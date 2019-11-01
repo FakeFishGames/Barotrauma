@@ -19,7 +19,7 @@ namespace Barotrauma
             : base(prefab, locations)
         {
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", null);
-            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 0);
+            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
                 string monster = monsterElement.GetAttributeString("character", string.Empty);
@@ -45,9 +45,12 @@ namespace Barotrauma
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
 
             bool isClient = IsClient;
-            for (int i = 0; i < monsterCount; i++)
+            if (!string.IsNullOrEmpty(monsterFile))
             {
-                monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
+                for (int i = 0; i < monsterCount; i++)
+                {
+                    monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
+                }
             }
             foreach (var monster in monsterFiles)
             {
@@ -87,7 +90,7 @@ namespace Barotrauma
         
         public override void End()
         {
-            if (State == 1) { return; }
+            if (State < 1) { return; }
                         
             GiveReward();
             completed = true;

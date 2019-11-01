@@ -170,5 +170,16 @@ namespace Barotrauma.Items.Components
                 }
             }  
         }
+
+        public override XElement Save(XElement parentElement)
+        {
+            Vector2 prevPropellerPos = PropellerPos;
+            //undo flipping before saving
+            if (item.FlippedX) { PropellerPos = new Vector2(-PropellerPos.X, PropellerPos.Y); }
+            if (item.FlippedY) { PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y); }
+            XElement element = base.Save(parentElement);
+            PropellerPos = prevPropellerPos;
+            return element;
+        }
     }
 }

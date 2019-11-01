@@ -193,7 +193,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="193,36,31,26" origin="0.5,0.5" />
     <EqualsComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -221,7 +221,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="161,35,30,27" origin="0.5,0.5" />
     <GreaterComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -277,7 +277,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="129,2,32,25" origin="0.5,0.5" />
     <ColorComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -307,7 +307,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="192,2,31,25" origin="0.5,0.5" />
     <SubtractComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -335,7 +335,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="32,96,31,25" origin="0.5,0.5" />
     <MultiplyComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem identifier="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -363,7 +363,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="224,2,31,25" origin="0.5,0.5" />
     <DivideComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -420,7 +420,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="160,3,31,25" origin="0.5,0.5" />
     <XorComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -839,7 +839,7 @@
     <Sprite texture="signalcomp.png" depth="0.8" sourcerect="128,36,31,25" origin="0.5,0.5" />
     <MemoryComponent canbeselected="true" />
     <Body width="31" height="25" density="30" />
-    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="Detach [Wrench]" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
       <requireditem items="wrench" type="Equipped" />
     </Holdable>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -940,7 +940,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Water Detector" identifier="waterdetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when the detector is submerged." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -994,7 +994,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Motion Detector" identifier="motiondetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="Sends out a signal when it detects movement." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1193,7 +1193,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="Camera" identifier="camera" category="Electrical" Tags="smallitem,camera" focusonselected="true" offsetonselected="500" cargocontaineridentifier="metalcrate" description="Typically used in photonics masts to provide the crew with a high-resolution view of the area outside the sub." Scale="0.5">
-    <Upgrade gameversion="0.9.3.1" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="768,320,64,64" origin="0.5,0.5" />
     <Sprite texture="detectors.png" depth="0.8" sourcerect="131,44,60,46" origin="0.5,0.5" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">

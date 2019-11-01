@@ -12,8 +12,8 @@
       <sprite name="Engineer Torso" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Left Upper Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Right Upper Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Engineer Left Lower Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Engineer Right Lower Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Engineer Left Lower Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Engineer Right Lower Arm" texture="engineer_torso_[GENDER]_[VARIANT].png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Waist" texture="engineer_legs_[GENDER]_[VARIANT].png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Right Thigh" texture="engineer_legs_[GENDER]_[VARIANT].png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Engineer Left Thigh" texture="engineer_legs_[GENDER]_[VARIANT].png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

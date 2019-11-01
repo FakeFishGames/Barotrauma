@@ -2,7 +2,7 @@
 <ItemAssembly name="Automatic Windowed Door" description="Door with window. Closes automatically after 10 seconds, with motion detector" hideinmenus="false">
   <Item name="Button" identifier="button" ID="43" rect="-40,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPressSelect">
-      <requireditem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+      <requireditem identifiers="idcard" type="Picked" msg="itemmsgunauthorizedaccess" />
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" />
@@ -17,7 +17,7 @@
   </Item>
   <Item name="Button" identifier="button" ID="42" rect="31,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPressSelect">
-      <requireditem identifiers="idcard" type="Picked" msg="UNAUTHORIZED ACCESS" />
+      <requireditem identifiers="idcard" type="Picked" msg="itemmsgunauthorizedaccess" />
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" />

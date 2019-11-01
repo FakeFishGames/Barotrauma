@@ -1431,10 +1431,9 @@ namespace Barotrauma
                 NPCConversation.WriteToCSV();
             }));
 
-            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            commands.Add(new Command("csvtoxml", "Converts .csv localization files in Content/NPCConversations/language & Content/Texts/language to .xml files for use in-game.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                LocalizationCSVtoXML.Convert(args[0]);
+                LocalizationCSVtoXML.Convert();
             }));
 #endif
 
@@ -1985,10 +1984,17 @@ namespace Barotrauma
                 {
                     character.Info.Race = race;
                     character.ReloadHead();
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprites();
+                        }
+                    }
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("loadhead|head", "Load head sprite(s). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
+            commands.Add(new Command("head", "Load the head sprite and the wearables (hair etc). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
                 if (character == null)
@@ -2022,6 +2028,13 @@ namespace Barotrauma
                         int.TryParse(args[4], out faceAttachmentIndex);
                     }
                     character.ReloadHead(id, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+                    foreach (var limb in character.AnimController.Limbs)
+                    {
+                        if (limb.type != LimbType.Head)
+                        {
+                            limb.RecreateSprites();
+                        }
+                    }
                 }
             }, isCheat: true));
 
@@ -2067,13 +2080,13 @@ namespace Barotrauma
                     {
                         wearable.Variant = variant;
                     }
-                    wearable.RefreshPath();
+                    wearable.ParsePath(true);
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }
                 foreach (var wearable in limb.OtherWearables)
                 {
-                    wearable.RefreshPath();
+                    wearable.ParsePath(true);
                     wearable.Sprite.ReloadXML();
                     wearable.Sprite.ReloadTexture();
                 }

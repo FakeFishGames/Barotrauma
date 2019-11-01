@@ -7,7 +7,7 @@
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Mine" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" origin="0.5,0.5" />
-    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="0,96,96,96" origin="0.5,0.5" />
+    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="5,105,68,69" origin="0.5,0.5" />
     <Body radius="15" height="10" density="30" />
     <Deconstruct time="10">
       <Item identifier="plastic" />
@@ -26,7 +26,7 @@
     </ItemContainer>
     <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="0,1" sourcerect="2,3,288,288" origin="0.5,0.5" />
+      <sprite name="Headset Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inherittexturescale="true" hideotherwearables="false" sourcerect="7,106,60,66" origin="0.4850145,0.6084235" />
     </Wearable>
   </Item>
 </Items>

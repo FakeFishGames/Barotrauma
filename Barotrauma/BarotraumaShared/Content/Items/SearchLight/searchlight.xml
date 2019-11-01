@@ -11,7 +11,7 @@
     linkable="false"
     Scale="0.5">
     
-    <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     
     <Sprite texture="Content/Items/SearchLight/SearchLightBase.png" depth="0.01" sourcerect="0,0,98,81"/>
 

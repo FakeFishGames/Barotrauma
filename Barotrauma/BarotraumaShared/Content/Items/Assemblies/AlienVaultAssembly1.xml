@@ -18,7 +18,7 @@
   <Structure name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" ID="5" rect="48,-80,368,54" texturescale="1,1" specialtag="" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" usedropshadow="True" dropshadowoffset="0,0" scale="1" spritedepth="0.062" />
   <Structure name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" ID="4" rect="-192,240,54,512" texturescale="1,1" specialtag="" drawtiled="True" textureoffset="0,0" spritecolor="255,255,255,255" usedropshadow="True" dropshadowoffset="0,0" scale="1" spritedepth="0.063" />
   <Item name="Alien Hatch" identifier="alienhatch" ID="13" rect="-390,0,208,48" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
-    <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="True" msg="Force open [Crowbar]">
+    <Door isopen="False" pickingtime="30" canbepicked="True" allowingameediting="True" msg="ItemMsgForceOpenCrowbar">
       <requireditem identifiers="crowbar" type="Equipped" optional="false" ignoreineditor="false" />
     </Door>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="">

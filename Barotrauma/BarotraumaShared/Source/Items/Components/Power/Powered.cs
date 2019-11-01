@@ -212,6 +212,10 @@ namespace Barotrauma.Items.Components
                 {
                     powered.CurrPowerConsumption = 0.0f;
                     pt.PowerLoad = 0.0f;
+                    if (pt is RelayComponent relay)
+                    {
+                        relay.DisplayLoad = 0.0f;
+                    }
                 }
                 //only reset voltage if the item has a power connector
                 //(other items, such as handheld devices, get power through other means and shouldn't be updated here)

@@ -5,11 +5,11 @@
        uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
-      <Skill identifier="helm" level="30,40"/>
-      <Skill identifier="weapons" level="20,25"/>
-      <Skill identifier="mechanical" level="10,15"/>
-      <Skill identifier="electrical" level="10,15"/>
-      <Skill identifier="medical" level="5,15"/>
+      <Skill identifier="helm" level="60,80"/>
+      <Skill identifier="weapons" level="40,50"/>
+      <Skill identifier="mechanical" level="20,30"/>
+      <Skill identifier="electrical" level="20,30"/>
+      <Skill identifier="medical" level="10,30"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
@@ -50,11 +50,11 @@
        uicolor="0.88,0.72,0.43"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="electrical" level="30,40"/>
-      <Skill identifier="mechanical" level="12,17"/>
-      <Skill identifier="weapons" level="5,15"/>
-      <Skill identifier="medical" level="5,15"/>
-      <Skill identifier="helm" level="5,10"/>
+      <Skill identifier="electrical" level="60,80"/>
+      <Skill identifier="mechanical" level="25,35"/>
+      <Skill identifier="weapons" level="10,30"/>
+      <Skill identifier="medical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
@@ -100,11 +100,11 @@
        uicolor="0.5,0.86,0.9"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="mechanical" level="30,40"/>
-      <Skill identifier="electrical" level="12,17"/>
-      <Skill identifier="weapons" level="5,15"/>
-      <Skill identifier="medical" level="5,10"/>
-      <Skill identifier="helm" level="5,10"/>
+      <Skill identifier="mechanical" level="60,80"/>
+      <Skill identifier="electrical" level="25,35"/>
+      <Skill identifier="weapons" level="10,30"/>
+      <Skill identifier="medical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
@@ -149,11 +149,11 @@
        uicolor="0.57,0.48,0.43"
        vitalitymodifier="0">
     <Skills>
-      <Skill identifier="weapons" level="25,30"/>
-      <Skill identifier="medical" level="15,20"/>
-      <Skill identifier="mechanical" level="5,10"/>
-      <Skill identifier="electrical" level="5,10"/>
-      <Skill identifier="helm" level="5,10"/>
+      <Skill identifier="weapons" level="50,60"/>
+      <Skill identifier="medical" level="30,40"/>
+      <Skill identifier="mechanical" level="10,20"/>
+      <Skill identifier="electrical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
@@ -196,11 +196,11 @@
        uicolor="0.81,0.31,0.19"
        vitalitymodifier="0">
     <Skills>
-      <Skill identifier="medical" level="30,35"/>
-      <Skill identifier="weapons" level="5,10"/>
-      <Skill identifier="mechanical" level="5,10"/>
-      <Skill identifier="electrical" level="5,10"/>
-      <Skill identifier="helm" level="5,10"/>
+      <Skill identifier="medical" level="60,70"/>
+      <Skill identifier="weapons" level="10,20"/>
+      <Skill identifier="mechanical" level="10,20"/>
+      <Skill identifier="electrical" level="10,20"/>
+      <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
@@ -236,11 +236,11 @@
        allowalways="true" minkarma="0"
        vitalitymodifier="-10">
     <Skills>
-      <Skill identifier="weapons" level="10,16"/>
-      <Skill identifier="mechanical" level="10,16"/>
-      <Skill identifier="electrical" level="10,16"/>
-      <Skill identifier="medical" level="5,11"/>
-      <Skill identifier="helm" level="5,10"/>
+      <Skill identifier="weapons" level="20,32"/>
+      <Skill identifier="mechanical" level="20,32"/>
+      <Skill identifier="electrical" level="20,32"/>
+      <Skill identifier="medical" level="10,22"/>
+      <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
       <Skill identifier="initiative" level="20,60"/>
     </Skills>

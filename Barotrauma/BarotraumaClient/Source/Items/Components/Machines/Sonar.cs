@@ -435,7 +435,7 @@ namespace Barotrauma.Items.Components
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
 
                     float dist = (float)Math.Sqrt(distSqr);
-                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range)
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
                     {
                         Ping(t.WorldPosition, transducerCenter,
                             Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f), 

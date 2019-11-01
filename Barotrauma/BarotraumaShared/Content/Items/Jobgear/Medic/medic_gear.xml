@@ -15,10 +15,10 @@
       <RequiredItem identifier="plastic" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,256,64,64" origin="0.5,0.5" />
-    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="197,29,86,38" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Health Scanner" texture="Content/Items/Jobgear/headgears.png" sourcerect="80,136,86,38" depth="0.6" origin="0.5,0.5" />
     <Body width="30" height="15" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" sheetindex="2,0" sourcerect="0,0,288,288" origin="0.5,0.5" />
+      <sprite name="Health Scanner Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="80,136,86,38" origin="0.5084225,0.645426" />
     </Wearable>
     <StatusHUD drawhudwhenequipped="true" />
   </Item>
@@ -30,7 +30,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,320,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="270,142,175,68" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" />
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="2">
       <sprite name="Medic Torso" texture="medic_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Right Lower Arm" texture="medic_torso_[GENDER]_[VARIANT].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Left Lower Arm" texture="medic_torso_[GENDER]_[VARIANT].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

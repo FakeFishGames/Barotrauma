@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsClient", "Barotrauma\BarotraumaClient\WindowsClient.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -307,6 +307,7 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugLinux|x86.ActiveCfg = DebugLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugLinux|x86.Build.0 = DebugLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.ActiveCfg = DebugMac|x64
+		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.Build.0 = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x64.ActiveCfg = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x64.Build.0 = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x86.ActiveCfg = DebugMac|x86
@@ -328,6 +329,7 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseLinux|x86.ActiveCfg = ReleaseLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseLinux|x86.Build.0 = ReleaseLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.ActiveCfg = ReleaseMac|x64
+		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x64.ActiveCfg = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x64.Build.0 = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x86.ActiveCfg = ReleaseMac|x86
@@ -337,8 +339,6 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x64.Build.0 = ReleaseWindows|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x86.ActiveCfg = ReleaseWindows|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x86.Build.0 = ReleaseWindows|x86
-		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|x64
-		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.Build.0 = DebugMac|x64
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|x64.ActiveCfg = Debug|Any CPU

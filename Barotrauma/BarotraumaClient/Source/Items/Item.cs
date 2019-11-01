@@ -19,7 +19,7 @@ namespace Barotrauma
         
         private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
-        private List<ItemComponent> activeHUDs = new List<ItemComponent>();
+        private readonly List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
         public IEnumerable<ItemComponent> ActiveHUDs => activeHUDs;
 
@@ -230,9 +230,6 @@ namespace Barotrauma
 
                 if (body == null)
                 {
-                    bool flipHorizontal = (SpriteEffects & SpriteEffects.FlipHorizontally) != 0;
-                    bool flipVertical = (SpriteEffects & SpriteEffects.FlipVertically) != 0;
-
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
                         activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
@@ -570,7 +567,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (ic.requiredItems.Count == 0 && SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
+                    if (ic.requiredItems.Count == 0 && ic.DisabledRequiredItems.Count == 0 && SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
@@ -582,37 +579,44 @@ namespace Barotrauma
                     continue;
                 }
 
+                List<RelatedItem> requiredItems = new List<RelatedItem>();
                 foreach (var kvp in ic.requiredItems)
                 {
                     foreach (RelatedItem relatedItem in kvp.Value)
                     {
-                        var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)),
-                            relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
-                        {
-                            Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
-                        };
-                        componentEditor.AddCustomContent(textBlock, 1);
-
-                        GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
-                        {
-                            Font = GUI.SmallFont,
-                            Text = relatedItem.JoinedIdentifiers
-                        };
-
-                        namesBox.OnDeselected += (textBox, key) =>
-                        {
-                            relatedItem.JoinedIdentifiers = textBox.Text;
-                            textBox.Text = relatedItem.JoinedIdentifiers;
-                        };
-
-                        namesBox.OnEnterPressed += (textBox, text) =>
-                        {
-                            relatedItem.JoinedIdentifiers = text;
-                            textBox.Text = relatedItem.JoinedIdentifiers;
-                            return true;
-                        };
+                        requiredItems.Add(relatedItem);
                     }
                 }
+                requiredItems.AddRange(ic.DisabledRequiredItems);
+
+                foreach (RelatedItem relatedItem in requiredItems)
+                {
+                    var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)),
+                        relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
+                    {
+                        Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
+                    };
+                    componentEditor.AddCustomContent(textBlock, 1);
+
+                    GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
+                    {
+                        Font = GUI.SmallFont,
+                        Text = relatedItem.JoinedIdentifiers
+                    };
+
+                    namesBox.OnDeselected += (textBox, key) =>
+                    {
+                        relatedItem.JoinedIdentifiers = textBox.Text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
+                    };
+
+                    namesBox.OnEnterPressed += (textBox, text) =>
+                    {
+                        relatedItem.JoinedIdentifiers = text;
+                        textBox.Text = relatedItem.JoinedIdentifiers;
+                        return true;
+                    };
+                }                
 
                 ic.CreateEditingHUD(componentEditor);
                 componentEditor.Recalculate();
@@ -782,7 +786,7 @@ namespace Barotrauma
             }
         }
 
-        List<ColoredText> texts = new List<ColoredText>();
+        readonly List<ColoredText> texts = new List<ColoredText>();
         public List<ColoredText> GetHUDTexts(Character character)
         {
             texts.Clear();

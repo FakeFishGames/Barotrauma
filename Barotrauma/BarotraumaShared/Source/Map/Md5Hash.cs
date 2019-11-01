@@ -85,6 +85,7 @@ namespace Barotrauma
 
         public static string GetShortHash(string fullHash)
         {            
+            if (string.IsNullOrEmpty(fullHash)) { return ""; }
             return fullHash.Length < 7 ? fullHash : fullHash.Substring(0, 7);
         }
     }

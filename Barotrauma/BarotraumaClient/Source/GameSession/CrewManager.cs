@@ -1416,34 +1416,11 @@ namespace Barotrauma
         {
             return CharacterHealth.OpenHealthWindow == null;
         }
-
-        // TODO: remove? not used at all
-        //private bool ReportButtonClicked(GUIButton button, object userData)
-        //{
-        //    //order targeted to all characters
-        //    Order order = userData as Order;
-        //    if (order.TargetAllCharacters)
-        //    {
-        //        if (Character.Controlled == null || Character.Controlled.CurrentHull == null) return false;
-        //        AddOrder(new Order(order.Prefab, Character.Controlled.CurrentHull, null), order.Prefab.FadeOutTime);
-        //        HumanAIController.PropagateHullSafety(Character.Controlled, Character.Controlled.CurrentHull);
-        //        SetCharacterOrder(null, order, "", Character.Controlled);
-        //    }
-        //    return true;
-        //}
-
+        
         private void ToggleReportButton(string orderIdentifier, bool enabled)
         {
             Order order = Order.GetPrefab(orderIdentifier);
-
-            //already reported, disable the button
-            /*if (GameMain.GameSession.CrewManager.ActiveOrders.Any(o =>
-                o.First.TargetEntity == Character.Controlled.CurrentHull &&
-                o.First.Identifier == orderIdentifier))
-            {
-                enabled = false;
-            }*/
-
+            
             var reportButton = reportButtonFrame.GetChildByUserData(order);
             if (reportButton != null)
             {

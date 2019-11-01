@@ -91,10 +91,9 @@ namespace Barotrauma.Networking
 
         partial class NetPropertyData
         {
-            private SerializableProperty property;
-            private string typeString;
-
-            private object parentObject;
+            private readonly SerializableProperty property;
+            private readonly string typeString;
+            private readonly object parentObject;
 
             public string Name
             {
@@ -266,7 +265,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        Dictionary<UInt32, NetPropertyData> netProperties;
+        private readonly Dictionary<UInt32, NetPropertyData> netProperties;
 
         partial void InitProjSpecific();
 
@@ -357,7 +356,6 @@ namespace Barotrauma.Networking
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
 
-        private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
         private float selectedLevelDifficulty;
         private byte[] password;
 
@@ -619,6 +617,20 @@ namespace Barotrauma.Networking
 
         [Serialize(true, true)]
         public bool AllowFriendlyFire
+        {
+            get;
+            set;
+        }
+
+
+        [Serialize("", true)]
+        public string SelectedSubmarine
+        {
+            get;
+            set;
+        }
+        [Serialize("", true)]
+        public string SelectedShuttle
         {
             get;
             set;

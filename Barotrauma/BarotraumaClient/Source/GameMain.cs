@@ -1051,8 +1051,19 @@ namespace Barotrauma
         {
             if (NetworkMember != null) NetworkMember.Disconnect();
             SteamManager.ShutDown();
-            if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
+
+            try
+            {
+                SaveUtil.CleanUnnecessarySaveFiles();
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error while cleaning unnecessary save files", e);
+            }
+
+            if (GameSettings.SendUserStatistics){ GameAnalytics.OnQuit(); }
+            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
+
             base.OnExiting(sender, args);
         }
 

@@ -2,7 +2,7 @@
 <ItemAssembly name="AlienPumpAssembly" description="" hideinmenus="true">
   <Item name="Alien Pump" identifier="alienpump" ID="2" rect="-224,128,256,256" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="alien" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="1">
     <Pump minvoltage="0.3" powerconsumption="300" vulnerabletoemp="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="" />
-    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Rewire [Screwdriver]">
+    <ConnectionPanel locked="True" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" ignoreineditor="false" />
       <input name="power_in">
         <link w="5" />
@@ -12,7 +12,7 @@
       <input name="set_speed" />
       <input name="set_targetlevel" />
     </ConnectionPanel>
-    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" fixdurationlowskill="20" fixdurationhighskill="5" pickingtime="0" canbepicked="False" allowingameediting="False" msg="Repair [Wrench]">
+    <Repairable deteriorationspeed="0" mindeteriorationdelay="0" maxdeteriorationdelay="0" mindeteriorationcondition="50" showrepairuithreshold="80" fixdurationlowskill="20" fixdurationhighskill="5" pickingtime="0" canbepicked="False" allowingameediting="False" msg="ItemMsgRepairWrench">
       <requireditem identifiers="wrench" type="Equipped" optional="false" ignoreineditor="false" />
     </Repairable>
   </Item>

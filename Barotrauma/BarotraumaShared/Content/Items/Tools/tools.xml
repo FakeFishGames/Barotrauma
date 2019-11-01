@@ -98,6 +98,11 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
+    <Upgrade gameversion="0.9.1000.0">
+      <RepairTool>
+        <RequiredItems identifier="weldingfuel,oxygensource" type="Contained" msg="ItemMsgWeldingFuelRequired" />
+      </RepairTool>
+    </Upgrade>
   </Item>
   <Item name="Plasma Cutter" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
@@ -163,6 +168,11 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,157,92,27" />
       <Containable items="weldingfuel,oxygensource" />
     </ItemContainer>
+    <Upgrade gameversion="0.9.1000.0">
+      <RepairTool>
+        <RequiredItems identifier="oxygentank,oxygenitetank,weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgOxygenTankRequired" />
+      </RepairTool>
+    </Upgrade>
   </Item>
   <Item name="Welding Fuel Tank" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" preferredcontainers="locker" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="50" />
@@ -176,9 +186,6 @@
     <Fabricate suitablefabricators="fabricator" requiredtime="10">
       <RequiredItem identifier="aluminium" />
       <RequiredItem identifier="ethanol" />
-    </Fabricate>
-    <Fabricate suitablefabricators="fabricator" displayname="WeldingFuelTankEmpty" outcondition="0.0" requiredtime="5">
-      <RequiredItem identifier="aluminium" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="395,223,38,109" depth="0.55" />
@@ -430,7 +437,8 @@
         <Conditional IsOn="eq False" targetitemcomponent="LightComponent" />
         <sound file="Content/Items/Tools/FlareIgnite.ogg" range="800.0" />
       </StatusEffect>
-      <StatusEffect type="OnActive" targettype="This" Condition="-0.25">
+      <StatusEffect type="OnActive" targettype="This" Condition="-0.25" />
+      <StatusEffect type="OnActive" targettype="This">
         <Conditional PhysicsBodyActive="eq true" />
         <ParticleEmitter particle="flare" particlespersecond="30" />
         <ParticleEmitter particle="bubbles" particlespersecond="30" />

@@ -19,8 +19,8 @@ namespace Barotrauma.Sounds
             private set;
         }
         
-        private IntPtr alcDevice;
-        private IntPtr alcContext;
+        private readonly IntPtr alcDevice;
+        private readonly IntPtr alcContext;
         
         public enum SourcePoolIndex
         {
@@ -29,7 +29,7 @@ namespace Barotrauma.Sounds
         }
         private readonly SoundSourcePool[] sourcePools;
         
-        private List<Sound> loadedSounds;
+        private readonly List<Sound> loadedSounds;
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
 
         private Thread streamingThread;
@@ -51,7 +51,7 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private float[] listenerOrientation = new float[6];
+        private readonly float[] listenerOrientation = new float[6];
         public Vector3 ListenerTargetVector
         {
             get { return new Vector3(listenerOrientation[0], listenerOrientation[1], listenerOrientation[2]); }
@@ -245,8 +245,6 @@ namespace Barotrauma.Sounds
                 return;
             }
 
-            int alError = Al.NoError;
-
             sourcePools = new SoundSourcePool[2];
             sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
@@ -256,7 +254,7 @@ namespace Barotrauma.Sounds
 
             Al.DistanceModel(Al.LinearDistanceClamped);
             
-            alError = Al.GetError();
+            int alError = Al.GetError();
             if (alError != Al.NoError)
             {
                 DebugConsole.ThrowError("Error setting distance model: " + Al.GetErrorString(alError) + ". Disabling audio playback...");
@@ -488,7 +486,7 @@ namespace Barotrauma.Sounds
             if (index < 0)
             {
                 float accumulatedMultipliers = 1.0f;
-                for (int i=0;i<categoryModifiers[category].GainMultipliers.Length;i++)
+                for (int i = 0; i < categoryModifiers[category].GainMultipliers.Length; i++)
                 {
                     accumulatedMultipliers *= categoryModifiers[category].GainMultipliers[i];
                 }

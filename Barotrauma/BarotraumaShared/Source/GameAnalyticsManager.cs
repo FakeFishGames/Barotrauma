@@ -83,8 +83,16 @@ namespace Barotrauma
         /// </summary>
         public static void AddErrorEventOnce(string identifier, EGAErrorSeverity errorSeverity, string message)
         {
-            if (!GameSettings.SendUserStatistics) return;
-            if (sentEventIdentifiers.Contains(identifier)) return;
+            if (!GameSettings.SendUserStatistics) { return; }
+            if (sentEventIdentifiers.Contains(identifier)) { return; }
+
+            if (GameMain.SelectedPackages != null)
+            {
+                if (GameMain.VanillaContent == null || GameMain.SelectedPackages.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
+                {
+                    message = "[MODDED] " + message;
+                }
+            }
 
             GameAnalytics.AddErrorEvent(errorSeverity, message);
             sentEventIdentifiers.Add(identifier);

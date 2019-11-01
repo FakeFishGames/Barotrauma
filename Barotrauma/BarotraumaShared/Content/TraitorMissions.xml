@@ -334,7 +334,7 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="acidparty_objectiveSuccessMessage1"/>
       <StartMessage id="acidparty_traitorobjectivestartmessage1"/>
-      <Goal type="finditem" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,toxcabinet">
+      <Goal type="finditem" percentage="100" identifier="deliriumine" preferNew="false" allowNew="true" allowExisting="true" allowedContainers="loosevent,loosepanel,toxcabinet">
         <InfoText id="traitorgoalfinditeminfo"/>
       </Goal>
     </Objective>
