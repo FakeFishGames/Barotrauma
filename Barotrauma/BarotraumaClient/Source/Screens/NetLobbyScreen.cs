@@ -2590,6 +2590,7 @@ namespace Barotrauma
 
                 if (images != null && images.Length > 1)
                 {
+                    jobPrefab.Second = Math.Min(jobPrefab.Second, images.Length);
                     int currVisible = jobPrefab.Second;
                     GUIButton currSelected = null;
                     for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
@@ -2630,7 +2631,10 @@ namespace Barotrauma
                             currSelected = variantButton;
                         }
                     }
-                    currSelected.Selected = true;
+                    if (currSelected != null)
+                    {
+                        currSelected.Selected = true;
+                    }
                 }
             }
 

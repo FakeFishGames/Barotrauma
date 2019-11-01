@@ -482,7 +482,7 @@ namespace Barotrauma.Items.Components
                     // TODO: Optimize? Creates multiple new classes per frame?
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
-                        availableAmmo[i], true);
+                        availableAmmo[i], -1, true);
                 }
                 if (flashNoAmmo)
                 {
