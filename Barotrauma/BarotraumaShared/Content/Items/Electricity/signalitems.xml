@@ -731,7 +731,7 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Absolute Value Component" identifier="absolutevaluecomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="Abs Component" identifier="abscomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
