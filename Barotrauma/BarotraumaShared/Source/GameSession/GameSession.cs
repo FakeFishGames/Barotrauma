@@ -279,9 +279,8 @@ namespace Barotrauma
             GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
                     GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
 
-
 #if CLIENT
-            if (GameMode is SinglePlayerCampaign) SteamAchievementManager.OnBiomeDiscovered(level.Biome);
+            if (GameMode is SinglePlayerCampaign) { SteamAchievementManager.OnBiomeDiscovered(level.Biome); }
             roundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
@@ -289,8 +288,7 @@ namespace Barotrauma
             if (!(GameMode is TutorialMode))
             {
                 GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);
-                //TODO: re-enable when biome names have been translated
-                //GUI.AddMessage(level.Biome.Name, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);
+                GUI.AddMessage(level.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);
                 GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
                 GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), (Mission == null ? TextManager.Get("None") : Mission.Name)), Color.CadetBlue, playSound: false);
             }
