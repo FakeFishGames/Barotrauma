@@ -18,7 +18,7 @@ namespace Barotrauma.Networking
             this.ExpirationTime = expirationTime;
             this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
-            this.IsRangeBan = IP.IndexOf(".x")>-1;
+            this.IsRangeBan = IP.IndexOf(".x") > -1;
         }
 
         public BannedPlayer(string name, ulong steamID, string reason, DateTime? expirationTime)
@@ -30,6 +30,8 @@ namespace Barotrauma.Networking
             this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
             this.IsRangeBan = false;
+
+            this.IP = "";
         }
 
         public bool CompareTo(string ipCompare)
@@ -50,7 +52,7 @@ namespace Barotrauma.Networking
         public bool CompareTo(IPAddress ipCompare)
         {
             if (string.IsNullOrEmpty(IP) || ipCompare == null) { return false; }
-            if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4().ToString()))
+            if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4NoThrow().ToString()))
             {
                 return true;
             }
@@ -136,7 +138,7 @@ namespace Barotrauma.Networking
 
         public void BanPlayer(string name, IPAddress ip, string reason, TimeSpan? duration)
         {
-            string ipStr = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString();
+            string ipStr = ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4NoThrow().ToString() : ip.ToString();
             BanPlayer(name, ipStr, 0, reason, duration);
         }
 
@@ -276,28 +278,42 @@ namespace Barotrauma.Networking
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
-            if (!c.HasPermission(ClientPermissions.Ban))
+            try
             {
-                outMsg.Write(false); outMsg.WritePadBits();
-                return;
-            }
-            outMsg.Write(true);
-            outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
+                if (outMsg == null) { throw new ArgumentException("OutMsg was null"); }
+                if (GameMain.Server == null) { throw new Exception("GameMain.Server was null"); }
 
-            outMsg.WritePadBits();
-            outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
-            for (int i = 0; i < bannedPlayers.Count; i++)
-            {
-                BannedPlayer bannedPlayer = bannedPlayers[i];
-
-                outMsg.Write(bannedPlayer.Name);
-                outMsg.Write(bannedPlayer.UniqueIdentifier);
-                outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
-                if (c.Connection == GameMain.Server.OwnerConnection)
+                if (!c.HasPermission(ClientPermissions.Ban))
                 {
-                    outMsg.Write(bannedPlayer.IP);
-                    outMsg.Write(bannedPlayer.SteamID);
+                    outMsg.Write(false); outMsg.WritePadBits();
+                    return;
                 }
+
+                outMsg.Write(true);
+                outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
+
+                outMsg.WritePadBits();
+                outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
+                for (int i = 0; i < bannedPlayers.Count; i++)
+                {
+                    BannedPlayer bannedPlayer = bannedPlayers[i];
+
+                    outMsg.Write(bannedPlayer.Name);
+                    outMsg.Write(bannedPlayer.UniqueIdentifier);
+                    outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
+                    if (c.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        outMsg.Write(bannedPlayer.IP);
+                        outMsg.Write(bannedPlayer.SteamID);
+                    }
+                }
+            }
+
+            catch (Exception e)
+            {
+                string errorMsg = "Error while writing banlist. {" + e + "}\n" + e.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("Banlist.ServerAdminWrite", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                throw;
             }
         }
 

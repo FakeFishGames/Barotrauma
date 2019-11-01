@@ -25,7 +25,8 @@ namespace Barotrauma.Items.Components
 
         public PhysicsBody ParentBody;
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f), Serialize(100.0f, true)]
+        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive."), 
+            Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
             get { return range; }
@@ -40,8 +41,8 @@ namespace Barotrauma.Items.Components
 
         public float Rotation;
 
-        [Editable(ToolTip = "Should structures cast shadows when light from this light source hits them. "+
-            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range."), Serialize(true, true)]
+        [Editable, Serialize(true, true, description: "Should structures cast shadows when light from this light source hits them. " +
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.")]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -54,8 +55,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(ToolTip = "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. "+
-            "It's recommended to enable this on decorative lights outside the submarine's hull."), Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
+            "It's recommended to enable this on decorative lights outside the submarine's hull.")]
         public bool DrawBehindSubs
         {
             get { return drawBehindSubs; }
@@ -68,7 +69,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Is the light currently on.")]
         public bool IsOn
         {
             get { return IsActive; }
@@ -83,7 +84,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -93,7 +94,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true)]
+        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -103,7 +104,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1.0,1.0,1.0,1.0", true)]
+        [InGameEditable, Serialize("255,255,255,255", true, description: "The color of the emitted light (R,G,B,A).")]
         public Color LightColor
         {
             get { return lightColor; }
@@ -160,6 +161,14 @@ namespace Barotrauma.Items.Components
             item.AddTag("light");
         }
 
+#if CLIENT
+        public override void OnScaleChanged()
+        {
+            light.SpriteScale = Vector2.One * item.Scale;
+            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+        }
+#endif
+
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
@@ -175,7 +184,6 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
 #if CLIENT
-            light.SpriteScale = Vector2.One * item.Scale;
             light.ParentSub = item.Submarine;
             if (item.Container != null)
             {
@@ -208,19 +216,12 @@ namespace Barotrauma.Items.Components
 #endif
             }
             
-            if (powerConsumption == 0.0f)
-            {
-                voltage = 1.0f;
-            }
-            else
-            {
-                currPowerConsumption = powerConsumption;                
-            }
+            currPowerConsumption = powerConsumption;
 
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && voltage < Rand.Range(0.0f, minVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
             {
 #if CLIENT
-                if (voltage > 0.1f)
+                if (Voltage > 0.1f)
                 {
                     SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                 }
@@ -229,7 +230,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(voltage, 1.0f), 0.1f);
+                lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(Voltage, 1.0f), 0.1f);
             }
 
             if (blinkFrequency > 0.0f)
@@ -250,16 +251,10 @@ namespace Barotrauma.Items.Components
                 light.Range = range;
 #endif
             }
-            if (AITarget != null)
-            {
-                UpdateAITarget(AITarget);
-            }
             if (item.AiTarget != null)
             {
                 UpdateAITarget(item.AiTarget);
             }
-
-            voltage -= deltaTime;
         }
                 
 #if CLIENT

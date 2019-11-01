@@ -101,7 +101,7 @@ namespace Barotrauma.Networking
             if (wlp == null) return false;
             if (!string.IsNullOrWhiteSpace(wlp.IP))
             {
-                if (address.IsIPv4MappedToIPv6 && wlp.IP == address.MapToIPv4().ToString())
+                if (address.IsIPv4MappedToIPv6 && wlp.IP == address.MapToIPv4NoThrow().ToString())
                 {
                     return true;
                 }

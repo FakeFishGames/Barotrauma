@@ -15,6 +15,9 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
 
+        [Serialize(true, true)]
+        public bool ResetKarmaBetweenRounds { get; set; }
+
         [Serialize(0.1f, true)]
         public float KarmaDecay { get; set; }
 
@@ -53,12 +56,12 @@ namespace Barotrauma
         public float ExtinguishFireKarmaIncrease { get; set; }
 
 
-        private float allowedWireDisconnectionsPerMinute;
-        [Serialize(5.0f, true)]
-        public float AllowedWireDisconnectionsPerMinute
+        private int allowedWireDisconnectionsPerMinute;
+        [Serialize(5, true)]
+        public int AllowedWireDisconnectionsPerMinute
         {
             get { return allowedWireDisconnectionsPerMinute; }
-            set { allowedWireDisconnectionsPerMinute = Math.Max(0.0f, value); }
+            set { allowedWireDisconnectionsPerMinute = Math.Max(0, value); }
         }
 
         [Serialize(6.0f, true)]
@@ -75,9 +78,15 @@ namespace Barotrauma
 
         [Serialize(1.0f, true)]
         public float KickBanThreshold { get; set; }
-
+        
+        [Serialize(0, true)]
+        public int KicksBeforeBan { get; set; }
+        
         [Serialize(10.0f, true)]
         public float KarmaNotificationInterval { get; set; }
+
+        [Serialize(120.0f, true)]
+        public float AllowedRetaliationTime { get; set; }
 
         private readonly AfflictionPrefab herpesAffliction;
 
@@ -85,7 +94,23 @@ namespace Barotrauma
         
         public KarmaManager()
         {
-            XDocument doc = XMLExtensions.TryLoadXml(ConfigFile);
+            XDocument doc = null;
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
+            {
+                try
+                {
+                    doc = XMLExtensions.TryLoadXml(ConfigFile);
+                    break;
+                }
+                catch (IOException)
+                {
+                    if (i == maxLoadRetries) { break; }
+                    DebugConsole.NewMessage("Opening karma settings file \"" + ConfigFile + "\" failed, retrying in 250 ms...");
+                    System.Threading.Thread.Sleep(250);
+                }
+            }
+
             SerializableProperties = SerializableProperty.DeserializeProperties(this, doc?.Root);
             if (doc?.Root != null)
             {
@@ -95,7 +120,7 @@ namespace Barotrauma
                     string presetName = subElement.GetAttributeString("name", "");
                     Presets[presetName.ToLowerInvariant()] = subElement;
                 }
-                SelectPreset("default");
+                SelectPreset(GameMain.NetworkMember?.ServerSettings?.KarmaPreset ?? "default");
             }
             herpesAffliction = AfflictionPrefab.List.Find(ap => ap.Identifier == "spaceherpes");
         }
@@ -109,13 +134,18 @@ namespace Barotrauma
             {
                 SerializableProperty.DeserializeProperties(this, Presets[presetName]);
             }
+            else if (Presets.ContainsKey("custom"))
+            {
+                SerializableProperty.DeserializeProperties(this, Presets["custom"]);
+
+            }
         }
 
         public void SaveCustomPreset()
         {
             if (Presets.ContainsKey("custom"))
             {
-                SerializableProperty.SerializeProperties(this, Presets["custom"]);
+                SerializableProperty.SerializeProperties(this, Presets["custom"], saveIfDefault: true);
             }
         }
 
@@ -134,9 +164,25 @@ namespace Barotrauma
                 NewLineOnAttributes = true
             };
 
-            using (var writer = XmlWriter.Create(ConfigFile, settings))
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
             {
-                doc.Save(writer);
+                try
+                {
+                    using (var writer = XmlWriter.Create(ConfigFile, settings))
+                    {
+                        doc.Save(writer);
+                    }
+                    break;
+                }
+                catch (IOException)
+                {
+                    if (i == maxLoadRetries) { throw; }
+
+                    DebugConsole.NewMessage("Saving karma settings file file \"" + ConfigFile + "\" failed, retrying in 250 ms...");
+                    System.Threading.Thread.Sleep(250);
+                    continue;
+                }
             }
         }
     }

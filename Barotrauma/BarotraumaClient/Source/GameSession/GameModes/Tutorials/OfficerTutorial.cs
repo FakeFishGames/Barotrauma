@@ -74,18 +74,12 @@ namespace Barotrauma.Tutorials
         // Variables
         private string radioSpeakerName;
         private Character officer;
-        private string crawlerCharacterFile;
-        private string hammerheadCharacterFile;
-        private string mudraptorCharacterFile;
         private float superCapacitorRechargeRate = 10;
         private Sprite officer_gunIcon;
         private Color officer_gunIconColor;
 
         public OfficerTutorial(XElement element) : base(element)
         {
-            crawlerCharacterFile = Character.GetConfigFile("crawler");
-            hammerheadCharacterFile = Character.GetConfigFile("hammerhead");
-            mudraptorCharacterFile = Character.GetConfigFile("mudraptor");
         }
 
         public override void Start()
@@ -111,7 +105,7 @@ namespace Barotrauma.Tutorials
             bodyarmor.Unequip(officer);
             officer.Inventory.RemoveItem(bodyarmor);
 
-            var gunOrder = Order.PrefabList.Find(order => order.AITag == "operateweapons");
+            var gunOrder = Order.GetPrefab("operateweapons");
             officer_gunIcon = gunOrder.SymbolSprite;
             officer_gunIconColor = gunOrder.Color;
 
@@ -267,7 +261,7 @@ namespace Barotrauma.Tutorials
             // Room 3
             do { yield return null; } while (!officer_crawlerSensor.MotionDetected);
             TriggerTutorialSegment(2);
-            officer_crawler = SpawnMonster(crawlerCharacterFile, officer_crawlerSpawnPos);
+            officer_crawler = SpawnMonster("crawler", officer_crawlerSpawnPos);
             do { yield return null; } while (!officer_crawler.IsDead);
             RemoveCompletedObjective(segments[2]);
             Heal(officer);
@@ -298,17 +292,24 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[3]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
-            officer_hammerhead = SpawnMonster(hammerheadCharacterFile, officer_hammerheadSpawnPos);
+            officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
             float originalDistance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerheadSpawnPos);
             do
             {
                 float distance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerhead.WorldPosition);
+                if (distance > originalDistance * 1.5f)
+                {
+                    // Don't let the Hammerhead go too far.
+                    officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos + new Vector2(0, -1000));
+                }
                 if (distance > originalDistance)
                 {
-                    // Don't let the Hammerhead go too far from the periscope.
-                    officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos);
+                    // Ensure that the Hammerhead targets the player
+                    officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
+                    /*var ai = officer_hammerhead.AIController as EnemyAIController;
+                    ai.sight = 2.0f;*/
                 }
                 yield return null;
             }
@@ -366,7 +367,7 @@ namespace Barotrauma.Tutorials
                     HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
                 }
                 yield return null;
-            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all five harpons loaded
+            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all six harpoons loaded
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);
@@ -374,7 +375,7 @@ namespace Barotrauma.Tutorials
             // Room 6
             do { yield return null; } while (!officer_mudraptorObjectiveSensor.MotionDetected);
             TriggerTutorialSegment(6);
-            officer_mudraptor = SpawnMonster(mudraptorCharacterFile, officer_mudraptorSpawnPos);
+            officer_mudraptor = SpawnMonster("mudraptor", officer_mudraptorSpawnPos);
             do { yield return null; } while (!officer_mudraptor.IsDead);
             Heal(officer);
             RemoveCompletedObjective(segments[6]);
@@ -440,9 +441,9 @@ namespace Barotrauma.Tutorials
             return officer?.SelectedConstruction == item;
         }
 
-        private Character SpawnMonster(string characterFile, Vector2 pos)
+        private Character SpawnMonster(string speciesName, Vector2 pos)
         {
-            var character = Character.Create(characterFile, pos, ToolBox.RandomSeed(8));
+            var character = Character.Create(speciesName, pos, ToolBox.RandomSeed(8));
             var ai = character.AIController as EnemyAIController;
             ai.TargetOutposts = true;
             character.CharacterHealth.SetVitality(character.Health / 2);

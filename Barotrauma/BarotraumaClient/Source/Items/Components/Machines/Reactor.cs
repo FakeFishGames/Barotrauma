@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
 
                 var btnText = warningBtn.GetChild<GUITextBlock>();
                 btnText.Font = GUI.Font;
-                btnText.Wrap = true;
+                btnText.Wrap = false;
                 btnText.SetTextPos();
                 warningButtons.Add(warningTexts[i], warningBtn);
             }
@@ -290,6 +290,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             turbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
             fissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
             var itemContainer = item.GetComponent<ItemContainer>();
@@ -451,7 +452,10 @@ namespace Barotrauma.Items.Components
                 if (PlayerInput.KeyDown(InputType.Right)) input.X += 1.0f;
                 if (PlayerInput.KeyDown(InputType.Up)) input.Y += 1.0f;
                 if (PlayerInput.KeyDown(InputType.Down)) input.Y += -1.0f;
-                if (PlayerInput.KeyDown(InputType.Run)) rate = 200.0f;
+                if (PlayerInput.KeyDown(InputType.Run))
+                    rate = 200.0f;
+                else if (PlayerInput.KeyDown(InputType.Crouch))
+                    rate = 20.0f;
 
                 rate *= deltaTime;
                 input.X *= rate;
@@ -601,14 +605,15 @@ namespace Barotrauma.Items.Components
         
         protected override void RemoveComponentSpecific()
         {
-            graphLine.Remove();
-            fissionRateMeter.Remove();
-            turbineOutputMeter.Remove();
-            meterPointer.Remove();
-            sectorSprite.Remove();
-            tempMeterFrame.Remove();
-            tempMeterBar.Remove();
-            tempRangeIndicator.Remove();
+            base.RemoveComponentSpecific();
+            graphLine?.Remove();
+            fissionRateMeter?.Remove();
+            turbineOutputMeter?.Remove();
+            meterPointer?.Remove();
+            sectorSprite?.Remove();
+            tempMeterFrame?.Remove();
+            tempMeterBar?.Remove();
+            tempRangeIndicator?.Remove();
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

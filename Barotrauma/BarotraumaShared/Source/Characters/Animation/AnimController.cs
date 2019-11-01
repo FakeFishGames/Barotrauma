@@ -37,7 +37,7 @@ namespace Barotrauma
                 }
                 if (!CanWalk)
                 {
-                    DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
+                    //DebugConsole.ThrowError($"{character.SpeciesName} cannot walk!");
                     return null;
                 }
                 else
@@ -61,7 +61,7 @@ namespace Barotrauma
             }
         }
 
-        public bool CanWalk => CanEnterSubmarine;
+        public bool CanWalk => RagdollParams.CanWalk;
         public bool IsMovingBackwards => !InWater && Math.Sign(targetMovement.X) == -Math.Sign(Dir);
         
         // TODO: define death anim duration in XML
@@ -214,6 +214,8 @@ namespace Barotrauma
                     return SwimSlowParams;
                 case AnimationType.SwimFast:
                     return SwimFastParams;
+                case AnimationType.NotDefined:
+                    return null;
                 default:
                     throw new NotImplementedException(type.ToString());
             }

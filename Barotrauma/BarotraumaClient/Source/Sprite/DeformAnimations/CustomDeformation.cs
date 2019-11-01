@@ -8,13 +8,12 @@ namespace Barotrauma.SpriteDeformations
 {
     class CustomDeformationParams : SpriteDeformationParams
     {
-        [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
-            ToolTip = "How fast the deformation \"oscillates\" back and forth. " +
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f),
+            Serialize(0.0f, true, description: "How fast the deformation \"oscillates\" back and forth. " +
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
         public override float Frequency { get; set; } = 1;
 
-        [Serialize(1.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f,
-            ToolTip = "The \"strength\" of the deformation.")]
+        [Serialize(1.0f, true, description: "The \"strength\" of the deformation."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Amplitude { get; set; }
 
         public CustomDeformationParams(XElement element) : base(element)
@@ -26,7 +25,7 @@ namespace Barotrauma.SpriteDeformations
     {
         private List<Vector2[]> deformRows = new List<Vector2[]>();
 
-        private CustomDeformationParams CustomDeformationParams => deformationParams as CustomDeformationParams;
+        private CustomDeformationParams CustomDeformationParams => Params as CustomDeformationParams;
 
         public override float Phase
         {
@@ -116,11 +115,12 @@ namespace Barotrauma.SpriteDeformations
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
                 (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
+            multiplier *= Params.Strength;
         }
 
         public override void Update(float deltaTime)
         {
-            if (!deformationParams.UseMovementSine)
+            if (!Params.UseMovementSine)
             {
                 phase += deltaTime * CustomDeformationParams.Frequency;
                 phase %= MathHelper.TwoPi;

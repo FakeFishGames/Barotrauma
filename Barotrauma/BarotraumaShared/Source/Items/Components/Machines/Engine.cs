@@ -22,8 +22,8 @@ namespace Barotrauma.Items.Components
 
         private float prevVoltage;
         
-        [Editable(0.0f, 10000000.0f, ToolTip = "The amount of force exerted on the submarine when the engine is operating at full power."), 
-        Serialize(2000.0f, true)]
+        [Editable(0.0f, 10000000.0f), 
+        Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }
@@ -33,7 +33,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("0.0,0.0", true)]
+        [Editable, Serialize("0.0,0.0", true, 
+            description: "The position of the propeller as an offset from the item's center (in pixels)."+
+            " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
         {
             get;
@@ -48,7 +50,7 @@ namespace Barotrauma.Items.Components
 
         public float CurrentVolume
         {
-            get { return Math.Abs((force / 100.0f) * (minVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / minVoltage, 1.0f))); }
+            get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / MinVoltage, 1.0f))); }
         }
 
         public Engine(Item item, XElement element)
@@ -81,15 +83,15 @@ namespace Barotrauma.Items.Components
             //pumps consume more power when in a bad condition
             currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
 
-            if (powerConsumption == 0.0f) voltage = 1.0f;
+            if (powerConsumption == 0.0f) { Voltage = 1.0f; }
 
-            prevVoltage = voltage;
-            hasPower = voltage > minVoltage;
+            prevVoltage = Voltage;
+            hasPower = Voltage > MinVoltage;
 
-            Force = MathHelper.Lerp(force, (voltage < minVoltage) ? 0.0f : targetForce, 0.1f);
+            Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
-                Vector2 currForce = new Vector2((force / 10.0f) * maxForce * Math.Min(voltage / minVoltage, 1.0f), 0.0f);
+                Vector2 currForce = new Vector2((force / 10.0f) * maxForce * Math.Min(Voltage / MinVoltage, 1.0f), 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
 
@@ -97,11 +99,17 @@ namespace Barotrauma.Items.Components
 
                 UpdatePropellerDamage(deltaTime);
 
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                }
                 if (item.CurrentHull != null)
                 {
-                    item.CurrentHull.AiTarget.SoundRange = Math.Max(currForce.Length(), item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                    aiTarget.SoundRange = Math.Max(noise, aiTarget.SoundRange);
                 }
-
 #if CLIENT
                 for (int i = 0; i < 5; i++)
                 {
@@ -111,8 +119,6 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
-
-            voltage -= deltaTime;
         }
 
         private void UpdatePropellerDamage(float deltaTime)
@@ -142,6 +148,16 @@ namespace Barotrauma.Items.Components
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            PropellerPos = new Vector2(-PropellerPos.X, PropellerPos.Y);
+        }
+
+        public override void FlipY(bool relativeToSub)
+        {
+            PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
@@ -153,6 +169,17 @@ namespace Barotrauma.Items.Components
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                 }
             }  
+        }
+
+        public override XElement Save(XElement parentElement)
+        {
+            Vector2 prevPropellerPos = PropellerPos;
+            //undo flipping before saving
+            if (item.FlippedX) { PropellerPos = new Vector2(-PropellerPos.X, PropellerPos.Y); }
+            if (item.FlippedY) { PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y); }
+            XElement element = base.Save(parentElement);
+            PropellerPos = prevPropellerPos;
+            return element;
         }
     }
 }

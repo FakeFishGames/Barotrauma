@@ -12,8 +12,8 @@ namespace Barotrauma
 {
     partial class SaveUtil
     {
-        private static string LegacySaveFolder = Path.Combine("Data", "Saves");
-        private static string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
+        private static readonly string LegacySaveFolder = Path.Combine("Data", "Saves");
+        private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
 
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
@@ -32,9 +32,10 @@ namespace Barotrauma
             "Barotrauma");
 #endif
 
-        public static string MultiplayerSaveFolder = Path.Combine(
-            SaveFolder, 
-            "Multiplayer");
+        public static string MultiplayerSaveFolder = Path.Combine(SaveFolder, "Multiplayer");
+
+        public static readonly string SubmarineDownloadFolder = Path.Combine("Submarines", "Downloaded");
+        public static readonly string CampaignDownloadFolder = Path.Combine("Data", "Saves", "Multiplayer");
 
         public delegate void ProgressDelegate(string sMessage);
 
@@ -46,7 +47,7 @@ namespace Barotrauma
             get { return Path.Combine(SaveFolder, "temp"); }
 #endif
         }
-        
+
         public enum SaveType
         {
             Singleplayer,
@@ -119,6 +120,7 @@ namespace Barotrauma
             DecompressToDirectory(filePath, TempPath, null);
 
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
 
             string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
             Submarine selectedSub = new Submarine(subPath, "");
@@ -130,6 +132,7 @@ namespace Barotrauma
             DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
             DecompressToDirectory(filePath, TempPath, null);
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+            if (doc == null) { return; }
             gameSession.Load(doc.Root);
         }
 
@@ -206,11 +209,11 @@ namespace Barotrauma
             if (Directory.Exists(legacyFolder))
             {
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save"));
-            }            
+            }
 
             return files;
         }
-        
+
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
         {
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
@@ -227,7 +230,7 @@ namespace Barotrauma
                 DebugConsole.Log("Save folder \"" + folder + "\" not found. Created new folder");
                 Directory.CreateDirectory(folder);
             }
-            
+
             string extension = ".save";
             string pathWithoutExtension = Path.Combine(folder, fileName);
 
@@ -244,7 +247,7 @@ namespace Barotrauma
 
             return pathWithoutExtension + " " + i + extension;
         }
-        
+
         public static void CompressStringToFile(string fileName, string value)
         {
             // A.
@@ -294,8 +297,7 @@ namespace Barotrauma
                 foreach (string sFilePath in sFiles)
                 {
                     string sRelativePath = sFilePath.Substring(iDirLen);
-                    if (progress != null)
-                        progress(sRelativePath);
+                    progress?.Invoke(sRelativePath);
                     CompressFile(sInDir, sRelativePath, str);
                 }
         }
@@ -303,12 +305,6 @@ namespace Barotrauma
 
         public static Stream DecompressFiletoStream(string fileName)
         {
-            if (!File.Exists(fileName))
-            {
-                DebugConsole.ThrowError("File \"" + fileName + " doesn't exist!");
-                return null;
-            }
-
             using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
             {
                 MemoryStream decompressedFileStream = new MemoryStream();
@@ -332,7 +328,7 @@ namespace Barotrauma
             int iNameLen = BitConverter.ToInt32(bytes, 0);
             if (iNameLen > 255)
             {
-                throw new Exception("Failed to decompress \""+sDir+"\" (file name length > 255). The file may be corrupted.");
+                throw new Exception("Failed to decompress \"" + sDir + "\" (file name length > 255). The file may be corrupted.");
             }
 
             bytes = new byte[sizeof(char)];
@@ -344,8 +340,7 @@ namespace Barotrauma
                 sb.Append(c);
             }
             string sFileName = sb.ToString();
-            if (progress != null)
-                progress(sFileName);
+            progress?.Invoke(sFileName);
 
             //Decompress file content
             bytes = new byte[sizeof(int)];
@@ -427,12 +422,8 @@ namespace Barotrauma
             FileInfo[] files = dir.GetFiles();
             foreach (FileInfo file in files)
             {
-                string temppath = Path.Combine(destDirName, file.Name);
-                if (overwriteExisting && File.Exists(temppath))
-                {
-                    File.Delete(temppath);
-                }
-                file.CopyTo(temppath, false);
+                string tempPath = Path.Combine(destDirName, file.Name);
+                file.CopyTo(tempPath, overwriteExisting);
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -440,15 +431,29 @@ namespace Barotrauma
             {
                 foreach (DirectoryInfo subdir in dirs)
                 {
-                    string temppath = Path.Combine(destDirName, subdir.Name);
-                    CopyFolder(subdir.FullName, temppath, copySubDirs);
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
                 }
             }
         }
 
-        public static void ClearFolder(string FolderName, string[] ignoredFileNames = null)
+        public static void CleanUnnecessarySaveFiles()
         {
-            DirectoryInfo dir = new DirectoryInfo(FolderName);
+            if (Directory.Exists(CampaignDownloadFolder)) 
+            { 
+                ClearFolder(CampaignDownloadFolder);
+                Directory.Delete(CampaignDownloadFolder);
+            }
+            if (Directory.Exists(TempPath)) 
+            { 
+                ClearFolder(TempPath);
+                Directory.Delete(TempPath);
+            }
+        }
+
+        public static void ClearFolder(string folderName, string[] ignoredFileNames = null)
+        {
+            DirectoryInfo dir = new DirectoryInfo(folderName);
 
             foreach (FileInfo fi in dir.GetFiles())
             {

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <!-- Ingredients / base chemicals **************************************************************************************** -->
-  <Elastin name="Elastin" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" scale="0.2" impactsoundtag="impact_soft">
+  <Elastin name="Elastin" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" scale="0.2" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -18,7 +18,7 @@
       </StatusEffect>
     </Holdable>
   </Elastin>
-  <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
+  <Opium name="Opium" identifier="opium" category="Material" Tags="smallitem,chem" preferredcontainers="medcontainer" description="A relatively mild opioid obtained from Aquatic Poppy. Most commonly used to manufacture morphine and fentanyl." cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -41,11 +41,11 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="4" />
         <ReduceAffliction identifier="burn" amount="4" />
-        <Affliction identifier="opiateaddiction" amount="0.3" />
-        <Affliction identifier="opiateoverdose" amount="0.3" />
+        <Affliction identifier="opiateaddiction" amount="2" />
+        <Affliction identifier="opiateoverdose" amount="3.5" />
         <Affliction identifier="oxygenlow" amount="3" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
-      </StatusEffect>
+      </StatusEffect>            
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3" />
@@ -61,7 +61,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Opium>
-  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem,medical,syringe" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
+  <Antibiotics name="Broad-spectrum Antibiotics" identifier="antibiotics" category="Material" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="A mild antibiotic that acts against a wide range of disease-causing bacteria, though with side effect of internal damage. Used as an ingredient in many medical compounds." cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -77,7 +77,7 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="0.5"/>
         <Affliction identifier="huskinfectionresistance" amount="1.0"/>
       </StatusEffect>
@@ -86,7 +86,7 @@
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="60.0">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="0.25"/>
         <Affliction identifier="huskinfectionresistance" amount="0.5"/>
       </StatusEffect>
@@ -110,7 +110,7 @@
       </StatusEffect>
     </Projectile>
   </Antibiotics>
-  <Stabilozine name="Stabilozine" identifier="stabilozine" category="Material" tags="smallitem,chem,medical,syringe" cargocontaineridentifier="chemicalcrate" description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage and burns, and slightly more effectively for oxygen deprivation." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Stabilozine name="Stabilozine" identifier="stabilozine" category="Material" tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" cargocontaineridentifier="chemicalcrate" description="Used as an ingredient in the manufacture of various medicines. On its own, can be mildly useful in the treatment of internal damage and burns, and slightly more effectively for oxygen deprivation." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -154,7 +154,7 @@
       </StatusEffect>
     </Projectile>
   </Stabilozine>
-  <Ethanol name="Ethanol" identifier="ethanol" category="Material" cargocontaineridentifier="chemicalcrate" description="Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not advised." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Ethanol name="Ethanol" identifier="ethanol" category="Material" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="Medical alcohol used as an ingredient in the manufacture of various medicines. Drinking while on duty is not advised." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15" />
     <Price locationtype="Military" buyprice="15" />
@@ -167,7 +167,7 @@
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect">      
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true" />
       <StatusEffect type="OnUse" target="Character" delay="10" duration="10">
-        <Affliction identifier="drunk" amount="0.5" />
+        <Affliction identifier="drunk" amount="2.0" />
         <Affliction identifier="psychosisresistance" amount="10" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -176,7 +176,7 @@
       </StatusEffect>
     </Holdable>
   </Ethanol>
-  <Adrenaline name="Adrenaline" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Adrenaline name="Adrenaline" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -200,7 +200,7 @@
       <!-- TODO: some effect for adrenaline -->
     </Projectile>
   </Adrenaline>
-  <SulphuricAcid name="Sulphuric Acid" identifier="sulphuricacid" category="Material" cargocontaineridentifier="chemicalcrate" description="A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <SulphuricAcid name="Sulphuric Acid" identifier="sulphuricacid" category="Material" cargocontaineridentifier="chemicalcrate" preferredcontainers="toxcontainer" description="A strong acid that causes burns when in contact with skin. Used as an ingredient in several poisons." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -220,8 +220,9 @@
       </StatusEffect>
     </MeleeWeapon>
   </SulphuricAcid>
+  
   <!-- meds **************************************************************************************** -->
-  <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3" impactsoundtag="impact_soft">
+  <Bandage name="Bandage" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="Basic bandages, useful in the treatment of bleeding wounds and burns." scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -232,6 +233,9 @@
       <RequiredSkill identifier="medical" level="30" />
       <RequiredItem identifier="organicfiber" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="organicfiber" copycondition="true" mincondition="0.1"/>
+    </Deconstruct>
     <SuitableTreatment identifier="bleeding" suitability="50" />
     <SuitableTreatment identifier="gunshotwound" suitability="50" />
     <SuitableTreatment identifier="burn" suitability="50" />
@@ -260,7 +264,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </Bandage>
-  <Plastiseal name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="A synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_soft">
+  
+  <Plastiseal name="Plastiseal" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="A synthetic skin with hemostatic properties, able to quickly seal most wounds." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="30" />
     <Price locationtype="Military" buyprice="40" />
@@ -272,6 +277,10 @@
       <RequiredItem identifier="antibleeding1" />
       <RequiredItem identifier="elastin" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="antibleeding1" copycondition="true" mincondition="0.1" />
+      <Item identifier="elastin" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="959,771,63,59" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="67,808,45,70" depth="0.6" origin="0.5,0.5" />
     <Body width="43" height="68" density="20" />
@@ -300,7 +309,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </Plastiseal>
-  <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <AntibioticGlue name="Antibiotic Glue" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="An antibiotic glue with hemostatic properties. Seals bleeding wounds almost immediately and treats burns very effectively. Use with care as it may cause mobile clots in the bloodstream." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
@@ -313,6 +323,11 @@
       <RequiredItem identifier="antibiotics" />
       <RequiredItem identifier="elastin" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibiotics" copycondition="true" mincondition="0.1" />
+      <Item identifier="elastin" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="20,765,110,40" depth="0.6" origin="0.5,0.5" />
     <Body radius="15" height="60" density="20" />
@@ -341,7 +356,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </AntibioticGlue>
-  <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Morphine name="Morphine" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
@@ -358,6 +374,10 @@
       <RequiredItem identifier="opium" />
       <RequiredItem identifier="opium" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="opium" copycondition="true" mincondition="0.1" />
+      <Item identifier="opium" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,0,63,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -376,11 +396,11 @@
       </StatusEffect>
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="10">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="burn" amount="2.5" />
-        <ReduceAffliction identifier="damage" amount="2.5" />
+        <ReduceAffliction identifier="burn" amount="2" />
+        <ReduceAffliction identifier="damage" amount="2" />
         <Affliction identifier="oxygenlow" amount="6" />
-        <Affliction identifier="opiateaddiction" amount="0.6" />
-        <Affliction identifier="opiateoverdose" amount="2" />
+        <Affliction identifier="opiateaddiction" amount="3" />
+        <Affliction identifier="opiateoverdose" amount="4.75" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -393,16 +413,17 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
       <StatusEffect tags="medical" type="OnImpact" target="Character" duration="10">
-        <ReduceAffliction identifier="burn" amount="2.5" />
-        <ReduceAffliction identifier="damage" amount="2.5" />
+        <ReduceAffliction identifier="burn" amount="2" />
+        <ReduceAffliction identifier="damage" amount="2" />
         <Affliction identifier="oxygenlow" amount="6" />
-        <Affliction identifier="opiateaddiction" amount="0.6" />
-        <Affliction identifier="opiateoverdose" amount="2" />
+        <Affliction identifier="opiateaddiction" amount="3" />
+        <Affliction identifier="opiateoverdose" amount="4.75" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="3.0" />
       </StatusEffect>
     </Projectile>
   </Morphine>
-  <Fentanyl name="Fentanyl" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Fentanyl name="Fentanyl" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="A powerful opiate for treating pain associated with internal injuries, but will cause shortness of breath and eventual dependency with overuse." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="130" />
@@ -420,6 +441,11 @@
       <RequiredItem identifier="adrenaline" />
       <RequiredItem identifier="ethanol" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="antidama1" copycondition="true" mincondition="0.1" />
+      <Item identifier="adrenaline" copycondition="true" mincondition="0.1" />
+      <Item identifier="ethanol" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="62,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -431,20 +457,21 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
         <ReduceAffliction identifier="damage" amount="15" />
         <ReduceAffliction identifier="burn" amount="15" />
-        <Affliction identifier="oxygenlow" amount="10" />
-        <Affliction identifier="opiateaddiction" amount="0.3" />
-        <Affliction identifier="opiateoverdose" amount="0.3" />
+        <Affliction identifier="oxygenlow" amount="8" />
+        <Affliction identifier="opiateaddiction" amount="3" />
+        <Affliction identifier="opiateoverdose" amount="8" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
-      </StatusEffect>
+      </StatusEffect>     
+      
       <StatusEffect tags="medical" type="OnFailure" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="7.5" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
-        <Affliction identifier="oxygenlow" amount="15" />
-        <Affliction identifier="opiateaddiction" amount="0.3" />
-        <Affliction identifier="opiateoverdose" amount="5" />
+        <ReduceAffliction identifier="damage" amount="5.75" />
+        <ReduceAffliction identifier="burn" amount="5.75" />
+        <Affliction identifier="oxygenlow" amount="12" />
+        <Affliction identifier="opiateaddiction" amount="14" />
+        <Affliction identifier="opiateoverdose" amount="11" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
-      </StatusEffect>
+      </StatusEffect>   
       <!-- Remove the item when fully used -->
       <StatusEffect type="OnBroken" target="This">
         <Remove />
@@ -454,16 +481,17 @@
       <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true" />
       <StatusEffect tags="medical" type="OnImpact" target="Character" duration="5">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
-        <ReduceAffliction identifier="damage" amount="7.5" />
-        <ReduceAffliction identifier="burn" amount="7.5" />
-        <Affliction identifier="oxygenlow" amount="18" />
-        <Affliction identifier="opiateaddiction" amount="0.3" />
-        <Affliction identifier="opiateoverdose" amount="5" />
+        <ReduceAffliction identifier="damage" amount="5.75" />
+        <ReduceAffliction identifier="burn" amount="5.75" />
+        <Affliction identifier="oxygenlow" amount="12" />
+        <Affliction identifier="opiateaddiction" amount="14" />
+        <Affliction identifier="opiateoverdose" amount="11" />
         <ReduceAffliction identifier="opiatewithdrawal" amount="20" />
       </StatusEffect>
     </Projectile>
   </Fentanyl>
-  <Saline name="Saline" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A sodium chloride infusion mildly useful in the treatment of blood loss." scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Saline name="Saline" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" description="A sodium chloride infusion mildly useful in the treatment of blood loss." scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -475,6 +503,10 @@
       <RequiredItem identifier="sodium" />
       <RequiredItem identifier="chlorine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="sodium" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="bloodloss" suitability="30" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,437,133,70" depth="0.6" origin="0.5,0.5" />
@@ -495,7 +527,8 @@
       </StatusEffect>
     </Holdable>
   </Saline>
-  <BloodPack name="Blood Pack" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="A pack of blood substitute for the treatment of blood loss." scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <BloodPack name="Blood Pack" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" description="A pack of blood substitute for the treatment of blood loss." scale="0.3" impactsoundtag="impact_soft">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -508,6 +541,11 @@
       <RequiredItem identifier="antibloodloss1" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="alienblood" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibloodloss1" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="bloodloss" suitability="60" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,365,133,70" depth="0.6" origin="0.5,0.5" />
@@ -528,7 +566,8 @@
       </StatusEffect>
     </Holdable>
   </BloodPack>
-  <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Deusizine name="Deusizine" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="A highly potent stimulant effective in the treatment of internal damage, oxygen deprivation and to a lesser extent, blood loss. Produces mild burns as a side effect." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />
@@ -538,6 +577,11 @@
       <RequiredItem identifier="antidama2" />
       <RequiredItem identifier="liquidoxygenite" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="antibleeding3" copycondition="true" mincondition="0.1" />
+      <Item identifier="antidama2" copycondition="true" mincondition="0.1" />
+      <Item identifier="liquidoxygenite" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="378,515,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -580,7 +624,8 @@
       </StatusEffect>
     </Projectile>
   </Deusizine>
-  <Calyxanide name="Calyxanide" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Calyxanide name="Calyxanide" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An antiparasitic drug used in the treatment of husk parasite infections. Might require higher dosage to cure the infection at later stages." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="375" />
     <Price locationtype="Military" buyprice="350" />
     <Price locationtype="City" buyprice="500" />
@@ -590,8 +635,13 @@
       <RequiredItem identifier="antibiotics" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="huskeggs" copycondition="true" mincondition="0.1" />
+      <Item identifier="antibiotics" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="huskinfection" suitability="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,448,64,64" origin="0.5,0.5" />
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="897,449,63,63" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="372,122,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
     <MeleeWeapon canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" aimpos="5,0" handle1="-5,0" holdangle="220" reload="1.0" msg="ItemMsgPickUpSelect">
@@ -601,13 +651,17 @@
       <StatusEffect type="OnUse" target="This" Condition="-50.0" disabledeltatime="true">
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
-      <StatusEffect type="OnUse" target="Character">
-        <Conditional HuskInfectionState="lt 100.0" />
-        <ReduceAffliction identifier="huskinfection" amount="40" />
+      <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
+        <Conditional huskinfection="lt 100.0" />
+        <ReduceAffliction identifier="huskinfection" amount="4" />
+      </StatusEffect>
+      <StatusEffect tags="medical" type="OnFailure" target="Character" duration="20">
+        <Conditional huskinfection="lt 100.0" />
+        <ReduceAffliction identifier="huskinfection" amount="1" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 100.0" />
+        <Conditional huskinfection="eq 100.0" />
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
@@ -624,12 +678,12 @@
         <Sound file="Content/Items/Medical/Syringe.ogg" range="500" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character">
-        <Conditional HuskInfectionState="lt 100.0" />
+        <Conditional huskinfection="lt 100.0" />
         <ReduceAffliction identifier="huskinfection" amount="40" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">
         <!-- Injecting a still-conscious Husk will only piss it off and kill the "conscious" faster -->
-        <Conditional HuskInfectionState="eq 100.0" />
+        <Conditional huskinfection="eq 100.0" />
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">
@@ -637,8 +691,9 @@
         <Affliction identifier="internaldamage" amount="4" />
       </StatusEffect>
     </Projectile>
+    
   </Calyxanide>
-  <Haloperidol name="Haloperidol" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3" impactsoundtag="impact_metal_light">
+  <Haloperidol name="Haloperidol" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" description="A strong antipsychotic drug." scale="0.3" impactsoundtag="impact_metal_light">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="220" />
     <Price locationtype="Military" buyprice="250" />
@@ -651,6 +706,11 @@
       <RequiredItem identifier="carbon" />
       <RequiredItem identifier="chlorine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="lithium" copycondition="true" mincondition="0.1" />
+      <Item identifier="carbon" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="psychosis" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="64,235,62,115" depth="0.6" origin="0.5,0.5" />
@@ -681,7 +741,8 @@
       </StatusEffect>
     </Projectile>
   </Haloperidol>
-  <Naloxone name="Naloxone" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Naloxone name="Naloxone" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" description="An opioid antagonist for the treatment of opiate based withdrawal and overdose." scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
@@ -692,6 +753,10 @@
       <RequiredItem identifier="antidama1" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="antidama1" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>    
     <SuitableTreatment identifier="opiateaddiction" suitability="100" />
     <SuitableTreatment identifier="opiatewithdrawal" suitability="100" />
     <SuitableTreatment identifier="opiateoverdose" suitability="100" />
@@ -732,7 +797,8 @@
       </StatusEffect>
     </Projectile>
   </Naloxone>
-  <MorbusineAntidote name="Morbusine Antidote" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute morbusine poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <MorbusineAntidote name="Morbusine Antidote" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An antidote for acute morbusine poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
@@ -741,6 +807,10 @@
       <RequiredItem identifier="morbusine" mincondition="0.25" />
       <RequiredItem identifier="stabilozine" mincondition="0.25" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="morbusine" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="morbusinepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
@@ -766,7 +836,8 @@
       </StatusEffect>
     </Projectile>
   </MorbusineAntidote>
-  <CyanideAntidote name="Cyanide Antidote" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute cyanide poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <CyanideAntidote name="Cyanide Antidote" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An antidote for acute cyanide poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="130" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
@@ -775,6 +846,10 @@
       <RequiredItem identifier="cyanide" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="cyanide" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="cyanidepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
@@ -800,7 +875,8 @@
       </StatusEffect>
     </Projectile>
   </CyanideAntidote>
-  <SufforinAntidote name="Sufforin Antidote" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute sufforin poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <SufforinAntidote name="Sufforin Antidote" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An antidote for acute sufforin poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
@@ -809,6 +885,10 @@
       <RequiredItem identifier="sufforin" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="sufforin" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="sufforinpoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
@@ -834,7 +914,8 @@
       </StatusEffect>
     </Projectile>
   </SufforinAntidote>
-  <DeliriumineAntidote name="Deliriumine Antidote" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An antidote for acute deliriumine poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <DeliriumineAntidote name="Deliriumine Antidote" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An antidote for acute deliriumine poisoning." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="450" />
     <Price locationtype="City" buyprice="450" />
@@ -843,6 +924,10 @@
       <RequiredItem identifier="deliriumine" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="deliriumine" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="deliriuminepoisoning" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,703,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="315,515,62,115" depth="0.6" origin="0.5,0.5" />
@@ -872,7 +957,8 @@
       </StatusEffect>
     </Projectile>
   </DeliriumineAntidote>
-  <AntiRad name="AntiRad" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="Slows down cellular degradation caused by radiation." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <AntiRad name="AntiRad" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="Slows down cellular degradation caused by radiation." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
@@ -882,6 +968,10 @@
       <RequiredItem identifier="radiotoxin" />
       <RequiredItem identifier="stabilozine" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="radiotoxin" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <SuitableTreatment identifier="radiationsickness" suitability="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="375,351,62,113" depth="0.6" origin="0.5,0.5" />
@@ -907,7 +997,8 @@
       </StatusEffect>
     </Projectile>
   </AntiRad>
-  <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <LiquidOxygenite name="Liquid Oxygenite" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" impacttolerance="8" description="A mildy toxic solution that slowly releases oxygen into the bloodstream when injected. Avoid dropping." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
     <SuitableTreatment identifier="oxygenlow" suitability="90" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
@@ -916,6 +1007,11 @@
       <RequiredItem identifier="stabilozine" />
       <RequiredItem identifier="oxygeniteshard" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="tonicliquid" copycondition="true" mincondition="0.1" />
+      <Item identifier="stabilozine" copycondition="true" mincondition="0.1" />
+      <Item identifier="oxygeniteshard" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="311,235,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -956,7 +1052,8 @@
       </StatusEffect>
     </Projectile>
   </LiquidOxygenite>
-  <TonicLiquid name="Tonic Liquid" identifier="tonicliquid" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <TonicLiquid name="Tonic Liquid" identifier="tonicliquid" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" description="A medical solution that's mildy effective as a treatment for internal damage, but most commonly used as an ingredient in more complex medical compounds." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <SuitableTreatment identifier="internaldamage" suitability="-10" />
     <SuitableTreatment identifier="damage" suitability="-10" />
     <SuitableTreatment identifier="burn" suitability="-10" />
@@ -969,6 +1066,11 @@
       <RequiredItem identifier="zinc" />
       <RequiredItem identifier="potassium" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="calcium" copycondition="true" mincondition="0.1" />
+      <Item identifier="potassium" copycondition="true" mincondition="0.1" />
+      <Item identifier="zinc" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="704,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="138,759,63,150" depth="0.6" origin="0.5,0.5" />
     <Body radius="60" height="140" density="9" />
@@ -984,7 +1086,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </TonicLiquid>
-  <Methamphetamine name="Methamphetamine" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A potent nervous system stimulant." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Methamphetamine name="Methamphetamine" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="A potent nervous system stimulant." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="50" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
@@ -993,6 +1096,11 @@
       <RequiredItem identifier="chlorine" />
       <RequiredItem identifier="carbon" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="phosphorus" copycondition="true" mincondition="0.1" />
+      <Item identifier="carbon" copycondition="true" mincondition="0.1" />
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="512,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="124,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1029,7 +1137,8 @@
       </StatusEffect>
     </Projectile>
   </Methamphetamine>
-  <AnabolicSteroids name="Anabolic Steroids" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="Temporarily increases muscular strength and physical performance." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <AnabolicSteroids name="Anabolic Steroids" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="Temporarily increases muscular strength and physical performance." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="150" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
@@ -1037,6 +1146,10 @@
       <RequiredItem identifier="tonicliquid" />
       <RequiredItem identifier="antidama2" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="tonicliquid" copycondition="true" mincondition="0.1" />
+      <Item identifier="antidama2" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <!-- TODO: sprite -->
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="187,0,62,115" depth="0.6" origin="0.5,0.5" />
@@ -1065,7 +1178,8 @@
       </StatusEffect>
     </Projectile>
   </AnabolicSteroids>
-  <Hyperzine name="Hyperzine" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="An extremely potent muscle stimulant for those moments when you gotta go fast." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Hyperzine name="Hyperzine" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="An extremely potent muscle stimulant for those moments when you gotta go fast." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="25">
@@ -1073,6 +1187,10 @@
       <RequiredItem identifier="meth" />
       <RequiredItem identifier="steroids" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="meth" copycondition="true" mincondition="0.1" />
+      <Item identifier="steroids" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="249,0,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="15" />
@@ -1107,8 +1225,9 @@
       </StatusEffect>
     </Projectile>
   </Hyperzine>
+  
   <!-- poisons and harmful chemicals **************************************************************************************** -->
-  <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Morbusine name="Morbusine" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1116,6 +1235,10 @@
       <RequiredItem identifier="sulphuricacid" />
       <RequiredItem identifier="deusizine" count="2" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="sulphuricacid" copycondition="true" mincondition="0.1" />
+      <Item identifier="deusizine" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="64,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="311,120,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />      
@@ -1139,7 +1262,8 @@
       </StatusEffect>
     </Projectile>
   </Morbusine>
-  <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <ChloralHydrate name="Chloral Hydrate" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A sedative that can be used to knock someone out for a short period of time." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="30" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -1149,6 +1273,10 @@
       <RequiredItem identifier="chlorine" />
       <RequiredItem identifier="ethanol" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="chlorine" copycondition="true" mincondition="0.1" />
+      <Item identifier="ethanol" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="640,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="126,232,67,124" depth="0.6" origin="0.5,0.5" />
     <Body width="65" height="120" density="20" />
@@ -1174,7 +1302,8 @@
       </StatusEffect>
     </Projectile>
   </ChloralHydrate>
-  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Cyanide name="Cyanide" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A famous neurotoxin. Causes muscle spasms and eventual death." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="200" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1182,6 +1311,10 @@
       <RequiredItem identifier="chloralhydrate" />
       <RequiredItem identifier="sodium" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="chloralhydrate" copycondition="true" mincondition="0.1" />
+      <Item identifier="sodium" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="192,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="63,117,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -1205,7 +1338,8 @@
       </StatusEffect>
     </Projectile>
   </Cyanide>
-  <Radiotoxin name="Radiotoxin" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly radioactive solution." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Radiotoxin name="Radiotoxin" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A highly radioactive solution." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1213,6 +1347,10 @@
       <RequiredItem identifier="thorium" />
       <RequiredItem identifier="uranium" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="thorium" copycondition="true" mincondition="0.1" />
+      <Item identifier="thorium" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="0,115,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />       
@@ -1236,7 +1374,8 @@
       </StatusEffect>
     </Projectile>
   </Radiotoxin>
-  <Sufforin name="Sufforin" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Sufforin name="Sufforin" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A highly potent neurotoxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1244,6 +1383,10 @@
       <RequiredItem identifier="sulphuricacid" />
       <RequiredItem identifier="flashpowder" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="sulphuricacid" copycondition="true" mincondition="0.1" />
+      <Item identifier="flashpowder" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,640,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="188,120,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -1267,13 +1410,17 @@
       </StatusEffect>
     </Projectile>
   </Sufforin>
-  <Deliriumine name="Deliriumine" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="A psychosis-inducing toxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Deliriumine name="Deliriumine" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="A psychosis-inducing toxin." useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="250" />
     <Price locationtype="Military" buyprice="600" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
       <RequiredSkill identifier="medical" level="60" />
       <RequiredItem identifier="dementonite" />
     </Fabricate>
+    <Deconstruct time="20">
+      <Item identifier="dementonite" copycondition="true" mincondition="0.1" />
+    </Deconstruct>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="448,704,64,64" origin="0.5,0.5" />
     <Sprite texture="Medicines.png" sourcerect="378,239,62,115" depth="0.6" origin="0.5,0.5" />
     <Body width="60" height="110" density="20" />
@@ -1333,7 +1480,7 @@
     <Throwable characterusable="true" canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" throwforce="4.0" aimpos="35,-10">
       <StatusEffect tags="medical" type="OnUse" target="Character" duration="10">
         <ReduceAffliction identifier="oxygenlow" amount="2"/>
-        <RequiredItem identifier="medicalsyringe" type="Container"/>
+        <RequiredItem items="medicalsyringe" type="Container"/>
       </StatusEffect>
       <StatusEffect type="OnBroken" target="This">
         <Remove/>

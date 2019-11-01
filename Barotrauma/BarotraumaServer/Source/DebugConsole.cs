@@ -197,7 +197,20 @@ namespace Barotrauma
                                 }
                                 break;
                             default:
-                                if (key.KeyChar != 0)
+                                if (key.Modifiers.HasFlag(ConsoleModifiers.Control))
+                                {
+                                    if (key.Key == ConsoleKey.Z)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^Z");
+                                    }
+                                    else if (key.Key == ConsoleKey.D)
+                                    {
+                                        activeQuestionCallback = null;
+                                        NewMessage("^D");
+                                    }
+                                }
+                                else if (key.KeyChar != 0)
                                 {
                                     input += key.KeyChar;
                                     memoryIndex = -1;
@@ -205,10 +218,10 @@ namespace Barotrauma
                                 ResetAutoComplete();
                                 break;
                         }
-                        
+
                         RewriteInputToCommandLine(input);
                     }
-                    
+
                     //TODO: be more clever about it
                     Thread.Sleep(10); //sleep for 10ms to not pin the CPU super hard
                 }
@@ -249,7 +262,7 @@ namespace Barotrauma
             try
             {
                 Console.WriteLine(""); Console.CursorTop -= inputLines;
-                       
+
                 string ln = input.Length > 0 ? AutoComplete(input, 0) : "";
                 ln += new string(' ', consoleWidth - (ln.Length % consoleWidth));
                 Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -738,19 +751,33 @@ namespace Barotrauma
             });
             AssignOnExecute("togglekarmatestmode|karmatestmode", (string[] args) =>
             {
-                if (GameMain.Server?.KarmaManager == null) return;
+                if (GameMain.Server?.KarmaManager == null) { return; }
                 GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
                 NewMessage(GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.", Color.LightGreen);
+            });
+            AssignOnClientRequestExecute("togglekarmatestmode|karmatestmode", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server?.KarmaManager == null) { return; }
+                GameMain.Server.KarmaManager.TestMode = !GameMain.Server.KarmaManager.TestMode;
+                NewMessage(GameMain.Server.KarmaManager.TestMode ? 
+                    $"Karma test mode enabled by {client.Name}." :
+                    $"Karma test mode disabled by {client.Name}.", 
+                    Color.LightGreen);
+                GameMain.Server.SendDirectChatMessage(
+                    GameMain.Server.KarmaManager.TestMode ? "Karma test mode enabled." : "Karma test mode disabled.",
+                    client);
             });
 
             AssignOnExecute("banendpoint", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"?", (reason) =>
+                ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
                 {
-                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\")", (duration) =>
+                    if (reason == "c" || reason == "C") { return; }
+                    ShowQuestionPrompt("Enter the duration of the ban (leave empty to ban permanently, or use the format \"[days] d [hours] h\") (c to cancel)", (duration) =>
                     {
+                        if (duration == "c" || duration == "C") { return; }
                         TimeSpan? banDuration = null;
                         if (!string.IsNullOrWhiteSpace(duration))
                         {
@@ -829,13 +856,13 @@ namespace Barotrauma
             AssignOnExecute("setclientcharacter", (string[] args) =>
             {
                 if (GameMain.Server == null) return;
-                
+
                 if (args.Length < 2)
                 {
                     ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                     return;
                 }
-                
+
                 var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                 if (client == null)
                 {
@@ -844,6 +871,12 @@ namespace Barotrauma
 
                 var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                 GameMain.Server.SetClientCharacter(client, character);
+                client.SpectateOnly = false;
+            });
+
+            AssignOnExecute("starttraitormissionimmediately", (string[] args) =>
+            {
+                GameMain.Server?.TraitorManager?.SkipStartDelay();
             });
 
             AssignOnExecute("difficulty|leveldifficulty", (string[] args) =>
@@ -916,22 +949,51 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null) return;
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null) return;
-                foreach (Traitor t in traitorManager.TraitorList)
+                if (traitorManager == null || traitorManager.Traitors == null || !traitorManager.Traitors.Any())
                 {
-                    NewMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", Color.Cyan);
+                    NewMessage("There are no traitors at the moment.", Color.Cyan);
+                    return;
                 }
-                NewMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", Color.Cyan);
+                foreach (Traitor t in traitorManager.Traitors)
+                {
+                    if (t.CurrentObjective != null)
+                    {
+                        NewMessage(string.Format("- Traitor {0}'s current goals are:\n{1}", t.Character.Name, t.CurrentObjective.GoalInfos), Color.Cyan);
+                    }
+                    else
+                    {
+                        NewMessage(string.Format("- Traitor {0} has no current objective.", t.Character.Name), Color.Cyan);
+                    }
+                }
+                //NewMessage("The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", Color.Cyan);
             }));
             AssignOnClientRequestExecute("traitorlist", (Client client, Vector2 cursorPos, string[] args) =>
             {
                 TraitorManager traitorManager = GameMain.Server.TraitorManager;
-                if (traitorManager == null) return;
-                foreach (Traitor t in traitorManager.TraitorList)
+                if (traitorManager == null || traitorManager.Traitors == null || !traitorManager.Traitors.Any())
                 {
-                    GameMain.Server.SendConsoleMessage("- Traitor " + t.Character.Name + "'s target is " + t.TargetCharacter.Name + ".", client);
+                    GameMain.Server.SendTraitorMessage(client, "There are no traitors at the moment.", "", TraitorMessageType.Console);
+                    return;
                 }
-                GameMain.Server.SendConsoleMessage("The code words are: " + traitorManager.codeWords + ", response: " + traitorManager.codeResponse + ".", client);
+                foreach (Traitor t in traitorManager.Traitors)
+                {
+                    if (t.CurrentObjective != null)
+                    {
+                        var traitorGoals = TextManager.FormatServerMessage(t.CurrentObjective.GoalInfos);
+                        var traitorGoalsStart = traitorGoals.LastIndexOf('/') + 1;
+                        GameMain.Server.SendTraitorMessage(client, string.Join("/", new[] {
+                            traitorGoals.Substring(0, traitorGoalsStart),
+                            $"[traitorgoals]={traitorGoals.Substring(traitorGoalsStart)}",
+                            $"[traitorname]={t.Character.Name}",
+                            "Traitor [traitorname]'s current goals are:\n[traitorgoals]"
+                            }.Where(s => !string.IsNullOrEmpty(s))), t.Mission?.Identifier, TraitorMessageType.Console);
+                    }
+                    else
+                    {
+                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", "", t.Character.Name), "", TraitorMessageType.Console);
+                    }
+                }
+                //GameMain.Server.SendTraitorMessage(client, "The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", TraitorMessageType.Console);
             });
 
             commands.Add(new Command("setpassword|setserverpassword|password", "setpassword [password]: Changes the password of the server that's being hosted.", (string[] args) =>
@@ -1024,7 +1086,7 @@ namespace Barotrauma
 
             commands.Add(new Command("servername", "servername [name]: Change the name of the server.", (string[] args) =>
             {
-                GameMain.Server.Name = string.Join(" ", args);
+                GameMain.Server.ServerName = string.Join(" ", args);
                 GameMain.NetLobbyScreen.ChangeServerName(string.Join(" ", args));
             }));
 
@@ -1098,14 +1160,7 @@ namespace Barotrauma
             commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
             {
                 int index = -1;
-                if (int.TryParse(string.Join(" ", args), out index))
-                {
-                    GameMain.NetLobbyScreen.MissionTypeIndex = index;
-                }
-                else
-                {
-                    GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
-                }
+                GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
             },
             () =>
@@ -1131,7 +1186,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
@@ -1150,7 +1205,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.Loaded.Select(s => s.Name).ToArray()
+                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
@@ -1166,7 +1221,7 @@ namespace Barotrauma
 
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
-                if (Screen.Selected == GameMain.GameScreen) return;
+                if (Screen.Selected == GameMain.GameScreen) { return; }
                 if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
             }));
 
@@ -1175,7 +1230,7 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.NetLobbyScreen) return;
                 GameMain.Server.EndGame();
             }));
-            
+
             commands.Add(new Command("entitydata", "", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -1499,7 +1554,7 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Character killedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
-                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);          
+                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
             );
 
@@ -1512,7 +1567,17 @@ namespace Barotrauma
                     if (character != null)
                     {
                         GameMain.Server.SetClientCharacter(client, character);
+                        client.SpectateOnly = false;
                     }
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "freecam",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    GameMain.Server.SetClientCharacter(client, null);
+                    client.SpectateOnly = true;
                 }
             );
 
@@ -1762,7 +1827,7 @@ namespace Barotrauma
                         ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                         return;
                     }
-                    
+
                     var client = GameMain.Server.ConnectedClients.Find(c => c.Name == args[0]);
                     if (client == null)
                     {
@@ -1771,6 +1836,7 @@ namespace Barotrauma
 
                     var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
                     GameMain.Server.SetClientCharacter(client, character);
+                    client.SpectateOnly = false;
                 }
             );
 
@@ -1838,7 +1904,7 @@ namespace Barotrauma
                 foreach (Structure wall in Structure.WallList)
                 {
                     GameMain.Server.CreateEntityEvent(wall);
-                }                
+                }
             }));
 #endif
         }

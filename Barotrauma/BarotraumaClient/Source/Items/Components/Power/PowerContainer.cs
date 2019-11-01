@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             if (rechargeSpeedSlider != null)
             {
                 rechargeSpeedSlider.BarScroll = rechargeSpeed / MaxRechargeSpeed;
@@ -92,7 +93,7 @@ namespace Barotrauma.Items.Components
             chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing = false)
+        public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) return;
 
@@ -129,7 +130,7 @@ namespace Barotrauma.Items.Components
         
         public void ClientWrite(IWriteMessage msg, object[] extraData)
         {
-            msg.WriteRangedIntegerDeprecated(0, 10, (int)(rechargeSpeed / MaxRechargeSpeed * 10));
+            msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
@@ -140,7 +141,14 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            RechargeSpeed = msg.ReadRangedInteger(0, 10) / 10.0f * maxRechargeSpeed;
+            float rechargeRate = msg.ReadRangedInteger(0, 10) / 10.0f;
+            RechargeSpeed = rechargeRate * MaxRechargeSpeed;
+#if CLIENT
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.BarScroll = rechargeRate;
+            }
+#endif
             Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
         }
     }

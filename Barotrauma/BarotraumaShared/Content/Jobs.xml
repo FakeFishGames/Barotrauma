@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Jobs>
   <Job identifier="captain"
-       maxnumber="1" minkarma="45" initialcount="1"
+       minnumber="1" maxnumber="1" minkarma="45" initialcount="1"
        uicolor="0.65,0.73,0.84"
        vitalitymodifier="-20">
     <Skills>
@@ -11,16 +11,19 @@
       <Skill identifier="electrical" level="20,30"/>
       <Skill identifier="medical" level="10,30"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
       <Item identifier="captainscap" equip="true"/>
-      <Item identifier="captainsuniform" equip="true"/>
+      <Item identifier="captainsuniform" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
       <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
         <Item identifier="revolverround"/>
         <Item identifier="revolverround"/>
         <Item identifier="revolverround"/>
@@ -29,10 +32,17 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="steer" option="maintainposition" prioritymodifier="0.5"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="steer" option="maintainposition" prioritymodifier="0.5"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="steer"/>
+    </AppropriateOrders>
   </Job>
   
   <Job identifier="engineer"    
@@ -46,7 +56,7 @@
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -57,7 +67,7 @@
         <Item identifier="bluewire"/>
         <Item identifier="orangewire"/>
       </Item>
-      <Item identifier="orangejumpsuit" equip="true"/>
+      <Item identifier="orangejumpsuit" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
@@ -65,15 +75,24 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="fixleaks" prioritymodifier="0.75"/>
-      <Order aitag="operatereactor" option="powerup" prioritymodifier="0.3"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order identifier="fixleaks" prioritymodifier="0.75"/>
+      <Order identifier="operatereactor" option="powerup" prioritymodifier="0.3"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operatereactor"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="chargebatteries"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="mechanic"
@@ -87,7 +106,7 @@
       <Skill identifier="medical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
@@ -98,7 +117,7 @@
         </Item>     
       </Item>
       <Item identifier="crowbar"/>
-      <Item identifier="bluejumpsuit" equip="true"/>
+      <Item identifier="bluejumpsuit" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
@@ -106,14 +125,23 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="fixleaks" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="jobspecific" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.5"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="fixleaks" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="jobspecific" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.5"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="fixleaks"/>
+      <Order identifier="pumpwater"/>
+      <Order identifier="repairsystems"/>
+      <Order identifier="reportbrokendevices"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="securityofficer"
@@ -127,10 +155,10 @@
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
-      <Item identifier="securityuniform" equip="true"/>
+      <Item identifier="securityuniform" equip="true" outfit="true"/>
       <Item identifier="idcard" equip="true"/>
       <Item identifier="stunbaton">
         <Item identifier="batterycell"/>
@@ -145,15 +173,22 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="fightintruders" prioritymodifier="1"/>
-      <Order aitag="extinguishfires" prioritymodifier ="0.75"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="fixleaks" prioritymodifier="0.2"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
-      <Order aitag="operateweapons" option="holdfire" prioritymodifier="0.1"/>
+      <Order identifier="fightintruders" prioritymodifier="1"/>
+      <Order identifier="extinguishfires" prioritymodifier ="0.75"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="fixleaks" prioritymodifier="0.2"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order identifier="operateweapons" option="holdfire" prioritymodifier="0.1"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="operateweapons"/>
+      <Order identifier="fightintruders"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="medicaldoctor"
@@ -167,11 +202,11 @@
       <Skill identifier="electrical" level="10,20"/>
       <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="20,100"/>
+      <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
-      <Item identifier="doctorsuniform" equip="true"/>
+      <Item identifier="doctorsuniform" equip="true" outfit="true"/>
       <Item identifier="healthscanner"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
@@ -180,14 +215,21 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Medic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="rescue" prioritymodifier="1"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="0.25"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="0.25"/>
-      <Order aitag="fixleaks" prioritymodifier="0.2"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.2"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="rescue" prioritymodifier="1"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="0.25"/>
+      <Order identifier="fixleaks" prioritymodifier="0.2"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.2"/>
     </AutonomousObjectives>
+    <AppropriateOrders>
+      <Order identifier="rescue"/>
+      <Order identifier="requestfirstaid"/>
+    </AppropriateOrders>
   </Job>
 
   <Job identifier="assistant"
@@ -200,11 +242,11 @@
       <Skill identifier="medical" level="10,22"/>
       <Skill identifier="helm" level="10,20"/>
       <!--<Skill identifier="resolution" level="20,100"/>-->
-      <Skill identifier="initiative" level="0,60"/>
+      <Skill identifier="initiative" level="20,60"/>
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
-      <Item identifier="assistantclothes" equip="true"/>
+      <Item identifier="assistantclothes" equip="true" outfit="true"/>
       <Item identifier="wrench"/>
       <Item identifier="screwdriver"/>
       <Item identifier="headset" equip="true">
@@ -214,12 +256,15 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Assistant" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
     </PortraitClothing>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
     <AutonomousObjectives>
-      <Order aitag="extinguishfires" prioritymodifier ="1"/>
-      <Order aitag="chargebatteries" option="charge" prioritymodifier="1"/>
-      <Order aitag="pumpwater" option="pumpout" prioritymodifier="1"/>
-      <Order aitag="repairsystems" option="all" prioritymodifier="0.5"/>
-      <Order aitag="fixleaks" prioritymodifier="0.5"/>
+      <Order identifier="extinguishfires" prioritymodifier ="1"/>
+      <Order identifier="pumpwater" option="pumpout" prioritymodifier="1"/>
+      <Order identifier="repairsystems" option="all" prioritymodifier="0.5"/>
+      <Order identifier="fixleaks" prioritymodifier="0.5"/>
     </AutonomousObjectives>
   </Job>
 
@@ -239,4 +284,10 @@
       </Item>
     </Items>
   </Job>
+
+  <NoJob>
+    <PortraitClothing>
+      <sprite name="Portrait Clothing None" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,2"/>
+    </PortraitClothing>
+  </NoJob>
 </Jobs>

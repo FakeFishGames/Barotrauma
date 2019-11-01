@@ -10,9 +10,11 @@ namespace Barotrauma.Networking
     {
         public const int MaxNameLength = 20;
 
-        public string Name;
+        public string Name; public UInt16 NameID;
         public byte ID;
         public UInt64 SteamID;
+
+        public string PreferredJob;
 
         public Character.TeamType TeamID;
 
@@ -39,6 +41,12 @@ namespace Barotrauma.Networking
                     HasSpawned = true;
 #if CLIENT
                     GameMain.GameSession?.CrewManager?.SetPlayerVoiceIconState(this, muted, mutedLocally);
+
+                    if (character == GameMain.Client.Character && GameMain.Client.SpawnAsTraitor)
+                    {
+                        character.IsTraitor = true;
+                        character.TraitorCurrentObjective = GameMain.Client.TraitorFirstObjective;
+                    }
 #endif
                 }
             }

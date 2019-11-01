@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text;
 
 namespace SteamNative
 {
@@ -139,7 +141,30 @@ namespace SteamNative
 		{
 			IntPtr string_pointer;
 			string_pointer = platform.ISteamMatchmaking_GetLobbyData( steamIDLobby.Value, pchKey );
-			return Marshal.PtrToStringAnsi( string_pointer );
+            //steamworks documentation says this returns empty string,
+            //just gonna check for good measure
+            if (string_pointer == IntPtr.Zero) { return string.Empty; }
+
+            //ugliest try-catch of my life, it's here because SOMETHING might still be up with this method! >:(
+            try
+            {
+                //also gonna do some manual marshalling here 'cause Mono's broken or something, idk
+                List<byte> bytes = new List<byte>();
+                IntPtr seekPointer = string_pointer;
+                byte b = Marshal.ReadByte(seekPointer);
+                while (b != 0)
+                {
+                    bytes.Add(b);
+                    seekPointer = (IntPtr)(seekPointer.ToInt64() + sizeof(byte));
+                    b = Marshal.ReadByte(seekPointer);
+                }
+
+                return Encoding.UTF8.GetString(bytes.ToArray());
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Failed to retrieve lobby data for key " + pchKey + ": " + e.Message + "\n" + e.StackTrace, e);
+            }
 		}
 		
 		// bool
@@ -269,12 +294,21 @@ namespace SteamNative
 		
 		// bool
 		public bool SetLobbyData( CSteamID steamIDLobby /*class CSteamID*/, string pchKey /*const char **/, string pchValue /*const char **/ )
-		{
-			return platform.ISteamMatchmaking_SetLobbyData( steamIDLobby.Value, pchKey, pchValue );
-		}
-		
-		// void
-		public void SetLobbyGameServer( CSteamID steamIDLobby /*class CSteamID*/, uint unGameServerIP /*uint32*/, ushort unGameServerPort /*uint16*/, CSteamID steamIDGameServer /*class CSteamID*/ )
+        {
+            byte[] pchKeyBytes = Encoding.UTF8.GetBytes(pchKey + "\0");
+            byte[] pchValueBytes = Encoding.UTF8.GetBytes(pchValue + "\0");
+
+            GCHandle handleKey = GCHandle.Alloc(pchKeyBytes, GCHandleType.Pinned);
+            GCHandle handleValue = GCHandle.Alloc(pchValueBytes, GCHandleType.Pinned);
+
+            bool retVal = platform.ISteamMatchmaking_SetLobbyData(steamIDLobby.Value, handleKey.AddrOfPinnedObject(), handleValue.AddrOfPinnedObject());
+            handleKey.Free(); handleValue.Free();
+
+            return retVal;
+        }
+
+        // void
+        public void SetLobbyGameServer( CSteamID steamIDLobby /*class CSteamID*/, uint unGameServerIP /*uint32*/, ushort unGameServerPort /*uint16*/, CSteamID steamIDGameServer /*class CSteamID*/ )
 		{
 			platform.ISteamMatchmaking_SetLobbyGameServer( steamIDLobby.Value, unGameServerIP, unGameServerPort, steamIDGameServer.Value );
 		}

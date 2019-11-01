@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -8,8 +9,10 @@ namespace Barotrauma.Items.Components
     class RelayComponent : PowerTransfer, IServerSerializable
     {
         private float maxPower;
-        
+
         private bool isOn;
+
+        private float throttlePowerOutput;
 
         private static readonly Dictionary<string, string> connectionPairs = new Dictionary<string, string>
         {
@@ -21,8 +24,9 @@ namespace Barotrauma.Items.Components
             { "signal_in4", "signal_out4" },
             { "signal_in5", "signal_out5" }
         };
+        public float DisplayLoad { get; set; }
 
-        [Editable, Serialize(1000.0f, true)]
+        [Editable, Serialize(1000.0f, true, description: "The maximum amount of power that can pass through the item.")]
         public float MaxPower
         {
             get { return maxPower; }
@@ -31,8 +35,8 @@ namespace Barotrauma.Items.Components
                 maxPower = Math.Max(0.0f, value);
             }
         }
-        
-        [Editable, Serialize(false, true)]
+
+        [Editable, Serialize(false, true, description: "Can the relay currently pass power and signals through it.")]
         public bool IsOn
         {
             get
@@ -49,18 +53,46 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
+
         public RelayComponent(Item item, XElement element)
-            : base (item, element)
+            : base(item, element)
         {
             IsActive = true;
-        }
-        
+            throttlePowerOutput = MaxPower;
+        }        
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
+            RefreshConnections();
 
             item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
+			
+            if (!CanTransfer) { Voltage = 0.0f; return; }
+
+            if (isBroken)
+            {
+                SetAllConnectionsDirty();
+                isBroken = false;
+            }
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+
+            if (powerOut != null)
+            {
+				bool overloaded = false;
+                foreach (Connection recipient in powerOut.Recipients)
+                {
+                    var pt = recipient.Item.GetComponent<PowerTransfer>();
+                    if (pt != null)
+                    {
+						float overload = -pt.CurrPowerConsumption - pt.PowerLoad;
+						throttlePowerOutput += overload * deltaTime * 0.5f;
+						overloaded = overload > 1.0f;
+                    }
+                }
+                throttlePowerOutput = overloaded ?
+					MathHelper.Clamp(throttlePowerOutput, 0.0f, MaxPower): 					
+					Math.Max(throttlePowerOutput - MaxPower * 0.1f * deltaTime, 0.0f);
+            }
 
             if (Math.Min(-currPowerConsumption, PowerLoad) > maxPower && CanBeOverloaded)
             {
@@ -68,9 +100,56 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
+        {
+            if (!IsOn) { return; }
+
+            //we've already received this signal
+            if (lastPowerProbeRecipients.Contains(this)) { return; }
+            lastPowerProbeRecipients.Add(this);
+
+            if (power < 0.0f)
+            {
+                if (!connection.IsOutput || powerIn == null) { return; }
+
+                //power being drawn from the power_out connection
+                DisplayLoad -= Math.Min(power, 0.0f);
+                powerLoad -= Math.Min(power + throttlePowerOutput, 0.0f);
+
+                //pass the load to items connected to the input
+                powerIn.SendPowerProbeSignal(source, Math.Max(power, -MaxPower));
+            }
+            else
+            {
+                if (connection.IsOutput || powerOut == null) { return; }
+                //power being supplied to the power_in connection
+                if (currPowerConsumption - power < -MaxPower)
+                {
+                    power += MaxPower + (currPowerConsumption - power);
+                }
+
+                currPowerConsumption -= power;
+
+                foreach (Connection recipient in powerOut.Recipients)
+                {
+                    if (!recipient.IsPower) { continue; }
+                    var powered = recipient.Item.GetComponent<Powered>();
+                    if (powered == null) { continue; }
+					
+					float load = powered.CurrPowerConsumption;
+					var powerTransfer = powered as PowerTransfer;
+					if (powerTransfer != null) { load = powerTransfer.PowerLoad;  }
+
+                    float powerOut = power * (load / Math.Max(powerLoad + throttlePowerOutput, 0.01f));
+                    powered.ReceivePowerProbeSignal(recipient, source, Math.Min(powerOut, power));
+                }
+            }
+            
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (connection.IsPower || item.Condition <= 0.0f) { return; }
+            if (item.Condition <= 0.0f || connection.IsPower) { return; }
 
             if (connectionPairs.TryGetValue(connection.Name, out string outConnection))
             {

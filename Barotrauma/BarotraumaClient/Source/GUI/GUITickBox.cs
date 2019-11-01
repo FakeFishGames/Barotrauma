@@ -1,11 +1,13 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {
+        private GUILayoutGroup layoutGroup;
         private GUIFrame box;
         private GUITextBlock text;
 
@@ -69,14 +71,19 @@ namespace Barotrauma
             set { text.TextColor = value; }
         }
 
-        public override Rectangle MouseRect
+        /*public override Rectangle MouseRect
         {
             get
             {
                 if (!CanBeFocused) return Rectangle.Empty;
-                return ClampMouseRectToParent ? ClampRect(box.Rect) : box.Rect;
+                Rectangle union = Rectangle.Union(box.Rect, TextBlock.Rect);
+                Vector2 textPos = TextBlock.Rect.Location.ToVector2() + TextBlock.TextPos + TextBlock.TextOffset;
+                Vector2 textSize = TextBlock.Font.MeasureString(TextBlock.Text);
+                union = Rectangle.Union(union, new Rectangle(textPos.ToPoint(), textSize.ToPoint()));
+                union = Rectangle.Union(union, Rect);
+                return ClampMouseRectToParent ? ClampRect(union) : union;
             }
-        }
+        }*/
 
         public override ScalableFont Font
         {
@@ -121,7 +128,11 @@ namespace Barotrauma
 
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
-            box = new GUIFrame(new RectTransform(new Point(rectT.Rect.Height, rectT.Rect.Height), rectT, Anchor.CenterLeft)
+            CanBeFocused = true;
+
+            layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), true);
+
+            box = new GUIFrame(new RectTransform(Vector2.One, layoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight)
             {
                 IsFixedSize = false
             }, string.Empty, Color.DarkGray)
@@ -131,7 +142,11 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
-            text = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.CenterLeft) { AbsoluteOffset = new Point(box.Rect.Width, 0) }, label, font: font, textAlignment: Alignment.CenterLeft);
+            Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
+            text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
             GUI.Style.Apply(text, "GUIButtonHorizontal", this);
             Enabled = true;
 
@@ -148,9 +163,9 @@ namespace Barotrauma
 
         private void ResizeBox()
         {
-            box.RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.Y);
-            text.RectTransform.NonScaledSize = new Point(Rect.Width - box.Rect.Width, text.Rect.Height);
-            text.RectTransform.AbsoluteOffset = new Point(box.Rect.Width, 0);
+            Vector2 textBlockScale = new Vector2(Math.Max(Rect.Width - box.Rect.Width, 0.0f) / Math.Max(Rect.Width, 1.0f), 1.0f);
+            text.RectTransform.RelativeSize = textBlockScale;
+            text.SetTextPos();
         }
         
         protected override void Update(float deltaTime)

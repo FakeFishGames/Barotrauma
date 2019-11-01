@@ -65,35 +65,37 @@ namespace Barotrauma.Items.Components
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
-        private Sprite pingCircle, directionalPingCircle, screenOverlay, screenBackground;
+        private Sprite pingCircle, directionalPingCircle;
+        private Sprite screenOverlay, screenBackground;
+
         private Sprite sonarBlip;
         private Sprite lineSprite;
 
         private bool aiPingCheckPending;
 
         //the float value is a timer used for disconnecting the transducer if no signal is received from it for 1 second
-        private List<ConnectedTransducer> connectedTransducers;
+        private readonly List<ConnectedTransducer> connectedTransducers;
 
         public IEnumerable<SonarTransducer> ConnectedTransducers
         {
             get { return connectedTransducers.Select(t => t.Transducer); }
         }
 
-        [Serialize(DefaultSonarRange, false)]
+        [Serialize(DefaultSonarRange, false, description: "The maximum range of the sonar.")]
         public float Range
         {
             get { return range; }
             set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the sonar display the walls of the submarine it is inside.")]
         public bool DetectSubmarineWalls
         {
             get;
             set;
         }
 
-        [Serialize(false, false), Editable(ToolTip = "Does the sonar have to be connected to external transducers to work.")]
+        [Editable, Serialize(false, false, description: "Does the sonar have to be connected to external transducers to work.")]
         public bool UseTransducers
         {
             get;
@@ -114,9 +116,9 @@ namespace Barotrauma.Items.Components
                 if (value == Mode.Passive)
                 {
                     currentPingIndex = -1;
-                    if (item.CurrentHull != null)
+                    if (item.AiTarget != null)
                     {
-                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                        item.AiTarget.SectorDegrees = 360.0f;
                     }
                 }
 #if CLIENT
@@ -160,7 +162,7 @@ namespace Barotrauma.Items.Components
 
             if (currentMode == Mode.Active)
             {
-                if ((voltage >= minVoltage || powerConsumption <= 0.0f) &&
+                if ((Voltage >= MinVoltage) &&
                     (!UseTransducers || connectedTransducers.Count > 0))
                 {
                     if (currentPingIndex != -1)
@@ -168,15 +170,10 @@ namespace Barotrauma.Items.Components
                         var activePing = activePings[currentPingIndex];
                         if (activePing.State > 1.0f)
                         {
-                            if (item.CurrentHull != null)
-                            {
-                                item.CurrentHull.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.CurrentHull.AiTarget.SoundRange);
-                                item.CurrentHull.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
-                                item.CurrentHull.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                            }
                             if (item.AiTarget != null)
                             {
-                                item.AiTarget.SoundRange = Math.Max(Range * activePing.State / zoom, item.AiTarget.SoundRange);
+                                float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
+                                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
                                 item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
                                 item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                             }
@@ -200,11 +197,10 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.CurrentHull != null)
+                    if (item.AiTarget != null)
                     {
-                        item.CurrentHull.AiTarget.SectorDegrees = 360.0f;
+                        item.AiTarget.SectorDegrees = 360.0f;
                     }
-                    currentPingIndex = -1;
                     aiPingCheckPending = false;
                 }
             }
@@ -238,6 +234,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             sonarBlip?.Remove();
             pingCircle?.Remove();
             directionalPingCircle?.Remove();
@@ -250,6 +247,7 @@ namespace Barotrauma.Items.Components
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) return false;
 
+            // TODO: Don't create new collections here
             Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
             foreach (Character c in Character.CharacterList)

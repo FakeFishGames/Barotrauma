@@ -145,7 +145,7 @@ namespace Barotrauma
                 UnlockAchievement(c, "clowncostume");
             }
 
-            if (Submarine.MainSub != null && c.Submarine == null && c.ConfigPath == Character.HumanConfigFile)
+            if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 float dist = 500 / Physics.DisplayToRealWorldRatio;
                 if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
@@ -218,7 +218,7 @@ namespace Barotrauma
                 causeOfDeath.Killer == Character.Controlled)
             {
                 SteamManager.IncrementStat(
-                    character.SpeciesName.ToLowerInvariant() == "human" ? "humanskilled" : "monsterskilled",
+                    character.IsHuman ? "humanskilled" : "monsterskilled",
                     1);
             }
 
@@ -228,6 +228,14 @@ namespace Barotrauma
             if (character.CurrentHull != null)
             {
                 UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName + "indoors");
+            }
+            if (character.SpeciesName.EndsWith("boss"))
+            {
+                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", ""));
+                if (character.CurrentHull != null)
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", "") + "indoors");
+                }
             }
 
             if (character.HasEquippedItem("clownmask") && 
@@ -259,21 +267,20 @@ namespace Barotrauma
 #if SERVER
             if (GameMain.Server?.TraitorManager != null)
             {
-                foreach (Traitor traitor in GameMain.Server.TraitorManager.TraitorList)
+                if (GameMain.Server.TraitorManager.IsTraitor(character))
                 {
-                    if (traitor.TargetCharacter == character)
-                    {
-                        //killed the target as a traitor
-                        UnlockAchievement(traitor.Character, "traitorwin");
-                    }
-                    else if (traitor.Character == character)
-                    {
-                        //someone killed a traitor
-                        UnlockAchievement(causeOfDeath.Killer, "killtraitor");
-                    }
+                    UnlockAchievement(causeOfDeath.Killer, "killtraitor");
                 }
             }
 #endif
+        }
+
+        public static void OnTraitorWin(Character character)
+        {
+#if CLIENT
+            if (GameMain.Client != null || GameMain.GameSession == null) return;
+#endif
+            UnlockAchievement(character, "traitorwin");
         }
 
         public static void OnRoundEnded(GameSession gameSession)
@@ -303,13 +310,11 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            if (GameMain.Client != null) { return; }
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             if (gameSession.Mission != null)
             {
-                if (gameSession.Mission is CombatMission combatMission)
+                if (gameSession.Mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
                     UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 

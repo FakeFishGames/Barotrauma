@@ -62,7 +62,7 @@
   </Item>
   <Item name="Button" identifier="button" ID="390" rect="127,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPressSelect">
-      <requireditem identifiers="idcard" type="Picked" optional="false" msg="UNAUTHORIZED ACCESS" />
+      <requireditem identifiers="idcard" type="Picked" optional="false" msg="itemmsgunauthorizedaccess" />
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
@@ -77,7 +77,7 @@
   </Item>
   <Item name="Button" identifier="button" ID="348" rect="-1,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPressSelect">
-      <requireditem identifiers="idcard" type="Picked" optional="false" msg="UNAUTHORIZED ACCESS" />
+      <requireditem identifiers="idcard" type="Picked" optional="false" msg="itemmsgunauthorizedaccess" />
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />
@@ -92,7 +92,7 @@
   </Item>
   <Item name="Button" identifier="button" ID="286" rect="-145,15,24,27" hiddeningame="False" spritecolor="255,255,255,255" inventoryiconcolor="255,255,255,255" containercolor="255,255,255,255" condition="100" tags="smallitem" displaysidebysidewhenlinked="False" spritedepth="0.8" scale="0.5">
     <Controller pickingtime="0" canbepicked="True" allowingameediting="True" msg="ItemMsgPressSelect">
-      <requireditem identifiers="idcard" type="Picked" optional="false" msg="UNAUTHORIZED ACCESS" />
+      <requireditem identifiers="idcard" type="Picked" optional="false" msg="itemmsgunauthorizedaccess" />
     </Controller>
     <ConnectionPanel locked="False" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRewireScrewdriver">
       <requireditem identifiers="screwdriver" type="Equipped" optional="false" />

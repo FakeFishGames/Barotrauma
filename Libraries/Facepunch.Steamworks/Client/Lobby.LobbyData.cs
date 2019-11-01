@@ -60,7 +60,12 @@ namespace Facepunch.Steamworks
                 if ( data.ContainsKey( k ) )
                 {
                     if ( data[k] == v ) { return true; }
-                    if ( client.native.matchmaking.SetLobbyData( lobby, k, v ) )
+                    bool setKey = true;
+                    if (lobby == client.Lobby.CurrentLobby && client.Lobby.Owner == client.SteamId)
+                    {
+                        setKey = client.native.matchmaking.SetLobbyData(lobby, k, v);
+                    }
+                    if ( setKey )
                     {
                         data[k] = v;
                         return true;
@@ -68,7 +73,12 @@ namespace Facepunch.Steamworks
                 }
                 else
                 {
-                    if ( client.native.matchmaking.SetLobbyData( lobby, k, v ) )
+                    bool setKey = true;
+                    if (lobby == client.Lobby.CurrentLobby && client.Lobby.Owner == client.SteamId)
+                    {
+                        setKey = client.native.matchmaking.SetLobbyData(lobby, k, v);
+                    }
+                    if ( setKey )
                     {
                         data.Add( k, v );
                         return true;

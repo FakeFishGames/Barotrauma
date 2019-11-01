@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     public class Md5Hash
     {
+        private static Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         public string Hash { get; private set; }
 
         public string ShortHash { get; private set; }
@@ -34,14 +36,13 @@ namespace Barotrauma
 
         public Md5Hash(XDocument doc)
         {
-            if (doc == null) return;
-
-            string docString = Regex.Replace(doc.ToString(), @"\s+", "");
-
+            if (doc == null) { return; }
+            
+            string docString = removeWhitespaceRegex.Replace(doc.ToString(), "");
+            
             byte[] inputBytes = Encoding.ASCII.GetBytes(docString);
-
-            Hash = CalculateHash(inputBytes);
-
+            
+            Hash = CalculateHash(inputBytes);            
             ShortHash = GetShortHash(Hash);
         }
 
@@ -84,6 +85,7 @@ namespace Barotrauma
 
         public static string GetShortHash(string fullHash)
         {            
+            if (string.IsNullOrEmpty(fullHash)) { return ""; }
             return fullHash.Length < 7 ? fullHash : fullHash.Substring(0, 7);
         }
     }

@@ -9,6 +9,8 @@ namespace Barotrauma.Networking
     struct TempClient
     {
         public string Name;
+        public string PreferredJob;
+        public UInt16 NameID;
         public UInt64 SteamID;
         public byte ID;
         public UInt16 CharacterID;

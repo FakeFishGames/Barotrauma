@@ -140,6 +140,15 @@ namespace Barotrauma
             return fileName;
         }
 
+        private static System.Text.RegularExpressions.Regex removeBBCodeRegex = 
+            new System.Text.RegularExpressions.Regex(@"\[\/?(?:b|i|u|url|quote|code|img|color|size)*?.*?\]");
+
+        public static string RemoveBBCodeTags(string str)
+        {
+            if (string.IsNullOrEmpty(str)) { return str; }
+            return removeBBCodeRegex.Replace(str, "");
+        }
+
         public static string LimitString(string str, int maxCharacters)
         {
             if (str == null || maxCharacters < 0) return null;
@@ -260,6 +269,7 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
+            //TODO: localize time format
             int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
             {
@@ -417,6 +427,15 @@ namespace Barotrauma
             foreach (byte b in ba)
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
+        }
+
+        public static string ConvertAbsoluteToRelativePath(string path)
+        {
+            string[] splitted = path.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
+            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
+            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
+            return string.Join("/", filtered);
         }
     }
 }

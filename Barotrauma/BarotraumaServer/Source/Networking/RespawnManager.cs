@@ -27,8 +27,8 @@ namespace Barotrauma.Networking
                     .ToList();
             }
 
-            int currPlayerCount = GameMain.Server.ConnectedClients.Count(c => 
-                c.InGame && 
+            int currPlayerCount = GameMain.Server.ConnectedClients.Count(c =>
+                c.InGame &&
                 (!c.SpectateOnly || (!GameMain.Server.ServerSettings.AllowSpectating && GameMain.Server.OwnerConnection != c.Connection)));
 
             var existingBots = Character.CharacterList
@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
                 CharacterInfo botToRespawn = existingBots.Find(b => b.IsDead)?.Info;
                 if (botToRespawn == null)
                 {
-                    botToRespawn = new CharacterInfo(Character.HumanConfigFile);
+                    botToRespawn = new CharacterInfo(Character.HumanSpeciesName);
                 }
                 else
                 {
@@ -68,7 +68,7 @@ namespace Barotrauma.Networking
             {
                 RespawnCountdownStarted = respawnPending;
                 RespawnTime = DateTime.Now + new TimeSpan(0,0,0,0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
-                GameMain.Server.CreateEntityEvent(this);                
+                GameMain.Server.CreateEntityEvent(this);
             }
 
             if (!RespawnCountdownStarted) { return; }
@@ -180,7 +180,7 @@ namespace Barotrauma.Networking
 
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
-            
+
             if (!ReturnCountdownStarted)
             {
                 //if there are no living chracters inside, transporting can be stopped immediately
@@ -225,17 +225,17 @@ namespace Barotrauma.Networking
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
                 c.TeamID = Character.TeamType.Team1;
-                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanConfigFile, c.Name);
+                if (c.CharacterInfo == null) c.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, c.Name);
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
 
             var botsToSpawn = GetBotsToRespawn();
             characterInfos.AddRange(botsToSpawn);
-            
+
             GameMain.Server.AssignJobs(clients);
             foreach (Client c in clients)
             {
-                c.CharacterInfo.Job = new Job(c.AssignedJob);
+                c.CharacterInfo.Job = new Job(c.AssignedJob.First, c.AssignedJob.Second);
             }
 
             //the spawnpoints where the characters will spawn
@@ -257,7 +257,7 @@ namespace Barotrauma.Networking
 
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !bot, bot);
                 character.TeamID = Character.TeamType.Team1;
-                
+
                 if (bot)
                 {
                     GameServer.Log(string.Format("Respawning bot {0} as {1}", character.Info.Name, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
@@ -265,11 +265,11 @@ namespace Barotrauma.Networking
                 else
                 {
                     //tell the respawning client they're no longer a traitor
-                    if (GameMain.Server.TraitorManager != null && clients[i].Character != null)
+                    if (GameMain.Server.TraitorManager?.Traitors != null && clients[i].Character != null)
                     {
-                        if (GameMain.Server.TraitorManager.TraitorList.Any(t => t.Character == clients[i].Character))
+                        if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == clients[i].Character))
                         {
-                            GameMain.Server.SendDirectChatMessage(TextManager.Get("traitorrespawnmessage"), clients[i], ChatMessageType.MessageBox);
+                            GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("TraitorRespawnMessage"), clients[i], ChatMessageType.ServerMessageBox);
                         }
                     }
 
@@ -290,7 +290,7 @@ namespace Barotrauma.Networking
 
                         var oxyTank = new Item(oxyPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(oxyTank, false);
-                        divingSuit.Combine(oxyTank);
+                        divingSuit.Combine(oxyTank, user: null);
                         respawnItems.Add(oxyTank);
                     }
 
@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
                         var battery = new Item(batteryPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(battery, false);
 
-                        scooter.Combine(battery);
+                        scooter.Combine(battery, user: null);
                         respawnItems.Add(scooter);
                         respawnItems.Add(battery);
                     }
@@ -327,7 +327,7 @@ namespace Barotrauma.Networking
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.WriteRangedIntegerDeprecated(0, Enum.GetNames(typeof(State)).Length, (int)CurrentState);
+            msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
 
             switch (CurrentState)
             {

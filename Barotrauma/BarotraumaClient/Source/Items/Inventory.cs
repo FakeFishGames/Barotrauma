@@ -155,8 +155,8 @@ namespace Barotrauma
         public class SlotReference
         {
             public readonly Inventory ParentInventory;
-            public readonly InventorySlot Slot;
             public readonly int SlotIndex;
+            public InventorySlot Slot;
 
             public Inventory Inventory;
 
@@ -209,7 +209,14 @@ namespace Barotrauma
 
         public static SlotReference SelectedSlot
         {
-            get { return selectedSlot; }
+            get
+            {
+                if (selectedSlot?.ParentInventory?.Owner == null || selectedSlot.ParentInventory.Owner.Removed)
+                {
+                    return null;
+                }
+                return selectedSlot;
+            }
         }
 
         public virtual void CreateSlots()
@@ -430,6 +437,8 @@ namespace Barotrauma
 
             if (canMove)
             {
+                subInventory.HideTimer = 1.0f;
+                subInventory.OpenState = 1.0f;
                 if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.RightButtonClicked())
                 {
                     container.Inventory.savedPosition = container.Inventory.originalPos;
@@ -741,17 +750,37 @@ namespace Barotrauma
                 {
                     Inventory selectedInventory = selectedSlot.ParentInventory;
                     int slotIndex = selectedSlot.SlotIndex;
-                    if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+
+                    //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
+                    if (selectedInventory.Items[slotIndex] == null &&
+                        selectedInventory == Character.Controlled.Inventory &&
+                        !draggingItem.AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                        selectedInventory.TryPutItem(draggingItem, Character.Controlled, draggingItem.AllowedSlots))
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                        if (selectedInventory.slots != null)
+                        {
+                            for (int i = 0; i < selectedInventory.slots.Length; i++)
+                            {
+                                if (selectedInventory.Items[i] == draggingItem)
+                                {
+                                    selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                                }
+                            }
+                            selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        }
+                        GUI.PlayUISound(GUISoundType.PickItem);
+                    }
+                    else if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
+                    {
+                        if (selectedInventory.slots != null) { selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
                         GUI.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
-                        if (selectedInventory.slots != null) selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                        if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f); }
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
-                    selectedInventory.HideTimer = 1.0f;
+                    selectedInventory.HideTimer = 2.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)
                     {
                         for (int i = 0; i < parentItem.ParentInventory.capacity; i++)
@@ -960,11 +989,11 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
-                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * item.Condition / item.MaxCondition), 8),
+                            new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * (item.Condition / item.MaxCondition)), 8),
                             Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 
-                    if (itemContainer != null)
+                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
                     {
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)
@@ -1080,9 +1109,9 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            receivedItemIDs = new ushort[capacity];
-
-            for (int i = 0; i < capacity; i++)
+            byte itemCount = msg.ReadByte();
+            receivedItemIDs = new ushort[itemCount];
+            for (int i = 0; i < itemCount; i++)
             {
                 receivedItemIDs[i] = msg.ReadUInt16();
             }
@@ -1127,7 +1156,7 @@ namespace Barotrauma
 
         private void ApplyReceivedState()
         {
-            if (receivedItemIDs == null) return;
+            if (receivedItemIDs == null || (Owner != null && Owner.Removed)) { return; }
 
             for (int i = 0; i < capacity; i++)
             {
@@ -1142,7 +1171,7 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] > 0)
                 {
-                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) continue;
+                    if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) { continue; }
 
                     TryPutItem(item, i, true, true, null, false);
                     for (int j = 0; j < capacity; j++)

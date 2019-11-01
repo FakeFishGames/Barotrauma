@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
             Whitelist.ServerAdminWrite(outMsg, c);
         }
 
-        public void ServerWrite(IWriteMessage outMsg,Client c)
+        public void ServerWrite(IWriteMessage outMsg, Client c)
         {
             outMsg.Write(ServerName);
             outMsg.Write(ServerMessageText);
@@ -50,7 +50,7 @@ namespace Barotrauma.Networking
             outMsg.Write(HasPassword);
             outMsg.Write(isPublic);
             outMsg.WritePadBits();
-            outMsg.WriteRangedIntegerDeprecated(1, 60, TickRate);
+            outMsg.WriteRangedInteger(TickRate, 1, 60);
 
             WriteExtraCargo(outMsg);
 
@@ -69,8 +69,8 @@ namespace Barotrauma.Networking
                 outMsg.WritePadBits();
             }
         }
-        
-        public void ServerRead(IReadMessage incMsg,Client c)
+
+        public void ServerRead(IReadMessage incMsg, Client c)
         {
             if (!c.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
                 if (ServerMessageText != serverMessageText) changed = true;
                 ServerMessageText = serverMessageText;
             }
-            
+                        
             if (flags.HasFlag(NetFlags.Properties))
             {
                 changed |= ReadExtraCargo(incMsg);
@@ -128,10 +128,9 @@ namespace Barotrauma.Networking
 
             if (flags.HasFlag(NetFlags.Misc))
             {
-                int missionType = GameMain.NetLobbyScreen.MissionTypeIndex + incMsg.ReadByte() - 1;
-                while (missionType < 0) missionType += Enum.GetValues(typeof(MissionType)).Length;
-                while (missionType >= Enum.GetValues(typeof(MissionType)).Length) missionType -= Enum.GetValues(typeof(MissionType)).Length;
-                GameMain.NetLobbyScreen.MissionTypeIndex = missionType;
+                int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
+                int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
+                GameMain.NetLobbyScreen.MissionType = (Barotrauma.MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
                 
                 int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
                 if (traitorSetting < 0) traitorSetting = 2;
@@ -169,7 +168,15 @@ namespace Barotrauma.Networking
                 changed |= true;
             }
 
-            if (changed) GameMain.NetLobbyScreen.LastUpdateID++;
+            if (changed)
+            {
+                if (KarmaPreset == "custom")
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
+                    GameMain.NetworkMember?.KarmaManager?.Save();
+                }
+                GameMain.NetLobbyScreen.LastUpdateID++;
+            }
         }
 
         public void SaveSettings()
@@ -186,18 +193,10 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
-
-            doc.Root.SetAttributeValue("SubSelection", SubSelectionMode.ToString());
-            doc.Root.SetAttributeValue("ModeSelection", ModeSelectionMode.ToString());
+            
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
-            doc.Root.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.ToString());
-
-            /*doc.Root.SetAttributeValue("BotCount", BotCount);
-            doc.Root.SetAttributeValue("MaxBotCount", MaxBotCount);*/
-            doc.Root.SetAttributeValue("BotSpawnMode", BotSpawnMode.ToString());
-
+            
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
-
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
             
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
@@ -228,7 +227,7 @@ namespace Barotrauma.Networking
                 doc = XMLExtensions.TryLoadXml(SettingsFile);
             }
 
-            if (doc == null || doc.Root == null)
+            if (doc == null)
             {
                 doc = new XDocument(new XElement("serversettings"));
             }
@@ -242,18 +241,30 @@ namespace Barotrauma.Networking
 
             selectedLevelDifficulty = doc.Root.GetAttributeFloat("LevelDifficulty", 20.0f);
             GameMain.NetLobbyScreen.SetLevelDifficulty(selectedLevelDifficulty);
-
-            var traitorsEnabled = TraitorsEnabled;
-            Enum.TryParse(doc.Root.GetAttributeString("TraitorsEnabled", "No"), out traitorsEnabled);
-            TraitorsEnabled = traitorsEnabled;
+            
             GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
 
-            var botSpawnMode = BotSpawnMode.Normal;
-            Enum.TryParse(doc.Root.GetAttributeString("BotSpawnMode", "Normal"), out botSpawnMode);
-            BotSpawnMode = botSpawnMode;
+            string[] defaultAllowedClientNameChars = 
+                new string[] {
+                    "32-33",
+                    "38-46",
+                    "48-57",
+                    "65-90",
+                    "91",
+                    "93",
+                    "95-122",
+                    "192-255",
+                    "384-591",
+                    "1024-1279",
+                    "19968-40959","13312-19903","131072-15043983","15043985-173791","173824-178207","178208-183983","63744-64255","194560-195103" //CJK
+                };
 
-            //"65-90", "97-122", "48-59" = upper and lower case english alphabet and numbers
-            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", new string[] { "65-90", "97-122", "48-59" });
+            string[] allowedClientNameCharsStr = doc.Root.GetAttributeStringArray("AllowedClientNameChars", defaultAllowedClientNameChars);
+            if (doc.Root.GetAttributeString("AllowedClientNameChars", "") == "65-90,97-122,48-59")
+            {
+                allowedClientNameCharsStr = defaultAllowedClientNameChars;
+            }
+
             foreach (string allowedClientNameCharRange in allowedClientNameCharsStr)
             {
                 string[] splitRange = allowedClientNameCharRange.Split('-');
@@ -279,7 +290,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (min > -1 && max > -1) AllowedClientNameChars.Add(new Pair<int, int>(min, max));
+                if (min > -1 && max > -1) { AllowedClientNameChars.Add(new Pair<int, int>(min, max)); }
             }
 
             AllowedRandomMissionTypes = new List<MissionType>();
@@ -298,6 +309,9 @@ namespace Barotrauma.Networking
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
+            //handle Random as the mission type, which is no longer a valid setting
+            //MissionType.All offers equivalent functionality
+            if (MissionType == "Random") { MissionType = "All"; }
             GameMain.NetLobbyScreen.MissionTypeName = MissionType;
 
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
@@ -329,6 +343,7 @@ namespace Barotrauma.Networking
             }
 
             XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
+            if (doc == null) { return; }
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");

@@ -34,11 +34,17 @@ namespace Barotrauma.Networking
         public const float HighPrioCharacterPositionUpdateInterval = 0.0f;
         public const float LowPrioCharacterPositionUpdateInterval = 1.0f;
 
+        //this should be higher than LowPrioCharacterPositionUpdateInterval,
+        //otherwise the clients may freeze characters even though the server hasn't actually stopped sending position updates
+        public const float FreezeCharacterIfPositionDataMissingDelay = 2.0f;
+        public const float DisableCharacterIfPositionDataMissingDelay = 3.5f;
+
         public const float DeleteDisconnectedTime = 20.0f;
 
         public const float ItemConditionUpdateInterval = 0.15f;
         public const float LevelObjectUpdateInterval = 0.5f;
         public const float HullUpdateInterval = 0.5f;
+        public const float SparseHullUpdateInterval = 5.0f;
         public const float HullUpdateDistance = 20000.0f;
 
         public const int MaxEventPacketsPerUpdate = 4;

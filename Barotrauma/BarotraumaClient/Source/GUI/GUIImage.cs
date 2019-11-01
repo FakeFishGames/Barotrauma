@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -57,6 +58,10 @@ namespace Barotrauma
             }
         }
 
+        public BlendState BlendState;
+
+        public ComponentState? OverrideState = null;
+
         public GUIImage(RectTransform rectT, string style, bool scaleToFit = false)
             : this(rectT, null, null, scaleToFit, style)
         {
@@ -82,9 +87,7 @@ namespace Barotrauma
             }
             if (style == null)
             {
-                color = Color.White;
-                hoverColor = Color.White;
-                selectedColor = Color.White;
+                color = hoverColor = selectedColor = pressedColor = Color.White;                
             }
             if (!scaleToFit)
             {
@@ -99,7 +102,17 @@ namespace Barotrauma
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
+
+            if (Parent != null) { state = Parent.State; }
+            if (OverrideState != null) { state = OverrideState.Value; }
             Color currColor = GetCurrentColor(state);
+
+            if (BlendState != null)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(blendState: BlendState, samplerState: GUI.SamplerState);
+            }
+
             if (style != null)
             {
                 foreach (UISprite uiSprite in style.Sprites[state])
@@ -120,6 +133,12 @@ namespace Barotrauma
             {
                 spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects, 0.0f);
+            }
+
+            if (BlendState != null)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
 

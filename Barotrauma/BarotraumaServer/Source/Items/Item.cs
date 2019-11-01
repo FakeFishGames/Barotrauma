@@ -25,7 +25,7 @@ namespace Barotrauma
                 {
                     errorMsg = "Failed to write a network event for the item \"" + Name + "\" - event type not set.";
                 }
-                msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:InvalidData" + Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -34,7 +34,7 @@ namespace Barotrauma
             int initialWritePos = msg.LengthBits;
 
             NetEntityEvent.Type eventType = (NetEntityEvent.Type)extraData[0];
-            msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)eventType);
+            msg.WriteRangedInteger((int)eventType, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
             switch (eventType)
             {
                 case NetEntityEvent.Type.ComponentState:
@@ -54,7 +54,7 @@ namespace Barotrauma
                         errorMsg = "Failed to write a component state event for the item \"" + Name + "\" - component \"" + components[componentIndex] + "\" is not server serializable.";
                         break;
                     }
-                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, componentIndex);
+                    msg.WriteRangedInteger(componentIndex, 0, components.Count - 1);
                     (components[componentIndex] as IServerSerializable).ServerWrite(msg, c, extraData);
                     break;
                 case NetEntityEvent.Type.InventoryState:
@@ -74,7 +74,7 @@ namespace Barotrauma
                         errorMsg = "Failed to write an inventory state event for the item \"" + Name + "\" - component \"" + components[containerIndex] + "\" is not server serializable.";
                         break;
                     }
-                    msg.WriteRangedIntegerDeprecated(0, components.Count - 1, containerIndex);
+                    msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
                     (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
                 case NetEntityEvent.Type.Status:
@@ -91,7 +91,7 @@ namespace Barotrauma
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                         msg.Write((byte)components.IndexOf(targetComponent));
-                        msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
+                        msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
                         msg.Write(targetID);
                         msg.Write(targetLimbIndex);
                     }
@@ -106,7 +106,7 @@ namespace Barotrauma
                         Character targetCharacter = FindEntityByID(targetID) as Character;
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
-                        msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(ActionType)).Length - 1, (int)actionType);
+                        msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
                         msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
                         msg.Write(targetID);
                         msg.Write(targetLimbIndex);
@@ -132,7 +132,7 @@ namespace Barotrauma
                 //something went wrong - rewind the write position and write invalid event type to prevent creating an unreadable event
                 msg.BitPosition = initialWritePos;
                 msg.LengthBits = initialWritePos;
-                msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1, (int)NetEntityEvent.Type.Invalid);
+                msg.WriteRangedInteger((int)NetEntityEvent.Type.Invalid, 0, Enum.GetValues(typeof(NetEntityEvent.Type)).Length - 1);
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
@@ -192,7 +192,7 @@ namespace Barotrauma
                     {
                         return;
                     }
-                    Combine(combineTarget);
+                    Combine(combineTarget, c.Character);
                     break;
             }
         }
@@ -345,7 +345,7 @@ namespace Barotrauma
 
             if (!ItemList.Contains(this))
             {
-                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.";
+                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace;
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;

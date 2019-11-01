@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 using System;
+using System.Xml.Linq;
+using System.IO;
+using RestSharp;
+using System.Net;
 
 namespace Barotrauma
 {
@@ -67,6 +71,21 @@ namespace Barotrauma
         }
 
         // TODO: refactor?
+
+        public GUIComponent FindChild(Func<GUIComponent, bool> predicate, bool recursive = false)
+        {
+            var matchingChild = Children.FirstOrDefault(predicate);
+            if (recursive && matchingChild == null)
+            {
+                foreach (GUIComponent child in Children)
+                {
+                    matchingChild = child.FindChild(predicate, recursive);
+                    if (matchingChild != null) return matchingChild;
+                }
+            }
+
+            return matchingChild;
+        }
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
             var matchingChild = Children.FirstOrDefault(c => c.userData == userData);
@@ -87,9 +106,19 @@ namespace Barotrauma
             return Children.Where(c => c.userData == userData);
         }
 
+        public IEnumerable<GUIComponent> FindChildren(Func<GUIComponent, bool> predicate)
+        {
+            return Children.Where(c => predicate(c));
+        }
+
         public virtual void ClearChildren()
         {
             RectTransform.ClearChildren();
+        }
+
+        public void SetAsFirstChild()
+        {
+            RectTransform.SetAsFirstChild();
         }
 
         public void SetAsLastChild()
@@ -300,7 +329,7 @@ namespace Barotrauma
 
             Font = GUI.Font;
 
-            CanBeFocused = true;
+            CanBeFocused = true; //TODO: change default to false?
 
             if (style != null)
                 GUI.Style.Apply(this, style);
@@ -580,6 +609,342 @@ namespace Barotrauma
             OutlineColor = style.OutlineColor;
 
             this.style = style;
+        }
+
+        public static GUIComponent FromXML(XElement element, RectTransform parent)
+        {
+            GUIComponent component = null;
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "conditional" &&
+                    !CheckConditional(subElement))
+                {
+                    return null;
+                }
+            }
+
+            switch (element.Name.ToString().ToLowerInvariant())
+            {
+                case "text":
+                case "guitextblock":
+                    component = LoadGUITextBlock(element, parent);
+                    break;
+                case "link":
+                    component = LoadLink(element, parent);
+                    break;
+                case "frame":
+                case "guiframe":
+                case "spacing":
+                    component = LoadGUIFrame(element, parent);
+                    break;
+                case "button":
+                case "guibutton":
+                    component = LoadGUIButton(element, parent);
+                    break;
+                case "listbox":
+                case "guilistbox":
+                    component = LoadGUIListBox(element, parent);
+                    break;
+                case "guilayoutgroup":
+                case "layoutgroup":
+                    component = LoadGUILayoutGroup(element, parent);
+                    break;
+                case "image":
+                case "guiimage":
+                    component = LoadGUIImage(element, parent);
+                    break;
+                case "accordion":
+                    return LoadAccordion(element, parent);
+                case "gridtext":
+                    LoadGridText(element, parent);
+                    return null;
+                default:
+                    throw new NotImplementedException("Loading GUI component \""+element.Name+"\" from XML is not implemented.");
+            }
+
+            if (component != null)
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
+                    FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
+                }
+
+                if (element.GetAttributeBool("resizetofitchildren", false))
+                {
+                    Vector2 relativeResizeScale = element.GetAttributeVector2("relativeresizescale", Vector2.One);
+                    if (component is GUILayoutGroup layoutGroup)
+                    {
+                        layoutGroup.RectTransform.NonScaledSize =
+                            layoutGroup.IsHorizontal ?
+                            new Point(layoutGroup.Children.Sum(c => c.Rect.Width), layoutGroup.Rect.Height) :
+                            component.RectTransform.MinSize = new Point(layoutGroup.Rect.Width, layoutGroup.Children.Sum(c => c.Rect.Height));
+                        if (layoutGroup.CountChildren > 0)
+                        {
+                            layoutGroup.RectTransform.NonScaledSize +=
+                                layoutGroup.IsHorizontal ?
+                                new Point((int)((layoutGroup.CountChildren - 1) * (layoutGroup.AbsoluteSpacing + layoutGroup.Rect.Width * layoutGroup.RelativeSpacing)), 0) :
+                                new Point(0, (int)((layoutGroup.CountChildren - 1) * (layoutGroup.AbsoluteSpacing + layoutGroup.Rect.Height * layoutGroup.RelativeSpacing)));
+                        }
+                    }
+                    else if (component is GUIListBox listBox)
+                    {
+                        listBox.RectTransform.NonScaledSize =
+                            listBox.ScrollBar.IsHorizontal ?
+                            new Point(listBox.Children.Sum(c => c.Rect.Width + listBox.Spacing), listBox.Rect.Height) :
+                            component.RectTransform.MinSize = new Point(listBox.Rect.Width, listBox.Children.Sum(c => c.Rect.Height + listBox.Spacing));
+                    }
+                    else
+                    {
+                        component.RectTransform.NonScaledSize =
+                            new Point(
+                                component.Children.Max(c => c.Rect.Right) - component.Children.Min(c => c.Rect.X),
+                                component.Children.Max(c => c.Rect.Bottom) - component.Children.Min(c => c.Rect.Y));
+                    }
+                    component.RectTransform.NonScaledSize =
+                        component.RectTransform.NonScaledSize.Multiply(relativeResizeScale);
+                }
+            }
+            return component;
+        }
+
+        private static bool CheckConditional(XElement element)
+        {
+            foreach (XAttribute attribute in element.Attributes())
+            {
+                switch (attribute.Name.ToString().ToLowerInvariant())
+                {
+                    case "language":
+                        string[] languages = element.GetAttributeStringArray(attribute.Name.ToString(), new string[0]);
+                        if (!languages.Any(l => GameMain.Config.Language.ToLower() == l.ToLower())) { return false; }
+                        break;
+                    case "gameversion":
+                        var version = new Version(attribute.Value);
+                        if (GameMain.Version != version) { return false; }
+                        break;
+                    case "mingameversion":
+                        var minVersion = new Version(attribute.Value);
+                        if (GameMain.Version < minVersion) { return false; }
+                        break;
+                    case "maxgameversion":
+                        var maxVersion = new Version(attribute.Value);
+                        if (GameMain.Version > maxVersion) { return false; }
+                        break;
+                }
+            }
+
+            return true;
+        }
+
+        private static GUITextBlock LoadGUITextBlock(XElement element, RectTransform parent, string overrideText = null, Anchor? anchor = null)
+        {
+            string text = overrideText ??
+                (element.Attribute("text") == null ?
+                    element.ElementInnerText() :
+                    element.GetAttributeString("text", ""));
+            text = text.Replace(@"\n", "\n");
+
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+            Color? color = null;
+            if (element.Attribute("color") != null) { color = element.GetAttributeColor("color", Color.White); }           
+            float scale = element.GetAttributeFloat("scale", 1.0f);
+            bool wrap = element.GetAttributeBool("wrap", true);
+            Alignment alignment = Alignment.Center;
+            Enum.TryParse(element.GetAttributeString("alignment", "Center"), out alignment);
+            ScalableFont font = GUI.Font;
+            switch (element.GetAttributeString("font", "Font").ToLowerInvariant())
+            {
+                case "font":
+                    font = GUI.Font;
+                    break;
+                case "smallfont":
+                    font = GUI.SmallFont;
+                    break;
+                case "largefont":
+                    font = GUI.LargeFont;
+                    break;
+                case "videotitlefont":
+                    font = GUI.VideoTitleFont;
+                    break;
+                case "objectivetitlefont":
+                    font = GUI.ObjectiveTitleFont;
+                    break;
+                case "objectivenamefont":
+                    font = GUI.ObjectiveNameFont;
+                    break;
+            }
+
+            var textBlock = new GUITextBlock(RectTransform.Load(element, parent),
+                text, color, font, alignment, wrap: wrap, style: style)
+            {
+                TextScale = scale
+            };
+            if (anchor.HasValue) { textBlock.RectTransform.SetPosition(anchor.Value); }
+            textBlock.RectTransform.IsFixedSize = true;
+            textBlock.RectTransform.NonScaledSize = new Point(textBlock.Rect.Width, textBlock.Rect.Height);
+            return textBlock;
+        }
+
+        private static GUIButton LoadLink(XElement element, RectTransform parent)
+        {
+            var button = LoadGUIButton(element, parent);
+            string url = element.GetAttributeString("url", "");
+            button.OnClicked = (btn, userdata) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(url);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to open url \""+url+"\".", e);
+                }
+                return true;
+            };
+            return button;
+        }
+
+        private static void LoadGridText(XElement element, RectTransform parent)
+        {
+            string text = element.Attribute("text") == null ?
+                element.ElementInnerText() :
+                element.GetAttributeString("text", "");
+            text = text.Replace(@"\n", "\n");
+
+            string[] elements = text.Split(',');
+            RectTransform lineContainer = null;
+            for (int i = 0; i < elements.Length; i++)
+            {
+                switch (i % 3)
+                {
+                    case 0:
+                        lineContainer = LoadGUITextBlock(element, parent, elements[i], Anchor.CenterLeft).RectTransform;
+                        lineContainer.Anchor = Anchor.TopCenter;
+                        lineContainer.Pivot = Pivot.TopCenter;
+                        lineContainer.NonScaledSize = new Point((int)(parent.NonScaledSize.X * 0.7f), lineContainer.NonScaledSize.Y);
+                        break;
+                    case 1:
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.Center).TextAlignment = Alignment.Center;
+                        break;
+                    case 2:
+                        LoadGUITextBlock(element, lineContainer, elements[i], Anchor.CenterRight).TextAlignment = Alignment.CenterRight;
+                        break;
+                }
+            }
+        }
+
+        private static GUIFrame LoadGUIFrame(XElement element, RectTransform parent)
+        {
+            string style = element.GetAttributeString("style", element.Name.ToString().ToLowerInvariant() == "spacing" ? null : "");
+            if (style == "null") { style = null; }
+            return new GUIFrame(RectTransform.Load(element, parent), style: style);
+        }
+
+        private static GUIButton LoadGUIButton(XElement element, RectTransform parent)
+        {
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+
+            Alignment textAlignment = Alignment.Center;
+            Enum.TryParse(element.GetAttributeString("textalignment", "Center"), out textAlignment);
+
+            string text = element.Attribute("text") == null ?
+                element.ElementInnerText() :
+                element.GetAttributeString("text", "");
+            text = text.Replace(@"\n", "\n");
+
+            return new GUIButton(RectTransform.Load(element, parent),
+                text: text,
+                textAlignment: textAlignment,
+                style: style);
+        }
+
+        private static GUIListBox LoadGUIListBox(XElement element, RectTransform parent)
+        {
+            string style = element.GetAttributeString("style", "");
+            if (style == "null") { style = null; }
+            bool isHorizontal = element.GetAttributeBool("ishorizontal", !element.GetAttributeBool("isvertical", true));
+            return new GUIListBox(RectTransform.Load(element, parent), isHorizontal, style: style);
+        }
+
+        private static GUILayoutGroup LoadGUILayoutGroup(XElement element, RectTransform parent)
+        {
+            bool isHorizontal = element.GetAttributeBool("ishorizontal", !element.GetAttributeBool("isvertical", true));
+
+            Enum.TryParse(element.GetAttributeString("childanchor", "TopLeft"), out Anchor childAnchor);
+            return new GUILayoutGroup(RectTransform.Load(element, parent), isHorizontal, childAnchor)
+            {
+                Stretch = element.GetAttributeBool("stretch", false),
+                RelativeSpacing = element.GetAttributeFloat("relativespacing", 0.0f),
+                AbsoluteSpacing = element.GetAttributeInt("absolutespacing", 0),
+            };
+        }
+
+        private static GUIImage LoadGUIImage(XElement element, RectTransform parent)
+        {
+            Sprite sprite = null;
+
+            string url = element.GetAttributeString("url", "");
+            if (!string.IsNullOrEmpty(url))
+            {
+                string localFileName = Path.GetFileNameWithoutExtension(url.Replace("/", "").Replace(":", "").Replace("https", "").Replace("http", ""))
+                    .Replace(".", "");
+                localFileName += Path.GetExtension(url);
+                string localFilePath = Path.Combine("Downloads", localFileName);
+                if (!File.Exists(localFilePath))
+                {
+                    Uri baseAddress = new Uri(url);
+                    Uri remoteDirectory = new Uri(baseAddress, ".");
+                    string remoteFileName = Path.GetFileName(baseAddress.LocalPath);
+                    IRestClient client = new RestClient(remoteDirectory);
+                    var response = client.Execute(new RestRequest(remoteFileName, Method.GET));
+                    if (response.ResponseStatus != ResponseStatus.Completed) { return null; }
+                    if (response.StatusCode != HttpStatusCode.OK) { return null; }
+
+                    if (!Directory.Exists("Downloads")) { Directory.CreateDirectory("Downloads"); }
+                    File.WriteAllBytes(localFilePath, response.RawBytes);
+                }
+                sprite = new Sprite(element, "Downloads", localFileName);
+            }
+            else
+            {
+                sprite = new Sprite(element);
+            }
+
+            return new GUIImage(RectTransform.Load(element, parent), sprite, scaleToFit: true);
+        }
+
+        private static GUIButton LoadAccordion(XElement element, RectTransform parent)
+        {
+            var button = LoadGUIButton(element, parent);
+            List<GUIComponent> content = new List<GUIComponent>();
+            foreach (XElement subElement in element.Elements())
+            {
+                var contentElement = FromXML(subElement, parent);
+                if (contentElement != null)
+                {
+                    contentElement.Visible = false;
+                    contentElement.IgnoreLayoutGroups = true;
+                    content.Add(contentElement);
+                }
+            }
+            button.OnClicked = (btn, userdata) =>
+            {
+                bool visible = content.FirstOrDefault()?.Visible ?? true;
+                foreach (GUIComponent contentElement in content)
+                {
+                    contentElement.Visible = !visible;
+                    contentElement.IgnoreLayoutGroups = !contentElement.Visible;
+                }
+                if (button.Parent is GUILayoutGroup layoutGroup)
+                {
+                    layoutGroup.Recalculate();
+                }
+                return true;
+            };
+            return button;
         }
     }
 }

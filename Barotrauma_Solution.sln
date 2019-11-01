@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29424.173
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsClient", "Barotrauma\BarotraumaClient\WindowsClient.csproj", "{008C0F83-E914-4966-9135-EA885059EDD8}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -65,22 +65,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Concentus", "Libraries\Conc
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		Barotrauma\BarotraumaClient\ClientCode.projitems*{008c0f83-e914-4966-9135-ea885059edd8}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedCode.projitems*{008c0f83-e914-4966-9135-ea885059edd8}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedContent.projitems*{008c0f83-e914-4966-9135-ea885059edd8}*SharedItemsImports = 4
 		Libraries\SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{2e4773b7-961a-4328-9d77-9749f9071ca2}*SharedItemsImports = 13
 		Barotrauma\BarotraumaClient\ClientCode.projitems*{51aff563-4982-474d-a92f-50b06db05b3d}*SharedItemsImports = 13
 		Barotrauma\BarotraumaShared\SharedCode.projitems*{561357c2-db28-4e01-b275-6bf545f70491}*SharedItemsImports = 13
-		Barotrauma\BarotraumaShared\SharedCode.projitems*{85232b20-074d-4723-b0c6-91495391e448}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedContent.projitems*{85232b20-074d-4723-b0c6-91495391e448}*SharedItemsImports = 4
 		Barotrauma\BarotraumaShared\SharedContent.projitems*{a67d00eb-8f3d-49c9-9e01-94ed90b6bf2b}*SharedItemsImports = 13
 		Libraries\SharpFont\Source\SharpFontShared\SharpFontShared.projitems*{c293db32-fa42-486d-b128-5a12522fae4e}*SharedItemsImports = 4
-		Barotrauma\BarotraumaClient\ClientCode.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedCode.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedContent.projitems*{cc996bb6-3781-4868-b996-07f9cdc936ed}*SharedItemsImports = 4
-		Barotrauma\BarotraumaClient\ClientCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedCode.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
-		Barotrauma\BarotraumaShared\SharedContent.projitems*{d7f9fdd3-af03-46ad-a2c2-f590899712b7}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -307,6 +296,7 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugLinux|x86.ActiveCfg = DebugLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugLinux|x86.Build.0 = DebugLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.ActiveCfg = DebugMac|x64
+		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.Build.0 = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x64.ActiveCfg = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x64.Build.0 = DebugMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|x86.ActiveCfg = DebugMac|x86
@@ -328,6 +318,7 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseLinux|x86.ActiveCfg = ReleaseLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseLinux|x86.Build.0 = ReleaseLinux|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.ActiveCfg = ReleaseMac|x64
+		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x64.ActiveCfg = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x64.Build.0 = ReleaseMac|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|x86.ActiveCfg = ReleaseMac|x86
@@ -337,8 +328,6 @@ Global
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x64.Build.0 = ReleaseWindows|x64
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x86.ActiveCfg = ReleaseWindows|x86
 		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseWindows|x86.Build.0 = ReleaseWindows|x86
-		{85232B20-074D-4723-B0C6-91495391E448}.ReleaseMac|Any CPU.Build.0 = ReleaseMac|x64
-		{85232B20-074D-4723-B0C6-91495391E448}.DebugMac|Any CPU.Build.0 = DebugMac|x64
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4610E4C-DD34-428B-BABB-779CA0B5993A}.Debug|x64.ActiveCfg = Debug|Any CPU

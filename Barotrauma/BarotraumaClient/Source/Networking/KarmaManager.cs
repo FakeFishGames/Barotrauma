@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -9,7 +9,16 @@ namespace Barotrauma
     {
         public void CreateSettingsFrame(GUIComponent parent)
         {
+            if (TextManager.ContainsTag("Karma.ResetKarmaBetweenRounds"))
+            {
+                CreateLabeledTickBox(parent, "ResetKarmaBetweenRounds");
+            }
+
             CreateLabeledSlider(parent, 0.0f, 40.0f, 1.0f, "KickBanThreshold");
+            if (TextManager.ContainsTag("Karma.KicksBeforeBan"))
+            {
+                CreateLabeledNumberInput(parent, 0, 10, "KicksBeforeBan");
+            }
             CreateLabeledSlider(parent, 0.0f, 50.0f, 1.0f, "HerpesThreshold");
 
             CreateLabeledSlider(parent, 0.0f, 0.5f, 0.01f, "KarmaDecay");
@@ -37,7 +46,7 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, "DamageFriendlyKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 100.0f, 1.0f, "ReactorMeltdownKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 10.0f, 0.05f, "ReactorOverheatKarmaDecrease");
-            CreateLabeledSlider(parent, 0.0f, 20.0f, 1f, "AllowedWireDisconnectionsPerMinute");
+            CreateLabeledNumberInput(parent, 0, 20, "AllowedWireDisconnectionsPerMinute");
             CreateLabeledSlider(parent, 0.0f, 20.0f, 0.5f, "WireDisconnectionKarmaDecrease");
             CreateLabeledSlider(parent, 0.0f, 30.0f, 1.0f, "SpamFilterKarmaDecrease");
         }
@@ -73,6 +82,39 @@ namespace Barotrauma
             };
             GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, slider);
             slider.OnMoved(slider, slider.BarScroll);
+        }
+
+        private void CreateLabeledNumberInput(GUIComponent parent, int min, int max, string propertyName)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f,
+                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
+            };
+
+            string labelText = TextManager.Get("Karma." + propertyName);
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform),
+                labelText, font: GUI.SmallFont)
+            {
+                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
+            };
+
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform), GUINumberInput.NumberType.Int)
+            {
+                MinValueInt = min,
+                MaxValueFloat = max
+            };
+            GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, numInput);
+        }
+
+        private void CreateLabeledTickBox(GUIComponent parent, string propertyName)
+        {
+            var tickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.1f), parent.RectTransform), TextManager.Get("Karma." + propertyName))
+            {
+                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip", returnNull: true) ?? ""
+            };
+            GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, tickBox);
         }
     }
 }

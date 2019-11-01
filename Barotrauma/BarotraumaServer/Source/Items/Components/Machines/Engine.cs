@@ -1,8 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
 using System;
-using System.Globalization;
-using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,7 +8,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             //force can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedIntegerDeprecated(-10, 10, (int)(targetForce / 10.0f));
+            msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
         }
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)

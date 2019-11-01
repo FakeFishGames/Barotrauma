@@ -3,14 +3,15 @@
   <Item
 		name="Fabricator"
     identifier="fabricator"
+    tags="fabricator"
     category="Machine"
 		linkable="true"
-    allowedlinks="deconstructor,cabinet"
+    allowedlinks="deconstructor,locker"
     description="A machine capable of manufacturing a wide range of items out of basic raw materials."
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="0,513,285,391" depth="0.8"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="286,513,285,391" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="286,513,285,391" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="572,513,285,391" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected="true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
@@ -22,14 +23,14 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10" msg="ItemMsgRewireScrewdriver">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_in" displayname="connection.powerin"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="40" />
-      <RequiredItem identifier="wrench" type="Equipped" />
+      <RequiredItem items="wrench" type="Equipped" />
 	    <ParticleEmitter particle="spark" particleamount="10" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="25.0"/>
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="0.0"/>
     </Repairable>
@@ -41,13 +42,14 @@
   <Item
     name="Medical Fabricator"
     identifier="medicalfabricator"
+    tags="medicalfabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor"
     description="A machine that can be used to manufacture various medicines.">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,0,140,168"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="280,0,140,168" depth="0.8" maxcondition="0" />
 
     <Fabricator canbeselected = "true" powerconsumption="100.0" msg="ItemMsgInteractSelect">
@@ -58,14 +60,14 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10" msg="ItemMsgRewireScrewdriver">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_in" displayname="connection.powerin"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="wrench" type="equipped" />
+      <RequiredItem items="wrench" type="equipped" />
       <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0"/>
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>
@@ -78,14 +80,15 @@
   <Item
     name="Deconstructor"
     identifier="deconstructor"
+    tags="deconstructor"
     category="Machine"
 		linkable="true"
-    allowedlinks="fabricator,medicalfabricator,cabinet"
+    allowedlinks="fabricator,medicalfabricator,locker"
     description="Disassembles and breaks down items to reusable components and material bars."
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,171,243,335"/>
-    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="243,171,243,335" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="243,171,243,335" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="486,171,243,335" depth="0.8" maxcondition="0" />
 
     <Deconstructor canbeselected = "true" powerconsumption="500.0" msg="ItemMsgInteractSelect">
@@ -96,14 +99,14 @@
 
     <ConnectionPanel selectkey="Action" canbeselected="true" hudpriority="10" msg="ItemMsgRewireScrewdriver">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
-      <RequiredItem identifier="screwdriver" type="Equipped"/>
-      <output name="power_in" displayname="connection.powerin"/>
+      <RequiredItem items="screwdriver" type="Equipped"/>
+      <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
     <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
-      <RequiredItem identifier="wrench" type="equipped" />
+      <RequiredItem items="wrench" type="equipped" />
       <ParticleEmitter particle="smoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0"/>
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0"/>
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0"/>

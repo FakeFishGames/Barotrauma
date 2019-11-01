@@ -9,9 +9,9 @@ using System.Linq;
 namespace Barotrauma
 {
 
-    delegate void TextBoxEvent(GUITextBox sender, Keys key);
+    public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
@@ -38,6 +38,7 @@ namespace Barotrauma
 
         public bool CaretEnabled { get; set; }
         public Color? CaretColor { get; set; }
+        public bool DeselectAfterMessage = true;
 
         private int? maxTextLength;
 
@@ -162,10 +163,11 @@ namespace Barotrauma
 
         public override ScalableFont Font
         {
+            get { return textBlock?.Font ?? base.Font; }
             set
             {
                 base.Font = value;
-                if (textBlock == null) return;
+                if (textBlock == null) { return; }
                 textBlock.Font = value;
             }
         }
@@ -231,6 +233,8 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
+            CanBeFocused = true;
+
             Enabled = true;
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
@@ -476,7 +480,7 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonClicked() && selected) Deselect();
+                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) Deselect();
                 isSelecting = false;
                 state = ComponentState.None;
             }
@@ -655,7 +659,12 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b': //backspace
-                    if (selectedCharacters > 0)
+                    if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                    {
+                        SetText(string.Empty, false);
+                        CaretIndex = Text.Length;
+                    }
+                    else if (selectedCharacters > 0)
                     {
                         RemoveSelectedText();
                     }
@@ -691,6 +700,7 @@ namespace Barotrauma
                     text = memento.Undo();
                     if (text != Text)
                     {
+                        ClearSelection();
                         SetText(text, false);
                         CaretIndex = Text.Length;
                         OnTextChanged?.Invoke(this, Text);
@@ -700,6 +710,7 @@ namespace Barotrauma
                     text = memento.Redo();
                     if (text != Text)
                     {
+                        ClearSelection();
                         SetText(text, false);
                         CaretIndex = Text.Length;
                         OnTextChanged?.Invoke(this, Text);
@@ -859,16 +870,12 @@ namespace Barotrauma
         private void RemoveSelectedText()
         {
             if (selectedText.Length == 0) { return; }
-            if (IsLeftToRight)
-            {
-                SetText(Text.Remove(selectionStartIndex, selectedText.Length));
-                CaretIndex = Math.Min(Text.Length, selectionStartIndex);
-            }
-            else
-            {
-                SetText(Text.Remove(selectionEndIndex, selectedText.Length));
-                CaretIndex = Math.Min(Text.Length, selectionEndIndex);
-            }
+
+            selectionStartIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
+            int selectionLength = Math.Min(Text.Length - selectionStartIndex, selectedText.Length);
+            SetText(Text.Remove(selectionStartIndex, selectionLength));
+            CaretIndex = Math.Min(Text.Length, selectionStartIndex);
+
             ClearSelection();
             OnTextChanged?.Invoke(this, Text);
         }

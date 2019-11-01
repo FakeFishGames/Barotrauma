@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
             if (spriteIndex >= propellerSprite.FrameCount) spriteIndex = 0.0f;
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (propellerSprite != null)
             {
@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             //targetForce can only be adjusted at 10% intervals -> no need for more accuracy than this
-            msg.WriteRangedIntegerDeprecated(-10, 10, (int)(targetForce / 10.0f));
+            msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

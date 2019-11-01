@@ -92,9 +92,7 @@ namespace Barotrauma.Items.Components
                     
                     foreach (XElement connectionElement in subElement.Elements())
                     {
-                        if (connectionElement.Name.ToString() != element.Name.ToString()) { continue; }
-                        
-                        string prefabConnectionName = element.GetAttributeString("name", IsOutput ? "output" : "input");
+                        string prefabConnectionName = element.GetAttributeString("name", null);
                         if (prefabConnectionName == Name)
                         {
                             displayNameTag = connectionElement.GetAttributeString("displayname", "");
@@ -218,6 +216,16 @@ namespace Barotrauma.Items.Components
 
         public void SetWire(int index, Wire wire)
         {
+            Wire previousWire = wires[index];
+            if (wire != previousWire && previousWire != null)
+            {
+                var otherConnection = previousWire.OtherConnection(this);
+                if (otherConnection != null)
+                {
+                    otherConnection.recipientsDirty = true;
+                }
+            }
+
             wires[index] = wire;
             recipientsDirty = true;
             if (wire != null)
@@ -235,31 +243,38 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < MaxLinked; i++)
             {
-                if (wires[i] == null) continue;
+                if (wires[i] == null) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
-                if (recipient == null) continue;
-                if (recipient.item == this.item || recipient.item == source) continue;
+                if (recipient == null) { continue; }
+                if (recipient.item == this.item || recipient.item == source) { continue; }
 
-                if (source != null && !source.LastSentSignalRecipients.Contains(recipient.item))
-                {
-                    source.LastSentSignalRecipients.Add(recipient.item);
-                }
+                source?.LastSentSignalRecipients.Add(recipient.item);
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
                     ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
                 }
 
-                bool broken = recipient.Item.Condition <= 0.0f;
                 foreach (StatusEffect effect in recipient.Effects)
                 {
-                    if (broken && effect.type != ActionType.OnBroken) continue;
                     recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false);
                 }
             }
         }
 
+        public void SendPowerProbeSignal(Item source, float power)
+        {
+            for (int i = 0; i < MaxLinked; i++)
+            {
+                if (wires[i] == null) { continue; }
+
+                Connection recipient = wires[i].OtherConnection(this);
+                if (recipient == null) { continue; }
+
+                recipient.item.GetComponent<Powered>()?.ReceivePowerProbeSignal(recipient, source, power);
+            }
+        }
         public void ClearConnections()
         {
             for (int i = 0; i < MaxLinked; i++)

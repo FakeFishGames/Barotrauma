@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -12,32 +13,34 @@ namespace Barotrauma.Items.Components
     {
         partial class WireSection
         {
-            public void Draw(SpriteBatch spriteBatch, Color color, Vector2 offset, float depth, float width = 0.3f)
+            public void Draw(SpriteBatch spriteBatch, Wire wire, Color color, Vector2 offset, float depth, float width = 0.3f)
             {
-                spriteBatch.Draw(wireSprite.Texture,
+                spriteBatch.Draw(wire.wireSprite.Texture,
                     new Vector2(start.X + offset.X, -(start.Y + offset.Y)), null, color,
                     -angle,
-                    new Vector2(0.0f, wireSprite.size.Y / 2.0f),
-                    new Vector2(length / wireSprite.Texture.Width, width),
+                    new Vector2(0.0f, wire.wireSprite.size.Y / 2.0f),
+                    new Vector2(length / wire.wireSprite.Texture.Width, width),
                     SpriteEffects.None,
                     depth);
             }
 
-            public static void Draw(SpriteBatch spriteBatch, Vector2 start, Vector2 end, Color color, float depth, float width = 0.3f)
+            public static void Draw(SpriteBatch spriteBatch, Wire wire, Vector2 start, Vector2 end, Color color, float depth, float width = 0.3f)
             {
                 start.Y = -start.Y;
                 end.Y = -end.Y;
-
-                spriteBatch.Draw(wireSprite.Texture,
+                
+                spriteBatch.Draw(wire.wireSprite.Texture,
                     start, null, color,
                     MathUtils.VectorToAngle(end - start),
-                    new Vector2(0.0f, wireSprite.size.Y / 2.0f),
-                    new Vector2((Vector2.Distance(start, end)) / wireSprite.Texture.Width, width),
+                    new Vector2(0.0f, wire.wireSprite.size.Y / 2.0f),
+                    new Vector2((Vector2.Distance(start, end)) / wire.wireSprite.Texture.Width, width),
                     SpriteEffects.None,
                     depth);
             }
         }        
-        private static Sprite wireSprite;
+        private static Sprite defaultWireSprite;
+        private Sprite overrideSprite;
+        private Sprite wireSprite;
 
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
@@ -48,7 +51,29 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
-        public void Draw(SpriteBatch spriteBatch, bool editing)
+        partial void InitProjSpecific(XElement element)
+        {
+            if (defaultWireSprite == null)
+            {
+                defaultWireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f))
+                {
+                    Depth = 0.85f
+                };
+            }
+
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() == "wiresprite")
+                {
+                    overrideSprite = new Sprite(subElement);
+                    break;
+                }
+            }
+
+            wireSprite = overrideSprite ?? defaultWireSprite;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -75,20 +100,20 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, Color.Gold, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, Color.Gold, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
             else if (item.IsSelected)
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, Color.Red, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, Color.Red, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
 
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, item.Color, drawOffset, depth, 0.3f);
+                section.Draw(spriteBatch, this, item.Color, drawOffset, depth, 0.3f);
             }
 
             if (nodes.Count > 0)
@@ -101,7 +126,8 @@ namespace Barotrauma.Items.Components
                 if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
                 {
                     WireSection.Draw(
-                        spriteBatch,
+                        spriteBatch, 
+                        this,
                         new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
                         new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
                         item.Color * 0.5f,
@@ -141,12 +167,12 @@ namespace Barotrauma.Items.Components
             Vector2 endPos = start + new Vector2((float)Math.Sin(angle), -(float)Math.Cos(angle)) * 50.0f;
 
             WireSection.Draw(
-                spriteBatch,
+                spriteBatch, this,
                 start, endPos,
                 Color.Orange, depth + 0.00001f, 0.2f);
 
             WireSection.Draw(
-                spriteBatch,
+                spriteBatch, this,
                 start, start + (endPos - start) * 0.7f,
                 item.Color, depth, 0.3f);
         }
@@ -154,6 +180,18 @@ namespace Barotrauma.Items.Components
 
         public static void UpdateEditing(List<Wire> wires)
         {
+            Wire equippedWire =
+                Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
+                Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+            if (equippedWire != null)
+            {
+                if (PlayerInput.LeftButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                {
+                    equippedWire.Use(1.0f, Character.Controlled);
+                }
+                return;
+            }
+
             //dragging a node of some wire
             if (draggingWire != null)
             {

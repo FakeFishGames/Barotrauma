@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
 
         private Character user;
         
-        [Serialize("0,0", false)]
+        [Serialize("0,0", false, description: "The position of the barrel relative to the upper left corner of the base sprite (in pixels).")]
         public Vector2 BarrelPos
         {
             get 
@@ -57,21 +57,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "The impulse applied to the physics body of the projectile (the higher the impulse, the faster the projectiles are launched).")]
         public float LaunchImpulse
         {
             get { return launchImpulse; }
             set { launchImpulse = value; }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f)]
+        [Editable(0.0f, 1000.0f), Serialize(5.0f, false, description: "The period of time the user has to wait between shots.")]
         public float Reload
         {
             get { return reloadTime; }
             set { reloadTime = value; }
         }
 
-        [Serialize("0.0,0.0", true), Editable]
+        [Editable, Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate. TODO")]
         public Vector2 RotationLimits
         {
             get
@@ -94,39 +94,49 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(5.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(5.0f, false, description: "How much torque is applied to rotate the barrel when the item is used by a character"
+            + " with insufficient skills to operate it. Higher values make the barrel rotate faster.")]
         public float SpringStiffnessLowSkill
         {
             get;
             private set;
         }
-        [Serialize(2.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(2.0f, false, description: "How much torque is applied to rotate the barrel when the item is used by a character"
+            + " with sufficient skills to operate it. Higher values make the barrel rotate faster.")]
         public float SpringStiffnessHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(50.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(50.0f, false, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
+            + " with insufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
         public float SpringDampingLowSkill
         {
             get;
             private set;
         }
-        [Serialize(10.0f, false), Editable(0.0f, 1000.0f, DecimalCount = 2)]
+        [Editable(0.0f, 1000.0f, DecimalCount = 2),
+            Serialize(10.0f, false, description: "How much torque is applied to resist the movement of the barrel when the item is used by a character"
+            + " with sufficient skills to operate it. Higher values make the aiming more \"snappy\", stopping the barrel from swinging around the direction it's being aimed at.")]
         public float SpringDampingHighSkill
         {
             get;
             private set;
         }
 
-        [Serialize(1.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
+        [Editable(0.0f, 100.0f, DecimalCount = 2),
+            Serialize(1.0f, false, description: "Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it.")]
         public float RotationSpeedLowSkill
         {
             get;
             private set;
         }
-        [Serialize(5.0f, false), Editable(0.0f, 100.0f, DecimalCount = 2)]
+        [Editable(0.0f, 100.0f, DecimalCount = 2),
+            Serialize(5.0f, false, description: "Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it."),]
         public float RotationSpeedHighSkill
         {
             get;
@@ -134,7 +144,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float baseRotationRad;
-        [Serialize(0.0f, true), Editable(0.0f, 360.0f)]
+        [Editable(0.0f, 360.0f), Serialize(0.0f, true, description: "The angle of the turret's base in degrees.")]
         public float BaseRotation
         {
             get { return MathHelper.ToDegrees(baseRotationRad); }
@@ -182,6 +192,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var lightComponents = item.GetComponents<LightComponent>();
             if (lightComponents != null && lightComponents.Count() > 0)
             {
@@ -315,20 +326,24 @@ namespace Barotrauma.Items.Components
             failedLaunchAttempts = 0;
 
             var batteries = item.GetConnectedComponents<PowerContainer>();
-            float availablePower = 0.0f;
-            foreach (PowerContainer battery in batteries)
+            float neededPower = powerConsumption;
+
+            while (neededPower > 0.0001f && batteries.Count > 0)
             {
-                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
-                float takePower = Math.Min(powerConsumption - availablePower, batteryPower);
-
-                battery.Charge -= takePower / 3600.0f;
-
-#if SERVER
-                if (GameMain.Server != null)
+                batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                float takePower = neededPower / batteries.Count;
+                takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                foreach (PowerContainer battery in batteries)
                 {
-                    battery.Item.CreateServerEvent(battery);
-                }
+                    neededPower -= takePower;
+                    battery.Charge -= takePower / 3600.0f;
+#if SERVER
+                    if (GameMain.Server != null)
+                    {
+                        battery.Item.CreateServerEvent(battery);
+                    }
 #endif
+                }
             }
 
             Launch(projectiles[0].Item, character);
@@ -467,12 +482,12 @@ namespace Barotrauma.Items.Components
 
             //enough shells and power
             Character closestEnemy = null;
-            float closestDist = 10000.0f * 10000.0f;
+            float closestDist = 3000 * 3000;
             foreach (Character enemy in Character.CharacterList)
             {
-                //ignore humans and characters that are inside the sub
-                if (enemy.IsDead|| enemy.AnimController.CurrentHull != null || !enemy.Enabled) { continue; }
-                if (enemy.SpeciesName == character.SpeciesName && enemy.TeamID == character.TeamID) { continue; }
+                // Ignore friendly and those that are inside the sub
+                if (enemy.IsDead || enemy.AnimController.CurrentHull != null || !enemy.Enabled) { continue; }
+                if (HumanAIController.IsFriendly(character, enemy)) { continue; }
                 
                 float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
                 if (dist > closestDist) { continue; }
@@ -500,8 +515,21 @@ namespace Barotrauma.Items.Components
 
             if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return false; }
 
-            var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition, null);
-            if (pickedBody != null && !(pickedBody.UserData is Limb)) { return false; }
+            var pickedBody = Submarine.PickBody(ConvertUnits.ToSimUnits(item.WorldPosition), closestEnemy.SimPosition);
+            if (pickedBody == null) { return false; }
+            Character target = null;
+            if (pickedBody.UserData is Character c)
+            {
+                target = c;
+            }
+            else if (pickedBody.UserData is Limb limb)
+            {
+                target = limb.character;
+            }
+            if (target == null || HumanAIController.IsFriendly(character, target))
+            {
+                return false;
+            }
 
             if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
@@ -544,8 +572,8 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
-            if (barrelSprite != null) barrelSprite.Remove();
-            if (railSprite != null) railSprite.Remove();
+            barrelSprite?.Remove(); barrelSprite = null;
+            railSprite?.Remove(); railSprite = null;
 
 #if CLIENT
             moveSoundChannel?.Dispose(); moveSoundChannel = null;

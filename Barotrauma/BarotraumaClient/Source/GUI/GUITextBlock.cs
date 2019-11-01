@@ -40,6 +40,8 @@ namespace Barotrauma
 
         private float textDepth;
 
+        private ScalableFont originalFont;
+
         public Vector2 TextOffset { get; set; }
 
         private Vector4 padding;
@@ -62,7 +64,7 @@ namespace Barotrauma
             set
             {
                 if (base.Font == value) return;
-                base.Font = value;
+                base.Font = originalFont = value;
                 SetTextPos();
             }
         }
@@ -74,13 +76,23 @@ namespace Barotrauma
             {
                 string newText = forceUpperCase ? value?.ToUpper() : value;
 
-                if (Text == newText) return;
+                if (Text == newText) { return; }
+
 
                 //reset scale, it gets recalculated in SetTextPos
-                if (autoScale) textScale = 1.0f;                
+                if (autoScale) { textScale = 1.0f; }
 
                 text = newText;
                 wrappedText = newText;
+                if (TextManager.IsCJK(text))
+                {
+                    //switch to fallback CJK font
+                    if (!Font.IsCJK) { base.Font = GUI.CJKFont; }
+                }
+                else
+                {
+                    if (Font == GUI.CJKFont) { base.Font = originalFont; }
+                }
                 SetTextPos();
             }
         }
@@ -204,8 +216,16 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 this.textColor = textColor.Value;
+            }            
+
+            //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
+            //use the default CJK font as a fallback
+            var selectedFont = originalFont = font ?? GUI.Font;
+            if (TextManager.IsCJK(text) && !selectedFont.IsCJK)
+            {                
+                selectedFont = GUI.CJKFont;
             }
-            this.Font = font ?? GUI.Font;
+            this.Font = selectedFont;
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
             this.Text = text ?? "";
@@ -222,10 +242,10 @@ namespace Barotrauma
             Censor = false;
         }
 
-        public void CalculateHeightFromText()
+        public void CalculateHeightFromText(int padding = 0)
         {
             if (wrappedText == null) { return; }
-            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y));
+            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y + padding));
         }
         
         public override void ApplyStyle(GUIComponentStyle style)
@@ -242,7 +262,7 @@ namespace Barotrauma
             if (text == null) return;
 
             censoredText = "";
-            for (int i=0;i<text.Length;i++)
+            for (int i = 0; i < text.Length; i++)
             {
                 censoredText += "\u2022";
             }
@@ -347,7 +367,7 @@ namespace Barotrauma
                 spriteBatch.End();
                 Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
                 spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (!string.IsNullOrEmpty(text))
@@ -371,7 +391,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = prevScissorRect;
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             if (OutlineColor.A * currColor.A > 0.0f) GUI.DrawRectangle(spriteBatch, rect, OutlineColor * (currColor.A / 255.0f), false);

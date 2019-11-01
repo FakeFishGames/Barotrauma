@@ -28,6 +28,15 @@ namespace Barotrauma.Networking
         Normal, Fill
     }
 
+    public enum PlayStyle
+    {
+        Serious = 0,
+        Casual = 1,
+        Roleplay = 2,
+        Rampage = 3,
+        SomethingDifferent = 4
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";
@@ -82,10 +91,9 @@ namespace Barotrauma.Networking
 
         partial class NetPropertyData
         {
-            private SerializableProperty property;
-            private string typeString;
-
-            private object parentObject;
+            private readonly SerializableProperty property;
+            private readonly string typeString;
+            private readonly object parentObject;
 
             public string Name
             {
@@ -257,7 +265,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        Dictionary<UInt32, NetPropertyData> netProperties;
+        private readonly Dictionary<UInt32, NetPropertyData> netProperties;
 
         partial void InitProjSpecific();
 
@@ -319,7 +327,7 @@ namespace Barotrauma.Networking
                 }
             }
         }
-        
+
         public string ServerName;
 
         private string serverMessageText;
@@ -339,7 +347,7 @@ namespace Barotrauma.Networking
         public int QueryPort;
 
         public bool EnableUPnP;
-        
+
         public ServerLog ServerLog;
 
         public Voting Voting;
@@ -347,8 +355,7 @@ namespace Barotrauma.Networking
         public Dictionary<string, bool> MonsterEnabled { get; private set; }
 
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
-        
-        private TimeSpan sparseUpdateInterval = new TimeSpan(0, 0, 0, 3);
+
         private float selectedLevelDifficulty;
         private byte[] password;
 
@@ -363,7 +370,7 @@ namespace Barotrauma.Networking
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
         public WhiteList Whitelist { get; private set; }
-        
+
         [Serialize(20, true)]
         public int TickRate
         {
@@ -439,7 +446,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(true, true)]
         public bool EndRoundAtLevelEnd
         {
@@ -481,6 +488,18 @@ namespace Barotrauma.Networking
             }
         }
 
+        private PlayStyle playstyleSelection;
+        [Serialize(PlayStyle.Serious, true)]
+        public PlayStyle PlayStyle
+        {
+            get { return playstyleSelection; }
+            set 
+            {
+                playstyleSelection = value;
+                ServerDetailsChanged = true;
+            }
+        }
+
         [Serialize(800, true)]
         private int LinesPerLogFile
         {
@@ -515,7 +534,7 @@ namespace Barotrauma.Networking
             }
 #endif
         }
-        
+
         [Serialize(true, true)]
         public bool AllowVoteKick
         {
@@ -554,7 +573,7 @@ namespace Barotrauma.Networking
                 ServerDetailsChanged = true;
             }
         }
-        
+
         [Serialize(0, true)]
         public int BotCount
         {
@@ -568,7 +587,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
+        [Serialize(BotSpawnMode.Normal, true)]
         public BotSpawnMode BotSpawnMode
         {
             get;
@@ -587,7 +607,7 @@ namespace Barotrauma.Networking
             get;
             set;
         }
-        
+
         [Serialize(true, true)]
         public bool AllowRewiring
         {
@@ -602,7 +622,22 @@ namespace Barotrauma.Networking
             set;
         }
 
+
+        [Serialize("", true)]
+        public string SelectedSubmarine
+        {
+            get;
+            set;
+        }
+        [Serialize("", true)]
+        public string SelectedShuttle
+        {
+            get;
+            set;
+        }
+
         private YesNoMaybe traitorsEnabled;
+        [Serialize(YesNoMaybe.No, true)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }
@@ -612,6 +647,41 @@ namespace Barotrauma.Networking
                 traitorsEnabled = value;
                 ServerDetailsChanged = true;
             }
+        }
+
+        [Serialize(defaultValue: 1, isSaveable: true)]
+        public int TraitorsMinPlayerCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMinStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 180.0f, isSaveable: true)]
+        public float TraitorsMaxStartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 30.0f, isSaveable: true)]
+        public float TraitorsMinRestartDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        public float TraitorsMaxRestartDelay
+        {
+            get;
+            set;
         }
 
         private SelectionMode subSelectionMode;
@@ -641,7 +711,7 @@ namespace Barotrauma.Networking
         }
 
         public BanList BanList { get; private set; }
-        
+
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
         {
@@ -662,23 +732,9 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         [Serialize(120.0f, true)]
         public float KickAFKTime
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
-        public bool TraitorUseRatio
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(0.2f, true)]
-        public float TraitorRatio
         {
             get;
             private set;
@@ -698,12 +754,21 @@ namespace Barotrauma.Networking
             }
         }
 
+        private string karmaPreset = "default";
         [Serialize("default", true)]
         public string KarmaPreset
         {
-            get;
-            set;
-        } = "default";
+            get { return karmaPreset; }
+            set
+            {
+                if (karmaPreset == value) { return; }
+                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                {
+                    GameMain.NetworkMember?.KarmaManager?.SelectPreset(value);
+                }
+                karmaPreset = value;
+            }
+        }
 
         [Serialize("sandbox", true)]
         public string GameModeIdentifier
@@ -712,13 +777,13 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize("Random", true)]
+        [Serialize("All", true)]
         public string MissionType
         {
             get;
             set;
         }
-        
+
         public int MaxPlayers
         {
             get { return maxPlayers; }
@@ -744,7 +809,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-        
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))

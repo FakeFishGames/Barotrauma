@@ -6,6 +6,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using LimbParams = Barotrauma.RagdollParams.LimbParams;
+using ColliderParams = Barotrauma.RagdollParams.ColliderParams;
 
 namespace Barotrauma
 {
@@ -358,6 +360,7 @@ namespace Barotrauma
             body.CollisionCategories = Physics.CollisionItem;
             body.Friction = limbParams.Friction;
             body.Restitution = limbParams.Restitution;
+            body.AngularDamping = limbParams.AngularDamping;
             body.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
@@ -442,7 +445,7 @@ namespace Barotrauma
                 default:
                     throw new NotImplementedException();
             }
-            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(spritesheetRotation));
+            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(-spritesheetRotation));
         }
 
         public float GetMaxExtent()
@@ -651,9 +654,9 @@ namespace Barotrauma
             if (newSpeedSqr > maxVelocity * maxVelocity)
             {
                 newVelocity = newVelocity.ClampLength(maxVelocity);
+                force = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
             }
 
-            Vector2 clampedForce = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
             body.ApplyForce(force);
         }

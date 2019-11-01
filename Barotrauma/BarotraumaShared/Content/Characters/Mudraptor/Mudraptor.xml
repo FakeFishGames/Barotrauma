@@ -1,64 +1,47 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Character name="Mudraptor" humanoid="false">
+﻿<Character speciesname="Mudraptor" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
   <ragdolls />
   <animations />
-  
-  <health
-    vitality="120"
-    doesbleed="true"/>
-
-  <bloodemitter particle="blood" particleamount="1"/>
-  <bloodemitter particle="waterblood" particleamount="1"/>
-  <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3"/>
-  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
-  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
-
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" state="Attack" range="1000"/>
-
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage1.ogg" state="Damage" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage2.ogg" state="Damage" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage3.ogg" state="Damage" range="1000"/>
-
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle1.ogg" state="Idle" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle2.ogg" state="Idle" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle3.ogg" state="Idle" range="1000"/>
-
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="1000"/>
-  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="1000"/>
-
-  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="15">
-    <Item identifier="hydroxyapatite"/>
+  <health vitality="120" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />
+  <bloodemitter particle="blood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <damageemitter particle="brownchunks" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.1" scalemax="0.3" />
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack1.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack2.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_attack3.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage1.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage2.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_damage3.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle1.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle2.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_idle3.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death1.ogg" state="Die" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Mudraptor/MUDRAPTOR_death2.ogg" state="Die" range="1000" volume="1" gender="None" />
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="15">
+    <Item identifier="hydroxyapatite" />
   </Inventory>
-  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="1">
-    <Item identifier="hydroxyapatite"/>
-    <Item identifier="mudraptorshell"/>
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="1">
+    <Item identifier="hydroxyapatite" />
+    <Item identifier="mudraptorshell" />
   </Inventory>
-
-
-  <ai
-    combatstrength="250"
-    sight="0.5"
-    hearing="1.0"
-    aggressiveboarding="true"
-    fleehealththreshold="20"
-    aggressiongreed="30"
-    aggressionhurt="100">
-
-    <latchonto attachtowalls="true" attachtosub="false"/>
-
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="1">
+    <Item identifier="hydroxyapatite" />
+    <Item identifier="smallmudraptoregg" />
+  </Inventory>
+  <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackonlywhenprovoked="False">
+    <latchonto attachtowalls="true" attachtosub="false" />
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="provocative" state="Attack" priority="300"/>
-    <targetpriority tag="light" state="Attack" priority="250"/>
-    <targetpriority tag="human" state="Attack" priority="200"/>
-    <targetpriority tag="stronger" state="Escape" priority="150"/>
-    <targetpriority tag="dead" state="Eat" priority="140"/>
-    <targetpriority tag="weaker" state="Attack" priority="120"/>
-    <targetpriority tag="door" state="Attack" priority="100"/>
-    <targetpriority tag="nasonov" state="Attack" priority="60"/>
-    <targetpriority tag="sonar" state="Attack" priority="55"/>
-    <targetpriority tag="wall" state="Attack" priority="40"/>
-    <targetpriority tag="room" state="Attack" priority="5"/>
+    <targetpriority tag="provocative" state="Attack" priority="200" />
+    <targetpriority tag="light" state="Attack" priority="80" />
+    <targetpriority tag="human" state="Attack" priority="100" />
+    <targetpriority tag="stronger" state="Escape" priority="110" />
+    <targetpriority tag="dead" state="Eat" priority="60" />
+    <targetpriority tag="weaker" state="Attack" priority="60" />
+    <targetpriority tag="nasonov" state="Attack" priority="200" />
+    <targetpriority tag="sonar" state="Attack" priority="60" />
+    <targetpriority tag="door" state="Attack" priority="30" />
+    <targetpriority tag="wall" state="Attack" priority="20" />
+    <targetpriority tag="room" state="Attack" priority="10" />
   </ai>
 </Character>

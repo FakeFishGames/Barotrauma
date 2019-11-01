@@ -20,13 +20,13 @@ namespace Barotrauma
                         return;
                     }
 
-                    //freeze AI characters if more than 1 seconds have passed since last update from the server
-                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 1.0f)
+                    //freeze AI characters if more than x seconds have passed since last update from the server
+                    if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.FreezeCharacterIfPositionDataMissingDelay)
                     {
                         AnimController.Frozen = true;
                         memState.Clear();
-                        //hide after 2 seconds
-                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - 2.0f)
+                        //hide after y seconds
+                        if (lastRecvPositionUpdateTime < Lidgren.Network.NetTime.Now - NetConfig.DisableCharacterIfPositionDataMissingDelay)
                         {
                             Enabled = false;
                             return;
@@ -74,7 +74,7 @@ namespace Barotrauma
                         states = newInput,
                         intAim = intAngle
                     };
-                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld && 
+                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld &&
                         (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
                     {
                         newMem.interact = focusedItem.ID;
@@ -105,15 +105,15 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
+                        msg.WriteRangedInteger(0, 0, 3);
                         Inventory.ClientWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Treatment:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
+                        msg.WriteRangedInteger(1, 0, 3);
                         msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
+                        msg.WriteRangedInteger(2, 0, 3);
                         break;
                 }
             }
@@ -131,11 +131,11 @@ namespace Barotrauma
                 msg.Write(inputCount);
                 for (int i = 0; i < inputCount; i++)
                 {
-                    msg.WriteRangedIntegerDeprecated(0, (int)InputNetFlags.MaxVal, (int)memInput[i].states);
+                    msg.WriteRangedInteger((int)memInput[i].states, 0, (int)InputNetFlags.MaxVal);
                     msg.Write(memInput[i].intAim);
-                    if (memInput[i].states.HasFlag(InputNetFlags.Select) || 
+                    if (memInput[i].states.HasFlag(InputNetFlags.Select) ||
                         memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
-                        memInput[i].states.HasFlag(InputNetFlags.Use) || 
+                        memInput[i].states.HasFlag(InputNetFlags.Use) ||
                         memInput[i].states.HasFlag(InputNetFlags.Health) ||
                         memInput[i].states.HasFlag(InputNetFlags.Grab))
                     {
@@ -187,11 +187,11 @@ namespace Barotrauma
                         bool attackInput = msg.ReadBoolean();
                         keys[(int)InputType.Attack].Held = attackInput;
                         keys[(int)InputType.Attack].SetState(false, attackInput);
-                        
+
                         double aimAngle = msg.ReadUInt16() / 65535.0 * 2.0 * Math.PI;
                         cursorPosition = AimRefPosition + new Vector2((float)Math.Cos(aimAngle), (float)Math.Sin(aimAngle)) * 500.0f;
                         TransformCursorPos();
-                        
+
                         bool ragdollInput = msg.ReadBoolean();
                         keys[(int)InputType.Ragdoll].Held = ragdollInput;
                         keys[(int)InputType.Ragdoll].SetState(false, ragdollInput);
@@ -225,7 +225,7 @@ namespace Barotrauma
                         msg.ReadSingle());
                     float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
                     Vector2 linearVelocity = new Vector2(
-                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12), 
+                        msg.ReadRangedSingle(-MaxVel, MaxVel, 12),
                         msg.ReadRangedSingle(-MaxVel, MaxVel, 12));
                     linearVelocity = NetConfig.Quantize(linearVelocity, -MaxVel, MaxVel, 12);
 
@@ -249,12 +249,12 @@ namespace Barotrauma
                     msg.ReadPadBits();
 
                     int index = 0;
-                    if (GameMain.Client.Character == this && AllowInput)
+                    if (GameMain.Client.Character == this && CanMove)
                     {
                         var posInfo = new CharacterStateInfo(
-                            pos, rotation, 
-                            networkUpdateID, 
-                            facingRight ? Direction.Right : Direction.Left, 
+                            pos, rotation,
+                            networkUpdateID,
+                            facingRight ? Direction.Right : Direction.Left,
                             selectedCharacter, selectedItem, animation);
 
                         while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
@@ -264,11 +264,11 @@ namespace Barotrauma
                     else
                     {
                         var posInfo = new CharacterStateInfo(
-                            pos, rotation, 
-                            linearVelocity, angularVelocity, 
-                            sendingTime, facingRight ? Direction.Right : Direction.Left, 
+                            pos, rotation,
+                            linearVelocity, angularVelocity,
+                            sendingTime, facingRight ? Direction.Right : Direction.Left,
                             selectedCharacter, selectedItem, animation);
-                        
+
                         while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                             index++;
                         memState.Insert(index, posInfo);
@@ -283,9 +283,16 @@ namespace Barotrauma
                         case 0:
                             if (Inventory == null)
                             {
-                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ")";
+                                string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ", removed: " + Removed + ")";
                                 DebugConsole.ThrowError(errorMsg);
                                 GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+
+                                //read anyway to prevent messing up reading the rest of the message
+                                byte itemCount = msg.ReadByte();
+                                for (int i = 0; i < itemCount; i++)
+                                {
+                                    msg.ReadUInt16();
+                                }
                             }
                             else
                             {
@@ -302,7 +309,7 @@ namespace Barotrauma
                                     LastNetworkUpdateID = controlled.LastNetworkUpdateID;
                                 }
 
-                                Controlled = this;
+                                if (!IsDead) { Controlled = this; }
                                 IsRemotePlayer = false;
                                 GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
@@ -335,9 +342,9 @@ namespace Barotrauma
             }
         }
 
-        public static Character ReadSpawnData(IReadMessage inc, bool spawn = true)
+        public static Character ReadSpawnData(IReadMessage inc)
         {
-            DebugConsole.NewMessage("READING CHARACTER SPAWN DATA", Color.Cyan);
+            DebugConsole.Log("Reading character spawn data");
 
             if (GameMain.Client == null) return null;
 
@@ -352,19 +359,12 @@ namespace Barotrauma
 
             DebugConsole.Log("Received spawn data for " + speciesName);
 
-            string configPath = GetConfigFile(speciesName);
-            if (string.IsNullOrEmpty(configPath))
-            {
-                throw new Exception("Error in character spawn data - could not find a config file for the character \"" + configPath + "\"!");
-            }
-
             Character character = null;
             if (noInfo)
             {
-                if (!spawn) return null;
-
-                character = Create(configPath, position, seed, null, true);
+                character = Create(speciesName, position, seed, null, true);
                 character.ID = id;
+                character.ReadStatus(inc);
             }
             else
             {
@@ -374,21 +374,14 @@ namespace Barotrauma
                 bool hasAi = inc.ReadBoolean();
                 string infoSpeciesName = inc.ReadString();
 
-                if (!spawn) return null;
+                CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                string infoConfigPath = GetConfigFile(infoSpeciesName);
-                if (string.IsNullOrEmpty(infoConfigPath))
-                {
-                    throw new Exception("Error in character spawn data - could not find a config file for the character info \"" + configPath + "\"!");
-                }
-
-                CharacterInfo info = CharacterInfo.ClientRead(infoConfigPath, inc);
-
-                character = Create(configPath, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
+                character.ReadStatus(inc);
 
-                if (configPath == HumanConfigFile && character.TeamID != TeamType.FriendlyNPC)
+                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC && !character.IsDead)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);
@@ -399,7 +392,7 @@ namespace Barotrauma
                 {
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
-                    Controlled = character;
+                    if (!character.IsDead) { Controlled = character; }
 
                     GameMain.LightManager.LosEnabled = true;
 
@@ -413,7 +406,7 @@ namespace Barotrauma
 
             return character;
         }
-        
+
         private void ReadStatus(IReadMessage msg)
         {
             bool isDead = msg.ReadBoolean();
@@ -424,7 +417,16 @@ namespace Barotrauma
                 if (causeOfDeathType == CauseOfDeathType.Affliction)
                 {
                     int afflictionIndex = msg.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
-                    causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                    if (afflictionIndex < 0 || afflictionIndex >= AfflictionPrefab.List.Count)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction index out of bounds (index: {afflictionIndex}, affliction count: {AfflictionPrefab.List.Count})";
+                        causeOfDeathType = CauseOfDeathType.Unknown;
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                    }
                 }
 
                 byte severedLimbCount = msg.ReadByte();
@@ -443,13 +445,20 @@ namespace Barotrauma
                 for (int i = 0; i < severedLimbCount; i++)
                 {
                     int severedJointIndex = msg.ReadByte();
-                    AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                    if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                    {
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    }
+                    else
+                    {
+                        AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                    }
                 }
             }
             else
             {
-                if (IsDead) Revive();
-                
+                if (IsDead) { Revive(); }
                 CharacterHealth.ClientRead(msg);
             }
         }

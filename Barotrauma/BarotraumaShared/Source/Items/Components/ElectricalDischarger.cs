@@ -48,28 +48,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(100.0f, true, description: "How far the discharge can travel from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
             set;
         }
 
-        [Serialize(10.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f, ToolTip = "How much further can the discharge be carried when moving across walls.")]
+        [Serialize(10.0f, true, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;
             set;
         }
 
-        [Serialize(0.25f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.25f, true, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Duration
         {
             get;
             set;
         }
 
-        [Serialize(false, true), Editable()]
+        [Serialize(false, true, "If set to true, the discharge cannot travel inside the submarine nor shock anyone inside."), Editable]
         public bool OutdoorsOnly
         {
             get;
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (charging)
                 {
-                    if (voltage > minVoltage || powerConsumption <= 0.0f)
+                    if (Voltage > MinVoltage)
                     {
                         Discharge();
                     }
@@ -142,8 +142,6 @@ namespace Barotrauma.Items.Components
             {
                 IsActive = false;
             }
-
-            voltage = 0.0f;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -455,6 +453,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             list.Remove(this);
         }
     }

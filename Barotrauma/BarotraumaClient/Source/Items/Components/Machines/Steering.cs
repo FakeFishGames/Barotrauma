@@ -47,6 +47,10 @@ namespace Barotrauma.Items.Components
         private Sprite maintainPosIndicator, maintainPosOriginIndicator;
         private Sprite steeringIndicator;
 
+        private List<DockingPort> connectedPorts = new List<DockingPort>();
+        private float checkConnectedPortsTimer;
+        private const float CheckConnectedPortsInterval = 1.0f;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -73,10 +77,30 @@ namespace Barotrauma.Items.Components
             set { maintainPosTickBox.Selected = value; }
         }
 
+        private bool dockingModeEnabled;
         public bool DockingModeEnabled
+        {
+            get { return UseAutoDocking && dockingModeEnabled; }
+            set { dockingModeEnabled = value; }
+        }
+
+        public bool UseAutoDocking
         {
             get;
             set;
+        } = true;
+
+        private float steerRadius;
+        public float? SteerRadius
+        {
+            get
+            {
+                return steerRadius;
+            }
+            set
+            {
+                steerRadius = value ?? (steerArea.Rect.Width / 2);
+            }
         }
 
         public List<DockingPort> DockingSources = new List<DockingPort>();
@@ -135,9 +159,9 @@ namespace Barotrauma.Items.Components
             };
 
             GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
-            modes.AddRadioButton(Mode.AutoPilot, autopilotTickBox);
-            modes.AddRadioButton(Mode.Manual, manualTickBox);
-            modes.Selected = Mode.Manual;
+            modes.AddRadioButton((int)Mode.AutoPilot, autopilotTickBox);
+            modes.AddRadioButton((int)Mode.Manual, manualTickBox);
+            modes.Selected = (int)Mode.Manual;
             
             var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), paddedControlContainer.RectTransform), "InnerFrame");
             var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.8f), autoPilotControls.RectTransform, Anchor.Center))
@@ -147,7 +171,7 @@ namespace Barotrauma.Items.Components
             };
 
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
-                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
+                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = maintainPos,
@@ -184,7 +208,7 @@ namespace Barotrauma.Items.Components
 
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelStartSelected,
@@ -211,7 +235,7 @@ namespace Barotrauma.Items.Components
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelEndSelected,
@@ -239,11 +263,11 @@ namespace Barotrauma.Items.Components
             autoPilotControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, autoPilotControls.RectTransform), "InnerFrame");
 
             GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
-            destinations.AddRadioButton(Destination.MaintainPos, maintainPosTickBox);
-            destinations.AddRadioButton(Destination.LevelStart, levelStartTickBox);
-            destinations.AddRadioButton(Destination.LevelEnd, levelEndTickBox);
-            destinations.Selected = maintainPos        ? Destination.MaintainPos :
-                                    levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd;
+            destinations.AddRadioButton((int)Destination.MaintainPos, maintainPosTickBox);
+            destinations.AddRadioButton((int)Destination.LevelStart, levelStartTickBox);
+            destinations.AddRadioButton((int)Destination.LevelEnd, levelEndTickBox);
+            destinations.Selected = (int)(maintainPos        ? Destination.MaintainPos :
+                                          levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd);
             
             string steeringVelX = TextManager.Get("SteeringVelocityX");
             string steeringVelY = TextManager.Get("SteeringVelocityY");
@@ -301,17 +325,16 @@ namespace Barotrauma.Items.Components
             dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
             { MinSize = new Point(150, 0) }, style: null);
             var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
-
-            //TODO: add new texts for these ("Dock" & "Undock")
-            dockText = TextManager.Get("captain.dock");
-            undockText = TextManager.Get("captain.undock");
+            
+            dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
+            undockText = TextManager.Get("label.navterminalundock", fallBackTag: "captain.undock");
             dockingButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), paddedDockingContainer.RectTransform, Anchor.Center), dockText, style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
                 {
                     if (GameMain.Client == null)
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: Character.Controlled);
+                        item.SendSignal(0, "1", "toggle_docking", sender: null);
                     }
                     else
                     {
@@ -378,6 +401,8 @@ namespace Barotrauma.Items.Components
             statusContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
             steerArea.RectTransform.NonScaledSize = new Point(viewSize);
             dockingContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+
+            steerRadius = steerArea.Rect.Width / 2;
         }
 
         private void FindConnectedDockingPort()
@@ -417,7 +442,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (Voltage < MinVoltage) { return; }
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
@@ -624,7 +649,7 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            if (Voltage < MinVoltage)
             {
                 tipContainer.Visible = true;
                 tipContainer.Text = noPowerTip;
@@ -655,7 +680,7 @@ namespace Barotrauma.Items.Components
 
             pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
 
-            if (Vector2.Distance(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerArea.Rect.Width / 2)
+            if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.LeftButtonHeld())
                 {
@@ -727,10 +752,23 @@ namespace Barotrauma.Items.Components
                 inputCumulation = 0;
                 keyboardInput = Vector2.Zero;
             }
+
+            if (!UseAutoDocking) { return; }
+
+            if (checkConnectedPortsTimer <= 0.0f)
+            {
+                Connection dockingConnection = item.Connections?.FirstOrDefault(c => c.Name == "toggle_docking");
+                if (dockingConnection != null)
+                {
+                    connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                }
+                checkConnectedPortsTimer = CheckConnectedPortsInterval;
+            }
             
             float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            foreach (DockingPort sourcePort in DockingPort.List)
+            
+            foreach (DockingPort sourcePort in connectedPorts)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
                 if (sourcePort.Item.Submarine != controlledSub) { continue; }
@@ -781,6 +819,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             maintainPosIndicator?.Remove();
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
@@ -818,12 +857,18 @@ namespace Barotrauma.Items.Components
             int msgStartPos = msg.BitPosition;
 
             bool autoPilot                  = msg.ReadBoolean();
+            bool dockingButtonClicked       = msg.ReadBoolean();
             Vector2 newSteeringInput        = steeringInput;
             Vector2 newTargetVelocity       = targetVelocity;
             float newSteeringAdjustSpeed    = steeringAdjustSpeed;
             bool maintainPos                = false;
             Vector2? newPosToMaintain       = null;
             bool headingToStart             = false;
+
+            if (dockingButtonClicked)
+            {
+                item.SendSignal(0, "1", "toggle_docking", sender: null);
+            }
 
             if (autoPilot)
             {

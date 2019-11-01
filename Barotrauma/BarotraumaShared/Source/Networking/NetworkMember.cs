@@ -60,7 +60,10 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
-        ENDGAME
+        ENDGAME,
+
+        TRAITOR_MESSAGE,
+        MISSION
     }
     enum ServerNetObject
     {
@@ -72,6 +75,14 @@ namespace Barotrauma.Networking
         ENTITY_POSITION,
         ENTITY_EVENT,
         ENTITY_EVENT_INITIAL,
+    }
+
+    enum TraitorMessageType
+    {
+        Server,
+        ServerMessageBox,
+        Objective,
+        Console
     }
 
     enum VoteType
@@ -130,8 +141,6 @@ namespace Barotrauma.Networking
         public Dictionary<string, long> messageCount = new Dictionary<string, long>();
 #endif
         
-        protected string name;
-
         protected ServerSettings serverSettings;
         
         protected TimeSpan updateInterval;
@@ -144,6 +153,10 @@ namespace Barotrauma.Networking
         protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
+        
+        public float SimulatedRandomLatency, SimulatedMinimumLatency;
+        public float SimulatedLoss;
+        public float SimulatedDuplicatesChance;
 
         public int TickRate
         {
@@ -160,16 +173,6 @@ namespace Barotrauma.Networking
             get;
             private set;
         } = new KarmaManager();
-
-        public string Name
-        {
-            get { return name; }
-            set
-            {
-                if (string.IsNullOrEmpty(value)) { return; }
-                name = value.Replace(":", "").Replace(";", "");
-            }
-        }
 
         public bool GameStarted
         {

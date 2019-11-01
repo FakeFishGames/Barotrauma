@@ -15,9 +15,13 @@
   headtorque="60"
   footangle="-15.42238"
   backwardsmovementmultiplier="0.75"
-  cyclespeed="2.031435"
+  cyclespeed="2"
   animationtype="Run"
   foottorque="25"
-  footangles="10: 0.01250029"
+  footangles="10: 1.515006,15: 1.413079"
   tailtorque="50"
-  tailangle="10.48347" />
+  tailangle="10.48347"
+  stepliftheadmultiplier="1"
+  stepliftamount="16.00002"
+  stepliftoffset="0.5000001"
+  stepliftfrequency="1" />

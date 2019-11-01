@@ -13,12 +13,33 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             if (c.Character == null) return;
-            StartRepairing(c.Character);
+            var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
+            if (requestedFixAction != FixActions.None)
+            {
+                if (!c.Character.IsTraitor && requestedFixAction == FixActions.Sabotage)
+                {
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
+                    }
+                    requestedFixAction = FixActions.Repair;
+                }
+
+                if (CurrentFixer == null || CurrentFixer == c.Character && requestedFixAction != currentFixerAction)
+                {
+                    StartRepairing(c.Character, requestedFixAction);
+                    item.CreateServerEvent(this);
+                }
+            }
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(deteriorationTimer);
+            msg.Write(deteriorateAlwaysResetTimer);
+            msg.Write(DeteriorateAlways);
+            msg.Write(CurrentFixer == c.Character);
+            msg.WriteRangedInteger((int)currentFixerAction, 0, 2);
         }
     }
 }

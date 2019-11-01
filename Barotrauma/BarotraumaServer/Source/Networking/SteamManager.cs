@@ -48,7 +48,7 @@ namespace Barotrauma.Steam
             // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
             // creation/authentication functions to maintain your player count.
-            instance.server.ServerName = server.Name;
+            instance.server.ServerName = server.ServerName;
             instance.server.MaxPlayers = server.ServerSettings.MaxPlayers;
             instance.server.Passworded = server.ServerSettings.HasPassword;
             instance.server.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName ?? "";
@@ -62,6 +62,8 @@ namespace Barotrauma.Steam
             Instance.server.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Instance.server.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
             Instance.server.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
+            Instance.server.SetKey("karmaenabled", server.ServerSettings.KarmaEnabled.ToString());
+            Instance.server.SetKey("friendlyfireenabled", server.ServerSettings.AllowFriendlyFire.ToString());
             Instance.server.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
             Instance.server.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
             Instance.server.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());

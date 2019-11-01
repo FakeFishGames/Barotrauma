@@ -130,35 +130,44 @@ namespace Barotrauma
 
             switch (enemyAI.State)
             {
-                case AIController.AIState.Idle:
+                case AIState.Idle:
                     if (attachToWalls && character.Submarine == null && Level.Loaded != null)
                     {
-                        raycastTimer -= deltaTime;
-                        //check if there are any walls nearby the character could attach to
-                        if (raycastTimer < 0.0f)
+                        if (!IsAttached)
                         {
-                            wallAttachPos = Vector2.Zero;
-
-                            var cells = Level.Loaded.GetCells(character.WorldPosition, 1);
-                            if (cells.Count > 0)
+                            raycastTimer -= deltaTime;
+                            //check if there are any walls nearby the character could attach to
+                            if (raycastTimer < 0.0f)
                             {
-                                foreach (Voronoi2.VoronoiCell cell in cells)
+                                wallAttachPos = Vector2.Zero;
+
+                                var cells = Level.Loaded.GetCells(character.WorldPosition, 1);
+                                if (cells.Count > 0)
                                 {
-                                    foreach (Voronoi2.GraphEdge edge in cell.Edges)
+                                    float closestDist = float.PositiveInfinity;
+                                    foreach (Voronoi2.VoronoiCell cell in cells)
                                     {
-                                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
+                                        foreach (Voronoi2.GraphEdge edge in cell.Edges)
                                         {
-                                            attachSurfaceNormal = edge.GetNormal(cell);
-                                            attachTargetBody = cell.Body;
-                                            wallAttachPos = ConvertUnits.ToSimUnits(intersection);
-                                            break;
+                                            if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
+                                            {
+                                                attachSurfaceNormal = edge.GetNormal(cell);
+                                                attachTargetBody = cell.Body;
+                                                Vector2 potentialAttachPos = ConvertUnits.ToSimUnits(intersection);
+                                                float distSqr = Vector2.DistanceSquared(character.SimPosition, wallAttachPos);
+                                                if (distSqr < closestDist)
+                                                {
+                                                    wallAttachPos = potentialAttachPos;
+                                                    closestDist = distSqr;
+                                                }
+                                                break;
+                                            }
                                         }
                                     }
-                                    if (WallAttachPos != Vector2.Zero) break;
                                 }
+                                raycastTimer = RaycastInterval;
                             }
-                            raycastTimer = RaycastInterval;
-                        }
+                        }                        
                     }
                     else
                     {
@@ -187,7 +196,7 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case AIController.AIState.Attack:
+                case AIState.Attack:
                     if (enemyAI.AttackingLimb != null)
                     {
                         if (attachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && attachTargetBody != null)

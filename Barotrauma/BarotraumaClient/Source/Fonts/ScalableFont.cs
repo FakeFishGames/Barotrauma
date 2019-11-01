@@ -32,6 +32,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool IsCJK
+        {
+            get;
+            private set;
+        }
+
         public uint Size
         {
             get
@@ -58,11 +64,16 @@ namespace Barotrauma
         }
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
-            : this (element.GetAttributeString("file", ""), (uint)element.GetAttributeInt("size", 14), gd, element.GetAttributeBool("dynamicloading", false))
-        {            
+            : this(
+                element.GetAttributeString("file", ""),
+                (uint)element.GetAttributeInt("size", 14),
+                gd,
+                element.GetAttributeBool("dynamicloading", false),
+                element.GetAttributeBool("iscjk", false))
+        {
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false)
+        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false, bool isCJK = false)
         {
             lock (mutex)
             {
@@ -85,6 +96,7 @@ namespace Barotrauma
                 this.textures = new List<Texture2D>();
                 this.texCoords = new Dictionary<uint, GlyphData>();
                 this.DynamicLoading = dynamicLoading;
+                this.IsCJK = isCJK;
                 this.graphicsDevice = gd;
 
                 if (gd != null && !dynamicLoading)
@@ -239,7 +251,7 @@ namespace Barotrauma
             {
                 this.texDims = texDims;
                 this.baseChar = baseChar;
-                face.SetPixelSizes(0, size);
+                lock (mutex) { face.SetPixelSizes(0, size); }
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
                 CrossThread.RequestExecutionOnMainThread(() =>
@@ -251,6 +263,7 @@ namespace Barotrauma
             uint glyphIndex = face.GetCharIndex(character);
             if (glyphIndex == 0) { return; }
 
+            lock (mutex) { face.SetPixelSizes(0, size); }
             face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
             if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
             {

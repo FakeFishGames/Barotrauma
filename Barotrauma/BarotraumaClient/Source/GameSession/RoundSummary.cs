@@ -32,7 +32,10 @@ namespace Barotrauma
                 SoundPlayer.OverrideMusicDuration = 18.0f;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            {
+                UserData = "roundsummary"
+            };
 
             int width = 760, height = 500;
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), frame.RectTransform, Anchor.Center, minSize: new Point(width, height)));
@@ -57,10 +60,11 @@ namespace Barotrauma
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);
 
+            GUIComponent endText = null;
             if (!string.IsNullOrWhiteSpace(endMessage))
             {
-                var endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
-                    endMessage, wrap: true);
+                endText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform), 
+                    TextManager.GetServerMessage(endMessage), wrap: true);
             }
 
             //don't show the mission info if the mission was not completed and there's no localized "mission failed" text available
@@ -70,7 +74,9 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(message))
                 {
                     //spacing
-                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform), style: null);
+                    var spacingTransform = new RectTransform(new Vector2(1.0f, 0.1f), infoTextBox.Content.RectTransform);
+
+                    new GUIFrame(spacingTransform, style: null);
 
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                        TextManager.AddPunctuation(':', TextManager.Get("Mission"), GameMain.GameSession.Mission.Name),
@@ -86,12 +92,7 @@ namespace Barotrauma
                     }  
                 }
             }
-
-            foreach (GUIComponent child in infoTextBox.Content.Children)
-            {
-                child.CanBeFocused = false;
-            }
-
+            
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), 
                 TextManager.Get("RoundSummaryCrewStatus"), font: GUI.LargeFont);
 
@@ -165,6 +166,16 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f,
                 UserData = "buttonarea"
             };
+
+            paddedFrame.Recalculate();
+            foreach (GUIComponent child in infoTextBox.Content.Children)
+            {
+                child.CanBeFocused = false;
+                if (child is GUITextBlock textBlock)
+                {
+                    textBlock.CalculateHeightFromText();
+                }
+            }
 
             return frame;
         }

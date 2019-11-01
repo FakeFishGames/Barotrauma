@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Character name="RedCrawler" humanoid="false" blooddecal="blood">
+<Character speciesname="RedCrawler" humanoid="false" blooddecal="blood">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>

@@ -13,7 +13,7 @@ namespace Barotrauma
     {
         private static bool toggledThisFrame;
 
-        private static Sprite damageOverlay;
+        public static Sprite DamageOverlay;
 
         private static string[] strengthTexts;
 
@@ -95,6 +95,8 @@ namespace Barotrauma
         private const float UpdateDisplayedAfflictionsInterval = 0.5f;
         private List<Affliction> currentDisplayedAfflictions = new List<Affliction>();
 
+        public float DisplayedVitality, DisplayVitalityDelay;
+
         public bool MouseOnElement
         {
             get { return highlightedLimbIndex > -1 || GUI.MouseOn == dropItemArea; }
@@ -151,14 +153,11 @@ namespace Barotrauma
             get { return healthBarPulsateTimer; }
             set { healthBarPulsateTimer = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
-
-        static CharacterHealth()
-        {
-            damageOverlay = new Sprite("Content/UI/damageOverlay.png", Vector2.Zero);
-        }
-
+        
         partial void InitProjSpecific(XElement element, Character character)
         {
+            DisplayedVitality = MaxVitality;
+
             if (strengthTexts == null)
             {
                 strengthTexts = new string[]
@@ -349,15 +348,17 @@ namespace Barotrauma
 
         private void OnAttacked(Character attacker, AttackResult attackResult)
         {
-            if (Math.Abs(attackResult.Damage) < 0.01f && attackResult.Afflictions.Count == 0) return;
+            if (Math.Abs(attackResult.Damage) < 0.01f && attackResult.Afflictions.Count == 0) { return; }
             DamageOverlayTimer = MathHelper.Clamp(attackResult.Damage / MaxVitality, DamageOverlayTimer, 1.0f);
-            if (healthShadowDelay <= 0.0f) healthShadowDelay = 1.0f;
+            if (healthShadowDelay <= 0.0f) { healthShadowDelay = 1.0f; }
 
-            if (healthBarPulsateTimer <= 0.0f) healthBarPulsatePhase = 0.0f;
+            if (healthBarPulsateTimer <= 0.0f) { healthBarPulsatePhase = 0.0f; }
             healthBarPulsateTimer = 1.0f;
 
             float additionalIntensity = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 0.1f, attackResult.Damage / MaxVitality));
             damageIntensity = MathHelper.Clamp(damageIntensity + additionalIntensity, 0, 1);
+
+            DisplayVitalityDelay = 0.5f;
         }
 
         private void UpdateAlignment()
@@ -435,6 +436,35 @@ namespace Barotrauma
             uiScale = GUI.Scale;
         }
 
+        public void UpdateClientSpecific(float deltaTime)
+        {
+            if (GameMain.NetworkMember == null)
+            {
+                DisplayedVitality = Vitality;
+            }
+            else
+            {
+                DisplayVitalityDelay -= deltaTime;
+                if (DisplayVitalityDelay <= 0.0f)
+                {
+                    DisplayedVitality = Vitality;
+                }
+            }
+            
+            if (damageIntensity > 0)
+            {
+                damageIntensity -= deltaTime * damageIntensityDropdownRate;
+                if (damageIntensity < 0)
+                {
+                    damageIntensity = 0;
+                }
+            }
+            if (DamageOverlayTimer > 0.0f)
+            {
+                DamageOverlayTimer -= deltaTime;
+            }
+        }
+
         partial void UpdateOxygenProjSpecific(float prevOxygen)
         {
             if (prevOxygen > 0.0f && OxygenAmount <= 0.0f && 
@@ -492,20 +522,7 @@ namespace Barotrauma
                 });
                 updateDisplayedAfflictionsTimer = UpdateDisplayedAfflictionsInterval;
             }
-
-            if (DamageOverlayTimer > 0.0f)
-            {
-                DamageOverlayTimer -= deltaTime;
-            }
-            if (damageIntensity > 0)
-            {
-                damageIntensity -= deltaTime * damageIntensityDropdownRate;
-                if (damageIntensity < 0)
-                {
-                    damageIntensity = 0;
-                }
-            }
-
+            
             if (healthShadowDelay > 0.0f)
             {
                 healthShadowDelay -= deltaTime;
@@ -639,12 +656,12 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(Vitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
+                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(DisplayedVitality / MaxVitality, Color.Red, Color.Orange, Color.Green);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = 
-                    (Vitality > 0.0f) ? 
-                    (MaxVitality > 0.0f ? Vitality / MaxVitality : 0.0f) : 
-                    (Math.Abs(MinVitality) > 0.0f ? 1.0f - Vitality / MinVitality : 0.0f);
+                    (DisplayedVitality > 0.0f) ? 
+                    (MaxVitality > 0.0f ? DisplayedVitality / MaxVitality : 0.0f) : 
+                    (Math.Abs(MinVitality) > 0.0f ? 1.0f - DisplayedVitality / MinVitality : 0.0f);
 
                 if (healthBarPulsateTimer > 0.0f)
                 {
@@ -815,8 +832,8 @@ namespace Barotrauma
 
             if (damageOverlayAlpha > 0.0f)
             {
-                damageOverlay.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayAlpha, Vector2.Zero, 0.0f,
-                    new Vector2(GameMain.GraphicsWidth / damageOverlay.size.X, GameMain.GraphicsHeight / damageOverlay.size.Y));
+                DamageOverlay?.Draw(spriteBatch, Vector2.Zero, Color.White * damageOverlayAlpha, Vector2.Zero, 0.0f,
+                    new Vector2(GameMain.GraphicsWidth / DamageOverlay.size.X, GameMain.GraphicsHeight / DamageOverlay.size.Y));
             }
 
             if (Character.Inventory != null)
@@ -975,30 +992,7 @@ namespace Barotrauma
             //key = item identifier
             //float = suitability
             Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
-            float minSuitability = -10, maxSuitability = 10;
-            foreach (Affliction affliction in afflictions)
-            {
-                foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
-                {
-                    if (!treatmentSuitability.ContainsKey(treatment.Key))
-                    {
-                        treatmentSuitability[treatment.Key] = treatment.Value * affliction.Strength;
-                    }
-                    else
-                    {
-                        treatmentSuitability[treatment.Key] += treatment.Value * affliction.Strength;
-                    }
-                    minSuitability = Math.Min(treatmentSuitability[treatment.Key], minSuitability);
-                    maxSuitability = Math.Max(treatmentSuitability[treatment.Key], maxSuitability);
-                }
-            }
-            //normalize the suitabilities to a range of 0 to 1
-            foreach (string treatment in treatmentSuitability.Keys.ToList())
-            {
-                treatmentSuitability[treatment] = (treatmentSuitability[treatment] - minSuitability) / (maxSuitability - minSuitability);
-                //lerp towards a random value if the medical skill is low
-                treatmentSuitability[treatment] = MathHelper.Lerp(treatmentSuitability[treatment], Rand.Range(0.0f, 1.0f), randomVariance);
-            }
+            GetSuitableTreatments(treatmentSuitability, normalize: true, randomization: randomVariance);
 
             foreach (Affliction affliction in afflictions)
             {
@@ -1446,6 +1440,9 @@ namespace Barotrauma
                     }
                 }
             }
+
+            CalculateVitality();
+            DisplayedVitality = Vitality;
         }
 
         partial void UpdateLimbAfflictionOverlays()

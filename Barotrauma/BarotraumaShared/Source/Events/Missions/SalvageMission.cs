@@ -14,13 +14,11 @@ namespace Barotrauma
 
         private Level.PositionType spawnPositionType;
 
-        private int state;
-
         public override IEnumerable<Vector2> SonarPositions
         {
             get
             {
-                if (state > 0 )
+                if (State > 0 )
                 {
                     Enumerable.Empty<Vector2>();
                 }
@@ -80,41 +78,34 @@ namespace Barotrauma
 
                     var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                     if (itemContainer == null) continue;
-                    if (itemContainer.Combine(item)) break; // Placement successful
+                    if (itemContainer.Combine(item, user: null)) break; // Placement successful
                 }
             }
         }
 
         public override void Update(float deltaTime)
         {
-            switch (state)
+            if (IsClient) { return; }
+            switch (State)
             {
                 case 0:
-                    //item.body.LinearVelocity = Vector2.Zero;
-                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;
-                    if (item.CurrentHull?.Submarine == null) return;
-
-                    ShowMessage(state);
-
-                    state = 1;
+                    if (item.ParentInventory != null) { item.body.FarseerBody.IsKinematic = false; }
+                    if (item.CurrentHull?.Submarine == null) { return; }
+                    State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) return;
-
-                    ShowMessage(state);
-
-                    state = 2;
+                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
+                    State = 2;
                     break;
             }    
         }
 
         public override void End()
         {
-            if (item.CurrentHull?.Submarine == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) return;
+            if (item.CurrentHull?.Submarine == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) { return; }
+
             item.Remove();
-
             GiveReward();
-
             completed = true;
         }
     }

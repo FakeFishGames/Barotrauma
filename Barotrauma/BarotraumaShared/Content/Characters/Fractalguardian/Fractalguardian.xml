@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Fractalguardian" humanoid="false">
+<Character speciesname="Fractalguardian" humanoid="false">
   
   <ragdolls folder="default"/>
   <animations folder="default"/>

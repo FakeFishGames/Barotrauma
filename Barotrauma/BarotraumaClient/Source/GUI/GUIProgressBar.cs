@@ -56,7 +56,21 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            if (ProgressGetter != null) BarSize = ProgressGetter();   
+            if (ProgressGetter != null)
+            {
+                float newSize = MathHelper.Clamp(ProgressGetter(), 0.0f, 1.0f);
+                if (!MathUtils.IsValid(newSize))
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "GUIProgressBar.Draw:GetProgress",
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "ProgressGetter of a GUIProgressBar (" + ProgressGetter.Target.ToString() + " - " + ProgressGetter.Method.ToString() + ") returned an invalid value (" + newSize + ")\n" + Environment.StackTrace);
+                }
+                else
+                {
+                    BarSize = newSize;
+                }
+            }
 
             Rectangle sliderRect = new Rectangle(
                     frame.Rect.X,
@@ -80,7 +94,7 @@ namespace Barotrauma
             {
                 spriteBatch.End();
                 spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, sliderRect);
-                spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
             Color currColor = GetCurrentColor(state);

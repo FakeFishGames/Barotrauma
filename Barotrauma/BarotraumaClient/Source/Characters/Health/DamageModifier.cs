@@ -2,7 +2,7 @@
 {
     partial class DamageModifier
     {
-        [Serialize("", false)]
+        [Serialize("", false), Editable]
         public string DamageSound
         {
             get;

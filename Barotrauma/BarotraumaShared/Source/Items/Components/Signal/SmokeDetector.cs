@@ -5,7 +5,7 @@ namespace Barotrauma.Items.Components
 {
     class SmokeDetector : ItemComponent
     {
-        [Serialize(50.0f, false)]
+        [Serialize(50.0f, false, description: "How large the fire has to be for the detector to react to it.")]
         public float FireSizeThreshold
         {
             get; set;

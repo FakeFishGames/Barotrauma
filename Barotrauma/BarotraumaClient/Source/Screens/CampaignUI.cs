@@ -12,28 +12,33 @@ namespace Barotrauma
     {
         public enum Tab { Map, Crew, Store, Repair }
         private Tab selectedTab;
-        private GUIFrame[] tabs;
-        private GUIFrame topPanel;
+        private readonly GUIFrame[] tabs;
+        private readonly GUIFrame topPanel;
 
-        private GUIListBox characterList;
+        private readonly GUIListBox characterList;
 
         private MapEntityCategory selectedItemCategory = MapEntityCategory.Equipment;
 
-        private GUIListBox myItemList;
-        private GUIListBox storeItemList;
-        private GUITextBox searchBox;
+        private readonly GUIListBox myItemList;
+        private readonly GUIListBox storeItemList;
+        private readonly GUITextBox searchBox;
 
-        private GUIComponent missionPanel;
-        private GUIComponent selectedLocationInfo;
-        private GUIListBox selectedMissionInfo;
+        private readonly GUIComponent missionPanel;
+        private readonly GUIComponent selectedLocationInfo;
+        private readonly GUIListBox selectedMissionInfo;
 
-        private GUIButton repairHullsButton, repairItemsButton;
+        private readonly GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
 
         private GUIFrame characterPreviewFrame;
 
-        private List<GUIButton> tabButtons = new List<GUIButton>();
-        private List<GUIButton> itemCategoryButtons = new List<GUIButton>();
-        private List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+        private bool displayMissionPanelInMapTab;
+
+        private readonly List<GUIButton> tabButtons = new List<GUIButton>();
+        private readonly List<GUIButton> itemCategoryButtons = new List<GUIButton>();
+        private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+        private GUIRadioButtonGroup missionRadioButtonGroup = new GUIRadioButtonGroup();
+
+        private Location selectedLocation;
 
         public Action StartRound;
         public Action<Location, LocationConnection> OnLocationSelected;
@@ -41,12 +46,12 @@ namespace Barotrauma
         public Level SelectedLevel { get; private set; }
 
         public GUIComponent MapContainer { get; private set; }
-
+        
         public GUIButton StartButton { get; private set; }
 
         public CampaignMode Campaign { get; }
 
-        public CampaignUI(CampaignMode campaign, GUIFrame container)
+        public CampaignUI(CampaignMode campaign, GUIComponent container)
         {
             this.Campaign = campaign;
 
@@ -99,7 +104,8 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.9f), tabButton.RectTransform, i == 0 ? Anchor.CenterLeft : Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) },
                         TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
                     {
-                        UserData = "buttontext"
+                        UserData = "buttontext",
+                        Padding = new Vector4(GUI.Scale * 1)                    
                     };
                 }
                 else
@@ -107,7 +113,8 @@ namespace Barotrauma
                     new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.9f), tabButton.RectTransform, Anchor.Center),
                         TextManager.Get(tab.ToString()), textColor: tabButton.TextColor, font: GUI.LargeFont, textAlignment: Alignment.Center, style: null)
                     {
-                        UserData = "buttontext"
+                        UserData = "buttontext",
+                        Padding = new Vector4(GUI.Scale * 1)
                     };
                 }
 
@@ -129,6 +136,7 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Crew].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -174,21 +182,18 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Store].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
-
-            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
-            //don't show categories with no buyable items
-            itemCategories.RemoveAll(c =>
-                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
-
+            
             var storeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), tabs[(int)Tab.Store].RectTransform, Anchor.Center))
             {
+                UserData = "content",
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.015f
             };
 
-            var storeContentTop = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var storeContentTop = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), storeContent.RectTransform) { MinSize = new Point(0, (int)(30 * GUI.Scale)) }, isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true
             };
@@ -197,7 +202,7 @@ namespace Barotrauma
             {
                 TextGetter = GetMoney
             };
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), storeContentTop.RectTransform), isHorizontal: true)
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 0.4f), storeContentTop.RectTransform) { MinSize = new Point(0, (int)(25 * GUI.Scale)) }, isHorizontal: true)
             {
                 Stretch = true
             };
@@ -214,6 +219,7 @@ namespace Barotrauma
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
+                RelativeSpacing = 0.03f,
                 Stretch = true
             };
             myItemList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), storeItemLists.RectTransform));
@@ -226,6 +232,11 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.02f
             };
+
+            List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            //don't show categories with no buyable items
+            itemCategories.RemoveAll(c =>
+                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
             foreach (MapEntityCategory category in itemCategories)
             {
                 var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
@@ -268,6 +279,7 @@ namespace Barotrauma
             }, color: Color.Black * 0.9f);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), tabs[(int)Tab.Repair].RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -281,6 +293,8 @@ namespace Barotrauma
                 TextGetter = GetMoney
             };
 
+            // repair hulls -----------------------------------------------
+
             var repairHullsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
             {
                 RelativeSpacing = 0.05f,
@@ -291,11 +305,11 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
             repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
@@ -324,6 +338,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            // repair items -------------------------------------------
+
             var repairItemsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
             {
                 RelativeSpacing = 0.05f,
@@ -334,11 +350,11 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), "500", textAlignment: Alignment.Right, font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
             repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
             {
                 OnClicked = (btn, userdata) =>
@@ -367,6 +383,60 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            // replace lost shuttles -------------------------------------------
+
+            var replaceShuttlesHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), repairContent.RectTransform), childAnchor: Anchor.TopRight)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+            new GUIImage(new RectTransform(new Vector2(0.3f, 1.0f), replaceShuttlesHolder.RectTransform, Anchor.CenterLeft), "ReplaceShuttlesButton")
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = false
+            };
+            var replaceShuttlesLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            {
+                ForceUpperCase = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
+            replaceShuttlesButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceShuttles"), style: "GUIButtonLarge")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (GameMain.GameSession?.Submarine != null && 
+                        GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                    {
+                        new GUIMessageBox("", TextManager.Get("ReplaceShuttleDockingPortOccupied"));
+                        return true;
+                    }
+
+                    if (campaign.PurchasedLostShuttles)
+                    {
+                        campaign.Money += CampaignMode.ShuttleReplaceCost;
+                        campaign.PurchasedLostShuttles = false;
+                    }
+                    else
+                    {
+                        if (campaign.Money >= CampaignMode.ShuttleReplaceCost)
+                        {
+                            campaign.Money -= CampaignMode.ShuttleReplaceCost;
+                            campaign.PurchasedLostShuttles = true;
+                        }
+                    }
+                    GameMain.Client?.SendCampaignState();
+                    btn.GetChild<GUITickBox>().Selected = campaign.PurchasedLostShuttles;
+
+                    return true;
+                }
+            };
+            new GUITickBox(new RectTransform(new Vector2(0.65f), replaceShuttlesButton.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point(10, 0) }, "")
+            {
+                CanBeFocused = false
+            };
+            GUITextBlock.AutoScaleAndNormalize(repairHullsLabel, repairItemsLabel, replaceShuttlesLabel);
+
+
             // mission info -------------------------------------------------------------------------
 
             missionPanel = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.5f), container.RectTransform, Anchor.TopRight)
@@ -379,6 +449,7 @@ namespace Barotrauma
             
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), missionPanel.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
+                UserData = "outerglow",
                 CanBeFocused = false
             };
 
@@ -386,6 +457,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.1f, -0.05f) }, TextManager.Get("Mission"),
                 textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
             {
+                UserData = "missionlabel",
                 AutoScale = true
             };
             var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionPanel.RectTransform, Anchor.Center))
@@ -403,6 +475,11 @@ namespace Barotrauma
             {
                 Visible = false
             };
+            new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), selectedMissionInfo.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.9f)
+            {
+                UserData = "outerglow",
+                CanBeFocused = false
+            };
 
             // -------------------------------------------------------------------------
 
@@ -416,13 +493,55 @@ namespace Barotrauma
             campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation);
             campaign.Map.OnMissionSelected += (connection, mission) => 
             {
-                var selectedTickBox = missionTickBoxes.Find(tb => tb.UserData == mission);
-                if (selectedTickBox != null)
+                var selectedTickBox = (missionRadioButtonGroup.UserData as List<Mission>).FindIndex(m => m == mission);
+                if (selectedTickBox >= 0)
                 {
-                    selectedTickBox.Selected = true;
+                    missionRadioButtonGroup.Selected = selectedTickBox;
                 }
             };
             campaign.CargoManager.OnItemsChanged += RefreshMyItems;
+        }
+
+        public void SetMissionPanelParent(RectTransform parent)
+        {
+            missionPanel.RectTransform.Parent = parent;
+            missionPanel.RectTransform.RelativeOffset = Vector2.Zero;
+            missionPanel.RectTransform.RelativeSize = Vector2.One;
+            var outerGlow = missionPanel.GetChildByUserData("outerglow");
+            if (outerGlow != null) { outerGlow.Visible = false; }
+            var label = missionPanel.GetChildByUserData("missionlabel");
+            if (label != null) { label.Visible = false; }
+
+            displayMissionPanelInMapTab = true;
+
+            selectedMissionInfo.RectTransform.RelativeOffset = Vector2.Zero;
+            selectedMissionInfo.RectTransform.SetPosition(Anchor.BottomLeft, Pivot.BottomRight);
+        }
+        public void SetMenuPanelParent(RectTransform parent)
+        {
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                var panel = tabs[i];
+                if (panel == null) { continue; }
+                panel.RectTransform.Parent = parent;
+                panel.RectTransform.RelativeOffset = Vector2.Zero;
+                panel.RectTransform.RelativeSize = Vector2.One;
+                var outerGlow = panel.GetChildByUserData("outerglow");
+                if (outerGlow != null) { outerGlow.Visible = false; }
+
+                if (i == (int)Tab.Store)
+                {
+                    panel.RectTransform.RelativeSize *= new Vector2(1.5f, 1.0f);
+                    panel.RectTransform.SetPosition(Anchor.TopRight);
+                    var content = panel.GetChildByUserData("content");
+                    if (content != null) { content.RectTransform.RelativeSize = Vector2.One; }
+                    new GUIFrame(new RectTransform(new Vector2(1.107f, 1.0f), panel.RectTransform, Anchor.TopRight), style: null)
+                    {
+                        Color = Color.Black,
+                        CanBeFocused = false
+                    }.SetAsFirstChild();
+                }
+            }
         }
 
         private void UpdateLocationView(Location location)
@@ -549,8 +668,14 @@ namespace Barotrauma
         public void SelectLocation(Location location, LocationConnection connection)
         {
             selectedLocationInfo.ClearChildren();
-            missionPanel.Visible = location != null;
-            
+            //don't select the map panel if the tabs are displayed in the same place as the map, and we're looking at some other tab
+            if (!displayMissionPanelInMapTab || selectedTab == Tab.Map)
+            {
+                SelectTab(Tab.Map);
+                missionPanel.Visible = location != null;
+            }
+
+            selectedLocation = location;
             if (location == null) { return; }
             
             var container = selectedLocationInfo;
@@ -586,30 +711,43 @@ namespace Barotrauma
                 Mission selectedMission = Campaign.Map.CurrentLocation.SelectedMission != null && availableMissions.Contains(Campaign.Map.CurrentLocation.SelectedMission) ?
                     Campaign.Map.CurrentLocation.SelectedMission : null;
                 missionTickBoxes.Clear();
-                foreach (Mission mission in availableMissions)
+                missionRadioButtonGroup = new GUIRadioButtonGroup
                 {
+                    UserData = availableMissions
+                };
+
+                for (int i = 0; i < availableMissions.Count; i++)
+                {
+                    var mission = availableMissions[i];
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
-                       mission?.Name ?? TextManager.Get("NoMission"))
+                       mission?.Name ?? TextManager.Get("NoMission"), style: "GUIRadioButton")
                     {
-                        UserData = mission,
-                        Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign),
-                        Selected = mission == selectedMission,
-                        OnSelected = (tb) => 
-                        {
-                            if (!tb.Selected) { return false; }
-                            RefreshMissionTab(tb.UserData as Mission); 
-                            Campaign.Map.OnMissionSelected?.Invoke(connection, mission);
-                            if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
-                            {
-                                GameMain.Client?.SendCampaignState();
-                            }
-                            return true;
-                        }
+                        Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign)
                     };
                     missionTickBoxes.Add(tickBox);
+                    missionRadioButtonGroup.AddRadioButton(i, tickBox);
                 }
-                
+
+                if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                {
+                    missionRadioButtonGroup.OnSelect = (rbg, missionInd) =>
+                    {
+                        int ind = missionInd ?? -1;
+                        if (ind < 0) { return; }
+                        var mission = availableMissions[ind];
+                        if (Campaign.Map.CurrentLocation.SelectedMission == mission) { return; }
+                        if (rbg.Selected == missionInd) { return; }
+                        RefreshMissionTab(mission);
+                        if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
+                            GameMain.Client != null && GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                        {
+                            GameMain.Client?.SendCampaignState();
+                        }
+                    };
+                }
+
+                missionRadioButtonGroup.Selected = availableMissions.IndexOf(selectedMission);
+
                 RefreshMissionTab(selectedMission);
 
                 StartButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.7f), missionContent.RectTransform, Anchor.CenterRight),
@@ -640,9 +778,10 @@ namespace Barotrauma
             
             GameMain.GameSession.Map.CurrentLocation.SelectedMission = selectedMission;
 
-            foreach (GUITickBox missionTickBox in missionTickBoxes)
+            var selectedTickBoxIndex = (missionRadioButtonGroup.UserData as List<Mission>).FindIndex(m => m == selectedMission);
+            if (selectedTickBoxIndex >= 0)
             {
-                missionTickBox.Selected = missionTickBox.UserData == selectedMission;
+                missionRadioButtonGroup.Selected = selectedTickBoxIndex;
             }
 
             selectedMissionInfo.ClearChildren();
@@ -677,7 +816,7 @@ namespace Barotrauma
             }
         }
 
-        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, int width)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox)
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
             {
@@ -808,7 +947,7 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(pi);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList, myItemList.Rect.Width);
+                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList);
                 }
                 itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
                 existingItemFrames.Add(itemFrame);
@@ -837,6 +976,9 @@ namespace Barotrauma
                     tabs[i].Visible = (int)selectedTab == i;
                 }
             }
+            
+            missionPanel.Visible = tab == Tab.Map && selectedLocation != null;            
+
             foreach (GUIButton button in tabButtons)
             {
                 button.Selected = (Tab)button.UserData == tab;
@@ -853,13 +995,28 @@ namespace Barotrauma
                         (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
+
+                    if (GameMain.GameSession?.Submarine == null || !GameMain.GameSession.Submarine.SubsLeftBehind)
+                    {
+                        replaceShuttlesButton.Enabled = false;
+                        replaceShuttlesButton.GetChild<GUITickBox>().Selected = false;
+                    }
+                    else
+                    {
+                        replaceShuttlesButton.Enabled =
+                            (Campaign.PurchasedLostShuttles || Campaign.Money >= CampaignMode.ShuttleReplaceCost) &&
+                            (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
+                        replaceShuttlesButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedLostShuttles;
+                    }
                     break;
             }
         }
 
         private void FillStoreItemList()
         {
-            int width = storeItemList.Rect.Width;
+            float prevStoreItemScroll = storeItemList.BarScroll;
+            float prevMyItemScroll = myItemList.BarScroll;
+
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
             {
@@ -870,7 +1027,7 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(priceInfo);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList, width);
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, 0), priceInfo, storeItemList);
                 }
                 existingItemFrames.Add(itemFrame);
             }
@@ -883,6 +1040,9 @@ namespace Barotrauma
 
             storeItemList.Content.RectTransform.SortChildren(
                 (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
+
+            storeItemList.BarScroll = prevStoreItemScroll;
+            myItemList.BarScroll = prevMyItemScroll;
         }
 
         private void FilterStoreItems(MapEntityCategory? category, string filter)
@@ -904,7 +1064,7 @@ namespace Barotrauma
                 btn.Selected = (MapEntityCategory)btn.UserData == selectedItemCategory;
             }
             storeItemList.UpdateScrollBarSize();
-            storeItemList.BarScroll = 0.0f;
+            //storeItemList.BarScroll = 0.0f;
         }
 
         public string GetMoney()
@@ -929,7 +1089,7 @@ namespace Barotrauma
 
             if (characterPreviewFrame == null || characterPreviewFrame.UserData != characterInfo)
             {
-                characterPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), tabs[(int)selectedTab].RectTransform, Anchor.TopRight, Pivot.TopLeft))
+                characterPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.5f), tabs[(int)selectedTab].RectTransform, Anchor.TopRight, Pivot.TopLeft))
                 {
                     UserData = characterInfo
                 };

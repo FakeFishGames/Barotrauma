@@ -55,6 +55,8 @@ namespace Barotrauma.Items.Components
 
         public bool Hidden;
 
+        private float removeNodeDelay;
+
         private bool locked;
         public bool Locked
         {
@@ -71,7 +73,7 @@ namespace Barotrauma.Items.Components
             get { return connections; }
         }
 
-        [Serialize(5000.0f, false)]
+        [Serialize(5000.0f, false, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
         {
             get;
@@ -81,21 +83,15 @@ namespace Barotrauma.Items.Components
         public Wire(Item item, XElement element)
             : base(item, element)
         {
-#if CLIENT
-            if (wireSprite == null)
-            {
-                wireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f))
-                {
-                    Depth = 0.85f
-                };
-            }
-#endif
-
             nodes = new List<Vector2>();
             sections = new List<WireSection>();
             connections = new Connection[2];            
             IsActive = false;
+
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public Connection OtherConnection(Connection connection)
         {
@@ -255,17 +251,18 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
-            ClearConnections(dropper);            
+            ClearConnections(dropper);
             IsActive = false;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (nodes.Count == 0) return;
+            removeNodeDelay -= deltaTime;
+            if (nodes.Count == 0) { return; }
 
             Submarine sub = null;
-            if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
-            if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+            if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
+            if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
 
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
@@ -281,7 +278,7 @@ namespace Barotrauma.Items.Components
                     Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
                     canPlaceNode = attachTarget != null;
 
-                    sub = attachTarget?.Submarine;
+                    sub = sub ?? attachTarget?.Submarine;
                     newNodePos = sub == null ? 
                         item.WorldPosition :
                         item.WorldPosition - sub.Position - sub.HiddenSubPosition;
@@ -332,7 +329,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newNodePos = RoundNode(item.Position, item.CurrentHull) - sub.HiddenSubPosition;
+                newNodePos = RoundNode(item.Position, item.CurrentHull);
+                if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
 
@@ -353,10 +351,12 @@ namespace Barotrauma.Items.Components
         
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) return false;
-#if CLIENT
-            if (character == Character.Controlled && character.SelectedConstruction != null) return false;
-#endif
+            if (character == null) { return false; }
+            if (character == Character.Controlled && character.SelectedConstruction != null) { return false; }
+            if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.LeftButtonClicked())
+            {
+                return false;
+            }
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
@@ -383,11 +383,12 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
-            if (nodes.Count > 1)
+            if (nodes.Count > 1 && removeNodeDelay <= 0.0f)
             {
                 nodes.RemoveAt(nodes.Count - 1);
                 UpdateSections();
             }
+            removeNodeDelay = 0.1f;
 
             Drawable = IsActive || sections.Count > 0;
             return true;
@@ -667,9 +668,9 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(XElement componentElement)
+        public override void Load(XElement componentElement, bool usePrefabValues)
         {
-            base.Load(componentElement);
+            base.Load(componentElement, usePrefabValues);
 
             string nodeString = componentElement.GetAttributeString("nodes", "");
             if (nodeString == "") return;
@@ -721,6 +722,11 @@ namespace Barotrauma.Items.Components
         {
             ClearConnections();
             base.RemoveComponentSpecific();
+#if CLIENT
+            overrideSprite?.Remove();
+            overrideSprite = null;
+            wireSprite = null;
+#endif
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

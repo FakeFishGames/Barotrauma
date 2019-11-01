@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public readonly Entity Owner;
 
-        protected int capacity;
+        protected readonly int capacity;
 
         public Item[] Items;
         protected bool[] hideEmptySlot;
@@ -25,7 +25,7 @@ namespace Barotrauma
             get { return capacity; }
         }
 
-        public Inventory(Entity owner, int capacity, Vector2? centerPos = null, int slotsPerRow = 5)
+        public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
             this.capacity = capacity;
 
@@ -132,7 +132,7 @@ namespace Barotrauma
             //there's already an item in the slot
             if (Items[i] != null && allowCombine)
             {
-                if (Items[i].Combine(item))
+                if (Items[i].Combine(item, user))
                 {
                     System.Diagnostics.Debug.Assert(Items[i] != null);
                     return true;
@@ -336,29 +336,38 @@ namespace Barotrauma
             }
         }
 
-        public Item FindItemByTag(string tag)
+        public Item FindItem(Func<Item, bool> predicate, bool recursive)
         {
-            if (tag == null) return null;
-            return Items.FirstOrDefault(i => i != null && i.HasTag(tag));
+            Item match = Items.FirstOrDefault(i => i != null && predicate(i));
+            if (match == null && recursive)
+            {
+                foreach (var item in Items)
+                {
+                    if (item == null) { continue; }
+                    if (item.OwnInventory != null)
+                    {
+                        match = item.OwnInventory.FindItem(predicate, true);
+                        if (match != null)
+                        {
+                            return match;
+                        }
+                    }
+                }
+            }
+            return match;
         }
 
-        public Item FindItemByIdentifier(string identifier)
+        public Item FindItemByTag(string tag, bool recursive = false)
+        {
+            if (tag == null) { return null; }
+            return FindItem(i => i.HasTag(tag), recursive);
+        }
+
+        public Item FindItemByIdentifier(string identifier, bool recursive = false)
         {
             if (identifier == null) return null;
-            return Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == identifier);
+            return FindItem(i => i.Prefab.Identifier == identifier, recursive);
         }
-
-        /*public Item FindItem(string[] itemNames)
-        {
-            if (itemNames == null) return null;
-
-            foreach (string itemName in itemNames)
-            {
-                var item = FindItem(itemName);
-                if (item != null) return item;
-            }
-            return null;
-        }*/
 
         public virtual void RemoveItem(Item item)
         {
@@ -376,6 +385,7 @@ namespace Barotrauma
 
         public void SharedWrite(IWriteMessage msg, object[] extraData = null)
         {
+            msg.Write((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
                 msg.Write((ushort)(Items[i] == null ? 0 : Items[i].ID));

@@ -40,14 +40,14 @@ namespace Barotrauma.Networking
                 Retries = 0;
                 SteamID = steamId;
                 PasswordSalt = null;
-                UpdateTime = Timing.TotalTime;
-                TimeOut = 20.0;
+                UpdateTime = Timing.TotalTime+Timing.Step*3.0;
+                TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }
 
             public void Heartbeat()
             {
-                TimeOut = 5.0;
+                TimeOut = NetworkConnection.TimeoutThreshold;
             }
         }
 
@@ -105,7 +105,7 @@ namespace Barotrauma.Networking
 
             for (int i = pendingClients.Count - 1; i >= 0; i--)
             {
-                RemovePendingClient(pendingClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
+                RemovePendingClient(pendingClients[i], DisconnectReason.ServerShutdown, msg);
             }
 
             for (int i = connectedClients.Count - 1; i >= 0; i--)
@@ -173,10 +173,11 @@ namespace Barotrauma.Networking
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
                 GameAnalyticsManager.AddErrorEventOnce("SteamP2PServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.ThrowError(errorMsg);
-                }
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#else
+                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+#endif
             }
 
             for (int i = 0; i < pendingClients.Count; i++)
@@ -199,7 +200,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (IPAddress.IsLoopback(inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4()))
+            if (IPAddress.IsLoopback(inc.SenderConnection.RemoteEndPoint.Address.MapToIPv4NoThrow()))
             {
                 inc.SenderConnection.Approve();
                 netConnection = inc.SenderConnection;
@@ -227,7 +228,7 @@ namespace Barotrauma.Networking
             
             if (isServerMessage)
             {
-                DebugConsole.ThrowError("got server message from" + senderSteamId.ToString());
+                DebugConsole.ThrowError("Got server message from" + senderSteamId.ToString());
                 return;
             }
 
@@ -243,7 +244,7 @@ namespace Barotrauma.Networking
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ Banned");
+                        RemovePendingClient(pendingClient, DisconnectReason.Banned, "Banned");
                     }
                     else if (connectedClient != null)
                     {
@@ -256,7 +257,7 @@ namespace Barotrauma.Networking
                     if (pendingClient != null)
                     {
                         string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}";
-                        RemovePendingClient(pendingClient, disconnectMsg);
+                        RemovePendingClient(pendingClient, DisconnectReason.Unknown, disconnectMsg);
                     }
                     else if (connectedClient != null)
                     {
@@ -312,9 +313,11 @@ namespace Barotrauma.Networking
                     if (OwnerConnection == null)
                     {
                         string ownerName = inc.ReadString();
-                        OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID);
-                        OwnerConnection.Status = NetworkConnectionStatus.Connected;
-                        
+                        OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID)
+                        {
+                            Status = NetworkConnectionStatus.Connected
+                        };
+
                         OnInitializationComplete?.Invoke(OwnerConnection);
                     }
                     return;
@@ -345,7 +348,11 @@ namespace Barotrauma.Networking
                     NetOutgoingMessage outMsg = netServer.CreateMessage();
                     outMsg.Write(OwnerSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
-                    netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                    {
+                        DebugConsole.NewMessage("Failed to send connection confirmation message to owner: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+                    }
                     break;
                 case NetConnectionStatus.Disconnected:
                     DebugConsole.NewMessage("Owner disconnected: closing the server...");
@@ -359,13 +366,15 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            pendingClient.TimeOut = 20.0;
+            pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
 
             ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
 
             //DebugConsole.NewMessage(initializationStep+" "+pendingClient.InitializationStep);
 
             if (pendingClient.InitializationStep != initializationStep) return;
+
+            pendingClient.UpdateTime = Timing.TotalTime+Timing.Step;
 
             switch (initializationStep)
             {
@@ -377,7 +386,7 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName.ToString() + "/ The name \"" + name + "\" is invalid");
+                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "The name \"" + name + "\" is invalid");
                         return;
                     }
 
@@ -385,7 +394,7 @@ namespace Barotrauma.Networking
                     bool isCompatibleVersion = NetworkMember.IsCompatible(version, GameMain.Version.ToString()) ?? false;
                     if (!isCompatibleVersion)
                     {
-                        RemovePendingClient(pendingClient,
+                        RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
                                     $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version.ToString()}~[clientversion]={version}");
 
                         GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
@@ -394,44 +403,61 @@ namespace Barotrauma.Networking
                     }
 
                     int contentPackageCount = (int)inc.ReadVariableUInt32();
-                    List<ClientContentPackage> contentPackages = new List<ClientContentPackage>();
+                    List<ClientContentPackage> clientContentPackages = new List<ClientContentPackage>();
                     for (int i = 0; i < contentPackageCount; i++)
                     {
                         string packageName = inc.ReadString();
                         string packageHash = inc.ReadString();
-                        contentPackages.Add(new ClientContentPackage(packageName, packageHash));
+                        clientContentPackages.Add(new ClientContentPackage(packageName, packageHash));
                     }
 
+                    //check if the client is missing any of our packages
                     List<ContentPackage> missingPackages = new List<ContentPackage>();
-                    foreach (ContentPackage contentPackage in GameMain.SelectedPackages)
+                    foreach (ContentPackage serverContentPackage in GameMain.SelectedPackages)
                     {
-                        if (!contentPackage.HasMultiplayerIncompatibleContent) continue;
-                        bool packageFound = false;
-                        for (int i = 0; i < (int)contentPackageCount; i++)
-                        {
-                            if (contentPackages[i].Name == contentPackage.Name && contentPackages[i].Hash == contentPackage.MD5hash.Hash)
-                            {
-                                packageFound = true;
-                                break;
-                            }
-                        }
-                        if (!packageFound) missingPackages.Add(contentPackage);
+                        if (!serverContentPackage.HasMultiplayerIncompatibleContent) continue;
+                        bool packageFound = clientContentPackages.Any(cp => cp.Name == serverContentPackage.Name && cp.Hash == serverContentPackage.MD5hash.Hash);
+                        if (!packageFound) { missingPackages.Add(serverContentPackage); }
+                    }
+
+                    //check if the client is using packages we don't have
+                    List<ClientContentPackage> redundantPackages = new List<ClientContentPackage>();
+                    foreach (ClientContentPackage clientContentPackage in clientContentPackages)
+                    {
+                        bool packageFound = GameMain.SelectedPackages.Any(cp => cp.Name == clientContentPackage.Name && cp.MD5hash.Hash == clientContentPackage.Hash);
+                        if (!packageFound) { redundantPackages.Add(clientContentPackage); }
                     }
 
                     if (missingPackages.Count == 1)
                     {
-                        RemovePendingClient(pendingClient,
+                        RemovePendingClient(pendingClient, DisconnectReason.MissingContentPackage,
                             $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}");
-                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + pendingClient.SteamID + ") couldn't join the server (missing content package " + GetPackageStr(missingPackages[0]) + ")", ServerLog.MessageType.Error);
                         return;
                     }
                     else if (missingPackages.Count > 1)
                     {
                         List<string> packageStrs = new List<string>();
                         missingPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                        RemovePendingClient(pendingClient,
+                        RemovePendingClient(pendingClient, DisconnectReason.MissingContentPackage,
                             $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}");
-                        GameServer.Log(name + " (" + pendingClient.SteamID.ToString() + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                        GameServer.Log(name + " (" + pendingClient.SteamID + ") couldn't join the server (missing content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
+                        return;
+                    }
+                    if (redundantPackages.Count == 1)
+                    {
+                        RemovePendingClient(pendingClient, DisconnectReason.IncompatibleContentPackage,
+                            $"DisconnectMessage.IncompatibleContentPackage~[incompatiblecontentpackage]={GetPackageStr(redundantPackages[0])}");
+                        GameServer.Log(name + " (" + pendingClient.SteamID + ") couldn't join the server (using an incompatible content package " + GetPackageStr(redundantPackages[0]) + ")", ServerLog.MessageType.Error);
+                        return;
+                    }
+                    if (redundantPackages.Count > 1)
+                    {
+                        List<string> packageStrs = new List<string>();
+                        redundantPackages.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
+                        RemovePendingClient(pendingClient, DisconnectReason.IncompatibleContentPackage,
+                            $"DisconnectMessage.IncompatibleContentPackages~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}");
+                        GameServer.Log(name + " (" + pendingClient.SteamID + ") couldn't join the server (using incompatible content packages " + string.Join(", ", packageStrs) + ")", ServerLog.MessageType.Error);
                         return;
                     }
 
@@ -464,7 +490,7 @@ namespace Barotrauma.Networking
                             string banMsg = "Failed to enter correct password too many times";
                             serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID, banMsg, null);
 
-                            RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ "+banMsg);
+                            RemovePendingClient(pendingClient, DisconnectReason.Banned, banMsg);
                             return;
                         }
                     }
@@ -473,21 +499,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected struct ClientContentPackage
-        {
-            public string Name;
-            public string Hash;
-
-            public ClientContentPackage(string name, string hash)
-            {
-                Name = name; Hash = hash;
-            }
-        }
-
-        private string GetPackageStr(ContentPackage contentPackage)
-        {
-            return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
-        }
 
         private void UpdatePendingClient(PendingClient pendingClient)
         {
@@ -495,21 +506,23 @@ namespace Barotrauma.Networking
 
             if (serverSettings.BanList.IsBanned(pendingClient.SteamID))
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Banned.ToString()+"/ Initialization interrupted by ban");
+                RemovePendingClient(pendingClient, DisconnectReason.Banned, "Initialization interrupted by ban");
                 return;
             }
 
             //DebugConsole.NewMessage("pending client status: " + pendingClient.InitializationStep);
 
-            if (connectedClients.Count >= serverSettings.MaxPlayers-1)
+            if (connectedClients.Count >= serverSettings.MaxPlayers - 1)
             {
-                RemovePendingClient(pendingClient, DisconnectReason.ServerFull.ToString());
+                RemovePendingClient(pendingClient, DisconnectReason.ServerFull, "");
             }
-            
+
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
             {
-                SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.Name, pendingClient.SteamID);
-                newConnection.Status = NetworkConnectionStatus.Connected;
+                SteamP2PConnection newConnection = new SteamP2PConnection(pendingClient.Name, pendingClient.SteamID)
+                {
+                    Status = NetworkConnectionStatus.Connected
+                };
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
                 OnInitializationComplete?.Invoke(newConnection);
@@ -518,7 +531,7 @@ namespace Barotrauma.Networking
             pendingClient.TimeOut -= Timing.Step;
             if (pendingClient.TimeOut < 0.0)
             {
-                RemovePendingClient(pendingClient,  Lidgren.Network.NetConnection.NoResponseMessage);
+                RemovePendingClient(pendingClient, DisconnectReason.Unknown, Lidgren.Network.NetConnection.NoResponseMessage);
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
@@ -548,16 +561,20 @@ namespace Barotrauma.Networking
             if (netConnection != null)
             {
                 NetSendResult result = netServer.SendMessage(outMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+                if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+                {
+                    DebugConsole.NewMessage("Failed to send initialization step " + pendingClient.InitializationStep.ToString() + " to pending client: " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+                }
             }
         }
 
-        private void RemovePendingClient(PendingClient pendingClient, string reason)
+        private void RemovePendingClient(PendingClient pendingClient, DisconnectReason reason, string msg)
         {
             if (netServer == null) { return; }
 
             if (pendingClients.Contains(pendingClient))
             {
-                SendDisconnectMessage(pendingClient.SteamID, reason);
+                SendDisconnectMessage(pendingClient.SteamID, reason + "/" + msg);
 
                 pendingClients.Remove(pendingClient);
 
@@ -599,16 +616,25 @@ namespace Barotrauma.Networking
                     lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
                     break;
             }
-
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Server.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Server.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Server.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Server.SimulatedLoss;
+#endif
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
-            byte[] msgData = new byte[1500];
+            byte[] msgData = new byte[msg.LengthBytes];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
             lidgrenMsg.Write(conn.SteamID);
             lidgrenMsg.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send message to " + conn.Name + ": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
         }
 
         private void SendDisconnectMessage(UInt64 steamId, string msg)
@@ -621,7 +647,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((byte)(PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage));
             lidgrenMsg.Write(msg);
 
-            netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            NetSendResult result = netServer.SendMessage(lidgrenMsg, netConnection, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            {
+                DebugConsole.NewMessage("Failed to send disconnect message to " + Steam.SteamManager.SteamIDUInt64ToString(steamId) + ": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+            }
         }
 
         private void Disconnect(NetworkConnection conn, string msg, bool sendDisconnectMessage)

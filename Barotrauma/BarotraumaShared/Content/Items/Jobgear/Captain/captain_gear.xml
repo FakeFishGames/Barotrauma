@@ -5,10 +5,10 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <Sprite name="Captain's Cap Icon" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="200,109,78,54" origin="0.5,0.5" />
+    <Sprite name="Captain's Cap" texture="Content/Items/Jobgear/headgears_1.png" depth="0.6" sourcerect="13,11,80,55" origin="0.5,0.5" />
     <Body width="75" height="50" density="30" />
-    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite name="Captain's Cap" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" hidelimb="false" hideotherwearables="false" inherittexturescale="true" inheritorigin="false" inheritsourcerect="true" sheetindex="2,1" sourcerect="192,96,96,96" origin="0.5,0.6485507" />
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect" variants="3">
+      <sprite name="Captain's Cap Wearable" texture="Content/Items/Jobgear/headgears_[VARIANT].png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidelimb="false" sourcerect="4,1,96,96" origin="0.5,0.6485507" />
     </Wearable>
   </Item>
   <Item name="Captain's Uniform" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
@@ -19,7 +19,7 @@
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="48,33,184,75" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" />
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="3">
       <sprite name="Captain's Uniform Torso" texture="captain_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Captain's Uniform Right Lower Arm" texture="captain_torso_[GENDER]_[VARIANT].png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Captain's Uniform Left Lower Arm" texture="captain_torso_[GENDER]_[VARIANT].png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

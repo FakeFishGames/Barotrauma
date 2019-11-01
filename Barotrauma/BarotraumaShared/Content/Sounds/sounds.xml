@@ -114,6 +114,9 @@
   <zap file="Content/Items/Electricity/Zap3.ogg" volume="1.0" range="500"/>
   <zap file="Content/Items/Electricity/Zap4.ogg" volume="1.0" range="500"/>
   <zap file="Content/Items/Electricity/Zap5.ogg" volume="1.0" range="500"/>
+
+  <rewire file="Content/Sounds/RewiringLoop.ogg" volume="1.0" range="1000"/>
+  <repair file="Content/Sounds/RepairLoop.ogg" volume="1.0" range="1000"/>
   
   <flow file="Content/Sounds/Water/FlowSmall.ogg"/>
   <flow file="Content/Sounds/Water/FlowMedium.ogg"/>

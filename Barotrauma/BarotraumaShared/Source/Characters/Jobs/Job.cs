@@ -36,9 +36,12 @@ namespace Barotrauma
             get { return skills.Values.ToList(); }
         }
 
-        public Job(JobPrefab jobPrefab)
+        public int Variant;
+
+        public Job(JobPrefab jobPrefab, int variant = 0)
         {
             prefab = jobPrefab;
+            Variant = variant;
 
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
@@ -50,38 +53,25 @@ namespace Barotrauma
         public Job(XElement element)
         {
             string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
-            prefab = JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == identifier);
-
-            string name = "";
-            if (prefab == null)
+            if (!JobPrefab.List.TryGetValue(identifier, out JobPrefab p))
             {
-                name = element.GetAttributeString("name", "").ToLowerInvariant();
-                prefab = JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == name);
+                DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
+                p = JobPrefab.Random();
             }
-            if (prefab == null)
-            {
-                DebugConsole.ThrowError("Could not find the job \"" + name + "\" (identifier " + identifier + "). Giving the character a random job.");
-                prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count)];
-            }
-
+            prefab = p;
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "skill") continue;
+                if (subElement.Name.ToString().ToLowerInvariant() != "skill") { continue; }
                 string skillIdentifier = subElement.GetAttributeString("identifier", "");
-                if (string.IsNullOrEmpty(skillIdentifier)) continue;
+                if (string.IsNullOrEmpty(skillIdentifier)) { continue; }
                 skills.Add(
                     skillIdentifier,
                     new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
         
-        public static Job Random(Rand.RandSync randSync)
-        {
-            JobPrefab prefab = JobPrefab.List[Rand.Int(JobPrefab.List.Count - 1, randSync)];
-
-            return new Job(prefab);
-        }
+        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced) => new Job(JobPrefab.Random(randSync));
 
         public float GetSkillLevel(string skillIdentifier)
         {
@@ -169,6 +159,25 @@ namespace Barotrauma
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
+            Wearable wearable = ((List<ItemComponent>)item.Components)?.Find(c => c is Wearable) as Wearable;
+            if (wearable != null)
+            {
+                if (Variant > 0 && Variant <= wearable.Variants)
+                {
+                    wearable.Variant = Variant;
+                }
+                else
+                {
+                    wearable.Variant = wearable.Variant; //force server event
+                    if (wearable.Variants > 0 && Variant == 0)
+                    {
+                        //set variant to the same as the wearable to get the rest of the character's gear
+                        //to use the same variant (if possible)
+                        Variant = wearable.Variant;
+                    }
+                }
+            }
+
             if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
             {
                 foreach (string s in spawnPoint.IdCardTags)
@@ -186,7 +195,7 @@ namespace Barotrauma
                 wifiComponent.TeamID = character.TeamID;
             }
             
-            if (parentItem != null) parentItem.Combine(item);
+            if (parentItem != null) parentItem.Combine(item, user: null);
 
             foreach (XElement childItemElement in itemElement.Elements())
             {

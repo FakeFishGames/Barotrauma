@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
-        private List<RelatedItem> containableItems;
         public ItemInventory Inventory;
 
         private List<Pair<Item, StatusEffect>> itemsWithStatusEffects;
@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
         //how many items can be contained
         private int capacity;
-        [Serialize(5, false)]
+        [Serialize(5, false, description: "How many items can be contained inside this item.")]
         public int Capacity
         {
             get { return capacity; }
@@ -25,18 +25,19 @@ namespace Barotrauma.Items.Components
         }
 
         private bool hideItems;
-        [Serialize(true, false)]
+        [Serialize(true, false, description: "Should the items contained inside this item be hidden."
+            + " If set to false, you should use the ItemPos and ItemInterval properties to determine where the items get rendered.")]
         public bool HideItems
         {
             get { return hideItems; }
-            set 
-            { 
+            set
+            {
                 hideItems = value;
                 Drawable = !hideItems;
             }
         }
         
-        [Serialize(true, false)]
+        [Serialize(true, false, description: "Should the inventory of this item be visible when the item is selected.")]
         public bool DrawInventory
         {
             get;
@@ -44,41 +45,60 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained
         {
             get;
             set;
         }
 
-        [Serialize("0.5,0.5", false)]
-        public Vector2 HudPos { get; set; }
-        [Serialize(5, false)]
+        [Serialize(5, false, description: "How many inventory slots the inventory has per row.")]
         public int SlotsPerRow { get; set; }
 
-        public List<RelatedItem> ContainableItems
+        private HashSet<string> containableRestrictions = new HashSet<string>();
+        [Editable, Serialize("", true, description: "Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.")]
+        public string ContainableRestrictions
         {
-            get { return containableItems; }
+            get { return string.Join(",", containableRestrictions); }
+            set
+            {
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, containableRestrictions);
+            }
         }
+
+        public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
+        {
+            isRestrictionsDefined = containableRestrictions.Any();
+            if (!isRestrictionsDefined) { return true; }
+            return identifiersOrTags.Any(id => containableRestrictions.Any(r => r == id));
+        }
+
+        public bool ShouldBeContained(Item item, out bool isRestrictionsDefined)
+        {
+            isRestrictionsDefined = containableRestrictions.Any();
+            if (!isRestrictionsDefined) { return true; }
+            return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+        }
+
+        public List<RelatedItem> ContainableItems { get; private set; } = new List<RelatedItem>();
 
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
-            Inventory = new ItemInventory(item, this, capacity, HudPos, SlotsPerRow);            
-            containableItems = new List<RelatedItem>();
+            Inventory = new ItemInventory(item, this, capacity, SlotsPerRow);
             
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "containable":
-                        RelatedItem containable = RelatedItem.Load(subElement, item.Name);
+                        RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
                         if (containable == null)
                         {
                             DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
                             continue;
                         }
-                        containableItems.Add(containable);
+                        ContainableItems.Add(containable);
                         break;
                 }
             }
@@ -94,7 +114,7 @@ namespace Barotrauma.Items.Components
         {
             item.SetContainedItemPositions();
             
-            RelatedItem ri = containableItems.Find(x => x.MatchesItem(containedItem));
+            RelatedItem ri = ContainableItems.Find(x => x.MatchesItem(containedItem));
             if (ri != null)
             {
                 itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
@@ -118,8 +138,8 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeContained(Item item)
         {
-            if (containableItems.Count == 0) return true;
-            return (containableItems.Find(x => x.MatchesItem(item)) != null);
+            if (ContainableItems.Count == 0) return true;
+            return (ContainableItems.Find(x => x.MatchesItem(item)) != null);
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -189,9 +209,10 @@ namespace Barotrauma.Items.Components
             return (picker != null);
         }
 
-        public override bool Combine(Item item)
+        public override bool Combine(Item item, Character user)
         {
-            if (!containableItems.Any(x => x.MatchesItem(item))) return false;
+            if (!ContainableItems.Any(x => x.MatchesItem(item))) { return false; }
+            if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             
             if (Inventory.TryPutItem(item, null))
             {            
@@ -286,20 +307,16 @@ namespace Barotrauma.Items.Components
             }               
         }        
 
-        public override void Load(XElement componentElement)
+        public override void Load(XElement componentElement, bool usePrefabValues)
         {
-            base.Load(componentElement);
+            base.Load(componentElement, usePrefabValues);
 
             string containedString = componentElement.GetAttributeString("contained", "");
-
             string[] itemIdStrings = containedString.Split(',');
-
             itemIds = new ushort[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                ushort id = 0;
-                if (!ushort.TryParse(itemIdStrings[i], out id)) continue;
-
+                if (!ushort.TryParse(itemIdStrings[i], out ushort id)) { continue; }
                 itemIds[i] = id;
             }
         }

@@ -8,63 +8,47 @@ namespace Barotrauma.Items.Components
 {
     partial class PowerTransfer : Powered
     {
-        private static float fullPower;
-        private static float fullLoad;
+        public List<Connection> PowerConnections { get; private set; }
 
-        private int updateCount;
-
-        //affects how fast changes in power/load are carried over the grid
-        static float inertia = 5.0f;
-
-        private static HashSet<Powered> connectedList = new HashSet<Powered>();
-        private List<Connection> powerConnections;
-        public List<Connection> PowerConnections
-        {
-            get
-            {
-                return powerConnections;
-            }
-        }
-
-
-        private Dictionary<Connection, bool> connectionDirty = new Dictionary<Connection, bool>();
+        private readonly Dictionary<Connection, bool> connectionDirty = new Dictionary<Connection, bool>();
 
         //a list of connections a given connection is connected to, either directly or via other power transfer components
-        private Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
+        private readonly Dictionary<Connection, HashSet<Connection>> connectedRecipients = new Dictionary<Connection, HashSet<Connection>>();
 
-        private float powerLoad;
+        protected float powerLoad;
 
-        private bool isBroken;
+        protected bool isBroken;
 
         public float PowerLoad
         {
             get { return powerLoad; }
+            set { powerLoad = value; }
         }
 
-        [Serialize(true, true), Editable(ToolTip = "Can the item be damaged if too much power is supplied to the power grid.")]
+        [Editable, Serialize(true, true, description: "Can the item be damaged if too much power is supplied to the power grid.")]
         public bool CanBeOverloaded
         {
             get;
             set;
         }
 
-        [Serialize(2.0f, true), Editable(MinValueFloat = 1.0f, ToolTip = 
+        [Editable(MinValueFloat = 1.0f), Serialize(2.0f, true, description:
             "How much power has to be supplied to the grid relative to the load before item starts taking damage. "
-            +"E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
+            + "E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
         public float OverloadVoltage
         {
             get;
             set;
         }
 
-        [Serialize(0.15f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, ToolTip = "The probability for a fire to start when the item breaks.")]
+        [Serialize(0.15f, true, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float FireProbability
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool Overload
         {
             get;
@@ -145,97 +129,43 @@ namespace Barotrauma.Items.Components
                 SetAllConnectionsDirty();
                 isBroken = false;
             }
-            
-            if (updateCount > 0)
+
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+
+            //if the item can't be fixed, don't allow it to break
+            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
+
+            float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
+            Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
+            if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
-                //this junction box has already been updated this frame
-                updateCount--;
-                return;
-            }
+                //damage the item if voltage is too high (except if running as a client)
+                float prevCondition = item.Condition;
+                item.Condition -= deltaTime * 10.0f;
 
-            Overload = false;
-
-            //reset and recalculate the power generated/consumed
-            //by the constructions connected to the grid
-            fullPower = 0.0f;
-            fullLoad = 0.0f;
-
-            connectedList.Clear();
-
-            updateCount = 0;
-            CheckJunctions(deltaTime);
-
-            foreach (Powered p in connectedList)
-            {
-                PowerTransfer pt = p as PowerTransfer;
-                if (pt == null || pt.updateCount == 0) { continue; }
-
-                if (pt is RelayComponent != this is RelayComponent) { continue; }
-
-                pt.Overload = false;
-                pt.powerLoad += (fullLoad - pt.powerLoad) / inertia;
-                pt.currPowerConsumption += (-fullPower - pt.currPowerConsumption) / inertia;
-
-                float voltage = fullPower / Math.Max(fullLoad, 1.0f);
-                if (this is RelayComponent)
-                {
-                    pt.currPowerConsumption = Math.Max(-fullLoad, pt.currPowerConsumption);
-                    voltage = Math.Min(voltage, 1.0f);
-                }
-
-                pt.Item.SendSignal(0, "", "power", null, voltage);
-                pt.Item.SendSignal(0, "", "power_out", null, voltage);
-
-                //items in a bad condition are more sensitive to overvoltage
-                float maxOverVoltage = MathHelper.Lerp(OverloadVoltage * 0.75f, OverloadVoltage, pt.item.Condition / pt.item.MaxCondition);
-                maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
-
-                //if the item can't be fixed, don't allow it to break
-                if (!pt.item.Repairables.Any() || !pt.CanBeOverloaded) { continue; }
-
-                //relays don't blow up if the power is higher than load, only if the output is high enough 
-                //(i.e. enough power passing through the relay)
-                if (pt is RelayComponent) { continue; }
-
-                if (-pt.currPowerConsumption < Math.Max(pt.powerLoad, 200.0f) * maxOverVoltage) { continue; }
-
-                pt.Overload = true;
-#if CLIENT
-                //damage the item if voltage is too high 
-                //(except if running as a client)
-                if (GameMain.Client != null) { continue; }
-#endif
-                float prevCondition = pt.item.Condition;
-                pt.item.Condition -= deltaTime * 10.0f;
-
-                if (pt.item.Condition <= 0.0f && prevCondition > 0.0f)
+                if (item.Condition <= 0.0f && prevCondition > 0.0f)
                 {
 #if CLIENT
-                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: pt.item.CurrentHull);                    
-
+                    SoundPlayer.PlaySound("zap", item.WorldPosition, hullGuess: item.CurrentHull);
                     Vector2 baseVel = Rand.Vector(300.0f);
                     for (int i = 0; i < 10; i++)
                     {
-                        var particle = GameMain.ParticleManager.CreateParticle("spark", pt.item.WorldPosition,
-                            baseVel + Rand.Vector(100.0f), 0.0f, pt.item.CurrentHull);
-
+                        var particle = GameMain.ParticleManager.CreateParticle("spark", item.WorldPosition,
+                            baseVel + Rand.Vector(100.0f), 0.0f, item.CurrentHull);
                         if (particle != null) particle.Size *= Rand.Range(0.5f, 1.0f);
                     }
 #endif
-
-                    float currentIntensity = GameMain.GameSession?.EventManager != null ? 
+                    float currentIntensity = GameMain.GameSession?.EventManager != null ?
                         GameMain.GameSession.EventManager.CurrentIntensity : 0.5f;
-                    
+
                     //higher probability for fires if the current intensity is low
-                    if (pt.FireProbability > 0.0f && 
-                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(pt.FireProbability, pt.FireProbability * 0.1f, currentIntensity))
+                    if (FireProbability > 0.0f &&
+                        Rand.Range(0.0f, 1.0f) < MathHelper.Lerp(FireProbability, FireProbability * 0.1f, currentIntensity))
                     {
-                        new FireSource(pt.item.WorldPosition);
+                        new FireSource(item.WorldPosition);
                     }
                 }
             }
-
-            updateCount = 0;
         }
 
         public override bool Pick(Character picker)
@@ -243,7 +173,7 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        private void RefreshConnections()
+        protected void RefreshConnections()
         {
             var connections = item.Connections;
             foreach (Connection c in connections)
@@ -317,102 +247,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        //a recursive function that goes through all the junctions and adds up
-        //all the generated/consumed power of the constructions connected to the grid
-        private void CheckJunctions(float deltaTime, bool increaseUpdateCount = true, float clampPower = float.MaxValue, float clampLoad = float.MaxValue)
-        {
-            if (increaseUpdateCount)
-            {
-                updateCount = 1;
-            }
-            connectedList.Add(this);
-
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
-            //float maxPower = this is RelayComponent relayComponent ? relayComponent.MaxPower : float.PositiveInfinity;
-            RelayComponent thisRelayComponent = this as RelayComponent;
-            if (thisRelayComponent != null)
-            {
-                clampPower = Math.Min(Math.Min(clampPower, thisRelayComponent.MaxPower), powerLoad);
-                clampLoad = Math.Min(clampLoad, thisRelayComponent.MaxPower);
-            }
-
-            foreach (Connection c in PowerConnections)
-            {
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
-                {
-                    if (recipient?.Item == null || !recipient.IsPower) { continue; }
-
-                    Item it = recipient.Item;
-                    if (it.Condition <= 0.0f) { continue; }
-
-                    foreach (ItemComponent ic in it.Components)
-                    {
-                        if (!(ic is Powered powered) || !powered.IsActive) { continue; }
-                        if (connectedList.Contains(powered)) { continue; }
-
-                        if (powered is PowerTransfer powerTransfer)
-                        {
-                            RelayComponent otherRelayComponent = powerTransfer as RelayComponent;
-                            if ((thisRelayComponent == null) == (otherRelayComponent == null))
-                            {
-                                if (!powerTransfer.CanTransfer) { continue; }
-                                powerTransfer.CheckJunctions(deltaTime, increaseUpdateCount, clampPower, clampLoad);
-                            }
-                            else
-                            {
-                                if (!powerTransfer.CanTransfer) continue;
-                                float maxPowerIn = (thisRelayComponent != null && c.IsOutput) ? 0.0f : clampPower;
-                                float maxPowerOut = (thisRelayComponent != null && !c.IsOutput) ? 0.0f : clampLoad;
-                                if (maxPowerIn > 0.0f || maxPowerOut > 0.0f)
-                                {
-                                    powerTransfer.CheckJunctions(deltaTime, false, maxPowerIn, maxPowerOut);
-                                }
-                            }
-
-                            continue;
-                        }
-
-                        float addLoad = 0.0f;
-                        float addPower = 0.0f;
-                        if (powered is PowerContainer powerContainer)
-                        {
-                            if (recipient.Name == "power_in")
-                            {
-                                addLoad = powerContainer.CurrPowerConsumption;
-                            }
-                            else
-                            {
-                                addPower = powerContainer.CurrPowerOutput;
-                            }
-                        }
-                        else
-                        {
-                            connectedList.Add(powered);
-                            //positive power consumption = the construction requires power -> increase load
-                            if (powered.CurrPowerConsumption > 0.0f)
-                            {
-                                addLoad = powered.CurrPowerConsumption;
-                            }
-                            else if (powered.CurrPowerConsumption < 0.0f)
-                            //negative power consumption = the construction is a 
-                            //generator/battery or another junction box
-                            {
-                                addPower -= powered.CurrPowerConsumption;
-                            }
-                        }
-
-                        if (addPower + fullPower > clampPower) { addPower -= (addPower + fullPower) - clampPower; };
-                        if (addPower > 0) { fullPower += addPower; }
-
-                        if (addLoad + fullLoad > clampLoad) { addLoad -= (addLoad + fullLoad) - clampLoad; };
-                        if (addLoad > 0) { fullLoad += addLoad; }
-                    }
-                }
-            }
-        }
-
         public void SetAllConnectionsDirty()
         {
             if (item.Connections == null) return;
@@ -431,8 +265,9 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            base.OnItemLoaded();
             var connections = Item.Connections;
-            powerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);  
+            PowerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);  
             if (connections == null)
             {
                 IsActive = false;
@@ -440,33 +275,45 @@ namespace Barotrauma.Items.Components
             }
             SetAllConnectionsDirty();
         }
-        
+
+        public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
+        {
+            //we've already received this signal
+            if (lastPowerProbeRecipients.Contains(this)) { return; }
+            lastPowerProbeRecipients.Add(this);
+
+            if (power < 0.0f)
+            {
+                powerLoad -= power;
+            }
+            else
+            {
+                currPowerConsumption -= power;
+            }
+            powerOut?.SendPowerProbeSignal(source, power);
+        }
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
         {
-            if (connection.IsPower) return;
-
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power);
-
-            if (!connectedRecipients.ContainsKey(connection)) return;
+            if (item.Condition <= 0.0f || connection.IsPower) { return; }
+            if (!connectedRecipients.ContainsKey(connection)) { return; }
 
             if (connection.Name.Length > 5 && connection.Name.Substring(0, 6) == "signal")
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
-                    if (recipient.Item == item || recipient.Item == source) continue;
+                    if (recipient.Item == item || recipient.Item == source) { continue; }
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //powertransfer components don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && connection.Name.Contains("signal")) continue;
+                        if (ic is PowerTransfer && connection.Name.Contains("signal")) { continue; }
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
-                    bool broken = recipient.Item.Condition <= 0.0f;
                     foreach (StatusEffect effect in recipient.Effects)
                     {
-                        if (broken && effect.type != ActionType.OnBroken) continue;
                         recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
                     }
                 }

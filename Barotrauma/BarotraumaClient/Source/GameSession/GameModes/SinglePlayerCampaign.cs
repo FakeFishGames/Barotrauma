@@ -32,11 +32,11 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { TryEndRound(GetLeavingSub()); return true; }
             };
 
-            foreach (JobPrefab jobPrefab in JobPrefab.List)
+            foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanConfigFile, "", jobPrefab));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanSpeciesName, "", jobPrefab));
                 }
             }
         }
@@ -175,13 +175,17 @@ namespace Barotrauma
 
         protected override void WatchmanInteract(Character watchman, Character interactor)
         {
+            if (interactor != null)
+            {
+                interactor.FocusedCharacter = null;
+            }
+
             Submarine leavingSub = GetLeavingSub();
             if (leavingSub == null)
             {
                 CreateDialog(new List<Character> { watchman }, "WatchmanInteractNoLeavingSub", 5.0f);
                 return;
             }
-
 
             CreateDialog(new List<Character> { watchman }, "WatchmanInteract", 1.0f);
 
@@ -295,7 +299,7 @@ namespace Barotrauma
                         {
                             GameMain.GameSession.LoadPrevious();
                             GameMain.LobbyScreen.Select();
-                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                            GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData as string == "roundsummary");
                             return true;
                         }
                     };
@@ -303,7 +307,11 @@ namespace Barotrauma
                     var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
-                    quitButton.OnClicked += (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox); return true; };
+                    quitButton.OnClicked += (GUIButton button, object obj) =>
+                    {
+                        GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData as string == "roundsummary");
+                        return true;
+                    };
                 }
             }
 

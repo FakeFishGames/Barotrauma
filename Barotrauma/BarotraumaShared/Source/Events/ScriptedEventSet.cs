@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -85,8 +85,9 @@ namespace Barotrauma
 
         public float GetCommonness(Level level)
         {
-            return Commonness.ContainsKey(level.GenerationParams.Name) ?
-                    Commonness[level.GenerationParams.Name] : Commonness[""];
+            string key = level.GenerationParams?.Name ?? "";
+            return Commonness.ContainsKey(key) ?
+                    Commonness[key] : Commonness[""];
         }
 
         public static void LoadPrefabs()
@@ -103,12 +104,19 @@ namespace Barotrauma
             foreach (string configFile in configFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null) continue;
+                if (doc == null) { continue; }
+
+                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+                if (doc.Root.IsOverride())
+                {
+                    DebugConsole.NewMessage($"Overriding all random events using the file {configFile}", Color.Yellow);
+                    List.Clear();
+                }
 
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (element.Name.ToString().ToLowerInvariant() != "eventset") continue;
+                    if (element.Name.ToString().ToLowerInvariant() != "eventset") { continue; }
                     List.Add(new ScriptedEventSet(element, i.ToString()));
                     i++;
                 }

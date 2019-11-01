@@ -116,10 +116,15 @@ namespace Barotrauma
             foreach (string soundFile in soundFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(soundFile);
-                if (doc != null && doc.Root != null)
+                if (doc == null) { continue; }
+                var mainElement = doc.Root;
+                if (doc.Root.IsOverride())
                 {
-                    soundElements.AddRange(doc.Root.Elements());
+                    mainElement = doc.Root.FirstElement();
+                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile}", Color.Yellow);
+                    soundElements.Clear();
                 }
+                soundElements.AddRange(mainElement.Elements());
             }
             
             SoundCount = 1 + soundElements.Count();
@@ -393,19 +398,19 @@ namespace Barotrauma
                     if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
                     {
                         Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diffLeft.X = 0.0f;
+                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffLeft.X = 0.0f; }
                         if (diffLeft.X <= 0)
                         {
                             float distFallOffLeft = diffLeft.Length() / FireSoundRange;
                             if (distFallOffLeft < 0.99f)
                             {
-                                fireVolumeLeft[0] += (1.0f - distFallOffLeft) * (fs.Size.X / FireSoundLargeLimit);
+                                fireVolumeLeft[0] += (1.0f - distFallOffLeft);
                                 if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
                             }
                         }
 
                         Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
-                        if (diff.X < fs.Size.X / 2.0f) diffRight.X = 0.0f;
+                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffRight.X = 0.0f; }
                         if (diffRight.X >= 0)
                         {
                             float distFallOffRight = diffRight.Length() / FireSoundRange;
@@ -484,12 +489,19 @@ namespace Barotrauma
         public static SoundChannel PlaySound(string soundTag, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
             var sound = GetSound(soundTag);
-            if (sound == null) return null;
+            if (sound == null) { return null; }
             return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
         }
 
         public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
         {
+            if (sound == null)
+            {
+                string errorMsg = "Error in SoundPlayer.PlaySound (sound was null)\n" + Environment.StackTrace;
+                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return null;
+            }
+
             float far = range ?? sound.BaseFar;
 
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;

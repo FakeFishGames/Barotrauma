@@ -121,7 +121,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool DrawDamageEffect
+        public bool DrawDamageEffect
         {
             get
             {
@@ -151,7 +151,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize("0,0", true), Editable(ToolTip = "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
+        [Editable, Serialize("0,0", true, description: "The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.")]
         public Vector2 DropShadowOffset
         {
             get;
@@ -206,6 +206,14 @@ namespace Barotrauma
         }
 
         private Rectangle defaultRect;
+        /// <summary>
+        /// Unscaled rect
+        /// </summary>
+        public Rectangle DefaultRect
+        {
+            get { return defaultRect; }
+            set { defaultRect = value; }
+        }
 
         public override Rectangle Rect
         {
@@ -236,6 +244,29 @@ namespace Barotrauma
                         sec.rect = secRect;
                     }
                 }          
+            }
+        }
+        
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectWidth
+        {
+            get { return rect.Width; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
+            }
+        }
+        //for upgrading the dimensions of a structure from xml
+        [Serialize(0, false)]
+        public int RectHeight
+        {
+            get { return rect.Height; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
             }
         }
 
@@ -372,7 +403,12 @@ namespace Barotrauma
             // Only add ai targets automatically to submarine/outpost walls 
             if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
             {
-                aiTarget = new AITarget(this);
+                aiTarget = new AITarget(this)
+                {
+                    MinSightRange = 2000,
+                    MaxSightRange = 5000,
+                    MaxSoundRange = 0
+                };
             }
 
             InsertToList();
@@ -407,19 +443,20 @@ namespace Barotrauma
         private void CreateStairBodies()
         {
             Bodies = new List<Body>();
+                        
+            float stairAngle = MathHelper.ToRadians(Math.Min(Prefab.StairAngle, 75.0f));
 
-            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width * Math.Sqrt(2.0));
+            float bodyWidth = ConvertUnits.ToSimUnits(rect.Width / Math.Cos(stairAngle));
             float bodyHeight = ConvertUnits.ToSimUnits(10);
+
+            float stairHeight = rect.Width * (float)Math.Tan(stairAngle);
 
             Body newBody = BodyFactory.CreateRectangle(GameMain.World,
                 bodyWidth, bodyHeight, 1.5f);
 
             newBody.BodyType = BodyType.Static;
-            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + rect.Width / 2.0f);
-            /*stairPos += new Vector2(
-                (StairDirection == Direction.Right) ? -Submarine.GridSize.X * 1.5f : Submarine.GridSize.X * 1.5f,
-                -Submarine.GridSize.Y * 2.0f);*/
-            newBody.Rotation = (StairDirection == Direction.Right) ? MathHelper.PiOver4 : -MathHelper.PiOver4;
+            Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + stairHeight / 2.0f);
+            newBody.Rotation = (StairDirection == Direction.Right) ? stairAngle : -stairAngle;
             newBody.CollisionCategories = Physics.CollisionStairs;
             newBody.Friction = 0.8f;
             newBody.UserData = this;
@@ -1186,6 +1223,11 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(s, element);
 
+            if (submarine?.GameVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.GameVersion);
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
@@ -1287,6 +1329,14 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+        }
+
+        public override void Update(float deltaTime, Camera cam)
+        {
+            if (aiTarget != null)
+            {
+                aiTarget.SightRange = Submarine == null ? aiTarget.MinSightRange : Submarine.Velocity.Length() / 2 * aiTarget.MaxSightRange;
+            }
         }
     }
 }

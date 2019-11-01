@@ -86,11 +86,7 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string BloodDecalName
-        {
-            get;
-            private set;
-        }
+        public string BloodDecalName => Params.BloodDecal;
                 
         private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
@@ -137,22 +133,18 @@ namespace Barotrauma
             get { return activeObjectiveEntities; }
         }
 
-        partial void InitProjSpecific(XDocument doc)
+        partial void InitProjSpecific(XElement mainElement)
         {
-            soundInterval = doc.Root.GetAttributeFloat("soundinterval", 10.0f);
+            soundInterval = mainElement.GetAttributeFloat("soundinterval", 10.0f);
             soundTimer = Rand.Range(0.0f, soundInterval);
 
-            BloodDecalName = doc.Root.GetAttributeString("blooddecal", "");
-
             sounds = new List<CharacterSound>();
-            foreach (XElement subElement in doc.Root.Elements())
+            Params.Sounds.ForEach(s => sounds.Add(new CharacterSound(s)));
+
+            foreach (XElement subElement in mainElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "sound":
-                        var characterSound = new CharacterSound(subElement);
-                        if (characterSound.Sound != null) { sounds.Add(characterSound); }
-                        break;
                     case "damageemitter":
                         damageEmitters.Add(new ParticleEmitter(subElement));
                         break;
@@ -216,7 +208,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (needsAir &&
+                    if (NeedsAir &&
                         pressureProtection < 80.0f &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
@@ -351,7 +343,7 @@ namespace Barotrauma
         
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
         {
-            if (attackResult.Damage <= 0) { return; }
+            if (attackResult.Damage <= 1.0f || IsDead) { return; }
             if (soundTimer < soundInterval * 0.5f)
             {
                 PlaySound(CharacterSound.SoundType.Damage);
@@ -532,6 +524,8 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (!enabled) { return; }
+
             if (!IsDead && !IsUnconscious)
             {
                 if (soundTimer > 0)
@@ -542,7 +536,7 @@ namespace Barotrauma
                 {                    
                     switch (AIController.State)
                     {
-                        case AIController.AIState.Attack:
+                        case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:
@@ -577,6 +571,7 @@ namespace Barotrauma
                 }
             }
 
+            CharacterHealth.UpdateClientSpecific(deltaTime);
             if (controlled == this)
             {
                 CharacterHealth.UpdateHUD(deltaTime);
@@ -612,7 +607,7 @@ namespace Barotrauma
             CharacterHUD.Draw(spriteBatch, this, cam);
             if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
         }
-
+        
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
             if (!Enabled) return;
@@ -713,12 +708,14 @@ namespace Barotrauma
 
             if (IsDead) return;
             
-            if (Vitality < MaxVitality * 0.98f && hudInfoVisible)
+            if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
+                hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));
+
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
-                    Vitality / MaxVitality, 
-                    Color.Lerp(Color.Red, Color.Green, Vitality / MaxVitality) * 0.8f * hudInfoAlpha,
+                    CharacterHealth.DisplayedVitality / MaxVitality, 
+                    Color.Lerp(Color.Red, Color.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }

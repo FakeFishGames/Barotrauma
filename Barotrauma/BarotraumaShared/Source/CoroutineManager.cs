@@ -195,6 +195,9 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
+#if CLIENT && WINDOWS
+                if (e is SharpDX.SharpDXException) { throw; }
+#endif
                 DebugConsole.ThrowError("Coroutine " + handle.Name + " threw an exception: " + e.Message + "\n" + e.StackTrace.ToString());
                 handle.Exception = e;
                 return true;

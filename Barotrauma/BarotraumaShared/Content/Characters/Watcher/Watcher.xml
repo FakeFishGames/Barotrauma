@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Watcher" humanoid="false">
+<Character speciesname="Watcher" humanoid="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -17,23 +17,23 @@
   <sound file="Content/Characters/Watcher/attack2.ogg" state="Attack" range="500"/>
   <sound file="Content/Characters/Watcher/attack3.ogg" state="Attack" range="500"/>
   
-  <sound file="Content/Characters/Watcher/watch1.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch2.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch3.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch4.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch5.ogg" state="None" range="500"/>
-  <sound file="Content/Characters/Watcher/watch6.ogg" state="None" range="500"/>
+  <sound file="Content/Characters/Watcher/watch1.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch2.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch3.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch4.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch5.ogg" state="Idle" range="500"/>
+  <sound file="Content/Characters/Watcher/watch6.ogg" state="Idle" range="500"/>
 
   <ai
     attackpriorityhumans="0.0"
     attackpriorityrooms="0.0"
     combatstrength="1000"
-    attackwhenprovoked="true"
+    attackonlywhenprovoked="true"
     sight="1.0"
     hearing="0.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="human" state="None" priority="10"/>
-    <targetpriority tag="light" state="None" priority="10"/>
+    <targetpriority tag="human" state="Idle" priority="10"/>
+    <targetpriority tag="light" state="Idle" priority="10"/>
   </ai>
 
 </Character>

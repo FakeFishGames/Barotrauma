@@ -9,11 +9,12 @@ namespace Barotrauma
 {
     public class GUIRadioButtonGroup : GUIComponent
     {
-        private Dictionary<Enum, GUITickBox> radioButtons; //TODO: use children list instead?
+        private Dictionary<int, GUITickBox> radioButtons; //TODO: use children list instead?
 
-        public GUIRadioButtonGroup() : base("GUIFrame")
+        public GUIRadioButtonGroup() : base(null)
         {
-            radioButtons = new Dictionary<Enum, GUITickBox>();
+            radioButtons = new Dictionary<int, GUITickBox>();
+            selected = null;
         }
 
         public override bool Enabled
@@ -22,28 +23,28 @@ namespace Barotrauma
             set
             {
                 base.Enabled = value;
-                foreach(KeyValuePair<Enum, GUITickBox> rbPair in radioButtons)
+                foreach(KeyValuePair<int, GUITickBox> rbPair in radioButtons)
                 {
                     rbPair.Value.Enabled = value;
                 }
             }
         }
 
-        public void AddRadioButton(Enum key, GUITickBox radioButton)
+        public void AddRadioButton(int key, GUITickBox radioButton)
         {
             if (selected == key) radioButton.Selected = true;
             else if (radioButton.Selected) selected = key;
 
             radioButton.SetRadioButtonGroup(this);
-            radioButtons.Add(key, radioButton);
+            radioButtons.Add((int)key, radioButton);
         }
 
-        public delegate void RadioButtonGroupDelegate(GUIRadioButtonGroup rbg, Enum val);
+        public delegate void RadioButtonGroupDelegate(GUIRadioButtonGroup rbg, int? val);
         public RadioButtonGroupDelegate OnSelect = null;
 
         public void SelectRadioButton(GUITickBox radioButton)
         {
-            foreach (KeyValuePair<Enum, GUITickBox> rbPair in radioButtons)
+            foreach (KeyValuePair<int, GUITickBox> rbPair in radioButtons)
             {
                 if (radioButton == rbPair.Value)
                 {
@@ -53,8 +54,8 @@ namespace Barotrauma
             }
         }
 
-        private Enum selected;
-        public Enum Selected
+        private int? selected;
+        public int? Selected
         {
             get
             {
@@ -63,11 +64,11 @@ namespace Barotrauma
             set
             {
                 OnSelect?.Invoke(this, value);
-                if (selected != null && selected.Equals((Enum)value)) return;
+                if (selected != null && selected.Equals(value)) return;
                 selected = value;
-                foreach (KeyValuePair<Enum, GUITickBox> radioButton in radioButtons)
+                foreach (KeyValuePair<int, GUITickBox> radioButton in radioButtons)
                 {
-                    if (radioButton.Key.Equals((Enum)value))
+                    if (radioButton.Key.Equals(value))
                     {
                         radioButton.Value.Selected = true;
                     }
@@ -80,7 +81,7 @@ namespace Barotrauma
         {
             get
             {
-                return radioButtons[selected];
+                return selected.HasValue ? radioButtons[selected.Value] : null;
             }
         }
     }

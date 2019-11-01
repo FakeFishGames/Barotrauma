@@ -45,7 +45,7 @@ namespace Barotrauma
         {
             if (!(this is AICharacter) || IsRemotePlayer)
             {
-                if (!AllowInput)
+                if (!CanMove)
                 {
                     AnimController.Frozen = false;
                     if (memInput.Count > 0)
@@ -156,7 +156,7 @@ namespace Barotrauma
                     UInt16 networkUpdateID = msg.ReadUInt16();
                     byte inputCount = msg.ReadByte();
 
-                    if (AllowInput) Enabled = true;
+                    if (AllowInput) { Enabled = true; }
 
                     for (int i = 0; i < inputCount; i++)
                     {
@@ -263,20 +263,20 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 0);
+                        msg.WriteRangedInteger(0, 0, 3);
                         Inventory.SharedWrite(msg, extraData);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 1);
+                        msg.WriteRangedInteger(1, 0, 3);
                         Client owner = ((Client)extraData[1]);
                         msg.Write(owner == null ? (byte)0 : owner.ID);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 2);
+                        msg.WriteRangedInteger(2, 0, 3);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedIntegerDeprecated(0, 3, 3);
+                        msg.WriteRangedInteger(3, 0, 3);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -411,10 +411,10 @@ namespace Barotrauma
             msg.Write(IsDead);
             if (IsDead)
             {
-                msg.WriteRangedIntegerDeprecated(0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1, (int)CauseOfDeath.Type);
+                msg.WriteRangedInteger((int)CauseOfDeath.Type, 0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.WriteRangedIntegerDeprecated(0, AfflictionPrefab.List.Count - 1, AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction));
+                    msg.WriteRangedInteger(AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction), 0, AfflictionPrefab.List.Count - 1);
                 }
 
                 if (AnimController?.LimbJoints == null)
@@ -470,7 +470,11 @@ namespace Barotrauma
             msg.Write(Enabled);
 
             //character with no characterinfo (e.g. some monster)
-            if (Info == null) return;
+            if (Info == null)
+            {
+                WriteStatus(msg);
+                return;
+            }
 
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
@@ -492,6 +496,7 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
+            WriteStatus(msg);
 
             DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));
         }

@@ -5,7 +5,7 @@
     <Turret canbeselected="false" linkable="true" characterusable="false" barrelpos="42, 149" rotationlimits="90,90" powerconsumption="0.0" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredItem identifier="screwdriver" type="Equipped" />
+      <RequiredItem items="screwdriver" type="Equipped" />
       <input name="trigger_in" displayname="connection.turrettriggerin" />
     </ConnectionPanel>
   </Item>
@@ -13,7 +13,7 @@
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="354,2,125,188" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="depthchargeammo" />
+      <Containable items="depthchargeammo" />
     </ItemContainer>
   </Item>
   <Item name="Depth Charge Shell" identifier="depthchargeshell" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -43,7 +43,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,explosive" />
+      <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
   <Item name="Nuclear Depth Charge" identifier="nucleardepthcharge" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -89,7 +89,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,explosive" />
+      <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
   <Item name="Depth Decoy Shell" identifier="depthdecoyshell" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -110,7 +110,7 @@
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect" />
-    <AiTarget maxsoundrange="15000" minsoundrange="0" fadeouttime="20" />
+    <AiTarget soundrange="15000" fadeouttime="20" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
@@ -121,7 +121,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,explosive" />
+      <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
   <Item name="Nuclear Depth Decoy" identifier="nucleardepthdecoy" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
@@ -144,7 +144,7 @@
     <Sprite texture="TurretsAndDepthCharges.png" sourcerect="138,380,129,88" depth="0.55" origin="0.5,0.5" />
     <Body width="128" height="85" density="30" />
     <Holdable slots="RightHand+LeftHand" holdpos="0,-50" handle1="-10,20" handle2="10,20" aimable="false" msg="ItemMsgPickUpSelect" />
-    <AiTarget maxsoundrange="15000" minsoundrange="0" fadeouttime="20" />
+    <AiTarget soundrange="15000" fadeouttime="20" />
     <Projectile characterusable="false" launchimpulse="5.0">
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
@@ -168,7 +168,7 @@
     </Projectile>
     <ItemContainer hideitems="true" capacity="1" canbeselected="false">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
-      <Containable identifiers="smallitem,explosive" />
+      <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
 </Items>

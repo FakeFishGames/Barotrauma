@@ -11,11 +11,10 @@ namespace Barotrauma
     {
         public override string DebugTag => "fight intruders";
         protected override float IgnoreListClearInterval => 30;
+        public virtual bool IgnoreUnsafeHulls => true;
 
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
-
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFightIntruders;
 
         protected override bool Filter(Character target) => IsValidTarget(target, character);
 

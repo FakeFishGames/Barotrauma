@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,10 @@ namespace Barotrauma.Items.Components
         }
     }
 
-    partial class Controller : ItemComponent
+    partial class Controller : ItemComponent, IServerSerializable
     {
         //where the limbs of the user should be positioned when using the controller
-        private List<LimbPos> limbPositions;
+        private readonly List<LimbPos> limbPositions;
 
         private Direction dir;
 
@@ -50,7 +51,9 @@ namespace Barotrauma.Items.Components
             get { return user; }
         }
 
-        [Serialize(false, false), Editable(ToolTip = "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
+        public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
+
+        [Editable, Serialize(false, false, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.")]
         public bool IsToggle
         {
             get;
@@ -145,7 +148,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, user);
 
-            if (limbPositions.Count == 0) return;
+            if (limbPositions.Count == 0) { return; }
 
             user.AnimController.Anim = AnimController.Animation.UsingConstruction;
 
@@ -270,17 +273,21 @@ namespace Barotrauma.Items.Components
         {
             if (IsToggle)
             {
-                state = !state;
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    state = !state;
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
+                }
             }
             else
             {
                 item.SendSignal(0, "1", "signal_out", picker);
             }
-
 #if CLIENT
             PlaySound(ActionType.OnUse, item.WorldPosition, picker);
 #endif
-
             return true;
         }
 

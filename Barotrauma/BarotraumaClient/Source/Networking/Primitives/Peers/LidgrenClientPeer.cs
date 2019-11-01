@@ -135,7 +135,8 @@ namespace Barotrauma.Networking
             {
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
-                    OnDisconnect?.Invoke(disconnectMsg);
+                    Close(disconnectMsg);
+                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
                     break;
             }
         }
@@ -168,7 +169,7 @@ namespace Barotrauma.Networking
 
                     outMsg.Write(GameMain.Version.ToString());
 
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent && !cp.NeedsRestart);
                     outMsg.WriteVariableInt32(mpContentPackages.Count());
                     foreach (ContentPackage contentPackage in mpContentPackages)
                     {
@@ -176,7 +177,11 @@ namespace Barotrauma.Networking
                         outMsg.Write(contentPackage.MD5hash.Hash);
                     }
 
-                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send "+initializationStep.ToString()+" message to host: " + result);
+                    }
                     break;
                 case ConnectionInitialization.Password:
                     if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
@@ -207,7 +212,11 @@ namespace Barotrauma.Networking
             byte[] saltedPw = ServerSettings.SaltPassword(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
             outMsg.Write((byte)saltedPw.Length);
             outMsg.Write(saltedPw, 0, saltedPw.Length);
-            netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+            {
+                DebugConsole.NewMessage("Failed to send " + initializationStep.ToString() + " message to host: " + result);
+            }
         }
 
         public override void Close(string msg = null)
@@ -219,6 +228,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
+            OnDisconnect?.Invoke();
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
@@ -239,6 +249,13 @@ namespace Barotrauma.Networking
                     break;
             }
 
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+#endif
+
             NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
             byte[] msgData = new byte[msg.LengthBytes];
             msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
@@ -246,7 +263,11 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+            {
+                DebugConsole.NewMessage("Failed to send message to host: " + result);
+            }
         }
     }
 }

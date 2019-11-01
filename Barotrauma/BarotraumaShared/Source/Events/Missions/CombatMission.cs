@@ -32,7 +32,7 @@ namespace Barotrauma
                 if (Winner == Character.TeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
 
                 //disable success message for now if it hasn't been translated
-                if (!TextManager.ContainsTag("MissionSuccess." + Prefab.Identifier)) { return ""; }
+                if (!TextManager.ContainsTag("MissionSuccess." + Prefab.TextIdentifier)) { return ""; }
 
                 var loser = Winner == Character.TeamType.Team1 ? 
                     Character.TeamType.Team2 : 
@@ -49,9 +49,9 @@ namespace Barotrauma
         {
             descriptions = new string[]
             {
-                TextManager.Get("MissionDescriptionNeutral." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
-                TextManager.Get("MissionDescription1." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("description1", ""),
-                TextManager.Get("MissionDescription2." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("description2", "")
+                TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
+                TextManager.Get("MissionDescription1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description1", ""),
+                TextManager.Get("MissionDescription2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description2", "")
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -64,8 +64,8 @@ namespace Barotrauma
 
             teamNames = new string[]
             {
-                TextManager.Get("MissionTeam1." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
-                TextManager.Get("MissionTeam2." + prefab.Identifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
+                TextManager.Get("MissionTeam1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
+                TextManager.Get("MissionTeam2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
             };
         }
 

@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
 {
     public enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog
+        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox
     }
 
     partial class ChatMessage
@@ -18,7 +18,9 @@ namespace Barotrauma.Networking
         public const int MaxMessagesPerPacket = 10;
 
         public const float SpeakRange = 2000.0f;
-        
+
+        private static readonly string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
+
         public static Color[] MessageColor = 
         {
             new Color(190, 198, 205),   //default
@@ -64,6 +66,11 @@ namespace Barotrauma.Networking
         public Color Color
         {
             get { return MessageColor[(int)Type]; }
+        }
+
+        public static string GetTimeStamp()
+        {
+            return $"[{DateTime.Now.ToString(dateTimeFormatLongTimePattern)}] ";
         }
 
         public string TextWithSender
@@ -233,11 +240,10 @@ namespace Barotrauma.Networking
         public static bool CanUseRadio(Character sender, out WifiComponent radio)
         {
             radio = null;
-            if (sender == null) { return false; }
-            var senderItem = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-            if (senderItem == null) { return false; }
-            radio = senderItem.GetComponent<WifiComponent>();
-            return sender.HasEquippedItem(senderItem) && radio.CanTransmit();
+            if (sender?.Inventory == null || sender.Removed) { return false; }
+            radio = sender.Inventory.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null)?.GetComponent<WifiComponent>();
+            if (radio?.Item == null) { return false; }
+            return sender.HasEquippedItem(radio.Item) && radio.CanTransmit();
         }
     }
 }

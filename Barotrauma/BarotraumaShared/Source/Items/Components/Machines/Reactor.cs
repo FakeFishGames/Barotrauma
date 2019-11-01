@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -35,6 +36,7 @@ namespace Barotrauma.Items.Components
 
         private float maxPowerOutput;
 
+        private Queue<float> loadQueue = new Queue<float>();
         private float load;
         
         private bool unsentChanges;
@@ -51,6 +53,8 @@ namespace Barotrauma.Items.Components
         const float AIUpdateInterval = 0.2f;
         private float aiUpdateTimer;
 
+        private Character lastAIUser;
+
         private Character lastUser;
         private Character LastUser
         {
@@ -63,7 +67,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How much power (kW) the reactor generates when operating at full capacity."), Serialize(10000.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(10000.0f, true, description: "How much power (kW) the reactor generates when operating at full capacity.")]
         public float MaxPowerOutput
         {
             get { return maxPowerOutput; }
@@ -73,21 +77,21 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until a meltdown occurs."), Serialize(120.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(120.0f, true, description: "How long the temperature has to stay critical until a meltdown occurs.")]
         public float MeltdownDelay
         {
             get { return meltDownDelay; }
             set { meltDownDelay = Math.Max(value, 0.0f); }
         }
 
-        [Editable(0.0f, float.MaxValue, ToolTip = "How long the temperature has to stay critical until the reactor catches fire."), Serialize(30.0f, true)]
+        [Editable(0.0f, float.MaxValue), Serialize(30.0f, true, description: "How long the temperature has to stay critical until the reactor catches fire.")]
         public float FireDelay
         {
             get { return fireDelay; }
             set { fireDelay = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current temperature of the reactor (0% - 100%). Indended to be used by StatusEffect conditionals.")]
         public float Temperature
         {
             get { return temperature; }
@@ -98,7 +102,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current fission rate of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float FissionRate
         {
             get { return fissionRate; }
@@ -109,7 +113,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, true, description: "Current turbine output of the reactor (0% - 100%). Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public float TurbineOutput
         {
             get { return turbineOutput; }
@@ -120,7 +124,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.2f, true), Editable(0.0f, 1000.0f, ToolTip = "How fast the condition of the contained fuel rods deteriorates.")]
+        [Serialize(0.2f, true, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f)]
         public float FuelConsumptionRate
         {
             get { return fuelConsumptionRate; }
@@ -131,7 +135,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the temperature currently critical. Intended to be used by StatusEffect conditionals (setting the value from XML has no effect).")]
         public bool TemperatureCritical
         {
             get { return temperature > allowedTemperature.Y; }
@@ -143,7 +147,7 @@ namespace Barotrauma.Items.Components
         private float targetFissionRate;
         private float targetTurbineOutput;
         
-        [Serialize(false, true)]
+        [Serialize(false, true, description: "Is the automatic temperature control currently on. Indended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool AutoTemp
         {
             get { return autoTemp; }
@@ -163,7 +167,10 @@ namespace Barotrauma.Items.Components
         
         private float prevAvailableFuel;
         public float AvailableFuel { get; set; }
-        
+
+        private readonly string[] fuelTags = new string[1] { "reactorfuel" };
+
+
         public Reactor(Item item, XElement element)
             : base(item, element)
         {         
@@ -192,6 +199,18 @@ namespace Barotrauma.Items.Components
                 }
             }
 #endif
+
+            //if an AI character was using the item on the previous frame but not anymore, turn autotemp on
+            // (= bots turn autotemp back on when leaving the reactor)
+            if (lastAIUser != null)
+            {
+                if (lastAIUser.SelectedConstruction != item && lastAIUser.CanInteractWith(item))
+                {
+                    AutoTemp = true;
+                    unsentChanges = true;
+                    lastAIUser = null;
+                }
+            }
 
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -253,8 +272,7 @@ namespace Barotrauma.Items.Components
             {
                 UpdateAutoTemp(2.0f, deltaTime);
             }
-
-            load = 0.0f;
+            float currentLoad = 0.0f;
             List<Connection> connections = item.Connections;
             if (connections != null && connections.Count > 0)
             {
@@ -270,11 +288,18 @@ namespace Barotrauma.Items.Components
 
                         //calculate how much external power there is in the grid 
                         //(power coming from somewhere else than this reactor, e.g. batteries)
-                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0);
+                        float externalPower = Math.Max(CurrPowerConsumption - pt.CurrPowerConsumption, 0) * 0.95f;
                         //reduce the external power from the load to prevent overloading the grid
-                        load = Math.Max(load, pt.PowerLoad - externalPower);
+                        currentLoad = Math.Max(currentLoad, pt.PowerLoad - externalPower);
                     }
                 }
+            }
+
+            loadQueue.Enqueue(currentLoad);
+            while (loadQueue.Count() > 60.0f)
+            {
+                load = loadQueue.Average();
+                loadQueue.Dequeue();
             }
 
             if (fissionRate > 0.0f)
@@ -287,10 +312,17 @@ namespace Barotrauma.Items.Components
 
                 if (item.CurrentHull != null)
                 {
-                    //the sound can be heard from 20 000 display units away when running at full power
-                    item.CurrentHull.SoundRange = Math.Max(
-                        (-currPowerConsumption / MaxPowerOutput) * 20000.0f, 
-                        item.CurrentHull.AiTarget.SoundRange);
+                    var aiTarget = item.CurrentHull.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                }
+
+                if (item.AiTarget != null)
+                {
+                    var aiTarget = item.AiTarget;
+                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
                 }
             }
 
@@ -484,6 +516,19 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
+        private int itemIndex;
+        private List<Item> ignoredContainers = new List<Item>();
+        private bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
+        {
+            suitableContainer = null;
+            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
+            {
+                suitableContainer = targetContainer;
+                return true;
+            }
+            return false;
+        }
+
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
@@ -495,13 +540,56 @@ namespace Barotrauma.Items.Components
             //characters with insufficient skill levels don't refuel the reactor
             if (degreeOfSuccess > 0.2f)
             {
-                //remove used-up fuel from the reactor
-                var containedItems = item.ContainedItems;
-                foreach (Item item in containedItems)
+                if (objective.SubObjectives.None())
                 {
-                    if (item != null && item.Condition <= 0.0f)
+                    var containedItems = item.ContainedItems;
+                    foreach (Item fuelRod in containedItems)
                     {
-                        item.Drop(character);
+                        if (fuelRod != null && fuelRod.Condition <= 0.0f)
+                        {
+                            if (!FindSuitableContainer(character, 
+                                i =>
+                                {
+                                    var container = i.GetComponent<ItemContainer>();
+                                    if (container == null) { return 0; }
+                                    if (container.Inventory.IsFull()) { return 0; }
+                                    if (container.ShouldBeContained(fuelRod, out bool isRestrictionsDefined))
+                                    {
+                                        if (isRestrictionsDefined)
+                                        {
+                                            return 3;
+                                        }
+                                        else
+                                        {
+                                            if (fuelRod.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                                            {
+                                                return isPreferencesDefined ? 2 : 1;
+                                            }
+                                            else
+                                            {
+                                                return isPreferencesDefined ? 0 : 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        return 0;
+                                    }
+                                }, out Item targetContainer))
+                            {
+                                return false;
+                            }
+                            var decontainObjective = new AIObjectiveDecontainItem(character, fuelRod, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                            decontainObjective.Abandoned += () => 
+                            {
+                                itemIndex = 0;
+                                if (targetContainer != null)
+                                {
+                                    ignoredContainers.Add(targetContainer);
+                                }
+                            };
+                            objective.AddSubObjectiveInQueue(decontainObjective);
+                        }
                     }
                 }
 
@@ -514,31 +602,33 @@ namespace Barotrauma.Items.Components
                 //load more fuel if the current maximum output is only 50% of the current load
                 if (NeedMoreFuel(minimumOutputRatio: 0.5f))
                 {
-                    var containFuelObjective = new AIObjectiveContainItem(character, new string[] { "fuelrod", "reactorfuel" }, item.GetComponent<ItemContainer>(), objective.objectiveManager)
-                    {
-                        targetItemCount = item.ContainedItems.Count(i => i != null && i.Prefab.Identifier == "fuelrod" || i.HasTag("reactorfuel")) + 1,
-                        GetItemPriority = (Item fuelItem) =>
-                        {
-                            if (fuelItem.ParentInventory?.Owner is Item)
-                            {
-                                //don't take fuel from other reactors
-                                if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
-                            }
-                            return 1.0f;
-                        }
-                    };
-                    objective.AddSubObjective(containFuelObjective);
-
-                    character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
-
                     aiUpdateTimer = AIUpdateInterval;
+                    if (objective.SubObjectives.None())
+                    {
+                        var containFuelObjective = new AIObjectiveContainItem(character, fuelTags, item.GetComponent<ItemContainer>(), objective.objectiveManager)
+                        {
+                            targetItemCount = item.ContainedItems.Count(i => i != null && fuelTags.Any(t => i.Prefab.Identifier == t || i.HasTag(t))) + 1,
+                            GetItemPriority = (Item fuelItem) =>
+                            {
+                                if (fuelItem.ParentInventory?.Owner is Item)
+                                {
+                                    //don't take fuel from other reactors
+                                    if (((Item)fuelItem.ParentInventory.Owner).GetComponent<Reactor>() != null) return 0.0f;
+                                }
+                                return 1.0f;
+                            }
+                        };
+                        containFuelObjective.Abandoned += () => objective.Abandon = true;
+                        objective.AddSubObjective(containFuelObjective);
+                        character?.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+                    }
                     return false;
                 }
                 else if (TooMuchFuel())
                 {
                     foreach (Item item in item.ContainedItems)
                     {
-                        if (item != null && item.HasTag("reactorfuel"))
+                        if (item != null && fuelTags.Any(t => item.Prefab.Identifier == t || item.HasTag(t)))
                         {
                             if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
                             {
@@ -555,23 +645,29 @@ namespace Barotrauma.Items.Components
                 character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
             }
 
-            LastUser = character;
-            
+            LastUser = lastAIUser = character;
+
+            bool prevAutoTemp = autoTemp;
+            bool prevShutDown = shutDown;
+            float prevFissionRate = targetFissionRate;
+            float prevTurbineOutput = targetTurbineOutput;
+
             switch (objective.Option.ToLowerInvariant())
             {
                 case "powerup":
                     shutDown = false;
-                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
-                    if (degreeOfSuccess < 0.5f)
+                    if (objective.Override || !autoTemp)
                     {
-                        if (!autoTemp) unsentChanges = true;
-                        AutoTemp = true;
-                    }
-                    else
-                    {
-                        AutoTemp = false;
-                        unsentChanges = true;
-                        UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                        if (degreeOfSuccess < 0.5f)
+                        {
+                            AutoTemp = true;
+                        }
+                        else
+                        {
+                            AutoTemp = false;
+                            UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                        }
                     }
 #if CLIENT
                     onOffSwitch.BarScroll = 0.0f;
@@ -583,16 +679,19 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     onOffSwitch.BarScroll = 1.0f;
 #endif
-                    if (AutoTemp || !shutDown || targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
-                    {
-                        unsentChanges = true;
-                    }
-
                     AutoTemp = false;
                     shutDown = true;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;
+            }
+
+            if (autoTemp != prevAutoTemp ||
+                prevShutDown != shutDown ||
+                Math.Abs(prevFissionRate - targetFissionRate) > 1.0f || 
+                Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
+            {
+                unsentChanges = true;
             }
 
             aiUpdateTimer = AIUpdateInterval;

@@ -1,74 +1,59 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Crawler" humanoid="false" blooddecal="blood">
-  
-  <ragdolls folder="default"/>
-  <animations folder="default"/>
-
-  <bloodemitter particle="blood" particleamount="10"/>
-  <bloodemitter particle="waterblood" particleamount="1"/>
-  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>
-  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360"/>
-
-  <health
-    vitality="50"
-    doesbleed="true"/>
-
-  <sound file="Content/Characters/Crawler/CRAWLER_attack1.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_attack2.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_attack3.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_attack4.ogg" state="Attack" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" state="Idle" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" state="Idle" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" state="Idle" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_death1.ogg" state="Die" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_death2.ogg" state="Die" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_damage1.ogg" state="Damage" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_damage2.ogg" state="Damage" range="1000"/>
-  <sound file="Content/Characters/Crawler/CRAWLER_damage3.ogg" state="Damage" range="1000"/>
-  
-  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="1">
-    <Item identifier="crawlermask"/>
-    <Item identifier="alienblood"/>
+﻿<Character speciesname="Crawler" humanoid="False" blooddecal="blood" group="" husk="False" needsair="False" canspeak="False" noise="100">
+  <ragdolls folder="default" />
+  <animations folder="default" />
+  <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="heavygib" particleamount="10" velocitymin="50" velocitymax="500" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <health vitality="50" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0.2" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />
+  <sound file="Content/Characters/Crawler/CRAWLER_attack1.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_attack2.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_attack3.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_attack4.ogg" state="Attack" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_idle1.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_idle2.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_idle3.ogg" state="Idle" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_death1.ogg" state="Die" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_death2.ogg" state="Die" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_damage1.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_damage2.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <sound file="Content/Characters/Crawler/CRAWLER_damage3.ogg" state="Damage" range="1000" volume="1" gender="None" />
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="1">
+    <Item identifier="crawlermask" />
+    <Item identifier="alienblood" />
   </Inventory>
-  <Inventory slots="Any, Any" accessiblewhenalive="false" commonness="50">
-    <Item identifier="alienblood"/>
+  <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="50">
+    <Item identifier="alienblood" />
   </Inventory>
-
-  <ai
-    combatstrength="100"
-    sight="0.5"
-    hearing="1.0"
-    fleehealththreshold="10"
-    aggressiveboarding="true"
-    aggressiongreed="10"
-    aggressionhurt="100">
-    <targetpriority tag="decoy" state="Attack" priority="600"/>
-    <targetpriority tag="stronger" state="Escape" priority="300"/>
-    <targetpriority tag="provocative" state="Attack" priority="250"/>
-    <targetpriority tag="light" state="Attack" priority="200"/>
-    <targetpriority tag="dead" state="Eat" priority="190"/>
-    <targetpriority tag="human" state="Attack" priority="150"/>
-    <targetpriority tag="wall" state="Attack" priority="100"/>
-    <targetpriority tag="nasonov" state="Attack" priority="70"/>
-    <targetpriority tag="sonar" state="Attack" priority="60"/>
-    <targetpriority tag="door" state="Attack" priority="40"/>
-    <targetpriority tag="weaker" state="Attack" priority="30"/>
-    <targetpriority tag="room" state="Attack" priority="20"/>
-    <latchonto 
-      attachtowalls="true"
-      attachtosub="true"
-      mindeattachspeed="3.0"
-      maxdeattachspeed="10.0"
-      damageondetach="1000"
-      detachstun="5.0"
-      attachlimb="Head"
-      localattachpos="40,10"
-      attachlimbrotation="100"/>
-    <SwarmBehavior
-      mindistfromclosest="200"
-      maxdistfromcenter="1000"
-      cohesion="0.1"/>
+  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False">
+    <target tag="decoy" state="Attack" priority="150" />
+    <target tag="stronger" state="Escape" priority="200" />
+    <target tag="provocative" state="Attack" priority="90" />
+    <target tag="light" state="Attack" priority="80" />
+    <target tag="dead" state="Eat" priority="100" />
+    <target tag="human" state="Attack" priority="90" />
+    <target tag="wall" state="Attack" priority="40" />
+    <target tag="nasonov" state="Attack" priority="70" />
+    <target tag="sonar" state="Attack" priority="60" />
+    <target tag="door" state="Attack" priority="30" />
+    <target tag="weaker" state="Attack" priority="30" />
+    <target tag="room" state="Attack" priority="20" />
+    <SwarmBehavior mindistfromclosest="200" maxdistfromcenter="1000" cohesion="1" />
   </ai>
-  
+  <ai combatstrength="100" sight="0.75" hearing="1.0" fleehealththreshold="10" aggressiveboarding="true" aggressiongreed="10" aggressionhurt="100">
+    <target tag="decoy" state="Attack" priority="150" />
+    <target tag="stronger" state="Escape" priority="200" />
+    <target tag="provocative" state="Attack" priority="90" />
+    <target tag="light" state="Attack" priority="80" />
+    <target tag="dead" state="Eat" priority="100" />
+    <target tag="human" state="Attack" priority="90" />
+    <target tag="wall" state="Attack" priority="40" />
+    <target tag="nasonov" state="Attack" priority="70" />
+    <target tag="sonar" state="Attack" priority="60" />
+    <target tag="door" state="Attack" priority="30" />
+    <target tag="weaker" state="Attack" priority="30" />
+    <target tag="room" state="Attack" priority="20" />
+    <latchonto attachtowalls="true" attachtosub="true" mindeattachspeed="3.0" maxdeattachspeed="10.0" damageondetach="1000" detachstun="5.0" attachlimb="Head" localattachpos="40,10" attachlimbrotation="100" />
+    <SwarmBehavior mindistfromclosest="200" maxdistfromcenter="1000" cohesion="0.1" />
+  </ai>
 </Character>
-

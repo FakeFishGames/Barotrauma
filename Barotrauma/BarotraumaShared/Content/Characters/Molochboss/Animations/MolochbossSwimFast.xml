@@ -1,4 +1,4 @@
-﻿<MolochbossSwimFast
+﻿<MolochSwimFast
   animationtype="SwimFast"
   flip="True"
   mirror="True"
@@ -11,7 +11,7 @@
   tailtorque="50"
   footangles=""
   steertorque="175"
-  movementspeed="8"
+  movementspeed="5"
   cyclespeed="1"
   headangle="NaN"
   torsoangle="71.74113"

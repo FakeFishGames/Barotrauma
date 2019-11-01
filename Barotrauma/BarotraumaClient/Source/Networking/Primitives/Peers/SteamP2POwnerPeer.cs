@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
         private void OnAuthChange(ulong steamID, ulong ownerID, ClientAuthStatus status)
         {
             RemotePeer remotePeer = remotePeers.Find(p => p.SteamID == steamID);
-            DebugConsole.NewMessage(steamID + " validation: " + status + ", " + (remotePeer != null));
+            DebugConsole.Log(steamID + " validation: " + status + ", " + (remotePeer != null));
 
             if (remotePeer == null) { return; }
 
@@ -106,7 +106,11 @@ namespace Barotrauma.Networking
                 remotePeer.Authenticating = false;
                 foreach (var msg in remotePeer.UnauthedMessages)
                 {
-                    netClient.SendMessage(msg.Second, msg.First);
+                    NetSendResult result = netClient.SendMessage(msg.Second, msg.First);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send unauthed message to host: " + result);
+                    }
                 }
                 remotePeer.UnauthedMessages.Clear();
             }
@@ -200,7 +204,11 @@ namespace Barotrauma.Networking
             }
             else
             {
-                netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
+                NetSendResult result = netClient.SendMessage(outMsg, lidgrenDeliveryMethod);
+                if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                {
+                    DebugConsole.NewMessage("Failed to send message from "+SteamManager.SteamIDUInt64ToString(remotePeer.SteamID)+" to host: " + result);
+                }
             }
         }
 
@@ -285,8 +293,20 @@ namespace Barotrauma.Networking
                         break;
                 }
 
-                byte[] p2pData = new byte[inc.LengthBytes - p2pDataStart];
-                Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
+                byte[] p2pData;
+
+                if (isConnectionInitializationStep)
+                {
+                    p2pData = new byte[inc.LengthBytes - p2pDataStart + 8];
+                    p2pData[0] = inc.Data[p2pDataStart];
+                    Lidgren.Network.NetBitWriter.WriteUInt64(Steam.SteamManager.Instance.Lobby.CurrentLobby, 64, p2pData, 8);
+                    Array.Copy(inc.Data, p2pDataStart+1, p2pData, 9, inc.LengthBytes - p2pDataStart - 1);
+                }
+                else
+                {
+                    p2pData = new byte[inc.LengthBytes - p2pDataStart];
+                    Array.Copy(inc.Data, p2pDataStart, p2pData, 0, p2pData.Length);
+                }
 
                 if (p2pData.Length + 4 >= MsgConstants.MTU)
                 {
@@ -332,7 +352,11 @@ namespace Barotrauma.Networking
                     outMsg.Write(selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
-                    netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send initialization message to host: " + result);
+                    }
 
                     return;
                 }
@@ -390,6 +414,7 @@ namespace Barotrauma.Networking
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
                     Close(disconnectMsg);
+                    OnDisconnectMessageReceived?.Invoke(disconnectMsg);
                     break;
             }
         }
@@ -405,7 +430,7 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            for (int i=remotePeers.Count-1;i>=0;i--)
+            for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
                 DisconnectPeer(remotePeers[i], msg ?? DisconnectReason.ServerShutdown.ToString());
             }
@@ -420,7 +445,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
 
-            OnDisconnect?.Invoke(msg);
+            OnDisconnect?.Invoke();
 
             Steam.SteamManager.Instance.Networking.OnIncomingConnection = null;
             Steam.SteamManager.Instance.Networking.OnP2PData = null;
@@ -454,7 +479,17 @@ namespace Barotrauma.Networking
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
 
-            netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Client.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Client.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Client.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Client.SimulatedLoss;
+#endif
+            NetSendResult result = netClient.SendMessage(lidgrenMsg, lidgrenDeliveryMethod);
+            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+            {
+                DebugConsole.NewMessage("Failed to send own message to host: " + result);
+            }
         }
     }
 }

@@ -79,6 +79,11 @@ namespace Barotrauma.Items.Components
             displayedSubs.AddRange(item.Submarine.DockedTo);
         }
 
+        public override void FlipX(bool relativeToSub)
+        {
+            CreateHUD();
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             //recreate HUD if the subs we should display have changed
@@ -109,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (voltage < minVoltage)
+            if (Voltage < MinVoltage)
         {
                 Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
@@ -159,7 +164,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (voltage < minVoltage)
+            if (Voltage < MinVoltage)
             {
                 return;
             }

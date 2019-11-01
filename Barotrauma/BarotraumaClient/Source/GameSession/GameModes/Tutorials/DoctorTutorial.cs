@@ -48,7 +48,7 @@ namespace Barotrauma.Tutorials
         {
             base.Start();
 
-            var firstAidOrder = Order.PrefabList.Find(order => order.AITag == "requestfirstaid");
+            var firstAidOrder = Order.GetPrefab("requestfirstaid");
             doctor_firstAidIcon = firstAidOrder.SymbolSprite;
             doctor_firstAidIconColor = firstAidOrder.Color;
 
@@ -63,30 +63,30 @@ namespace Barotrauma.Tutorials
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
             medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
-            var assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "assistant"));
+            var assistantInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("assistant"));
             patient1 = Character.Create(assistantInfo, patientHull1.WorldPosition, "1");
             patient1.GiveJobItems(null);
             patient1.CanSpeak = false;
             patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 45.0f) }, stun: 0, playSound: false);
             patient1.AIController.Enabled = false;
-            
-            assistantInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "assistant"));
+
+            assistantInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("assistant"));
             patient2 = Character.Create(assistantInfo, patientHull2.WorldPosition, "2");
             patient2.GiveJobItems(null);
             patient2.CanSpeak = false;
             patient2.AIController.Enabled = false;
 
-            var mechanicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer"));
+            var mechanicInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("engineer"));
             var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
-            var securityInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "securityofficer"));
+            var securityInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("securityofficer"));
             var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
-            var engineerInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer"));
+            var engineerInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("engineer"));
             var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "3");
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);
@@ -240,7 +240,7 @@ namespace Barotrauma.Tutorials
             // treat patient --------------------------------------------------------------------------------------------
 
             //patient 1 requests first aid
-            var newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient1.CurrentHull, null, orderGiver: patient1);
+            var newOrder = new Order(Order.GetPrefab("requestfirstaid"), patient1.CurrentHull, null, orderGiver: patient1);
             doctor.AddActiveObjectiveEntity(patient1, doctor_firstAidIcon, doctor_firstAidIconColor);
             //GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient1.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order, null);
@@ -256,13 +256,14 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AddCharacter(doctor);
             GameMain.GameSession.CrewManager.AddCharacter(patient1);
             GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
+            patient1.CharacterHealth.UseHealthWindow = false;
 
             yield return new WaitForSeconds(3.0f, false);
             patient1.AIController.Enabled = true;
             doctor.RemoveActiveObjectiveEntity(patient1);
             TriggerTutorialSegment(3); // Get the patient to medbay
 
-            while (patient1.CurrentOrder == null || patient1.CurrentOrder.AITag != "follow")
+            while (patient1.CurrentOrder == null || patient1.CurrentOrder.Identifier != "follow")
             {
                 GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
                 yield return null;
@@ -277,6 +278,7 @@ namespace Barotrauma.Tutorials
             RemoveCompletedObjective(segments[3]);
             SetHighlight(doctor_medBayCabinet.Item, true);
             SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, true);
+            patient1.CharacterHealth.UseHealthWindow = true;
 
             yield return new WaitForSeconds(2.0f, false);
 
@@ -327,7 +329,7 @@ namespace Barotrauma.Tutorials
             //patient calls for help
             //patient2.CanSpeak = true;
             yield return new WaitForSeconds(2.0f, false);
-            newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), patient2.CurrentHull, null, orderGiver: patient2);
+            newOrder = new Order(Order.GetPrefab("requestfirstaid"), patient2.CurrentHull, null, orderGiver: patient2);
             doctor.AddActiveObjectiveEntity(patient2, doctor_firstAidIcon, doctor_firstAidIconColor);
             //GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(patient2.Name, newOrder.GetChatMessage("", patient1.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order, null);
@@ -394,7 +396,7 @@ namespace Barotrauma.Tutorials
                     if (!patientCalledHelp[i] && Timing.TotalTime > subEnterTime + 60 * (i + 1))
                     {
                         doctor.AddActiveObjectiveEntity(subPatients[i], doctor_firstAidIcon, doctor_firstAidIconColor);
-                        newOrder = new Order(Order.PrefabList.Find(o => o.AITag == "requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
+                        newOrder = new Order(Order.GetPrefab("requestfirstaid"), subPatients[i].CurrentHull, null, orderGiver: subPatients[i]);
                         string message = newOrder.GetChatMessage("", subPatients[i].CurrentHull?.DisplayName, givingOrderToSelf: false);
                         GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(subPatients[i].Name, message, ChatMessageType.Order, null);
                         patientCalledHelp[i] = true;

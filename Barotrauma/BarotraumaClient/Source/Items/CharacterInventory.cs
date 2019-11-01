@@ -113,7 +113,13 @@ namespace Barotrauma
             if (item == null) return null;
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null || !container.KeepOpenWhenEquipped || !character.HasEquippedItem(container.Item)) return null;
+            if (container == null || 
+                !character.CanAccessInventory(container.Inventory) ||
+                !container.KeepOpenWhenEquipped || 
+                !character.HasEquippedItem(container.Item))
+            {
+                return null;
+            }
 
             return container.Inventory;
         }
@@ -126,13 +132,14 @@ namespace Barotrauma
 
         public override void RemoveItem(Item item)
         {
+            if (!Items.Contains(item)) { return; }
             base.RemoveItem(item);
             CreateSlots();
         }
 
         public override void CreateSlots()
         {
-            if (slots == null) slots = new InventorySlot[capacity];
+            if (slots == null) { slots = new InventorySlot[capacity]; }
             
             for (int i = 0; i < capacity; i++)
             {
@@ -175,7 +182,14 @@ namespace Barotrauma
 
             AssignQuickUseNumKeys();
 
-            highlightedSubInventorySlots.Clear();
+            highlightedSubInventorySlots.RemoveWhere(s => s.Inventory.OpenState <= 0.0f);
+            foreach (var subSlot in highlightedSubInventorySlots)
+            {
+                if (subSlot.ParentInventory == this && subSlot.SlotIndex > 0 && subSlot.SlotIndex < slots.Length)
+                {
+                    subSlot.Slot = slots[subSlot.SlotIndex];
+                }
+            }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             CalculateBackgroundFrame();
@@ -469,6 +483,9 @@ namespace Barotrauma
             }
             
             List<SlotReference> hideSubInventories = new List<SlotReference>();
+            highlightedSubInventorySlots.RemoveWhere(s => 
+                s.ParentInventory == this &&
+                ((s.SlotIndex < 0 || s.SlotIndex >= Items.Length || Items[s.SlotIndex] == null) || (Character.Controlled != null && !Character.Controlled.CanAccessInventory(s.Inventory))));
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
@@ -515,6 +532,9 @@ namespace Barotrauma
 
             if (character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
             {
+                //remove the highlighted slots of other characters' inventories when not grabbing anyone
+                highlightedSubInventorySlots.RemoveWhere(s => s.ParentInventory != this && s.ParentInventory?.Owner is Character);
+
                 for (int i = 0; i < capacity; i++)
                 {
                     var item = Items[i];
@@ -524,7 +544,10 @@ namespace Barotrauma
                         if (character.HasEquippedItem(item)) // Keep a subinventory display open permanently when the container is equipped
                         {
                             var itemContainer = item.GetComponent<ItemContainer>();
-                            if (itemContainer != null && itemContainer.KeepOpenWhenEquipped && !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
+                            if (itemContainer != null && 
+                                itemContainer.KeepOpenWhenEquipped && 
+                                character.CanAccessInventory(itemContainer.Inventory) &&
+                                !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                             {
                                 ShowSubInventory(new SlotReference(this, slots[i], i, false, itemContainer.Inventory), deltaTime, cam, hideSubInventories, true);
                             }
@@ -646,7 +669,10 @@ namespace Barotrauma
                 }
             }
 
-            slotRef.Inventory.OpenState = isEquippedSubInventory ? 1f : 0f; // Reset animation when initially equipped
+            if (isEquippedSubInventory)
+            {
+                slotRef.Inventory.OpenState = 1.0f; // Reset animation when initially equipped
+            }
 
             highlightedSubInventorySlots.Add(slotRef);
             slotRef.Inventory.HideTimer = 1f;
@@ -692,11 +718,11 @@ namespace Barotrauma
             
             if (item.ParentInventory != this)
             {
-                //in another inventory -> attempt to place in the character's inventory
-                if (item.ParentInventory.Locked || item.ParentInventory == null)
+                if (item.ParentInventory == null || item.ParentInventory.Locked)
                 {
                     return QuickUseAction.None;
                 }
+                //in another inventory -> attempt to place in the character's inventory
                 else if (allowInventorySwap)
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory

@@ -68,7 +68,7 @@ namespace Barotrauma.Tutorials
             captainsuniform.Unequip(captain);
             captain.Inventory.RemoveItem(captainsuniform);
 
-            var steerOrder = Order.PrefabList.Find(order => order.AITag == "steer");
+            var steerOrder = Order.GetPrefab("steer");
             captain_steerIcon = steerOrder.SymbolSprite;
             captain_steerIconColor = steerOrder.Color;
 
@@ -85,7 +85,7 @@ namespace Barotrauma.Tutorials
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            var medicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "medicaldoctor"));
+            var medicInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.GiveJobItems(null);
             captain_medic.CanSpeak = captain_medic.AIController.Enabled = false;
@@ -107,15 +107,15 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_lockedDoor_1, null, false);
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
-            var mechanicInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "mechanic"));
+            var mechanicInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("mechanic"));
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "mechanic");
             captain_mechanic.GiveJobItems();
 
-            var securityInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "securityofficer"));
+            var securityInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("securityofficer"));
             captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "securityofficer");
             captain_security.GiveJobItems();
 
-            var engineerInfo = new CharacterInfo(Character.HumanConfigFile, "", JobPrefab.List.Find(jp => jp.Identifier == "engineer"));
+            var engineerInfo = new CharacterInfo(Character.HumanSpeciesName, "", JobPrefab.Get("engineer"));
             captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "engineer");
             captain_engineer.GiveJobItems();
 
@@ -199,6 +199,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(captain_navConsole.Item, true);
             SetHighlight(captain_sonar.Item, true);
             SetHighlight(captain_statusMonitor, true);
+            captain_navConsole.UseAutoDocking = false;
             do
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
@@ -218,9 +219,10 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (!captain_sonar.IsActive);
+            } while (captain_sonar.CurrentMode != Sonar.Mode.Active);
             do { yield return null; } while (Vector2.Distance(Submarine.MainSub.WorldPosition, Level.Loaded.EndPosition) > 4000f);
             RemoveCompletedObjective(segments[5]);
+            captain_navConsole.UseAutoDocking = true;
             yield return new WaitForSeconds(4f, false);
             TriggerTutorialSegment(6); // Docking
             do
@@ -253,9 +255,9 @@ namespace Barotrauma.Tutorials
                 }
                 if (order.Options[orderIndex] == option)
                 {
-                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.FlashTimer <= 0)
+                    if (GameMain.GameSession.CrewManager.OrderOptionButtons[i].FlashTimer <= 0)
                     {
-                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Frame.Flash(highlightColor);
+                        GameMain.GameSession.CrewManager.OrderOptionButtons[i].Flash(highlightColor);
                     }
                 }
 

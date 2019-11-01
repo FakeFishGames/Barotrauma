@@ -69,11 +69,12 @@ namespace Barotrauma.Networking
 
         public static void LoadAll(string file)
         {
-            if (!File.Exists(file)) return;
+            if (!File.Exists(file)) { return; }
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null || doc.Root == null) return;
+            if (doc == null) { return; }
 
+            List.Clear();
             foreach (XElement element in doc.Root.Elements())
             {
                 List.Add(new PermissionPreset(element));

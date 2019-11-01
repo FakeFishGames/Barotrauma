@@ -255,10 +255,24 @@ internal static class Sdl
 
     public static void SetClipboardText(string text)
     {
-        byte[] bytes = Encoding.UTF8.GetBytes(text);
+        byte[] bytes = Encoding.UTF8.GetBytes(text+"\0");
         GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
         GetError(SDL_SetClipboardText(handle.AddrOfPinnedObject()));
         handle.Free();
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate int d_sdl_showsimplemessagebox(uint flags, IntPtr title, IntPtr msg, IntPtr window);
+    public static d_sdl_showsimplemessagebox SDL_ShowSimpleMessageBox = FuncLoader.LoadFunction<d_sdl_showsimplemessagebox>(NativeLibrary, "SDL_ShowSimpleMessageBox");
+    public static void ShowSimpleMessageBox(uint flags, string title, string message, IntPtr window)
+    {
+        byte[] bytesTitle = Encoding.UTF8.GetBytes(title + "\0");
+        GCHandle handleTitle = GCHandle.Alloc(bytesTitle, GCHandleType.Pinned);
+        byte[] bytesMessage = Encoding.UTF8.GetBytes(message + "\0");
+        GCHandle handleMessage = GCHandle.Alloc(bytesMessage, GCHandleType.Pinned);
+        GetError(SDL_ShowSimpleMessageBox(flags, handleTitle.AddrOfPinnedObject(), handleMessage.AddrOfPinnedObject(), window));
+        handleTitle.Free();
+        handleMessage.Free();
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]

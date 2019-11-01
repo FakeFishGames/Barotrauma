@@ -11,13 +11,13 @@ namespace Barotrauma
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             List<Item> prevItems = new List<Item>(Items);
-            ushort[] newItemIDs = new ushort[capacity];
 
-            for (int i = 0; i < capacity; i++)
+            byte itemCount = msg.ReadByte();
+            ushort[] newItemIDs = new ushort[itemCount];            
+            for (int i = 0; i < itemCount; i++)
             {
                 newItemIDs[i] = msg.ReadUInt16();
             }
-
             
             if (c == null || c.Character == null) return;
 

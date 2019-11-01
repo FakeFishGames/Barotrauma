@@ -12,14 +12,7 @@ namespace Barotrauma
 {
     public static class XMLExtensions
     {
-        public static string ParseContentPathFromUri(this XObject element)
-        {
-            string[] splitted = element.BaseUri.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            string currentFolder = Environment.CurrentDirectory.Split(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }).Last();
-            // Filter out the current folder -> result is "Content/blaahblaah" or "Mods/blaahblaah" etc.
-            IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
-            return string.Join("/", filtered);
-        }
+        public static string ParseContentPathFromUri(this XObject element) => ToolBox.ConvertAbsoluteToRelativePath(element.BaseUri);
 
         public static XDocument TryLoadXml(string filePath)
         {
@@ -34,9 +27,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't load xml document \"" + filePath + "\"!", e);
                 return null;
             }
-
-            if (doc.Root == null) return null;
-
+            if (doc?.Root == null)
+            {
+                DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded: Document or the root element is invalid!");
+                return null;
+            }
             return doc;
         }
 
@@ -256,6 +251,42 @@ namespace Barotrauma
             try
             {
                 val = UInt32.Parse(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
+        public static UInt64 GetAttributeUInt64(this XElement element, string name, UInt64 defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            UInt64 val = defaultValue;
+
+            try
+            {
+                val = UInt64.Parse(element.Attribute(name).Value);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error in " + element + "! ", e);
+            }
+
+            return val;
+        }
+
+        public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
+        {
+            if (element?.Attribute(name) == null) return defaultValue;
+
+            UInt64 val = defaultValue;
+
+            try
+            {
+                val = Steam.SteamManager.SteamIDStringToUInt64(element.Attribute(name).Value);
             }
             catch (Exception e)
             {
@@ -502,27 +533,54 @@ namespace Barotrauma
 
             Color color = Color.White;
 
-            if (strComponents.Length < 3)
-            {
-                if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
-                return Color.White;
-            }
-
             float[] components = new float[4] { 1.0f, 1.0f, 1.0f, 1.0f };
-            
-            for (int i = 0; i < 4 && i < strComponents.Length; i++)
-            {
-                float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
-            }
 
-            if (components.Any(c => c > 1.0f))
+            if (strComponents.Length == 1)
             {
-                for (int i = 0; i < 4; i++)
+                bool hexFailed = true;
+                stringColor = stringColor.Trim();
+                if (stringColor[0]=='#')
                 {
-                    components[i] = components[i] / 255.0f;
+                    stringColor = stringColor.Substring(1);
+
+                    int colorInt = 0;
+                    if (int.TryParse(stringColor, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out colorInt))
+                    {
+                        if (stringColor.Length == 6)
+                        {
+                            colorInt = (colorInt << 8) | 0xff;
+                        }
+                        components[0] = ((float)((colorInt & 0xff000000) >> 24)) / 255.0f;
+                        components[1] = ((float)((colorInt & 0x00ff0000) >> 16)) / 255.0f;
+                        components[2] = ((float)((colorInt & 0x0000ff00) >> 8)) / 255.0f;
+                        components[3] = ((float)(colorInt & 0x000000ff)) / 255.0f;
+
+                        hexFailed = false;
+                    }
                 }
-                //alpha defaults to 255 if not given
-                if (strComponents.Length < 4) components[3] = 255;
+
+                if (hexFailed)
+                {
+                    if (errorMessages) DebugConsole.ThrowError("Failed to parse the string \"" + stringColor + "\" to Color");
+                    return Color.White;
+                }
+            }
+            else
+            {
+                for (int i = 0; i < 4 && i < strComponents.Length; i++)
+                {
+                    float.TryParse(strComponents[i], NumberStyles.Float, CultureInfo.InvariantCulture, out components[i]);
+                }
+
+                if (components.Any(c => c > 1.0f))
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        components[i] = components[i] / 255.0f;
+                    }
+                    //alpha defaults to 1.0 if not given
+                    if (strComponents.Length < 4) components[3] = 1.0f;
+                }
             }
 
             return new Color(components[0], components[1], components[2], components[3]);
@@ -559,5 +617,19 @@ namespace Barotrauma
 
             return floatArray;
         }
+
+        public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
+
+        public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
+
+        /// <summary>
+        /// Returns the first child element that matches the name using the provided comparison method.
+        /// </summary>
+        public static XElement GetChildElement(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().FirstOrDefault(e => e.Name.ToString().Equals(name, comparisonMethod));
+
+        /// <summary>
+        /// Returns all child elements that match the name using the provided comparison method.
+        /// </summary>
+        public static IEnumerable<XElement> GetChildElements(this XContainer container, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => container.Elements().Where(e => e.Name.ToString().Equals(name, comparisonMethod));
     }
 }

@@ -83,6 +83,11 @@ namespace Barotrauma
             }
         }
 
+        public JobPrefab AssignedJob
+        {
+            get { return assignedJob; }
+        }
+
         public WayPoint(Vector2 position, SpawnType spawnType, Submarine submarine, Gap gap = null)
             : this(new Rectangle((int)position.X - 3, (int)position.Y + 3, 6, 6), submarine)
         {
@@ -648,8 +653,8 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(jobIdentifier))
             {
                 w.assignedJob = 
-                    JobPrefab.List.Find(jp => jp.Identifier.ToLowerInvariant() == jobIdentifier) ??
-                    JobPrefab.List.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
+                    JobPrefab.Get(jobIdentifier) ??
+                    JobPrefab.List.Values.FirstOrDefault(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);

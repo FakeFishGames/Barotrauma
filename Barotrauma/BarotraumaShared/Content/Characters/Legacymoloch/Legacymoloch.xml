@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character name="Legacymoloch" humanoid="false">
+<Character speciesname="Legacymoloch" humanoid="false">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -12,8 +12,8 @@
 
   <sound file="Content/Characters/Legacymoloch/attack1.ogg" state="Attack" range="3000"/>
   <sound file="Content/Characters/Legacymoloch/attack2.ogg" state="Attack" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="None" range="3000"/>
-  <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="None" range="3000"/>
+  <sound file="Content/Characters/Legacymoloch/idle1.ogg" state="Idle" range="3000"/>
+  <sound file="Content/Characters/Legacymoloch/idle2.ogg" state="Idle" range="3000"/>
 
   <ai
     combatstrength="1200"

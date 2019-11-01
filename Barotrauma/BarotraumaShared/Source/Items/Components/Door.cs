@@ -20,9 +20,9 @@ namespace Barotrauma.Items.Components
         private bool isOpen;
 
         private float openState;
-        private Sprite doorSprite, weldedSprite, brokenSprite;
-        private bool scaleBrokenSprite, fadeBrokenSprite;
-        private bool autoOrientGap;
+        private readonly Sprite doorSprite, weldedSprite, brokenSprite;
+        private readonly bool scaleBrokenSprite, fadeBrokenSprite;
+        private readonly bool autoOrientGap;
 
         private bool isStuck;
         public bool IsStuck => isStuck;
@@ -32,7 +32,6 @@ namespace Barotrauma.Items.Components
         private Rectangle doorRect;
 
         private bool isBroken;
-        private const float brokenThreshold = 50.0f;
         
         public bool IsBroken
         {
@@ -62,7 +61,7 @@ namespace Barotrauma.Items.Components
         public bool CanBeWelded = true;
 
         private float stuck;
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, false, description: "How badly stuck the door is (in percentages). If the percentage reaches 100, the door needs to be cut open to make it usable again.")]
         public float Stuck
         {
             get { return stuck; }
@@ -75,10 +74,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(3.0f, true), Editable]
+        [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
         public float OpeningSpeed { get; private set; }
 
-        [Serialize(3.0f, true), Editable]
+        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
 
         public bool? PredictedState { get; private set; }
@@ -122,10 +121,10 @@ namespace Barotrauma.Items.Components
 
         public bool IsHorizontal { get; private set; }
 
-        [Serialize("0.0,0.0,0.0,0.0", false)]
+        [Serialize("0.0,0.0,0.0,0.0", false, description: "Position and size of the window on the door. The upper left corner is 0,0. Set the width and height to 0 if you don't want the door to have a window.")]
         public Rectangle Window { get; set; }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, description: "Is the door currently open.")]
         public bool IsOpen
         {
             get { return isOpen; }
@@ -136,7 +135,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
                 
         public float OpenState
@@ -154,7 +153,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Characters and items cannot pass through impassable doors. Useful for things such as ducts that should only let water and air through.")]
         public bool Impassable
         {
             get;
@@ -222,8 +221,8 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private string accessDeniedTxt = TextManager.Get("AccessDenied");
-        private string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
+        private readonly string accessDeniedTxt = TextManager.Get("AccessDenied");
+        private readonly string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
         private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
@@ -273,27 +272,26 @@ namespace Barotrauma.Items.Components
                     ToggleState(ActionType.OnUse);
                     PickingTime = originalPickingTime;
                 }
-                else if (hasRequiredItems)
-                {
 #if CLIENT
+                else if (hasRequiredItems && character != null && character == Character.Controlled)
+                {
                     GUI.AddMessage(accessDeniedTxt, Color.Red);
-#endif
+
                 }
+#endif
             }
-            return item.Condition <= RepairThreshold;
+            return false;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            // The door has to be over the broken threshold before collision detection on the body is re-enabled, and under for the collision detection to be disabled
-            if (isBroken && item.ConditionPercentage > brokenThreshold)
+            if (isBroken)
             {
-                IsBroken = false;
-                return;
-            }
-            else if (!isBroken && item.ConditionPercentage <= brokenThreshold)
-            {
-                IsBroken = true;                
+                //the door has to be restored to 50% health before collision detection on the body is re-enabled
+                if (item.ConditionPercentage > 50.0f)
+                {
+                    IsBroken = false;
+                }
                 return;
             }
 
@@ -316,8 +314,7 @@ namespace Barotrauma.Items.Components
                         PredictedState = null;
                     }
                 }
-
-                LinkedGap.Open = openState;
+                LinkedGap.Open = isBroken ? 1.0f : openState;
             }
             
             if (isClosing)
@@ -344,6 +341,13 @@ namespace Barotrauma.Items.Components
             if (!Impassable)
             {
                 Body.FarseerBody.IsSensor = false;
+                var ce = Body.FarseerBody.ContactList;
+                while (ce != null && ce.Contact != null)
+                {
+                    ce.Contact.Enabled = false;
+                    ce = ce.Next;
+                }
+                PushCharactersAway();
             }
 #if CLIENT
             UpdateConvexHulls();
@@ -358,6 +362,12 @@ namespace Barotrauma.Items.Components
             if (!Impassable)
             {
                 Body.FarseerBody.IsSensor = true;
+                var ce = Body.FarseerBody.ContactList;
+                while (ce != null && ce.Contact != null)
+                {
+                    ce.Contact.Enabled = false;
+                    ce = ce.Next;
+                }
             }
             linkedGap.Open = 1.0f;
             IsOpen = false;
@@ -374,7 +384,7 @@ namespace Barotrauma.Items.Components
             {
                 LinkedGap.AutoOrient();
             }
-            LinkedGap.Open = openState;
+            LinkedGap.Open = isBroken ? 1.0f : openState;
             LinkedGap.PassAmbientLight = Window != Rectangle.Empty;
         }
 
@@ -417,15 +427,14 @@ namespace Barotrauma.Items.Components
             //otherwise the gap will be removed twice and cause console warnings
             if (!Submarine.Unloading)
             {
-                if (linkedGap != null) linkedGap.Remove();
+                linkedGap?.Remove();
             }
-
-            doorSprite.Remove();
-            if (weldedSprite != null) weldedSprite.Remove();
+            doorSprite?.Remove();
+            weldedSprite?.Remove();
 
 #if CLIENT
-            if (convexHull != null) convexHull.Remove();
-            if (convexHull2 != null) convexHull2.Remove();
+            convexHull?.Remove();
+            convexHull2?.Remove();
 #endif
         }
 
@@ -478,7 +487,6 @@ namespace Barotrauma.Items.Components
 
         private bool PushBodyOutOfDoorway(Character c, PhysicsBody body, int dir, Vector2 doorRectSimPos, Vector2 doorRectSimSize)
         {
-            float diff = 0.0f;
             if (!MathUtils.IsValid(body.SimPosition))
             {
                 DebugConsole.ThrowError("Failed to push a limb out of a doorway - position of the body (character \"" + c.Name + "\") is not valid (" + body.SimPosition + ")");
@@ -488,7 +496,8 @@ namespace Barotrauma.Items.Components
                     " Remoteplayer: " + c.IsRemotePlayer);
                 return false;
             }
-            
+
+            float diff;
             if (IsHorizontal)
             {
                 if (body.SimPosition.X < doorRectSimPos.X || body.SimPosition.X > doorRectSimPos.X + doorRectSimSize.X) { return false; }

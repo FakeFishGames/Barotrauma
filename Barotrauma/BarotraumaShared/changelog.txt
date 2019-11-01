@@ -1,10 +1,512 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.5.0
+---------------------------------------------------------------------------------------------------------
+
+Misc additions and changes:
+- A new submarine, Kastrull.
+- 6 new traitor missions with much more varied objectives.
+- More variants of all job outfits.
+- 30 new character face sprites. 
+- Overhauled job assignment logic to make the job distribution a little more balanced. Now each client gets assigned one of the spawnpoints (and its associated job) according to their job preference, which means that if the sub for example has 2x as many engineer spawnpoints than medic spawnpoints, there tend to be 2x more engineers. When playing with a mod that adds new jobs to the game, spawnpoints that have no job associated with them are considered spawnpoints for the non-vanilla jobs.
+	- We would like to get feedback from players about this: does the job assignment seem fair, are people generally getting the jobs they want? 
+- New logic components: sin, cos, tan, asin, acos, atan, modulo, round, ceil, floor and factorial.
+- Improved autopilot: much faster and less likely to get stuck.
+	- We would like to get feedback from players about this: Is there still incentive to steer manually?
+- AI characters don't set stationary batteries to recharge unless ordered to do so.
+- Items can be made damageable by projectiles, melee weapons and explosions by adding DamagedByProjectiles="true", DamagedByMeleeWeapons="true" or DamagedByExplosions="true" to the config.
+- Nerfed welding fuel + diving mask combo. The tank depletes much faster and one tank is only enough to make the target fall unconscious, not to kill them.
+- Added deconstruction recipes to all drugs.
+- Added huskified face sprites to all characters.
+- Question prompts in the debug console and dedicated server console (such as "enter the reason to ban XXX") can be cancelled by pressing Ctrl+D or Ctrl+Z (or Ctrl+C in the in-game debug console).
+- Welding tools and plasma cutters explode when loaded with the wrong fuel.
+- Removed sodium as a product of recycling fire extinguishers.
+- Added some loose vents and panels to Orca and Typhon.
+- Option to set a name for a character added by a mod without having to configure it in a separate text file. Use displayname="somemonster" in the character element to set the name.
+- Balanced splash screen audio volumes.
+- Alarm buzzers twitch when active to make it more clear where the sound is coming from.
+- Scrollbars that work as on/off switches (e.g. power switches and autotemp sliders in item interfaces) can be toggled by clicking on them.
+- Decreased the chance of selecting a traitor mission that's already been selected during the session.
+
+Multiplayer:
+- Option to choose a "play style" for the servers to tell the players what kind of gameplay and rules they can expect on the server.
+- Improved server browser:
+	- More filtering options
+		- Same version
+		- Show whitelisted
+		- Karma enabled
+		- Traitors enabled
+		- Friendly fire off
+		- Voice chat enabled
+		- Modded
+	- Option to filter by play style.
+	- Option to filter by game mode.
+	- Added the option to favorite servers.
+	- Added a list of recent servers.
+	- Added a friends list, you can keep track on which servers your friends are playing at as well as join them directly from the friends list.
+	- Miscellaneous layout improvements.
+- Improved server lobby:
+	- Improved character customization interface: players now have full control over their appearance.
+	- Improved job preferences interface: players can now more easily switch around their class preferences, as well as pick which variation of an outfit they would like to wear.
+	- Mission selection is more flexible: mission types can be toggled separately.
+	- The campaign interface is displayed directly in the menu, not in a separate view.
+	- The submarine preview is displayed directly in the menu without having to open a separate window.
+	- The job preferences of other players are indicated in the player list.
+	- Voice chat icon now indicates the loudness of the audio being transmitted/received.
+	- Voice chat settings are indicated in the bottom-right corner of the chat box.
+	- The server log is integrated into the chat box.
+	- Added new server settings under anti-griefing tab which previously were only accessible through serversettings.xml.
+		- Allow friendly fire.
+		- Allow rewiring.
+		- Allow disguises.
+	- Miscellaneous layout changes.
+
+Human AI:
+- Changed the logic for automatically unequipping the diving gear, extinguishers or items that are held in hands.
+- Taught the bots to place diving suits, fuel rods and fire extinguishers into right places, if they can't unequip the items without dropping them AND if the current objective is not high priority. The system uses tags/identifiers and two new attributes: "preferredcontainers" in Items and "containablerestrictions" in ItemComponents so it can be adjusted both in the editor and in xml.
+- Improved the code to prevent dead-locks between the AI states.
+- Start looking new oxygen when the current oxygen tank is at 10% instead of starting when it's empty (which often lead the bot to suffocate while doing the objective).
+- Combat: Don't ignore empty weapons when evaluating weapons for the first time (allows to try reloading a weapon before ignoring it as useless).
+- Fight Intruders: Automatically switch weapon when the current weapon runs out of ammo. Find ammunition for the current weapon if no other decent weapon is found. Don't allow to go offensive while armed with poor weapons, like a wrench.
+- Fix Leaks: Improved the operating of welding tools.
+- Rescue: Major refactoring. Allow to heal self. Improve the priority calculation. The priority is now based on the severity of wounds.
+- Taught the bots to look deeper into the inventories (recursive) when seeking items.
+- Changed the decision making on whether or not a bot needs diving gear.
+- The bots now avoid unsafe paths in the idle state or when doing low priority objectives.
+- The bots don't follow targets outside of the submarine.
+- The bots don't stay still when idling underwater.They swim in place instead.
+- Adjusted the combat priorities for the weapons.
+- Increased the minimum initiatives.
+- Adjusted the target evaluation for the Fix Leaks objective.
+- Improved the distance approximations for all AI objectives.
+- Increased the base devotion (how much the current objective priority is boosted).
+- Reduced the shooting distance when the bots are operating turrets.
+- Adjusted the idle waiting, standing, and walking times.
+- Fixed bots getting stuck if the next node was behind a door.
+- Fixed bots getting stuck on ladders when the main collider bottom was slightly lower than the floor level, even though the bot should be able to take off from the ladders.
+- Fixed bots getting stuck on ladders when they need a new target while climbing.
+- Fixed bots ignoring/avoiding targets in hulls when there were dead enemies inside them.
+- Fixed issues in switching empty oxygen tanks to new.
+- Fixed bots unequipping and re-equipping diving gear while ordered to follow another character.
+- Fixed bots not being able to handle things when they cannot find diving gear. Now they should first try to get the gear and if it fails, they should just target a safe hull.
+- Fixed bots shooting friendly characters with turrets.
+- Fixed bots always treating weapons as revolvers.
+- Fixed the loading of smg magazines/fuel tanks etc (because they are different from revolver rounds).
+- Fixed autonomic objectives overriding the user-defined settings (steering, batteries).
+- Fixed bots being able to do things while hand-cuffed.
+- Fixed a dead-end when an item is taken by another character after the target item was defined and before the objective is completed.
+- Fixed item prioritization calculations.
+- Fixed hull safety calculations always using the current visible hulls (which should only be taken into account when the hull is the current hull).
+- Fixed bots abandoning the operate item objective if there was another character operating the item.
+- Fixed bots speaking about success/failure to repair when another character fixes their target.
+- Fixed bots reporting individual failures when doing a loop objective. Should fix bots spamming with the "Cannot reach the target" msgs.
+- Fixed the current objective not being reassigned after sorting the objectives, leading to sorting the subobjectives of the old current objective, which would be fixed only after the next time the objectives were sorted (after 1 sec).
+- Fixed the gap size being misinterpreted when calculating the priority for a fix leak objective.
+- Fixed bots switching repair targets while repairing an item.
+- Fixed bots in some situations facing the wrong direction. The bots should now always face the item they are operating.
+- Fixed bots' ragdolls getting unstable due to constant flipping in some rare cases.
+- Fixed bots not immediately targeting the other rooms when they reach the airlock (when entering the submarine).
+
+Monsters:
+- New monster: Hammerhead Matriarch
+- New monster: Hammerhead Spawn
+- New diving suit sprite for husks.
+- Characters now have a separate property that defines whether or not they can walk, meaning that characters can now enter the submarine even if they cannot walk. When there is no water, the character will fidget around.
+Also fixes Fractal Guardians flying in non-flooded alien ruins.
+- Monsters now remember the position of the last target even when idling. The memories fade, however.
+- Monsters now flee briefly when being fired at with the turrets. Fixes swarming characters being easy to exploit.
+- Don't allow the monsters to retaliate unless they are in the same submarine as the attacker. Removed the CanRetaliate parameter on character AI that was added in the previous update.
+- Refactored ConditionalSprite: ConditionalSprite now takes Sprite or DeformableSprite as child elements.
+- StatusEffects can now be used to spawn characters.
+- Monster missions now support multiple monsters of different species.
+- Minor adjustments on eating. Fixes Bonethresher's eating animation.
+- Improved the avoid steering logic (used when the character is not using pathfiding, i.e. outside the submarine).
+- Charybdis: Increase the damage against structures for all attacks.
+- Adjusted Mudraptor, Bonethresher and Tigerthersher behavior. Threshers now hunt in packs.
+- Fixed incorrect flipping and mirroring. Disable mirroring on characters that don't need it.
+- Fixed Mudraptors preferring doors over humans.
+- Fixed targeting at wall center position instead of the section position. Fixes hammerheads and bonethreshers targeting destroyed wall sections.
+- Fixed the damage modifiers on hammerheads not working properly.
+- Fixed a crash when trying to create a swarm with characters that have no swarming behavior defined.
+- Fixed monsters not targeting the closest limb when they should.
+- Fixed ai targets not being updated when the character is dead, causing the characters to be too perceivable/not perceivable enough by the monsters.
+- Fixed limbs' lightsources not being visible inside the submarine.
+- Fixed immobilized characters (e.g. stunned, monsters on dry land) occasionally "hanging" mid-air.
+- Fixed draw order issues due to normal sprites and deformable sprites being used on the same characters.
+
+Character editor:
+- Added "TailTorqueBoost" parameter that can be used to prevent long and fast-moving characters, like the Tigerthresher, to get tangled around themselves.
+- "TailTorque" no longer affects the swimming sine amplitude (how strong the tail moves).
+- Sprite orientation no longer affects the damage modifiers.
+- Exposed the ragdoll main limb.
+- Exposed the damage emitters.
+- Exposed the damage sound of damage modifiers.
+- The radial widget angles are now rounded to the closest 10.
+- Fixed characters being able to collide with the submarine, which often caused large monsters to get stunned and impact sounds to be played when they're spawned.
+- Fixed characters moving when they shouldn't.
+
+Bugfixes:
+- Rewrote power distribution logic to resolve several issues and oddities in the way power was distributed across electrical grids, particularly when relays were used. The new system is also less performance intensive, so submarines that had performance issues due to large and complex power grids should now run better.
+- Fixed inability for mods to override jobs.
+- Fixed pumps calculating targetlevel incorrectly when receiving a "set_targetlevel" signal, causing neutral ballast level value in the sub editor to be off.
+- Fixed clients being able to join servers when they're using content packages the server doesn't have, which usually causes the client to get disconnected when a round starts.
+- Fixed clients being able to join servers after enabling a required content package in the settings, even though they need to restart first (leading to errors when a round starts).
+- Fixed "attempted to access a potentially removed character" console errors if a character dies while the client is waiting to apply the character's remote inventory state.
+- Fixed broken waypoints in Typhon that prevented bots from opening some of the doors.
+- Fixed characters being very hard or impossible to hit with melee weapons when they're lying on the floor.
+- Fixed characters placing their feet above a platform when not actually standing on the platform (noticeable in rooms where there's a platform on top of the "actual" floor).
+- Fixed husk eggs not causing a husk infection when injected.
+- Fixed depth sorting not working on damageable structures.
+- Fixed characters stepping on nothing if their feet are below the lowest step of a ladder.
+- Fixed door components being selectable when the door is broken, causing characters to drop from ladders if they interact with a door while climbing.
+- Alien motion sensors don't react to dead bodies to prevent bodies from blocking the way through the ruins by constantly activating coils.
+- Fixes to waypoints and outdated structure sourcerects in Bunyip, Selkie & Venture.
+- Put the shotgun shells in Dugong's, Kastrull's and Humpback's armory inside the shotgun.
+- Fixed clients retaining their original character when taking control of another one in the multiplayer campaign, but keeping the items of the new character.
+- Fixed sourcerects being moved when going through the sprite lists with arrow keys in the sprite editor.
+- Fixed servers occasionally appearing in the server list twice.
+- Improved color input layout in EntityEditors to prevent overlaps.
+- Fixed flares not depleting when in inventory.
+- Fixed propeller position becoming unmirrored when saving and reloading a mirrored engine.
+- Fixed detection area offset becoming unmirrored when saving and reloading a mirrored motion sensor.
+- Fixed a couple of doors and hatches in vanilla subs being repairable with welding tools instead of wrenches.
+- Fixed ruins occasionally having rooms too narrow to pass through.
+- Fixed door gaps occasionally getting misplaced when placing them in ruins, preventing water from flowing through the room.
+- Fixed "picked/selected required" fields disappearing from the item editing panel in the submarine editor if left blank.
+- Fixed being able to hit through walls with melee weapons.
+- Fixed framerate issues when using passive sonar near large amounts of sound emitters (right outside a submarine for example).
+- Fixed empty exploding ammo boxes exploding when deconstructed.
+- Fixed old chat messages overlapping in the server lobby after the scrollbar of the chatbox becomes active.
+- Fixed textbox selection not being cleared when pressing Ctrl+Z or Ctrl+R, causing a crash if the selection is outside the bounds of the current text and the player attempts to remove text from the box.
+- Don't allow reporting things while inside ruins.
+- Fixed crashing if a client has written something in the chatbox, gets disconnected and sends the message.
+- Fixed servers showing up in the server lobby after the server has been shut down.
+- Fixed traitor missions not ending when the traitor dies and the traitor retaining their old mission info in the info menu.
+- Fixed dead characters still appearing in the crew list when a client joins mid-round.
+- Fixes to decorative sprites: Rotation property is in degrees, fixed offset anim type being used as the rotation anim.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.4.0
+---------------------------------------------------------------------------------------------------------
+
+Monster additions and changes:
+- New character: Bonethresher.
+- New character: Golden Hammerhead.
+- Completely remade the Tigerthresher (new skin, ragdoll, behavior and attacks).
+- Reworked Hammerhead (new ragdoll, adjusted behavior and attacks).
+- Adjusted the behavior of most characters.
+- Medium sized monsters can now more easily trigger impact effects when ramming the submarine.
+- Characters are now allowed to move faster than previously (9 -> 15).
+- Changed the mouth position calculations and redefined the values for all monsters that have the eating behavior.
+- Removed Moloch Baby (Which was just a test. Molochs will be revisited later).
+- Better bend deformations on limbs.
+- Better feedback about hit impacts on limbs when the character takes damage.
+- AI monsters should hit moving targets more easily.
+- Added configurable health regeneration, which is applied when the character is eating a corpse.
+- Added configurable affliction reductions (bleeding, burn, damage).
+- Added an option for the monsters to ignore retaliation when they are attacked.
+- Added an option to target the attack on specific limb types.
+- Added an option to continue the movement, "following through" the target after the attack.
+
+Modding improvements:
+- Mods can override specific content without having to create a completely new content package. This can
+be done by surrounding the element with "<override></override>" (for example, an Item or a Character
+config element you want to replace a vanilla Item/Character with). The overrides work based on identifiers;
+for instance, if you configure an item with the identifier "wrench" and surround it with the override
+tags, it will replace the vanilla wrench.
+- Content package load order: the game will first load the core package, then other content in the order
+ of selection (proper ui still pending). The load order is saved in the config_player.xml.
+- Made AI orders and event manager settings moddable.
+- The engine and reactor sound ranges can now be modified in the item XML.
+- The husk affliction can now be modified and applied on any character.
+- Support for multiple simultaneous husk afflictions based on the same system.
+- Support for multiple husk appendages. Made the attachment limb configurable in the affliction definition.
+- Additional content package validity checks during startup: make sure all XML files in the package can 
+be loaded, and disable the package if they can't. Fixes tons of console errors on startup when a mod with 
+invalid XML files is enabled.
+- Don't allow publishing workshop items that contain invalid XML files.
+- Don't allow selecting invalid content packages in the settings menu.
+- Fixed disabled content packages becoming active when they're autoupdated.
+
+Character editor improvements:
+- Improved layout, hotkeys, general UI/UX improvements.
+- Support for editing the character configuration files including health, ai, inventory, sounds, particles etc.
+- Support for limb sounds.
+- Support for light sources attached to limbs.
+- Support for adding and removing attacks.
+- Support for afflictions in attacks.
+- Support for damage modifiers in limbs.
+- New functionality: creating limbs (without having to operate on duplicates).
+- Support for creating humanoids.
+- Allow to create new characters based on an existing character (copy character).
+- Added a limb specific "sprite orientation" that overrides the universal "spritesheet orientation".
+- Option for mirroring limb sprites.
+- Option for hiding the limb sprite (invisible limbs).
+- Multiple minor additions and changes, like an option to enable lights or to display the damage modifiers
+drawn on the character.
+- Exposed structure sound types.
+- Exposed the mouth position.
+- Exposed the angular damping and density for limbs (removed mass, which was not used).
+- Added a default texture path for ragdolls so that the texture can only be defined once. Limb specific 
+texture definitions override this.
+- Allow to define a group for different species. The characters in the same group are friendly to each other.
+- DecorativeSprites can now be used on character limbs (like on items).
+- Made it easier to adjust the source rect's position with the arrows. Hold CTRL to change the size.
+- Fixed a rare case where characters got stunned in the character editor.
+
+Misc improvements:
+- New husk faces.
+- Increased default VOIP and microphone volume and the maximum values.
+- Force a restart when switching the language.
+- More detailed "x is not a valid XML file" error messages.
+- Improved mission and traitor info popups.
+- Show the number of lights (total and shadow-casting) in the sub editor.
+- When rewiring, clicking the right mouse button only removes one node from the wire.
+- Wire nodes are added by left clicking in the sub editor, and can be laid out horizontally/vertically
+by holding shift.
+- Improved logging for DXGI_ERROR crashes on startup.
+- Made level ambient lighting darker.
+- Added "pause" console command (only usable in single player).
+
+Bugfixes:
+- Fixed crashing when the recharge speed of a PowerContainer with no interface (e.g. Alien Generator) is 
+adjusted by a signal or a bot.
+- Fixed docking interface becoming active on navigation terminals when any of the submarine's docking
+ports are close to another docking port, even if the terminal in question is not wired to that port.
+- Fixed an occasional crash when a bot starts retreating away from an enemy immediately after spawning.
+- Fixed clients not creating a download prompt when a sub they don't have is selected by vote.
+- Fixed traitor missions almost always placing the mission-related items inside the same containers.
+- Fixed traitor goal durations being displayed as "duration(xx) seconds" instead of "xx seconds".
+- Fixed Traitor's "find an item" objectives not being considered complete if the target item is inside 
+another item within the traitor's inventory.
+- Fixed server using the provided campaign savefile name as-is (without the required .save file extension) 
+when starting a new campaign through the console. Caused clients to throw "File transfer failed (wrong 
+file extension """!)" errors and prevented them from receiving the save files.
+- Fixed servers being able to start the round multiple times by spamming the "start" console command 
+before loading the round finishes.
+- Fixed rewiring sound playing whenever a remote player is using a rewireable device.
+- Fixed subinventories not opening when grabbing another character with no items in the corresponding slot.
+- Fixed draggable inventories getting stuck to a half-open state if the item is equipped when 
+the inventory is opening/closing.
+- Fixed light sprites being mirrored when the item is mirrored, even if the mirroring the item's sprite 
+had been disabled (e.g. junction boxes).
+- Fixed motion sensor detection area not being flipped when the item is mirrored.
+- Fixed status monitor not mirroring rooms on the display in mirrored subs.
+- Fixed engine propeller position not being flipped when the item is mirrored.
+- Fixed diving suits being displayed in an incorrect position when the locker has been flipped on either axis.
+- AI characters turn autotemp back on when leaving the reactor.
+- Fixed item sprites becoming unmirrored when a damaged sprite is fading in.
+- Fixed damaged item sprites that are set to fade in according to the damage always being drawn at full opacity.
+- Fixed spectators being distributed into teams in combat missions, potentially leading to imbalanced crew sizes.
+- Notify the client using the "togglekarmatestmode" command about the test mode being enabled/disabled.
+- Send karma change notifications when karma has changed by 1 unit or more when test mode is enabled, not 
+just when an action causes an immediate change of 1 unit or more.
+- Fixed adjacent sprites bleeding into the platform and topwindow sprites.
+- Fixed autocompleting submarine/shuttle names when using the submarine/shuttle console commands.
+- Fixed some items (like sonar beacon) attracting monsters even when they're powered off.
+- Fixed inability to open the pause menu if an inventory slot had been highlighted when exiting 
+the game screen.
+- Fixed welded door sprites "twitching" when the submarine moves.
+- Fixed crashing when a character with no hands or arms drops a holdable item.
+- Non-humanoids (i.e. monsters controlled by a player) cannot be assigned as traitors.
+- Traitor missions are considered unsuccessful if the objectives cannot be completed (for example if the
+submarine doesn't have suitable containers to place the traitor items inside).
+- Fixed the "Barotrauma" title text staying invisible in the main menu when coming back from the credits.
+- Fixed clients not refreshing an item's editing hud when a remote player adjusts the values (i.e. if two 
+players had selected the same lamp and one changed the color value, the other client wouldn't see 
+the value change in the editing hud).
+- Fixed a couple of the additive light sprites being slightly offset from the lamp.
+- Clients don't display client-side vitality changes in healthbars until the actual vitality is received 
+from the server. Fixes health occasionally dropping and then jumping back up if the client predicts damage 
+incorrectly (e.g. if a melee attack hits client-side but doesn't server-side).
+- Fixed character syncing being very inaccurate when switching to freecam and spectating a character
+far away from other players.
+- Fixed oxygen/fuel tanks attached to a tool being rendered behind the character's legs.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.3.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed an error when trying to start a multiplayer campaign with voting enabled
+- Fixed a character inventory desyncing error in multiplayer that caused random disconnections
+- Fixed download prompts for submarines not showing up
+
+---------------------------------------------------------------------------------------------------------
+v0.9.3.2
+---------------------------------------------------------------------------------------------------------
+
+- Fixed a networking error that prevented clients from selecting the correct submarine in multiplayer if
+the settings menu had been toggled open, which caused the client to start the round with an incorrect
+submarine and get kicked out from the server due to entity ID mismatch errors.
+- Added Japanese translation.
+- Added Polish, Spanish and Turkish NPC conversations.
+- Improvements to Russian and Spanish translations.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.3.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed clients waiting an excessive amount of time before resending network messages the server has not
+acknowledged receiving. Caused clients to occasionally enter a state where they can't interact with devices
+or pick up items.
+- Fixed fonts getting messed up when playing in Simplified Chinese.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.3.0
+---------------------------------------------------------------------------------------------------------
+
+Traitor improvements:
+- Players who haven't been a traitor yet are more likely to get selected as a traitor.
+- If both teams have a traitor during a combat mission, traitor win will result in the opposite team's victory.
+- Fixed the order of the traitor objective chat messages.
+- Fixed flooding the respawn shuttle counting as flooding a part of the submarine when doing the "flood
+the submarine" traitor task.
+
+Multiplayer fixes:
+- Fixed server not sending a condition update for an item that gets removed when its condition drops to zero.
+Caused potassium and magnesium to explode continuously client-side when immersed in water.
+- Fixed server list only displaying servers that are located close to the client.
+- Fixed server list displaying the selected game mode incorrectly.
+- Fixed Chinese server names and descriptions showing up as "?????" in the server list when not playing in Chinese.
+- Fixed occasional "error while reading a message from the server" console errors when joining a server.
+- Fixed clients occasionally timing out and disconnecting during the loading screens.
+- Fixed character name box resetting in the server lobby when another client joins or disconnects.
+- Fixed "collection was modified" error when a client who's been given control of a bot tries to use 
+the report buttons.
+- Fixed server hanging when a client joins if the server has a very large number of submarines installed.
+- Fixed a bunch of client-side console commands crashing the game if the client disconnects while a question 
+prompt is active and then enters something in the console.
+- Fixed full SteamP2P servers not showing up on the server list regardless of the filters.
+- Fixed "remove ban" and "range ban" buttons in the server settings menu doing nothing.
+- Fixed switches occasionally getting desynced between clients.
+- Added a tickbox for selecting/deselecting all permissions to the client management panel.
+- Fixed clients with campaign management permissions not seeing the permissions of newly joined clients.
+- Fixed statuseffects with a duration not having an effect on karma.
+- Causing an "oxygen low" affliction decreases karma (for example when injecting large amounts of fentanyl).
+- Fixed scroll values resetting in the multiplayer campaign store menu when purchasing/selling items.
+
+Miscellaneous improvements:
+- Attempting to drop an item to an empty inventory slot that's not of the right type (e.g. trying to put 
+an extinguisher in the normal inventory slots), automatically moves the item to the correct slot if it's free.
+- Made irrelevant items (light components, lamps, small automated pumps, etc) non-interactable in the tutorials.
+- The first patient cannot be healed in the doctor tutorial until the "take the patient to the medbay" 
+objective has been completed.
+- The docking interface does not become active in the captain tutorial when leaving the first outpost.
+- Added sounds for rewiring and repairing.
+
+Miscellaneous fixes:
+- Fixed skills not having any effect on repair durations.
+- Fixed inability to enable content packages created for a version prior to 0.9.2.0 (ones that have the 
+content package in the Data/ContentPackages folder instead of in the mod folder).
+- Use a welding tool icon to indicate damaged walls in the mechanic tutorial, because the generic repair
+icon caused some players to think the wall needs to be repaired with a wrench.
+- Minor changes to the instruction texts in the mechanic tutorial.
+- Reduced repair durations in the engineer/mechanic tutorials.
+- Fixed draggable subinventories staying visible when stunned.
+- Fixed light sprites not being scaled in the sub editor when resizing lamps.
+- Fixed contained items not changing their position when flipping the container (e.g. oxygen generator 
+with some tanks inside).
+- Fixed projectiles emitting sparks when they hit a character (not just when they hit a structure).
+- Fixed sonar's zoom slider not moving when autodocking zooms in.
+- Fixed small creatures being unable to reach waypoints.
+- Fixed bots getting stuck while trying to repair items (in practice hatches) while holding ladders.
+- Hid SMG rounds and coilgun bolts from the sub editor because they're not usable by themselves, but are 
+spawned automatically when the SMG/coilgun is fired.
+- Hid the junction box tutorial variant from the sub editor.
+- Stun guns and darts can be fabricated and purchased.
+- More reliable melee weapon hit detection (for example in the security tutorial it was previously very
+difficult to hit the crawler after it falls to the ground).
+- Enemies steer back towards the level if they end up outside the boundaries.
+- Added confirmation popups when exiting the sub editor or character editor to prevent losing unsaved work.
+- Fixed reactor warning lights being clickable and becoming invisible when pressed.
+- Fixed CPR button becoming invisible when pressed.
+- Fixed water occasionally flowing only through one gap in a hull, for example water only draining 
+through a hole at a one side of a room even if there is another hole at the other side of the room. 
+- Fixed scrollbars not resizing when filtering lists (e.g. the submarine list in the "new game" menu).
+- Fixed being able to fire flamers (and other repair tools) through walls and doors.
+- Fixed flamers working underwater when the water is shallow enough for the character to stand.
+- Fixed battery recharge rate slider not moving when the recharge rate is set by an incoming signal 
+or a remote player.
+- Fixed some connection panels being rewireable in vanilla subs when a wire is equipped.
+- Fixed some pre-placed body armors and grenades in vanilla subs having an incorrect scale.
+- Fixed crashing when a character gains a skill level on a skill that's not initially configured 
+for the character class.
+- Fixed "Add File" dialog of the Workshop publish screen always using the mod's root folder as the file 
+path even if the file is in a subfolder.
+- Fixed contentpackage version number not being updated when updating an older workshop item.
+- Fixed subinventories closing when items are dropped into or removed from them, which made reloading 
+weapons or putting several items into a container cumbersome.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.2.2
+---------------------------------------------------------------------------------------------------------
+
+Karma improvements:
+- Attacking someone who has just recently attacked you doesn't reduce karma.
+- The karma penalty from attacking someone scales according to their karma (i.e. smaller penalty for 
+attacking a griefer whose karma is low).
+- Damaging characters by performing CPR doesn't decrease karma.
+- Fixed karma decreasing when moving a wire from a connection to another.
+- Reviving characters with CPR increases karma.
+- Made the default karma settings a little less strict.
+- Fixed clients always getting kicked (never banned) if the "kicks before ban" karma setting is set above 0.
+- Players aren't notified about their karma decreasing when it decreases "naturally" towards the neutral
+value of 50.
+
+Bugfixes:
+- Fixed mechanic tutorial crashing after the welding task when playing in Russian.
+- Less restrictive client name symbol constraints. Fixes clients failing to join servers if their name 
+contains Chinese symbols for example.
+- Fixed inability to enable/update content packages created for a version prior to 0.9.2.0 (ones that have 
+the content package in the Data/ContentPackages folder instead of in the mod folder).
+
+---------------------------------------------------------------------------------------------------------
+v0.9.2.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing if a traitor client switches to a non-human creature and their original character dies.
+- Traitors don't lose karma by damaging structures if their goal is to flood the sub.
+- Traitors cannot be assigned to kill themselves.
+- Fixed round summary and traitorlist command displaying incorrect traitor mission info.
+- Fixed inability to end the round if there's an active traitor mission but no traitors assigned.
+- Disabled traitors in campaign mode.
+- Fixed server crashing when attempting to greet a traitor with no objective.
+- Fixed dead characters being occasionally selected as traitors.
+- Fixed info menu still displaying the old traitor objective after a traitor dies and respawns.
+- Allow traitors to re-use the sabotage button when someone starts to repair the device without having 
+to re-open the interface.
+- Fixed grenades exploding multiple times when triggered using a detonator.
+- Scaled down alien materials (oxygenite, sulphurite, fulgurium, etc) and fixed their collider sizes.
+- Karma doesn't spontaneously decay/increase when dead.
+- Increased karma penalties for poisoning someone.
+- Option to kick clients with low karma from the server and ban them if they get kicked more than x times.
+- Space herpes randomly toggles inverted controls on/off to make it more difficult to bypass the effect 
+by modifying keybinds.
+- Fixed workshop item preview image not being refreshed in the publish tab when adding a preview image 
+to an item that doesn't have one.
+- Fixed "error loading submarine" console error when creating a copy of a submarine, deleting the original 
+sub and then saving the copy.
+- Fixed server logging an "attempted to send a chat message to a null client" error when a client tries 
+to send a private message to a non-existent client.
+- Enable dynamic range compression and VOIP attenuation by default.
+- Fixed inability to extinguish fires through holes in walls.
+- Fixed some texts not fitting on the submarine's wall labels in Spanish and Polish.
+- Fixed "Broken English" character trait not being translated.
+- Fixed missing "undock" text in the navigation terminal interface.
+- Fixed some of the items in Berilia and Bunyip being impossible to pick up.
+- Fixed crashing when less than 3 arguments are passed to the "color" console command.
+- Fixed crashing when attempting to rewire two linked devices at the same time.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.2.0
 ---------------------------------------------------------------------------------------------------------
 
 Easier server hosting:
 - Switched to Steam's networking API, which allows clients to connect to servers without the need for the
 host to forward their ports.
+
+Expanded traitor feature:
+- Multi-step traitor missions that not only make things more interesting to the traitors themselves but 
+also to give the rest of the crew a fighting chance of detecting the traitor.
 
 Anti-griefing:
 - Karma: a system that detects malicious actions and automatically creates a more challenging experience 
@@ -27,7 +529,7 @@ New items and structures:
 - Tons of new decorative submarine pieces for the sub editor.
 
 New submarine:
-- Berilia, a submarine for 16 players
+- Berilia, a submarine for 16 players.
 
 Bugfixes:
 - Fixed crashing when selecting doors or gaps in the sub editor.
@@ -36,7 +538,9 @@ Bugfixes:
 ports. Specifically, if a port needed to be docked to from below but was positioned above the center of
 the submarine (or vice versa), the docking interface would not activate on the navigation terminal.
 - Fixed docking port using the wrong submarine's position for joint adjustment, causing errors when 
-docking a submarine with greater mass to one with a smaller mass
+docking a submarine with greater mass to one with a smaller mass.
+- Fixed an issue that caused occasional ID mismatch errors if a client died during a multiplayer
+campaign round and disconnected before the round ended.
 - Fixed item editing panel not appearing in wiring mode when selecting a wire in the sub editor.
 - Fixed ability to throw throwable items while unconscious.
 - Fixed bots not using fire extinguishers client-side in multiplayer.
@@ -93,8 +597,12 @@ limb slot (for example, when moving a flashlight from a hand slot to the head sl
 - Fixed deconstructor losing some of the material from deconstructed items if the output container couldn't hold all of the new items.
 - Fixed discrepancies in door welding & repairing logic regarding collision.
 - Fixed a crash when retrieving lobby information with an uninitialized IP.
-- Fixed max player count in server list & duplicate lobby entries
-- Fixed arrow keys not changing caret position when typing
+- Fixed max player count in server list & duplicate lobby entries.
+- Fixed arrow keys not changing caret position when typing.
+- Fixed doors looking repaired as soon as the condition goes above 0%, even though the collisions aren't 
+re-enabled until the door gets above 50%.
+- Fixed water not leaking through broken doors.
+- Fixed inability to throw items through platforms.
 
 Misc additions and changes:
 - Respawn shuttles now spawn inside the level somewhere near the submarine, instead of always spawning

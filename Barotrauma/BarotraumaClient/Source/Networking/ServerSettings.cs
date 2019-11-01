@@ -30,6 +30,10 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIScrollBar scrollBar) return scrollBar.BarScrollValue;
                     else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) return radioButtonGroup.Selected;
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
+                    }
                     return null;
                 }
                 set
@@ -37,9 +41,30 @@ namespace Barotrauma.Networking
                     if (GUIComponent == null) return;
                     else if (GUIComponent is GUITickBox tickBox) tickBox.Selected = (bool)value;
                     else if (GUIComponent is GUITextBox textBox) textBox.Text = (string)value;
-                    else if (GUIComponent is GUIScrollBar scrollBar) scrollBar.BarScrollValue = (float)value;
-                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (Enum)value;
+                    else if (GUIComponent is GUIScrollBar scrollBar)
+                    {
+                        if (value.GetType() == typeof(int))
+                        {
+                            scrollBar.BarScrollValue = (int)value;
+                        }
+                        else
+                        {
+                            scrollBar.BarScrollValue = (float)value;
+                        }
+                    }
+                    else if (GUIComponent is GUIRadioButtonGroup radioButtonGroup) radioButtonGroup.Selected = (int)value;
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
+                    else if (GUIComponent is GUINumberInput numInput)
+                    {
+                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        {
+                            numInput.IntValue = (int)value;
+                        }
+                        else
+                        {
+                            numInput.FloatValue = (float)value;
+                        }
+                    }
                 }
             }
 
@@ -122,7 +147,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int missionType = 0, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -175,7 +200,8 @@ namespace Barotrauma.Networking
 
             if (dataToSend.HasFlag(NetFlags.Misc))
             {
-                outMsg.Write((byte)(missionType + 1));
+                outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
+                outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
                 outMsg.Write((byte)(traitorSetting + 1));
                 outMsg.Write((byte)(botCount + 1));
                 outMsg.Write((byte)(botSpawnMode + 1));
@@ -305,7 +331,30 @@ namespace Barotrauma.Networking
             };
 
             //***********************************************
-            
+
+            // Play Style Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
+            var playStyleSelection = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), serverTab.RectTransform))
+            {
+                AutoHideScrollBar = true,
+                UseGridLayout = true
+            };
+
+            List<GUITickBox> playStyleTickBoxes = new List<GUITickBox>();
+            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
+                {
+                    ToolTip = TextManager.Get("servertagdescription." + playStyle)
+                };
+                selectionPlayStyle.AddRadioButton((int)playStyle, selectionTick);
+                playStyleTickBoxes.Add(selectionTick);
+            }
+            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+            GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
+
+            // Sub Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
             var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
@@ -316,12 +365,13 @@ namespace Barotrauma.Networking
             GUIRadioButtonGroup selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
-                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                selectionMode.AddRadioButton(i, selectionTick);
             }
             DebugConsole.NewMessage(SubSelectionMode.ToString(), Color.White);
             GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
 
+            // Mode Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
             selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
             {
@@ -332,8 +382,8 @@ namespace Barotrauma.Networking
             selectionMode = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont);
-                selectionMode.AddRadioButton((SelectionMode)i, selectionTick);
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
+                selectionMode.AddRadioButton(i, selectionTick);
             }
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
 
@@ -511,7 +561,7 @@ namespace Barotrauma.Networking
             var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
 
-            var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
+            /*var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
 
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             var traitorRatioSlider = slider;
@@ -556,7 +606,7 @@ namespace Barotrauma.Networking
             GetPropertyData("TraitorRatio").AssignGUIComponent(traitorRatioSlider);
 
             traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-            traitorRatioBox.OnSelected(traitorRatioBox);
+            traitorRatioBox.OnSelected(traitorRatioBox);*/
             
             var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
             {
@@ -690,6 +740,18 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.02f
             };
 
+            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowFriendlyFire"));
+            GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
+
+            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowRewiring"));
+            GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+
+            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+                TextManager.Get("ServerSettingsAllowDisguises"));
+            GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
+
             var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
 
@@ -733,8 +795,14 @@ namespace Barotrauma.Networking
 
             karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) { MaxSize = new Point(karmaSettingsList.Content.Rect.Width, int.MaxValue) }, 
                 style: "InnerFrame");
+            karmaPresetDD.SelectItem(KarmaPreset);
+            karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
+            GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
             karmaPresetDD.OnSelected = (selected, obj) =>
             {
+                string newKarmaPreset = obj as string;
+                if (newKarmaPreset == KarmaPreset) { return true; }
+
                 List<NetPropertyData> properties = netProperties.Values.ToList();
                 List<object> prevValues = new List<object>();
                 foreach (NetPropertyData prop in netProperties.Values)
@@ -747,7 +815,7 @@ namespace Barotrauma.Networking
                     GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
                     GameMain.NetworkMember?.KarmaManager?.Save();
                 }
-                KarmaPreset = obj as string;
+                KarmaPreset = newKarmaPreset;
                 GameMain.NetworkMember.KarmaManager.SelectPreset(KarmaPreset);
                 karmaSettingsList.Content.ClearChildren();
                 karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
@@ -758,7 +826,6 @@ namespace Barotrauma.Networking
                 }
                 return true;
             };
-            karmaPresetDD.SelectItem(KarmaPreset);
             AssignGUIComponent("KarmaPreset", karmaPresetDD);
             karmaBox.OnSelected = (tb) =>
             {
@@ -812,15 +879,15 @@ namespace Barotrauma.Networking
         {
             if (settingsFrame == null)
             {
+                CreateSettingsFrame();
+            }
+            else
+            {
                 if (KarmaPreset == "custom")
                 {
                     GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
                     GameMain.NetworkMember?.KarmaManager?.Save();
                 }
-                CreateSettingsFrame();
-            }
-            else
-            {
                 ClientAdminWrite(NetFlags.Properties);
                 foreach (NetPropertyData prop in netProperties.Values)
                 {

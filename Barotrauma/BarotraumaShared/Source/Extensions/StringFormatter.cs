@@ -23,6 +23,11 @@ namespace Barotrauma
             }
             return new string(newString.SelectMany(str => str.ToCharArray()).ToArray());
         }
+        
+        public static string Remove(this string s, string substring)
+        {
+            return s.Replace(substring, string.Empty);
+        }
 
         public static string Remove(this string s, Func<char, bool> predicate)
         {
@@ -104,6 +109,61 @@ namespace Barotrauma
                     i++;
                 }
             }
+        }
+
+        public static ICollection<string> ParseCommaSeparatedStringToCollection(string input, ICollection<string> texts = null, bool convertToLowerInvariant = true)
+        {
+            if (texts == null)
+            {
+                texts = new HashSet<string>();
+            }
+            else
+            {
+                texts.Clear();
+            }
+            if (!string.IsNullOrWhiteSpace(input))
+            {
+                foreach (string value in input.Split(','))
+                {
+                    if (string.IsNullOrWhiteSpace(value)) { continue; }
+                    if (convertToLowerInvariant)
+                    {
+                        texts.Add(value.ToLowerInvariant());
+                    }
+                    else
+                    {
+                        texts.Add(value);
+                    }
+                }
+            }
+            return texts;
+        }
+
+        public static ICollection<string> ParseSeparatedStringToCollection(string input, string[] separators, ICollection<string> texts = null, bool convertToLowerInvariant = true)
+        {
+            if (texts == null)
+            {
+                texts = new HashSet<string>();
+            }
+            else
+            {
+                texts.Clear();
+            }
+            if (!string.IsNullOrWhiteSpace(input))
+            {
+                foreach (string value in input.Split(separators, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (convertToLowerInvariant)
+                    {
+                        texts.Add(value.ToLowerInvariant());
+                    }
+                    else
+                    {
+                        texts.Add(value);
+                    }
+                }
+            }
+            return texts;
         }
     }
 }

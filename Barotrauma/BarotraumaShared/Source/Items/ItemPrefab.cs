@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Linq;
+using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -150,6 +152,11 @@ namespace Barotrauma
         /// </summary>
         public readonly string OriginalName;
 
+        /// <summary>
+        /// Is this prefab overriding a prefab in another content package
+        /// </summary>
+        public bool IsOverride;
+
         public string ConfigFile
         {
             get { return configFile; }
@@ -243,6 +250,27 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
+        public bool DamagedByExplosions
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByProjectiles
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByMeleeWeapons
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
         public bool FireProof
         {
             get;
@@ -303,6 +331,17 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        private HashSet<string> preferredContainers = new HashSet<string>();
+        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
+        public string PreferredContainers
+        {
+            get { return string.Join(",", preferredContainers); }
+            set
+            {
+                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
+            }
         }
 
         /// <summary>
@@ -412,22 +451,58 @@ namespace Barotrauma
                 }
 
                 XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc?.Root == null)
-                {
-                    DebugConsole.ThrowError("File \"" + filePath + "\" could not be loaded.");
-                    continue;
-                }
+                if (doc == null) { return; }
 
-                if (doc.Root.Name.ToString().ToLowerInvariant() == "items")
+                var rootElement = doc.Root;
+                switch (rootElement.Name.ToString().ToLowerInvariant())
                 {
-                    foreach (XElement element in doc.Root.Elements())
-                    {
-                        new ItemPrefab(element, filePath);
-                    }
-                }
-                else
-                {
-                    new ItemPrefab(doc.Root, filePath);
+                    case "item":
+                        new ItemPrefab(rootElement, filePath, false);
+                        break;
+                    case "items":
+                        foreach (var element in rootElement.Elements())
+                        {
+                            if (element.IsOverride())
+                            {
+                                var itemElement = element.GetChildElement("item");
+                                if (itemElement != null)
+                                {
+                                    new ItemPrefab(itemElement, filePath, true)
+                                    {
+                                        IsOverride = true
+                                    };
+                                }
+                                else
+                                {
+                                    DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {filePath}");
+                                }
+                            }
+                            else
+                            {
+                                new ItemPrefab(element, filePath, false);
+                            }
+                        }
+                        break;
+                    case "override":
+                        var items = rootElement.GetChildElement("items");
+                        if (items != null)
+                        {
+                            foreach (var element in items.Elements())
+                            {
+                                new ItemPrefab(element, filePath, true)
+                                {
+                                    IsOverride = true
+                                };
+                            }
+                        }
+                        foreach (var element in rootElement.GetChildElements("item"))
+                        {
+                            new ItemPrefab(element, filePath, true);
+                        }
+                        break;
+                    default:
+                        DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {filePath}");
+                        break;
                 }
             }
 
@@ -444,7 +519,7 @@ namespace Barotrauma
             }
         }
 
-        public ItemPrefab(XElement element, string filePath)
+        public ItemPrefab(XElement element, string filePath, bool allowOverriding)
         {
             configFile = filePath;
             ConfigElement = element;
@@ -702,19 +777,13 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (!string.IsNullOrEmpty(identifier))
-            {
-                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
-                if (existingPrefab != null)
-                {
-                    DebugConsole.ThrowError(
-                        "Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier!");
-                }
-            }
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
-            List.Add(this);
+            if (HandleExisting(identifier, allowOverriding, filePath))
+            {
+                List.Add(this);
+            }
         }
 
         public PriceInfo GetPrice(Location location)
@@ -759,9 +828,24 @@ namespace Barotrauma
             }
             return prefab;
         }
+
         public IEnumerable<PriceInfo> GetPrices()
         {
             return prices?.Values;
+        }
+
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+        }
+
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
+        {
+            isPreferencesDefined = preferredContainers.Any();
+            if (!isPreferencesDefined) { return true; }
+            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
         }
     }
 }

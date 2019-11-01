@@ -26,4 +26,8 @@
   footangle="-90"
   crouchingfootmoveoffset="0,0"
   crouchingheadpos="0.65"
-  crouchingheadangle="-10" />
+  crouchingheadangle="-10"
+  stepliftheadmultiplier="0"
+  stepliftamount="1.000003"
+  stepliftoffset="-0.5"
+  stepliftfrequency="2" />

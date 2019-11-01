@@ -44,6 +44,16 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+            
+            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
+            {
+                OnSelected = (GUIComponent component, object userdata) =>
+                {
+                    selectedItem = userdata as FabricationRecipe;
+                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
+                    return true;
+                }
+            };
 
             var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), paddedFrame.RectTransform), isHorizontal: true)
             {
@@ -56,16 +66,6 @@ namespace Barotrauma.Items.Components
             var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterArea.RectTransform), "x")
             {
                 OnClicked = (btn, userdata) => { ClearFilter(); itemFilterBox.Flash(Color.White); return true; }
-            };
-
-            itemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedFrame.RectTransform))
-            {
-                OnSelected = (GUIComponent component, object userdata) =>
-                {
-                    selectedItem = userdata as FabricationRecipe;
-                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
-                    return true;
-                }
             };
 
             inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.15f), paddedFrame.RectTransform), style: null);
@@ -271,11 +271,14 @@ namespace Barotrauma.Items.Components
 
                 Rectangle slotRect = outputContainer.Inventory.slots[0].Rect;
 
-                GUI.DrawRectangle(spriteBatch,
-                new Rectangle(
-                    slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - progressState)),
-                    slotRect.Width, (int)(slotRect.Height * progressState)),
-                Color.Green * 0.5f, isFilled: true);
+                if (fabricatedItem != null)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Rectangle(
+                            slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - progressState)),
+                            slotRect.Width, (int)(slotRect.Height * progressState)),
+                        Color.Green * 0.5f, isFilled: true);
+                }
 
                 itemIcon.Draw(
                     spriteBatch,
@@ -462,7 +465,7 @@ namespace Barotrauma.Items.Components
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             int itemIndex = pendingFabricatedItem == null ? -1 : fabricationRecipes.IndexOf(pendingFabricatedItem);
-            msg.WriteRangedIntegerDeprecated(-1, fabricationRecipes.Count - 1, itemIndex);
+            msg.WriteRangedInteger(itemIndex, -1, fabricationRecipes.Count - 1);
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

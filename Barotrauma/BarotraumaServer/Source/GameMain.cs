@@ -48,7 +48,7 @@ namespace Barotrauma
 
         private static Stopwatch stopwatch;
 
-        public static HashSet<ContentPackage> SelectedPackages
+        public static IEnumerable<ContentPackage> SelectedPackages
         {
             get { return Config?.SelectedContentPackages; }
         }
@@ -92,6 +92,7 @@ namespace Barotrauma
         public void Init()
         {
             MissionPrefab.Init();
+            TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
@@ -242,6 +243,18 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 steamId);
+
+            for (int i = 0; i < CommandLineArgs.Length; i++)
+            {
+                switch (CommandLineArgs[i].Trim())
+                {
+                    case "-playstyle":
+                        Enum.TryParse(CommandLineArgs[i + 1], out PlayStyle playStyle);
+                        Server.ServerSettings.PlayStyle = playStyle;
+                        i++;
+                        break;
+                }
+            }
         }
 
         public void CloseServer()

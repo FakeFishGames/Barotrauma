@@ -97,16 +97,14 @@ namespace Barotrauma
 
             GameMain.GameSession.EndRound("");
             
+            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has an alive character)
+            characterData.RemoveAll(cd => cd.HasSpawned);
+            
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
-                if (c.HasSpawned)
-                {
-                    //client has spawned this round -> remove old data (and replace with new one if the client still has an alive character)
-                    characterData.RemoveAll(cd => cd.MatchesClient(c));
-                }
-                
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
+                    c.CharacterInfo = c.Character.Info;
                     characterData.Add(new CharacterCampaignData(c));
                 }
             }

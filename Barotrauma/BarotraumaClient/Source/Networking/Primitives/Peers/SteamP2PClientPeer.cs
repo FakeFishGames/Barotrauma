@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
             heartbeatTimer = 1.0;
 
             isActive = true;
@@ -83,7 +83,7 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
-            timeout = 20.0;
+            timeout = NetworkConnection.TimeoutThreshold;
 
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -96,7 +96,12 @@ namespace Barotrauma.Networking
 
             if (isConnectionInitializationStep)
             {
-                IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
+                ulong low = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8);
+                ulong high = Lidgren.Network.NetBitWriter.ReadUInt32(data, 32, 8+32);
+                ulong lobbyId = low + (high << 32);
+
+                Steam.SteamManager.JoinLobby(lobbyId, false);
+                IReadMessage inc = new ReadOnlyMessage(data, false, 1+8, dataLength - 9, ServerConnection);
                 if (initializationStep != ConnectionInitialization.Success)
                 {
                     incomingInitializationMessages.Add(inc);
@@ -110,7 +115,8 @@ namespace Barotrauma.Networking
             {
                 IReadMessage inc = new ReadOnlyMessage(data, false, 1, dataLength - 1, ServerConnection);
                 string msg = inc.ReadString();
-                OnDisconnect?.Invoke(msg);
+                Close(msg);
+                OnDisconnectMessageReceived?.Invoke(msg);
             }
             else
             {
@@ -143,7 +149,7 @@ namespace Barotrauma.Networking
 
             if (timeout < 0.0)
             {
-                Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                Close("Timed out");
                 return;
             }
 
@@ -196,7 +202,7 @@ namespace Barotrauma.Networking
 
                     outMsg.Write(GameMain.Version.ToString());
 
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent && !cp.NeedsRestart);
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count());
                     foreach (ContentPackage contentPackage in mpContentPackages)
                     {
@@ -265,8 +271,27 @@ namespace Barotrauma.Networking
             }
 
             heartbeatTimer = 5.0;
-            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
 
+#if DEBUG
+            CoroutineManager.InvokeAfter(() =>
+            {
+                if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
+                int count = Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedDuplicatesChance ? 2 : 1;
+                for (int i = 0; i < count; i++)
+                {
+                    Send(buf, length + 4, sendType);
+                }
+            },
+            GameMain.Client.SimulatedMinimumLatency + Rand.Range(0.0f, GameMain.Client.SimulatedRandomLatency));
+
+#else
+            Send(buf, length + 4, sendType);
+#endif
+        }
+
+        private void Send(byte[] buf, int length, Facepunch.Steamworks.Networking.SendType sendType)
+        {
+            bool successSend = SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, buf, length + 4, sendType);
             if (!successSend)
             {
                 if (sendType != Facepunch.Steamworks.Networking.SendType.Reliable)
@@ -304,6 +329,8 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
+            SteamManager.LeaveLobby();
+
             isActive = false;
 
             IWriteMessage outMsg = new WriteOnlyMessage();
@@ -324,6 +351,8 @@ namespace Barotrauma.Networking
 
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             hostSteamId = 0;
+
+            OnDisconnect?.Invoke();
         }
     }
 }

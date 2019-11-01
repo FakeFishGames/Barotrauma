@@ -17,6 +17,8 @@ namespace Barotrauma
         private float barScroll;
 
         private float step;
+
+        private Vector2? dragStartPos;
         
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
@@ -162,6 +164,18 @@ namespace Barotrauma
             }
         }
 
+        public float StepValue
+        {
+            get
+            {
+                return step * (Range.Y - Range.X);
+            }
+            set
+            {
+                Step = value / (Range.Y - Range.X);
+            }
+        }
+
         public float BarSize
         {
             get { return barSize; }
@@ -174,6 +188,8 @@ namespace Barotrauma
 
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
@@ -201,11 +217,11 @@ namespace Barotrauma
         
         protected override void Update(float deltaTime)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             base.Update(deltaTime);
 
-            if (!enabled) return;
+            if (!enabled) { return; }
 
             if (IsBooleanSwitch && 
                 (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != this && !IsParentOf(GUI.MouseOn))))
@@ -221,10 +237,19 @@ namespace Barotrauma
             
             if (draggingBar == this)
             {
+                if (dragStartPos == null) { dragStartPos = PlayerInput.MousePosition; }
+
                 if (!PlayerInput.LeftButtonHeld())
                 {
+                    if (IsBooleanSwitch && GUI.MouseOn == Bar && Vector2.Distance(dragStartPos.Value, PlayerInput.MousePosition) < 5)
+                    {
+                        BarScroll = BarScroll > 0.5f ? 0.0f : 1.0f;
+                        OnMoved?.Invoke(this, BarScroll);
+                    }
                     OnReleased?.Invoke(this, BarScroll);
                     draggingBar = null;
+                    dragStartPos = null;
+
                 }
                 if ((isHorizontal && PlayerInput.MousePosition.X > Rect.X && PlayerInput.MousePosition.X < Rect.Right) ||
                     (!isHorizontal && PlayerInput.MousePosition.Y > Rect.Y && PlayerInput.MousePosition.Y < Rect.Bottom))
@@ -237,9 +262,18 @@ namespace Barotrauma
                 if (PlayerInput.LeftButtonClicked())
                 {
                     draggingBar?.OnReleased?.Invoke(draggingBar, draggingBar.BarScroll);
-                    MoveButton(new Vector2(
-                        Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
-                        Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
+                    if (IsBooleanSwitch)
+                    {
+                        MoveButton(new Vector2(
+                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Rect.Width,
+                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Rect.Height));                        
+                    }
+                    else
+                    {
+                        MoveButton(new Vector2(
+                            Math.Sign(PlayerInput.MousePosition.X - Bar.Rect.Center.X) * Bar.Rect.Width,
+                            Math.Sign(PlayerInput.MousePosition.Y - Bar.Rect.Center.Y) * Bar.Rect.Height));
+                    }
                 }
             }       
         }
@@ -270,7 +304,7 @@ namespace Barotrauma
 
             BarScroll = newScroll;
 
-            if (moveAmount != Vector2.Zero && OnMoved != null) OnMoved(this, BarScroll);
+            if (moveAmount != Vector2.Zero && OnMoved != null) { OnMoved(this, BarScroll); }
         }
     }
 }

@@ -10,15 +10,11 @@ namespace Barotrauma.Lights
 {
     class LightSourceParams : ISerializableEntity
     {
-        public string Name => "LightSource";
+        public string Name => "Light Source";
 
         public bool Persistent;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
-        {
-            get;
-            private set;
-        } = new Dictionary<string, SerializableProperty>();
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<string, SerializableProperty>();
 
         [Serialize("1.0,1.0,1.0,1.0", true), Editable]
         public Color Color
@@ -28,6 +24,7 @@ namespace Barotrauma.Lights
         }
 
         private float range;
+
         [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
@@ -64,7 +61,7 @@ namespace Barotrauma.Lights
 
         public LightSourceParams(XElement element)
         {
-            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            Deserialize(element);
             
             foreach (XElement subElement in element.Elements())
             {
@@ -102,6 +99,17 @@ namespace Barotrauma.Lights
             SerializableProperties = SerializableProperty.DeserializeProperties(this);
             Range = range;
             Color = color;
+        }
+
+        public bool Deserialize(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            return SerializableProperties != null;
+        }
+
+        public void Serialize(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element, true);
         }
     }
 
@@ -893,13 +901,21 @@ namespace Barotrauma.Lights
 
             if (GameMain.DebugDraw)
             {
+                Vector2 drawPos = position;
+                if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
+                drawPos.Y = -drawPos.Y;
+
+                if (CastShadows && Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 20, Vector2.One * 40, Color.Orange, isFilled: false);
+                    GUI.DrawLine(spriteBatch, drawPos - Vector2.One * 20, drawPos + Vector2.One * 20, Color.Orange);
+                    GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * 20, drawPos + new Vector2(1.0f, -1.0f) * 20, Color.Orange);
+                }
+
                 //visualize light recalculations
                 float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
                 if (timeSinceRecalculation < 0.1f)
                 {
-                    Vector2 drawPos = position;
-                    if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-                    drawPos.Y = -drawPos.Y;
                     GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);

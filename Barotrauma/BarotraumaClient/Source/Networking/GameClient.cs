@@ -18,6 +18,28 @@ namespace Barotrauma.Networking
             get { return true; }
         }
 
+        private string name;
+
+        private UInt16 nameId = 0;
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public void SetName(string value)
+        {
+            value = value.Replace(":", "").Replace(";", "");
+            if (string.IsNullOrEmpty(value)) { return; }
+            name = value;
+            nameId++;
+        }
+
+        public void ForceNameAndJobUpdate()
+        {
+            nameId++;
+        }
+
         private ClientPeer clientPeer;
         public ClientPeer ClientPeer { get { return clientPeer; } }
 
@@ -74,6 +96,9 @@ namespace Barotrauma.Networking
 
         //has the client been given a character to control this round
         public bool HasSpawned;
+
+        public bool SpawnAsTraitor;
+        public string TraitorFirstObjective;
 
         public byte ID
         {
@@ -210,7 +235,7 @@ namespace Barotrauma.Networking
             Hull.EditFire = false;
             Hull.EditWater = false;
 
-            Name = newName;
+            SetName(newName);
 
             entityEventManager = new ClientEntityEventManager(this);
 
@@ -218,7 +243,7 @@ namespace Barotrauma.Networking
             fileReceiver.OnFinished += OnFileReceived;
             fileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(Character.HumanConfigFile, name, null)
+            characterInfo = new CharacterInfo(Character.HumanSpeciesName, name, null)
             {
                 Job = null
             };
@@ -246,9 +271,9 @@ namespace Barotrauma.Networking
         private void ConnectToServer(object endpoint, string hostName)
         {
             chatBox.InputBox.Enabled = false;
-            if (GameMain.NetLobbyScreen?.TextBox != null)
+            if (GameMain.NetLobbyScreen?.ChatInput != null)
             {
-                GameMain.NetLobbyScreen.TextBox.Enabled = false;
+                GameMain.NetLobbyScreen.ChatInput.Enabled = false;
             }
 
             serverName = hostName;
@@ -256,6 +281,8 @@ namespace Barotrauma.Networking
             myCharacter = Character.Controlled;
             ChatMessage.LastID = 0;
 
+            clientPeer?.Close();
+            clientPeer = null;
             object translatedEndpoint = null;
             if (endpoint is string hostIP)
             {
@@ -306,17 +333,20 @@ namespace Barotrauma.Networking
                 translatedEndpoint = endpoint;
             }
             clientPeer.OnDisconnect = OnDisconnect;
+            clientPeer.OnDisconnectMessageReceived = HandleDisconnectMessage;
             clientPeer.OnInitializationComplete = () =>
             {
                 if (SteamManager.IsInitialized)
                 {
                     SteamManager.Instance.User.ClearRichPresence();
                     SteamManager.Instance.User.SetRichPresence("status", "Playing on " + serverName);
-                    SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"","\\\"") + "\" " + serverEndpoint);
+                    SteamManager.Instance.User.SetRichPresence("connect", "-connect \"" + serverName.Replace("\"", "\\\"") + "\" " + serverEndpoint);
                 }
 
                 canStart = true;
                 connected = true;
+
+                VoipClient = new VoipClient(this, clientPeer);
 
                 if (Screen.Selected != GameMain.GameScreen)
                 {
@@ -324,9 +354,9 @@ namespace Barotrauma.Networking
                 }
 
                 chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                if (GameMain.NetLobbyScreen?.ChatInput != null)
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    GameMain.NetLobbyScreen.ChatInput.Enabled = true;
                 }
             };
             clientPeer.OnRequestPassword = (int salt, int retries) =>
@@ -346,9 +376,9 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Couldn't connect to " + endpoint.ToString() + ". Error message: " + e.Message);
                 Disconnect();
                 chatBox.InputBox.Enabled = true;
-                if (GameMain.NetLobbyScreen?.TextBox != null)
+                if (GameMain.NetLobbyScreen?.ChatInput != null)
                 {
-                    GameMain.NetLobbyScreen.TextBox.Enabled = true;
+                    GameMain.NetLobbyScreen.ChatInput.Enabled = true;
                 }
                 GameMain.ServerListScreen.Select();
                 return;
@@ -391,15 +421,13 @@ namespace Barotrauma.Networking
         private bool connectCancelled;
         private void CancelConnect()
         {
-            if (!(GameMain.ServerChildProcess?.HasExited??true))
+            if (!(GameMain.ServerChildProcess?.HasExited ?? true))
             {
                 GameMain.ServerChildProcess.Kill();
                 GameMain.ServerChildProcess = null;
             }
-
             connectCancelled = true;
-            clientPeer?.Close();
-            clientPeer = null;
+            Disconnect();
         }
 
         // Before main looping starts, we loop here and wait for approval message
@@ -454,7 +482,7 @@ namespace Barotrauma.Networking
 
                 if (DateTime.Now > timeOut)
                 {
-                    OnDisconnect(Lidgren.Network.NetConnection.NoResponseMessage);
+                    clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
                     reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }
@@ -549,14 +577,20 @@ namespace Barotrauma.Networking
             UpdateHUD(deltaTime);
 
             base.Update(deltaTime);
-            
+
             try
             {
                 clientPeer?.Update(deltaTime);
             }
             catch (Exception e)
             {
-                string errorMsg = "Error while reading a message from server. {" + e + "}\n" + e.StackTrace;
+                string errorMsg = "Error while reading a message from server. {" + e + "}. ";
+                if (GameMain.Client == null) { errorMsg += "Client disposed."; }
+                errorMsg += "\n" + e.StackTrace;
+                if (e.InnerException != null)
+                {
+                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
@@ -582,13 +616,17 @@ namespace Barotrauma.Networking
                     respawnManager.Update(deltaTime);
                 }
 
-                if (updateTimer > DateTime.Now) { return; }
-                SendIngameUpdate();
+                if (updateTimer <= DateTime.Now)
+                {
+                    SendIngameUpdate();
+                }
             }
             else
             {
-                if (updateTimer > DateTime.Now) { return; }
-                SendLobbyUpdate();
+                if (updateTimer <= DateTime.Now)
+                {
+                    SendLobbyUpdate();
+                }
             }
 
             if (serverSettings.VoiceChatEnabled)
@@ -598,16 +636,22 @@ namespace Barotrauma.Networking
 
             if (IsServerOwner && connected && !connectCancelled)
             {
-                if (GameMain.ServerChildProcess?.HasExited??true)
+                if (GameMain.WindowActive)
                 {
-                    Disconnect();
-                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
-                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                    if (GameMain.ServerChildProcess?.HasExited ?? true)
+                    {
+                        Disconnect();
+                        var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                        msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+                    }
                 }
             }
 
-            // Update current time
-            updateTimer = DateTime.Now + updateInterval;
+            if (updateTimer <= DateTime.Now)
+            {
+                // Update current time
+                updateTimer = DateTime.Now + updateInterval;
+            }
         }
 
         private CoroutineHandle startGameCoroutine;
@@ -621,9 +665,37 @@ namespace Barotrauma.Networking
                     ReadLobbyUpdate(inc);
                     break;
                 case ServerPacketHeader.UPDATE_INGAME:
-                    ReadIngameUpdate(inc);
+                    try
+                    {
+                        ReadIngameUpdate(inc);
+                    }
+                    catch (Exception e)
+                    {
+                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        if (e.InnerException != null)
+                        {
+                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                        }
+#if DEBUG
+                        DebugConsole.ThrowError("Error while reading an ingame update message from server.", e);
+#endif
+                        GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadDataMessage:ReadIngameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        throw;
+                    }
                     break;
                 case ServerPacketHeader.VOICE:
+                    if (VoipClient == null)
+                    {
+                        string errorMsg = "Failed to read a voice packet from the server (VoipClient == null). ";
+                        if (GameMain.Client == null) { errorMsg += "Client disposed. "; }
+                        errorMsg += "\n" + Environment.StackTrace;
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "GameClient.ReadDataMessage:VoipClientNull", 
+                            GameMain.Client == null ? GameAnalyticsSDK.Net.EGAErrorSeverity.Error : GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, 
+                            errorMsg);
+                        return;
+                    }
+
                     VoipClient.Read(inc);
                     break;
                 case ServerPacketHeader.QUERY_STARTGAME:
@@ -637,10 +709,21 @@ namespace Barotrauma.Networking
                     IWriteMessage readyToStartMsg = new WriteOnlyMessage();
                     readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
 
+                    MultiPlayerCampaign campaign = GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                                                        GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+
                     GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
-                    bool readyToStart =
-                        GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
-                        GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    bool readyToStart;
+                    if (campaign == null)
+                    {
+                        readyToStart = GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList) &&
+                                       GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
+                    }
+                    else
+                    {
+                        readyToStart = !fileReceiver.ActiveTransfers.Any(c => c.FileType == FileTransferType.CampaignSave) &&
+                                            (campaign.LastSaveID == campaign.PendingSaveID);
+                    }
                     readyToStartMsg.Write(readyToStart);
 
                     WriteCharacterInfo(readyToStartMsg);
@@ -673,8 +756,7 @@ namespace Barotrauma.Networking
                     {
                         saveFiles.Add(inc.ReadString());
                     }
-
-                    GameMain.NetLobbyScreen.CampaignSetupUI = MultiPlayerCampaign.StartCampaignSetup(serverSubmarines, saveFiles);
+                    MultiPlayerCampaign.StartCampaignSetup(saveFiles);
                     break;
                 case ServerPacketHeader.PERMISSIONS:
                     ReadPermissions(inc);
@@ -695,33 +777,42 @@ namespace Barotrauma.Networking
                         SteamAchievementManager.CheatsEnabled = cheatsEnabled;
                         if (cheatsEnabled)
                         {
-                            new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
+                            var cheatMessageBox = new GUIMessageBox(TextManager.Get("CheatsEnabledTitle"), TextManager.Get("CheatsEnabledDescription"));
+                            cheatMessageBox.Buttons[0].OnClicked += (btn, userdata) =>
+                            {
+                                DebugConsole.TextBox.Select();
+                                return true;
+                            };
                         }
                     }
                     break;
                 case ServerPacketHeader.FILE_TRANSFER:
                     fileReceiver.ReadMessage(inc);
                     break;
+                case ServerPacketHeader.TRAITOR_MESSAGE:
+                    ReadTraitorMessage(inc);
+                    break;
+                case ServerPacketHeader.MISSION:
+                    GameMain.GameSession.Mission?.ClientRead(inc);
+                    break;
             }
         }
         
-        private void OnDisconnect(string disconnectMsg)
-        {
-            HandleDisconnectMessage(disconnectMsg);
-        }
-
-        private void HandleDisconnectMessage(string disconnectMsg)
+        private void OnDisconnect()
         {
             if (SteamManager.IsInitialized)
             {
                 SteamManager.Instance.User.ClearRichPresence();
             }
+        }
 
+        private void HandleDisconnectMessage(string disconnectMsg)
+        {
             disconnectMsg = disconnectMsg ?? "";
 
             string[] splitMsg = disconnectMsg.Split('/');
             DisconnectReason disconnectReason = DisconnectReason.Unknown;
-            if (splitMsg.Length > 0) Enum.TryParse(splitMsg[0], out disconnectReason);
+            if (splitMsg.Length > 0) { Enum.TryParse(splitMsg[0], out disconnectReason); }
 
             if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
             {
@@ -729,6 +820,19 @@ namespace Barotrauma.Networking
             }
 
             DebugConsole.NewMessage("Received a disconnect message (" + disconnectMsg + ")");
+
+            if (disconnectReason != DisconnectReason.Banned &&
+                disconnectReason != DisconnectReason.ServerShutdown &&
+                disconnectReason != DisconnectReason.TooManyFailedLogins &&
+                disconnectReason != DisconnectReason.NotOnWhitelist &&
+                disconnectReason != DisconnectReason.MissingContentPackage &&
+                disconnectReason != DisconnectReason.InvalidVersion)
+            {
+                GameAnalyticsManager.AddErrorEventOnce(
+                "GameClient.HandleDisconnectMessage", 
+                GameAnalyticsSDK.Net.EGAErrorSeverity.Debug, 
+                "Client received a disconnect message. Reason: " + disconnectReason.ToString() + ", message: " + disconnectMsg);
+            }
 
             if (disconnectReason == DisconnectReason.ServerFull)
             {
@@ -858,6 +962,45 @@ namespace Barotrauma.Networking
             SteamAchievementManager.UnlockAchievement(achievementIdentifier);
         }
 
+        private void ReadTraitorMessage(IReadMessage inc)
+        {
+            TraitorMessageType messageType = (TraitorMessageType)inc.ReadByte();
+            string missionIdentifier = inc.ReadString();
+            string message = inc.ReadString();
+            message = TextManager.GetServerMessage(message);
+
+            var missionPrefab = TraitorMissionPrefab.List.Find(t => t.Identifier == missionIdentifier);
+            Sprite icon = missionPrefab?.Icon;
+
+            switch(messageType) {
+                case TraitorMessageType.Objective:
+                    var isTraitor = !string.IsNullOrEmpty(message); 
+                    SpawnAsTraitor = isTraitor;
+                    TraitorFirstObjective = message;
+                    if (Character != null)
+                    {
+                        Character.IsTraitor = isTraitor;
+                        Character.TraitorCurrentObjective = message;
+                    }
+                    break;
+                case TraitorMessageType.Console:
+                    GameMain.Client.AddChatMessage(ChatMessage.Create("", message, ChatMessageType.Console, null));
+                    DebugConsole.NewMessage(message);
+                    break;
+                case TraitorMessageType.ServerMessageBox:
+                    var msgBox = new GUIMessageBox("", message, new string[0], type: GUIMessageBox.Type.InGame, icon: icon);
+                    if (msgBox.Icon != null)
+                    {
+                        msgBox.IconColor = missionPrefab.IconColor;
+                    }
+                    break;
+                case TraitorMessageType.Server:
+                default:
+                    GameMain.Client.AddChatMessage(message, ChatMessageType.Server);
+                    break;
+            }
+        }
+
         private void ReadPermissions(IReadMessage inc)
         {
             List<string> permittedConsoleCommands = new List<string>();
@@ -979,8 +1122,6 @@ namespace Barotrauma.Networking
 
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
-            bool isTraitor          = inc.ReadBoolean();
-            string traitorTargetName = isTraitor ? inc.ReadString() : null;
 
             bool allowRagdollButton = inc.ReadBoolean();
 
@@ -1020,6 +1161,43 @@ namespace Barotrauma.Networking
 
             if (campaign == null)
             {
+                //this shouldn't happen, TrySelectSub should stop the coroutine if the correct sub/shuttle cannot be found
+                if (GameMain.NetLobbyScreen.SelectedSub == null ||
+                    GameMain.NetLobbyScreen.SelectedSub.Name != subName ||
+                    GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                {
+                    string errorMsg = "Failed to select submarine \"" + subName + "\" (hash: " + subHash + ").";
+                    if (GameMain.NetLobbyScreen.SelectedSub == null)
+                    {
+                        errorMsg += "\n" + "SelectedSub is null";
+                    }
+                    else
+                    {
+                        if (GameMain.NetLobbyScreen.SelectedSub.Name != subName)
+                        {
+                            errorMsg += "\n" + "Name mismatch: " + GameMain.NetLobbyScreen.SelectedSub.Name + " != " + subName;
+                        }
+                        if (GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash != subHash)
+                        {
+                            errorMsg += "\n" + "Hash mismatch: " + GameMain.NetLobbyScreen.SelectedSub.MD5Hash?.Hash + " != " + subHash;
+                        }
+                    }
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+                if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.Name != shuttleName ||
+                    GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash?.Hash != shuttleHash)
+                {
+                    string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    CoroutineManager.StartCoroutine(EndGame(""));
+                    yield return CoroutineStatus.Failure;
+                }
+
                 GameMain.GameSession = missionIndex < 0 ?
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
@@ -1032,6 +1210,12 @@ namespace Barotrauma.Networking
                     reloadSub: true,
                     loadSecondSub: false,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+            }
+
+            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            {
+                DebugConsole.ThrowError($"Failed to start a round. Could not load the submarine \"{GameMain.GameSession.Submarine.Name}\".");
+                yield return CoroutineStatus.Failure;
             }
 
             for (int i = 0; i < Submarine.MainSubs.Length; i++)
@@ -1118,7 +1302,6 @@ namespace Barotrauma.Networking
         private void ReadInitialUpdate(IReadMessage inc)
         {
             myID = inc.ReadByte();
-            VoipClient = new VoipClient(this, clientPeer);
 
             UInt16 subListCount = inc.ReadUInt16();
             serverSubmarines.Clear();
@@ -1126,16 +1309,14 @@ namespace Barotrauma.Networking
             {
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
+                bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
-                var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
-                if (matchingSub != null)
-                {
-                    serverSubmarines.Add(matchingSub);
-                }
-                else
-                {
-                    serverSubmarines.Add(new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false));
-                }
+                var matchingSub =
+                    Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
+                    new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false);
+
+                matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
+                serverSubmarines.Add(matchingSub);
             }
 
             GameMain.NetLobbyScreen.UpdateSubList(GameMain.NetLobbyScreen.SubList, serverSubmarines);
@@ -1162,7 +1343,9 @@ namespace Barotrauma.Networking
             {
                 byte id             = inc.ReadByte();
                 UInt64 steamId      = inc.ReadUInt64();
+                UInt16 nameId       = inc.ReadUInt16();
                 string name         = inc.ReadString();
+                string preferredJob = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
                 bool muted          = inc.ReadBoolean();
                 bool allowKicking   = inc.ReadBoolean();
@@ -1171,8 +1354,10 @@ namespace Barotrauma.Networking
                 tempClients.Add(new TempClient
                 {
                     ID = id,
+                    NameID = nameId,
                     SteamID = steamId,
                     Name = name,
+                    PreferredJob = preferredJob,
                     CharacterID = characterID,
                     Muted = muted,
                     AllowKicking = allowKicking
@@ -1198,9 +1383,12 @@ namespace Barotrauma.Networking
                         ConnectedClients.Add(existingClient);
                         GameMain.NetLobbyScreen.AddPlayer(existingClient);
                     }
+                    existingClient.NameID = tc.NameID;
+                    existingClient.PreferredJob = tc.PreferredJob;
                     existingClient.Character = null;
                     existingClient.Muted = tc.Muted;
                     existingClient.AllowKicking = tc.AllowKicking;
+                    GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
                     if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
@@ -1212,8 +1400,13 @@ namespace Barotrauma.Networking
                     if (existingClient.ID == myID)
                     {
                         existingClient.SetPermissions(permissions, permittedConsoleCommands);
-                        name = tc.Name;
-                        if (GameMain.NetLobbyScreen.CharacterNameBox != null)
+                        if (!NetIdUtils.IdMoreRecent(nameId, tc.NameID))
+                        {
+                            name = tc.Name;
+                            nameId = tc.NameID;
+                        }
+                        if (GameMain.NetLobbyScreen.CharacterNameBox != null &&
+                            !GameMain.NetLobbyScreen.CharacterNameBox.Selected)
                         {
                             GameMain.NetLobbyScreen.CharacterNameBox.Text = name;
                         }
@@ -1230,7 +1423,12 @@ namespace Barotrauma.Networking
                         ConnectedClients.RemoveAt(i);
                     }
                 }
-                if (updateClientListId) LastClientListUpdateID = listId;
+                if (updateClientListId) { LastClientListUpdateID = listId; }
+
+                if (clientPeer is SteamP2POwnerPeer)
+                {
+                    Steam.SteamManager.UpdateLobby(serverSettings);
+                }
             }
         }
 
@@ -1278,7 +1476,7 @@ namespace Barotrauma.Networking
                             bool allowSpectating        = inc.ReadBoolean();
 
                             YesNoMaybe traitorsEnabled  = (YesNoMaybe)inc.ReadRangedInteger(0, 2);
-                            int missionTypeIndex        = inc.ReadRangedInteger(0, Enum.GetValues(typeof(MissionType)).Length - 1);
+                            MissionType missionType     = (MissionType)inc.ReadRangedInteger(0, (int)MissionType.All);
                             int modeIndex               = inc.ReadByte();
 
                             string levelSeed            = inc.ReadString();
@@ -1296,10 +1494,10 @@ namespace Barotrauma.Networking
                                 ReadWriteMessage settingsBuf = new ReadWriteMessage();
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
                                 serverSettings.ClientRead(settingsBuf);
-
-                                if (clientPeer is SteamP2POwnerPeer)
+                                if (!IsServerOwner)
                                 {
-                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(serverEndpoint, serverSettings);
+                                    GameMain.ServerListScreen.AddToRecentServers(info);
                                 }
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
@@ -1314,7 +1512,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);
-                                GameMain.NetLobbyScreen.SetMissionType(missionTypeIndex);
+                                GameMain.NetLobbyScreen.SetMissionType(missionType);
 
                                 if (!allowModeVoting) GameMain.NetLobbyScreen.SelectMode(modeIndex);
 
@@ -1328,6 +1526,11 @@ namespace Barotrauma.Networking
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
+
+                                if (clientPeer is SteamP2POwnerPeer)
+                                {
+                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                }
 
                                 GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
@@ -1481,7 +1684,17 @@ namespace Barotrauma.Networking
             outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
             outmsg.Write(ChatMessage.LastID);
             outmsg.Write(LastClientListUpdateID);
+            outmsg.Write(nameId);
             outmsg.Write(name);
+            var jobPreferences = GameMain.NetLobbyScreen.JobPreferences;
+            if (jobPreferences.Count > 0)
+            {
+                outmsg.Write(jobPreferences[0].First.Identifier);
+            }
+            else
+            {
+                outmsg.Write("");
+            }
 
             var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
             if (campaign == null || campaign.LastSaveID == 0)
@@ -1555,7 +1768,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(ChatMessage msg)
         {
-            if (clientPeer.ServerConnection == null) return;
+            if (clientPeer?.ServerConnection == null) { return; }
             lastQueueChatMsgID++;
             msg.NetStateID = lastQueueChatMsgID;
             chatMsgQueue.Add(msg);
@@ -1563,7 +1776,7 @@ namespace Barotrauma.Networking
 
         public void SendChatMessage(string message, ChatMessageType type = ChatMessageType.Default)
         {
-            if (clientPeer.ServerConnection == null) return;
+            if (clientPeer?.ServerConnection == null) { return; }
 
             ChatMessage chatMessage = ChatMessage.Create(
                 gameStarted && myCharacter != null ? myCharacter.Name : name,
@@ -1642,19 +1855,6 @@ namespace Barotrauma.Networking
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.UserData = newSub;
                         subElement.ToolTip = newSub.Description;
-
-                        GUIButton infoButton = subElement.GetChild<GUIButton>();
-                        if (infoButton == null)
-                        {
-                            int buttonSize = (int)(subElement.Rect.Height * 0.8f);
-                            infoButton = new GUIButton(new RectTransform(new Point(buttonSize), subElement.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?");
-                        }
-                        infoButton.UserData = newSub;
-                        infoButton.OnClicked = (component, userdata) =>
-                        {
-                            ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
-                            return true;
-                        };
                     }
 
                     if (GameMain.NetLobbyScreen.FailedSelectedSub != null &&
@@ -1683,8 +1883,12 @@ namespace Barotrauma.Networking
                         string subPath = Path.Combine(SaveUtil.TempPath, gameSessionDoc.Root.GetAttributeString("submarine", "")) + ".sub";
                         GameMain.GameSession.Submarine = new Submarine(subPath, "");
                     }
-
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    GameMain.GameSession?.Submarine?.CheckSubsLeftBehind();
+                    if (GameMain.GameSession?.Submarine?.Name != null)
+                    {
+                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.Submarine);
+                    }
                     campaign.LastSaveID = campaign.PendingSaveID;
 
                     DebugConsole.Log("Campaign save received, save ID " + campaign.LastSaveID);
@@ -1772,6 +1976,8 @@ namespace Barotrauma.Networking
                 GameMain.ServerChildProcess = null;
             }
 
+            characterInfo?.Remove();
+
             VoipClient?.Dispose();
             VoipClient = null;
             GameMain.Client = null;
@@ -1795,7 +2001,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)count);
             for (int i = 0; i < count; i++)
             {
-                msg.Write(jobPreferences[i].Identifier);
+                msg.Write(jobPreferences[i].First.Identifier);
+                msg.Write((byte)jobPreferences[i].Second);
             }
         }
 
@@ -1969,6 +2176,8 @@ namespace Barotrauma.Networking
 
         public void SetupNewCampaign(Submarine sub, string saveName, string mapSeed)
         {
+            GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
+
             saveName = Path.GetFileNameWithoutExtension(saveName);
 
             IWriteMessage msg = new WriteOnlyMessage();
@@ -1981,12 +2190,12 @@ namespace Barotrauma.Networking
             msg.Write(sub.MD5Hash.Hash);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
-
-            GameMain.NetLobbyScreen.CampaignSetupUI = null;
         }
 
         public void SetupLoadCampaign(string saveName)
         {
+            GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.CAMPAIGN_SETUP_INFO);
 
@@ -1994,8 +2203,6 @@ namespace Barotrauma.Networking
             msg.Write(saveName);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
-
-            GameMain.NetLobbyScreen.CampaignSetupUI = null;
         }
 
         /// <summary>
@@ -2013,7 +2220,15 @@ namespace Barotrauma.Networking
 
         public bool SpectateClicked(GUIButton button, object userData)
         {
-            if (button != null) button.Enabled = false;
+            MultiPlayerCampaign campaign = 
+                GameMain.NetLobbyScreen.SelectedMode == GameMain.GameSession?.GameMode.Preset ?
+                GameMain.GameSession?.GameMode as MultiPlayerCampaign : null;
+            if (campaign != null && campaign.LastSaveID < campaign.PendingSaveID)
+            {
+                new GUIMessageBox("", TextManager.Get("campaignfiletransferinprogress"));
+                return false;
+            }
+            if (button != null) { button.Enabled = false; }
 
             IWriteMessage readyToStartMsg = new WriteOnlyMessage();
             readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
@@ -2102,7 +2317,11 @@ namespace Barotrauma.Networking
 
             SendChatMessage(message);
 
-            textBox.Deselect();
+            if (textBox.DeselectAfterMessage)
+            {
+                textBox.Deselect();
+            }
+
             textBox.Text = "";
 
             return true;
@@ -2116,6 +2335,7 @@ namespace Barotrauma.Networking
                 Screen.Selected == GameMain.GameScreen)
             {
                 inGameHUD.AddToGUIUpdateList();
+                GameMain.NetLobbyScreen.FileTransferFrame?.AddToGUIUpdateList();
             }
         }
 
@@ -2129,7 +2349,7 @@ namespace Barotrauma.Networking
             }
             else if (Screen.Selected == GameMain.NetLobbyScreen)
             {
-                msgBox = GameMain.NetLobbyScreen.TextBox;
+                msgBox = GameMain.NetLobbyScreen.ChatInput;
             }
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
@@ -2182,46 +2402,26 @@ namespace Barotrauma.Networking
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
-            
+
             if (fileReceiver != null && fileReceiver.ActiveTransfers.Count > 0)
             {
-                Vector2 downloadBarSize = new Vector2(250, 35) * GUI.Scale;
-                Vector2 pos = new Vector2(GameMain.NetLobbyScreen.InfoFrame.Rect.X, GameMain.GraphicsHeight - downloadBarSize.Y - 5);
-
-                GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)pos.X,
-                    (int)pos.Y,
-                    (int)(fileReceiver.ActiveTransfers.Count * (downloadBarSize.X + 10)),
-                    (int)downloadBarSize.Y),
-                    Color.Black * 0.8f, true);
-
-                for (int i = 0; i < fileReceiver.ActiveTransfers.Count; i++)
-                {
-                    var transfer = fileReceiver.ActiveTransfers[i];
-
-                    GUI.DrawString(spriteBatch,
-                        pos,
-                        ToolBox.LimitString(TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName), GUI.SmallFont, (int)downloadBarSize.X),
-                        Color.White, null, 0, GUI.SmallFont);
-                    GUI.DrawProgressBar(spriteBatch, new Vector2(pos.X, -pos.Y - downloadBarSize.Y / 2), new Vector2(downloadBarSize.X * 0.7f, downloadBarSize.Y / 2), transfer.Progress, Color.Green);
-                    GUI.DrawString(spriteBatch, pos + new Vector2(5, downloadBarSize.Y / 2),
-                        MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize),
-                        Color.White, null, 0, GUI.SmallFont);
-
-                    if (GUI.DrawButton(spriteBatch, new Rectangle(
-                            (int)(pos.X + downloadBarSize.X * 0.7f), (int)(pos.Y + downloadBarSize.Y / 2),
-                            (int)(downloadBarSize.X * 0.3f), (int)(downloadBarSize.Y / 2)), 
-                        TextManager.Get("Cancel"), new Color(0.47f, 0.13f, 0.15f, 0.08f)))
-                    {
-                        CancelFileTransfer(transfer);
-                        fileReceiver.StopTransfer(transfer);
-                    }
-
-                    pos.X += (downloadBarSize.X + 10);
-                }
+                var transfer = fileReceiver.ActiveTransfers.First();
+                GameMain.NetLobbyScreen.FileTransferFrame.Visible = true;
+                GameMain.NetLobbyScreen.FileTransferTitle.Text =
+                    ToolBox.LimitString(
+                        TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName),
+                        GameMain.NetLobbyScreen.FileTransferTitle.Font,
+                        GameMain.NetLobbyScreen.FileTransferTitle.Rect.Width);
+                GameMain.NetLobbyScreen.FileTransferProgressBar.BarSize = transfer.Progress;
+                GameMain.NetLobbyScreen.FileTransferProgressText.Text =
+                    MathUtils.GetBytesReadable((long)transfer.Received) + " / " + MathUtils.GetBytesReadable((long)transfer.FileSize);
             }
-            
-            if (!gameStarted || Screen.Selected != GameMain.GameScreen) return;
+            else
+            {
+                GameMain.NetLobbyScreen.FileTransferFrame.Visible = false;
+            }
+
+            if (!gameStarted || Screen.Selected != GameMain.GameScreen) { return; }
 
             inGameHUD.DrawManually(spriteBatch);
 

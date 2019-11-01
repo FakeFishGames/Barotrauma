@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         Vector2 DrawSize { get; }
 
-        void Draw(SpriteBatch spriteBatch, bool editing);
+        void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
 #endif
     }
     
@@ -44,8 +44,9 @@ namespace Barotrauma.Items.Components
         public bool WasUsed;
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
-                
+
         public Dictionary<RelatedItem.RelationType, List<RelatedItem>> requiredItems;
+        public readonly List<RelatedItem> DisabledRequiredItems = new List<RelatedItem>();
 
         public List<Skill> requiredSkills;
 
@@ -57,7 +58,7 @@ namespace Barotrauma.Items.Components
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
                 
-        [Editable, Serialize(0.0f, false)]
+        [Editable, Serialize(0.0f, false, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {
             get;
@@ -82,7 +83,6 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #endif
-                if (AITarget != null) AITarget.Enabled = value;
                 isActive = value;
             }
         }
@@ -115,45 +115,42 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, false)] //Editable for doors to do their magic
+        [Editable, Serialize(false, false, description: "Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).")] //Editable for doors to do their magic
         public bool CanBePicked
         {
             get { return canBePicked; }
             set { canBePicked = value; }
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the interface of the item (if it has one) be drawn when the item is equipped.")]
         public bool DrawHudWhenEquipped
         {
             get;
             private set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be selected by interacting with it.")]
         public bool CanBeSelected
         {
             get { return canBeSelected; }
             set { canBeSelected = value; }
         }
 
-        //Transfer conditions between same prefab items
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the item be combined with other items of the same type.")]
         public bool CanBeCombined
         {
             get { return canBeCombined; }
             set { canBeCombined = value; }
         }
 
-        //Remove item if combination results in 0 condition
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be removed if combining it with an other item causes the condition of this item to drop to 0.")]
         public bool RemoveOnCombined
         {
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
         }
         
-        //Can the "Use" action be triggered by characters or just other items/statuseffects
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Can the \"Use\" action of the item be triggered by characters or just other items/StatusEffects.")]
         public bool CharacterUsable
         {
             get { return characterUsable; }
@@ -161,7 +158,7 @@ namespace Barotrauma.Items.Components
         }
 
         //Remove item if combination results in 0 condition
-        [Serialize(true, false), Editable(ToolTip = "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).")]
+        [Serialize(true, false, description: "Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties)."), Editable()]
         public bool AllowInGameEditing
         {
             get;
@@ -180,7 +177,7 @@ namespace Barotrauma.Items.Components
             protected set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, false, description: "Should the item be deleted when it's used.")]
         public bool DeleteOnUse
         {
             get;
@@ -197,7 +194,7 @@ namespace Barotrauma.Items.Components
             get { return name; }
         }
         
-        [Editable, Serialize("", true, translationTextTag: "ItemMsg")]
+        [Editable, Serialize("", true, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. \"[Mouse1] Pick up\").")]
         public string Msg
         {
             get;
@@ -210,16 +207,11 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public AITarget AITarget
-        {
-            get;
-            private set;
-        }
 
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
         /// </summary>
-        [Serialize(0f, false)]
+        [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
         public float CombatPriority { get; private set; }
 
         public ItemComponent(Item item, XElement element) 
@@ -280,19 +272,7 @@ namespace Barotrauma.Items.Components
                         break;
                     case "requireditem":
                     case "requireditems":
-                        RelatedItem ri = RelatedItem.Load(subElement, item.Name);
-                        if (ri != null)
-                        {
-                            if (!requiredItems.ContainsKey(ri.Type))
-                            {
-                                requiredItems.Add(ri.Type, new List<RelatedItem>());
-                            }
-                            requiredItems[ri.Type].Add(ri);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
-                        }
+                        SetRequiredItems(subElement);
                         break;
                     case "requiredskill":
                     case "requiredskills":
@@ -320,12 +300,6 @@ namespace Barotrauma.Items.Components
                         effectList.Add(statusEffect);
 
                         break;
-                    case "aitarget":
-                        AITarget = new AITarget(item, subElement)
-                        {
-                            Enabled = isActive
-                        };
-                        break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
                         ItemComponent ic = Load(subElement, item, item.ConfigFile, false);                        
@@ -336,6 +310,34 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }        
+        }
+
+        public void SetRequiredItems(XElement element)
+        {
+            bool returnEmpty = false;
+#if CLIENT
+            returnEmpty = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+            RelatedItem ri = RelatedItem.Load(element, returnEmpty, item.Name);
+            if (ri != null)
+            {
+                if (ri.Identifiers.Length == 0)
+                {
+                    DisabledRequiredItems.Add(ri);
+                }
+                else
+                {
+                    if (!requiredItems.ContainsKey(ri.Type))
+                    {
+                        requiredItems.Add(ri.Type, new List<RelatedItem>());
+                    }
+                    requiredItems[ri.Type].Add(ri);
+                }
+            }
+            else
+            {
+                DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
+            }
         }
 
         public virtual void Move(Vector2 amount) { }
@@ -412,7 +414,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual bool Combine(Item item) 
+        public virtual bool Combine(Item item, Character user) 
         {
             if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
             {
@@ -485,12 +487,6 @@ namespace Barotrauma.Items.Components
                 delayedCorrectionCoroutine = null;
             }
 
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
-
             RemoveComponentSpecific();
         }
 
@@ -507,11 +503,6 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 #endif
-            if (AITarget != null)
-            {
-                AITarget.Remove();
-                AITarget = null;
-            }
 
             ShallowRemoveComponentSpecific();
         }
@@ -693,9 +684,9 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public virtual void Load(XElement componentElement)
+        public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
-            if (componentElement == null) return;
+            if (componentElement == null || usePrefabValues) { return; }
             foreach (XAttribute attribute in componentElement.Attributes())
             {
                 if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
@@ -788,6 +779,12 @@ namespace Barotrauma.Items.Components
                     componentElement.Add(newElement);
                 }
             }
+            foreach (RelatedItem ri in DisabledRequiredItems)
+            {
+                XElement newElement = new XElement("requireditem");
+                ri.Save(newElement);
+                componentElement.Add(newElement);
+            }
 
 
             SerializableProperty.SerializeProperties(this, componentElement);
@@ -799,6 +796,7 @@ namespace Barotrauma.Items.Components
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, originalElement);
+            if (this is Pickable) { canBePicked = true; }
             ParseMsg();
             OverrideRequiredItems(originalElement);
         }
@@ -808,12 +806,16 @@ namespace Barotrauma.Items.Components
             var prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             requiredItems.Clear();
 
+            bool returnEmptyRequirements = false;
+#if CLIENT
+            returnEmptyRequirements = Screen.Selected == GameMain.SubEditorScreen;
+#endif
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
-                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, item.Name);
+                        RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmptyRequirements, item.Name);
                         if (newRequiredItem == null) continue;
 
                         var prevRequiredItem = prevRequiredItems.ContainsKey(newRequiredItem.Type) ?

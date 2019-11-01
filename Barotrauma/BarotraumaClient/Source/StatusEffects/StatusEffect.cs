@@ -35,7 +35,7 @@ namespace Barotrauma
                         break;
                     case "sound":
                         var sound = Submarine.LoadRoundSound(subElement);
-                        if (sound != null)
+                        if (sound?.Sound != null)
                         {
                             loopSound = subElement.GetAttributeBool("loop", false);
                             if (subElement.Attribute("selectionmode") != null)
@@ -52,7 +52,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull, Vector2 worldPosition)
         {
             if (entity == null) { return; }
 
@@ -64,8 +64,14 @@ namespace Barotrauma
                     {
                         foreach (RoundSound sound in sounds)
                         {
-                            soundChannel = SoundPlayer.PlaySound(sound.Sound, entity.WorldPosition, sound.Volume, sound.Range, hull);
-                            if (soundChannel != null) soundChannel.Looping = loopSound;
+                            if (sound.Sound == null)
+                            {
+                                string errorMsg = $"Error in StatusEffect.ApplyProjSpecific1 (sound \"{sound.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
+                                GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                                return;
+                            }
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hull);
+                            if (soundChannel != null) { soundChannel.Looping = loopSound; }
                         }
                     }
                     else
@@ -84,8 +90,14 @@ namespace Barotrauma
                             selectedSoundIndex = Rand.Int(sounds.Count);
                         }
                         var selectedSound = sounds[selectedSoundIndex];
-                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, entity.WorldPosition, selectedSound.Volume, selectedSound.Range, hull);
-                        if (soundChannel != null) soundChannel.Looping = loopSound;
+                        if (selectedSound.Sound == null)
+                        {
+                            string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
+                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            return;
+                        }
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hull);
+                        if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
 
@@ -108,7 +120,7 @@ namespace Barotrauma
                     }
                 }
 
-                emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
+                emitter.Emit(deltaTime, worldPosition, hull, angle);
             }
             
         }
