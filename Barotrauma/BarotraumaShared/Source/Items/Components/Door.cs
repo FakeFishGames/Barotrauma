@@ -78,10 +78,10 @@ namespace Barotrauma.Items.Components
         [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
         public float OpeningSpeed { get; private set; }
 
-        [Serialize(1.0f, true, description: "How quickly the door closes."), Editable]
+        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
 
-        [Serialize(5.0f, true, description: "The door cannot be opened/closed until this time has passed since it was last opened/closed."), Editable]
+        [Serialize(1.0f, true, description: "The door cannot be opened/closed until this time has passed since it was last opened/closed."), Editable]
         public float ToggleCoolDown { get; private set; }
 
         public bool? PredictedState { get; private set; }
