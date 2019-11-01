@@ -3720,5 +3720,7 @@
   <biomename.theaphoticplateau>The Aphotic Plateau</biomename.theaphoticplateau>
   <biomename.thegreatvoid>The Great Void</biomename.thegreatvoid>
   <biomename.hydrothermalwastes>Hydrothermal Wastes</biomename.hydrothermalwastes>
-  
+  <tutorialskipwarning>It looks like this might be the first time you've played Barotrauma. We strongly recommend that you give the tutorials a try before starting your journey through the depths of Europa.</tutorialskipwarning>
+  <tutorialwarningplaytutorials>Play tutorials</tutorialwarningplaytutorials>
+  <tutorialwarningskiptutorials>Skip tutorials</tutorialwarningskiptutorials>
 </infotexts>

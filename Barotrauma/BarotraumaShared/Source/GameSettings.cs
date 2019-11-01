@@ -283,7 +283,7 @@ namespace Barotrauma
         private const float MinInventoryScale = 0.75f, MaxInventoryScale = 1.25f;
         public static float InventoryScale { get; set; }
 
-        public List<string> CompletedTutorialNames { get; private set; }
+        public List<string> CompletedTutorialNames { get; private set; } = new List<string>();
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
@@ -310,10 +310,16 @@ namespace Barotrauma
 
         public bool ShowLanguageSelectionPrompt { get; set; }
 
+        private bool showTutorialSkipWarning = true;
+        public bool ShowTutorialSkipWarning
+        {
+            get { return showTutorialSkipWarning && CompletedTutorialNames.Count == 0; }
+            set { showTutorialSkipWarning = value; }
+        }
+
         public GameSettings()
         {
             ContentPackage.LoadAll();
-            CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
 
@@ -498,7 +504,8 @@ namespace Barotrauma
                 new XAttribute("usesteammatchmaking", useSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
                 new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
+                new XAttribute("aimassistamount", aimAssistAmount),
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -622,6 +629,7 @@ namespace Barotrauma
             if (!fileFound)
             {
                 ShowLanguageSelectionPrompt = true;
+                ShowTutorialSkipWarning = true;
                 ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
             }
@@ -637,6 +645,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null)
             {
                 ShowUserStatisticsPrompt = true;
+                ShowTutorialSkipWarning = true;
                 return false;
             }
             LoadGeneralSettings(doc);
@@ -798,7 +807,8 @@ namespace Barotrauma
                 new XAttribute("chatopen", ChatOpen),
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
-                new XAttribute("editordisclaimershown", EditorDisclaimerShown));
+                new XAttribute("editordisclaimershown", EditorDisclaimerShown),
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
 
             if (!string.IsNullOrEmpty(overrideSaveFolder))
             {
