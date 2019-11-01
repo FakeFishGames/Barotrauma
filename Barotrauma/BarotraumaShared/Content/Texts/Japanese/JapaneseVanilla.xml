@@ -3,7 +3,7 @@
 
 <!-- Loading Screen -->
 <loading>ロードしています…</loading>
-<pressanykey>何かキーを押して続けて下さい</pressanykey>
+<pressanykey>任意のキーを押して続行する</pressanykey>
 
 <!-- Loading Screen tips -->
 <loadingscreentip>運送中に荷物を失ったり傷めたりしたら運送費は支払われません。</loadingscreentip>
@@ -52,7 +52,7 @@
 <loadingscreentip>火災の場合に、火傷だけが注意すべきものではありません--火事は潜水艦の中で迅速にすべての酸素を焼き尽くしてしまいます。</loadingscreentip>
 <loadingscreentip>いわゆる熱水廃物を横切ること際には特別に注意する必要があります。それらは天然に多く存在しているだけではなく、地熱活動によって起こされた水の流れは船体のナビゲーションをよりいっそう危険にします。</loadingscreentip>
 <loadingscreentip>ユーロパの中の無柄の生命体の中には、潜水艦のソナーを粉砕するかもしれない低周波音を放つものがあります。</loadingscreentip>
-<loadingscreentip>あまりにも深く潜らないように注意してください。ほとんどのほとんどの潜水艦の船体は水深約2,000メートルで崩壊し始めるでしょう。</loadingscreentip>
+<loadingscreentip>あまりにも深く潜らないように注意してください。ほとんどの潜水艦の船体は水深約2,000メートルで崩壊し始めるでしょう。</loadingscreentip>
 <loadingscreentip>ユーロパは天然資源が豊富なので、鋭い目とプラズマカッターを持つ冒険的なキャプテンは、相当な利潤を得る可能性があります。</loadingscreentip>
 <loadingscreentip>それらのIDカードとフェイスマスクを身につけ、他の誰かに変装することができます。</loadingscreentip>
 <loadingscreentip>wifiコンポーネントを海底のエディタの中のラジオチャットと接続することにより、ボイスコントロールシステムを構築することができます。</loadingscreentip>
@@ -77,13 +77,13 @@
 <charactereditorbutton>キャラクタエディタ</charactereditorbutton>
 <settingsbutton>設定</settingsbutton>
 <steamworkshopbutton>Steamワークショップ</steamworkshopbutton>
-<quitbutton>終了する</quitbutton>
+<quitbutton>終了</quitbutton>
 
 <!-- Pause menu -->
 <pausemenuresume>再開する</pausemenuresume>
 <pausemenusettings>設定</pausemenusettings>
 <pausemenuretry>リトライ</pausemenuretry>
-<pausemenusavequit>保存して終了します</pausemenusavequit>
+<pausemenusavequit>保存して終了する</pausemenusavequit>
 <pausemenuquit>メインメニュー</pausemenuquit>
 <pausemenuquitverification>本当にゲームを終了してもよいですか？保存されていない進捗は全て失われます。</pausemenuquitverification>
 <pausemenuretryverification>あなたはミッションを中止し、以前保存したファイルをロードしますか？保存されていない進捗は全て失われます。</pausemenuretryverification>
@@ -120,7 +120,7 @@
 <modstab>購読されたMOD</modstab>
 <downloadbutton>購読</downloadbutton>
 <subscribedmods>MOD</subscribedmods>
-<nosubscribedmods>あなたはSteamワークショップの任意のMODを購読していません。ゲームを改造するために、下の「人気のMOD」ボタンをクリックしてください！</nosubscribedmods>
+<nosubscribedmods>あなたはSteamワークショップの任意のMODを購読していません。ゲームを改造するために、「人気のMOD」ボタンをクリックしてください！</nosubscribedmods>
 <popularmods>人気のMOD</popularmods>
 <findmodsbutton>MODを検索</findmodsbutton>
 <workshopitemunsubscribe>購読解除</workshopitemunsubscribe>
@@ -130,13 +130,13 @@
 <workshoplabelsubmarines>潜水艦</workshoplabelsubmarines>
 <workshoplabelcontentpackages>内容パッケージ</workshoplabelcontentpackages>
 <workshopitemenabled>有効</workshopitemenabled>
-<workshopitemdownloading>ダウンロード…</workshopitemdownloading>
-<workshopshowiteminsteam>Steamに表示</workshopshowiteminsteam>
+<workshopitemdownloading>ダウンロード中…</workshopitemdownloading>
+<workshopshowiteminsteam>Steamで閲覧</workshopshowiteminsteam>
 <workshopitemscore>スコア</workshopitemscore>
 <workshopitemvotes>[votecount]票</workshopitemvotes>
 <workshopitemcreator>創造者</workshopitemcreator>
-<workshopitemcreationdate>配布済み</workshopitemcreationdate>
-<workshopitemmodificationdate>アップデート済み</workshopitemmodificationdate>
+<workshopitemcreationdate>配信日付</workshopitemcreationdate>
+<workshopitemmodificationdate>アップデート日付</workshopitemmodificationdate>
 <workshopitemfilesize>ファイルサイズ</workshopitemfilesize>
 <workshopitemtitle>タイトル</workshopitemtitle>
 <workshopitemdescription>説明</workshopitemdescription>
@@ -155,9 +155,9 @@
 <workshopitempublish>アイテム公開</workshopitempublish>
 <workshopitemupdate>アイテム更新</workshopitemupdate>
 <workshopitemdelete>アイテム削除</workshopitemdelete>
-<workshopitemdeletetooltip>アイテムをSteam ワークショップから削除します。</workshopitemdeletetooltip>
+<workshopitemdeletetooltip>アイテムをSteamワークショップから削除します。</workshopitemdeletetooltip>
 <workshopitemdeleteverification>アイテム‘[itemname]’をSteamワークショップから本当に削除しますか？</workshopitemdeleteverification>
-<workshopitempublishtooltip>Steam ワークショップにファイルをアップロードします。</workshopitempublishtooltip>
+<workshopitempublishtooltip>Steamワークショップにファイルをアップロードします。</workshopitempublishtooltip>
 <workshopitemfileincluded>ファイルはワークショップに含められるでしょう。</workshopitemfileincluded>
 <workshopitemfilenotincluded>ファイルはワークショップフォルダに存在せず、ワークショップに含まれません。あなたが操作システムで、プレーヤーがすでに持っているバニラファイルを使ってほしいならば、これは望ましいかもしれません―そうでなければ、あなたはワークショップフォルダにファイルをコピーするべきです。</workshopitemfilenotincluded>
 <workshopitemfilenotfound>ファイルが見つかりません。</workshopitemfilenotfound>
@@ -165,7 +165,7 @@
 <workshopitemrefreshfilelisttooltip>ワークショップ(アイテムのフォルダの中のfilelist.xml)のコンフィギュレーションファイルをリロードし、その中のすべての新しいファイルをファイルリストに追加してください。</workshopitemrefreshfilelisttooltip>
 <workshoppublishpleasewait>お待ちください</workshoppublishpleasewait>
 <workshoppublishinprogress>‘[itemname]’をSteamワークショップに発表します。</workshoppublishinprogress>
-<workshopitempublished>[itemname]は現在Steamワークショップで入手可能です！</workshopitempublished>
+<workshopitempublished>現在Steamワークショップで '[itemname]' を入手可能です！</workshopitempublished>
 <workshopitempublishfailed>Steamワークショップで‘[itemname]’の発行に失敗しました。</workshopitempublishfailed>
 <workshopitempreviewimagedialogtitle>Steamワークショップアイテムにプレビュー画像を選ぶ</workshopitempreviewimagedialogtitle>
 <workshopitempreviewimagetoolarge>プレビューイメージのファイルサイズは、1MB未満である必要があります。</workshopitempreviewimagetoolarge>
@@ -187,7 +187,7 @@
 <settings>設定</settings>
 
 <!-- General tab -->
-<settingstab.general>一般的な</settingstab.general>
+<settingstab.general>通常</settingstab.general>
 <contentpackage>コンテンツパッケージ</contentpackage>
 <contentpackages>コンテンツパッケージ</contentpackages>
 <corepackagerequiredwarning>ゲームの動作に必要なコアパッケージであるため、あなたはコンテンツパッケージの選択を解除することはできません。別のコアパッケージを選択して切り替えることができます。</corepackagerequiredwarning>
@@ -196,12 +196,12 @@
 <incorrectexe>あなたが起動したい実行可能ファイルはコンテンツパッケージ[selectedpackage]に存在しません。あなたは、[exename]を起動したいですか？</incorrectexe>
 <language>言語</language>
 <language.english>英語</language.english>
-<applysettingsbutton>適用します</applysettingsbutton>
+<applysettingsbutton>適用</applysettingsbutton>
 <applysettingslabel>変更を適用しますか？</applysettingslabel>
 <applysettingsquestion>あなたは、設定を適用するか、変更を破棄しますか？</applysettingsquestion>
-<applysettingsyes>適用します</applysettingsyes>
-<applysettingsno>捨てます</applysettingsno>
-<applysettingsbuttonunsavedchanges>適用します</applysettingsbuttonunsavedchanges>
+<applysettingsyes>適用</applysettingsyes>
+<applysettingsno>破棄</applysettingsno>
+<applysettingsbuttonunsavedchanges>適用</applysettingsbuttonunsavedchanges>
 <restartrequiredlabel>再起動が必要</restartrequiredlabel>
 <restartrequiredresolution>解像度の変更を有効にするには、ゲームを再起動する必要があります。</restartrequiredresolution>
 <restartrequiredlanguage>言語の変更を有効にするには、ゲームを再起動する必要があります。</restartrequiredlanguage>
@@ -213,12 +213,12 @@
 
 <!-- Graphics tab -->
 <settingstab.graphics>グラフィックス</settingstab.graphics>
-<resolution>解決</resolution>
+<resolution>解像度</resolution>
 <displaymode>ディスプレイモード</displaymode>
 <fullscreen>全画面表示</fullscreen>
 <windowed>ウィンドウ表示</windowed>
 <borderlesswindowed>ボーダレスウィンドウ</borderlesswindowed>
-<enablevsync>垂直同期を有効にします</enablevsync>
+<enablevsync>垂直同期を有効</enablevsync>
 <enablevsynctooltip>ゲームのフレームレートはあなたのモニタのリフレッシュレートと同期します。スクリーンの破損を防ぐのに役立ちます。</enablevsynctooltip>
 <particlelimit>粒子の制限</particlelimit>
 <loseffect>視覚効果のライン</loseffect>
@@ -232,19 +232,19 @@
 <chromaticaberration>色収差</chromaticaberration>
 <chromaticaberrationtooltip>画面の端に微妙な色の歪み効果を可能にします。</chromaticaberrationtooltip>
 <hudscale>HUDスケール</hudscale>
-<inventoryscale>在庫スケール</inventoryscale>
+<inventoryscale>インベントリースケール</inventoryscale>
 
 <!-- Audio tab -->
 <settingstab.audio>オーディオ</settingstab.audio>
-<soundvolume>音量</soundvolume>
+<soundvolume>音効の音量</soundvolume>
 <musicvolume>音楽の音量</musicvolume>
 <voicechatvolume>ボイスチャットの音量</voicechatvolume>
 <microphonevolume>マイク音量</microphonevolume>
-<muteonfocuslost>集中ミュートが失われました。</muteonfocuslost>
+<muteonfocuslost>窓口を切り替えるとにミュートする</muteonfocuslost>
 <muteonfocuslosttooltip>そのウィンドウがフォーカスにない時に、ゲームをミュートにします。</muteonfocuslosttooltip>
 <voicechat>ボイスチャット</voicechat>
 <currentdevice>現在のデバイス</currentdevice>
-<currentdevicetooltip.osx>このデバイスは、ボイスチャット用に使用されます。残念ながら、Mac OS Xは、それだけで、あなたのシステムのデフォルトを使用する上での入力デバイスを変更する方法はありません。</currentdevicetooltip.osx>
+<currentdevicetooltip.osx>このデバイスは、ボイスチャット用に使用されます。残念ながら、Mac OS Xは、あなたのシステムのデフォルト設定しか使えません。の入力デバイスを変更する方法はありません。</currentdevicetooltip.osx>
 <refreshdefaultdevice>デフォルトのデバイスを更新</refreshdefaultdevice>
 <refreshdefaultdevicetooltip>ボイスチャット用に使用される入力デバイスを更新します。ご使用のシステムに/ホットプラグデフォルトの入力を入れ替える場合は、これを押してそれを検出してください。</refreshdefaultdevicetooltip>
 <voicemode.disabled>使用禁止</voicemode.disabled>
@@ -252,7 +252,7 @@
 <voicemode.pushtotalk>プッシュ・ツー・トーク</voicemode.pushtotalk>
 <voicemode.pushtotalktooltip>音声アクティビティは、特定のキーを押しているときにのみ送信されます。</voicemode.pushtotalktooltip>
 <voicemode.activity>音声アクティビティ</voicemode.activity>
-<voicemode.activitytooltip>てくる音がノイズゲートのしきい値を超えたときにボイスアクティビティが送信されます。</voicemode.activitytooltip>
+<voicemode.activitytooltip>デバイスの音がノイズゲートのしきい値を超えたときにボイスアクティビティが送信されます。</voicemode.activitytooltip>
 <noisegatethreshold>ノイズゲートのしきい値</noisegatethreshold>
 <directionalvoicechat>方向性ボイスチャット</directionalvoicechat>
 <directionalvoicechattooltip>有効にすると、ボイスチャットメッセージは、あなたの位置にスピーカーの相対的な向きに応じてパンされています。</directionalvoicechattooltip>
@@ -260,8 +260,8 @@
 <!-- Controls tab -->
 <settingstab.controls>コントロール</settingstab.controls>
 <aimassist>照準アシスト</aimassist>
-<aimassisttooltip>カーソルがそれを強調する項目にしなければならどれだけ近いかに影響します。 0％に設定すると、カーソルが項目上に正確である必要があります。</aimassisttooltip>
-<enablemouselook>マウスルックを有効にします</enablemouselook>
+<aimassisttooltip>アイテムをハイライトするのに必要なカーソルと目標の間の距離です。0％に設置すると、カーソルは精確に目標の上にあわせなければハイライトできません。</aimassisttooltip>
+<enablemouselook>マウスルックを有効</enablemouselook>
 <enablemouselooktooltip>有効にすると、カメラが移動は方向に応じて、あなたはにカーソルを合わせます。</enablemouselooktooltip>
 <inputtype.select>選択</inputtype.select>
 <inputtype.deselect>選択を解除</inputtype.deselect>
@@ -286,40 +286,40 @@
 <inputtype.selectpreviouscharacter>前のキャラクター</inputtype.selectpreviouscharacter>
 <inputtype.voice>押してヴォイスチャットをする</inputtype.voice>
 <setdefaultbindings>初期設定</setdefaultbindings>
-<setdefaultbindingstooltip>推奨されるデフォルト設定（項目を選択し、マウスの左ボタンを選択解除するには、マウスの右ボタンまたはESC）にキーバインドを設定します。</setdefaultbindingstooltip>
+<setdefaultbindingstooltip>推奨されるデフォルト設定（マウスの左ボタンでアイテムを選択し、マウスの右ボタンまたはESCキーで選択を解除する）にキーバインドを設定します。</setdefaultbindingstooltip>
 <setlegacybindings>レガシーバインディングを設定</setlegacybindings>
-<setlegacybindingstooltip>（手でアイテムを使用する項目を選択し、選択を解除するE、マウスの左ボタン）気圧障害の古いプレアルファバージョンで使用されたものにキーバインドを設定します。</setlegacybindingstooltip>
+<setlegacybindingstooltip>（Eボタンでアイテムを使用・選択を解除する、マウスの左ボタンで手で持つアイテムを使用）気圧障害の古いプレアルファバージョンで使用されたものにキーバインドを設定します。</setlegacybindingstooltip>
 
 <!-- Server settings -->
 <serversettingsroundstab>ラウンド</serversettingsroundstab>
 <serversettingsservertab>サーバ</serversettingsservertab>
 <serversettingsbanlisttab>ブラックリスト</serversettingsbanlisttab>
 <serversettingswhitelisttab>ホワイトリスト</serversettingswhitelisttab>
-<serversettingssubselection>潜水艦の選択</serversettingssubselection>
-<serversettingsmodeselection>ゲームモードの選択</serversettingsmodeselection>
-<serversettingsendroundwhendestreached>目的地に到達、このラウンドを終了する</serversettingsendroundwhendestreached>
-<serversettingsendroundvoting>投票してラウンド終了</serversettingsendroundvoting>
-<serversettingsendroundvotesrequired>投票が必要です：</serversettingsendroundvotesrequired>
-<serversettingsallowrespawning>復活の許可</serversettingsallowrespawning>
+<serversettingssubselection>潜水艦を選択</serversettingssubselection>
+<serversettingsmodeselection>ゲームモードを選択</serversettingsmodeselection>
+<serversettingsendroundwhendestreached>目標達成後にラウンドを終了する</serversettingsendroundwhendestreached>
+<serversettingsendroundvoting>ラウンド終了の時間に投票を行う</serversettingsendroundvoting>
+<serversettingsendroundvotesrequired>投票の要求：</serversettingsendroundvotesrequired>
+<serversettingsallowrespawning>復活を許可</serversettingsallowrespawning>
 <serversettingsrespawninterval>間隔：</serversettingsrespawninterval>
-<serversettingsminrespawn>最小プレイヤーの復活</serversettingsminrespawn>
-<serversettingsminrespawntooltip>復活シャトルが配備されるまで、選手の何パーセントかが死亡/観戦なければなりません。</serversettingsminrespawntooltip>
+<serversettingsminrespawn>復活するのに必要な最低限のプレイヤー人数</serversettingsminrespawn>
+<serversettingsminrespawntooltip>復活シャトルが配備されるまで、プレイヤーの何パーセントかが死亡/観戦なければなりません。</serversettingsminrespawntooltip>
 <serversettingsrespawnduration>復活輸送の所要時間：</serversettingsrespawnduration>
-<serversettingsrespawndurationtooltip>復活したプレーヤーが、主要な潜水艦に復活シャトルを操縦する必要時間。時間切れになった後に、シャトルはレベルから自動的に引き返すでしょう。</serversettingsrespawndurationtooltip>
+<serversettingsrespawndurationtooltip>復活したプレーヤーが、復活シャトルを操縦して潜水艦までに必要な時間。時間切れになった後に、シャトルは自動的に水平線に戻すでしょう。</serversettingsrespawndurationtooltip>
 <serversettingsmonsterspawns>モンスター発生</serversettingsmonsterspawns>
 <serversettingsadditionalcargo>追加の貨物</serversettingsadditionalcargo>
 <serversettingsautorestartdelay>自動再開遅延：</serversettingsautorestartdelay>
-<serversettingsstartwhenclientsready>プレイヤーが準備ができているときに開始</serversettingsstartwhenclientsready>
+<serversettingsstartwhenclientsready>全てのプレイヤーが準備ができているときに開始</serversettingsstartwhenclientsready>
 <serversettingsstartwhenclientsreadyratio>[percentage]％のプレイヤーの準備が必要です</serversettingsstartwhenclientsreadyratio>
-<serversettingsallowspectating>観戦を許可します</serversettingsallowspectating>
+<serversettingsallowspectating>観戦を許可</serversettingsallowspectating>
 <serversettingsallowvotekick>投票蹴りを許可</serversettingsallowvotekick>
-<serversettingskickvotesrequired>必要とされている票：</serversettingskickvotesrequired>
+<serversettingskickvotesrequired>投票の要求：</serversettingskickvotesrequired>
 <serversettingsautobantime>オート禁止期間：</serversettingsautobantime>
 <serversettingssharesubfiles>潜水艦のファイルをプレーヤーと共有</serversettingssharesubfiles>
 <serversettingsrandomizeseed>ラウンド間のシードレベルをランダム化</serversettingsrandomizeseed>
 <serversettingssavelogs>サーバーログを保存</serversettingssavelogs>
 <serversettingsallowragdollbutton>ラグドールボタンを許可します</serversettingsallowragdollbutton>
-<serversettingsusetraitorratio>最大の裏切り者のために選手の％を使用します</serversettingsusetraitorratio>
+<serversettingsusetraitorratio>最大は％のプレイヤーの裏切り者がいます</serversettingsusetraitorratio>
 <serversettingstraitorratio>裏切り者比：</serversettingstraitorratio>
 <serversettingstraitorcount>裏切り者数：</serversettingstraitorcount>
 <serversettingsusekarma>カルマシステムを有効にする</serversettingsusekarma>
@@ -331,8 +331,8 @@
 <whitelistremove>削除</whitelistremove>
 <banlistremove>削除</banlistremove>
 <banexpires>[time]期限切れ</banexpires>
-<banduration>期間</banduration>
-<banpermanent>永久的</banpermanent>
+<banduration>継続期間</banduration>
+<banpermanent>永久</banpermanent>
 <banreason>理由：</banreason>
 
 <!-- Round summary -->
@@ -424,17 +424,17 @@
 <create>作成</create>
 <walls>壁</walls>
 <reset>リセット</reset>
-<genericreplaceverification>交換したいですか？</genericreplaceverification>
+<genericreplaceverification>置き換えしたいですか？</genericreplaceverification>
 <dontshownotificationagain>このメッセージを二度と表示しません</dontshownotificationagain>
 <video>ビデオ</video>
 
 <!-- Characters -->
-<MyCharacter>私のキャラクター</MyCharacter>
+<MyCharacter>私のキャラ</MyCharacter>
 <character.carrier>キャリア</character.carrier>
-<character.charybdis>大渦巻</character.charybdis>
+<character.charybdis>カリュブディス</character.charybdis>
 <character.coelanth>コーランス</character.coelanth>
 <character.crawler>クローラー</character.crawler>
-<character.endworm>終わりワーム</character.endworm>
+<character.endworm>終末の虫</character.endworm>
 <character.fractalguardian>フラクタルガーディアン</character.fractalguardian>
 <character.fractalguardian2>フラクタルガーディアン</character.fractalguardian2>
 <character.human>人</character.human>
@@ -470,7 +470,7 @@
 <savenameinuseheader>そのセーブファイルの名称はすでに使われていました</savenameinuseheader>
 <savenameinusetext>ファイルを保存するために別の名前を選択してください</savenameinusetext>
 <savename>セーブファイルの名前</savename>
-<savefile.defaultname>保存する</savefile.defaultname>
+<savefile.defaultname>セーブファイル</savefile.defaultname>
 <lastsaved>最近のセーブファイル</lastsaved>
 <mapseed>マップシード</mapseed>
 <startcampaignbutton>開始</startcampaignbutton>
@@ -481,7 +481,7 @@
 <shuttleselected>シャトル選択済み</shuttleselected>
 <shuttlewarning>ほとんどのシャトルはユーロパ深度の危険性に対処するために十分に装備されていません。あなたの船としてシャトルを選ぶにしてもよろしいですか？</shuttlewarning>
 <contentpackagemismatch>不整合コンテンツパッケージ</contentpackagemismatch>
-<contentpackagemismatchwarning>それは[requiredcontentpackages]コンテンツパッケージを必要とするため、潜水艦は、現在選択されているコンテンツパッケージと互換性がない場合があります。あなたは潜水艦を選択してもよろしいですか？</contentpackagemismatchwarning>
+<contentpackagemismatchwarning>[requiredcontentpackages]がないため、該当潜水艦と現在選択せれていたコンテンツパッケージはと互換性がありません。この潜水艦を選択してもよろしいですか？</contentpackagemismatchwarning>
 <campaignstartfailedsubnotfound>キャンペーンの開始に失敗しました。潜水艦[subname]が見つかりません。</campaignstartfailedsubnotfound>
 
 <!-- Campaign menu -->
@@ -499,18 +499,18 @@
 <hireunavailable>雇用可能な人物がいません。</hireunavailable>
 <mission>ミッション</mission>
 <nomission>ミッションなし</nomission>
-<reward>報酬:[reward]クレジット</reward>
+<reward>報酬：[reward]クレジット</reward>
 
 <!-- In-game menus -->
 <credit>クレジット</credit>
-<playercredits>クレジット: [credits]</playercredits>
+<playercredits>クレジット： [credits]</playercredits>
 <missioninfo>ミッション情報</missioninfo>
-<missionreward>報酬: [reward]</missionreward>
+<missionreward>報酬：[reward]</missionreward>
 <infobutton>情報</infobutton>
 <endround>ラウンド終了</endround>
 <enterlocation>[locationname]に入る</enterlocation>
-<leavesubbehind>あなたの船の1つはまだ出口にありません。そのまま置き去りにしたいですか？</leavesubbehind>
-<leavesubsbehind>まだ出口にない船があります。そのまま置き去りにしたいですか？</leavesubsbehind>
+<leavesubbehind>あなたの船の1つはまだ出口に到着しません。そのまま置き去りにしたいですか？</leavesubbehind>
+<leavesubsbehind>まだ出口に到着しない船があります。そのまま置き去りにしたいですか？</leavesubsbehind>
 
 <!-- In-game messages -->
 <endroundvotes>ラウンドを終了するか否かに投票する[votes]/[max]</endroundvotes>
@@ -520,7 +520,7 @@
 <camfollowsubmarine>潜水艦をフォロー</camfollowsubmarine>
 <insufficientskills>あなたのスキルはアイテムを使用するには不十分かもしれません！[requiredskill]のレベルが[requiredlevel]に達することが必要です。</insufficientskills>
 <skillincreased>[name]さんの[skillname]スキルは[newlevel]にレベルアップしました！</skillincreased>
-<endroundsubnotatlevelend>潜水艦はレベルのどちらの終わりでもありません。あなたは、ミッションを中止し、今ラウンドを終えたいですか？</endroundsubnotatlevelend>
+<endroundsubnotatlevelend>潜水艦は水平線の両端に停泊していません。あなたは、ミッションを中止し、今ラウンドを終えたいですか？</endroundsubnotatlevelend>
 <crewdeadnorespawns>このラウンド中にサーバーで生存しているプレーヤーはおらず、復活は有効化されていません。どのキャラクターも復活又は再参加しない場合、サーバーは[time]秒でラウンド終了するでしょう。</crewdeadnorespawns>
 <minimapoutpostdockinginfo>[outpost]に停泊しています。\n潜水艦の操作前に港から離れてください。</minimapoutpostdockinginfo>
 <cargospawnnotification>購入済のアイテムは[roomname]に届いています。</cargospawnnotification>
@@ -533,17 +533,17 @@
 <serverlistplayers>プレーヤー</serverlistplayers>
 <serverlistversion>ゲームバージョン</serverlistversion>
 <serverlisthaspassword>パスワード</serverlisthaspassword>
-<serverlistusingwhitelist>ホワイトリストを使います</serverlistusingwhitelist>
+<serverlistusingwhitelist>ホワイトリストを使う</serverlistusingwhitelist>
 <serverlistcontentpackages>コンテンツパッケージ</serverlistcontentpackages>
-<serverlistsubselection>潜水艦の選択</serverlistsubselection>
-<serverlistmodeselection>ゲームモード選択</serverlistmodeselection>
-<serverlistallowspectating>観戦を許可します</serverlistallowspectating>
+<serverlistsubselection>潜水艦を選択</serverlistsubselection>
+<serverlistmodeselection>ゲームモードを選択</serverlistmodeselection>
+<serverlistallowspectating>観戦を許可</serverlistallowspectating>
 <serverlistcompatible>互換性あり</serverlistcompatible>
 <serverlistping>Ping</serverlistping>
 <serverlistroundstarted>ラウンド開始</serverlistroundstarted>
-<serverlistroundnotstarted>ラウンドが開始されていません</serverlistroundnotstarted>
+<serverlistroundnotstarted>ラウンド未開始</serverlistroundnotstarted>
 <serverlistinfo>情報</serverlistinfo>
-<serverlistrefresh>スキャンサーバー</serverlistrefresh>
+<serverlistrefresh>サーバーをスキャン</serverlistrefresh>
 <serverlistjoin>参加</serverlistjoin>
 <serverlistunknownversion>互換性を確定することができませんでした。(未知のゲームバージョン)</serverlistunknownversion>
 <serverlistnosteamqueryresponse>クエリに応答しなかったため、サーバーとの互換性を判断できませんでした。サーバがダウンしたり、ホストが自分のクエリ・ポートを転送していないが、あなたはまだサーバーに接続しようとしている場合であれば、これが生じる可能性があります。</serverlistnosteamqueryresponse>
@@ -553,19 +553,19 @@
 <serverlistcontentpackagenotenabled>このサーバー上でプレイするには設定でコンテンツパッケージ'[contentpackage]'を有効化する必要があります。</serverlistcontentpackagenotenabled>
 <serverlistincompatiblecontentpackageworkshopavailable>このサーバーに参加するにはコンテンツパッケージ'[contentpackage]'が必要です。Steamワークショップからパッケージをインストールすることができます。</serverlistincompatiblecontentpackageworkshopavailable>
 <serverlistsubscribemissingpackages>ワークショップから不足しているパッケージを取得します。</serverlistsubscribemissingpackages>
-<serverlistsubscribemissingpackagestooltip>Steam ワークショップにはないコンテンツパッケージに登録して、あなたがそれらをダウンロードして、ワークショップのメニューを有効化してください。</serverlistsubscribemissingpackagestooltip>
-<serverlistsubscribemissingpackagestooltipnosteam>行方不明のコンテンツパッケージはSteam ワークショップで入手可能ですが、あなたがSteamの上の気圧障害を所有していないならば、Steam機能は利用できません。</serverlistsubscribemissingpackagestooltipnosteam>
+<serverlistsubscribemissingpackagestooltip>Steamワークショップにはないコンテンツパッケージに登録して、あなたがそれらをダウンロードして、ワークショップのメニューを有効化してください。</serverlistsubscribemissingpackagestooltip>
+<serverlistsubscribemissingpackagestooltipnosteam>欠けたコンテンツパッケージはSteamワークショップで入手可能ですが、あなたがSteamの上の気圧障害を所有していないならば、Steam機能は利用できません。</serverlistsubscribemissingpackagestooltipnosteam>
 <filterservers>フィルタサーバ</filterservers>
 <filterpassword>パスワードなし</filterpassword>
-<filterincompatibleservers>互換性の無さを隠します</filterincompatibleservers>
-<filterfullservers>埋まっているものを隠す</filterfullservers>
-<filteremptyservers>空を隠す</filteremptyservers>
+<filterincompatibleservers>互換性の無いサーバーを隠す</filterincompatibleservers>
+<filterfullservers>満員のサーバーを隠す</filterfullservers>
+<filteremptyservers>空きサーバーを隠す</filteremptyservers>
 <nomatchingservers>一致するサーバが見つかりませんでした。</nomatchingservers>
 <refreshingserverlist>サーバーのリストを更新...</refreshingserverlist>
 <noservers>すべてのサーバーは全く見つかりませんでした。</noservers>
-<serverlistnosteamconnection>すべてのサーバー（Steamに接続されていない）を見つけることができませんでした。</serverlistnosteamconnection>
+<serverlistnosteamconnection>すべてのサーバーを見つけることができませんでした。（Steamに接続されていない）</serverlistnosteamconnection>
 <masterservererrorlabel>接続エラー</masterservererrorlabel>
-<masterservertimeouterror>マスターサーバーに接続できませんでした（要求がタイムアウトしました）。</masterservertimeouterror>
+<masterservertimeouterror>マスターサーバーに接続できませんでした（リクエストがタイムアウトしました）。</masterservertimeouterror>
 <masterservererrorexception>マスターサーバーへの接続中にエラーが発生しました { [error] }</masterservererrorexception>
 <masterservererror404>マスターサーバーへの接続中にエラーが発生しました（404  - [masterserverurl]が見つかりません）</masterservererror404>
 <masterservererrorunavailable>マスターサーバーエラー（505  - サービスは利用できません）に接続中。マスターサーバーは、メンテナンスや、一時的に過負荷状態のためにダウンしている可能性があり。しばらくしてからもう一度試してください。</masterservererrorunavailable>
@@ -573,18 +573,18 @@
 <couldnotconnecttoserver>サーバーに接続できませんでした。</couldnotconnecttoserver>
 <invalidipaddress>アドレスを解析できませんでした '[serverip]:[port]'。有効なIPアドレスが入力されていることを確認してください。</invalidipaddress>
 <connecting>接続しています</connecting>
-<disconnecting>切断しています</disconnecting>
-<passwordrequired>必要なパスワード</passwordrequired>
-<connectionlost>切断</connectionlost>
-<connectionlostreconnecting>あなたはサーバーから切断されています。再接続...</connectionlostreconnecting>
-<connectionfailed>失敗した接続</connectionfailed>
+<disconnecting>接続を切断しています</disconnecting>
+<passwordrequired>パスワードが必要</passwordrequired>
+<connectionlost>リンクが切断されました</connectionlost>
+<connectionlostreconnecting>あなたはサーバーから切断されています。再接続中...</connectionlostreconnecting>
+<connectionfailed>接続失敗</connectionfailed>
 <connectingto>[serverip]と接続中</connectingto>
-<serverfullquestionprompt>サーバーのキューに参加して、スロットの解放を待ちますか？</serverfullquestionprompt>
-<serverqueue>キュー</serverqueue>
+<serverfullquestionprompt>行列に並んで、サーバーが開いてるのを待ちますか？</serverfullquestionprompt>
+<serverqueue>行列を並ぶ</serverqueue>
 <serverqueuepleasewait>お待ちください...</serverqueuepleasewait>
-<waitinginserverqueue>サーバー上で解放するスロットを待っています。</waitinginserverqueue>
+<waitinginserverqueue>サーバーの空いてる席を待っています。</waitinginserverqueue>
 <messagereaderror>サーバからのメッセージ読み込み中にエラーが発生しました。 （[message] [targetsite]）</messagereaderror>
-<cheatsenabledtitle>チートが有効化されています。</cheatsenabledtitle>
+<cheatsenabledtitle>チートを有効化</cheatsenabledtitle>
 <cheatsenableddescription>チートコマンドは、このサーバー上で有効になっています。あなたはこのプレイセッション中にSteam実績を取得することはできません。</cheatsenableddescription>
 <pleasewait>お待ちください</pleasewait>
 
@@ -592,13 +592,13 @@
 <disconnectreason.banned>あなたは、サーバー接続を禁止されています。</disconnectreason.banned>
 <disconnectreason.kicked>あなたは、サーバーから追い出されてきました。</disconnectreason.kicked>
 <disconnectreason.servershutdown>サーバがシャットダウンされました。</disconnectreason.servershutdown>
-<disconnectreason.serverfull>サーバが満杯です。</disconnectreason.serverfull>
+<disconnectreason.serverfull>サーバが満員です。</disconnectreason.serverfull>
 <disconnectreason.authenticationrequired>クライアントが正常に認証を要求しませんでした。</disconnectreason.authenticationrequired>
-<disconnectreason.steamauthenticationrequired>Steam認証が必要。Steamが実行されている、あなたは、アカウントにログインしていることを確認してください。</disconnectreason.steamauthenticationrequired>
+<disconnectreason.steamauthenticationrequired>Steam認証が必要。Steamが実行されている、尚且つアカウントにログインしていることを確認してください。</disconnectreason.steamauthenticationrequired>
 <disconnectreason.steamauthenticationfailed>Steam認証に失敗しました。</disconnectreason.steamauthenticationfailed>
 <disconnectreason.sessiontaken>あなたのセッションは、同じIPアドレスの新しい接続によって取得されました。</disconnectreason.sessiontaken>
 <disconnectreason.toomanyfailedlogins>あまりにも多くの失敗したログイン試行。</disconnectreason.toomanyfailedlogins>
-<disconnectreason.noname>与えられた名前がありません。</disconnectreason.noname>
+<disconnectreason.noname>未命名</disconnectreason.noname>
 <disconnectreason.invalidname>あなたの名前は違法な記号が含まれています。</disconnectreason.invalidname>
 <disconnectreason.nametaken>その名前は既に使用されています。</disconnectreason.nametaken>
 <disconnectreason.invalidversion>ノンマッチングゲームバージョン。</disconnectreason.invalidversion>
@@ -615,7 +615,7 @@
 <disconnectmessage.incompatiblecontentpackages>あなたは、参加する前にコンテンツパッケージ[incompatiblecontentpackages]を無効化しなければなりません。</disconnectmessage.incompatiblecontentpackages>
 
 <!-- Server lobby -->
-<restartingin>で再起動</restartingin>
+<restartingin>間もなく再起動</restartingin>
 <votes>投票</votes>
 <manual>マニュアル</manual>
 <vote>投票</vote>
@@ -629,11 +629,11 @@
 <botspawnmode>ボット復活モード</botspawnmode>
 <normal>ノーマル</normal>
 <fill>補充</fill>
-<autorestart>自動的に再スタート</autorestart>
+<autorestart>自動的に再起動</autorestart>
 <serverlog>サーバーログ</serverlog>
 <campaignview>キャンペーンビュー</campaignview>
 <createnew>新規作成</createnew>
-<playyourself>一人でプレイする</playyourself>
+<playyourself>一人でプレイ</playyourself>
 <startgamebutton>開始</startgamebutton>
 <readytostarttickbox>開始する準備ができました</readytostarttickbox>
 <roundstartingpleasewait>お待ちください</roundstartingpleasewait>
@@ -648,9 +648,9 @@
 <subdoesntmatch>あなたの潜水艦のバー​​ジョンでは、サーバのバージョンと一致しません</subdoesntmatch>
 <rank>ランク</rank>
 <customrank>カスタム</customrank>
-<permissions>許可</permissions>
+<permissions>権限</permissions>
 <kick>蹴り</kick>
-<votetokick>投票蹴り</votetokick>
+<votetokick>投票してプレイヤーをサーバーから蹴り出す</votetokick>
 <ban>禁止</ban>
 <banrange>禁止範囲</banrange>
 <banreasonprompt>禁止の理由？</banreasonprompt>
@@ -658,16 +658,16 @@
 <privatemessagetag>[PM]</privatemessagetag>
 <subnotfounderror>潜水艦[subname]サーバーによって選択されました。一致するファイルは、あなたの潜水艦フォルダ内で見つかりません。</subnotfounderror>
 <subloaderror>潜水艦[subname]をロードすることができませんでした。ファイルが壊れている可能性があります。</subloaderror>
-<subdoesntmatcherror>潜水艦ファイル[subname]のバージョンとサーバのバージョンと一致していません\n貴方のMD5ハッシュ：[myhash] \nサーバーのMD5ハッシュ：[serverhash] \ n</subdoesntmatcherror>
+<subdoesntmatcherror>潜水艦ファイル[subname]のバージョンとサーバのバージョンと一致していません！\n貴方のMD5ハッシュ：[myhash] \nサーバーのMD5ハッシュ：[serverhash] \n</subdoesntmatcherror>
 <downloadsublabel>潜水艦が見つかりません！</downloadsublabel>
 <downloadsubquestion>あなたは、サーバーのホストからファイルをダウンロードしますか？</downloadsubquestion>
 <waitforfiletransfers>ファイル転送がラウンドを開始する前に終了するのを待っています...</waitforfiletransfers>
 <startnow>今すぐ開始</startnow>
 <serverinitfailed>サーバの起動に失敗しました。</serverinitfailed>
 <serverinitfailedaddressalreadyinuse>[errormsg]。あなたは、同じポートの上の複数のサーバーを運用しようとしていますか？</serverinitfailedaddressalreadyinuse>
-<permissionsremoved>ホストはすべてのあなたの特別な許可を取り除きました。</permissionsremoved>
-<currentpermissions>現在の許可：</currentpermissions>
-<permissionschanged>変更された許可</permissionschanged>
+<permissionsremoved>ホストはすべてのあなたの特別な権限を取り除きました。</permissionsremoved>
+<currentpermissions>現在の権限：</currentpermissions>
+<permissionschanged>権限変更：</permissionschanged>
 <permittedconsolecommands>許可されたコンソールコマンド：</permittedconsolecommands>
 <pleasewaitroundrunning>お待ちください</pleasewaitroundrunning>
 <roundrunningspectatedisabled>ラウンドはすでに動いていて、管理者は傍観を使用不可にしました。あなたは、新しいラウンドが始まるのを待つ必要があるでしょう。</roundrunningspectatedisabled>
@@ -676,20 +676,20 @@
 <downloadingfile>[filename]をダウンロード中</downloadingfile>
 <filedownloadednotification>ファイル '[filename]'が正常にダウンロードされました。</filedownloadednotification>
 <newcampaigncharacterheader>本当によいですか？</newcampaigncharacterheader>
-<newcampaigncharactertext>新しいキャラクターを作成すると、以前のキャラクターを破棄し、すべてのあなたのスキルの進捗とあなたの所有物を失います。新しいキャラクターを作成しますか？</newcampaigncharactertext>
+<newcampaigncharactertext>新しいキャラクターを作成すると、以前のキャラクターを破棄し、すべてのあなたのスキルの進捗と所有物を失います。新しいキャラクターを作成しますか？</newcampaigncharactertext>
 <mute>ミュート</mute>
-<mutedlocally>ローカルに消音する</mutedlocally>
-<mutedglobally>グローバルに消音する</mutedglobally>
+<mutedlocally>ローカルミュート</mutedlocally>
+<mutedglobally>グローバルミュート</mutedglobally>
 
 <!-- Server log -->
 <serverlog.filter>フィルタ</serverlog.filter>
 <serverlog.chatmessage>チャットメッセージ</serverlog.chatmessage>
-<serverlog.iteminteraction>アイテムの相互作用</serverlog.iteminteraction>
-<serverlog.inventoryusage>インベントリーを使う</serverlog.inventoryusage>
+<serverlog.iteminteraction>アイテム操作</serverlog.iteminteraction>
+<serverlog.inventoryusage>インベントリー使用</serverlog.inventoryusage>
 <serverlog.attackdeath>攻撃&amp;死亡</serverlog.attackdeath>
 <serverlog.spawning>生成中</serverlog.spawning>
 <serverlog.servermessage>サーバーメッセージ</serverlog.servermessage>
-<serverlog.consoleusage>コンソールの使用方法</serverlog.consoleusage>
+<serverlog.consoleusage>コンソールを使用</serverlog.consoleusage>
 <serverlog.error>エラー</serverlog.error>
 
 <!-- Server chat messages -->
@@ -706,23 +706,23 @@
 <servermessage.bannedfromserver>[client]はサーバーにブロックされています。</servermessage.bannedfromserver>
 <servermessage.hasdisconnected>[client]は接続を断ちました。</servermessage.hasdisconnected>
 <servermessage.excessivedesync>あなたは過度な非同期化のため接続を絶たれています。</servermessage.excessivedesync>
-<servermessage.excessivedesyncoldevent>あなたは、過度な非同期(非常に古いイベントを期待)のため接続を絶たれています。</servermessage.excessivedesyncoldevent>
-<servermessage.excessivedesyncremovedevent>あなたは、過度な非同期(取り除かれたイベントを期待)のため接続を絶たれています。</servermessage.excessivedesyncremovedevent>
+<servermessage.excessivedesyncoldevent>あなたは、過度な非同期(期限切れのイベントによる可能性があり)のため接続を絶たれています。</servermessage.excessivedesyncoldevent>
+<servermessage.excessivedesyncremovedevent>あなたは、過度な非同期(取り除かれたイベントによる可能性があり)のため接続を絶たれています。</servermessage.excessivedesyncremovedevent>
 <servermessage.synctimeout>サーバーとあなたのクライアントがあまりにも長期間同期されなかったので、あなたは接続を絶たれています。</servermessage.synctimeout>
 <servermessage.shuttleleaving>シャトルは自動的に前哨基地に戻ります。すぐにシャトルから離れてください。</servermessage.shuttleleaving>
-<servermessage.howtocommunicate>[chatbutton]を押してチャットする。無線機を通じて話をするには[adiobutton]を使用してください。</servermessage.howtocommunicate>
+<servermessage.howtocommunicate>[chatbutton]を押してチャットする。無線機を通じて話をするには[radiobutton]を使用してください。</servermessage.howtocommunicate>
 <servermessage.playernotfound>プレーヤー[player]が見つかりません！</servermessage.playernotfound>
 
 <!-- Client permissions -->
 <clientpermission.none>無し</clientpermission.none>
 <clientpermission.all>すべて</clientpermission.all>
-<clientpermission.endround>エンドラウンド</clientpermission.endround>
-<clientpermission.kick>キック</clientpermission.kick>
+<clientpermission.endround>ラウンドを終了</clientpermission.endround>
+<clientpermission.kick>蹴り</clientpermission.kick>
 <clientpermission.ban>禁止</clientpermission.ban>
 <clientpermission.unban>禁止を取り消し</clientpermission.unban>
 <clientpermission.selectsub>潜水艦を選択</clientpermission.selectsub>
 <clientpermission.selectmode>モードを選択</clientpermission.selectmode>
-<clientpermission.managecampaign>キャンペーンの管理</clientpermission.managecampaign>
+<clientpermission.managecampaign>キャンペーンを管理</clientpermission.managecampaign>
 <clientpermission.consolecommands>コンソールコマンド</clientpermission.consolecommands>
 <clientpermission.serverlog>サーバーログ</clientpermission.serverlog>
 <clientpermission.manageround>ラウンドの管理</clientpermission.manageround>
@@ -741,81 +741,89 @@
 <missiontype.prospect>採掘</missiontype.prospect>
 
 <!-- Mission descriptions -->
-<missionname.salvageskyholderartifactruins>アーティファクトを救助します</missionname.salvageskyholderartifactruins>
+<missionname.salvageskyholderartifactruins>アーティファクトをサルベージします</missionname.salvageskyholderartifactruins>
 <missiondescription.salvageskyholderartifactruins>[location1]の研究者はユーロパで以前に発見された異質なアーティファクトによって放たれたものと、非常に類似している超低周波音の信号を拾いました。信号を調査し、潜在的なアーティファクトを取り戻してください。</missiondescription.salvageskyholderartifactruins>
 <missionsonarlabel.salvageskyholderartifactruins>超低周波信号</missionsonarlabel.salvageskyholderartifactruins>
 <missionsuccess.salvageskyholderartifactruins>アーティファクトは正常に取得されています。</missionsuccess.salvageskyholderartifactruins>
 <missionfailure.salvageskyholderartifactruins>アーティファクトの取得に失敗しました。</missionfailure.salvageskyholderartifactruins>
-<missionheader0.salvageskyholderartifactruins>収集されたアーティファクト</missionheader0.salvageskyholderartifactruins>
+<missionheader0.salvageskyholderartifactruins>アーティファクトを収集された</missionheader0.salvageskyholderartifactruins>
 <missionmessage0.salvageskyholderartifactruins>アーティファクトは潜水艦上にあります。潜水艦を操縦して洞窟から出て報酬を求めてください。</missionmessage0.salvageskyholderartifactruins>
-<missionname.salvagethermalartifactruins>アーティファクトを救助しています。</missionname.salvagethermalartifactruins>
+<missionname.salvagethermalartifactruins>アーティファクトをサルベージします</missionname.salvagethermalartifactruins>
 <missiondescription.salvagethermalartifactruins>[location1]の研究者はユーロパで以前に発見された異質なアーティファクトによって放たれたものと、非常に類似している超低周波音の信号を拾いました。信号を調査し、潜在的なアーティファクトを取り戻してください。</missiondescription.salvagethermalartifactruins>
 <missionsonarlabel.salvagethermalartifactruins>超低周波音の信号</missionsonarlabel.salvagethermalartifactruins>
 <missionsuccess.salvagethermalartifactruins>アーティファクトの取得に成功しました。</missionsuccess.salvagethermalartifactruins>
 <missionfailure.salvagethermalartifactruins>アーティファクトの取得に失敗しました。</missionfailure.salvagethermalartifactruins>
-<missionheader0.salvagethermalartifactruins>収集されたアーティファクト</missionheader0.salvagethermalartifactruins>
+<missionheader0.salvagethermalartifactruins>アーティファクトを収集された</missionheader0.salvagethermalartifactruins>
 <missionmessage0.salvagethermalartifactruins>アーティファクトは潜水艦上にあります。潜水艦を操縦して洞窟から出て報酬を求めてください。</missionmessage0.salvagethermalartifactruins>
-<missionname.salvagethermalartifactcave>アーティファクトを救助しています</missionname.salvagethermalartifactcave>
+<missionname.salvagethermalartifactcave>アーティファクトをサルベージします</missionname.salvagethermalartifactcave>
 <missiondescription.salvagethermalartifactcave>[location1]の研究者はユーロパで以前に発見された異質なアーティファクトによって放たれたものと、非常に類似している超低周波音の信号を拾いました。信号を調査し、潜在的なアーティファクトを取り戻してください。</missiondescription.salvagethermalartifactcave>
 <missionsonarlabel.salvagethermalartifactcave>超低周波音の信号</missionsonarlabel.salvagethermalartifactcave>
 <missionsuccess.salvagethermalartifactcave>アーティファクトの取得に成功しました。</missionsuccess.salvagethermalartifactcave>
 <missionfailure.salvagethermalartifactcave>アーティファクトの取得に失敗しました。</missionfailure.salvagethermalartifactcave>
-<missionheader0.salvagethermalartifactcave>収集されたアーティファクト</missionheader0.salvagethermalartifactcave>
+<missionheader0.salvagethermalartifactcave>アーティファクトを収集された</missionheader0.salvagethermalartifactcave>
 <missionmessage0.salvagethermalartifactcave>アーティファクトは潜水艦上にあります。潜水艦を操縦して洞窟から出て報酬を求めてください。</missionmessage0.salvagethermalartifactcave>
-<missionname.salvagenasonovartifactcave>アーティファクトを救助しています</missionname.salvagenasonovartifactcave>
+<missionname.salvagenasonovartifactcave>アーティファクトをサルベージします</missionname.salvagenasonovartifactcave>
 <missiondescription.salvagenasonovartifactcave>[location1]の研究者はユーロパで以前に発見された異質なアーティファクトによって放たれたものと、非常に類似している超低周波音の信号を拾いました。信号を調査し、潜在的なアーティファクトを取り戻してください。</missiondescription.salvagenasonovartifactcave>
 <missionsonarlabel.salvagenasonovartifactcave>超低周波音の信号</missionsonarlabel.salvagenasonovartifactcave>
 <missionsuccess.salvagenasonovartifactcave>アーティファクトの取得に成功しました。</missionsuccess.salvagenasonovartifactcave>
 <missionfailure.salvagenasonovartifactcave>アーティファクトの取得に失敗しました。</missionfailure.salvagenasonovartifactcave>
-<missionheader0.salvagenasonovartifactcave>収集されたアーティファクト</missionheader0.salvagenasonovartifactcave>
+<missionheader0.salvagenasonovartifactcave>アーティファクトを収集された</missionheader0.salvagenasonovartifactcave>
 <missionmessage0.salvagenasonovartifactcave>アーティファクトは潜水艦上にあります。潜水艦を操縦して洞窟から出て報酬を求めてください。</missionmessage0.salvagenasonovartifactcave>
-<missionname.killmoloch>アーティファクトを救助しています</missionname.killmoloch>
+<missionname.killmoloch>モロクを殺す</missionname.killmoloch>
 <missiondescription.killmoloch>特に攻撃的なモロクトカゲは[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、モロトカゲを殺した人に約束されています。</missiondescription.killmoloch>
 <missionsonarlabel.killmoloch>モロク</missionsonarlabel.killmoloch>
 <missionsuccess.killmoloch>モロクは殺されました。</missionsuccess.killmoloch>
-<missionheader0.killmoloch>ターゲット抹殺</missionheader0.killmoloch>
+<missionheader0.killmoloch>ターゲットを抹殺されました</missionheader0.killmoloch>
 <missionmessage0.killmoloch>モロクトカゲは死んでいます。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killmoloch>
-<missionname.killtigerthresher>タイガーシャークを殺します</missionname.killtigerthresher>
+<missionname.killtigerthresher>タイガーシャークを殺す</missionname.killtigerthresher>
 <missiondescription.killtigerthresher>特に攻撃的なタイガーシャークは[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを殺した人々に約束されています。</missiondescription.killtigerthresher>
 <missionsonarlabel.killtigerthresher>タイガーシャーク</missionsonarlabel.killtigerthresher>
 <missionsuccess.killtigerthresher>タイガーシャークは殺されています。</missionsuccess.killtigerthresher>
-<missionheader0.killtigerthresher>ターゲット抹殺</missionheader0.killtigerthresher>
+<missionheader0.killtigerthresher>ターゲットを抹殺されました</missionheader0.killtigerthresher>
 <missionmessage0.killtigerthresher>シャークは死んでいます。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killtigerthresher>
 <missionname.killhammerhead>シュモクザメを殺します</missionname.killhammerhead>
 <missiondescription.killhammerhead>特に攻撃的なシュモクザメは[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、生き物を殺す誰にでも約束されています。</missiondescription.killhammerhead>
 <missionsonarlabel.killhammerhead>シュモクザメ</missionsonarlabel.killhammerhead>
 <missionsuccess.killhammerhead>シュモクザメは殺されています。</missionsuccess.killhammerhead>
-<missionheader0.killhammerhead>ターゲット抹殺</missionheader0.killhammerhead>
+<missionheader0.killhammerhead>ターゲットを抹殺されました</missionheader0.killhammerhead>
 <missionmessage0.killhammerhead>シュモクザメは死んでいます。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killhammerhead>
-<missionname.killcrawlerswarm1>大群を抹殺</missionname.killcrawlerswarm1>
-<missiondescription.killcrawlerswarm1>[monster]の小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>
-<missionsonarlabel.killcrawlerswarm1>大群</missionsonarlabel.killcrawlerswarm1>
-<missionsuccess.killcrawlerswarm1>大群は抹殺されました。</missionsuccess.killcrawlerswarm1>
-<missionheader0.killcrawlerswarm1>ターゲット抹殺</missionheader0.killcrawlerswarm1>
-<missionmessage0.killcrawlerswarm1>大群は抹殺されました。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killcrawlerswarm1>
-<missionname.killcrawlerswarm2>大群を抹殺してください。</missionname.killcrawlerswarm2>
-<missiondescription.killcrawlerswarm2>[monster]の大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>
-<missionsonarlabel.killcrawlerswarm2>大群</missionsonarlabel.killcrawlerswarm2>
-<missionsuccess.killcrawlerswarm2>大群は抹殺されました。</missionsuccess.killcrawlerswarm2>
-<missionheader0.killcrawlerswarm2>ターゲット抹殺</missionheader0.killcrawlerswarm2>
-<missionmessage0.killcrawlerswarm2>大群は抹殺されました。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killcrawlerswarm2>
+<missionname.killcrawlerswarm1>クローラー個体群を抹殺</missionname.killcrawlerswarm1>
+
+<!--<missiondescription.killcrawlerswarm1>[monster]の小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm1>クローラの小さな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm1>
+
+<missionsonarlabel.killcrawlerswarm1>クローラー個体群</missionsonarlabel.killcrawlerswarm1>
+<missionsuccess.killcrawlerswarm1>クローラー個体群は抹殺されました。</missionsuccess.killcrawlerswarm1>
+<missionheader0.killcrawlerswarm1>ターゲットを抹殺されました</missionheader0.killcrawlerswarm1>
+<missionmessage0.killcrawlerswarm1>クローラー個体群は抹殺されました。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killcrawlerswarm1>
+<missionname.killcrawlerswarm2>クローラー種族の大群を抹殺してください。</missionname.killcrawlerswarm2>
+
+<!--<missiondescription.killcrawlerswarm2>[monster]の大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>-->
+<!-- Temporary until plural monster names -->
+<missiondescription.killcrawlerswarm2>クローラの大きな大群は[location1]と[location2]間で移動している船にテロを仕掛けています。[reward]クレジットの報酬は、それを中立化することができるどのようなクルーにでも約束されています。</missiondescription.killcrawlerswarm2>
+
+<missionsonarlabel.killcrawlerswarm2>クローラー種族の大群</missionsonarlabel.killcrawlerswarm2>
+<missionsuccess.killcrawlerswarm2>クローラー種族の大群は抹殺されました。</missionsuccess.killcrawlerswarm2>
+<missionheader0.killcrawlerswarm2>ターゲットを抹殺されました</missionheader0.killcrawlerswarm2>
+<missionmessage0.killcrawlerswarm2>クローラー種族の大群は抹殺されました。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killcrawlerswarm2>
 <missionname.killendworm>深海からの猛獣</missionname.killendworm>
 <missiondescription.killendworm>地震のデータによると、ユーロパの奥には何か巨大なものが[location1]と[location2]間の通路の中に出現したことを示しています。通路を通るすべての輸送船は今のところキャンセルされていて、[reward]の報酬は、地震活動を起こしている何でも取り除く人々に約束されています。</missiondescription.killendworm>
 <missionsonarlabel.killendworm>ターゲット</missionsonarlabel.killendworm>
-<missionsuccess.killendworm>エンドワームは死んでいて、通路は再び輸送のために開いています。</missionsuccess.killendworm>
-<missionheader0.killendworm>ターゲット抹殺</missionheader0.killendworm>
+<missionsuccess.killendworm>終末の虫は死んでいて、通路は再び輸送のために開いています。</missionsuccess.killendworm>
+<missionheader0.killendworm>ターゲットを抹殺されました</missionheader0.killendworm>
 <missionmessage0.killendworm>猛獣は死んでいます。報酬を請求するために、潜水艦を操縦して洞窟から出てください。</missionmessage0.killendworm>
 <missionname.salvagekillmoloch>アーティファクトを救助しています</missionname.salvagekillmoloch>
 <missiondescription.salvagekillmoloch>[location1]の研究者はユーロパに以前に発見された異質なアーティファクトによって放たれたものと非常に類似している超低周波音の信号を拾いました。信号を調査し、潜在的なアーティファクトを取り戻してください。</missiondescription.salvagekillmoloch>
 <missionsonarlabel.salvagekillmoloch>超低周波音の信号</missionsonarlabel.salvagekillmoloch>
 <missionsuccess.salvagekillmoloch>信号がモロクにより放出されたと判明しました。 [location1]の研究者は、モロクを取り除くためにもかかわらず、あなたに報酬を支払うことに合意しました。</missionsuccess.salvagekillmoloch>
-<missionheader0.salvagekillmoloch>ターゲット抹殺</missionheader0.salvagekillmoloch>
+<missionheader0.salvagekillmoloch>ターゲットを抹殺されました</missionheader0.salvagekillmoloch>
 <missionmessage0.salvagekillmoloch>信号がモロクトカゲによって放たれたと判明します！あなたは洞窟からナビゲートし、研究者に知らせるべきです。</missionmessage0.salvagekillmoloch>
-<missionname.salvagekillcarrier>見捨てられた人を救助しています</missionname.salvagekillcarrier>
+<missionname.salvagekillcarrier>沈没船を引き上げる</missionname.salvagekillcarrier>
 <missiondescription.salvagekillcarrier>小さな貨物船が約2ヶ月前異種素材を[location1]から[location2]に輸送する時に行方不明になりました。船は、深海によって乗られると推定されたけれども、現在、その緊急指針は、[location2]の近くに作動したようです。船を見つけて、貨物を取り戻してください。</missiondescription.salvagekillcarrier>
 <missionsonarlabel.salvagekillcarrier>緊急信号</missionsonarlabel.salvagekillcarrier>
 <missionsuccess.salvagekillcarrier>[location2]の研究者は、遭遇のすべての詳細を知りたがっているけれども、船についてどのような質問にでも答えることを躊躇するようです。彼らは「あなたのトラブルのための返還」として1000のクレジットをあなたに提供します。</missionsuccess.salvagekillcarrier>
-<missionheader0.salvagekillcarrier>ターゲットは、破壊されました</missionheader0.salvagekillcarrier>
+<missionheader0.salvagekillcarrier>ターゲットが破壊されました</missionheader0.salvagekillcarrier>
 <missionmessage0.salvagekillcarrier>失踪船は、ある種の寄生的な発生物によって乗っ取られてしまい、あなたの潜水艦を攻撃しようとしました。それは、現在無能力化されたようです。あなたは[location2]にその出来事を報告すべきです。</missionmessage0.salvagekillcarrier>
 <missionname.cargocompoundn>爆発性貨物</missionname.cargocompoundn>
 <missiondescription.cargocompoundn>ローカルな兵器のディーラーは、高性能爆薬の2つのクレートを[location2]における顧客に提供することと交換に[reward]クレジットを提供しています。</missiondescription.cargocompoundn>
@@ -920,7 +928,7 @@
 <entityname.deconstructor>デコンストラクター</entityname.deconstructor>
 <entitydescription.deconstructor>再使用可能なコンポーネントと材料バーに分解し、アイテムを分類します。</entitydescription.deconstructor>
 <entityname.oxygenerator>酸素ジェネレーター</entityname.oxygenerator>
-<entitydescription.oxygenerator>酸素生成のための使用可能な機器--使用には換気口と接続する必要があります。。また、酸素タンクに再チャージします。</entitydescription.oxygenerator>
+<entitydescription.oxygenerator>酸素生成のための使用可能な機器--使用には換気口と接続する必要があります。また、酸素タンクに再チャージします。</entitydescription.oxygenerator>
 <entityname.shuttleoxygenerator>シャトル酸素ジェネレーター</entityname.shuttleoxygenerator>
 <entitydescription.shuttleoxygenerator>酸素生成のための使用可能な機器--使用には換気口と接続する必要があります。また、酸素タンクに再チャージします。</entitydescription.shuttleoxygenerator>
 <entityname.vent>通気口</entityname.vent>
@@ -982,7 +990,7 @@
 <entityname.assistantclothes>アシスタントの服</entityname.assistantclothes>
 <entitydescription.assistantclothes>アシスタントさえ衣類が必要です。</entitydescription.assistantclothes>
 <entityname.watchmanclothes>警備員衣服</entityname.watchmanclothes>
-<entitydescription.watchmanclothes>あなたを、あなたが今にもミッションを通行人に提供するかもしれないように見えさせます。</entitydescription.watchmanclothes>
+<entitydescription.watchmanclothes>あなたをいつでも通行人をチェックするように見えさせます。</entitydescription.watchmanclothes>
 <entityname.securityuniform>警備員のユニフォーム</entityname.securityuniform>
 <entitydescription.securityuniform>私の号令に従いなさい！</entitydescription.securityuniform>
 <entityname.bodyarmor>防護衣</entityname.bodyarmor>
@@ -1004,7 +1012,7 @@
 <entityname.antibleeding2>プラスチックシール</entityname.antibleeding2>
 <entitydescription.antibleeding2>すぐにほとんど傷をシールすることができ、止血特性を有する合成皮膚。</entitydescription.antibleeding2>
 <entityname.antibleeding3>抗生物質の接着剤</entityname.antibleeding3>
-<entitydescription.antibleeding3>止血特性を持つ抗生物質の接着剤。シールは、ほとんどすぐに傷を出血し、非常に効果的に火傷を処置します。それは血流中に流動性血栓を引き起こす可能性があるのでそれに注意して使用してください。</entitydescription.antibleeding3>
+<entitydescription.antibleeding3>止血特性を持つ抗生物質の接着剤。すぐに止血し、非常に効果的に火傷を治療できます。血流中に流動性血栓を引き起こす可能性があるので注意して使用してください。</entitydescription.antibleeding3>
 <entityname.weldingtool>溶接工具</entityname.weldingtool>
 <entitydescription.weldingtool>潜水艦上の最も重要なツールの1つ。また、水中で働きます。</entitydescription.weldingtool>
 <entityname.plasmacutter>プラズマカッター</entityname.plasmacutter>
@@ -1042,7 +1050,7 @@
 <entityname.ic4block>IC-4ブロック</entityname.ic4block>
 <entitydescription.ic4block>C-4とインセンディウムからなる化合物。</entitydescription.ic4block>
 <entityname.detonator>雷管</entityname.detonator>
-<entitydescription.detonator>信号を受信した場合、任意の爆発装置が爆発します。</entitydescription.detonator>
+<entitydescription.detonator>信号を受信したらすぐに爆薬を爆発させる起爆装置です。</entitydescription.detonator>
 <entityname.spear>銛</entityname.spear>
 <entitydescription.spear>捕鯨砲のための銛。</entitydescription.spear>
 <entityname.alienspear>物理真皮銛</entityname.alienspear>
@@ -1095,29 +1103,29 @@
 <entitydescription.chargingdock>ドックをチャージしている壁取付けバッテリーセル。</entitydescription.chargingdock>
 <entityname.fpgacircuit>FPGA回路</entityname.fpgacircuit>
 <entitydescription.fpgacircuit>フィールドがプログラム化可能なゲートアレイ--多種多様な電気機器の中の使用のために再設定されることができる多目的の回路。</entitydescription.fpgacircuit>
-<entityname.andcomponent>そして、コンポーネント</entityname.andcomponent>
-<entitydescription.andcomponent>両方の入力が互いの設定期間内に信号を受け取る時に、信号を送ります。</entitydescription.andcomponent>
+<entityname.andcomponent>ANDゲートコンポーネント</entityname.andcomponent>
+<entitydescription.andcomponent>両方の入力が互いの設定期間内に信号を受け取る時に、信号を出力します。</entitydescription.andcomponent>
 <entityname.addercomponent>加算器コンポーネント</entityname.addercomponent>
 <entitydescription.addercomponent>受け取られた信号の合計を出力します。</entitydescription.addercomponent>
-<entityname.orcomponent>またはコンポーネント</entityname.orcomponent>
-<entitydescription.orcomponent>インプットのどちらかが信号を受け取るならば、信号を送ります。</entitydescription.orcomponent>
-<entityname.notcomponent>コンポーネントでない</entityname.notcomponent>
-<entitydescription.notcomponent>インプットが信号を受け取っていない時に、信号を送ります。</entitydescription.notcomponent>
+<entityname.orcomponent>ORゲートコンポーネント</entityname.orcomponent>
+<entitydescription.orcomponent>インプットのどちらかが信号を受け取るならば、信号を出力します。</entitydescription.orcomponent>
+<entityname.notcomponent>NOTゲートコンポーネント</entityname.notcomponent>
+<entitydescription.notcomponent>インプットが信号を受け取っていない時に、信号を出力します。</entitydescription.notcomponent>
 <entityname.relaycomponent>リレーコンポーネント</entityname.relaycomponent>
 <entitydescription.relaycomponent>オン場合、転送はすべて出力に入力接続からの信号を受信しました。</entitydescription.relaycomponent>
 <entityname.delaycomponent>遅延コンポーネント</entityname.delaycomponent>
-<entitydescription.delaycomponent>遅延はすべて規定の時間の間信号を受け取りました。</entitydescription.delaycomponent>
+<entitydescription.delaycomponent>すべて受け取った信号を一定時間に遅延します。</entitydescription.delaycomponent>
 <entityname.oxygendetector>酸素検出器</entityname.oxygendetector>
-<entitydescription.oxygendetector>周囲の空気の質に応じて、0~100の間の値を送出します。</entitydescription.oxygendetector>
+<entitydescription.oxygendetector>周囲の空気の質に応じて、0~100の間の値を出力します。</entitydescription.oxygendetector>
 <entityname.waterdetector>水の検出器</entityname.waterdetector>
 <entitydescription.waterdetector>検出器が水没された信号を送出します。</entitydescription.waterdetector>
 <entityname.smokedetector>煙探知器</entityname.smokedetector>
-<entitydescription.smokedetector>それは煙を感知し信号を送出します。</entitydescription.smokedetector>
+<entitydescription.smokedetector>煙を感知し信号を送出します。</entitydescription.smokedetector>
 <entityname.motiondetector>動作検出器</entityname.motiondetector>
-<entitydescription.motiondetector>それが動きを検出する時に、信号を発します。</entitydescription.motiondetector>
+<entitydescription.motiondetector>移動を検出する時に、信号を出力します。</entitydescription.motiondetector>
 <entityname.signalcheckcomponent>信号チェックコンポーネント</entityname.signalcheckcomponent>
-<entitydescription.signalcheckcomponent>具体的な価値とマッチしている信号が受け取られる時に、信号を送ります。</entitydescription.signalcheckcomponent>
-<entityname.regexcomponent>コンポーネントを検索する正規表現</entityname.regexcomponent>
+<entitydescription.signalcheckcomponent>特定の信号が受け取った時に、信号を送ります。</entitydescription.signalcheckcomponent>
+<entityname.regexcomponent>正規表現検索コンポーネント</entityname.regexcomponent>
 <entitydescription.regexcomponent>受信信号は、特定の正規表現パターンと一致した場合に信号を送信します。</entitydescription.regexcomponent>
 <entityname.oscillator>発振器</entityname.oscillator>
 <entitydescription.oscillator>周期的で、発振する電波を発します。</entitydescription.oscillator>
@@ -1133,20 +1141,20 @@
 <entitydescription.lamp>壁取付け照明。</entitydescription.lamp>
 <entityname.emergencylight>非常灯</entityname.emergencylight>
 <entitydescription.emergencylight>壁取付け照明。電気入力は一切不要です。</entitydescription.emergencylight>
-<entityname.wire>通信</entityname.wire>
-<entitydescription.wire>1つの機器から別の機器のインプットに出力を接続します。</entitydescription.wire>
-<entityname.redwire>赤い通信</entityname.redwire>
-<entitydescription.redwire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.redwire>
-<entityname.bluewire>青色の通信</entityname.bluewire>
-<entitydescription.bluewire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.bluewire>
-<entityname.orangewire>オレンジ色の通信</entityname.orangewire>
-<entitydescription.orangewire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.orangewire>
-<entityname.greenwire>グリーン通信</entityname.greenwire>
-<entitydescription.greenwire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.greenwire>
-<entityname.blackwire>ブラック通信</entityname.blackwire>
-<entitydescription.blackwire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.blackwire>
-<entityname.brownwire>ブラウン通信</entityname.brownwire>
-<entitydescription.brownwire>1つの機器から別の機器の上のインプットに出力を接続します。</entitydescription.brownwire>
+<entityname.wire>電線</entityname.wire>
+<entitydescription.wire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.wire>
+<entityname.redwire>赤い電線</entityname.redwire>
+<entitydescription.redwire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.redwire>
+<entityname.bluewire>青い電線</entityname.bluewire>
+<entitydescription.bluewire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.bluewire>
+<entityname.orangewire>オレンジ色の電線</entityname.orangewire>
+<entitydescription.orangewire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.orangewire>
+<entityname.greenwire>緑色の電線</entityname.greenwire>
+<entitydescription.greenwire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.greenwire>
+<entityname.blackwire>黒い電線</entityname.blackwire>
+<entitydescription.blackwire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.blackwire>
+<entityname.brownwire>茶色の電線</entityname.brownwire>
+<entitydescription.brownwire>1つの機器から別の機器への信号の入力と出力が可能にします。</entitydescription.brownwire>
 <entityname.lightcomponent>光コンポーネント</entityname.lightcomponent>
 <entitydescription.lightcomponent>汎用照明。電気入力は一切不要です。</entitydescription.lightcomponent>
 <entityname.emergencysiren>緊急サイレン</entityname.emergencysiren>
@@ -1300,53 +1308,53 @@
 <entityname.nitroglycerin>ニトログリセリン</entityname.nitroglycerin>
 <entitydescription.nitroglycerin>熱や物理的な衝撃を受けたときに爆発する恐れがあり、非常に不安定な液体。</entitydescription.nitroglycerin>
 <entityname.calcium>熱や物理的な衝撃を受けたときに爆発する恐れがあり、非常に不安定な液体。</entityname.calcium>
-<entitydescription.calcium>造船のために有用な元素。</entitydescription.calcium>
+<entitydescription.calcium>制作の為に使う元素です。</entitydescription.calcium>
 <entityname.aluminium>アルミニウム</entityname.aluminium>
-<entitydescription.aluminium>造船のために有用な元素。</entitydescription.aluminium>
+<entitydescription.aluminium>制作の為に使う元素です。</entitydescription.aluminium>
 <entityname.titanium>チタン</entityname.titanium>
-<entitydescription.titanium>造船のために有用な元素。</entitydescription.titanium>
+<entitydescription.titanium>制作の為に使う元素です。</entitydescription.titanium>
 <entityname.thorium>トリウム</entityname.thorium>
-<entitydescription.thorium>造船のために有用な元素。</entitydescription.thorium>
+<entitydescription.thorium>制作の為に使う元素です。</entitydescription.thorium>
 <entityname.steel>スチール棒</entityname.steel>
-<entitydescription.steel>造船に便利です。</entitydescription.steel>
+<entitydescription.steel>制作の為に使う素材です。</entitydescription.steel>
 <entityname.titaniumaluminiumalloy>チタンアルミ合金</entityname.titaniumaluminiumalloy>
-<entitydescription.titaniumaluminiumalloy>造船に便利です。</entitydescription.titaniumaluminiumalloy>
+<entitydescription.titaniumaluminiumalloy>制作の為に使う素材です。</entitydescription.titaniumaluminiumalloy>
 <entityname.plastic>プラスチック</entityname.plastic>
-<entitydescription.plastic>造船に便利です。</entitydescription.plastic>
+<entitydescription.plastic>制作の為に使う素材です。</entitydescription.plastic>
 <entityname.ballisticfiber>弾道ファイバー</entityname.ballisticfiber>
-<entitydescription.ballisticfiber>造船に便利です。</entitydescription.ballisticfiber>
+<entitydescription.ballisticfiber>制作の為に使う素材です。</entitydescription.ballisticfiber>
 <entityname.organicfiber>有機繊維</entityname.organicfiber>
-<entitydescription.organicfiber>造船に便利です。</entitydescription.organicfiber>
+<entitydescription.organicfiber>制作の為に使う素材です。</entitydescription.organicfiber>
 <entityname.rubber>ゴム</entityname.rubber>
-<entitydescription.rubber>造船に便利です。</entitydescription.rubber>
+<entitydescription.rubber>制作の為に使う素材です。</entitydescription.rubber>
 <entityname.flashpowder>フラッシュパウダー</entityname.flashpowder>
-<entitydescription.flashpowder>造船に便利です。</entitydescription.flashpowder>
+<entitydescription.flashpowder>制作の為に使う素材です。</entitydescription.flashpowder>
 <entityname.incendium>インシジウムバー</entityname.incendium>
-<entitydescription.incendium>造船に便利です。</entitydescription.incendium>
+<entitydescription.incendium>制作の為に使う素材です。</entitydescription.incendium>
 <entityname.fulgurium>フルグリウムバー</entityname.fulgurium>
-<entitydescription.fulgurium>造船に便利です。</entitydescription.fulgurium>
+<entitydescription.fulgurium>制作の為に使う素材です。</entitydescription.fulgurium>
 <entityname.physicorium>物理真皮バー</entityname.physicorium>
-<entitydescription.physicorium>造船に便利です。</entitydescription.physicorium>
+<entitydescription.physicorium>制作の為に使う素材です。</entitydescription.physicorium>
 <entityname.dementonite>デメントナイトバ―</entityname.dementonite>
-<entitydescription.dementonite>造船に便利です。</entitydescription.dementonite>
+<entitydescription.dementonite>制作の為に使う素材です。</entitydescription.dementonite>
 <entityname.fiberplant>繊維植物</entityname.fiberplant>
-<entitydescription.fiberplant>この植物は、ココナッツの食感を有し、その繊維が気をくじくようにあなたの指の下に自分で移動します。造船に便利です。</entitydescription.fiberplant>
+<entitydescription.fiberplant>この植物は、ココナッツの食感を有し、その繊維が気をくじくようにあなたの指の下に自分で移動します。制作の為に使う素材です。</entitydescription.fiberplant>
 <entityname.elastinplant>エラスチンプラント</entityname.elastinplant>
-<entitydescription.elastinplant>この植物の葉は伸び、引き裂くことはできません。造船に便利です。</entitydescription.elastinplant>
+<entitydescription.elastinplant>この植物の葉は伸び、引き裂くことはできません。制作の為に使う素材です。</entitydescription.elastinplant>
 <entityname.aquaticpoppy>水生ポピー</entityname.aquaticpoppy>
-<entitydescription.aquaticpoppy>感触が暖かい。造船に便利です。</entitydescription.aquaticpoppy>
+<entitydescription.aquaticpoppy>感触が暖かい。制作の為に使う素材です。</entitydescription.aquaticpoppy>
 <entityname.yeastshroom>海の酵母マッシュルーム</entityname.yeastshroom>
-<entitydescription.yeastshroom>暑い日の肉の腐敗のような、信じられない臭いです。造船に便利です。</entitydescription.yeastshroom>
+<entitydescription.yeastshroom>暑い日の肉の腐敗のような、信じられない臭いです。制作の為に使う素材です。</entitydescription.yeastshroom>
 <entityname.elastin>エラスチン</entityname.elastin>
-<entitydescription.elastin>非常に伸縮自在で、天然に存在するタンパク質。造船に便利です。</entitydescription.elastin>
+<entitydescription.elastin>非常に伸縮自在で、天然に存在するタンパク質。制作の為に使う素材です。</entitydescription.elastin>
 <entityname.adrenaline>アドレナリン</entityname.adrenaline>
-<entitydescription.adrenaline>天然に存在するホルモン。造船に便利です。</entitydescription.adrenaline>
+<entitydescription.adrenaline>天然に存在するホルモン。制作の為に使う素材です。</entitydescription.adrenaline>
 
 <!-- Misc -->
 <entityname.swimbladder>鰾</entityname.swimbladder>
 <entitydescription.swimbladder>多くのEuropan生命体を容易に安定化剤および生理食塩水に加工することができる水泳膀胱含む組織液を有しています。</entitydescription.swimbladder>
 <entityname.adrenalinegland>アドレナリン腺</entityname.adrenalinegland>
-<entitydescription.adrenalinegland>大量のアドレナリンを含んでいます(それは、でコンストラクターを使って、抽出されることができます)。</entitydescription.adrenalinegland>
+<entitydescription.adrenalinegland>大量のアドレナリンを含んでいます、デコンストラクターを使って、抽出されることができます)。</entitydescription.adrenalinegland>
 <entityname.guitar>ギター</entityname.guitar>
 <entitydescription.guitar>古いアコースティック・ギター。</entitydescription.guitar>
 <entityname.harmonica>ハーモニカ</entityname.harmonica>
@@ -1552,12 +1560,12 @@
 <label.ventralcamera>腹側カメラビュー</label.ventralcamera>
 <label.dorsalcamera>背カメラビュー</label.dorsalcamera>
 <label.reactortemp>原子炉の温度。</label.reactortemp>
-<label.letwaterdrain>終了する前に、すべての水抜きをしてみましょう</label.letwaterdrain>
+<label.letwaterdrain>離れる前に、水抜きをする</label.letwaterdrain>
 <label.alphadeck>アルファデッキ</label.alphadeck>
 <label.gammadeck>ガンマデッキ</label.gammadeck>
 <label.deltadeck>デルタデッキ</label.deltadeck>
-<label.readytodock>ドッキングする準備ができました</label.readytodock>
-<label.docked>ドッキング</label.docked>
+<label.readytodock>停泊の準備をする</label.readytodock>
+<label.docked>停泊済み</label.docked>
 <label.emergencydooroverride>緊急時のドアのオーバーライド</label.emergencydooroverride>
 <label.emergencyhatchoverride>緊急ハッチオーバーライド</label.emergencyhatchoverride>
 <label.supplies>供給品</label.supplies>
@@ -1612,7 +1620,7 @@
 <submarine.description.berilia>質量と火力となるとべリリアはトップ商品です。その2つのエンジンと3つのバラストは、働く豊富な量のパワーを必要としていて、機械のメンテナンスができるのは比較的大人数のクルーの中でもほんの一握りです。</submarine.description.berilia>
 <!-- Waypoints -->
 <waypoint>中間点</waypoint>
-<linkwaypoint>別のウェイポイントにリンクするスペースを保持します</linkwaypoint>
+<linkwaypoint>スペースキーを押して別のウェイポイントにリンクする</linkwaypoint>
 <spawnpoint>生成ポイント</spawnpoint>
 <spawntype>生成タイプ</spawntype>
 <idcarddescription>IDカード説明</idcarddescription>
@@ -1636,14 +1644,14 @@
 <!-- Item HUDs -->
 <iteminuse>[character]で使用されています</iteminuse>
 <engineforce>推力</engineforce>
-<enginebackwards>後ろ</enginebackwards>
-<engineforwards>前</engineforwards>
-<enginepowered>動力を供給されます</enginepowered>
+<enginebackwards>後退</enginebackwards>
+<engineforwards>前進</engineforwards>
+<enginepowered>起動済み</enginepowered>
 <fabricatornopower>電力不足</fabricatornopower>
 <fabricatorrequireditems>必要なアイテム</fabricatorrequireditems>
 <fabricatorrequiredtime>必要な時間</fabricatorrequiredtime>
 <fabricatorrequiredcondition>条件</fabricatorrequiredcondition>
-<fabricatorrequiredskills>目盛り設定するために必要なスキル</fabricatorrequiredskills>
+<fabricatorrequiredskills>必要なスキル</fabricatorrequiredskills>
 <fabricatorcreate>作成</fabricatorcreate>
 <fabricatorcancel>キャンセル</fabricatorcancel>
 <uilabel.input>入力</uilabel.input>
@@ -1654,21 +1662,21 @@
 <lvl>レベル</lvl>
 <minimaphullbreach>船体破壊</minimaphullbreach>
 <minimapwaterlevel>水位</minimapwaterlevel>
-<minimapwaterlevelunavailable>入手可能でない水位データ</minimapwaterlevelunavailable>
+<minimapwaterlevelunavailable>水位データが利用不可能</minimapwaterlevelunavailable>
 <minimapairquality>大気の質</minimapairquality>
-<minimapairqualityunavailable>入手可能でない大気の質データ</minimapairqualityunavailable>
-<pumppowered>動力を供給されます</pumppowered>
-<pumpin>中</pumpin>
-<pumpout>外</pumpout>
-<pumpspeed>排気速度</pumpspeed>
+<minimapairqualityunavailable>エアマスデータが利用不可能</minimapairqualityunavailable>
+<pumppowered>起動済み</pumppowered>
+<pumpin>ポンプ送出</pumpin>
+<pumpout>ポンプ出力</pumpout>
+<pumpspeed>ポンプ出力速度</pumpspeed>
 <reactorautotemp>自動制御</reactorautotemp>
 <reactoroutput>出力: [kw] kW</reactoroutput>
-<reactorload>ロード: [kw] kW</reactorload>
+<reactorload>負荷: [kw] kW</reactorload>
 <reactorfissionrate>核分裂率</reactorfissionrate>
 <reactorturbineoutput>タービン出力</reactorturbineoutput>
-<reactorwarningcriticaltemp>重大な\n熱</reactorwarningcriticaltemp>
-<reactorwarningcriticallowtemp>批判的な、\n低温</reactorwarningcriticallowtemp>
-<reactorwarningcriticaloutput>重大な\nアウトプット</reactorwarningcriticaloutput>
+<reactorwarningcriticaltemp>熱量\n臨界値</reactorwarningcriticaltemp>
+<reactorwarningcriticallowtemp>低温\n臨界値</reactorwarningcriticallowtemp>
+<reactorwarningcriticaloutput>出力\n臨界値</reactorwarningcriticaloutput>
 <reactorwarninglowtemp>低温度</reactorwarninglowtemp>
 <reactorwarningoverheating>オーバーヒート</reactorwarningoverheating>
 <reactorwarninglowoutput>低出力</reactorwarninglowoutput>
@@ -1684,28 +1692,28 @@
 <reactortippower>どれくらいパワーが現在反応炉によって生成されていますか。</reactortippower>
 <reactortipautotemp>自動制御がオンのとき、反応器は、自動的に消費電力に応じて自身を調整します。しかし、システムは電力消費量の大きな変動に反応するのに十分な高速ではないので、手動での調整がまだ必要かもしれません。</reactortipautotemp>
 <uilabel.fuelrods>燃料棒</uilabel.fuelrods>
-<steeringmanual>マニュアルステアリング</steeringmanual>
-<steeringautopilot>オートパイロット</steeringautopilot>
+<steeringmanual>手動操縦</steeringmanual>
+<steeringautopilot>自動操縦</steeringautopilot>
 <steeringmaintainpos>ポジションを維持</steeringmaintainpos>
 <steeringvelocityx>速度: [kph] km/h</steeringvelocityx>
 <steeringvelocityy>下降速度: [kph] km/h</steeringvelocityy>
 <steeringdepth>深さ: [m] m</steeringdepth>
 <steeringdepthwarning>危険なプレッシャー</steeringdepthwarning>
 <steeringnopowertip>警告：電力不足</steeringnopowertip>
-<steeringautopilotmaintainpostip>自動操縦が有効になりました\ n現在の位置に維持中。クリックして、維持する必要がある位置を選択してください。</steeringautopilotmaintainpostip>
-<steeringautopilotlocationtip>自動操縦が有効になりました\ nオートパイロットは、[locationname]に移動するように設定されています。</steeringautopilotlocationtip>
+<steeringautopilotmaintainpostip>自動操縦が有効になりました\n現在の位置に維持中。クリックして、維持する必要がある位置を選択してください。</steeringautopilotmaintainpostip>
+<steeringautopilotlocationtip>自動操縦が有効になりました\nオートパイロットは、[locationname]に移動するように設定されています。</steeringautopilotlocationtip>
 <sonaractive>アクティブ・ソナー</sonaractive>
 <sonarpassive>パッシブ・ソナー</sonarpassive>
 <sonarzoom>ズーム</sonarzoom>
 <sonardirectionalping>指向性のソナー音</sonardirectionalping>
 <sonarsignalweak>弱い信号</sonarsignalweak>
-<sonarnosignal>信号がありません</sonarnosignal>
+<sonarnosignal>信号なし</sonarnosignal>
 <sonartipactive>アクティブ・ソナーがオンである時に、トランスポンダは、近くの障害から反射するソナー音を送ります。ソナー音はまた敵対的な生き物または敵潜水艦によって聞かれるかもしれません。</sonartipactive>
 <sonartippassive>パッシブモードでは、ソナーは積極的にソナー音を送出することなく、近くの障害物からの反射音と音の発生源を拾います。</sonartippassive>
 <powercontainercharge>チャージ：[charge] KWM（[percentage]％）</powercontainercharge>
 <powercontainerrechargerate>充電率[rate]％</powercontainerrechargerate>
 <uilabel.chargingdock>充電ドック</uilabel.chargingdock>
-<powertransferpowered>パワード</powertransferpowered>
+<powertransferpowered>起動済み</powertransferpowered>
 <powertransferhighvoltage>過電圧</powertransferhighvoltage>
 <powertransferlowvoltage>低電圧</powertransferlowvoltage>
 <powertransferpowerlabel>電力</powertransferpowerlabel>
@@ -1719,10 +1727,10 @@
 <connectionlocked>(ロックされます)</connectionlocked>
 <requiredrepairskills>必要なスキル：</requiredrepairskills>
 <repairbutton>修理</repairbutton>
-<repairing>修理します</repairing>
+<repairing>修理中</repairing>
 
 <!-- Health interface -->
-<vitality>活力</vitality>
+<vitality>状態</vitality>
 <suitabletreatments>適切な治療法：</suitabletreatments>
 <healthitemusetip>選択した手足にそれらを使用するためにここにアイテムをドロップします。また、在庫のホットキーまたはダブルクリックしてアイテムを使用することができます。</healthitemusetip>
 <afflictionstrengthlow>軽い</afflictionstrengthlow>
@@ -1741,10 +1749,10 @@
 <fixbutton>修正</fixbutton>
 <repair>修理</repair>
 <repairallwalls>すべての壁を修復</repairallwalls>
-<repairallitems>すべての項目を修復</repairallitems>
+<repairallitems>すべてのアイテムを修復</repairallitems>
 
 <!-- Traitors -->
-<newtraitor>新しい裏切り者</newtraitor>
+<newtraitor>駆け出しの裏切り者</newtraitor>
 <traitorstartmessage>あなたは裏切り者です！あなたの秘密の仕事は、[targetname]を暗殺することです！裁量は最大の関心事です。潜水艦を沈めて、、クルー全員を殺すことは群団で疑惑を引き起こすでしょう。可能ならば、死を事故のように見えかけてください。</traitorstartmessage>
 <traitormoreagentsmessage>他のエージェントがこの潜水艦に乗っている可能性があります。あなたはそれらの名前を知らないけれども、あなたは通信の方法を持っています。合言葉でエージェントを見つけ、応答合言葉で確認してください。クルーが、感付かないように、日常会話で合言葉を挟んでください。\n\n：合言葉：[codewords].\n応答合言葉：[coderesponse]。</traitormoreagentsmessage>
 <traitorstartmessageserver>[traitorname]はその反逆者であり、ターゲットは[targetname]です。</traitorstartmessageserver>
@@ -1764,17 +1772,17 @@
 <causeofdeath.drowning>溺死</causeofdeath.drowning>
 <causeofdeath.suffocation>窒息</causeofdeath.suffocation>
 <causeofdeath.pressure>圧力</causeofdeath.pressure>
-<causeofdeath.burn>燃やす</causeofdeath.burn>
-<causeofdeath.husk>殻感染</causeofdeath.husk>
+<causeofdeath.burn>火傷</causeofdeath.burn>
+<causeofdeath.husk>寄生虫感染</causeofdeath.husk>
 <causeofdeath.disconnected>脳死</causeofdeath.disconnected>
-<causeofdeathdescription.damage>それらの怪我に屈した</causeofdeathdescription.damage>
+<causeofdeathdescription.damage>怪我によって死亡</causeofdeathdescription.damage>
 <causeofdeathdescription.bloodloss>失血死</causeofdeathdescription.bloodloss>
 <causeofdeathdescription.drowning>溺死</causeofdeathdescription.drowning>
 <causeofdeathdescription.suffocation>窒息死</causeofdeathdescription.suffocation>
-<causeofdeathdescription.pressure>水圧によって押しつぶされます</causeofdeathdescription.pressure>
+<causeofdeathdescription.pressure>水圧によって押しつぶされました</causeofdeathdescription.pressure>
 <causeofdeathdescription.burn>焼死</causeofdeathdescription.burn>
-<causeofdeathdescription.husk>寄生虫の乗っ取り</causeofdeathdescription.husk>
-<causeofdeathdescription.disconnected>切断</causeofdeathdescription.disconnected>
+<causeofdeathdescription.husk>寄生虫に乗っ取り</causeofdeathdescription.husk>
+<causeofdeathdescription.disconnected>接続が切断されました</causeofdeathdescription.disconnected>
 <causeofdeathdescription.unknown>未知の</causeofdeathdescription.unknown>
 <self_causeofdeathdescription.damage>あなたは怪我に負けました。</self_causeofdeathdescription.damage>
 <self_causeofdeathdescription.bloodloss>あなたは失血死しました。</self_causeofdeathdescription.bloodloss>
@@ -1801,8 +1809,8 @@
 <dialogcannotreach>ターゲットに届きません。</dialogcannotreach>
 <dialogreactorfuel>反応炉により多くの燃料をロードします！</dialogreactorfuel>
 <dialogreactortaken>ねえ、私は反応炉を操作しています！</dialogreactortaken>
-<dialogreactortaken>武器を手放してください！これは私の物だ！</dialogreactortaken>
-<dialogreactortaken>ねえ、私達は反応炉で2人の人々が必要でありません！</dialogreactortaken>
+<dialogreactortaken>手放してください！これは私の物だ！</dialogreactortaken>
+<dialogreactortaken>ねえ、この反応炉を操作するには2人が要りません！</dialogreactortaken>
 <dialogcantfindcontroller>私は、[item]を操作する方法を見つけることができません！</dialogcantfindcontroller>
 <dialogcantfindcontroller>私はどのように[item]をコントロールするかを知りません！</dialogcantfindcontroller>
 <dialogloadturret>[itemname]へのロード弾薬！</dialogloadturret>
@@ -1810,11 +1818,11 @@
 <dialogfireturret>爆弾を投下しました！</dialogfireturret>
 <dialogturrettargetdead>敵ダウン！</dialogturrettargetdead>
 <dialogturrettargetdead>ターゲットダウン！</dialogturrettargetdead>
-<dialogturrettargetdead>わかりました！</dialogturrettargetdead>
-<dialogturrettargetdead>そして死にました！</dialogturrettargetdead>
+<dialogturrettargetdead>命中しました！</dialogturrettargetdead>
+<dialogturrettargetdead>ターゲットが死にました！</dialogturrettargetdead>
 <dialogchargebatteries>[itemname]へのチャージは[rate]%です！</dialogchargebatteries>
 <dialogchargebatteries>[itemname]へのチャージは現在[rate]%です！</dialogchargebatteries>
-<dialognobatteries>どんなバッテリー？</dialognobatteries>
+<dialognobatteries>バッテリーはどこ？</dialognobatteries>
 <dialognobatteries>このボートの上にバッテリーがありません！</dialognobatteries>
 <dialognobatteries>バッテリーが全く見つかりません！</dialognobatteries>
 <stopchargingbatteries>[itemname]へのチャージが中止されました！</stopchargingbatteries>
@@ -1826,14 +1834,14 @@
 <dialogitemrepaired>[itemname]は準備が整えた！</dialogitemrepaired>
 <dialogitemrepaired>[itemname]は修正されました！</dialogitemrepaired>
 <dialoggetdivinggear>ダイビングスーツを見つける必要があります！</dialoggetdivinggear>
-<dialoggetdivinggear>私は潜水服が必要です！</dialoggetdivinggear>
+<dialoggetdivinggear>私は潜水装備が必要です！</dialoggetdivinggear>
 <dialoggetoxygentank>酸素タンクを見つける必要があります！</dialoggetoxygentank>
 <dialoggetoxygentank>私は、酸素タンクを必要とします！</dialoggetoxygentank>
 <dialoggetoxygentank>酸素タンクはどこにありますか？</dialoggetoxygentank>
 <dialoggetoxygentank>私は、酸素を必要とします！</dialoggetoxygentank>
 <dialoglowoxygen>死にそうです！</dialoglowoxygen>
 <dialoglowoxygen>息ができません！</dialoglowoxygen>
-<dialoglowoxygen>あえぎます</dialoglowoxygen>
+<dialoglowoxygen>はあ、はあ</dialoglowoxygen>
 <dialogbleeding>助けて、私は出血しています！</dialogbleeding>
 <dialogbleeding>私は失血しています！</dialogbleeding>
 <dialogbleeding>私は失血しています！</dialogbleeding>
@@ -1850,7 +1858,7 @@
 <dialognofire>火種は一切ないと思います！</dialognofire>
 <dialogsteeringtaken>ねえ、私は現在舵取りにいます！</dialogsteeringtaken>
 <dialogsteeringtaken>離して！今は私が操縦しています！</dialogsteeringtaken>
-<dialogsteeringtaken>ねえ、私達は、操縦するために2人の人々が必要でありません！</dialogsteeringtaken>
+<dialogsteeringtaken>ねえ、私達は、操縦するために2人が要りません！</dialogsteeringtaken>
 <dialogsonartarget>ソナーの表示画面の[direction]にターゲットが出現しました！</dialogsonartarget>
 <dialogsonartarget>ソナーの表示画面の[direction]に一つの光点が出現しました！</dialogsonartarget>
 <dialogsonartarget>ソナーの表示画面の[direction]に何かあります！</dialogsonartarget>
@@ -1859,7 +1867,7 @@
 <dialogsonartargetlarge>[direction]がただいま大きな音があります！</dialogsonartargetlarge>
 <dialogsonartargetlarge>ソナーの表示画面の[direction]に大きいな物がいます！</dialogsonartargetlarge>
 <dialogsonartargetmultiple>ソナーの表示画面の[direction]に[count]個のターゲットが出現しました！</dialogsonartargetmultiple>
-<dialogsonartargetmultiple>私達は[direction]で[count]個のターゲットが現れたことに気付きました！</dialogsonartargetmultiple>
+<dialogsonartargetmultiple>私達は[direction]で [count] 個のターゲットが現れたことに気付きました！</dialogsonartargetmultiple>
 <dialogfoundunconscioustarget>[roomname]において無意識の[targetname]を発見しました！</dialogfoundunconscioustarget>
 <dialogfoundunconscioustarget>[roomname]における[targetname]を応急手当をします！</dialogfoundunconscioustarget>
 <dialoglistrequiredtreatments>私は、[treatmentlist]を見つける必要があります！</dialoglistrequiredtreatments>
@@ -1872,14 +1880,14 @@
 <orderdialog.wait>[name]、そこに待機！</orderdialog.wait>
 <orderdialog.wait>[name]、そこに待機しなさい！</orderdialog.wait>
 <orderdialogself.wait>私はここで待ちます！</orderdialogself.wait>
-<orderdialog.dismissed>[name]、解雇！</orderdialog.dismissed>
+<orderdialog.dismissed>[name]、解散！</orderdialog.dismissed>
 <orderdialogself.dismissed><!-- No data --></orderdialogself.dismissed>
 <orderdialog.operatereactor>[name] 、反応炉を操作せよ！</orderdialog.operatereactor>
 <orderdialog.operatereactor>[name] 、反応炉を操作せよ！</orderdialog.operatereactor>
 <orderdialogself.operatereactor>私は反応炉を操作します！</orderdialogself.operatereactor>
 <orderdialogself.operatereactor>私は反応炉を操作します！</orderdialogself.operatereactor>
 <orderdialog.operatereactor.powerup>[name]、反応炉を起動せよ！</orderdialog.operatereactor.powerup>
-<orderdialogself.operatereactor.powerup>私は反応炉をパワーアップします！</orderdialogself.operatereactor.powerup>
+<orderdialogself.operatereactor.powerup>私は反応炉を起動します！</orderdialogself.operatereactor.powerup>
 <orderdialog.operatereactor.shutdown>[name]、反応炉をシャットダウン！</orderdialog.operatereactor.shutdown>
 <orderdialogself.operatereactor.shutdown>私は、原子炉を停止します！</orderdialogself.operatereactor.shutdown>
 <orderdialog.operateweapons>[name]、武装して待機！</orderdialog.operateweapons>
@@ -1889,7 +1897,7 @@
 <orderdialog.operateweapons.fireatwill>[name]、任意射撃！</orderdialog.operateweapons.fireatwill>
 <orderdialogself.operateweapons.fireatwill>私は発射する準備ができています！</orderdialogself.operateweapons.fireatwill>
 <orderdialog.operateweapons.holdfire>[name]、射撃中止！</orderdialog.operateweapons.holdfire>
-<orderdialogself.operateweapons.holdfire>射撃続行！</orderdialogself.operateweapons.holdfire>
+<orderdialogself.operateweapons.holdfire>射撃停止！</orderdialogself.operateweapons.holdfire>
 <orderdialog.steer>[name]、舵輪に配置せよ！</orderdialog.steer>
 <orderdialog.steer>[name]、潜水艦の舵輪を操作せよ！</orderdialog.steer>
 <orderdialogself.steer>私は潜水艦を操縦します！</orderdialogself.steer>
@@ -1902,12 +1910,12 @@
 <orderdialog.steer.navigatetodestination>[name]、続けて進め！</orderdialog.steer.navigatetodestination>
 <orderdialog.steer.navigatetodestination>[name]、進め！</orderdialog.steer.navigatetodestination>
 <orderdialog.steer.navigatetodestination>[name]、私たちの目的地までのコースを設定せよ！</orderdialog.steer.navigatetodestination>
-<orderdialogself.steer.navigatetodestination>私は、以降のコースを設定します！</orderdialogself.steer.navigatetodestination>
+<orderdialogself.steer.navigatetodestination>私は、前方に向かって前進するのを設定します！</orderdialogself.steer.navigatetodestination>
 <orderdialog.fixleaks>[name]、漏れる所を修理して！</orderdialog.fixleaks>
 <orderdialog.fixleaks>[name]、漏れる所の修理に向かいなさい！</orderdialog.fixleaks>
-<orderdialogself.fixleaks>私はリークを修理します！</orderdialogself.fixleaks>
+<orderdialogself.fixleaks>私は漏れる所を修理します！</orderdialogself.fixleaks>
 <orderdialog.extinguishfires>[name]、消火せよ！</orderdialog.extinguishfires>
-<orderdialogself.extinguishfires>私は消化します！</orderdialogself.extinguishfires>
+<orderdialogself.extinguishfires>私は消火します！</orderdialogself.extinguishfires>
 <orderdialog.chargebatteries>[name]、バッテリーを処理せよ！</orderdialog.chargebatteries>
 <orderdialogself.chargebatteries>私はバッテリーを操作します！</orderdialogself.chargebatteries>
 <orderdialog.chargebatteries.charge>[name]、バッテリーを充電！</orderdialog.chargebatteries.charge>
@@ -1947,8 +1955,8 @@
 <orderdialog.requestfirstaid>[roomname]で医療援助を必要とします！</orderdialog.requestfirstaid>
 
 <!-- Status -->
-<deceased>故人</deceased>
-<unconscious>無意識</unconscious>
+<deceased>死亡した</deceased>
+<unconscious>意識を失った</unconscious>
 <stunned>気絶</stunned>
 <huskinfectiontransition>ベロナセプスの萼感染</huskinfectiontransition>
 <huskinfectionactive>進行したベロナセプスの萼感染症</huskinfectionactive>
@@ -1959,19 +1967,19 @@
 <catastrophicbleeding>致命的な出血</catastrophicbleeding>
 <noinjuries>目に見える怪我ありません</noinjuries>
 <minorinjuries>軽いけが</minorinjuries>
-<injuries>負傷者</injuries>
-<injured>負傷者</injured>
-<majorinjuries>主な負傷</majorinjuries>
-<criticalinjuries>重傷です</criticalinjuries>
+<injuries>負傷</injuries>
+<injured>負傷</injured>
+<majorinjuries>重傷</majorinjuries>
+<criticalinjuries>致命傷</criticalinjuries>
 <oxygennormal>酸素レベル正常</oxygennormal>
 <oxygenreduced>空気を求めてあえぎます</oxygenreduced>
-<oxygenlow>酸素欠乏の合図</oxygenlow>
+<oxygenlow>酸素欠乏</oxygenlow>
 <notbreathing>呼吸していません</notbreathing>
 <noavailablemedicalitems>利用可能な医療アイテムはありません</noavailablemedicalitems>
 
 <!-- Huskification -->
 <huskdormant>あなたの喉が痛いと感じます</huskdormant>
-<huskdormant>あなたは熱っぽい感じ</huskdormant>
+<huskdormant>あなたは熱を出した感じがする</huskdormant>
 <huskdormant>何かがあなたの喉で詰まっているかのように感じています</huskdormant>
 <huskdormant>あなたの筋肉が痛んでいます</huskdormant>
 <huskcantspeak>あなたの喉につっかえる何かを感じます。あなたは叫ぼうとしても、音が出ません。</huskcantspeak>
@@ -1982,7 +1990,7 @@
 <skillname.weapons>兵器</skillname.weapons>
 <skillname.mechanical>機械工学</skillname.mechanical>
 <skillname.electrical>電気工学</skillname.electrical>
-<skillname.medical>医療の</skillname.medical>
+<skillname.medical>医療</skillname.medical>
 
 <!-- Item messages -->
 <itemmsginteractselect>[[select]]操作</itemmsginteractselect>
@@ -2014,14 +2022,14 @@
 
 <!-- Afflictions -->
 <afflictionname.internaldamage>内部の損害</afflictionname.internaldamage>
-<afflictiondescription.internaldamage>そのエリアは紫に変色して、見たところ、触れるのが非常につらい。あなたは、骨が折れているかもしれないと疑っています。</afflictiondescription.internaldamage>
+<afflictiondescription.internaldamage>そのアザは触れるのが非常に痛いです。骨が折れているかもしれない。</afflictiondescription.internaldamage>
 <afflictioncauseofdeath.internaldamage>内臓の損傷で死にました。</afflictioncauseofdeath.internaldamage>
-<afflictioncauseofdeathself.internaldamage>あなたはあなたの内臓の損傷に負けました。</afflictioncauseofdeathself.internaldamage>
-<afflictionname.bleeding>出血中</afflictionname.bleeding>
-<afflictiondescription.bleeding>血液は、このぼろぼろと特に厄介開いた傷口から制限なく流血します。</afflictiondescription.bleeding>
+<afflictioncauseofdeathself.internaldamage>あなたは内臓の損傷によって死にました。</afflictioncauseofdeathself.internaldamage>
+<afflictionname.bleeding>出血</afflictionname.bleeding>
+<afflictiondescription.bleeding>血液は、この開放性損傷から噴き出しています。</afflictiondescription.bleeding>
 <afflictioncauseofdeath.bleeding>出血多量で死にました。</afflictioncauseofdeath.bleeding>
 <afflictioncauseofdeathself.bleeding>あなたは出血多量で死にました。</afflictioncauseofdeathself.bleeding>
-<afflictionname.burn>焼け焦げ</afflictionname.burn>
+<afflictionname.burn>火傷</afflictionname.burn>
 <afflictiondescription.burn>そのエリアは水ぶくれし、赤く、皮は、すでにはぎ取られはじめています。患者は多大な苦しみの中にいます。</afflictiondescription.burn>
 <afflictioncauseofdeath.burn>焼死しました。</afflictioncauseofdeath.burn>
 <afflictioncauseofdeathself.burn>あなたは焼死しました。</afflictioncauseofdeathself.burn>
@@ -2104,10 +2112,10 @@
 <jobname.assistant>アシスタント</jobname.assistant>
 <jobdescription.assistant>アシスタントは、特定の責任や専門分野を持っていません。このジョブは、彼らがために修飾されていないタスクを占有せずに潜水艦上の作業のこつを取得したいの新入りのための良い選択です。</jobdescription.assistant>
 <jobname.watchman>警備員</jobname.watchman>
-<jobdescription.watchman></jobdescription.watchman>
+<jobdescription.watchman><!-- No data --></jobdescription.watchman>
 
 <!-- Locations -->
-<locationname.none>自然な形成</locationname.none>
+<locationname.none>自然な集落</locationname.none>
 <locationnameformat.none>[name]</locationnameformat.none>
 <locationchange.none.changeto.outpost>[previousname]で設立された新しい前哨基地です。</locationchange.none.changeto.outpost>
 <locationchange.none.changeto.military>[previousname]で設立された新しい軍隊の前哨基地です。</locationchange.none.changeto.military>
@@ -2154,7 +2162,7 @@
 <tutorial.radio.speaker>キャプテン　ハスキンソン</tutorial.radio.speaker>
 <tutorial.radio.watchman>警備員</tutorial.radio.watchman>
 <tutorial.course>トレーニングコース</tutorial.course>
-<tutorial.coursecomplete>完全なトレーニング コース！</tutorial.coursecomplete>
+<tutorial.coursecomplete>トレーニング コースを全部クリアしました！</tutorial.coursecomplete>
 <tutorial.startbutton>行きましょう！</tutorial.startbutton>
 <tutorial.mechanictraining>機械工トレーニング</tutorial.mechanictraining>
 <tutorial.engineertraining>エンジニアトレーニング</tutorial.engineertraining>
@@ -2162,40 +2170,40 @@
 <tutorial.medicaldoctortraining>医者トレーニング</tutorial.medicaldoctortraining>
 <tutorial.captaintraining>キャプテントレーニング</tutorial.captaintraining>
 <tutorial.newobjective>新しい目的</tutorial.newobjective>
-<tutorial.objective>目的(レビューするをクリック)</tutorial.objective>
+<tutorial.objective>目的(クリックして閲覧する)</tutorial.objective>
 
 <!-- Job descriptions -->
-<tutorial.mechanictitle>メカニック - 接着剤、ダクトテープ、およびあなたの神経はクルーを生かしておいている唯一の物です。</tutorial.mechanictitle>
+<tutorial.mechanictitle>機械工- 接着剤、ダクトテープ、およびあなたの神経はクルーを生かしておいている唯一の物です。</tutorial.mechanictitle>
 <tutorial.mechanicdescription>計画通りに進み、ギアがこのシットホールを残す人類と同じくらい起こり得る時。全ては故障しえるし、将来故障しかねないので、球速は全くありません。そして、何も壊れていないならば、それはメンテナンス、メンテナンス、メンテナンスです。次の目的地に到着することが本当に重要で、あなたはそこへ届ける人です。あなたの「仲間のクルーメンバー」から感謝または敬意の、が全然なく、クスクス笑いと軽蔑があるだけです-けれども、それでOKです。これはあなたの生き残り船であり、彼らの誰かがそれをやってのけたなら…困ったなあと叫びなさい。</tutorial.mechanicdescription>
-<tutorial.mechanicresponsibilities>機械\n修理リークの責任\nメンテナンス</tutorial.mechanicresponsibilities>
+<tutorial.mechanicresponsibilities>役割\n-機械の修理\n-リークの修復</tutorial.mechanicresponsibilities>
 <tutorial.engineertitle>エンジニア - 自然の力を利用する人。</tutorial.engineertitle>
 <tutorial.engineerdescription>電力と酸素、どれもかけがえのないものだ。それなしに、船は動かず、肺は呼吸しないでしょう。空想話とわざとらしいことを捨てて、貴方は船を操縦する人なんですよ？物理学の法則を信用し、理性的に考えてください。また、そのおもちゃ修繕熱狂的ファンエンジニアと機械工を無視し、たとえ、あなたが何をしても、医者のたわごとに噛みつかないでください。彼は内面的に奥深いので、実質上女々しい男なのです。キャプテンとセキュリティは明らかにあなたより知能が劣っているので、無害です。</tutorial.engineerdescription>
-<tutorial.engineerresponsibilities>責任\n電気アイテムメンテナンス\n操作、反応炉</tutorial.engineerresponsibilities>
+<tutorial.engineerresponsibilities>役割\n-電気アイテムの修理\n-反応炉が無事に作動て切るように保証する</tutorial.engineerresponsibilities>
 <tutorial.securityofficertitle>警備員 - 暴力のバックボーン。</tutorial.securityofficertitle>
-<tutorial.securityofficerdescription>プレッシャーは人々の最悪の部分を引き出すと言われています。誰もがあなたの道徳的な力を持っているわけではありません--ほとんどの者は歪曲しているので、生きるべきかも疑問なのです。クルーの怒りを外のバケモノに向けてください。けれども、決して、自分自身を欺かないでくださいて彼らの信頼します。核兵器を用意できているようにしておき、手錠を入手可能にしておいてください。そうすれば、時々、誰かを営倉に入れた際には、誰が担当しているかを知っています！</tutorial.securityofficerdescription>
-<tutorial.securityofficerresponsibilities>責任\n命令保持(注文\n不快に侵入者)</tutorial.securityofficerresponsibilities>
-<tutorial.medicaldoctortitle>医者 - 重要な資源を維持します:人々</tutorial.medicaldoctortitle>
+<tutorial.securityofficerdescription>プレッシャーは人々の最悪の部分を引き出すと言われています。誰もがあなたの道徳的な力を持っているわけではありません--ほとんどの者は歪曲しているので、生きるべきかも疑問なのです。クルーの怒りを外のバケモノに向けてください。けれども、決して彼らの本性を信頼しないでください。いつでも警戒を忘れずに、手錠とスタンバトンを用意してください。時々、誰かを営倉に入れて、誰がリーダーなのかを知っておきます！</tutorial.securityofficerdescription>
+<tutorial.securityofficerresponsibilities>役割\n-秩序の維持\n-侵入者の撃退</tutorial.securityofficerresponsibilities>
+<tutorial.medicaldoctortitle>医者 - 重要な資源「人」を維持します</tutorial.medicaldoctortitle>
 <tutorial.medicaldoctordescription>銃とエンジンと反応炉は船を走らせ続けません--人々がそれをします。船を操縦するために銃と生きているキャプテンに人員を配置するために砲手を生かしておくことはあなたに任せられています。そして、覚えていてください、あなたの仕事は肉体の限界をはるかに越えます。私達は海で氷の下で狭い空間の中に詰め込まれても生きていました。光が消えてあなたの「仲間」が就寝すると、彼らの中に黒いものがうごめきます。彼らを生かして正気を保たせるか、または犬のように引き下ろしてください。あなた次第です。</tutorial.medicaldoctordescription>
-<tutorial.medicaldoctorresponsibilities>責任\n応急手当\n毒と対策</tutorial.medicaldoctorresponsibilities>
-<tutorial.captaintitle>キャプテン - 海軍の空想家、船乗り、天才。おそらく。</tutorial.captaintitle>
+<tutorial.medicaldoctorresponsibilities>役割\n-応急手当\n-毒と解毒</tutorial.medicaldoctorresponsibilities>
+<tutorial.captaintitle>キャプテン - 海軍の空想家、船乗り、天才。多分。</tutorial.captaintitle>
 <tutorial.captaindescription>キャプテン エイハブは一度、「地獄は消化されないりんご団子の上で最初に誕生したアイデアです」と言いました。あなたは、それが何を意味しているかを知っていますか？いいえ、クルーは、あなたが神秘的な天才であると思いますか？うん、ははは。この仕事は、少なくとも実際何をするかを知るのと同じくらい多く何をするかを知るようです。あなたはマップと羅針盤(大きな写真を持つ男)です。難題を解決してください。そして、覚えていてください、あなたは、前哨基地のボスであり、2、3人の仲間はまさに死の間際にいます--忘れないで！</tutorial.captaindescription>
-<tutorial.captainresponsibilities>責任\nステアリング(船\n委任)</tutorial.captainresponsibilities>
+<tutorial.captainresponsibilities>役割\n-船の操縦\n-命令を下す</tutorial.captainresponsibilities>
 
 <!-- Tutorial extras -->
 <tutorial.airlocktitle>エアロック</tutorial.airlocktitle>
-<tutorial.airlockdescription>クルーが潜水艦を、あまりに多くの浸水はんく、安全に脱出可能とするために、全ての潜水艦には安全なエアロックを装備するべきです。.\n\n安全に潜水艦を脱出するためには、潜水服や他の必要項目(通常ハンドヘルドソナー、武器、および特別な酸素タンク１個または2個)を装備しています。そして、エアロックに進んでください。大量の水が流れ込まないように後ろのドアを全て、必ず閉めてください。\n\n中に戻るときは、潜水艦の深層部に進む前に、ウォーターポンプを用いて、全ての水を輩出してください。機器のすべてをそれらの適切な場所に返し、酸素ジェネレーターで使われた酸素タンクを補充することはまた役立ちます。</tutorial.airlockdescription>
+<tutorial.airlockdescription>潜水艦をあまりに多くの浸水を避けるように、そしてクルーが安全に脱出可能とするように、全ての潜水艦には安全なエアロックを配置しています。.\n\n安全に潜水艦を脱出するためには、潜水服や他の必須アイテム(ハンドヘルドソナー、武器、酸素タンク１個または2個)を装備してください。そして、エアロックに行ってください。大量の水が流れ込まないように両側のドアを必ず全て閉じた後に船外の通路を開けてください。\n\n中に戻るときは、潜水艦の深層部に進む前に、ウォーターポンプを用いて、全ての水を排出してください。機器のすべてをそれらの適切な場所に返し、酸素ジェネレーターで使われた酸素タンクを補充してください。</tutorial.airlockdescription>
 <tutorial.railguntitle>レールガン</tutorial.railguntitle>
-<tutorial.railgundescription>レールガンは、爆発物でアップグレードできる巨大なシェルを発射できることを除いて、コイルガンのように働きます。\n\nレールガンローダーは、弾薬ボックスのかわりに単一のレールガンシェルで装填します。それ以外の操作方法は同じです:タレットを使って、潜望鏡を起動し{0}を押して発射してください。。{1}を押して照準を解除して下さい。</tutorial.railgundescription>
+<tutorial.railgundescription>レールガンの原理はコイルガンと似ていて、配置されている大型の砲弾は爆発物のアップグレードができるだけが違います。\n\nレールガンローダーは、弾薬ボックスのかわりに単一のレールガンシェルで装填します。それ以外の操作方法は同じです:タレットを使って、潜望鏡を起動し、目標を捉えた後に{0}を押して発射することができます。{1}を押して照準を解除できます。</tutorial.railgundescription>
 <tutorial.syringeguntitle>シリンジガン</tutorial.syringeguntitle>
 <tutorial.syringegundescription>医者に選ばれる遠隔武器、注射器銃は弾薬として医薬品を使います。これは、遠くから投薬することができます。注意して下さい：遠距離から発射された医薬品は、メディカルインターフェースで使用された場合と比べて、効果は減少しています。\n\n戦闘での戦略的な選択としては、注射器銃に毒薬をロードし、敵に向けて発射することです。シリンジガンを、他の遠隔武器と同様に使用してください：狙う{0}、発射{1}。</tutorial.syringegundescription>
 <tutorial.plasmacuttertitle>プラズマカッター</tutorial.plasmacuttertitle>
-<tutorial.plasmacutterdescription>プラズマカッターは、壁とドアを通り抜けるために使われる機器です。それは溶接ツールのように機能します：プラズマカッターは、狙いを定め{0}、発射{1}。\n\nプラズマカッターは原始的なツールですが、邪魔者を焼き切る便利な間に合わせの武器となります。</tutorial.plasmacutterdescription>
+<tutorial.plasmacutterdescription>プラズマカッターは、壁とドアを通り抜けるために使われる機器です。それは溶接ツールのように機能します：プラズマカッターは、{0}を押して狙いを定め、{1}を押して射撃します。\n\nプラズマカッターは原始的なツールですが、邪魔者を焼き切る便利な間に合わせの武器となります。</tutorial.plasmacutterdescription>
 <tutorial.crowbartitle>バール</tutorial.crowbartitle>
 <tutorial.crowbardescription>ドアを強制的に開けるのに使われる重い機器。誰かがドア配線を改変していた時またはあなたが入室を許可されていない部屋に行く必要がある時に便利です。それをこじ開け始めるために、閉まったドアにバールを使ってください({0})。バールは、使用のためには装備されていなければなりません。</tutorial.crowbardescription>
 <tutorial.mineralstitle>鉱物</tutorial.mineralstitle>
-<tutorial.mineralsdescription>造船のための基本的な材料は、解体や世界で見つけ、購入することができます\ n \鉱物は洞窟や氷壁で生成し、プラズマカッターで切り出した後、ピッ取り出すことができます。生鉱物は加工可能な要素を作成するために解体することができます。</tutorial.mineralsdescription>
+<tutorial.mineralsdescription>造船のための基本的な材料は、解体や世界で見つけ、購入することができます\n \鉱物は洞窟や氷壁で生成し、プラズマカッターで切り出した後、ピッ取り出すことができます。生鉱物は加工可能な要素を作成するために解体することができます。</tutorial.mineralsdescription>
 <tutorial.psychosistitle>精神病</tutorial.psychosistitle>
-<tutorial.psychosisdescription>一定の性能強化薬とのまたはいくらかの地球外の影響の下の接触時に、プレーヤーは精神病に苦しむことがあり、幻覚、幻聴、幻痛を生じさせます。.\n\n精神病はハロペリドールを使用して治療できるかもしれません。</tutorial.psychosisdescription>
+<tutorial.psychosisdescription>一定の興奮剤とのまたはいくらかの地球外の影響の下の接触時に、プレーヤーは精神病に苦しむことがあり、幻覚、幻聴、幻痛を生じさせます。.\n\n精神病はハロペリドールを使用して治療できるかもしれません。</tutorial.psychosisdescription>
 <tutorial.opiatestitle>アヘン剤中毒と離脱症状</tutorial.opiatestitle>
 <tutorial.opiatesdescription>痛み止めの乱用は中毒と、経時的に禁断症状を引き起こします。禁断症状は、中毒に供給することによって減らされることができるけれども、本当に効果から解放されるために、人は、完全に服薬を中止するか、ナロキソンを使わなければなりません。</tutorial.opiatesdescription>
 <tutorial.oxygentitle>酸素</tutorial.oxygentitle>
@@ -2205,29 +2213,29 @@
 
 <!-- Mechanic tutorial -->
 <!-- Radio -->
-<mechanic.radio.wakeup>大丈夫ですか？あなたは、上に、そして動いて到着する必要があります。できるだけ早く潜水艦に到着してください！</mechanic.radio.wakeup>
-<mechanic.radio.equipment>ロッカーから、忘れずにあなたのギアを得てください。あなたが運ぶことができるすべてをつかんでください。私達はいくらかのひどいこと直面することになります。</mechanic.radio.equipment>
-<mechanic.radio.breach>ねえ、私はあなたの道に沿っていくつかの船体破損を読んでいます。本当に、私達に時間を買うことが迅速なそれらを塞いだほうがよい。</mechanic.radio.breach>
+<mechanic.radio.wakeup>大丈夫ですか？立ち上がって移動してください。できるだけ早く潜水艦に到着しろ！</mechanic.radio.wakeup>
+<mechanic.radio.equipment>ロッカーから、忘れずにあなたのギアを得てください。あなたが運ぶことができるすべてを持っていってでください。私達はいくらかのひどいこと直面することになります。</mechanic.radio.equipment>
+<mechanic.radio.breach>ねえ、私はあなた達の船には幾つかの船体破損を見ました。私達に応急処置を取る時間を稼ぐ為に早くそれらを塞いだほうがよい。</mechanic.radio.breach>
 <mechanic.radio.news>はい、私の声が聞こえますか？私は悪いニュースとよいニュースを得ました。</mechanic.radio.news>
 <mechanic.radio.fire>悪いニュースは、前に火があることです。よいニュースは、あなたが消火器を組み立てるのに近くの十分なスクラップがたぶんあることです。</mechanic.radio.fire>
-<mechanic.radio.diving>あなたはほとんどそこにいます。ただ、気をつけてください--この次のリークは、部屋全体が与圧されるのに十分に大きい。潜水服を見つけてください。それはこの種のプレッシャーからあなたの臓器を保護するべきです。</mechanic.radio.diving>
-<mechanic.radio.submarine>ようこそ。あなたが、する必要がある最初の事は、エンジンをチェックすることであり、バラストは汲み上げて、それらがメンテナンスが必要であるかどうかを確かめてください。</mechanic.radio.submarine>
+<mechanic.radio.diving>もうすぐ着くよ。ただ、気をつけてください--この次のリークは、部屋全体が与圧されるのに十分に大きい。潜水服を見つけてください。それはこの種のプレッシャーからあなたの臓器を保護するべきです。</mechanic.radio.diving>
+<mechanic.radio.submarine>ようこそ。あなたの最初の仕事は、エンジンをチェックすることであり、バラストは汲み上げて、それらがメンテナンスが必要であるかどうかを確かめてください。</mechanic.radio.submarine>
 <mechanic.radio.complete>よくできました。他の人の到着を待ちましょう。私達2人だけととても潜水艦を操縦するわけにはいきません。</mechanic.radio.complete>
 
 <!-- Room 1 -->
 <mechanic.opendoor>ドア</mechanic.opendoor>
-<mechanic.opendoorobjective>隣接したボタンを押すことによって、ドアをあけてください。</mechanic.opendoorobjective>
-<mechanic.opendoortext>{0}、{1}、{2}、{3}ボタンを押すことによって動いてください。{4} ボタン。\n\nこのドアを開けてアイテムと機器と対話してください あなたのカーソルがそれの上にある間{5}押すことによるこのドア 。</mechanic.opendoortext>
+<mechanic.opendoorobjective>隣接したボタンを押すことによって、ドアを開けることができる</mechanic.opendoorobjective>
+<mechanic.opendoortext>{0}、{1}、{2}、{3}ボタンを押すことによって移動できます。{4} ボタンでアイテムと機器と相互作用できます 。\n\nあなたのカーソルがドアの上にある間{5}押すことによるドアを開きます 。</mechanic.opendoortext>
 
 <!-- Room 2 -->
 <mechanic.equipment>コンテナ</mechanic.equipment>
-<mechanic.equipmentobjective>ロッカーから自分の装備をゲット</mechanic.equipmentobjective>
-<mechanic.equipmenttext>アイテムはさまざまなサイズのコンテナの中に保管されます。あなたは、それ({0})を押して中身が分かります。キャラクターとコンテナ在庫の間でドラッグ又はダブルクリックして、アイテムを転送してください。.\n\nキャラクターのインベントリーでは、ダブルクリック又は対応するクイックスロットキーを押すことで、アイテムを装備することができます。\n\nインターフェースを閉じるには{1}を押してください。</mechanic.equipmenttext>
+<mechanic.equipmentobjective>ロッカーから自分の装備を取り出す</mechanic.equipmentobjective>
+<mechanic.equipmenttext>アイテムはさまざまなサイズのコンテナの中に保管されます。あなたは、{0}を押して中身を確認できます。キャラクターとコンテナ在庫の間でドラッグ又はダブルクリックして、アイテムを転送できます。.\n\nキャラクターのインベントリーでは、ダブルクリック又は対応するクイックスロットキーを押すことで、アイテムを装備することができます。\n\nインターフェースを閉じるには{1}を押してください。</mechanic.equipmenttext>
 
 <!-- Room 3 -->
 <mechanic.welding>リーク</mechanic.welding>
 <mechanic.weldingobjective>リーク修理</mechanic.weldingobjective>
-<mechanic.weldingtext>船体内でリークを修理するために、ダブルクリックして溶接工具を装備してください。いくつかのアイテムの使用にあたっては、溶接工具のように、自由な両手をい必要とします。ツールを溶接している\n\n溶接工具を装備している間、{0}を押して対象を狙い、{1}をを押して溶接してください。</mechanic.weldingtext>
+<mechanic.weldingtext>船体内でリークを修理するために、ダブルクリックして溶接工具を装備してください。いくつかのアイテムの使用にあたっては、溶接工具のように、両手が空いてる必要があります。\n\n溶接工具を装備した後に、{0}を押して対象を狙い、{1}をを押して溶接してください。</mechanic.weldingtext>
 <mechanic.drain>ウォータポンプ</mechanic.drain>
 <mechanic.drainobjective>余分な水を排水するために、近くのポンプに向かってください。</mechanic.drainobjective>
 <mechanic.draintext>潜水艦が氾濫する時に、余分な水を排水するために、ポンプを使ってください。通常、ポンプは近くの水検出器またはナビゲーションターミナルから信号を受け取るけれども、いくつかが手動で稼動することができます。このポンプは、水を送り出すようにプログラムされています。それ({0})を用いて、スイッチを「オン」ポジションに入れてください。</mechanic.draintext>
@@ -2242,9 +2250,9 @@
 
 <!-- Room 5 -->
 <mechanic.extinguisher>火災</mechanic.extinguisher>
-<mechanic.extinguisherobjective>消火。</mechanic.extinguisherobjective>
+<mechanic.extinguisherobjective>消火</mechanic.extinguisherobjective>
 <mechanic.extinguishertext>溶接ツールのように消火器を装備してください。そして、{0}を押して狙いを定め、{1}を押して発射してください。</mechanic.extinguishertext>
-<mechanic.dropextinguisher>ドロップアイテム</mechanic.dropextinguisher>
+<mechanic.dropextinguisher>アイテムをドロップ</mechanic.dropextinguisher>
 <mechanic.dropextinguisherobjective>消火器をドロップ</mechanic.dropextinguisherobjective>
 <mechanic.dropextinguishertext>いくつかのアイテムは、消火器のように、キャラクターの在庫の中で持ち歩くには大きすぎます。消火器を装備しないために、在庫からそれを引っ張り、マウスボタンをリリースしてください。</mechanic.dropextinguishertext>
 
@@ -2254,14 +2262,14 @@
 <mechanic.divingtext>潜水服は高圧から着用者を保護します。潜水艦の外で泳ぐことができるために、ものを装備していてください。スーツに完全な酸素タンクがついているのを確かめてください。さもなければ、着用者は窒息するでしょう。</mechanic.divingtext>
 
 <!-- Room 7 -->
-<mechanic.repairpump>修理機器</mechanic.repairpump>
-<mechanic.repairpumpobjective>修理ポンプ</mechanic.repairpumpobjective>
-<mechanic.repairpumptext>機械的および電気機器のメンテナンスを必要としています。さもなくば壊れ、動作を停止します。 。レンチを装着し、（{0}）それを用いて機械装置を修復してください。\n\n修理を要するアイテムは修理アイコンでマークされています。</mechanic.repairpumptext>
+<mechanic.repairpump>機器を修理</mechanic.repairpump>
+<mechanic.repairpumpobjective>ポンプを修理</mechanic.repairpumpobjective>
+<mechanic.repairpumptext>機械的および電気機器のメンテナンスを必要としています。さもなくば壊れ、動作を停止します。 レンチを装着し、{0}を押して機械装置を修復してください。\n\n修理を要するアイテムは修理アイコンでマークされています。</mechanic.repairpumptext>
 
 <!-- Submarine -->
 <mechanic.repairsubmarine>潜水艦のメンテナンス</mechanic.repairsubmarine>
 <mechanic.repairsubmarineobjective>エンジンとバラストのポンプを修理</mechanic.repairsubmarineobjective>
-<mechanic.repairsubmarinetext>あなたは現在潜水艦の内部にいます(それは、あなたが気圧障害の中であなたの時間のほとんどを過ごすであろう所です)。これはより簡単な側にあるけれども、あなたがゲームを開始する時に、あなたはあなたに利用可能な違う潜水艦の選択を持つでしょう。あなたは現在潜水服を脱ぐことができます。(機器スロットの上で非装備ボタンを押し、持つか、スロットからスーツを引っ張ることによって。)\n\n潜水艦の内部は通常は窮屈で、あなたのベアリングを取得するまで見つける事が困難な場合があります。\n\nエンジンと（通常は潜水艦の後方区画にあります）バラストタンクを見つけてください（底部；バラストタンクが複数ある潜水艦もあります）。</mechanic.repairsubmarinetext>
+<mechanic.repairsubmarinetext>あなたは現在潜水艦の内部にいます(それは、あなたが気圧障害の中であなたの時間のほとんどを過ごすであろう所です)。これはよりシンプルなタイプですけど、、ゲームを開始する時に、利用可能な他の潜水艦を選択してもかまいません。あなたは現在潜水服を脱ぐことができます。\n\n潜水艦の内部のスペースが狭くて、方位が確認できるまではターゲットを見つける事が困難な場合があります。\n\nエンジンと（通常は潜水艦の後方区にあります）バラストタンクを見つけてください（底部にあります。バラストタンクが複数ある潜水艦もあります）。</mechanic.repairsubmarinetext>
 
 <!-- Engineer tutorial -->
 <!-- Radio -->
@@ -2275,13 +2283,13 @@
 
 <!-- Room 2 -->
 <engineer.equipment>コンテナ</engineer.equipment>
-<engineer.equipmentobjective>キャビネットから機器を取得</engineer.equipmentobjective>
-<engineer.equipmenttext>アイテムはさまざまなサイズのコンテナの中に保管されます。あなたは、それ({0})を押して中身が分かります。キャラクターとコンテナ在庫の間でドラッグ又はダブルクリックして、アイテムを転送してください。.\n\nキャラクターのインベントリーでは、ダブルクリック又は対応するクイックスロットキーを押すことで、アイテムを装備することができます。\n\nインターフェースを閉じるには{1}を押してください。</engineer.equipmenttext>
+<engineer.equipmentobjective>キャビネットから装備を取得</engineer.equipmentobjective>
+<engineer.equipmenttext>アイテムはさまざまなサイズのコンテナの中に保管されます。あなたは、{0}を押して中身を確認できます。キャラクターとコンテナ在庫の間でドラッグ又はダブルクリックして、アイテムを転送できます。.\n\nキャラクターのインベントリーでは、ダブルクリック又は対応するクイックスロットキーを押すことで、アイテムを装備することができます。\n\nインターフェースを閉じるには{1}を押してください。</engineer.equipmenttext>
 
 <!-- Room 3 -->
 <engineer.reactor>反応炉</engineer.reactor>
 <engineer.reactorobjective>反応炉をパワーアップ</engineer.reactorobjective>
-<engineer.reactortext>原子炉は潜水艦と前哨基地に電力を供給します。\n\n燃料棒を左側のアイテムスロットにドラッグしてください。複数燃料棒はより多くの熱を生成しますが、通常は１本で十分で、それ以上は加熱に繋がる恐れがあります。\n\n核分裂割合を設定して棒が緑色になるようにして、タービン出力に対しても同様にしてください。。あなたはロードを見て、右に値を出力することができます。可能な限り負荷の近くに出力を保つようにしてください。出力がより低い時に、それは停電を引き起こし、出力がより高いときには、過電圧と発射が起こります。\n\n原子炉オペレーターがインターフェースを離れる場合には、自動制御をオンにすることがおすすめです。これは、グリッドの負荷の任意の変動に応答しますが、人間のオペレータよりもかなり遅いです。</engineer.reactortext>
+<engineer.reactortext>原子炉は潜水艦と前哨基地に電力を供給します。\n\n燃料棒を左側のアイテムスロットにドラッグしてください。複数燃料棒はより多くの熱を生成しますが、通常は１本で十分で、それ以上は加熱に繋がる恐れがあります。\n\n核分裂割合を設定して棒が緑色になるようにして、タービン出力に対しても同様にしてください。あなたはロードを見て、右に値を出力することができます。可能な限り負荷の近くに出力を保つようにしてください。出力がより低い時に、それは停電を引き起こし、出力がより高いときには、過電圧と発射が起こります。\n\n原子炉オペレーターがインターフェースを離れる場合には、自動制御をオンにすることがおすすめです。これは、グリッドの負荷の任意の変動に応答しますが、人間のオペレータよりもかなり遅いです。</engineer.reactortext>
 
 <!-- Room 4 -->
 <engineer.repairjunctionbox>メンテナンス</engineer.repairjunctionbox>
@@ -2299,7 +2307,7 @@
 <engineer.repairelectricalroomtext>潜水艦の電気の部屋を見つけて、ドライバーを持ち、それから「修理」ボタンを押すことで、配電盤を修理してください。</engineer.repairelectricalroomtext>
 <engineer.powerupreactor>反応炉</engineer.powerupreactor>
 <engineer.powerupreactorobjective>パワーアップ潜水艦の反応炉</engineer.powerupreactorobjective>
-<engineer.powerupreactortext>原子炉は潜水艦と前哨基地に電力を供給します。\n\n燃料棒を左側のアイテムスロットにドラッグしてください。複数燃料棒はより多くの熱を生成しますが、通常は１本で十分で、それ以上は加熱に繋がる恐れがあります。\n\n核分裂割合を設定して棒が緑色になるようにして、タービン出力に対しても同様にしてください。。あなたはロードを見て、右に値を出力することができます。可能な限り負荷の近くに出力を保つようにしてください。出力がより低い時に、それは停電を引き起こし、出力がより高いときには、過電圧と発射が起こります。\n\n原子炉オペレーターがインターフェースを離れる場合には、自動制御をオンにすることがおすすめです。これは、グリッドの負荷の任意の変動に応答しますが、人間のオペレータよりもかなり遅いです。</engineer.powerupreactortext>
+<engineer.powerupreactortext>原子炉は潜水艦と前哨基地に電力を供給します。\n\n燃料棒を左側のアイテムスロットにドラッグしてください。複数燃料棒はより多くの熱を生成しますが、通常は１本で十分で、それ以上は加熱に繋がる恐れがあります。\n\n核分裂割合を設定して棒が緑色になるようにして、タービン出力に対しても同様にしてください。あなたはロードを見て、右に値を出力することができます。可能な限り負荷の近くに出力を保つようにしてください。出力がより低い時に、それは停電を引き起こし、出力がより高いときには、過電圧と発射が起こります。\n\n原子炉オペレーターがインターフェースを離れる場合には、自動制御をオンにすることがおすすめです。これは、グリッドの負荷の任意の変動に応答しますが、人間のオペレータよりもかなり遅いです。</engineer.powerupreactortext>
 
 <!-- Security officer tutorial -->
 <!-- Radio -->
@@ -2334,17 +2342,17 @@
 
 <!-- Room 5 -->
 <officer.rangedweapon>射撃武器</officer.rangedweapon>
-<officer.rangedweaponobjective>いくつかの射撃武器をつかみます</officer.rangedweaponobjective>
+<officer.rangedweaponobjective>いくつかの射撃武器を取る</officer.rangedweaponobjective>
 <officer.rangedweapontext>命中精度がキャラクターの武器スキルにより依存していることを除いて、射撃武器は、近接武器と同じように動作します。{0}で攻撃対象を選択し{1}で発射してください。\n\n弾薬を装填しなければなりません。銃弾、銛の装填数を見るためには、射撃武器の上にマウス・カーソルを乗せてください。武器をロードするために、弾薬をスロットにまたは武器にドロップしてください。</officer.rangedweapontext>
 
 <!-- Room 6 -->
 <officer.mudraptor>ムドラプター</officer.mudraptor>
 <officer.mudraptorobjective>ムドラプターを殺す</officer.mudraptorobjective>
-<officer.mudraptortext>ムドラプターはより大きく、より卑劣で、クローラーより装甲が厚いです。それらを倒すにはより多くの火力が必要です。。口または腹を狙いつつ、距離を保ってください。</officer.mudraptortext>
+<officer.mudraptortext>ムドラプターはより大きく、より卑劣で、クローラーより装甲が厚いです。それらを倒すにはより多くの火力が必要です。口または腹を狙いつつ、距離を保ってください。</officer.mudraptortext>
 
 <!-- Submarine -->
 <officer.armsubmarine>潜水艦の武器</officer.armsubmarine>
-<officer.armsubmarineobjective>迅速なコイルガン</officer.armsubmarineobjective>
+<officer.armsubmarineobjective>コイルガンの調達</officer.armsubmarineobjective>
 <officer.armsubmarinetext>コイルガン用の弾薬を見つけて、ロードしてください。スーパーコンデンサーを再充電してください。\n\nInほとんどの潜水艦では、ガンローダーとスーパーコンデンサーはそれぞれのガンコントロールの隣にあります。スーパーコンデンサーの50%の再充電は、怪物との遭遇には通常、十分です。たくさんの射撃が予想される場合には100%再充電してください。</officer.armsubmarinetext>
 
 <!-- Medical doctor tutorial -->
@@ -2360,7 +2368,7 @@
 <doctor.suppliesobjective>医療品を探す</doctor.suppliesobjective>
 <doctor.suppliestext>アイテムはさまざまなサイズのコンテナの中に蓄えられます。あなたは、それを操作することで、中身が分かります。({0})ドラッグ又はダブルクリックすることで、キャラクターとコンテナ在庫の間にアイテムを転送することができます。\n\nキャラクターのインベントリーでは、アイテムをダブルクリックするか、対応するクイックスロットのキーを押すことで装備できます。\n\nインターフェースを閉じるには、{1}を押してください。</doctor.suppliestext>
 <doctor.openmedicalinterface>医療インターフェース</doctor.openmedicalinterface>
-<doctor.openmedicalinterfaceobjective>オープン医療インターフェース</doctor.openmedicalinterfaceobjective>
+<doctor.openmedicalinterfaceobjective>医療インターフェースを開く</doctor.openmedicalinterfaceobjective>
 <doctor.openmedicalinterfacetext>{0}を押すか、あなたの健康バーをクリックして、医学のインタフェースに入ってください。</doctor.openmedicalinterfacetext>
 <doctor.firstaidself>応急処置</doctor.firstaidself>
 <doctor.firstaidselfobjective>あなたの怪我を癒します</doctor.firstaidselfobjective>
@@ -2369,7 +2377,7 @@
 <!-- Room 4 -->
 <doctor.medbay>コマンドを与えます</doctor.medbay>
 <doctor.medbayobjective>クルーメンバーをメッドベイに連れて行く</doctor.medbayobjective>
-<doctor.medbaytext>時々、あなたは、即座の治療手段を持たない苦悩に遭遇します。これらの状況では患者を、より多くの治療手段のあるメッドベイに連れて行くのが便利です。.\n\左のクルーリストから、問題のあるキャラクターを探してください。そして、「ついて行ってください」ボタンを見つけて、それをクリックしてください。ボタンをもう一度押して却下されるまで、キャラクターはあなたについていきます。\n\n、「ついて行ってください」コマンドは、他のキャラクターに対して実行できるコマンドのほんの一つにすぎません。ゲームプレーの間他のコマンドによって実験してください！</doctor.medbaytext>
+<doctor.medbaytext>時々、あなたは、即座の治療手段を持たない苦悩に遭遇します。これらの状況では患者を、より多くの治療手段のあるメッドベイに連れて行くのが便利です。.\n\左のクルーリストから、問題のあるキャラクターを探してください。そして、「ついて行ってください」ボタンを見つけて、それをクリックしてください。ボタンをもう一度押して却下されるまで、キャラクターはあなたについていきます。\n\n、「フォロー」コマンドは、他のキャラクターに対して実行できるコマンドのほんの一つにすぎません。ゲームプレーの間他のコマンドによって実験してください！</doctor.medbaytext>
 
 <!-- Room 5 -->
 <doctor.treatburns>火傷の治療</doctor.treatburns>
@@ -2418,21 +2426,21 @@
 
 <!-- Karma system -->
 <karma>カルマ</karma>
-<karmaexplanation>カルマは、プレイ中に、あなたが撮影した有益と有害な行動を反映しています。こうした、潜水艦を修復操作装置と、そのようなあなたのクルーのメンバーを攻撃するか、潜水艦を傷つけるなどのアクションがそれを小さくしながら、モンスターは、カルマを増やす殺害などのアクション。あなたのカルマが低下しすぎると、もう一定の仕事に割り当てられないかもしれないか、より極端な場合に、あなたはサーバーから締め出されてさしつかえありません。</karmaexplanation>
+<karmaexplanation>カルマは、プレイ中に、あなたがとった有益と有害な行動を反映しています。こうした、潜水艦を修復し、装置を修理し、モンスターを殺すことによって、カルマを増やすことができます。グルーを攻撃すると施設破壊することによってカルマを減らすことになります。あなたのカルマが低下しすぎると、指定の仕事に割り当てられないかもしれないか、より極端な場合に、あなたはサーバーから締め出されてさしつかえありません。</karmaexplanation>
 <resetkarma>カルマをリセット</resetkarma>
-<karmadecreased>あなたの業は[karmadecrease]によって減少しました。</karmadecreased>
-<karmaincreased>あなたの業は[karmaincrease]によって増大しました。</karmaincreased>
-<karmabanwarning>警告:あなたの業が[banthreshold]下に減少するならば、あなたはサーバーから締め出されるでしょう。</karmabanwarning>
-<karmabanned>あなたの業が[banthreshold]下に減少したので、あなたはサーバーから締め出されています。</karmabanned>
-<karmajobdisallowed>あなたの業が低すぎる([yourkarma]/[minkarma])ので、あなたは、この仕事を選ぶことを許されません。</karmajobdisallowed>
+<karmadecreased>あなたのカルマは[karmadecrease]によって減少しました。</karmadecreased>
+<karmaincreased>あなたのカルマは[karmaincrease]によって増大しました。</karmaincreased>
+<karmabanwarning>警告:あなたのカルマが[banthreshold]下に減少するならば、あなたはサーバーから締め出されるでしょう。</karmabanwarning>
+<karmabanned>あなたのカルマが[banthreshold]下に減少したので、あなたはサーバーから締め出されています。</karmabanned>
+<karmajobdisallowed>あなたのカルマが低すぎる([yourkarma]/[minkarma])ので、あなたは、この仕事を選ぶことを許されません。</karmajobdisallowed>
 
 <!-- Disclaimers -->
 <campaigndisclaimertitle>気圧障害へようこそ！</campaigndisclaimertitle>
-<campaigndisclaimertext>気圧障害はアーリーアクセスにまだある、とゲームの多くの側面が不完全で、まだ作業中ということに注意してください。それでも、.\n\nTheキャンペーン・モードの上で作動させられていることが、私達がフル・バージョンのために計画した機能の多くを依然欠いていて、マルチプレイヤーほどまだ楽しくないことに注意してください。現在のバージョンの中で、ソロでゲームをすることはまた新しいプレーヤーに他の人々とそれをするより挑発的であるかもしれません--AIクルーはいくつかの仕事のためにあなたに手を貸すことができるけれども、彼らは通常本当の人のプレーヤーほど有益ではありません。しかし、あなたが、未来のアップデートに入ることになっているものの中で、「キャンペーンロードマップ」に\n\n興味があるのであればマルチプレイヤーに飛び込む前に、あなたが少なくともシングルプレーヤーチュートリアルをするように勧めてください。幸運を祈る、クルー！</campaigndisclaimertext>
-<campaignroadmaptitle>キャンペーンロードマップ</campaignroadmaptitle>
-<campaignroadmaptext> - 探索可能場所：今のところ、キャンペーンマップ上の位置は、基本的にあなたが物資を購入し、新しいクルーを雇うことができるだけのメニューですが、アーリーアクセス期間中に、彼らはあなたが物理的な場所を入力して探索することができます\ n\。 拡張の話：あなたはのNPCと相互作用することにより、そして前哨および非人工の場所を探索することにより気圧障害の世界をもっとよく知ることができるでしょう。\ n個の新しいミッションのタイプがあります：私たちはいくつかの完全に新しいのための計画を持っています。ミッションの難破船への人員輸送ミッションとサルベージミッションを含むタイプ、\ n\ 収益バランス：。現在、収益バランスは崩れていますが、我々は中のコンテンツの多くを持っている場合、それにもっと焦点を置くために開始します\。 n個のn最終ターゲットを\：現時点では、キャンペーンを完了することはできませんが、将来のバージョンでは、地図の中心にある神秘的な場所が到達可能になります...</campaignroadmaptext>
-<editordisclaimertitle>編集者</editordisclaimertitle>
-<editordisclaimertext>潜水艦とキャラクターのエディタは、あなた自身の潜水艦と怪物を作成することによって中心的なゲームを拡張するために使われることができるツールを改造しています。カスタム作成は、エディタが英語で入手可能である時に、Steam ワークショップ.\n\nにおいて共有することができます。完全にプレイ可能な潜水艦や機能的なモンスターを構築するプロセスは非常に複雑になること、そして残念ながら我々はまだ編集者のためのゲーム内のチュートリアルやドキュメントを提供していません。エディタによってあなた自身のカスタム内容を作成したいのであれば、あなたは、以下のリンクからヘルプを見つけることができるかもしれません：</editordisclaimertext>
+<campaigndisclaimertext>気圧障害はアーリーアクセスの状態で、ゲームの多くの側面が不完全で、まだ改良中ということに注意してください。.\n\nキャンペーン・モードは現時点、私達がフル・バージョンのために計画した機能の多くを依然欠いていて、マルチプレイヤーほどまだ楽しくないことに注意してください。現在のバージョンの中で、ソロでゲームをすることはまた新しいプレーヤーにとって少し困難かもしれません--AIクルーはいくつかの仕事のためにあなたに手を貸すことができるけれども、彼らは本当の人間が操作するキャラクタには敵えません。もしあなたが、未来のアップデートに興味がありましたら、キャンペーンの「ロードマップ」ボタンを押してください。\n\nマルチプレイヤーに飛び込む前に、あなたが少なくともシングルプレーヤーチュートリアルをするように勧めします。幸運を祈る、クルーさん！</campaigndisclaimertext>
+<campaignroadmaptitle>ロードマップ</campaignroadmaptitle>
+<campaignroadmaptext>- 探索可能場所：今のキャンペーンマップ上の場所は、物資を購入し、新しいクルーを雇うことができるだけですが、アーリーアクセス期間中に、それらはあなたが実際に探検できる場所になります。\n\n拡張ストーリー：NPCと相互作用することにより、そして前哨基地および非人工の施設を探索することにより気圧障害の世界をもっとよく知ることができるでしょう。\n\n新しいミッションタイプ：私たちはいくつかの全く新しいミッションのタイプをデザインしています。例えば人員輸送ミッションとサルベージミッションなど。\n\nゲームバランス：。現在、収益バランスはよくないですが、我々は内容がもっと豊かになった後に改善を検討します。\n\n最終目的：現時点では、キャンペーンを完成することは非現実ではありませんが、将来のバージョンでは、地図の中心にある神秘的な場所が到達可能になります...</campaignroadmaptext>
+<editordisclaimertitle>エディタ</editordisclaimertitle>
+<editordisclaimertext>潜水艦とキャラクターのエディタはカスタマイズツールであり、あなただけの潜水艦と生物を作成することによってゲームを拡張するとができる。Steamワークショップであなたの作品をシャアすることができます。\n\n現時点では、英語版のエディタしかありません。完全にプレイ可能な潜水艦や異常に強いモンスターを構築するプロセスは非常に複雑になるかもしれません。そして残念ながら我々はまだエディターのためのゲーム内のチュートリアルやドキュメントを提供していません。エディタによってあなた自身のカスタム内容を作成したいのであれば、あなたは、以下のリンクからヘルプを見つけることができます：</editordisclaimertext>
 <editordisclaimerwikilink>気圧障害Wiki</editordisclaimerwikilink>
 <editordisclaimerdiscordlink>気圧障害Discordサーバー</editordisclaimerdiscordlink>
 <editordisclaimerforumlink>気圧障害フォーラム</editordisclaimerforumlink>
@@ -2446,23 +2454,23 @@
 
 <!-- New additions -->
 <creditsbutton>クレジット</creditsbutton>
-<orderoptions.operatereactor>パワーアップ、シャットダウン</orderoptions.operatereactor>
-<orderoptions.operateweapons>任意射撃し、射撃継続してください。</orderoptions.operateweapons>
-<orderoptions.steer>現地で留まり、帰り、目的地に向かい</orderoptions.steer>
-<orderoptions.chargebatteries>チャージ、チャージ停止</orderoptions.chargebatteries>
-<orderoptions.pumpwater>ポンプ外、汲み上げ停止</orderoptions.pumpwater>
-<orderoptions.repairsystems>特定のジョブを修復、すべてを修復</orderoptions.repairsystems>
+<orderoptions.operatereactor>パワーアップ，シャットダウン</orderoptions.operatereactor>
+<orderoptions.operateweapons>任意射撃，射撃停止</orderoptions.operateweapons>
+<orderoptions.steer>現地で留まり，帰り，目的地に向かい</orderoptions.steer>
+<orderoptions.chargebatteries>チャージ，チャージ停止</orderoptions.chargebatteries>
+<orderoptions.pumpwater>ポンプ起動，汲み上げ停止</orderoptions.pumpwater>
+<orderoptions.repairsystems>特定のジョブを修復，すべてを修復</orderoptions.repairsystems>
 
 <ordername.dismissed>却下</ordername.dismissed>
-<ordername.follow>従います</ordername.follow>
+<ordername.follow>フォロー</ordername.follow>
 <ordername.wait>待つ</ordername.wait>
 <ordername.operatereactor>原子炉を操作</ordername.operatereactor>
-<ordername.operateweapons>武器を操作します</ordername.operateweapons>
+<ordername.operateweapons>武器をもって待機</ordername.operateweapons>
 <ordername.steer>スティア</ordername.steer>
-<ordername.fixleaks>リークを修正しました。</ordername.fixleaks>
+<ordername.fixleaks>リークを修復</ordername.fixleaks>
 <ordername.extinguishfires>消火</ordername.extinguishfires>
 <ordername.fightintruders>侵入者と戦います</ordername.fightintruders>
-<ordername.chargebatteries>チャージバッテリー</ordername.chargebatteries>
+<ordername.chargebatteries>バッテリーをチャージ</ordername.chargebatteries>
 <ordername.pumpwater>ポンプを操作します</ordername.pumpwater>
 <ordername.rescue>ヒールとレスキュー</ordername.rescue>
 <ordername.repairsystems>破損したシステムを修理</ordername.repairsystems>
@@ -2481,29 +2489,29 @@
 <orderdialog.fightintruders>[name]、すべての侵入者を排除します！</orderdialog.fightintruders>
 <orderdialog.fightintruders>[name]、クルーを守ります！</orderdialog.fightintruders>
 <orderdialogself.fightintruders>侵入者と応戦します！</orderdialogself.fightintruders>
-<orderdialogself.fightintruders>敵との戦い！</orderdialogself.fightintruders>
+<orderdialogself.fightintruders>敵を見つかり次第直ちに殺す！</orderdialogself.fightintruders>
 
 <dialogcannotrepair>[itemname]を修理することができません！</dialogcannotrepair>
 <dialogenemydown>敵ダウン！</dialogenemydown>
-<dialogenemydown>別のものは取り除きました。</dialogenemydown>
+<dialogenemydown>もう一人の敵もダウンした。</dialogenemydown>
 
 <dialognorepairtargets>修理するものは何もありません。</dialognorepairtargets>
 <dialognorepairtargets>どういう意味ですか？すべては順調です。</dialognorepairtargets>
 <dialognopumps>ポンプはOKですね？</dialognopumps>
 <dialognopumps>ポンプのどれも今のところ気を付けなくてよいです。</dialognopumps>
-<dialognoenemies>機内のどのような侵入者にも会うことができません。</dialognoenemies>
+<dialognoenemies>機内で侵入者の痕跡が見つかりません。</dialognoenemies>
 <dialognoenemies>敵？どこ？</dialognoenemies>
 <dialognoleaks>漏れは一切見つかりません。</dialognoleaks>
 <dialognoleaks>何が漏れていますか？</dialognoleaks>
 
-<bugreportgithubform>ギットハブの問題フォーム</bugreportgithubform>
+<bugreportgithubform>Githubでissueを提出する</bugreportgithubform>
 <bugreportfeedbackform>気圧障害フィードバックフォーム</bugreportfeedbackform>
 <bugreportbutton>バグを報告</bugreportbutton>
 
-<voipcapturedevicenotfound>音声キャプチャを開始できませんでした。適したキャプチャデバイスが見つかりません。</voipcapturedevicenotfound>
+<voipcapturedevicenotfound>音声キャプチャを起動できませんでした。適したキャプチャデバイスが見つかりません。</voipcapturedevicenotfound>
 
-<fabricatorinsufficientskills>偽造する不十分なスキル</fabricatorinsufficientskills>
-<fabricatorsufficientskills>偽造するために十分なスキル</fabricatorsufficientskills>
+<fabricatorinsufficientskills>制作するのに必要なスキル条件が満たされていない</fabricatorinsufficientskills>
+<fabricatorsufficientskills>制作するのに必要なスキル条件が満たされています</fabricatorsufficientskills>
 
 <dialogfoundwoundedtarget>[roomname]における[targetname]に応急手当せよ！</dialogfoundwoundedtarget>
 <dialogfoundwoundedtarget>[roomname]において[targetname]を救助せよ！</dialogfoundwoundedtarget>
@@ -2512,22 +2520,21 @@
 <skillname.courage>勇気</skillname.courage>
 
 <entityname.equalscomponent>同等のコンポーネント</entityname.equalscomponent>
-<entitydescription.equalscomponent>両方のインプットが同じ信号を受け取る時に、信号を送ります。</entitydescription.equalscomponent>
+<entitydescription.equalscomponent>両方の入力端末が同じ信号を受け取る時に、信号を送ります。</entitydescription.equalscomponent>
 <entityname.greatercomponent>より大きなコンポーネント</entityname.greatercomponent>
-<entitydescription.greatercomponent>signal_in1インプットがsignal_in2インプットより大きいならば、信号を送ります。</entitydescription.greatercomponent>
+<entitydescription.greatercomponent>信号入力1の数値が信号入力2より大きいならば、信号を送ります。</entitydescription.greatercomponent>
 <entityname.colorcomponent>色コンポーネント</entityname.colorcomponent>
 <entitydescription.colorcomponent>灯火管制のために結合された色信号を出力します。</entitydescription.colorcomponent>
-<entityname.subtractcomponent><!-- No data --></entityname.subtractcomponent>
-<!-- 減算コンポーネント -->
-<entitydescription.subtractcomponent>受け取られた信号の取り去られた値を出力します。</entitydescription.subtractcomponent>
+<entityname.subtractcomponent>減算コンポーネント</entityname.subtractcomponent>
+<entitydescription.subtractcomponent>受け取られた信号の差を出力します。</entitydescription.subtractcomponent>
 <entityname.multiplycomponent>乗算コンポーネント</entityname.multiplycomponent>
-<entitydescription.multiplycomponent>受け取られた信号の製品を出力します。</entitydescription.multiplycomponent>
-<entityname.dividecomponent>分割コンポーネント</entityname.dividecomponent>
-<entitydescription.dividecomponent>受け取られた信号の分割された値を出力します。</entitydescription.dividecomponent>
+<entitydescription.multiplycomponent>受け取られた信号の積を出力します。</entitydescription.multiplycomponent>
+<entityname.dividecomponent>除法コンポーネント</entityname.dividecomponent>
+<entitydescription.dividecomponent>受け取られた信号の商を出力します。</entitydescription.dividecomponent>
 <entityname.xorcomponent>Xorコンポーネント</entityname.xorcomponent>
-<entitydescription.xorcomponent>インプットのどちらかが信号を受け取るけれども両方が受け取るわけではないならば、信号を送ります。</entitydescription.xorcomponent>
+<entitydescription.xorcomponent>入力端末が一つの信号（二つではなく）を受けたときに、一つの信号を出力します。</entitydescription.xorcomponent>
 <entityname.memorycomponent>メモリーコンポーネント</entityname.memorycomponent>
-<entitydescription.memorycomponent>他のソースからアップデートされることができる蓄えられた値を出力します。受け取られた信号が保存されるべきであるかどうかにかかわらず、保存された値とsignal_inトア入力をトグルに設定するために、signal_store接続を使ってください。</entitydescription.memorycomponent>
+<entitydescription.memorycomponent>他のコンポーネントから出力された信号を保存することができ、いつも最新のデータであることを保証できます。signal_in（信号入力）で保存値を設定し、signal_store（信号保存）で入力された信号を保存する否かを設定できます。</entitydescription.memorycomponent>
 <entityname.oxygentank>酸素タンク</entityname.oxygentank>
 <entitydescription.oxygentank>ポータブル酸素コンテナ。</entitydescription.oxygentank>
 <entityname.cyanideantidote>シアン化物解毒剤</entityname.cyanideantidote>
@@ -2550,23 +2557,23 @@
 <connection.togglestate>トグルステート</connection.togglestate>
 <connection.setpumpingspeed>スピードセット</connection.setpumpingspeed>
 <connection.settargetwaterlevel>ターゲットレベルセット</connection.settargetwaterlevel>
-<connection.signalin>信号_入力</connection.signalin>
-<connection.signalout>信号_出力</connection.signalout>
-<connection.signalinx>信号[num]を入力</connection.signalinx>
-<connection.signaloutx>信号[num]を出力</connection.signaloutx>
+<connection.signalin>信号入力</connection.signalin>
+<connection.signalout>信号出力</connection.signalout>
+<connection.signalinx>信号入力[num]</connection.signalinx>
+<connection.signaloutx>信号出力[num]</connection.signaloutx>
 <connection.turretaimingin>ポジション入力</connection.turretaimingin>
 <connection.turrettriggerin>トリガー入力</connection.turrettriggerin>
 <connection.togglelight>トグルライト</connection.togglelight>
 <connection.setcolor>色セット</connection.setcolor>
 <connection.shutdown>シャットダウン</connection.shutdown>
 <connection.temperatureout>温度アウト</connection.temperatureout>
-<connection.meltdownwarning>メルトダウン_警告</connection.meltdownwarning>
-<connection.signalr>信号_r</connection.signalr>
-<connection.signalg>信号_g</connection.signalg>
-<connection.signalb>信号_b</connection.signalb>
-<connection.signala>信号_a</connection.signala>
+<connection.meltdownwarning>メルトダウン警告</connection.meltdownwarning>
+<connection.signalr>赤信号</connection.signalr>
+<connection.signalg>緑信号</connection.signalg>
+<connection.signalb>青信号</connection.signalb>
+<connection.signala>オール信号</connection.signala>
 <connection.setoutput>出力セット</connection.setoutput>
-<connection.signalstore>信号_保存</connection.signalstore>
+<connection.signalstore>信号保存</connection.signalstore>
 <connection.settargetsignal>ターゲット信号セット</connection.settargetsignal>
 <connection.setfrequency>周波数セット</connection.setfrequency>
 <connection.setoutputtype>出力タイプセット</connection.setoutputtype>
@@ -2580,41 +2587,41 @@
 <connection.waterdatain>水データ入力</connection.waterdatain>
 <connection.oxygendatain>酸素データ入力</connection.oxygendatain>
 
-<!-- *** New additions *** -->
-<itemmsgoxygenrefill>それを補充するために酸素タンクを挿入</itemmsgoxygenrefill>
+
+<itemmsgoxygenrefill>補充するために酸素タンクを挿入</itemmsgoxygenrefill>
 <missionfailed>ミッション失敗</missionfailed>
 <label.highpressurewarning>警告：高圧</label.highpressurewarning>
-<label.reactortempwarning>原子炉の温度　注意</label.reactortempwarning>
+<label.reactortempwarning>警告：原子炉の温度</label.reactortempwarning>
 <addercomponent.timeframe>時間枠</addercomponent.timeframe>
 <addercomponent.clampmin>クランプ最小</addercomponent.clampmin>
 <addercomponent.clampmax>クランプ最高</addercomponent.clampmax>
 <equalscomponent.timeframe>時間枠</equalscomponent.timeframe>
 <equalscomponent.output>出力</equalscomponent.output>
-<equalscomponent.falseoutput>出力の誤り</equalscomponent.falseoutput>
+<equalscomponent.falseoutput>偽出力</equalscomponent.falseoutput>
 <andcomponent.timeframe>時間枠</andcomponent.timeframe>
 <andcomponentcomponent.output>出力</andcomponentcomponent.output>
-<andcomponentcomponent.falseoutput>出力の誤り</andcomponentcomponent.falseoutput>
+<andcomponentcomponent.falseoutput>偽出力</andcomponentcomponent.falseoutput>
 <oscillatorcomponent.timeframe>時間枠</oscillatorcomponent.timeframe>
 <oscillatorcomponent.outputtype>出力タイプ</oscillatorcomponent.outputtype>
 <delaycomponent.delay>遅延</delaycomponent.delay>
 <delaycomponent.resetwhensignalreceived>信号を受信したときにリセット</delaycomponent.resetwhensignalreceived>
 <delaycomponent.resetwhendifferentsignalreceived>異なる信号を受信したときにリセット</delaycomponent.resetwhendifferentsignalreceived>
 <regexfindcomponent.output>出力</regexfindcomponent.output>
-<regexfindcomponent.falseoutput>出力の誤り</regexfindcomponent.falseoutput>
-<regexfindcomponent.expression>表現</regexfindcomponent.expression>
+<regexfindcomponent.falseoutput>偽出力</regexfindcomponent.falseoutput>
+<regexfindcomponent.expression>式</regexfindcomponent.expression>
 <regexfindcomponent.continuousoutput>継続的な出力</regexfindcomponent.continuousoutput>
-<memorycomponent.value>価値</memorycomponent.value>
+<memorycomponent.value>値</memorycomponent.value>
 <motionsensor.output>出力</motionsensor.output>
-<motionsensor.falseoutput>出力の誤り</motionsensor.falseoutput>
+<motionsensor.falseoutput>偽出力</motionsensor.falseoutput>
 <motionsensor.rangex>範囲X</motionsensor.rangex>
 <motionsensor.rangey>範囲Y</motionsensor.rangey>
 <signalcheckcomponent.targetsignal>ターゲット信号</signalcheckcomponent.targetsignal>
 <signalcheckcomponent.output>出力</signalcheckcomponent.output>
-<signalcheckcomponent.falseoutput>出力の誤り</signalcheckcomponent.falseoutput>
+<signalcheckcomponent.falseoutput>偽出力</signalcheckcomponent.falseoutput>
 <waterdetector.output>出力</waterdetector.output>
-<waterdetector.falseoutput>出力の誤り</waterdetector.falseoutput>
+<waterdetector.falseoutput>偽出力</waterdetector.falseoutput>
 <wificomponent.channel>チャンネル</wificomponent.channel>
-<quickuseaction.holdtounequip>装備解除の圧力</quickuseaction.holdtounequip>
+<quickuseaction.holdtounequip>長押しして装備解除</quickuseaction.holdtounequip>
 <entityname.incendiumfueltank>インシディウム燃料タンク</entityname.incendiumfueltank>
 <entityname.physicoriumammobox>物理皮膚弾薬箱</entityname.physicoriumammobox>
 <entityname.physicoriumbolt>物理皮膚ボルト</entityname.physicoriumbolt>
@@ -2629,23 +2636,23 @@
 <connection.turretaimingout>position_out</connection.turretaimingout>
 <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
 <connection.sonardataout>data_out</connection.sonardataout>
-<label.outpostinfodisplay1>ようこそ。酸素レベル:平常です。パワーレベル:平常です。放射能レベル:最適以下です。今日の天気予報:冷たく、湿っています。</label.outpostinfodisplay1>
-<label.navterminaldock>ドック</label.navterminaldock>
-<label.navterminalundock>ドックから出る</label.navterminalundock>
-<connectionerrornoresponse>サーバーからの応答がありません。サーバの最後に接続の問題があるかもしれません。</connectionerrornoresponse>
-<dialognorescuetargets>誰も今のところ治療が必要ではないようです！</dialognorescuetargets>
+<label.outpostinfodisplay1>ようこそ。酸素レベル:平常。パワーレベル:平常。放射能レベル:最適以下。今日の天気予報:湿気があり、すこし寒いです。</label.outpostinfodisplay1>
+<label.navterminaldock>入港</label.navterminaldock>
+<label.navterminalundock>出港</label.navterminalundock>
+<connectionerrornoresponse>サーバーからの応答がありません。サーバとの接続に不具合を発生しているかもしれません。</connectionerrornoresponse>
+<dialognorescuetargets>今のところ治療が必要な人はいないようです！</dialognorescuetargets>
 <dialognorescuetargets>私は、誰も今のところ治療が必要でないと思います。</dialognorescuetargets>
-<workshoppublisherror.limitexceeded>ワークショップを発行することに失敗しました(制限超過)。Steam Cloudを有効化し、その割り当てを超えていないかを確認してください。</workshoppublisherror.limitexceeded>
-<workshoppublisherror.limiteduseraccount>ワークショップのアイテムを発行でしませんでした。制限付きユーザーアカウントは、Steam ワークショップでアイテムを発行することはできません。あなたは、非制限ユーザーになるためにSteamストアに少なくとも$ 5費やす必要があります。</workshoppublisherror.limiteduseraccount>
+<workshoppublisherror.limitexceeded>ワークショップアイテムを配信することに失敗しました(制限超過)。Steam Cloudを有効化し、その割り当てを超えていないかを確認してください。</workshoppublisherror.limitexceeded>
+<workshoppublisherror.limiteduseraccount>ワークショップのアイテムを発行できませんでした。制限付きユーザーアカウントは、Steamワークショップでアイテムを発行することはできません。あなたは、非制限ユーザーになるためにSteamストアに少なくとも$ 5費やす必要があります。</workshoppublisherror.limiteduseraccount>
 <workshoppublisherror.banned>アカウントが禁止されているので、ワークショップのアイテムを発行できませんでした。</workshoppublisherror.banned>
-<workshoppublisherror.insufficientprivilege>ワークショップの発行に失敗しました(不十分な権限)。これはハブ禁止、アカウントロック、またはコミュニティ禁止のため起こることができます。あなたは、Steamサポートに連絡する必要があるかもしれません。</workshoppublisherror.insufficientprivilege>
+<workshoppublisherror.insufficientprivilege>ワークショップの発行に失敗しました(不十分な権限)。これはハブ禁止、アカウントロック、またはコミュニティ禁止のため起こることができます。Steamサポートに問い合わせしてください。</workshoppublisherror.insufficientprivilege>
 <workshoppublisherror.serviceunavailable>ワークショップに失敗しました(利用できないサービス)。ワークショップサーバーに問題が生じているかもしれません。少ししたらもう一度試してください。</workshoppublisherror.serviceunavailable>
 <workshopitemupdated>ワークショップ[itemname]の更新に成功しました。</workshopitemupdated>
 <workshopitemupdatefailed>ワークショップのアイテム[itemname]の更新に失敗しました。 [errormessage]</workshopitemupdatefailed>
 <workshopfilenotfound>[path]ファイルが見つかりません。</workshopfilenotfound>
-<debugconsolehelptext>デバッグコンソール--F3を押して、開く/閉まじるを選んでください;入手可能なコマンドのリストのために「help」を入力してください。</debugconsolehelptext>
+<debugconsolehelptext>デバッグコンソール--F3を押して、開く/閉じることができます;入手可能なコマンドのリストを獲得するために「help」を入力してください。</debugconsolehelptext>
 <voipnodevices>オーディオキャプチャデバイスが見つかりませんでした</voipnodevices>
-<wrongfiletype>間違ったファイルタイプ！</wrongfiletype>
+<wrongfiletype>ファイルタイプが間違っています！</wrongfiletype>
 <charactereditor.contentpackagenameinuse>同じ名前を持つコンテンツパッケージはすでに存在しています。別の名前を選ぶか、あなたが、キャラクターをそれに追加したいならば、ドロップダウンから既存のコンテンツパッケージを選んでください。</charactereditor.contentpackagenameinuse>
 <servermessage.previousclientname>[client]は以前にサーバーの上の名前[previousname]を使いました。</servermessage.previousclientname>
 <serverlistdirectjoin>直接参加</serverlistdirectjoin>
@@ -2658,19 +2665,19 @@
 <complete>コンプリート</complete>
 
 <!-- Traitor mission (new) -->
-<traitormissionstartmessage>あなたはその裏切り者です！あなたは首尾よく潜水艦に侵入し、今、計画に開始する時間です。</traitormissionstartmessage>
-<traitormissionfailuremessage>あなたはあなたのミッションに失敗しました。結果として、ミッションは取り消されていて、あなたは今クルーの一員です。あなたが再び連絡されるまで、控え目な姿勢を保持してください。</traitormissionfailuremessage>
-<traitormissionsuccessmessage>あなたは成功したクルーの努力を妨害してきました。エスケープシャトルはあなたのために派遣されてきました。</traitormissionsuccessmessage>
+<traitormissionstartmessage>あなたは裏切り者です！あなたは首尾よく潜水艦に侵入し、今、計画に開始する時間です。</traitormissionstartmessage>
+<traitormissionfailuremessage>ミッションに失敗しました。結果として、ミッションは取り消されていて、あなたは今クルーの一員です。再び連絡されるまで、控え目な姿勢を保持してください。</traitormissionfailuremessage>
+<traitormissionsuccessmessage>クルーの行動を妨害することに成功しました。エスケープシャトルはあなたのために派遣されてきました。</traitormissionsuccessmessage>
 
 <!-- Traitor objectives (new) -->
-<traitorobjectivestartmessage>新しい目標があります。以下の目標を完成する必要があります：\ n　[traitorgoalinfos]</traitorobjectivestartmessage>
-<traitorobjectivestartmessageserver>[targetname]は裏切り者であり、以下の目標を持っています：\ n [traitorgoalinfos]</traitorobjectivestartmessageserver>
-<traitorobjectiveendmessagesuccess>[targetname]は裏切り者で、与えられた以下の任務を完了しました：\ n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
-<traitorobjectiveendmessagesuccessdead>[targetname]は裏切り者で、以下の与えられた任務を完了しましたが、残念ながらそのために死亡しました：\ n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
-<traitorobjectiveendmessagesuccessdetained>[targetname]は裏切り者で、以下の与えられた任務を完了しましたが、拘束されました：\ n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
-<traitorobjectiveendmessagefailure>[targetname]裏切り者だったが、以下の与えられたターゲットを完了できませんでした：\ n [traitorgoalinfos]</traitorobjectiveendmessagefailure>
-<traitorobjectiveendmessagefailuredead>[targetname]裏切り者だったが、以下の与えられたターゲットを完成させることができない間、死亡した：\ n [traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
-<traitorobjectiveendmessagefailuredetained>[targetname]は裏切り者だったが、以下の与えられたターゲットを完成させることができない間、拘禁されました：\ n [traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
+<traitorobjectivestartmessage>新しい目標があります。以下の目標を完成する必要があります：\n　[traitorgoalinfos]</traitorobjectivestartmessage>
+<traitorobjectivestartmessageserver>[targetname]は裏切り者であり、以下の目標を持っています：\n [traitorgoalinfos]</traitorobjectivestartmessageserver>
+<traitorobjectiveendmessagesuccess>[targetname]は裏切り者で、与えられた以下の任務を完了しました：\n [traitorgoalinfos]</traitorobjectiveendmessagesuccess>
+<traitorobjectiveendmessagesuccessdead>[targetname]は裏切り者で、以下の与えられた任務を完了しましたが、残念ながらそのために死亡しました：\n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdead>
+<traitorobjectiveendmessagesuccessdetained>[targetname]は裏切り者で、以下の与えられた任務を完了しましたが、拘束されました：\n [traitorgoalinfos]</traitorobjectiveendmessagesuccessdetained>
+<traitorobjectiveendmessagefailure>[targetname]裏切り者だったが、以下の与えられたターゲットを完了できませんでした：\n [traitorgoalinfos]</traitorobjectiveendmessagefailure>
+<traitorobjectiveendmessagefailuredead>[targetname]裏切り者だったが、以下の与えられたターゲットを完成させることができない間、死亡した：\n [traitorgoalinfos]</traitorobjectiveendmessagefailuredead>
+<traitorobjectiveendmessagefailuredetained>[targetname]は裏切り者だったが、以下の与えられたターゲットを完成させることができない間、拘禁されました：\n [traitorgoalinfos]</traitorobjectiveendmessagefailuredetained>
 <traitorobjectivegoalinfoformat>- [statustext]\n</traitorobjectivegoalinfoformat>
 
 <!-- Traitor goals (new) -->
@@ -2679,7 +2686,7 @@
 <traitorgoalkilltargetinfo>[targetname]を暗殺</traitorgoalkilltargetinfo>
 <traitorgoalkilleveryoneinfo>すべての乗組員を殺す。</traitorgoalkilleveryoneinfo>
 <traitorgoalfinditeminfo>[targethullname]の中から[identifier]を一つ発見してください。</traitorgoalfinditeminfo>
-<traitorgoalcausereactormeltdown>炉心溶融を引き起こしまず。</traitorgoalcausereactormeltdown>
+<traitorgoalcausereactormeltdown>炉心溶融を引き起こします。</traitorgoalcausereactormeltdown>
 <traitorgoaldestroyitems>潜水艦内のすべての非在庫[tag]の少なくとも[percentage]パーセントを破壊してください。</traitorgoaldestroyitems>
 <traitorgoalfloodpercentofsub>潜水艦の少なくとも[percentage]パーセントを浸水させてください。</traitorgoalfloodpercentofsub>
 <traitorgoaljamsonarinfo>アクティブなソナー妨害機を、それが[duration]秒の間気付かれることができないどこかに隠してください。</traitorgoaljamsonarinfo>
@@ -2696,43 +2703,43 @@
 <entityname.flamer>フレーマー</entityname.flamer>
 <entitydescription.flamer>溶接燃料を燃やすストリームに点火する放火の武器。</entitydescription.flamer>
 <entityname.smg>SMG</entityname.smg>
-<entitydescription.smg>.45個の口径小型軽機関銃。</entitydescription.smg>
+<entitydescription.smg>.45口径の小型軽機関銃。</entitydescription.smg>
 <entityname.smgmagazine>SMG弾倉</entityname.smgmagazine>
-<entitydescription.smgmagazine>15の.45口径ラウンドのための弾倉。</entitydescription.smgmagazine>
-<entityname.smground>SMGラウンド</entityname.smground>
-<entitydescription.smground>.45の口径小型軽機関銃ラウンド。</entitydescription.smground>
+<entitydescription.smgmagazine>.45口径の弾薬の弾倉。装弾数が15発。</entitydescription.smgmagazine>
+<entityname.smground>SMG弾薬</entityname.smground>
+<entitydescription.smground>.45口径の小型軽機関銃弾薬。</entitydescription.smground>
 <entityname.grenadelauncher>グレネードランチャー</entityname.grenadelauncher>
-<entitydescription.grenadelauncher>40mmの手榴弾のためのポータブルグレネードランチャー。</entitydescription.grenadelauncher>
-<entityname.40mmgrenade>40mm手榴弾</entityname.40mmgrenade>
-<entitydescription.40mmgrenade>グレネードランチャーのための弾薬。</entitydescription.40mmgrenade>
+<entitydescription.grenadelauncher>40mmのグレネードを装弾できるポータブルグレネードランチャー。</entitydescription.grenadelauncher>
+<entityname.40mmgrenade>40mmグレネード</entityname.40mmgrenade>
+<entitydescription.40mmgrenade>グレネードランチャーの弾薬。</entitydescription.40mmgrenade>
 <entityname.40mmstungrenade>40mmのスタン擲弾</entityname.40mmstungrenade>
-<entitydescription.40mmstungrenade>グレネードランチャーのための弾薬。致命傷でありません。</entitydescription.40mmstungrenade>
+<entitydescription.40mmstungrenade>グレネードランチャーのための弾薬。致命的ではありません。</entitydescription.40mmstungrenade>
 <entityname.shotgun>暴動鎮圧用散弾銃</entityname.shotgun>
 <entitydescription.shotgun>群衆の制御用に設計された散弾銃。</entitydescription.shotgun>
-<entityname.shotgunshell>散弾銃シェル</entityname.shotgunshell>
-<entitydescription.shotgunshell>散弾銃用弾薬。致命傷。</entitydescription.shotgunshell>
+<entityname.shotgunshell>散弾銃弾薬</entityname.shotgunshell>
+<entitydescription.shotgunshell>散弾銃用弾薬。致命的です。</entitydescription.shotgunshell>
 <entityname.stungun>スタンガン</entityname.stungun>
 <entitydescription.stungun>電化ダーツを発射するための装置。</entitydescription.stungun>
 <entityname.stungundart>スタンガンダーツ</entityname.stungundart>
-<entitydescription.stungundart>ターゲットを無力化するために電気ショックを与えます。致命傷ではありません。</entitydescription.stungundart>
+<entitydescription.stungundart>ターゲットを無力化するために電気ショックを与えます。致命的ではありません。</entitydescription.stungundart>
 <entityname.toyhammer>玩具ハンマー</entityname.toyhammer>
-<entitydescription.toyhammer>致命的でないけれども非常に苦痛である。</entitydescription.toyhammer>
+<entitydescription.toyhammer>致命的でないけれども非常に煩わしい。</entitydescription.toyhammer>
 <entityname.coilgunammoboxexplosive>爆発弾薬箱</entityname.coilgunammoboxexplosive>
-<entitydescription.coilgunammoboxexplosive>コイルガンのための弾薬。インパクトの上で爆発します。</entitydescription.coilgunammoboxexplosive>
-<entityname.coilgunammoboxpiercing>鋭い弾薬箱</entityname.coilgunammoboxpiercing>
-<entitydescription.coilgunammoboxpiercing>鋭い機能を持っているコイルガン弾薬。</entitydescription.coilgunammoboxpiercing>
+<entitydescription.coilgunammoboxexplosive>コイルガンのための弾薬。命中と同時に爆発します。</entitydescription.coilgunammoboxexplosive>
+<entityname.coilgunammoboxpiercing>徹甲弾弾薬箱</entityname.coilgunammoboxpiercing>
+<entitydescription.coilgunammoboxpiercing>貫通機能を持っているコイルガン弾薬。</entitydescription.coilgunammoboxpiercing>
 <entityname.coilgunboltexplosive>爆発コイルガンボルト</entityname.coilgunboltexplosive>
-<entitydescription.coilgunboltexplosive>コイルガンの弾薬。衝撃で爆発します。</entitydescription.coilgunboltexplosive>
-<entityname.coilgunboltpiercing>鋭いコイルガンボルト</entityname.coilgunboltpiercing>
-<entitydescription.coilgunboltpiercing>鋭い機能を持っているコイルガン弾薬。</entitydescription.coilgunboltpiercing>
+<entitydescription.coilgunboltexplosive>コイルガンの弾薬。命中と同時に爆発します。</entitydescription.coilgunboltexplosive>
+<entityname.coilgunboltpiercing>徹甲コイルガンボルト</entityname.coilgunboltpiercing>
+<entitydescription.coilgunboltpiercing>貫通機能を持っているコイルガン弾薬。</entitydescription.coilgunboltpiercing>
 <entityname.crawlermask>クローラーマスク</entityname.crawlermask>
-<entitydescription.crawlermask>着用者の身元を保護します。特定のパーティーで楽しいです。</entitydescription.crawlermask>
+<entitydescription.crawlermask>着用者の身元を保護します。仮装パーティーでは注目を浴びられます。</entitydescription.crawlermask>
 <entityname.huskstinger>ハスクスティンガー</entityname.huskstinger>
 <entitydescription.huskstinger>間に合わせの刺突器具。</entitydescription.huskstinger>
 <entityname.shellshield>モロクシェル断片</entityname.shellshield>
 <entitydescription.shellshield>モレクトカゲのシェルの頑丈な断片。</entitydescription.shellshield>
 <entityname.mudraptorshell>ムドラプターの殻</entityname.mudraptorshell>
-<entitydescription.mudraptorshell>ムドラプターを保護する殻</entitydescription.mudraptorshell>
+<entitydescription.mudraptorshell>ムドラプターを保護する殻。</entitydescription.mudraptorshell>
 <entityname.accordion>アコーディオン</entityname.accordion>
 <entitydescription.accordion>手作りの古いアコーディオン。</entitydescription.accordion>
 <entityname.bongodrums>ボンゴドラム</entityname.bongodrums>
@@ -2756,9 +2763,9 @@
 <!-- *** August additions *** -->
 <!-- Server -->
 <serversettingsgeneraltab>一般</serversettingsgeneraltab>
-<serversettingsantigriefingtab>悪意の行為を防ぐ</serversettingsantigriefingtab>
+<serversettingsantigriefingtab>悪意行為を防ぐ</serversettingsantigriefingtab>
 <serverprocessclosed>サーバープロセスは不意に終了しました。クラッシュレポート(servercrashreport.log)がゲームのルートディレクトリの中で生成されたかもしれません。</serverprocessclosed>
-<serverprocesscrashed>サーバープロセスは壊れました。クラッシュレポート(servercrashreport.log)がゲームのルートディレクトリの中で生成されています。</serverprocesscrashed>
+<serverprocesscrashed>サーバープロセスはクラッシュしました。クラッシュレポート(servercrashreport.log)がゲームのルートディレクトリの中で生成されています。</serverprocesscrashed>
 <disconnectreason.servercrashed>サーバーはクラッシュしました。</disconnectreason.servercrashed>
 
 <!-- Workshop -->
@@ -2766,25 +2773,25 @@
 
 <!-- Audio -->
 <dynamicrangecompression>ダイナミックレンジ圧縮</dynamicrangecompression>
-<dynamicrangecompressiontooltip>ゲームのボリュームを自動的に調節してオーディオのひずみを調節します。</dynamicrangecompressiontooltip>
+<dynamicrangecompressiontooltip>オーディオのひずみを防ぐためにゲームのボリュームを自動的に調節します。</dynamicrangecompressiontooltip>
 <voipnodevices>オーディオキャプチャ機器が見つかりませんでした</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>自動制御</pumpautocontrol>
 <viewsteamprofile>Steamプロファイルを見る</viewsteamprofile>
 <deletefileverification>[filename]を削除したいですか？</deletefileverification>
-<connection.activate>起動</connection.activate>
+<connection.activate>有効化</connection.activate>
 
 <!-- Submarine labels -->
 <label.betadeck>ベータデッキ</label.betadeck>
 <label.airlock>エアロック</label.airlock>
-<label.dockingport>ドッキングポート</label.dockingport>
+<label.dockingport>停泊中の港</label.dockingport>
 <label.weapons>武器</label.weapons>
 <label.cargo>貨物室</label.cargo>
-<label.crewquarters>クルー配備地点</label.crewquarters>
-<label.electrical1>電気 #1</label.electrical1>
-<label.electrical2>電気 #2</label.electrical2>
-<label.medical>医療</label.medical>
+<label.crewquarters>クルー室</label.crewquarters>
+<label.electrical1>電気室 #1</label.electrical1>
+<label.electrical2>電気室 #2</label.electrical2>
+<label.medical>医療ステーション</label.medical>
 <label.engineering>エンジニアリング</label.engineering>
 <label.ballast>バラスト</label.ballast>
 <label.reactor>反応炉</label.reactor>
@@ -2793,57 +2800,57 @@
 <label.onoff>オン／オフ</label.onoff>
 <label.bilge>湾曲部</label.bilge>
 <label.powermainline>パワーメインライン</label.powermainline>
-<label.command>コマンド</label.command>
+<label.command>指揮室</label.command>
 <label.engine>エンジン</label.engine>
 
 <!-- Karma system -->
 <karma.kickbanthreshold>禁止閾値</karma.kickbanthreshold>
-<karma.kickbanthresholdtooltip>カルマがこの閾値如以下に減少するプレーヤーはサーバーから自動的に締め出されます。</karma.kickbanthresholdtooltip>
+<karma.kickbanthresholdtooltip>カルマがこの閾値以下に減少するプレーヤーはサーバーから自動的にブロックされます。</karma.kickbanthresholdtooltip>
 <karma.karmadecay>カルマ低下スピード</karma.karmadecay>
-<karma.karmadecaytooltip>低下閾値を超えた時に、どれくらいカルマが1秒あたり減少しますか。</karma.karmadecaytooltip>
+<karma.karmadecaytooltip>低下閾値を超えた時に、超えた部分のカルマの減少スピードです。</karma.karmadecaytooltip>
 <karma.karmadecaythreshold>カルマ低下閾値</karma.karmadecaythreshold>
-<karma.karmadecaythresholdtooltip>それがこの閾値を超えた時に、カルマは徐々に減少します。</karma.karmadecaythresholdtooltip>
+<karma.karmadecaythresholdtooltip>この閾値を超えた時に、超えた部分のカルマは徐々に減少します。</karma.karmadecaythresholdtooltip>
 <karma.karmaincrease>カルマ増加スピード</karma.karmaincrease>
-<karma.karmaincreasetooltip>それが増加閾値以下の時に、どれくらいカルマが1秒あたり増大しますか。</karma.karmaincreasetooltip>
+<karma.karmaincreasetooltip>増加閾値以下になった時に、カルマの増加スピードです。</karma.karmaincreasetooltip>
 <karma.karmaincreasethreshold>カルマ増加閾値</karma.karmaincreasethreshold>
-<karma.karmaincreasethresholdtooltip>それがこの閾値以下の時に、カルマは徐々に増大します。</karma.karmaincreasethresholdtooltip>
-<karma.structurerepairkarmaincrease>修理された構造</karma.structurerepairkarmaincrease>
-<karma.structurerepairkarmaincreasetooltip>構造(修理された損傷毎--例えば、0.05の値は、あなたが0から100まで壁を修理する時に、あなたが5ポイントのカルマを得るということを意味するでしょう)を修理する時に、どれくらいカルマが増大しますか。</karma.structurerepairkarmaincreasetooltip>
-<karma.structuredamagekarmadecrease>破損した構造</karma.structuredamagekarmadecrease>
-<karma.structuredamagekarmadecreasetooltip>構造(損傷毎--例えば、0.05の値は、カルマが100から0まで壁を損傷する時に5ずつ減少するということを意味するでしょう)に損害を与える時に、どれくらいカルマが減少しますか。</karma.structuredamagekarmadecreasetooltip>
-<karma.itemrepairkarmaincrease>修理された機器</karma.itemrepairkarmaincrease>
-<karma.itemrepairkarmaincreasetooltip>機器(修理された損害額あたりの--例えば、0.05の値は、あなたが0から100まで機器を修理する時に、あなたが5ポイントのカルマを得るということを意味するでしょう)を修理する時に、どれくらいカルマが増大しますか。</karma.itemrepairkarmaincreasetooltip>
+<karma.karmaincreasethresholdtooltip>この閾値以下の時に、カルマは徐々に増大します。</karma.karmaincreasethresholdtooltip>
+<karma.structurerepairkarmaincrease>構造修復</karma.structurerepairkarmaincrease>
+<karma.structurerepairkarmaincreasetooltip>構造を修理する時に、増大するカルマです(修理された損傷毎--例えば、0.05に設定した場合、構造を0から100までに修理する時に、あなたが5ポイントのカルマを得ることになります)。</karma.structurerepairkarmaincreasetooltip>
+<karma.structuredamagekarmadecrease>構造破壊</karma.structuredamagekarmadecrease>
+<karma.structuredamagekarmadecreasetooltip>構造に損害を与える時に、減少するカルマです(損傷毎--例えば、0.05に設定した場合、構造を100から0まで破壊する時に5ポイントのカルマが減少されることになります)。</karma.structuredamagekarmadecreasetooltip>
+<karma.itemrepairkarmaincrease>機器修理</karma.itemrepairkarmaincrease>
+<karma.itemrepairkarmaincreasetooltip>機器を修理する時に、増大するカルマです(修理された損害額あたりの--例えば、0.05に設定した場合、あなたが機器を0から100までに修理する時に、5ポイントのカルマを得ることになります)。</karma.itemrepairkarmaincreasetooltip>
 <karma.damageenemykarmaincrease>敵への損害</karma.damageenemykarmaincrease>
-<karma.damageenemykarmaincreasetooltip>敵に損害を与える時にどれくらいカルマが増大しますか（損傷毎）。</karma.damageenemykarmaincreasetooltip>
+<karma.damageenemykarmaincreasetooltip>敵に損害を与える時に増大するカルマです（損傷毎）。</karma.damageenemykarmaincreasetooltip>
 <karma.healfriendlykarmaincrease>友軍を回復</karma.healfriendlykarmaincrease>
-<karma.healfriendlykarmaincreasetooltip>他のクルーメンバーを回復する時にどれくらいカルマが増大しますか（回復した損害毎）。</karma.healfriendlykarmaincreasetooltip>
+<karma.healfriendlykarmaincreasetooltip>他のクルーメンバーを回復する時に増大するカルマです（回復した損害毎）。</karma.healfriendlykarmaincreasetooltip>
 <karma.damagefriendlykarmadecrease>友軍への損害</karma.damagefriendlykarmadecrease>
-<karma.damagefriendlykarmadecreasetooltip>他のクルーメンバーに損害を与えた時にどれくらいカルマが減少しますか（損害毎）。</karma.damagefriendlykarmadecreasetooltip>
+<karma.damagefriendlykarmadecreasetooltip>他のクルーメンバーに損害を与えた時に減少するカルマです（損害毎）。</karma.damagefriendlykarmadecreasetooltip>
 <karma.reactormeltdownkarmadecrease>反応炉溶解</karma.reactormeltdownkarmadecrease>
-<karma.reactormeltdownkarmadecreasetooltip>プレーヤーが反応炉溶解を起こすならば、どれくらいカルマが減少しますか。</karma.reactormeltdownkarmadecreasetooltip>
-<karma.reactoroverheatkarmadecrease>反応炉加熱</karma.reactoroverheatkarmadecrease>
-<karma.reactoroverheatkarmadecreasetooltip>プレイヤーの操作中、反応炉が臨界温度のままであったら、カルマは１秒当たりどれくらい減少しますか。</karma.reactoroverheatkarmadecreasetooltip>
+<karma.reactormeltdownkarmadecreasetooltip>プレーヤーが一回の反応炉溶解を起こす際に減少するカルマです。</karma.reactormeltdownkarmadecreasetooltip>
+<karma.reactoroverheatkarmadecrease>反応炉過熱</karma.reactoroverheatkarmadecrease>
+<karma.reactoroverheatkarmadecreasetooltip>プレイヤーが担当する反応炉が臨界温度を超える時に、カルマは１秒当たりに減少する数です。</karma.reactoroverheatkarmadecreasetooltip>
 <karma.extinguishfirekarmaincrease>消火</karma.extinguishfirekarmaincrease>
-<karma.extinguishfirekarmaincreasetooltip>消火を試みている際に、カルマは１秒当たりどれくらい減少しますか。</karma.extinguishfirekarmaincreasetooltip>
+<karma.extinguishfirekarmaincreasetooltip>消火をする際に、カルマは１秒当たり増加する数です。</karma.extinguishfirekarmaincreasetooltip>
 <karma.allowedwiredisconnectionsperminute>１分あたりのワイヤ切断許容量</karma.allowedwiredisconnectionsperminute>
-<karma.allowedwiredisconnectionsperminutetooltip>カルマを失い始める前に、プレイヤーは１人当たり何個のワイヤーを切断することができますか。</karma.allowedwiredisconnectionsperminutetooltip>
+<karma.allowedwiredisconnectionsperminutetooltip>プレイヤーが１分当たりに許容されたワイヤを切断する数です。この上限を超えるとカルマが減少し始めます。</karma.allowedwiredisconnectionsperminutetooltip>
 <karma.wiredisconnectionkarmadecrease>沢山のワイヤを切断する</karma.wiredisconnectionkarmadecrease>
-<karma.wiredisconnectionkarmadecreasetooltip>プレイヤーが１分当たりに許容された数以上のワイヤを切断した場合、そのくらいカルマが減少しますか。</karma.wiredisconnectionkarmadecreasetooltip>
-<karma.spamfilterkarmadecrease>スパムフィルタを引き起こします</karma.spamfilterkarmadecrease>
-<karma.spamfilterkarmadecreasetooltip>プレーヤーがテキストチャットのスパムフィルタを引き起こすならば、どれくらいカルマが減少しますか。</karma.spamfilterkarmadecreasetooltip>
+<karma.wiredisconnectionkarmadecreasetooltip>プレイヤーが１分当たりに許容された数以上のワイヤを切断することによって、減少されたカルマです。</karma.wiredisconnectionkarmadecreasetooltip>
+<karma.spamfilterkarmadecrease>スパム行為</karma.spamfilterkarmadecrease>
+<karma.spamfilterkarmadecreasetooltip>プレーヤーがテキストチャットのスパム行為によって、減少されたカルマです。</karma.spamfilterkarmadecreasetooltip>
 <karma.herpesthreshold>スペースヘルペス閾値</karma.herpesthreshold>
-<karma.herpesthresholdtooltip>プレーヤーがスペースヘルペスを得るためにはそれくらいの期間カルマは減少しなければなりませんか。</karma.herpesthresholdtooltip>
+<karma.herpesthresholdtooltip>プレーヤーのカルマが閾値より低い時に、スペースヘルペスになる。</karma.herpesthresholdtooltip>
 <karma.positiveactions>役立つ行動</karma.positiveactions>
 <karma.negativeactions>有害な行動</karma.negativeactions>
 <karmapreset.default>デフォルト</karmapreset.default>
-<karmapreset.strict>厳密</karmapreset.strict>
+<karmapreset.strict>厳格</karmapreset.strict>
 <karmapreset.custom>カスタム</karmapreset.custom>
 <karmadecreasedunknownamount>あなたのカルマは減少しました。</karmadecreasedunknownamount>
 <karmaincreasedunknownamount>あなたのカルマは増大しました。</karmaincreasedunknownamount>
 <afflictionname.spaceherpes>スペースヘルペス</afflictionname.spaceherpes>
 <afflictiondescription.spaceherpes>患者の顔は汚い水疱と潰瘍によって覆われています。</afflictiondescription.spaceherpes>
-<afflictionname.invertcontrols>方向感覚の消失</afflictionname.invertcontrols>
-<afflictiondescription.invertcontrols>患者の目はまわりを見回していて、環境に順応するのに苦労をしているようです。</afflictiondescription.invertcontrols>
+<afflictionname.invertcontrols>眩暈</afflictionname.invertcontrols>
+<afflictiondescription.invertcontrols>患者は眩暈がして、周囲の環境に順応するのに苦労をしているようです。</afflictiondescription.invertcontrols>
 
 
 <damagebutton>損害</damagebutton>
@@ -2855,29 +2862,29 @@
 <traitorgoalfindcontainerinfo>[targethullname]において[target]中のあなたの次の目標を発見してください。</traitorgoalfindcontainerinfo>
 <traitorgoaldestroyoxygen>潜水艦の上のすべての非在庫酸素タンクのうち少なくとも[percentage]パーセントを破壊してください。</traitorgoaldestroyoxygen>
 <traitorgoalsabotagedurationinfo>[target]を破壊し、そのステータスが少なくとも[duration]秒の間に[percentage]％以下にしてください。</traitorgoalsabotagedurationinfo>
-<traitorgoalescape>近くのシャトルに脱出してください。</traitorgoalescape>
+<traitorgoalescape>近くのシャトルで脱出する。</traitorgoalescape>
 
 <!-- MVP traitor mission text package -->
 <mvptraitormissionstartinfotext>あなたを驚かせるのに十分に騒々しく、あなたの頭の中の声は絶叫します:「殻のカルトが仕えよと言います！」</mvptraitormissionstartinfotext>
 <mvptraitorobjectivestartmessage1>アイデアは徐々に貴方の頭の中で形成し、俗っぽいのものであるにかかわらず、それは奇妙に誘惑的です：\n[traitorgoalinfos]</mvptraitorobjectivestartmessage1>
-<mvp_goalinfotext_1>貯蔵用ロッカーを捜してください--ただあなた宛の特別なメッセージは予備の酸素タンクの1つの下に隠されています。</mvp_goalinfotext_1>
-<mvpobjectivesuccessmessage1>どうにかして予測したように、不潔な紙切れはこの酸素タンクの下側に貼り付けられます。それは汚い走り書きで埋め尽くされていますが、あなたは直観的にそれを、コード化された指示であると理解しています。</mvpobjectivesuccessmessage1>
+<mvp_goalinfotext_1>貯蔵用ロッカーを捜してください--あなた宛の特別なメッセージは予備の酸素タンクの1つの下に隠されています。</mvp_goalinfotext_1>
+<mvpobjectivesuccessmessage1>その予言の通り、不潔な紙切れはこの酸素タンクの下側に貼り付けられています。それは汚い走り書きで埋め尽くされていますが、あなたは直観的にそれを、コード化された指示であると理解しています。</mvpobjectivesuccessmessage1>
 <mvptraitorobjectivestartmessage2>あなたの最初の仕事：\n[traitorgoalinfos]</mvptraitorobjectivestartmessage2>
 <mvpobjectivesuccessmessage2>あなたが紙の上の最初の仕事を完遂した際に、溢れんばかりの喜びが貴方を押し寄せます。乾いて狂った笑いは、貴方の頭の中でしばらく反響し、カチッという音の中にぼんやりとうすれていきます。</mvpobjectivesuccessmessage2>
 <mvptraitorobjectivestartmessage3>あなたは次に暗号化された指示を読みました：\n[traitorgoalinfos]</mvptraitorobjectivestartmessage3>
 <mvpobjectivesuccessmessage3>それによって、これ以上することは何もありません。潜水艦は混乱にあり、あなたの頭の中の声は静かになり、あなたの運命は決まります。</mvpobjectivesuccessmessage3>
 
 <!-- flood_1 traitor mission text package -->
-<flood_1_traitormissionstartinfotext>ホンクマザーを賞賛する！</flood_1_traitormissionstartinfotext>
+<flood_1_traitormissionstartinfotext>ホンクマザーを唱えよ！</flood_1_traitormissionstartinfotext>
 <flood_1_traitorobjectivestartmessage1>時間です。ミノス・リネアの港で、奇妙にペイントされた顔の男が指示した通り、仕事を始めましょう：\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage1>
 <flood_1_goalinfotext_1>各コンパートメントの中で緊急供給品ロッカーを探してください。スパイはボタンコンポーネントをそれらの1つに隠しました。</flood_1_goalinfotext_1>
 <flood_1_objectivesuccessmessage1>あなたは素早くボタンをあなたのポケットに隠し、何事もなかったようにふるまおうとします。ホンク！</flood_1_objectivesuccessmessage1>
 <flood_1_traitorobjectivestartmessage2>次に、貴方は他の誰かに手に入れられる前に、爆発物を見つけるてください！\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage2>
-<flood_1_goalinfotext_2>メッドベイから爆発物を取り戻してください。</flood_1_goalinfotext_2>
-<flood_1_objectivesuccessmessage2>計画は完璧に遂行中です。爆発物を掴み、あまりくすくす笑わないようにしましょう。</flood_1_objectivesuccessmessage2>
+<flood_1_goalinfotext_2>メッドベイから爆発物を手に入れてください。</flood_1_goalinfotext_2>
+<flood_1_objectivesuccessmessage2>計画は完璧に遂行中です。爆発物を手に入れ、あまりくすくす笑わないようにしましょう。</flood_1_objectivesuccessmessage2>
 <flood_1_traitorobjectivestartmessage3>最後に、ペイントされた男は、これを全て爆発させるためのものを探す必要があると言いました！\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage3>
-<flood_1_goalinfotext_3>潜水艦のまわりでスチール収納キャビネットを捜し、起爆装置を取り戻してください。</flood_1_goalinfotext_3>
-<flood_1_objectivesuccessmessage3>スパイは本当に通って来ました！あなたは、ここで宴を開始するために必要なものを全て持っています。</flood_1_objectivesuccessmessage3>
+<flood_1_goalinfotext_3>潜水艦のまわりでスチール収納キャビネットを捜し、起爆装置を手に入れてください。</flood_1_goalinfotext_3>
+<flood_1_objectivesuccessmessage3>あのスパイは本当に凄いです！あなたは、ここで宴を開始するために必要なものを全て持っています。</flood_1_objectivesuccessmessage3>
 <flood_1_traitorobjectivestartmessage4>貴方は、いい所を見つけて、起爆装置を壁にセットし、ボタンを安全の距離に置かれて、その２つをワイヤーで接続し、それを爆発させて、このさびたバケツを沈め！\n[traitorgoalinfos]</flood_1_traitorobjectivestartmessage4>
 <flood_1_objectivesuccessmessage4>ホンク、ホンク！潜水艦には、このミッションを早期に終了させるのに十分以上の水があります。貴方は、最も近い前哨基地まで泳ぎ、ペイントされた男に報告するのにどれくらいかかるのだろうかと思っているでしょう…</flood_1_objectivesuccessmessage4>
 
@@ -2890,7 +2897,253 @@
 <flood_2_objectivesuccessmessage2>よくやりました。酸素がなければ、すぐに連中はパニックになっていたでしょう。</flood_2_objectivesuccessmessage2>
 <flood_2_traitorobjectivestartmessage3>少々洪水を引き起こし、ファシストが悲鳴をあげるのを見ます：\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage3>
 <flood_2_objectivesuccessmessage3>素晴らしい！同志よ覚えておくのです、悪い戦略などなく、悪いターゲットがいるだけです！</flood_2_objectivesuccessmessage3>
-<flood_2_traitorobjectivestartmessage4>素早く、混乱を利用して、できる限りあの豚野郎をやっつけて！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
-<flood_2_objectivesuccessmessage4>ひょっとすると少々苦々しさを感じながら彼らの命を奪った際に、貴方のレシーバーはとても突然に故障しました。貴方の同志は貴方を残して、マザーユーロパの慈悲のもとへ旅立ったのです。</flood_2_objectivesuccessmessage4>
+<flood_2_traitorobjectivestartmessage4>ほら、速く、混乱を利用して、できる限りあの豚野郎をやっつけて！\n[traitorgoalinfos]</flood_2_traitorobjectivestartmessage4>
+<flood_2_objectivesuccessmessage4>彼らの命を奪った後、貴方は少々苦々しさを感じながら、自分のレシーバーが唐突に故障したことに気付きました。貴方の同志は貴方の運命をマザーユーロパに託した。</flood_2_objectivesuccessmessage4>
+
+
+<!-- New Additions as of 13th of August -->
+<connection.batterychargestatusout>charge_out</connection.batterychargestatusout>
+<connection.batterychargepercentage>charge_%</connection.batterychargepercentage>
+<connection.batterysetrechargespeed>set_charge_rate</connection.batterysetrechargespeed>
+<connection.batteryrechargespeedout>charge_rate_out</connection.batteryrechargespeedout>
+<personalitytrait.professional>専門家</personalitytrait.professional>
+<personalitytrait.laid-back>リラックス</personalitytrait.laid-back>
+<personalitytrait.rude>乱暴</personalitytrait.rude>
+<personalitytrait.tough>強引</personalitytrait.tough>
+<personalitytrait.joker>ジョーカー</personalitytrait.joker>
+<personalitytrait.brokenenglish>へたくそな英語</personalitytrait.brokenenglish>
+<personalitytrait.fearful>恐ろしい</personalitytrait.fearful>
+<personalitytrait.crazy>狂わしい</personalitytrait.crazy>
+<sabotagebutton>破壊</sabotagebutton>
+<sabotaging>破壊中</sabotaging>
+<voipattenuation>ヴォイスチャット減衰</voipattenuation>
+<voipattenuationtooltip>プレイヤーが話す時の音量を減衰</voipattenuationtooltip>
+<roundsummaryroundhasended>このラウンドは終了しました</roundsummaryroundhasended>
+<clientpermission.karmaimmunity>カルマ免疫</clientpermission.karmaimmunity>
+<karmakicked>あなたのカルマが[banthreshold]以下になったことにより、サーバーから蹴られました。</karmakicked>
+<karma.kicksbeforeban>ブロックされる前の蹴られた回数</karma.kicksbeforeban>
+<karma.kicksbeforebantooltip>プレイヤーはカルマの低下でサーバーに蹴られた回数が多すぎると、永久にサーバーからブロックされます。この数値が0になったら、プレイヤーのカルマが低下になると、永久にサーバーからブロックされることに意味します。</karma.kicksbeforebantooltip>
+<traitorgoalreachdistancefromsub>この潜水艦が[distance]までの距離です。</traitorgoalreachdistancefromsub>
+<traitorgoalisoptionalinfotext>任意：[infotext]</traitorgoalisoptionalinfotext>
+<traitorgoalwithtimelimitinfotext>[infotext] [timelimit]内でこの目標を完成する。</traitorgoalwithtimelimitinfotext>
+<traitorgoalwithdurationinfotext>[infotext] この目標は[duration]秒以内で完成しなければなりません。</traitorgoalwithdurationinfotext>
+<traitorgoalwithcumulativedurationinfotext>[infotext]この目標は総計[duration]秒で完成しなければなりません。</traitorgoalwithcumulativedurationinfotext>
+<traitorgoalwaitfortraitorsinfotext> [remaining]/[count] 裏切り者が彼らの任務を完成するのを待ってください。</traitorgoalwaitfortraitorsinfotext>
+<failed>失敗</failed>
+<pausemenuquitverificationeditor>メインメニューに戻りますか？全ての未保存のデータは失われます。</pausemenuquitverificationeditor>
+<mapentitycategory.decorative>飾り用</mapentitycategory.decorative>
+<mapentitycategory.wall>壁</mapentitycategory.wall>
+<karma.resetkarmabetweenrounds>カルマのラウンドの間隔をリセット</karma.resetkarmabetweenrounds>
+<enablesplashscreen>オープニングを有効化</enablesplashscreen>
+<restartrequiredgeneric>ゲームを再起動することでこれらの変更を有効化にする</restartrequiredgeneric>
+<invalidcontentpackage>コンテンツ '[packagename]'をロードできません</invalidcontentpackage>
+<xmlfileinvalid>ファイル '[filepath]' は合法なXMLファイルではありません ([errormessage])。</xmlfileinvalid>
+<roomname.airlockaccess>エアロックのアクセス</roomname.airlockaccess>
+<roomname.gunnerycompartment>銃砲コンパートメント</roomname.gunnerycompartment>
+<roomname.dronecontrol>ドローンコントロール</roomname.dronecontrol>
+<roomname.drone>ドローン</roomname.drone>
+<roomname.droneballast>ドローンカウンタウェイト</roomname.droneballast>
+<subeditorlights>ライト</subeditorlights>
+<subeditorshadowcastinglights>投影ランプ</subeditorshadowcastinglights>
+<contentpackagemismatchwarninggeneric>この潜水艦は現在選ばれたコンテンツとの互換性がない可能性があります。本当にこの潜水艦を選びますか？</contentpackagemismatchwarninggeneric>
+<label.activatedischargecoils>放電コイル</label.activatedischargecoils>
+<label.lights1>ライト1</label.lights1>
+<label.lights2>ライト2</label.lights2>
+<label.lights3>ライト3</label.lights3>
+<label.lights4>ライト4</label.lights4>
+<label.lights5>ライト5</label.lights5>
+<label.pumps1>ポンプ1</label.pumps1>
+<label.pumps2>ポンプ2</label.pumps2>
+<label.dronecharge>ドローンチャージ</label.dronecharge>
+<label.meltdown>炉心溶融</label.meltdown>
+<campaignfiletransferinprogress>キャンペーンのセーブファイルのダウンロードをお待ちください。</campaignfiletransferinprogress>
+<openlinkinbrowserprompt>ウェブブラウザーで[link] リンクを開けますか？</openlinkinbrowserprompt>
+<replacelostshuttles>失われた飛行船を置き換える</replacelostshuttles>
+<replaceshuttles>置き換え</replaceshuttles>
+<replaceshuttledockingportoccupied>この失われた飛行船は置き換えされできません。ドッキングポートが現在使用中で、ドッキングポートが空いたら新しい飛行船の置き換えが可能です。</replaceshuttledockingportoccupied>
+<character.blackmoloch>黒いモロク</character.blackmoloch>
+<character.hammerheadgold>金色のシュモクザメ</character.hammerheadgold>
+<character.hammerheadmatriarch>シュモクザメ女族長</character.hammerheadmatriarch>
+<character.bonethresher>ボーンタイガーシャーク</character.bonethresher>
+
+<!-- New Additions for the November update -->
+<submarine.name.kastrull>カストラル</submarine.name.kastrull>
+<submarine.description.kastrull>カストラルはあらゆる戦闘において、十分な火力をもたらす信頼性の高い攻撃潜水艦クラスです。それほど軽快ではありませんが、標準でドローンガンシップを搭載しています。試験用オープンバラストタンク、洪水に対する低い耐性、多くの乗組員ステーションがあります。多くの経験豊富な乗組員はこの潜水艦を最大限に活用するでしょう。</submarine.description.kastrull>
+
+<gamemodedescription.singleplayercampaign>エウロパの奥深くに向けた旅に乗り出します。土地から土地へ旅を続け、物資の資金を調達するためにミッションを遂行。新しい生物群を見つけだし、最終的にはエウロパの秘密を明らかにします。</gamemodedescription.singleplayercampaign>
+<gamemodedescription.sandbox>特定の目的を持たないゲームモード</gamemodedescription.sandbox>
+<gamemodedescription.mission>エイリアンから戦利品を獲得したり、近くの前哨基地を恐怖に陥れている生き物を殺害するなど、乗組員は特定の任務を完了させるために協力する必要があります。任務を全て完了するか、乗組員の全員が死亡すると、ゲームは終了します。</gamemodedescription.mission>
+<gamemodedescription.multiplayercampaign>エウロパの奥深くに向けた旅に乗り出します。土地から土地へ旅を続け、物資の資金を調達するためにミッションを遂行。新しい生物群を見つけだし、最終的にはエウロパの秘密を明らかにします。</gamemodedescription.multiplayercampaign>
+
+<entityname.sincomponent>Sin コンポーネント</entityname.sincomponent>
+<entitydescription.sincomponent>入力されたサインを出力します。</entitydescription.sincomponent>
+<entityname.coscomponent>Cos コンポーネント</entityname.coscomponent>
+<entitydescription.coscomponent>入力されたコサインを出力します。</entitydescription.coscomponent>
+<entityname.tancomponent>Tan コンポーネント</entityname.tancomponent>
+<entitydescription.tancomponent>入力されたタンジェントを出力します。</entitydescription.tancomponent>
+<entityname.asincomponent>Asin コンポーネント</entityname.asincomponent>
+<entitydescription.asincomponent>サインが入力値と等しい角度を出力します。</entitydescription.asincomponent>
+<entityname.acoscomponent>Acos コンポーネント</entityname.acoscomponent>
+<entitydescription.acoscomponent>コサインが入力値と等しい角度を出力します</entitydescription.acoscomponent>
+<entityname.atancomponent>Atan コンポーネント</entityname.atancomponent>
+<entitydescription.atancomponent>タンジェントが入力値と等しい角度を出力します。</entitydescription.atancomponent>
+<entityname.modulocomponent>モジュロ コンポーネント</entityname.modulocomponent>
+<entitydescription.modulocomponent>入力値が特定の数値で割り算された時、その残りを出力します。</entitydescription.modulocomponent>
+<entityname.roundcomponent>ラウンド コンポーネント</entityname.roundcomponent>
+<entitydescription.roundcomponent>入力された数値を最も近い整数値に四捨五入します。</entitydescription.roundcomponent>
+<entityname.ceilcomponent>セイル コンポーネント</entityname.ceilcomponent>
+<entitydescription.ceilcomponent>入力値以上の最小の整数値を出力します。切り上げ。</entitydescription.ceilcomponent>
+<entityname.floorcomponent>フロア コンポーネント</entityname.floorcomponent>
+<entitydescription.floorcomponent>入力値以下の最大の整数値を出力します。切り捨て。</entitydescription.floorcomponent>
+<entityname.factorialcomponent>階乗 コンポーネント</entityname.factorialcomponent>
+<entitydescription.factorialcomponent>入力値の階乗を出力します</entitydescription.factorialcomponent>
+<entityname.squarerootcomponent>平方根 コンポーネント</entityname.squarerootcomponent>
+<entitydescription.squarerootcomponent>入力値の平方根を出力します。</entitydescription.squarerootcomponent>
+<entityname.abscomponent>絶対値 コンポーネント</entityname.abscomponent>
+<entitydescription.abscomponent>入力値の絶対値を出力します。</entitydescription.abscomponent>
+<entityname.powcomponent>べき乗 コンポーネント</entityname.powcomponent>
+<entitydescription.powcomponent>入力値を指定された累乗で出力します。</entitydescription.powcomponent>
+
+<connection.setmodulus>set_modulus</connection.setmodulus>
+<shuttle>シャトル</shuttle>
+<privacypolicy>プライバシー ポリシー</privacypolicy>
+<entityname.mudraptoregg>マッドラプターの卵</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>ヌルヌルして脈打っているマッドラプターの卵。その卵の上にぽっかりと開いたアゴは、何か食べるものをつかんでいるようだ。</entitydescription.mudraptoregg>
+
+<!-- Server lobby 2.0 -->
+<serverlisttab.all>全てのサーバー</serverlisttab.all>
+<serverlisttab.favorites>お気に入り</serverlisttab.favorites>
+<serverlisttab.recent>最近使用</serverlisttab.recent>
+<addtofavorites>お気に入りに追加</addtofavorites>
+<removefromfavorites>お気に入りから削除</removefromfavorites>
+<servertag.casual>カジュアル</servertag.casual>
+<servertagdescription.casual>楽しむことは、任務の達成よりも重要です。新規プレーヤーにおすすめ。</servertagdescription.casual>
+<servertag.serious>シリアス</servertag.serious>
+<servertagdescription.serious>乗組員は効率的に協力し合い、その任務を完了することに集中する必要があります。細かい設定は必要ありません。</servertagdescription.serious>
+<servertag.roleplay>ロールプレイ</servertag.roleplay>
+<servertagdescription.roleplay>実際の潜水艦の乗組員のように行動する必要があります。指揮系統が重要な鍵となり、責任を遂行し命令に従うことも重要となります。ラウンドが進行中は、そのキャラクターとしての会話以外は避けるべきです。</servertagdescription.roleplay>
+<servertag.somethingdifferent>他とは違う</servertag.somethingdifferent>
+<servertagdescription.somethingdifferent>Barotraumaのゲームプレーは他のそれとは大きく異なります。改造されたサーバー、とても型破りな潜水艦、バトルロワイヤルラウンド、シャトルレース、デスランマップなど様々です！</servertagdescription.somethingdifferent>
+<servertag.rampage>大暴れ</servertag.rampage>
+<servertagdescription.rampage>その命をかけて戦う準備をしてください！戦闘に重点を置いたサーバー。これはプレイヤー対プレイヤーの戦闘、PvEもしくはその両方を意味し、サーバーの説明に「サーバー上で許可される暴力の種類に関するガイドライン」を定める必要があります。</servertagdescription.rampage>
+<servertag.modded.true>モッド</servertag.modded.true>
+<servertagdescription.modded.true>１つ以上のMODsが有効になっています。サーバーに参加するにはワークショップからMODsをインストールする必要がある場合があります。</servertagdescription.modded.true>
+<servertag.modded.false>バニラ</servertag.modded.false>
+<servertagdescription.modded.false>サーバーはMODを使用していません。</servertagdescription.modded.false>
+<servertag.247.true>年中無休</servertag.247.true>
+<servertagdescription.247.true>２４時間体制</servertagdescription.247.true>
+<servertag.247.false>時々UP</servertag.247.false>
+<servertagdescription.247.false>サーバーの稼働は年中無休ではありません。</servertagdescription.247.false>
+<servertag.friendlyfire.true>フレンドリーファイア ON</servertag.friendlyfire.true>
+<servertagdescription.friendlyfire.true>乗組員の仲間にダメージを与える可能性があります。</servertagdescription.friendlyfire.true>
+<servertag.friendlyfire.false>フレンドリーファイア OFF</servertag.friendlyfire.false>
+<servertagdescription.friendlyfire.false>乗組員の仲間にダメージを与える事はありません。</servertagdescription.friendlyfire.false>
+<servertag.voip.true>音声チャットが有効です。</servertag.voip.true>
+<servertagdescription.voip.true>音声チャットが有効になっています。</servertagdescription.voip.true>
+<servertag.voip.false>音声チャットが無効です。</servertag.voip.false>
+<servertagdescription.voip.false>音声チャットが無効になっています。</servertagdescription.voip.false>
+<servertag.karma.true>カルマが有効です。</servertag.karma.true>
+<servertagdescription.karma.true>カルマシステムが有効になっています。</servertagdescription.karma.true>
+<servertag.karma.false>カルマが無効です。</servertag.karma.false>
+<servertagdescription.karma.false>カルマシステムが無効になっています。</servertagdescription.karma.false>
+<servertag.traitors.true>裏切りが有効です。</servertag.traitors.true>
+<servertagdescription.traitors.true>裏切り者はサーバー上で有効になっています。</servertagdescription.traitors.true>
+<servertag.traitor.false>裏切り者は無効です。</servertag.traitor.false>
+<servertagdescription.traitors.false>裏切り者はサーバー上で無効になっています。</servertagdescription.traitors.false>
+<friendplayingbarotrauma>Barotraumaをプレイ</friendplayingbarotrauma>
+<friendplayinganothergame>他のゲームをプレイ</friendplayinganothergame>
+<friendnotplaying>プレイしない</friendnotplaying>
+<serversettingsplaystyle>プレイスタイル</serversettingsplaystyle>
+<serversettingsallowfriendlyfire>フレンドリーファイアを許可</serversettingsallowfriendlyfire>
+<serversettingsallowrewiring>再配線を許可</serversettingsallowrewiring>
+<serversettingsallowdisguises>偽装を許可</serversettingsallowdisguises>
+<filtersameversion>同じバージョン</filtersameversion>
+<filterwhitelistedservers>ホワイトリストを表示</filterwhitelistedservers>
+<!-- Misc -->
+<chat.shownewmessages>新しいメッセージを表示</chat.shownewmessages>
+<chat>チャット</chat>
+<clicktoselectjob>クリックしてジョブを選択</clicktoselectjob>
+<faceattachment.hair>髪の毛</faceattachment.hair>
+<faceattachment.beard>ひげ</faceattachment.beard>
+<faceattachment.moustache>口ひげ</faceattachment.moustache>
+<faceattachment.accessories>アクセサリー</faceattachment.accessories>
+<characterappearance>外観</characterappearance>
+<disconnect>切断</disconnect>
+<endcampaignverification>キャンペーンを終了してもよろしいですか？保存されていないデータは全て失われます。</endcampaignverification>
+<leveldifficultyexplanation>難易度の設定は、レベルの進行度合いとミッション中に直面する可能性のあるランダムな出来事に影響します。より高い難易度では、より多くの危険な環境、より多くの危険な生命体、そしてより多くの危険な敵との遭遇に備えてください。</leveldifficultyexplanation>
+<subnotdownloaded>潜水艦はダウンロードされていません。</subnotdownloaded>
+
+<difficulty.easy>初級</difficulty.easy>
+<difficulty.medium>中級</difficulty.medium>
+<difficulty.hard>上級</difficulty.hard>
+<difficulty.hellish>地獄級</difficulty.hellish>
+
+<!-- New traitor goals -->
+<traitorgoalkilltargetinfowithcause>[causeofdeath]によって[targetname]を暗殺</traitorgoalkilltargetinfowithcause>
+<traitorgoalkilltargetinfowithhull>[targetname]を暗殺し、[targethullname]に遺体を放置する。</traitorgoalkilltargetinfowithhull>
+<traitorgoalkilltargetinfowithcauseandhull>[causeofdeath]によって[targetname]を暗殺し、[targethullname]に遺体を放置する。</traitorgoalkilltargetinfowithcauseandhull>
+<traitorgoalpoisoneveryoneinfo>全ての乗組員に[poison]を注射。</traitorgoalpoisoneveryoneinfo>
+<traitorgoalkeepalive>[duration]秒間、[speciesname]を保護する。</traitorgoalkeepalive>
+
+<!-- Goblin mission -->
+<goblins_traitormissionstartinfotext>下から引っ掻く音が聞こえるなら、バラストゴブリンが餌を与えられてから時間が経っています。運が良ければ、周りに肉がたくさんあるかもしれません。</goblins_traitormissionstartinfotext>
+<goblins_traitorobjectivestartmessage1>まずは、いくつかの調味料。品揃え豊富なキッチンには多くの選択肢がありますが、この目的を果たすためには、純粋なシアン化物のみが使用されます。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage1>
+<goblins_objectivesuccessmessage1>ああ、はい。これは上手くいくでしょう。</goblins_objectivesuccessmessage1>
+<goblins_traitorobjectivestartmessage2>水を飲んでお気に入りから始めよう。\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage2>
+<goblins_objectivesuccessmessage2>さあ行こう。</goblins_objectivesuccessmessage2>
+<goblins_traitorobjectivestartmessage3>誰か、オードブルは？\n[traitorgoalinfos]</goblins_traitorobjectivestartmessage3>
+<goblins_objectivesuccessmessage3>あの柔らかくて、ジューシーな肉を見ろよ！</goblins_objectivesuccessmessage3>
+<goblins_traitorobjectivestartmessage4>じゃあメインは: \n[traitorgoalinfos]</goblins_traitorobjectivestartmessage4>
+<goblins_objectivesuccessmessage4>今ゴブリンに餌が与えられました。しかし食料貯蔵室は空です。次の場所で物資を手に入れましょう。</goblins_objectivesuccessmessage4>
+
+<!-- Oxygen sabotage mission -->
+<oxygen_sabotage_traitormissionstartinfotext>その他の実験の時間です。今回は人体が酸素を奪われた時にどのように反応するかをテストしています。</oxygen_sabotage_traitormissionstartinfotext>
+<oxygen_sabotage_traitorobjectivestartmessage1>被験者が集まり、準備は整いました。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage1>
+<oxygen_sabotage_objectivesuccessmessage1>間も無く、被験者たちには症状が現れるでしょう。酸欠状態では、末端が青くなり、けいれん、失神などが見られますが、その限りではありません。</oxygen_sabotage_objectivesuccessmessage1>
+<oxygen_sabotage_traitorobjectivestartmessage2>収集したデータに問題がなければ、被験者を破棄します。\n[traitorgoalinfos]</oxygen_sabotage_traitorobjectivestartmessage2>
+<oxygen_sabotage_objectivesuccessmessage2>テストの成果。最寄りの連合の前哨基地に報告して下さい</oxygen_sabotage_objectivesuccessmessage2>
+
+<!-- Acidparty mission -->
+<acidparty_traitormissionstartinfotext>ポケットの中に走り書きされたメモを見つけます。「やあ君、月の真ん中にこれがあることを知っているだろう？実際にそこに行かず、それが何であるかを確認する方法があるとしたら？」</acidparty_traitormissionstartinfotext>
+<acidparty_traitorobjectivestartmessage1>ステップ１・delimi- delirun- der-（デリミ -、デリラン - 、デア - ）など「DEL」(デル)と書かれているものを見つけろ。 \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_objectivesuccessmessage1>それでなければなりません。今まではこれを持っていませんでした。</acidparty_objectivesuccessmessage1>
+<acidparty_traitorobjectivestartmessage2>ステップ２・時々潜水艦はこれら…視界遮断薬を運ぶだろ？基本的に彼らがする事は、お前を地に運び、お前には現実の本当に狭い画像のように見えるだけだよな？そこでお前がしたい事は、それを取り除く事。それはhalleberrydil（ホールベリーディル）とか何とか呼ばれているんだ。\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
+<acidparty_objectivesuccessmessage2>それだけのようだ。</acidparty_objectivesuccessmessage2>
+<acidparty_traitorobjectivestartmessage3>ステップ３・最初のルール、我々は共有する事。ここで重要なのは一部の人々だろ？一部の人々はその世界観への挑戦を恐るように洗脳されているよね？だからお前は、彼らのシステムに潜り込んで、そのいいことをこっそりやってのける方法を見つけなきゃならないんだ。いいかい？\n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_objectivesuccessmessage3>ステップ４・横になって波に耳を傾けろ。</acidparty_objectivesuccessmessage3>
+
+<!-- Tainted welding mission -->
+<tainted_welding_traitorobjectivestartmessage2>弱い信号が受信されると、受信機はパチパチと音を立てます。：エウロパ　レジスタンスの行動、あなたがこのミッションを遂行する事は明らかです。この潜水艦は沈め、事故に見せかける必要があります。溶接ギアの損壊から始めます。\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
+<tainted_welding_goalinfotext_2>潜水艦の溶接ツールの少なくとも７０％の酸素タンクと溶接燃料を交換してください。</tainted_welding_goalinfotext_2>
+<tainted_welding_objectivesuccessmessage2>よくできました。酸素タンクは溶接ツールに装填されると引火する傾向があります。</tainted_welding_objectivesuccessmessage2>
+<tainted_welding_traitorobjectivestartmessage3>ここで、乗組員が後で使用することができないように、奪った燃料を処分する必要があります。:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_objectivesuccessmessage3>よくできました！乗組員はそれを知らずとも、とても危険な状況下にあります。</tainted_welding_objectivesuccessmessage3>
+<tainted_welding_traitorobjectivestartmessage4>いますぐ、トラップを仕掛けろ！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
+<tainted_welding_objectivesuccessmessage4>よくやったぞ、我が同士！豚どもはもうこの運命から逃れられない。</tainted_welding_objectivesuccessmessage4>
+<tainted_welding_traitorobjectivestartmessage5>脱出ルートを確保しろ！シャトルが間も無く出迎えに来ます！\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage5>
+<tainted_welding_objectivesuccessmessage5>ダイビングスーツの警告音が鳴ります…シャトルが少し前にあなたと合流したはずですが、暗闇の中で唯一動いているのはエイリアンの群れです。あなたは別の電波を受信します：「こちらはエウロパ レジスタンスです。入ってください。脱出を要求します！」送信機は無音です。運命に任されました。エウロパはあなたを受け入れます。</tainted_welding_objectivesuccessmessage5>
+
+<!-- One of Us mission -->
+<one_of_us_goalinfotext_2>殻の若者の神聖な船は緩やかな通気口の後ろに隠されています。誰かが踏みつけてしまう前に、すぐにそれらの卵を見つけてください！</one_of_us_goalinfotext_2>
+<one_of_us_objectivesuccessmessage2>卵を見つけると、快楽の波があなたに押し寄せます。乾いたような狂った笑いがしばらく頭の中に響き渡り、不明瞭で湿った音の中に消えて行きます。</one_of_us_objectivesuccessmessage2>
+<one_of_us_objectivesuccessmessage3>最後のシアン化物が破壊されると、頭がぐるぐる回り、視界が狭くなります。</one_of_us_objectivesuccessmessage3>
+<one_of_us_traitorobjectivestartmessage4>最後の任務を確認する:\n[traitorgoalinfos]</one_of_us_traitorobjectivestartmessage4>
+<one_of_us_goalinfotext_4>この潜水艦の全ては、殻とのかかわりに取り組まなければなりません。</one_of_us_goalinfotext_4>
+
+<!-- Easter bunny mission -->
+<easterbunny_goalinfotext_1>非常に特別な卵を見つけてください。おそらく通気口の１つに隠されています。</easterbunny_goalinfotext_1>
+<easterbunny_objectivesuccessmessage1>卵にうんざりするかもしれませんが、あなたのポケットにすっぽりと収まります。ホンクッ！</easterbunny_objectivesuccessmessage1>
+<easterbunny_traitorobjectivestartmessage2>卵を育てる:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
+<easterbunny_goalinfotext_2>卵が成長するために安全な場所を見つけ、世話をしてください [catalystitem].</easterbunny_goalinfotext_2>
+<easterbunny_objectivesuccessmessage2>卵が膨らみ、奇妙な音を立てます…あなたは親になろうとしています！</easterbunny_objectivesuccessmessage2>
+<easterbunny_traitorobjectivestartmessage3>卵に亀裂が入り、マッドラプターが飛び出す:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>マッドラプターが少なくとも３分間生き続けられるように、手段を講じてください。</easterbunny_goalinfotext_3>
+<easterbunny_objectivesuccessmessage3>ホンク ホンクッ！それは陽気でした。塗装された男はその様子を聞くと、ここから追い出すつもりだった。</easterbunny_objectivesuccessmessage3>
+<easterbunny_traitorobjectivestartmessage4>避難:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
+
+<!-- Modified values -->
+<pausemenuquitverification>メインメニューに戻りますか？保存されていないデータは全て失われます。</pausemenuquitverification>
+<leveldifficulty>難易度</leveldifficulty>
+<connection.set_text>set_text</connection.set_text>
 
 </infotexts>
