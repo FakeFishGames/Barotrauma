@@ -28,6 +28,7 @@ namespace Barotrauma.Items.Components
         public bool IsStuck => isStuck;
 
         private float resetPredictionTimer;
+        private float toggleCooldownTimer;
 
         private Rectangle doorRect;
 
@@ -77,8 +78,11 @@ namespace Barotrauma.Items.Components
         [Serialize(3.0f, true, description: "How quickly the door opens."), Editable]
         public float OpeningSpeed { get; private set; }
 
-        [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
+        [Serialize(1.0f, true, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
+
+        [Serialize(5.0f, true, description: "The door cannot be opened/closed until this time has passed since it was last opened/closed."), Editable]
+        public float ToggleCoolDown { get; private set; }
 
         public bool? PredictedState { get; private set; }
 
@@ -257,6 +261,8 @@ namespace Barotrauma.Items.Components
 
         private void ToggleState(ActionType actionType)
         {
+            if (toggleCooldownTimer > 0.0f) { return; }
+            toggleCooldownTimer = ToggleCoolDown;
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
@@ -285,6 +291,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            toggleCooldownTimer -= deltaTime;
+
             if (isBroken)
             {
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
@@ -541,12 +549,14 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (isStuck) return;
+            if (isStuck) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
-
+            
             if (connection.Name == "toggle")
             {
+                if (toggleCooldownTimer > 0.0f) { return; }
+                toggleCooldownTimer = ToggleCoolDown;
                 SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
