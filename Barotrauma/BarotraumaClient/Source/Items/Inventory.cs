@@ -570,7 +570,7 @@ namespace Barotrauma
                 //don't draw the item if it's being dragged out of the slot
                 bool drawItem = draggingItem == null || draggingItem != Items[i] || interactRect.Contains(PlayerInput.MousePosition);
 
-                DrawSlot(spriteBatch, this, slots[i], Items[i], drawItem);
+                DrawSlot(spriteBatch, this, slots[i], Items[i], i, drawItem);
             }
         }
 
@@ -954,7 +954,7 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, bool drawItem = true)
+        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, int slotIndex, bool drawItem = true)
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
@@ -983,7 +983,8 @@ namespace Barotrauma
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
 
-                if (slot.IsHighlighted && (draggingItem != null && inventory.CanBePut(draggingItem)))
+                bool canBePut = draggingItem != null && inventory != null && inventory.CanBePut(draggingItem, slotIndex);
+                if (slot.MouseOn() && canBePut)
                 {
                     GUI.UIGlow.Draw(spriteBatch, rect, Color.LightGreen);
                 }
