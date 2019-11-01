@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
             Ceil,
             Floor,
             Factorial,
-            Absolute
+            AbsoluteValue
         }
 
         [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.")]
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
                     }
                     item.SendSignal(0, factorial.ToString(), "signal_out", null);
                     break;
-                case FunctionType.Absolute:
+                case FunctionType.AbsoluteValue:
                     item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
                 default:
