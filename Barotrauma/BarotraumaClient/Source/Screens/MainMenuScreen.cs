@@ -661,6 +661,7 @@ namespace Barotrauma
             tutorialSkipWarning.Buttons[0].OnClicked += (btn, userdata) =>
             {
                 GameMain.Config.ShowTutorialSkipWarning = false;
+                GameMain.Config.SaveNewPlayerConfig();
                 tutorialSkipWarning.Close();
                 SelectTab(tabToContinueTo);
                 return true;
@@ -668,6 +669,7 @@ namespace Barotrauma
             tutorialSkipWarning.Buttons[1].OnClicked += (btn, userdata) =>
             {
                 GameMain.Config.ShowTutorialSkipWarning = false;
+                GameMain.Config.SaveNewPlayerConfig();
                 tutorialSkipWarning.Close();
                 SelectTab(Tab.Tutorials);
                 return true;
