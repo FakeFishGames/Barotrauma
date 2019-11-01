@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
 
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (isStuck ||
+            if (IsStuck ||
                 (PredictedState == null && isOpen == open) ||
                 (PredictedState != null && isOpen == PredictedState.Value && isOpen == open))
             {
@@ -225,6 +225,13 @@ namespace Barotrauma.Items.Components
             bool forcedOpen = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            UInt16 lastUserID = msg.ReadUInt16();
+            Character user = lastUserID == 0 ? null : Entity.FindEntityByID(lastUserID) as Character;
+            if (user != lastUser)
+            {
+                lastUser = user;
+                toggleCooldownTimer = ToggleCoolDown;
+            }
 
             PredictedState = null;
         }

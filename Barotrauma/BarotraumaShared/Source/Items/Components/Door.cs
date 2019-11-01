@@ -23,12 +23,13 @@ namespace Barotrauma.Items.Components
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
-
-        private bool isStuck;
-        public bool IsStuck => isStuck;
+        public bool IsStuck { get; private set; }
 
         private float resetPredictionTimer;
         private float toggleCooldownTimer;
+        private Character lastUser;
+
+        private float damageSoundCooldown;
 
         private Rectangle doorRect;
 
@@ -70,8 +71,8 @@ namespace Barotrauma.Items.Components
             {
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck <= 0.0f) isStuck = false;
-                if (stuck >= 100.0f) isStuck = true;
+                if (stuck <= 0.0f) IsStuck = false;
+                if (stuck >= 100.0f) IsStuck = true;
             }
         }
 
@@ -81,7 +82,7 @@ namespace Barotrauma.Items.Components
         [Serialize(3.0f, true, description: "How quickly the door closes."), Editable]
         public float ClosingSpeed { get; private set; }
 
-        [Serialize(1.0f, true, description: "The door cannot be opened/closed until this time has passed since it was last opened/closed."), Editable]
+        [Serialize(1.0f, true, description: "The door cannot be opened/closed during this time after it has been opened/closed by another character."), Editable]
         public float ToggleCoolDown { get; private set; }
 
         public bool? PredictedState { get; private set; }
@@ -254,15 +255,16 @@ namespace Barotrauma.Items.Components
             if (item.Condition <= RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
-                ToggleState(ActionType.OnPicked);
+                ToggleState(ActionType.OnPicked, picker);
             }
             return false;
         }
 
-        private void ToggleState(ActionType actionType)
+        private void ToggleState(ActionType actionType, Character user)
         {
-            if (toggleCooldownTimer > 0.0f) { return; }
+            if (toggleCooldownTimer > 0.0f && user != lastUser) { return; }
             toggleCooldownTimer = ToggleCoolDown;
+            lastUser = user;
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
 
@@ -275,7 +277,7 @@ namespace Barotrauma.Items.Components
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
-                    ToggleState(ActionType.OnUse);
+                    ToggleState(ActionType.OnUse, character);
                     PickingTime = originalPickingTime;
                 }
 #if CLIENT
@@ -292,6 +294,7 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             toggleCooldownTimer -= deltaTime;
+            damageSoundCooldown -= deltaTime;
 
             if (isBroken)
             {
@@ -304,7 +307,7 @@ namespace Barotrauma.Items.Components
             }
 
             bool isClosing = false;
-            if (!isStuck)
+            if (!IsStuck)
             {
                 if (PredictedState == null)
                 {
@@ -478,15 +481,14 @@ namespace Barotrauma.Items.Components
                 }
                 int dir = IsHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);
 
-                bool soundPlayed = false;
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (PushBodyOutOfDoorway(c, limb.body, dir, simPos, simSize) && !soundPlayed)
+                    if (PushBodyOutOfDoorway(c, limb.body, dir, simPos, simSize) && damageSoundCooldown <= 0.0f)
                     {
 #if CLIENT
                         SoundPlayer.PlayDamageSound("LimbBlunt", 1.0f, limb.body);
 #endif
-                        soundPlayed = true;
+                        damageSoundCooldown = 0.5f;
                     }
                 }
                 PushBodyOutOfDoorway(c, c.AnimController.Collider, dir, simPos, simSize);
@@ -549,14 +551,15 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (isStuck) { return; }
+            if (IsStuck) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
             if (connection.Name == "toggle")
             {
-                if (toggleCooldownTimer > 0.0f) { return; }
+                if (toggleCooldownTimer > 0.0f && sender != lastUser) { return; }
                 toggleCooldownTimer = ToggleCoolDown;
+                lastUser = sender;
                 SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
