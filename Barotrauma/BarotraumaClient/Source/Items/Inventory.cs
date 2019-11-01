@@ -983,7 +983,25 @@ namespace Barotrauma
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
 
-                bool canBePut = draggingItem != null && inventory != null && inventory.CanBePut(draggingItem, slotIndex);
+                bool canBePut = false;
+
+                if (draggingItem != null && inventory != null && slotIndex > -1 && slotIndex < inventory.slots.Length)
+                {
+                    if (inventory.CanBePut(draggingItem, slotIndex))
+                    {
+                        canBePut = true;
+                    }
+                    else if (inventory.Items[slotIndex]?.OwnInventory?.CanBePut(draggingItem) ?? false)
+                    {
+                        canBePut = true;
+                    }
+                    else if (inventory.Items[slotIndex] == null && inventory == Character.Controlled.Inventory && 
+                        !draggingItem.AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                        Character.Controlled.Inventory.CanBeAutoMovedToCorrectSlots(draggingItem))
+                    {
+                        canBePut = true;
+                    }
+                }
                 if (slot.MouseOn() && canBePut)
                 {
                     GUI.UIGlow.Draw(spriteBatch, rect, Color.LightGreen);
