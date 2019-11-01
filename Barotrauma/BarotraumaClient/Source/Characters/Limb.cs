@@ -501,8 +501,7 @@ namespace Barotrauma
             {
                 CalculateHeadPosition(activeSprite);
             }
-
-            // TODO: there's now two calls to this, because body.Draw() method calls this too -> is this an issue?
+            
             body.UpdateDrawPosition();
 
             if (!hideLimb)
