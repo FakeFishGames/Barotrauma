@@ -374,6 +374,34 @@
       <output name="signal_out" displayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
+  <Item name="Exponentiation Component" identifier="powcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <Price locationtype="Research" buyprice="75" />
+    <Price locationtype="City" buyprice="80" />
+    <Price locationtype="Outpost" buyprice="80" />
+    <Price locationtype="Military" buyprice="80" />
+    <Deconstruct time="10">
+      <Item identifier="fpgacircuit" />
+      <Item identifier="tin" />
+    </Deconstruct>
+    <Fabricate suitablefabricators="fabricator" requiredtime="10">
+      <RequiredItem identifier="fpgacircuit" />
+      <RequiredItem identifier="tin" />
+    </Fabricate>
+    <InventoryIcon texture="Content/Items/InventoryIconAtlas2.png" sourcerect="384,71,64,51" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="225,131,31,26" origin="0.5,0.5" />
+    <ExponentiationComponent canbeselected="true" />
+    <Body width="31" height="26" density="30" />
+    <Holdable selectkey="Select" pickkey="Use" slots="Any,RightHand,LeftHand" msg="ItemMsgDetachWrench" PickingTime="5.0" aimpos="65,-10" handle1="0,0" attachable="true" aimable="true">
+      <requireditem items="wrench" type="Equipped" />
+    </Holdable>
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <requireditem items="screwdriver" type="Equipped" />
+      <input name="signal_in1" displayname="connection.signalinx~[num]=1" />
+      <input name="signal_in2" displayname="connection.signalinx~[num]=2" />
+      <output name="signal_out" displayname="connection.signalout" />
+    </ConnectionPanel>
+  </Item>
   <Item name="Or Component" identifier="orcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="Sends a signal if either of the inputs receive a signal." scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
