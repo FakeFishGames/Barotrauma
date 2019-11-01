@@ -12,7 +12,8 @@ namespace Barotrauma.Items.Components
             Ceil,
             Floor,
             Factorial,
-            AbsoluteValue
+            AbsoluteValue,
+            SquareRoot
         }
 
         [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.")]
@@ -52,6 +53,10 @@ namespace Barotrauma.Items.Components
                     break;
                 case FunctionType.AbsoluteValue:
                     item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    break;
+                case FunctionType.SquareRoot:
+                    double square = value > 0 ? Math.Sqrt(value) : 0;
+                    item.SendSignal(0, square.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");
