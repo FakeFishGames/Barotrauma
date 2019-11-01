@@ -115,6 +115,7 @@
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
   <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
   <Missions file="Content/Missions.xml" />
+  <TraitorMissions file="Content/TraitorMissions.xml" />
   <NPCConversations file="Content/NPCConversations/English/NpcConversations_English.xml"/>
   <NPCConversations file="Content/NPCConversations/German/NpcConversations_German.xml"/>
   <NPCConversations file="Content/NPCConversations/French/NpcConversations_French.xml"/>
