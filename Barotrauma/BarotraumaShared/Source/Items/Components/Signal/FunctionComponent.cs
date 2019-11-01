@@ -11,7 +11,8 @@ namespace Barotrauma.Items.Components
             Round,
             Ceil,
             Floor,
-            Factorial
+            Factorial,
+            Absolute
         }
 
         [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.")]
@@ -48,6 +49,9 @@ namespace Barotrauma.Items.Components
                         factorial *= (ulong)i;
                     }
                     item.SendSignal(0, factorial.ToString(), "signal_out", null);
+                    break;
+                case FunctionType.Absolute:
+                    item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");
