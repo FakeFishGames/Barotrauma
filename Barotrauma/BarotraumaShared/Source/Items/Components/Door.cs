@@ -262,8 +262,9 @@ namespace Barotrauma.Items.Components
 
         private void ToggleState(ActionType actionType, Character user)
         {
-            if (toggleCooldownTimer > 0.0f && user != lastUser) { return; }
+            if (toggleCooldownTimer > 0.0f && user != lastUser) { OnFailedToOpen(); return; }
             toggleCooldownTimer = ToggleCoolDown;
+            if (IsStuck) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
             lastUser = user;
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
@@ -293,6 +294,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific(deltaTime);
             toggleCooldownTimer -= deltaTime;
             damageSoundCooldown -= deltaTime;
 
@@ -341,7 +343,10 @@ namespace Barotrauma.Items.Components
             //other items to an incorrect state if the prediction is wrong
             item.SendSignal(0, (isOpen) ? "1" : "0", "state_out", null);
         }
-        
+
+        partial void UpdateProjSpecific(float deltaTime);
+
+
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             IsBroken = true;
@@ -549,22 +554,25 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        partial void OnFailedToOpen();
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (IsStuck) { return; }
-
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
             if (connection.Name == "toggle")
             {
-                if (toggleCooldownTimer > 0.0f && sender != lastUser) { return; }
+                if (toggleCooldownTimer > 0.0f && sender != lastUser) { OnFailedToOpen(); return; }
+                if (IsStuck) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
                 toggleCooldownTimer = ToggleCoolDown;
                 lastUser = sender;
                 SetState(!wasOpen, false, true, forcedOpen: false);
             }
             else if (connection.Name == "set_state")
             {
-                SetState(signal != "0", false, true, forcedOpen: false);
+                bool signalOpen = signal != "0";
+                if (IsStuck && signalOpen != wasOpen) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
+                SetState(signalOpen, false, true, forcedOpen: false);
             }
 
 #if SERVER
