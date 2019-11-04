@@ -144,8 +144,8 @@ namespace Barotrauma
             }
             set
             {
-                textBlock.ToolTip = value;
                 base.ToolTip = value;
+                textBlock.ToolTip = value;                
             }
         }
         

@@ -20,7 +20,7 @@ namespace Barotrauma
         public static List<ColorData> GetColorData(string text, out string sanitizedText)
         {
             List<ColorData> textColors = null;
-            if (text.IndexOf(colorDefinitionIndicator) != -1 && text.Contains(colorDefinitionStartString))
+            if (text != null && text.IndexOf(colorDefinitionIndicator) != -1 && text.Contains(colorDefinitionStartString))
             {
                 textColors = new List<ColorData>();
                 List<int> lineChangeIndexes = null;

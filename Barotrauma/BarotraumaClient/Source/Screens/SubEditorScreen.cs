@@ -609,7 +609,7 @@ namespace Barotrauma
                         paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
                     {
                         HideElementsOutsideFrame = true,
-                        ToolTip = frame.ToolTip
+                        ToolTip = frame.RawToolTip
                     };
                 }
 
@@ -1479,7 +1479,7 @@ namespace Barotrauma
                         TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                         {
                             TextColor = textBlock.TextColor * 0.8f,
-                            ToolTip = textBlock.ToolTip
+                            ToolTip = textBlock.RawToolTip
                         };
                 }
             }

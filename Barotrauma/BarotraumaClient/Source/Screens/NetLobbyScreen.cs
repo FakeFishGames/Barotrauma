@@ -1545,7 +1545,7 @@ namespace Barotrauma
             if (!sub.RequiredContentPackagesInstalled)
             {
                 subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
-                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.ToolTip;
+                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.RawToolTip;
             }
 
             if (sub.HasTag(SubmarineTag.Shuttle))
@@ -1554,7 +1554,7 @@ namespace Barotrauma
                     TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
-                    ToolTip = subTextBlock.ToolTip,
+                    ToolTip = subTextBlock.RawToolTip,
                     CanBeFocused = false
                 };
                 //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
