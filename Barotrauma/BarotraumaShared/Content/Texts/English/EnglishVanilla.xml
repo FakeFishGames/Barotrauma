@@ -3725,4 +3725,6 @@
   <tutorialwarningskiptutorials>Skip tutorials</tutorialwarningskiptutorials>
   
   <quickuseaction.puttoequippeditem>Put to [equippeditem]</quickuseaction.puttoequippeditem>
+  <serversettingsbanafterwrongpassword>Ban after failed login</serversettingsbanafterwrongpassword>
+  <serversettingspasswordretriesbeforeban>Password retries before a ban</serversettingspasswordretriesbeforeban>
 </infotexts>

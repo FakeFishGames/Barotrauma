@@ -119,6 +119,23 @@ namespace Barotrauma
             }
         }
 
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                PlusButton.Enabled = true;
+                MinusButton.Enabled = true;
+                if (InputType == NumberType.Int) { ClampIntValue(); } else { ClampFloatValue(); }
+                TextBox.Enabled = value;
+                if (!value)
+                {
+                    PlusButton.Enabled = false;
+                    MinusButton.Enabled = false;
+                }
+            }
+        }
+
         public override ScalableFont Font
         {
             get
