@@ -67,6 +67,8 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
+        private List<string> activePings;
+
         private enum ServerListTab
         {
             All = 0,
@@ -1820,6 +1822,10 @@ namespace Barotrauma
 
         public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
+            activePings = activePings ?? new List<string>();
+            if (activePings.Any(ip => ip == serverInfo.IP)) { return; }
+            activePings.Add(serverInfo.IP);
+
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
@@ -1844,6 +1850,7 @@ namespace Barotrauma
                         serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
 					}
                     serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                    activePings?.RemoveAll(ip => ip == serverInfo.IP);
                     yield return CoroutineStatus.Success;
                 }
 
