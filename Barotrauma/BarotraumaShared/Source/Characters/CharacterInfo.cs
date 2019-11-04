@@ -75,7 +75,7 @@ namespace Barotrauma
 
             private void GetSpriteSheetIndex()
             {
-                if (heads.Any())
+                if (heads != null && heads.Any())
                 {
                     var matchingHead = heads.Keys.FirstOrDefault(h => h.Gender == gender && h.Race == race && h.ID == _headSpriteId);
                     if (matchingHead != null)
