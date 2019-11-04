@@ -300,7 +300,8 @@ namespace Barotrauma
                     character.SelectedConstruction = null;
                 }
                 float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
-                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(collider.radius * 2 * multiplier, 2))
+                float targetDistance = collider.GetSize().X * multiplier;
+                if (Vector2.DistanceSquared(pos, currentPath.CurrentNode.SimPosition) < MathUtils.Pow(targetDistance, 2))
                 {
                     currentPath.SkipToNextNode();
                 }
