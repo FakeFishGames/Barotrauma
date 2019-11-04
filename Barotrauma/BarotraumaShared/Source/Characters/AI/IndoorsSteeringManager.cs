@@ -191,7 +191,8 @@ namespace Barotrauma
             {
                 diff.Y = 0.0f;
             }
-            if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
+            //if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
+            if (diff == Vector2.Zero) { return Vector2.Zero; }
             return Vector2.Normalize(diff) * weight;
         }
 
