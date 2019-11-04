@@ -292,7 +292,9 @@ namespace Barotrauma
 
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, targetOffsetAmount, 0.05f);
 
-                if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
+                if (SelectedConstruction != null && 
+                    (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) || 
+                    ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
                     {
