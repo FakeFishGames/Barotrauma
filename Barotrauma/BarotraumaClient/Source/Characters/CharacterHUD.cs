@@ -80,9 +80,18 @@ namespace Barotrauma
         public static void Update(float deltaTime, Character character, Camera cam)
         {
             if (GUI.DisableHUD) { return; }
-
+            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
+                if (character.Info != null)
+                {
+                    bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
+                    if (PlayerInput.LeftButtonClicked())
+                    {
+                        CharacterHealth.OpenHealthWindow = character.CharacterHealth;
+                    }
+                }
+
                 if (character.Inventory != null)
                 {
                     if (!character.LockHands && character.Stun < 0.1f && 
@@ -312,7 +321,7 @@ namespace Barotrauma
                     }
                 }
             }
-            bool drawPortraitToolTip = false;
+            bool mouseOnPortrait = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
                 if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
@@ -321,7 +330,11 @@ namespace Barotrauma
                     {
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), targetWidth: HUDLayoutSettings.PortraitArea.Width);
                     }
-                    drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
+                    mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
+                    if (mouseOnPortrait)
+                    {
+                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.PortraitArea, Color.LightGreen * 0.5f);
+                    }
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
@@ -359,7 +372,7 @@ namespace Barotrauma
                 }
             }
 
-            if (drawPortraitToolTip)
+            if (mouseOnPortrait)
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
