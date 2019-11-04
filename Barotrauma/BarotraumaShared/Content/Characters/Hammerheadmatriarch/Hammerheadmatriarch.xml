@@ -35,6 +35,6 @@
     <ParticleEmitter particle="blackwaterblood" particleamount="10" scalemin="3" scalemax="5" velocitymin="0" velocitymax="20" anglemin="0" anglemax="360" />
     <ParticleEmitter particle="heavygib" particleamount="2" scalemin="15" scalemax="15" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" />
     <ParticleEmitter particle="gib" particleamount="200" scalemin="1" scalemax="2" velocitymin="100" velocitymax="300" anglemin="0" anglemax="360" />
-    <SpawnCharacter speciesname="hammerheadspawn" count="1" spread="100" />
+    <SpawnCharacter speciesname="hammerheadspawn" count="20" spread="100" />
   </StatusEffect>
 </Character>
