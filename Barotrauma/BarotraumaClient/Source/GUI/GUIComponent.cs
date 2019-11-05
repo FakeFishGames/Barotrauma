@@ -172,6 +172,7 @@ namespace Barotrauma
             set;
         }
 
+        // Use the rawtooltip when copying displayed tooltips so that any possible color-data related values are translated over as well
         public string RawToolTip;
         private string toolTip;
         public virtual string ToolTip
