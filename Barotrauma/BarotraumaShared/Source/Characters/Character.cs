@@ -2370,26 +2370,33 @@ namespace Barotrauma
             despawnTimer += deltaTime;
             if (despawnTimer < DespawnDelay) { return; }
 
-            var containerPrefab =
-                (MapEntityPrefab.List.Find(me => me.Tags.Contains("despawncontainer")) ??
-                MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
-            if (containerPrefab == null)
+            if (IsHuman)
             {
-                DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
-            }
-            else
-            {
-                Spawner.AddToSpawnQueue(containerPrefab, WorldPosition, onSpawned: onItemContainerSpawned);
-            }
-
-            void onItemContainerSpawned(Item item)
-            {
-                if (Inventory?.Items == null) { return; }
-                var itemContainer = item?.GetComponent<ItemContainer>();
-                if (itemContainer == null) { return; }
-                foreach (Item inventoryItem in Inventory.Items)
+                var containerPrefab =
+                    (MapEntityPrefab.List.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
+                if (containerPrefab == null)
                 {
-                    itemContainer.Inventory.TryPutItem(inventoryItem, user: null);
+                    DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
+                }
+                else
+                {
+                    Spawner.AddToSpawnQueue(containerPrefab, WorldPosition, onSpawned: onItemContainerSpawned);
+                }
+
+                void onItemContainerSpawned(Item item)
+                {
+                    if (Inventory?.Items == null) { return; }
+                
+                    item.AddTag("name:" + Name);
+                    if (info?.Job != null) { item.AddTag("job:" + info.Job.Name); }               
+
+                    var itemContainer = item?.GetComponent<ItemContainer>();
+                    if (itemContainer == null) { return; }
+                    foreach (Item inventoryItem in Inventory.Items)
+                    {
+                        itemContainer.Inventory.TryPutItem(inventoryItem, user: null);
+                    }
                 }
             }
 

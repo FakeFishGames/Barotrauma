@@ -913,7 +913,7 @@ namespace Barotrauma
                     else
                     {
                         string description = item.Description;
-                        if (item.Prefab.Identifier == "idcard")
+                        if (item.Prefab.Identifier == "idcard" || item.Tags.Contains("despawncontainer"))
                         {
                             string[] readTags = item.Tags.Split(',');
                             string idName = null;
