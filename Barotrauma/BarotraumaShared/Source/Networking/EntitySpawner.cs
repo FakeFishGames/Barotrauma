@@ -94,7 +94,7 @@ namespace Barotrauma
                 var character = string.IsNullOrEmpty(identifier) ? null : 
                     Character.Create(identifier,
                     Submarine == null ? Position : Submarine.Position + Position,
-                    ToolBox.RandomSeed(8));
+                    ToolBox.RandomSeed(8), createNetworkEvent: false);
                 onSpawn?.Invoke(character);
                 return character;
             }
