@@ -626,7 +626,7 @@ namespace Barotrauma.Networking
         public bool BanAfterWrongPassword
         {
             get;
-            private set;
+            set;
         }
 
         [Serialize(3, true)]

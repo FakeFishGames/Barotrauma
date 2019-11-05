@@ -28,7 +28,7 @@ namespace Barotrauma
         private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox/*, useUpnpBox*/;
+        private GUITickBox isPublicBox, wrongPasswordBanBox;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -800,6 +800,7 @@ namespace Barotrauma
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 int ownerKey = 0;
@@ -1155,17 +1156,15 @@ namespace Barotrauma
             {
                 Censor = true
             };
-            
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
+
+            var tickboxArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-            
-            /* TODO: remove UPnP altogether?
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
-            {
-                ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };*/
+
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {

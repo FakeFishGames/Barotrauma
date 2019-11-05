@@ -484,7 +484,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         pendingClient.Retries++;
-                        if (serverSettings.MaxPasswordRetriesBeforeBan >= 0 && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
+                        if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
                             string banMsg = "Failed to enter correct password too many times";
                             serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.SteamID, banMsg, null);
