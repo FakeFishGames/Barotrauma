@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
 
         private float RepairThreshold
         {
-            get { return item.GetComponent<Repairable>()?.ShowRepairUIThreshold ?? 0.0f; }
+            get { return item.GetComponent<Repairable>() == null ? 0.0f : item.Prefab.Health; }
         }
 
         public bool CanBeWelded = true;
@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (item.Condition <= RepairThreshold) { return true; }
+            if (item.Condition < RepairThreshold) { return true; }
             if (requiredItems.None()) { return false; }
             if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
             return base.Pick(picker);
@@ -252,7 +252,7 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
-            if (item.Condition <= RepairThreshold) { return true; }
+            if (item.Condition < RepairThreshold) { return true; }
             if (requiredItems.Any() && !hasValidIdCard)
             {
                 ToggleState(ActionType.OnPicked, picker);

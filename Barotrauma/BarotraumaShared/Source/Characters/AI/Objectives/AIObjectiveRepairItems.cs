@@ -60,7 +60,7 @@ namespace Barotrauma
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (!Objectives.ContainsKey(item))
             {
-                if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { return false; }
+                if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { return false; }
             }
             if (RequireAdequateSkills)
             {

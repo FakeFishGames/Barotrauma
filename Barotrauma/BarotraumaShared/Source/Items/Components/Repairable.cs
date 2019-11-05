@@ -56,8 +56,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(80.0f, true, description: "The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
-        public float ShowRepairUIThreshold
+        [Serialize(80.0f, true, description: "The condition of the item has to be below this for AI characters to repair it. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float AIRepairThreshold
         {
             get;
             set;
@@ -227,7 +227,7 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (item.ConditionPercentage < ShowRepairUIThreshold)
+            if (!item.IsFullCondition)
             {
                 wasBroken = true;
             }
