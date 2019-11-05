@@ -318,14 +318,17 @@ namespace Barotrauma
                 isSubInventory = subInventory;
             }
 
-            for (int i = 0; i < capacity; i++)
+            if (!subInventory || (OpenState >= 0.99f || OpenState < 0.01f))
             {
-                if (HideSlot(i)) continue;
-                UpdateSlot(slots[i], i, Items[i], subInventory);
-            }
-            if (!isSubInventory)
-            {
-                ControlInput(cam);
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (HideSlot(i)) { continue; }
+                    UpdateSlot(slots[i], i, Items[i], subInventory);
+                }
+                if (!isSubInventory)
+                {
+                    ControlInput(cam);
+                }
             }
         }
 
@@ -519,8 +522,8 @@ namespace Barotrauma
                 subRect.Y = startY;
 
                 subInventory.OpenState = subInventory.HideTimer >= 0.5f ?
-                    Math.Min(subInventory.OpenState + deltaTime * 5.0f, 1.0f) :
-                    Math.Max(subInventory.OpenState - deltaTime * 3.0f, 0.0f);
+                    Math.Min(subInventory.OpenState + deltaTime * 8.0f, 1.0f) :
+                    Math.Max(subInventory.OpenState - deltaTime * 5.0f, 0.0f);
 
                 for (int i = 0; i < itemCapacity; i++)
                 {
