@@ -1952,9 +1952,9 @@ namespace Barotrauma
                 }
                 if (character.SelectedItems[i]?.body != null && !character.SelectedItems[i].Removed)
                 {
-                    character.SelectedItems[i].body.SetTransform(
+                    /*character.SelectedItems[i].body.SetTransform(
                         character.SelectedItems[i].body.SimPosition,
-                        MathUtils.WrapAngleTwoPi(character.SelectedItems[i].body.Rotation + MathHelper.Pi));
+                        MathUtils.WrapAngleTwoPi(character.SelectedItems[i].body.Rotation + MathHelper.Pi));*/
                     character.SelectedItems[i].GetComponent<Holdable>()?.Flip();
                 }
             }
