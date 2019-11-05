@@ -1654,7 +1654,6 @@
   <entityname.bluejumpsuit>Blue Jumpsuit</entityname.bluejumpsuit>
   <entitydescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit>
   <entityname.toolbox>Toolbox</entityname.toolbox>
-  <entitydescription.toolbox>A portable container for storing tools</entitydescription.toolbox>
   <entityname.headset>Headset</entityname.headset>
   <entitydescription.headset>Allows remote communication among the crew.</entitydescription.headset>
   <entityname.clownmask>Clown Mask</entityname.clownmask>
@@ -3710,7 +3709,8 @@
   <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the the "signal_in_x" and "signal_in_y" connections are used, the input is interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
   <serverendpoint>Server IP / SteamID</serverendpoint>
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
-
+  <entitydescription.toolbox>A portable container for storing tools.</entitydescription.toolbox>
+  
   <!-- New values as of Oct 22 -->
   <timeformathours>[hours] h</timeformathours>
   <timeformatminutes>[minutes] m</timeformatminutes>

@@ -942,6 +942,17 @@ namespace Barotrauma
                                 }
                             }
                         }
+                        if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
+                        {
+                            foreach (string itemName in item.OwnInventory.Items.Where(it => it != null).Select(it => it.Name).Distinct())
+                            {
+                                int itemCount = item.OwnInventory.Items.Count(it => it != null && it.Name == itemName);
+                                description += itemCount == 1 ?
+                                    "\n    " + itemName :
+                                    "\n    " + itemName + " x" + itemCount;
+                            }
+                        }
+
                         toolTip = string.IsNullOrEmpty(description) ?
                             item.Name :
                             item.Name + '\n' + description;

@@ -333,6 +333,9 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool ShowContentsInTooltip { get; private set; }
+
         private HashSet<string> preferredContainers = new HashSet<string>();
         [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
         public string PreferredContainers

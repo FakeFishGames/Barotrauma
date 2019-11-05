@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" preferredcontainers="locker" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="Toolbox" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" preferredcontainers="locker" showcontentsintooltip="true" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
