@@ -234,6 +234,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableEnemyAI) { return; }
+            base.Update(deltaTime);
             bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
             if (steeringManager is IndoorsSteeringManager)
@@ -754,10 +755,11 @@ namespace Barotrauma
             }
             float distance = 0;
             Limb attackTargetLimb = null;
+            Character targetCharacter = SelectedAiTarget.Entity as Character;
             if (canAttack)
             {
                 // Target a specific limb instead of the target center position
-                if (wallTarget == null && SelectedAiTarget.Entity is Character targetCharacter)
+                if (wallTarget == null && targetCharacter != null)
                 {
                     var targetLimbType = AttackingLimb.Params.Attack.Attack.TargetLimbType;
                     attackTargetLimb = GetTargetLimb(AttackingLimb, targetCharacter, targetLimbType);
@@ -780,10 +782,10 @@ namespace Barotrauma
                         toTarget += margin;
                     }
                 }
-                else if (SelectedAiTarget.Entity is Character targetC)
+                else if (targetCharacter != null)
                 {
                     // Add a margin when the target is moving away, because otherwise it might be difficult to reach it (the attack takes some time to perform)
-                    Vector2 margin = CalculateMargin(targetC.AnimController.Collider.LinearVelocity);
+                    Vector2 margin = CalculateMargin(targetCharacter.AnimController.Collider.LinearVelocity);
                     toTarget += margin;
                 }
                 else if (SelectedAiTarget.Entity is MapEntity e)
@@ -846,15 +848,12 @@ namespace Barotrauma
             // Offset so that we don't overshoot the movement
             Vector2 steerPos = attackSimPos + offset;
 
-            if (SteeringManager is IndoorsSteeringManager pathSteering && wallTarget == null)
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && !pathSteering.CurrentPath.Unreachable)
+                if (pathSteering.CurrentPath != null)
                 {
-                    if (pathSteering.CurrentPath.Finished)
-                    {
-                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                    }
-                    else if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
+                    // Attack doors
+                    if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
                     {
                         SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget);
                         return;
@@ -866,7 +865,21 @@ namespace Barotrauma
                     }
                     else
                     {
-                        SteeringManager.SteeringSeek(steerPos, 2);
+                        // Steer towards the target if in the same room and swimming
+                        if (Character.AnimController.InWater && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        {
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringSeek(steerPos, 2);
+                            // Switch to Idle when cannot reach the target and if cannot damage the walls
+                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                            {
+                                State = AIState.Idle;
+                                return;
+                            }
+                        }
                     }
                 }
                 else

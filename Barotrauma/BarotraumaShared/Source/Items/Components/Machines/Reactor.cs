@@ -365,9 +365,10 @@ namespace Barotrauma.Items.Components
         /// </summary>
         /// <param name="minimumOutputRatio">How low we allow the output/load ratio to go before loading more fuel. 
         /// 1.0 = always load more fuel when maximum output is too low, 0.5 = load more if max output is 50% of the load</param>
-        private bool NeedMoreFuel(float minimumOutputRatio)
+        private bool NeedMoreFuel(float minimumOutputRatio, float minCondition = 0)
         {
-            if (prevAvailableFuel <= 0.0f && load > 0.0f)
+            float remainingFuel = item.ContainedItems.Sum(i => i.Condition);
+            if (remainingFuel <= minCondition && load > 0.0f)
             {
                 return true;
             }
@@ -536,9 +537,9 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-
+            float refuelLimit = 0.3f;
             //characters with insufficient skill levels don't refuel the reactor
-            if (degreeOfSuccess > 0.2f)
+            if (degreeOfSuccess > refuelLimit)
             {
                 if (objective.SubObjectives.None())
                 {
@@ -599,8 +600,10 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
 
-                //load more fuel if the current maximum output is only 50% of the current load
-                if (NeedMoreFuel(minimumOutputRatio: 0.5f))
+                // load more fuel if the current maximum output is only 50% of the current load
+                // or if the fuel rod is (almost) deplenished 
+                float minCondition = fuelConsumptionRate * MathUtils.Pow((degreeOfSuccess - refuelLimit) * 2, 2);
+                if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
                 {
                     aiUpdateTimer = AIUpdateInterval;
                     if (objective.SubObjectives.None())

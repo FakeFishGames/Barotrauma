@@ -93,7 +93,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Items.Length; i++)
             {
-                if (SlotTypes[i] == limbSlot) return i;
+                if (SlotTypes[i] == limbSlot) { return i; }
             }
             return -1;
         }
@@ -102,7 +102,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Items.Length; i++)
             {
-                if (Items[i] == item && SlotTypes[i] == limbSlot) return true;
+                if (Items[i] == item && SlotTypes[i] == limbSlot) { return true; }
             }
             return false;
         }
@@ -110,6 +110,21 @@ namespace Barotrauma
         public override bool CanBePut(Item item, int i)
         {
             return base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]);
+        }
+
+        public bool CanBeAutoMovedToCorrectSlots(Item item)
+        {
+            if (item == null) { return false; }
+            foreach (var allowedSlot in item.AllowedSlots)
+            {
+                InvSlotType slotsFree = InvSlotType.None;
+                for (int i = 0; i < Items.Length; i++)
+                {
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] == null) { slotsFree |= SlotTypes[i]; }
+                }
+                if (allowedSlot == slotsFree) { return true; }
+            }
+            return false;
         }
 
         /// <summary>

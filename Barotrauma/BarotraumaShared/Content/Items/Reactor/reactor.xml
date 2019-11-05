@@ -16,7 +16,7 @@
       <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
       <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
       <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
-      <RequiredSkill identifier="electrical" level="30"/>
+      <RequiredSkill identifier="electrical" level="50"/>
       <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />

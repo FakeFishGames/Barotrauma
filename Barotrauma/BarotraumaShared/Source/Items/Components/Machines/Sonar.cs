@@ -268,6 +268,7 @@ namespace Barotrauma.Items.Components
 
             foreach (KeyValuePair<string, List<Character>> targetGroup in targetGroups)
             {
+                if (!targetGroup.Value.Any()) { continue; }
                 string dialogTag = "DialogSonarTarget";
                 if (targetGroup.Value.Count > 1)
                 {

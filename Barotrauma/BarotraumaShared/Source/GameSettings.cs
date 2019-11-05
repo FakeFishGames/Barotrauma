@@ -987,6 +987,7 @@ namespace Barotrauma
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
+            ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
             if (gameplayElement != null)
