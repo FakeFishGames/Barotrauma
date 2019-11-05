@@ -78,8 +78,7 @@
     Tags="smallitem,reactorfuel"
     preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet"
     cargocontaineridentifier="metalcrate"
-    scale="0.5"
-    health="5">
+    scale="0.5">
 
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="Research" buyprice="100"/>
