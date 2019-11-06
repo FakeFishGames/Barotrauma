@@ -494,19 +494,26 @@ namespace Barotrauma.Items.Components
                             }
                         }
                     }
+#if SERVER
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, item.WorldPosition });
+                    }
+#endif
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f,  user: user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f,  user: user);
-                }
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, target: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, target: target.Body.UserData as Entity, user: user);
 #if SERVER
-                if (GameMain.NetworkMember.IsServer)
-                {
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse });
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
-                }
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (target.Body.UserData as Entity)?.ID ?? 0, null, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (target.Body.UserData as Entity)?.ID ?? 0, null, item.WorldPosition });
+                    }
 #endif
+                }
             }
 
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;

@@ -919,18 +919,25 @@ namespace Barotrauma
                         byte componentIndex = msg.ReadByte();
                         ushort targetID = msg.ReadUInt16();
                         byte targetLimbID = msg.ReadByte();
+                        Vector2? worldPosition = null;
+                        bool hasPosition = msg.ReadBoolean();
+                        if (hasPosition)
+                        {
+                            worldPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        }
 
                         ItemComponent targetComponent = componentIndex < components.Count ? components[componentIndex] : null;
-                        Character target = FindEntityByID(targetID) as Character;
-                        Limb targetLimb = target != null && targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
-                        
+                        Entity target = FindEntityByID(targetID);
+                        Limb targetLimb = target is Character targetCharacter && targetLimbID < targetCharacter.AnimController.Limbs.Length ? 
+                            targetCharacter.AnimController.Limbs[targetLimbID] : null;
+
                         if (targetComponent == null)
                         {
-                            ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
+                            ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true, worldPosition: worldPosition);
                         }
                         else
                         {
-                            targetComponent.ApplyStatusEffects(actionType, 1.0f, target, targetLimb);
+                            targetComponent.ApplyStatusEffects(actionType, 1.0f, target, targetLimb, worldPosition: worldPosition);
                         }                        
                     }
                     break;

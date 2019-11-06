@@ -1060,18 +1060,18 @@ namespace Barotrauma
             return true;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Entity target = null, Limb limb = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
             foreach (StatusEffect effect in statusEffectLists[type])
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
+                ApplyStatusEffect(effect, type, deltaTime, target, limb, isNetworkEvent, false, worldPosition);
             }
         }
         
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Entity target = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
         {
             if (!isNetworkEvent && checkCondition)
             {
@@ -1110,6 +1110,13 @@ namespace Barotrauma
                 if (targets.Count > 0) { hasTargets = true; }
             }
 
+            if (effect.HasTargetType(StatusEffect.TargetType.UseTarget) && target is ISerializableEntity serializableTarget &&
+                (!(target is Character) || !effect.HasTargetType(StatusEffect.TargetType.Character)))
+            {
+                hasTargets = true;
+                targets.Add(serializableTarget);
+            }
+
             if (!hasTargets) { return; }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
@@ -1125,30 +1132,32 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            if (target is Character character)
             {
-                if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    targets.Add(characterInventory.Owner as ISerializableEntity);
+                    if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                    {
+                        targets.Add(characterInventory.Owner as ISerializableEntity);
+                    }
+                    else
+                    {
+                        targets.Add(character);
+                    }
                 }
-                else
+                if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
-                    targets.Add(character);
+                    targets.AddRange(character.AnimController.Limbs.ToList());
                 }
             }
-
             if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
                 targets.Add(limb);
             }
-            if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
-            {
-                targets.AddRange(character.AnimController.Limbs.ToList());
-            }
             
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
-            effect.Apply(type, deltaTime, this, targets);            
+            effect.Apply(type, deltaTime, this, targets, worldPosition);            
         }
 
 
