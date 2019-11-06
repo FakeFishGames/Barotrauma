@@ -150,6 +150,7 @@
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -193,6 +194,7 @@
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -705,6 +707,7 @@
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -768,6 +771,7 @@
       </StatusEffect>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
