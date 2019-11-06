@@ -629,7 +629,7 @@ namespace Barotrauma
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
-                text: keyMapping[(int)InputType.Voice].ToString())
+                text: KeyBindText(InputType.Voice))
             {
                 UserData = InputType.Voice
             };
