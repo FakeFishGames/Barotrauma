@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         partial class WireSection
         {
@@ -36,6 +36,8 @@ namespace Barotrauma.Items.Components
                 length = Vector2.Distance(start, end);
             }
         }
+
+        const float MaxAttachDistance = 150.0f;
 
         const float nodeDistance = 32.0f;
         const float heightFromFloor = 128.0f;
@@ -279,13 +281,16 @@ namespace Barotrauma.Items.Components
                     canPlaceNode = attachTarget != null;
 
                     sub = sub ?? attachTarget?.Submarine;
-                    newNodePos = sub == null ? 
-                        item.WorldPosition :
-                        item.WorldPosition - sub.Position - sub.HiddenSubPosition;
+                    Character user = item.ParentInventory?.Owner as Character;
+                    Vector2 attachPos = GetAttachPosition(user);
+                    newNodePos = sub == null ?
+                        attachPos :
+                        attachPos - sub.Position - sub.HiddenSubPosition;
                 }
                 else
                 {
-                    newNodePos = RoundNode(item.Position, item.CurrentHull);
+                    Character user = item.ParentInventory?.Owner as Character;
+                    newNodePos = GetAttachPosition(user);
                     if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                     canPlaceNode = true;
                 }
@@ -348,15 +353,29 @@ namespace Barotrauma.Items.Components
                     Math.Max(Math.Abs(relativeNodePos.Y), sectionExtents.Y));
             }
         }
-        
+
+        private Vector2 GetAttachPosition(Character user)
+        {
+            if (user == null) { return item.Position; }
+
+            Vector2 mouseDiff = user.CursorWorldPosition - user.WorldPosition;
+            mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
+
+            return new Vector2(
+                MathUtils.RoundTowardsClosest(user.Position.X + mouseDiff.X, Submarine.GridSize.X),
+                MathUtils.RoundTowardsClosest(user.Position.Y + mouseDiff.Y, Submarine.GridSize.Y));
+        }
+
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null) { return false; }
-            if (character == Character.Controlled && character.SelectedConstruction != null) { return false; }
+            if (character == null || character != Character.Controlled) { return false; }
+            if (character.SelectedConstruction != null) { return false; }
             if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.LeftButtonClicked())
             {
                 return false;
             }
+            //clients communicate node addition/removal with network events
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) { return false; }
 
             if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
             {
@@ -370,11 +389,15 @@ namespace Barotrauma.Items.Components
                 UpdateSections();
                 Drawable = true;
                 newNodePos = Vector2.Zero;
-
-#if SERVER
-                if (GameMain.Server != null)
+#if CLIENT
+                if (GameMain.NetworkMember != null)
                 {
-                    CreateNetworkEvent();
+                    GameMain.Client.CreateEntityEvent(item, new object[]
+                    {
+                        NetEntityEvent.Type.ComponentState,
+                        item.GetComponentIndex(this),
+                        nodes.Count
+                    });
                 }
 #endif
             }
@@ -383,10 +406,26 @@ namespace Barotrauma.Items.Components
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
+            if (character == null || character != Character.Controlled) { return false; }
+
+            //clients communicate node addition/removal with network events
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) { return false; }
+
             if (nodes.Count > 1 && removeNodeDelay <= 0.0f)
             {
                 nodes.RemoveAt(nodes.Count - 1);
                 UpdateSections();
+#if CLIENT
+                if (GameMain.NetworkMember != null)
+                {
+                    GameMain.Client.CreateEntityEvent(item, new object[]
+                    {
+                        NetEntityEvent.Type.ComponentState,
+                        item.GetComponentIndex(this),
+                        nodes.Count
+                    });
+                }
+#endif
             }
             removeNodeDelay = 0.1f;
 
@@ -727,35 +766,6 @@ namespace Barotrauma.Items.Components
             overrideSprite = null;
             wireSprite = null;
 #endif
-        }
-
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
-        {
-            int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
-            int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
-            int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
-
-            Vector2[] nodePositions = new Vector2[nodeStartIndex + nodeCount];
-            for (int i = 0; i < nodes.Count && i < nodePositions.Length; i++)
-            {
-                nodePositions[i] = nodes[i];
-            }
-
-            for (int i = 0; i < nodeCount; i++)
-            {
-                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-            }
-
-            if (nodePositions.Any(n => !MathUtils.IsValid(n)))
-            {
-                nodes.Clear();
-                return;
-            }
-
-            nodes = nodePositions.ToList();
-            UpdateSections();
-            Drawable = nodes.Any();
-        }
-        
+        }        
     }
 }

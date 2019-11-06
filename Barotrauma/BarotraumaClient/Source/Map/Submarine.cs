@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter)
+        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
         {
             var horizontalLine = GUI.Style.GetComponentStyle("HorizontalLine").Sprites[GUIComponent.ComponentState.None].First();
             var verticalLine = GUI.Style.GetComponentStyle("VerticalLine").Sprites[GUIComponent.ComponentState.None].First();
@@ -304,12 +304,12 @@ namespace Barotrauma
                     horizontalLine.Sprite,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
-                    Color.White * (1.0f - normalizedDistY), depth: 0.6f, width: 3);
+                    Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
                     verticalLine.Sprite,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
-                    Color.White * (1.0f - normalizedDistX), depth: 0.6f, width: 3);
+                    Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
             }
         }
 

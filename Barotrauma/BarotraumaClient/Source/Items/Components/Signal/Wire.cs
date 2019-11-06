@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
         partial class WireSection
         {
@@ -123,16 +123,45 @@ namespace Barotrauma.Items.Components
                     if (connections[0] == null) { DrawHangingWire(spriteBatch, nodes[0] + drawOffset, depth); }
                     if (connections[1] == null) { DrawHangingWire(spriteBatch, nodes.Last() + drawOffset, depth); }
                 }
-                if (IsActive && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+                if (IsActive && item.ParentInventory?.Owner is Character user && user == Character.Controlled)// && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
                 {
+                    Vector2 gridPos = Character.Controlled.Position;
+                    Vector2 roundedGridPos = new Vector2(
+                        MathUtils.RoundTowardsClosest(Character.Controlled.Position.X, Submarine.GridSize.X),
+                        MathUtils.RoundTowardsClosest(Character.Controlled.Position.Y, Submarine.GridSize.Y));
+                    //Vector2 attachPos = GetAttachPosition(user);
+
+                    if (item.Submarine == null)
+                    {
+                        Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
+                        if (attachTarget != null)
+                        {
+                            if (attachTarget.Submarine != null)
+                            {
+                                //set to submarine-relative position
+                                gridPos += attachTarget.Submarine.Position;
+                                roundedGridPos += attachTarget.Submarine.Position;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        gridPos += item.Submarine.Position;
+                        roundedGridPos += item.Submarine.Position;
+                    }
+
+                    Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+
                     WireSection.Draw(
-                        spriteBatch, 
+                        spriteBatch,
                         this,
                         new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
                         new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                        item.Color * 0.5f,
-                        depth,
+                        item.Color,
+                        0.0f,
                         0.3f);
+
+                    GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X, newNodePos.Y) + drawOffset - Vector2.One * 3, Vector2.One * 6, item.Color);
                 }
             }
 
@@ -345,6 +374,45 @@ namespace Barotrauma.Items.Components
                     MapEntity.DisableSelect = true;
                     MapEntity.SelectEntity(highlighted.item);
                 }
+            }
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
+            int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
+            int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
+
+            Vector2[] nodePositions = new Vector2[nodeStartIndex + nodeCount];
+            for (int i = 0; i < nodes.Count && i < nodePositions.Length; i++)
+            {
+                nodePositions[i] = nodes[i];
+            }
+
+            for (int i = 0; i < nodeCount; i++)
+            {
+                nodePositions[nodeStartIndex + i] = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+            }
+
+            if (nodePositions.Any(n => !MathUtils.IsValid(n)))
+            {
+                nodes.Clear();
+                return;
+            }
+
+            nodes = nodePositions.ToList();
+            UpdateSections();
+            Drawable = nodes.Any();
+        }
+
+        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        {
+            int nodeCount = (int)extraData[2];
+            msg.Write((byte)nodeCount);
+            if (nodeCount > 0)
+            {
+                msg.Write(nodes.Last().X);
+                msg.Write(nodes.Last().Y);
             }
         }
     }

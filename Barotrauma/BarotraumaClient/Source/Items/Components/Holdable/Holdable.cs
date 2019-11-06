@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
                 attachPos += item.Submarine.Position;
             }
 
-            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos);
+            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
 
             item.Sprite.Draw(
                 spriteBatch,
