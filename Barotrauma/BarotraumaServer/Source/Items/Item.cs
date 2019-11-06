@@ -296,7 +296,7 @@ namespace Barotrauma
 
         public float GetPositionUpdateInterval(Client recipient)
         {
-            if (PositionUpdateInterval == float.PositiveInfinity)
+            if (PositionUpdateInterval == float.PositiveInfinity || body == null)
             {
                 return float.PositiveInfinity;
             }

@@ -461,7 +461,11 @@ namespace Barotrauma.Items.Components
 
                 if (GameMain.NetworkMember != null)
                 {
-                    if (GameMain.NetworkMember.IsServer)
+                    if (character != Character.Controlled)
+                    {
+                        return false;
+                    }
+                    else if (GameMain.NetworkMember.IsServer)
                     {
                         return false;
                     }
@@ -473,8 +477,7 @@ namespace Barotrauma.Items.Components
                         { 
                             NetEntityEvent.Type.ComponentState, 
                             item.GetComponentIndex(this), 
-                            attachPos,
-                            character.Submarine
+                            attachPos
                         });
 #endif
                     }

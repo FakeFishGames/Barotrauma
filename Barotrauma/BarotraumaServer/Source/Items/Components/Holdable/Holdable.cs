@@ -18,14 +18,12 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-            ushort parentSubID = msg.ReadUInt16(); 
 
             if (!item.CanClientAccess(c) || !Attachable || attached || !MathUtils.IsValid(simPosition)) { return; }
 
             Vector2 offset = simPosition - c.Character.SimPosition;
             offset = offset.ClampLength(MaxAttachDistance * 1.5f);
             simPosition = c.Character.SimPosition + offset;
-            //if (Entity.FindEntityByID(parentSubID) is Submarine sub) { simPosition += sub.SimPosition; }
 
             Drop(false, null);
             item.SetTransform(simPosition, 0.0f);

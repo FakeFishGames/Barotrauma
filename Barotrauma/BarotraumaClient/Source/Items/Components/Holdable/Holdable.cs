@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (!IsActive || picker == null || !CanBeAttached() || !picker.IsKeyDown(InputType.Aim)) { return; }
+            if (!IsActive || picker == null || !CanBeAttached() || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) { return; }
 
             Vector2 gridPos = picker.Position;
             Vector2 roundedGridPos = new Vector2(
@@ -64,8 +64,6 @@ namespace Barotrauma.Items.Components
             Vector2 attachPos = (Vector2)extraData[2];
             msg.Write(attachPos.X);
             msg.Write(attachPos.Y);
-            Submarine parentSub = (Submarine)extraData[3];
-            msg.Write(parentSub == null ? Entity.NullEntityID : parentSub.ID);
         }
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
