@@ -1824,7 +1824,7 @@
 <dialognobatteries>Welche Batterien?</dialognobatteries>
 <dialognobatteries>Auf diesem Boot gibt es keine Batterien!</dialognobatteries>
 <dialognobatteries>Ich finde keine Batterien!</dialognobatteries>
-<stopchargingbatteries>[itemname] – Aufladen beendet!</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname] – Aufladen beendet!</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname] – ein Leck repariert!</dialogleakfixed>
 <dialogleakfixed>[roomname] – Reparaturen laufen. Noch ein paar Löcher!</dialogleakfixed>
 <dialogleaksfixed>[roomname] – alle Lecks repariert!</dialogleaksfixed>

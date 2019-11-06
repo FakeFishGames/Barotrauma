@@ -2617,7 +2617,7 @@
   <dialognobatteries>What batteries?</dialognobatteries>
   <dialognobatteries>There aren't any batteries on this boat!</dialognobatteries>
   <dialognobatteries>Can't find any batteries!</dialognobatteries>
-  <stopchargingbatteries>Stopped charging [itemname]!</stopchargingbatteries>
+  <dialogstopchargingbatteries>Stopped charging [itemname]!</dialogstopchargingbatteries>
   <dialogleakfixed>One leak fixed in [roomname]!</dialogleakfixed>
   <dialogleakfixed>Repairing [roomname]. A few more holes to go!</dialogleakfixed>
   <dialogleaksfixed>All leaks repaired in [roomname]!</dialogleaksfixed>

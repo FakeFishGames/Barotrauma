@@ -1825,7 +1825,7 @@
 <dialognobatteries>バッテリーはどこ？</dialognobatteries>
 <dialognobatteries>このボートの上にバッテリーがありません！</dialognobatteries>
 <dialognobatteries>バッテリーが全く見つかりません！</dialognobatteries>
-<stopchargingbatteries>[itemname]へのチャージが中止されました！</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname]へのチャージが中止されました！</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname]において修理された1つのリーク！</dialogleakfixed>
 <dialogleakfixed>[roomname]修復中。まだいくつかの穴があります！</dialogleakfixed>
 <dialogleaksfixed>[roomname]のすべての漏れる所は修復しました！</dialogleaksfixed>
