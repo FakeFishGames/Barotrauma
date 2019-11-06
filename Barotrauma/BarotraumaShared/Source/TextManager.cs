@@ -288,8 +288,8 @@ namespace Barotrauma
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
-                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBindText(inputType));
+                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBindText(inputType));
             }
             return text;
         }

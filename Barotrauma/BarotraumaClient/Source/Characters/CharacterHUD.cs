@@ -212,13 +212,13 @@ namespace Barotrauma
                     textPos.Y += offset.Y;
                     if (character.FocusedCharacter.CanBeDragged)
                     {
-                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBind(InputType.Grab).ToString()),
+                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBindText(InputType.Grab)),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += offset.Y;
                     }
                     if (character.FocusedCharacter.CharacterHealth.UseHealthWindow && character.CanInteractWith(character.FocusedCharacter, 160f, false))
                     {
-                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBind(InputType.Health).ToString()),
+                        GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)),
                             Color.LightGreen, Color.Black, 2, GUI.SmallFont);
                         textPos.Y += offset.Y;
                     }
