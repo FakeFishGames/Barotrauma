@@ -610,10 +610,10 @@ namespace Barotrauma
                 barSize: 0.05f)
             {
                 UserData = micVolumeText,
-                BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, 5.0f, MicrophoneVolume)),
+                BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, MaxMicrophoneVolume, MicrophoneVolume)),
                 OnMoved = (scrollBar, scroll) =>
                 {
-                    MicrophoneVolume = MathHelper.Lerp(0.2f, 10.0f, scroll * scroll);
+                    MicrophoneVolume = MathHelper.Lerp(0.2f, MaxMicrophoneVolume, scroll * scroll);
                     MicrophoneVolume = (float)Math.Round(MicrophoneVolume, 1);
                     ChangeSliderText(scrollBar, MicrophoneVolume);
                     scrollBar.Step = 0.05f;
