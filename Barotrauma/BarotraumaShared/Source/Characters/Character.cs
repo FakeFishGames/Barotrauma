@@ -1913,8 +1913,15 @@ namespace Barotrauma
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
                         focusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                        focusedItem = CanInteract ?
-                            FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
+
+                        float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
+                        if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
+                        {
+                            //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
+                            aimAssist = 0.0f;
+                        }
+
+                        focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, aimAssist) : null;
                         findFocusedTimer = 0.05f;
                     }
                 }

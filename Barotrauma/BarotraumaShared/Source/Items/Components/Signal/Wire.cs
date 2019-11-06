@@ -39,8 +39,7 @@ namespace Barotrauma.Items.Components
 
         const float MaxAttachDistance = 150.0f;
 
-        const float nodeDistance = 32.0f;
-        const float heightFromFloor = 128.0f;
+        const float MinNodeDistance = 15.0f;
 
         const int MaxNodeCount = 255;
         const int MaxNodesPerNetworkEvent = 30;
@@ -89,6 +88,7 @@ namespace Barotrauma.Items.Components
             sections = new List<WireSection>();
             connections = new Connection[2];            
             IsActive = false;
+            item.IsShootable = true;
 
             InitProjSpecific(element);
         }
@@ -259,8 +259,10 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            removeNodeDelay -= deltaTime;
             if (nodes.Count == 0) { return; }
+
+            Character user = item.ParentInventory?.Owner as Character;
+            removeNodeDelay = (user?.SelectedConstruction == null) ? removeNodeDelay - deltaTime : 0.5f;
 
             Submarine sub = null;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
@@ -281,7 +283,6 @@ namespace Barotrauma.Items.Components
                     canPlaceNode = attachTarget != null;
 
                     sub = sub ?? attachTarget?.Submarine;
-                    Character user = item.ParentInventory?.Owner as Character;
                     Vector2 attachPos = GetAttachPosition(user);
                     newNodePos = sub == null ?
                         attachPos :
@@ -289,7 +290,6 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    Character user = item.ParentInventory?.Owner as Character;
                     newNodePos = GetAttachPosition(user);
                     if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                     canPlaceNode = true;
@@ -298,7 +298,7 @@ namespace Barotrauma.Items.Components
                 //prevent the wire from extending too far when rewiring
                 if (nodes.Count > 0)
                 {
-                    if (!(item.ParentInventory?.Owner is Character user)) return;
+                    if (user == null) { return; }
 
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
                     if (sub != null) { prevNodePos += sub.HiddenSubPosition; }
@@ -334,7 +334,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                newNodePos = RoundNode(item.Position, item.CurrentHull);
+                newNodePos = RoundNode(item.Position);
                 if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
@@ -377,7 +377,7 @@ namespace Barotrauma.Items.Components
             //clients communicate node addition/removal with network events
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) { return false; }
 
-            if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
+            if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > MinNodeDistance)
             {
                 if (nodes.Count >= MaxNodeCount)
                 {
@@ -562,28 +562,10 @@ namespace Barotrauma.Items.Components
             Drawable = sections.Count > 0;
         }
 
-        private Vector2 RoundNode(Vector2 position, Hull hull)
+        private Vector2 RoundNode(Vector2 position)
         {
-            if (Screen.Selected == GameMain.SubEditorScreen)
-            {
-                position.X = MathUtils.Round(position.X, Submarine.GridSize.X / 2.0f);
-                position.Y = MathUtils.Round(position.Y, Submarine.GridSize.Y / 2.0f);
-            }
-            else
-            {
-                position.X = MathUtils.Round(position.X, nodeDistance);
-                if (hull == null)
-                {
-                    position.Y = MathUtils.Round(position.Y, nodeDistance);
-                }
-                else
-                {
-                    position.Y -= hull.Rect.Y - hull.Rect.Height;
-                    position.Y = Math.Max(MathUtils.Round(position.Y, nodeDistance), heightFromFloor);
-                    position.Y += hull.Rect.Y -hull.Rect.Height;
-                }
-            }
-
+            position.X = MathUtils.Round(position.X, Submarine.GridSize.X / 2.0f);
+            position.Y = MathUtils.Round(position.Y, Submarine.GridSize.Y / 2.0f);
             return position;
         }
 
