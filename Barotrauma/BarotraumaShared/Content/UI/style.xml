@@ -1338,4 +1338,20 @@
     textcolor="0,0,0,255">
     <Sprite texture="Content/UI/tutorialAtlas.png" sourcerect="111,214,209,22" tile="false"/>
   </Stroke>
+  
+  <HorizontalLine
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
+    <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect="134,748,172,4" tile="false"/>
+  </HorizontalLine>
+
+  <VerticalLine
+    color="255,255,255,255"
+    hovercolor="255,255,255,255"
+    selectedcolor="255,255,255,255"
+    textcolor="0,0,0,255">
+    <Sprite texture="Content/UI/UI_Atlas2.png" sourcerect="292,569,4,172" tile="false"/>
+  </VerticalLine>
 </style>

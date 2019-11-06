@@ -91,6 +91,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ElectricalDischarger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\Holdable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemLabel.cs" />
