@@ -119,26 +119,6 @@ namespace Barotrauma.Items.Components
             barSize: 0.0f);
         }
 
-        private void InitializeRotationLimitWidget(Widget widget)
-        {
-            widget.Hovered += () =>
-            {
-                widget.secondaryColor = Color.Green;
-            };
-            widget.Selected += () =>
-            {
-                widget.color = Color.Green;
-            };
-            widget.MouseHeld += (deltaTime) =>
-            {
-                widget.DrawPos = PlayerInput.MousePosition;
-            };
-            widget.Deselected += () =>
-            {
-                widget.color = Color.Red;
-            };
-        }
-
         public override void Move(Vector2 amount)
         {
             widgets.Clear();
