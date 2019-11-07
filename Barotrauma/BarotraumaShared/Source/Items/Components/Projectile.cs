@@ -497,20 +497,20 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, item.WorldPosition });
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
                     }
 #endif
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, target: target.Body.UserData as Entity, user: user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, target: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (target.Body.UserData as Entity)?.ID ?? 0, null, item.WorldPosition });
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (target.Body.UserData as Entity)?.ID ?? 0, null, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
                     }
 #endif
                 }

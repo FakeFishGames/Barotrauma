@@ -669,7 +669,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Entity target = null, Limb targetLimb = null, Character user = null, Vector2? worldPosition = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null)
         {
             if (statusEffectLists == null) return;
 
@@ -680,7 +680,7 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
-                item.ApplyStatusEffect(effect, type, deltaTime, target, targetLimb, false, false, worldPosition);
+                item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
             }
         }
         

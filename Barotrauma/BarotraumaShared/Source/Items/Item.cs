@@ -1060,18 +1060,18 @@ namespace Barotrauma
             return true;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Entity target = null, Limb limb = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
             foreach (StatusEffect effect in statusEffectLists[type])
             {
-                ApplyStatusEffect(effect, type, deltaTime, target, limb, isNetworkEvent, false, worldPosition);
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, useTarget, isNetworkEvent, false, worldPosition);
             }
         }
         
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Entity target = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
         {
             if (!isNetworkEvent && checkCondition)
             {
@@ -1110,8 +1110,7 @@ namespace Barotrauma
                 if (targets.Count > 0) { hasTargets = true; }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.UseTarget) && target is ISerializableEntity serializableTarget &&
-                (!(target is Character) || !effect.HasTargetType(StatusEffect.TargetType.Character)))
+            if (effect.HasTargetType(StatusEffect.TargetType.UseTarget) && useTarget is ISerializableEntity serializableTarget)
             {
                 hasTargets = true;
                 targets.Add(serializableTarget);
@@ -1132,7 +1131,7 @@ namespace Barotrauma
                 }
             }
 
-            if (target is Character character)
+            if (character != null)
             {
                 if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
@@ -1577,7 +1576,7 @@ namespace Barotrauma
                 foreach (StatusEffect effect in connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false); }
+                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
                 connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
             }
