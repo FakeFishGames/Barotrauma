@@ -312,6 +312,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 item.body.Enabled = true;
+                item.body.PhysEnabled = false;
                 IsActive = true;
 
 #if SERVER
@@ -329,6 +330,7 @@ namespace Barotrauma.Items.Components
             GameServer.Log(character.LogName + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
 
+            item.body.PhysEnabled = true;
             item.body.Enabled = false;
             IsActive = false;
         }
