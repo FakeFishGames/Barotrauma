@@ -14,6 +14,9 @@ namespace Barotrauma
             get { return Math.Max(400, 400 * (GameMain.GraphicsWidth / 1920)); }
         }
 
+        private float inGameCloseTimer = 0.0f;
+        private const float inGameCloseTime = 15f;
+
         public enum Type
         {
             Default,
@@ -238,6 +241,13 @@ namespace Barotrauma
                 {
                     InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
                     openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
+
+                    inGameCloseTimer += deltaTime;
+
+                    if (inGameCloseTimer >= inGameCloseTime)
+                    {
+                        Close();
+                    }
                 }
                 else
                 {
