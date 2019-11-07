@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
             if (connection.Name != "signal_in") return;
-            if (!float.TryParse(signal, out float value)) return;
+            if (!float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;
             switch (Function)
             {
                 case FunctionType.Round:

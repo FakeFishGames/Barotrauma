@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
-            float.TryParse(signal, out float value);
+            float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             switch (Function)
             {
                 case FunctionType.Sin:

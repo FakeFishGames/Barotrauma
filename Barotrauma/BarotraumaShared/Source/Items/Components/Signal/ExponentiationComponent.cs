@@ -20,11 +20,11 @@ namespace Barotrauma.Items.Components
             {
                 case "set_exponent":
                 case "exponent":
-                    float.TryParse(signal, out float newExponent);
-                    Exponent = newExponent;
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float exponent);
+                    Exponent = exponent;
                     break;
                 case "signal_in":
-                    float.TryParse(signal, out float value);
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
                     item.SendSignal(0, MathUtils.Pow(value, Exponent).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
             }
