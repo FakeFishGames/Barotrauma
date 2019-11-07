@@ -798,10 +798,10 @@ namespace Barotrauma
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
                     {
                         GUI.TogglePauseMenu();
-                        paused = true;
+                        Paused = true;
                     }
 #endif
 
