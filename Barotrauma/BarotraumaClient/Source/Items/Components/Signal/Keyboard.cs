@@ -7,7 +7,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Keyboard : ItemComponent, IClientSerializable, IServerSerializable
     {
-        GUIListBox historyListBox;
+        private GUIListBox historyListBox;
+
         partial void InitProjSpecific(XElement element)
         {
             GUIFrame marginFrame = new GUIFrame(new RectTransform(new Vector2(.9f, .9f), GuiFrame.RectTransform, Anchor.Center));

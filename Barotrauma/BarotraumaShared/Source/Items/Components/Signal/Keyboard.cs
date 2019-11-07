@@ -5,8 +5,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Keyboard : ItemComponent
     {
-        List<string> history;
-        int maxHistoryCount = 10;
+        private List<string> history;
+        private int maxHistoryCount = 10;
 
         public Keyboard(Item item, XElement element)
             : base(item, element)

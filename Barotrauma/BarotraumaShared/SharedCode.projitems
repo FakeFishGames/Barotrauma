@@ -132,6 +132,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Deconstructor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Engine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Fabricator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\MiniMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\OxygenGenerator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Pump.cs" />
