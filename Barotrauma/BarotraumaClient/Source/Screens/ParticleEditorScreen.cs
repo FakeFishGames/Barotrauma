@@ -165,6 +165,7 @@ namespace Barotrauma
         {
             base.Deselect();
             GameMain.ParticleManager.Camera = GameMain.GameScreen.Cam;
+            filterBox.Text = "";
         }
 
         private void RefreshPrefabList()

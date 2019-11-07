@@ -737,6 +737,8 @@ namespace Barotrauma
                 }
             }
             dirtySprites.Clear();
+            filterSpritesBox.Text = "";
+            filterTexturesBox.Text = "";
         }
 
         public void SelectSprite(Sprite sprite)
