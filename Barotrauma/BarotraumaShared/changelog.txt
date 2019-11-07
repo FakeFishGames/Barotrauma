@@ -1,4 +1,21 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.5.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when attempting to start a tutorial.
+- Fixed Kastrull's drone not being docked to the sub by default.
+- Fixed items occasionally launching through walls/floors when they're spawned or dropped.
+- Nerfed Hammerhead Spawns.
+- Fixed occasional disconnections when the Hammerhead Matriarch releases her spawns.
+- Fixed Hammerhead Matriarch exploding twice when it attacks.
+- Fixed bots sometimes getting stuck in an objective loop, causing them to repeatedly drop and pick up
+diving suits or spam doors.
+- Fixed bots being allowed to go outside without a diving suit.
+- Fixed characters with a rectangular main collider being unable to use path finding.
+- Fixed microphone volume scrollbar resetting to the maximum value when opening the settings menu.
+- Fixed a bug that caused occasional crashes on Linux when pinging servers in the server list menu.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.5.0
 ---------------------------------------------------------------------------------------------------------
 
