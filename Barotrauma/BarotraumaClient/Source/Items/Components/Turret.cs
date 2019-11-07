@@ -476,8 +476,13 @@ namespace Barotrauma.Items.Components
 
             float zoom = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
 
-            crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
-            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
+            GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
+                GUI.MouseOn == null && !Inventory.IsMouseOnInventory() && !GameMain.Instance.Paused;
+            if (GUI.HideCursor)
+            {
+                crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
+                crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
+            }
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

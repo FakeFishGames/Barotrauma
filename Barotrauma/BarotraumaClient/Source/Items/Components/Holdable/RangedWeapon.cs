@@ -83,9 +83,14 @@ namespace Barotrauma.Items.Components
         {
             if (crosshairSprite == null) { return; }
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
-            
-            crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
-            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
+
+            GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
+                GUI.MouseOn == null && !Inventory.IsMouseOnInventory() && !GameMain.Instance.Paused;
+            if (GUI.HideCursor)
+            {
+                crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
+                crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
+            }
         }
 
         partial void LaunchProjSpecific()
