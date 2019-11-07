@@ -12,9 +12,20 @@ namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
-        private Sprite crosshairSprite;
+        private Sprite crosshairSprite, crosshairPointerSprite;
+
+        private Vector2 crosshairPos, crosshairPointerPos;
+
+        private float currentCrossHairScale;
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+
+        [Serialize(0.5f, false, description: "The scale of the crosshair sprite (if there is one).")]
+        public float CrossHairScale
+        {
+            get;
+            private set;
+        }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -23,8 +34,16 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crosshair":
-                        string texturePath = subElement.GetAttributeString("texture", "");
-                        crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        {
+                            string texturePath = subElement.GetAttributeString("texture", "");
+                            crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        }
+                        break;
+                    case "crosshairpointer":
+                        {
+                            string texturePath = subElement.GetAttributeString("texture", "");
+                            crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                        }
                         break;
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
@@ -33,9 +52,33 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
+        {
+            currentCrossHairScale = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
+            currentCrossHairScale *= CrossHairScale;
+
+            if (crosshairSprite != null)
+            {
+                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+                Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+
+                Vector2 mouseDiff = itemPos - PlayerInput.MousePosition;
+                crosshairPos = new Vector2(
+                    MathHelper.Clamp(itemPos.X + barrelDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
+                    MathHelper.Clamp(itemPos.Y + barrelDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
+            }
+
+            crosshairPointerPos = PlayerInput.MousePosition;
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            //TODO: draw crosshair
+            if (crosshairSprite == null || currentCrossHairScale <= 0.0f) { return; }
+            if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
+            
+            crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
+            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairScale);
         }
 
         partial void LaunchProjSpecific()
@@ -52,6 +95,8 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             crosshairSprite?.Remove();
+            crosshairSprite = null;
+            crosshairPointerSprite?.Remove();
             crosshairSprite = null;
         }
     }
