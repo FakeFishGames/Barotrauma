@@ -36,6 +36,11 @@ namespace Barotrauma
         private float maxZoom;
         private int spriteCount;
 
+        private GUITextBox filterSpritesBox;
+        private GUITextBlock filterSpritesLabel;
+        private GUITextBox filterTexturesBox;
+        private GUITextBlock filterTexturesLabel;
+
         private bool editBackgroundColor;
         private Color backgroundColor = new Color(0.051f, 0.149f, 0.271f, 1.0f);
 
@@ -175,7 +180,21 @@ namespace Barotrauma
             { MinSize = new Point(150, 0) }, style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft)
             { RelativeOffset = new Vector2(0.02f, 0.0f) })
-            { Stretch = true };
+            { RelativeSpacing = 0.01f, Stretch = true };
+
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
+            {
+                Stretch = true,
+                UserData = "filterarea"
+            };
+            filterTexturesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true }; ;
+            filterTexturesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
+            filterTexturesBox.OnTextChanged += (textBox, text) => { FilterTextures(text); return true; };
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform) { MinSize = new Point(20, 0) }, "x")
+            {
+                OnClicked = (btn, userdata) => { FilterTextures(""); filterTexturesBox.Text = ""; filterTexturesBox.Flash(Color.White); return true; }
+            };
+
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
             {
                 OnSelected = (listBox, userData) =>
@@ -191,6 +210,7 @@ namespace Barotrauma
                         var textBlock = (GUITextBlock)child;
                         var sprite = (Sprite)textBlock.UserData;
                         textBlock.TextColor = new Color(textBlock.TextColor, sprite.Texture == selectedTexture ? 1.0f : 0.4f);
+                        if (sprite.Texture == selectedTexture) { textBlock.Visible = true; }
                     }
                     if (selectedSprites.None(s => s.Texture == selectedTexture))
                     {
@@ -209,12 +229,25 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
+
+            filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
+            {
+                Stretch = true,
+                UserData = "filterarea"
+            };
+            filterSpritesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true };
+            filterSpritesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
+            filterSpritesBox.OnTextChanged += (textBox, text) => { FilterSprites(text); return true; };
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform) { MinSize = new Point(20, 0) }, "x")
+            {
+                OnClicked = (btn, userdata) => { FilterSprites(""); filterSpritesBox.Text = ""; filterSpritesBox.Flash(Color.White); return true; }
+            };
+
             spriteList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform))
             {
                 OnSelected = (listBox, userData) =>
                 {
-                    Sprite sprite = userData as Sprite;
-                    if (sprite == null) return false;
+                    if (!(userData is Sprite sprite)) return false;
                     SelectSprite(sprite);
                     return true;
                 }
@@ -623,6 +656,39 @@ namespace Barotrauma
             snappedPos.X += gridArea.X;
             snappedPos.Y += gridArea.Y;
             return snappedPos;
+        }
+
+        private void FilterTextures(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                filterTexturesLabel.Visible = true;
+                textureList.Content.Children.ForEach(c => c.Visible = true);
+                return;
+            }
+            text = text.ToLower();
+            filterTexturesLabel.Visible = false;
+            foreach (GUIComponent child in textureList.Content.Children)
+            {
+                if (!(child is GUITextBlock textBlock)) { continue; }
+                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+            }
+        }
+        private void FilterSprites(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                filterSpritesLabel.Visible = true;
+                spriteList.Content.Children.ForEach(c => c.Visible = true);
+                return;
+            }
+            text = text.ToLower();
+            filterSpritesLabel.Visible = false;
+            foreach (GUIComponent child in spriteList.Content.Children)
+            {
+                if (!(child is GUITextBlock textBlock)) { continue; }
+                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+            }
         }
 
         public override void Select()
