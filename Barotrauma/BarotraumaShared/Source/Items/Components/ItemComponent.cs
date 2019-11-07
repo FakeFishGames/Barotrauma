@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.Sounds;
 #endif
@@ -22,7 +23,7 @@ namespace Barotrauma.Items.Components
         void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1);
 #endif
     }
-    
+
     /// <summary>
     /// The base class for components holding the different functionalities of the item
     /// </summary>
@@ -57,7 +58,7 @@ namespace Barotrauma.Items.Components
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
         protected float correctionTimer;
-                
+
         [Editable, Serialize(0.0f, false, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
         {
@@ -71,7 +72,7 @@ namespace Barotrauma.Items.Components
         public virtual bool IsActive
         {
             get { return isActive; }
-            set 
+            set
             {
 #if CLIENT
                 if (!value)
@@ -94,15 +95,15 @@ namespace Barotrauma.Items.Components
         public bool Drawable
         {
             get { return drawable; }
-            set 
+            set
             {
                 if (value == drawable) return;
                 if (!(this is IDrawableComponent))
                 {
                     DebugConsole.ThrowError("Couldn't make \"" + this + "\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
-                }  
-              
+                }
+
                 drawable = value;
                 if (drawable)
                 {
@@ -111,7 +112,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     item.DisableDrawableComponent((IDrawableComponent)this);
-                }                
+                }
             }
         }
 
@@ -149,7 +150,7 @@ namespace Barotrauma.Items.Components
             get { return removeOnCombined; }
             set { removeOnCombined = value; }
         }
-        
+
         [Serialize(false, false, description: "Can the \"Use\" action of the item be triggered by characters or just other items/StatusEffects.")]
         public bool CharacterUsable
         {
@@ -193,7 +194,7 @@ namespace Barotrauma.Items.Components
         {
             get { return name; }
         }
-        
+
         [Editable, Serialize("", true, translationTextTag: "ItemMsg", description: "A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. \"[Mouse1] Pick up\").")]
         public string Msg
         {
@@ -214,12 +215,12 @@ namespace Barotrauma.Items.Components
         [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
         public float CombatPriority { get; private set; }
 
-        public ItemComponent(Item item, XElement element) 
+        public ItemComponent(Item item, XElement element)
         {
             this.item = item;
             originalElement = element;
             name = element.Name.ToString();
-            SerializableProperties = SerializableProperty.GetProperties(this);            
+            SerializableProperties = SerializableProperty.GetProperties(this);
             requiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>();
             requiredSkills = new List<Skill>();
 
@@ -302,14 +303,14 @@ namespace Barotrauma.Items.Components
                         break;
                     default:
                         if (LoadElemProjSpecific(subElement)) break;
-                        ItemComponent ic = Load(subElement, item, item.ConfigFile, false);                        
+                        ItemComponent ic = Load(subElement, item, item.ConfigFile, false);
                         if (ic == null) break;
 
                         ic.Parent = this;
                         item.AddComponent(ic);
                         break;
                 }
-            }        
+            }
         }
 
         public void SetRequiredItems(XElement element)
@@ -341,9 +342,9 @@ namespace Barotrauma.Items.Components
         }
 
         public virtual void Move(Vector2 amount) { }
-        
+
         /// <summary>a Character has picked the item</summary>
-        public virtual bool Pick(Character picker) 
+        public virtual bool Pick(Character picker)
         {
             return false;
         }
@@ -352,12 +353,12 @@ namespace Barotrauma.Items.Components
         {
             return CanBeSelected;
         }
-        
+
         /// <summary>a Character has dropped the item</summary>
-        public virtual void Drop(Character dropper)  { }
+        public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective) 
+        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }
@@ -366,7 +367,7 @@ namespace Barotrauma.Items.Components
         public virtual void Update(float deltaTime, Camera cam) { }
 
         //called when isActive is true and condition == 0.0f
-        public virtual void UpdateBroken(float deltaTime, Camera cam) 
+        public virtual void UpdateBroken(float deltaTime, Camera cam)
         {
 #if CLIENT
             StopSounds(ActionType.OnActive);
@@ -375,7 +376,7 @@ namespace Barotrauma.Items.Components
 
         //called when the item is equipped and the "use" key is pressed
         //returns true if the item was used succesfully (not out of ammo, reloading, etc)
-        public virtual bool Use(float deltaTime, Character character = null) 
+        public virtual bool Use(float deltaTime, Character character = null)
         {
             return characterUsable || character == null;
         }
@@ -392,8 +393,8 @@ namespace Barotrauma.Items.Components
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
 
-        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f) 
-        {        
+        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        {
             switch (connection.Name)
             {
                 case "activate":
@@ -414,7 +415,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual bool Combine(Item item, Character user) 
+        public virtual bool Combine(Item item, Character user)
         {
             if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
             {
@@ -477,7 +478,7 @@ namespace Barotrauma.Items.Components
             {
                 loopingSoundChannel.Dispose();
                 loopingSoundChannel = null;
-            }                
+            }
             if (GuiFrame != null) GUI.RemoveFromUpdateList(GuiFrame, true);
 #endif
 
@@ -512,7 +513,7 @@ namespace Barotrauma.Items.Components
             RemoveComponentSpecific();
         }
 
-        protected virtual void RemoveComponentSpecific() 
+        protected virtual void RemoveComponentSpecific()
         { }
 
         public bool HasRequiredSkills(Character character)
@@ -579,7 +580,7 @@ namespace Barotrauma.Items.Components
         {
             if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
             if (item.OwnInventory == null) return false;
-            
+
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
                 if (!ri.CheckRequirements(user, item))
@@ -668,7 +669,7 @@ namespace Barotrauma.Items.Components
                 return !shouldBreak;
             }
         }
-        
+
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Character user = null)
         {
             if (statusEffectLists == null) return;
@@ -683,7 +684,7 @@ namespace Barotrauma.Items.Components
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, false, false);
             }
         }
-        
+
         public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
             if (componentElement == null || usePrefabValues) { return; }
@@ -720,7 +721,7 @@ namespace Barotrauma.Items.Components
                 // Get the type of a specified class.                
                 t = Type.GetType("Barotrauma.Items.Components." + type + "", false, true);
                 if (t == null)
-                {                    
+                {
                     if (errorMessages) DebugConsole.ThrowError("Could not find the component \"" + type + "\" (" + file + ")");
                     return null;
                 }
@@ -851,5 +852,98 @@ namespace Barotrauma.Items.Components
                 DisplayMsg = Msg;
             }
         }
+
+        #region AI related
+        protected const float AIUpdateInterval = 0.2f;
+        protected float aiUpdateTimer;
+
+        private int itemIndex;
+        private List<Item> ignoredContainers = new List<Item>();
+        protected bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
+        {
+            suitableContainer = null;
+            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
+            {
+                suitableContainer = targetContainer;
+                return true;
+            }
+            return false;
+        }
+
+        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount) where T : ItemComponent
+        {
+            var containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
+            {
+                targetItemCount = itemCount,
+                GetItemPriority = i =>
+                {
+                    if (i.ParentInventory?.Owner is Item)
+                    {
+                        //don't take items from other items of the same type
+                        if (((Item)i.ParentInventory.Owner).GetComponent<T>() != null)
+                        {
+                            return 0.0f;
+                        }
+                    }
+                    return 1.0f;
+                }
+            };
+            containObjective.Abandoned += () => objective.Abandon = true;
+            objective.AddSubObjective(containObjective);
+            return containObjective;
+        }
+
+        protected void AIDecontainEmptyItems(Character character, AIObjective objective)
+        {
+            var containedItems = item.ContainedItems;
+            foreach (Item containedItem in containedItems)
+            {
+                if (containedItem != null && containedItem.Condition <= 0.0f)
+                {
+                    if (FindSuitableContainer(character,
+                        i =>
+                        {
+                            var container = i.GetComponent<ItemContainer>();
+                            if (container == null) { return 0; }
+                            if (container.Inventory.IsFull()) { return 0; }
+                            if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
+                            {
+                                if (isRestrictionsDefined)
+                                {
+                                    return 3;
+                                }
+                                else
+                                {
+                                    if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                                    {
+                                        return isPreferencesDefined ? 2 : 1;
+                                    }
+                                    else
+                                    {
+                                        return isPreferencesDefined ? 0 : 1;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                return 0;
+                            }
+                        }, out Item targetContainer))
+                    {
+                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                        decontainObjective.Abandoned += () =>
+                        {
+                            itemIndex = 0;
+                            if (targetContainer != null)
+                            {
+                                ignoredContainers.Add(targetContainer);
+                            }
+                        };
+                        objective.AddSubObjectiveInQueue(decontainObjective);
+                    }
+                }
+            }
+        }
+        #endregion
     }
 }
