@@ -3715,4 +3715,5 @@
   <timeformathours>[hours] h</timeformathours>
   <timeformatminutes>[minutes] m</timeformatminutes>
   <timeformatseconds>[seconds] s</timeformatseconds>
+  <connection.setexponent>set_exponent</connection.setexponent>
 </infotexts>
