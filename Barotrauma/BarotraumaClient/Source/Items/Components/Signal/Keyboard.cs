@@ -8,19 +8,18 @@ namespace Barotrauma.Items.Components
     partial class Keyboard : ItemComponent, IClientSerializable, IServerSerializable
     {
         private GUIListBox historyBox;
+        private GUITextBlock fillerBlock;
 
         partial void InitProjSpecific(XElement element)
         {
-            GUIFrame marginFrame = new GUIFrame(new RectTransform(new Vector2(.9f, .9f), GuiFrame.RectTransform, anchor: Anchor.Center));
+            GUIFrame marginFrame = new GUIFrame(new RectTransform(new Vector2(.9f, .8f), GuiFrame.RectTransform, anchor: Anchor.Center));
 
-            historyBox = new GUIListBox(
-                new RectTransform(new Vector2(1, .8f), marginFrame.RectTransform, Anchor.BottomCenter)
-                {
-                    RelativeOffset = new Vector2(0, .05f),
-                },
-                style: "InnerFrame")
+            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .85f), marginFrame.RectTransform, Anchor.TopCenter));
+
+            // Creating fillerBlock which covers the whole historyBox allows new values to appear at the bottom of historyBox
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.Center), string.Empty)
             {
-                AutoHideScrollBar = true
+                CanBeFocused = false
             };
 
             new GUITextBox(new RectTransform(new Vector2(1, .1f), marginFrame.RectTransform, anchor: Anchor.BottomCenter),
@@ -52,13 +51,27 @@ namespace Barotrauma.Items.Components
                 historyBox.RemoveChild(historyBox.Content.Children.First());
             }
 
-            new GUITextBlock(
+            GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + newValue,
                     textColor: Color.LimeGreen)
             {
                 CanBeFocused = false
             };
+
+            if (fillerBlock != null)
+            {
+                float y = fillerBlock.RectTransform.RelativeSize.Y - newBlock.RectTransform.RelativeSize.Y;
+                if (y > 0)
+                {
+                    fillerBlock.RectTransform.RelativeSize = new Vector2(1, y);
+                }
+                else
+                {
+                    historyBox.RemoveChild(fillerBlock);
+                    fillerBlock = null;
+                }
+            }
 
             historyBox.ScrollBar.BarScrollValue = 1;
         }
