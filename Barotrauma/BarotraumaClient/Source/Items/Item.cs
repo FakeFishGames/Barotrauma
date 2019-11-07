@@ -176,9 +176,8 @@ namespace Barotrauma
             }
             size *= 0.5f;
 
-            Vector2 worldPosition = WorldPosition;
-            if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
-            if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
+            if (WorldPosition.X - size.X > worldView.Right || WorldPosition.X + size.X < worldView.X) return false;
+            if (WorldPosition.Y + size.Y < worldView.Y - worldView.Height || WorldPosition.Y - size.Y > worldView.Y) return false;
 
             return true;
         }
