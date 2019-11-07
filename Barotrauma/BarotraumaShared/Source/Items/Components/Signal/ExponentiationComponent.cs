@@ -3,25 +3,30 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class ExponentiationComponent : AdderComponent
+    class ExponentiationComponent : ItemComponent
     {
+        [InGameEditable, Serialize(1.0f, false, description: "The exponent of the operation.")]
+        public float Exponent { get; set; }
+
         public ExponentiationComponent(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
         }
 
-        public override void Update(float deltaTime, Camera cam)
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
-            bool sendOutput = true;
-            for (int i = 0; i < timeSinceReceived.Length; i++)
+            switch (connection.Name)
             {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
-                timeSinceReceived[i] += deltaTime;
-            }
-            if (sendOutput)
-            {
-                item.SendSignal(0, MathUtils.Pow(receivedSignal[0], receivedSignal[1]).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                case "set_exponent":
+                case "exponent":
+                    float.TryParse(signal, out float newExponent);
+                    Exponent = newExponent;
+                    break;
+                case "signal_in":
+                    float.TryParse(signal, out float value);
+                    item.SendSignal(0, MathUtils.Pow(value, Exponent).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    break;
             }
         }
     }
