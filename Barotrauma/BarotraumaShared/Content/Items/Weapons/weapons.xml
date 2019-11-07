@@ -91,7 +91,9 @@
     <Sprite texture="weapons_new.png" sourcerect="0,64,282,60" depth="0.55" origin="0.5,0.5" />
     <Body width="90" height="30" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect" />
-    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="60">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="60" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <Sound file="Content/Items/Weapons/HarpoonGun1.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/HarpoonGun2.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/HarpoonGun3.ogg" type="OnUse" />
@@ -123,7 +125,9 @@
     <Sprite texture="Content/Items/Tools/tools_new.png" sourcerect="0,242,232,111" depth="0.55" origin="0.5,0.5" />
     <Body width="90" radius="40" density="50" />
     <Holdable slots="RightHand+LeftHand,Any" controlpose="true" aimpos="35,0" handle1="0,-7" handle2="80, 5" msg="ItemMsgPickUpSelect" />
-    <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10">
+    <RangedWeapon barrelpos="30,20" spread="0" unskilledspread="10" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <Sound file="Content/Items/Weapons/SyringeGun1.ogg" type="OnUse" />
       <Sound file="Content/Items/Weapons/SyringeGun2.ogg" type="OnUse" />
       <RequiredItems identifier="syringe" type="Contained" msg="ItemMsgSyringeRequired" />
@@ -165,7 +169,9 @@
     <Sprite texture="weapons_new.png" sourcerect="1,1,117,62" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="60" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect" />
-    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="70">
+    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="70" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
@@ -230,7 +236,9 @@
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="80">
+    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="80" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
       <Sound file="Content/Items/Weapons/SMGsingleShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/SMGsingleShot2.ogg" type="OnUse" range="3000" />
@@ -559,7 +567,9 @@
     <Sprite texture="weapons_new.png" sourcerect="219,274,290,102" depth="0.55" origin="0.5,0.5" />
     <Body width="280" height="60" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="75">
+    <RangedWeapon barrelpos="49,10" spread="1" unskilledspread="10" combatPriority="75" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <ParticleEmitter particle="muzzleflashrailgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
       <Sound file="Content/Items/Weapons/GrenadeLauncherShot1.ogg" type="OnUse" selectionmode="Random"/>
       <Sound file="Content/Items/Weapons/GrenadeLauncherShot2.ogg" type="OnUse" />
@@ -671,7 +681,9 @@
     <Sprite texture="weapons_new.png" sourcerect="0,191,289,84" depth="0.55" origin="0.5,0.5" />
     <Body width="280" height="50" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon barrelpos="45,10" spread="1" unskilledspread="10" combatPriority="80" reload="1.5">
+    <RangedWeapon barrelpos="45,10" spread="1" unskilledspread="10" combatPriority="80" reload="1.5" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
       <Sound file="Content/Items/Weapons/ShotgunShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/ShotgunShot2.ogg" type="OnUse" range="3000" />
@@ -730,7 +742,9 @@
     <Sprite texture="weapons_new.png" sourcerect="0,293,130,76" depth="0.55" origin="0.5,0.5" />
     <Body width="130" height="70" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="100">
+    <RangedWeapon barrelpos="14,6" spread="0" unskilledspread="2" combatPriority="100" drawhudwhenequipped="true" crosshairscale="0.2">
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <Sound file="Content/Items/Weapons/TaserShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/TaserShot2.ogg" type="OnUse" range="3000" />
       <StatusEffect type="OnUse" target="Contained">

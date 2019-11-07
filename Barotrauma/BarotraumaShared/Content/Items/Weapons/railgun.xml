@@ -12,8 +12,8 @@
       </StatusEffect>
       <RailSprite texture="Content/Items/Weapons/Turrets.png" origin="0.52, 0.59" sourcerect="512,256,164,256" depth="0.011" />
       <BarrelSprite texture="Content/Items/Weapons/Turrets.png" origin="0.5, 0.85" sourcerect="768,0,125,336" depth="0.012" />
-      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
-      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg" />

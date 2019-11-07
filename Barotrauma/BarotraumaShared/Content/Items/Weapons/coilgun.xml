@@ -12,8 +12,8 @@
       <sound file="Content/Items/Weapons/Coilgun3.ogg" range="10000" type="OnUse" />
       <RailSprite texture="Content/Items/Weapons/Turrets.png" depth="0.011" sourcerect="381,0,120,287" origin="0.64, 0.7" />
       <BarrelSprite texture="Content/Items/Weapons/Turrets.png" depth="0.012" sourcerect="256,0,125,333" origin="0.6, 0.8" />
-      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
-      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg" />

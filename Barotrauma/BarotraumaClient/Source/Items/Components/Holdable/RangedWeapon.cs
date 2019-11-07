@@ -16,11 +16,11 @@ namespace Barotrauma.Items.Components
 
         private Vector2 crosshairPos, crosshairPointerPos;
 
-        private float currentCrossHairScale;
+        private float currentCrossHairScale, currentCrossHairPointerScale;
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
-        [Serialize(0.5f, false, description: "The scale of the crosshair sprite (if there is one).")]
+        [Serialize(1.0f, false, description: "The scale of the crosshair sprite (if there is one).")]
         public float CrossHairScale
         {
             get;
@@ -54,12 +54,12 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            currentCrossHairScale = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
-            currentCrossHairScale *= CrossHairScale;
-
+            currentCrossHairScale = currentCrossHairPointerScale = cam == null ? 1.0f : cam.Zoom;
             if (crosshairSprite != null)
             {
-                Vector2 itemPos = cam.WorldToScreen(item.WorldPosition);
+                Vector2 aimRefWorldPos = character.AimRefPosition;
+                if (character.Submarine != null) { aimRefWorldPos += character.Submarine.Position; }
+                Vector2 itemPos = cam.WorldToScreen(aimRefWorldPos);
                 float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
                 Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
 
@@ -67,18 +67,25 @@ namespace Barotrauma.Items.Components
                 crosshairPos = new Vector2(
                     MathHelper.Clamp(itemPos.X + barrelDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
                     MathHelper.Clamp(itemPos.Y + barrelDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
-            }
 
+                float degreeOfSuccess = DegreeOfSuccess(character);
+                float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
+                float crossHairDist = Vector2.Distance(item.WorldPosition, cam.ScreenToWorld(crosshairPos));
+                float spreadDist = (float)Math.Sin(spread) * crossHairDist * 2.0f;
+
+                currentCrossHairPointerScale = MathHelper.Clamp(spreadDist / Math.Min(crosshairSprite.size.X, crosshairSprite.size.Y), 0.1f, 10.0f);
+            }
+            currentCrossHairScale *= CrossHairScale;
             crosshairPointerPos = PlayerInput.MousePosition;
         }
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (crosshairSprite == null || currentCrossHairScale <= 0.0f) { return; }
+            if (crosshairSprite == null) { return; }
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
             
             crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
-            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairScale);
+            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
         }
 
         partial void LaunchProjSpecific()
