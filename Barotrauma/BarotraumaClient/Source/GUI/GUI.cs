@@ -100,6 +100,8 @@ namespace Barotrauma
         public static GUIFrame PauseMenu { get; private set; }
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
+        public static bool HideCursor;
+
         public static KeyboardDispatcher KeyboardDispatcher { get; set; }
 
         /// <summary>
@@ -482,7 +484,7 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
 
-            if (GameMain.WindowActive)
+            if (GameMain.WindowActive && !HideCursor)
             {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
@@ -490,6 +492,7 @@ namespace Barotrauma
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
+            HideCursor = false;
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
