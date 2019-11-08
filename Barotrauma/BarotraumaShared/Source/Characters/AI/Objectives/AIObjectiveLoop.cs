@@ -14,6 +14,9 @@ namespace Barotrauma
         private float ignoreListTimer;
         protected float targetUpdateTimer;
 
+        private float syncTimer;
+        private readonly float syncTime = 1;
+
         // By default, doesn't clear the list automatically
         protected virtual float IgnoreListClearInterval => 0;
 
@@ -68,22 +71,27 @@ namespace Barotrauma
             {
                 targetUpdateTimer -= deltaTime;
             }
-            // Sync objectives, subobjectives and targets
-            foreach (var objective in Objectives)
+            // We shouldn't need this anymore, because we use the event callbacks to keep the lists in sync.
+            // TODO: if this is _never_ needed, let's remove it.
+            // Right now I'm not certain that the collections always stay in sync, so let's keep this as a safe guard.
+            if (syncTimer < 0)
             {
-                var target = objective.Key;
-                //if (!objective.Value.CanBeCompleted && !ignoreList.Contains(target))
-                //{
-                //    // TODO: leaks that cannot be accessed from inside cause FixLeak objective to fail, but for some reason it's not ignored. Make sure that it is.
-                //    ignoreList.Add(target);
-                //    targetUpdateTimer = 0;
-                //}
-                if (!Targets.Contains(target))
+                syncTimer = syncTime * Rand.Range(0.9f, 1.1f);
+                // Sync objectives, subobjectives and targets
+                foreach (var objective in Objectives)
                 {
-                    subObjectives.Remove(objective.Value);
+                    var target = objective.Key;
+                    if (!Targets.Contains(target))
+                    {
+                        subObjectives.Remove(objective.Value);
+                    }
                 }
+                SyncRemovedObjectives(Objectives, GetList());
             }
-            SyncRemovedObjectives(Objectives, GetList());
+            else
+            {
+                syncTimer -= deltaTime;
+            }
             if (Objectives.None() && Targets.Any(t => !ignoreList.Contains(t)))
             {
                 CreateObjectives();
