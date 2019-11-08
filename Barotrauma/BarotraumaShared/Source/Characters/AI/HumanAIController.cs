@@ -431,6 +431,7 @@ namespace Barotrauma
             }
             if (findItemState == FindItemState.None || findItemState == FindItemState.OtherItem)
             {
+                if (ObjectiveManager.IsActiveObjective<AIObjectiveContainItem>() || ObjectiveManager.IsActiveObjective<AIObjectiveDecontainItem>()) { return; }
                 if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() ||
                     ObjectiveManager.IsCurrentObjective<AIObjectiveOperateItem>() ||
                     ObjectiveManager.IsCurrentObjective<AIObjectivePumpWater>() ||
