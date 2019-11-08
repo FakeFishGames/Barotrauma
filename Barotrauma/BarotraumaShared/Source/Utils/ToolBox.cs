@@ -477,13 +477,22 @@ namespace Barotrauma
             }
 
             string retVal = arguments[startIndex].Substring(1);
+
+            int lastEscaped = arguments[startIndex].IndexOf("\\\"");
+            int lastQuote = arguments[startIndex].IndexOf("\"");
+            if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped + 1 < lastQuote))
+            {
+                endIndex = startIndex + 1;
+                return UnescapeCharacters(retVal.Substring(0, retVal.Length - 1));
+            }
+
             int currIndex = startIndex;
             while (currIndex < arguments.Length)
             {
                 currIndex++;
                 retVal += " " + arguments[currIndex];
-                int lastEscaped = arguments[currIndex].IndexOf("\\\"");
-                int lastQuote = arguments[currIndex].IndexOf("\"");
+                lastEscaped = arguments[currIndex].IndexOf("\\\"");
+                lastQuote = arguments[currIndex].IndexOf("\"");
                 if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped+1 < lastQuote))
                 {
                     break;
