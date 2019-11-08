@@ -1860,6 +1860,7 @@ namespace Barotrauma
             if (body != null)
             {
                 body.Enabled = true;
+                body.PhysEnabled = true;
                 body.ResetDynamics();
                 if (dropper != null)
                 {
