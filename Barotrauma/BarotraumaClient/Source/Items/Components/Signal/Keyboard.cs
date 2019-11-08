@@ -12,18 +12,17 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            GUIFrame marginFrame = new GUIFrame(new RectTransform(new Vector2(.9f, .8f), GuiFrame.RectTransform, anchor: Anchor.Center));
+            GUILayoutGroup layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(.9f, .8f), GuiFrame.RectTransform, anchor: Anchor.Center));
 
-            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .85f), marginFrame.RectTransform, Anchor.TopCenter));
+            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform));
 
             // Creating fillerBlock which covers the whole historyBox allows new values to appear at the bottom of historyBox
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.Center), string.Empty)
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform), string.Empty)
             {
                 CanBeFocused = false
             };
 
-            new GUITextBox(new RectTransform(new Vector2(1, .1f), marginFrame.RectTransform, anchor: Anchor.BottomCenter),
-                textColor: Color.LimeGreen)
+            new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
             {
                 OnEnterPressed = (GUITextBox textBox, string text) =>
                 {
