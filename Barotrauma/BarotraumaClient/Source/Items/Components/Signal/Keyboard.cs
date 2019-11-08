@@ -16,8 +16,9 @@ namespace Barotrauma.Items.Components
 
             historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform));
 
-            // Creating fillerBlock which covers the whole historyBox allows new values to appear at the bottom of historyBox
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform), string.Empty)
+            // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
+            // This could be removed if GUIListBox supported aligning its children
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
             {
                 CanBeFocused = false
             };
@@ -72,6 +73,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            historyBox.RecalculateChildren();
+            historyBox.UpdateScrollBarSize();
             historyBox.ScrollBar.BarScrollValue = 1;
         }
 
