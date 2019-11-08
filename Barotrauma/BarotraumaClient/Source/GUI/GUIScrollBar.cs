@@ -222,6 +222,12 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             if (!enabled) { return; }
+            
+            Frame.State = GUI.MouseOn == Frame ? ComponentState.Hover : ComponentState.None;
+            if (Frame.State == ComponentState.Hover && PlayerInput.LeftButtonHeld())
+            {
+                Frame.State = ComponentState.Pressed;
+            }            
 
             if (IsBooleanSwitch && 
                 (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != this && !IsParentOf(GUI.MouseOn))))
