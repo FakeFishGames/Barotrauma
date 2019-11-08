@@ -82,6 +82,8 @@ namespace Barotrauma.Items.Components
 
         public List<RelatedItem> ContainableItems { get; private set; } = new List<RelatedItem>();
 
+        public IEnumerable<string> GetContainableItemIdentifiers => ContainableItems.SelectMany(ri => ri.Identifiers);
+
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {

@@ -84,7 +84,7 @@ namespace Barotrauma
                 }
             }
             SyncRemovedObjectives(Objectives, GetList());
-            if (Objectives.None() && Targets.Any())
+            if (Objectives.None() && Targets.Any(t => !ignoreList.Contains(t)))
             {
                 CreateObjectives();
             }
@@ -151,6 +151,7 @@ namespace Barotrauma
         {
             foreach (T target in Targets)
             {
+                if (ignoreList.Contains(target)) { continue; }
                 if (!Objectives.TryGetValue(target, out AIObjective objective))
                 {
                     objective = ObjectiveConstructor(target);

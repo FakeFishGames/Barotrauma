@@ -69,10 +69,10 @@
       <Attack structuredamage="1" damagetype="Blunt">
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000" />
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="50000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="50000" />
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="1000.0" structuredamage="1000" force="50.0">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" camerashake="100" camerashakerange="50000">
           <Affliction identifier="burn" strength="500" />
           <Affliction identifier="radiationsickness" strength="100" />
           <Affliction identifier="internaldamage" strength="400" />

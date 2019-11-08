@@ -55,7 +55,7 @@ namespace Barotrauma.Particles
 
             if (particle != null)
             {
-                particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax);
+                particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax) * sizeMultiplier;
                 particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
             }
         }

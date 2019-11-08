@@ -128,7 +128,7 @@ namespace Barotrauma
             int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
-            int portraitSize = (int)(120 * GUI.Scale);
+            int portraitSize = (int)(100 * GUI.Scale);
             PortraitArea = new Rectangle(GameMain.GraphicsWidth - portraitSize - Padding, GameMain.GraphicsHeight - portraitSize - Padding, portraitSize, portraitSize);
             
             //horizontal slices at the corners of the screen for health bar and affliction icons

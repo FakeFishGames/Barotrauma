@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class RangedWeapon : ItemComponent
+    partial class RangedWeapon : ItemComponent
     {
         private float reload, reloadTimer;
 
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.SimPosition);
+                return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
                 
@@ -60,7 +60,10 @@ namespace Barotrauma.Items.Components
             item.IsShootable = true;
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -138,7 +141,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 projectilePos = item.SimPosition;
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
-            Vector2 barrelPos = TransformedBarrelPos;
+            Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
             //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
             if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
@@ -167,14 +170,15 @@ namespace Barotrauma.Items.Components
             //recoil
             item.body.ApplyLinearImpulse(
                 new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f, 
-                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);                
+                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+
+            LaunchProjSpecific();
 
             item.RemoveContained(projectile.Item);
-                
-            Rope rope = item.GetComponent<Rope>();
-            if (rope != null) rope.Attach(projectile.Item);
 
             return true;
-        }            
+        }
+
+        partial void LaunchProjSpecific();
     }
 }

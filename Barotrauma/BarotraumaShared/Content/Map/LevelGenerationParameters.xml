@@ -2,24 +2,29 @@
 <LevelGenerationParameters>
   <Biomes>
     <Biome
+      identifier="coldcaverns"
       name="Cold Caverns"
-      description="asdgfdfg"
+      description=""
       AllowedZones="1" />
     <Biome
+      identifier="europanridge"
       name="Europan Ridge"
-      description="asdgfdfg"
+      description=""
       AllowedZones="2" />
     <Biome
+      identifier="theaphoticplateau"
       name="The Aphotic Plateau"
-      description="asdgfdfg"
+      description=""
       AllowedZones="3" />
     <Biome
+      identifier="thegreatvoid"
       name="The Great Void"
-      description="asdgfdfg"
+      description=""
       AllowedZones="4" />
     <Biome
+      identifier="hydrothermalwastes"
       name="Hydrothermal Wastes"
-      description="asdgfdfg"
+      description=""
       AllowedZones="5,6" />
     <!-- TODO: "END ZONE" -->
   </Biomes>
@@ -68,7 +73,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsTutorial>
   <ColdCavernsBasic
-    biomes="Cold Caverns"
+    biomes="coldcaverns"
     height="60000"
     levelobjectamount="1000"
     ambientlightcolor="3,3,3,3"
@@ -112,7 +117,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsBasic>
   <ColdCavernsMaze
-    biomes="Cold Caverns"
+    biomes="coldcaverns"
     height="70000"
     levelobjectamount="1000"
     ambientlightcolor="3,3,3,3"
@@ -156,7 +161,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </ColdCavernsMaze>
   <RidgeBasic
-    biomes="Europan Ridge"
+    biomes="europanridge"
     height="50000"
     levelobjectamount="1500"
     ambientlightcolor="3,3,3,3"
@@ -200,7 +205,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </RidgeBasic>
   <PlateauBasic
-    biomes="The Aphotic Plateau"
+    biomes="theaphoticplateau"
     height="25000"
     levelobjectamount="1000"
     ambientlightcolor="3,3,3,3"
@@ -244,7 +249,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </PlateauBasic>
   <VoidBasic
-    biomes="The Great Void"
+    biomes="thegreatvoid"
     height="50000"
     levelobjectamount="800"
     ambientlightcolor="3,3,3,3"
@@ -288,7 +293,7 @@
       texture="Content/Map/IceWallEdgeSpecular.png" />
   </VoidBasic>
   <WastesBasic
-    biomes="Hydrothermal Wastes"
+    biomes="hydrothermalwastes"
     height="50000"
     levelobjectamount="1000"
     ambientlightcolor="3,3,3,3"
@@ -334,7 +339,7 @@
   <!--
   
   <Pillars
-    biomes="Cold Caverns, Volcanic Ridge"
+    biomes="coldcaverns, volcanicridge"
     width="100000"
     height="80000"
     VoronoiSiteInterval="1000,8000"
@@ -360,7 +365,7 @@
   </Pillars>
   
   <Slabs
-    biomes="Cold Caverns"
+    biomes="coldcaverns"
     width="150000"
     height="50000"
     VoronoiSiteInterval="8000,1000"

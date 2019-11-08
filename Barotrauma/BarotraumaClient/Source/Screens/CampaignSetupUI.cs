@@ -19,7 +19,7 @@ namespace Barotrauma
 
         private GUILayoutGroup subPreviewContainer;
 
-        private GUIButton loadGameButton;
+        private GUIButton loadGameButton, deleteMpSaveButton;
         
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
@@ -304,7 +304,7 @@ namespace Barotrauma
                         TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
                     {
                         TextColor = textBlock.TextColor * 0.8f,
-                        ToolTip = textBlock.ToolTip
+                        ToolTip = textBlock.RawToolTip
                     };
                 }
             }
@@ -318,8 +318,10 @@ namespace Barotrauma
             }
         }
 
+        private List<string> prevSaveFiles;
         public void UpdateLoadMenu(IEnumerable<string> saveFiles = null)
         {
+            prevSaveFiles?.Clear();
             loadGameContainer.ClearChildren();
 
             if (saveFiles == null)
@@ -357,12 +359,14 @@ namespace Barotrauma
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");
                     saveTime = doc.Root.GetAttributeString("savetime", "");
+                    prevSaveFiles?.Add(saveFile);
                 }
                 else
                 {
                     string[] splitSaveFile = saveFile.Split(';');
                     saveFrame.UserData = splitSaveFile[0];
                     fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
+                    prevSaveFiles?.Add(fileName);
                     if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
                     if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
                 }
@@ -414,7 +418,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
-                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) return false;
+                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) { return false; }
                     LoadGame?.Invoke(saveList.SelectedData as string);
                     if (isMultiplayer)
                     {
@@ -424,6 +428,11 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
+            deleteMpSaveButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomLeft), TextManager.Get("Delete"), style: "GUIButtonLarge")
+            {
+                OnClicked = DeleteSave,
+                Visible = false
+            };
         }       
         
         private bool SelectSaveFile(GUIComponent component, object obj)
@@ -431,6 +440,11 @@ namespace Barotrauma
             if (isMultiplayer)
             {
                 loadGameButton.Enabled = true;
+                deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
+                if (deleteMpSaveButton.Visible)
+                {
+                    deleteMpSaveButton.UserData = obj as string;
+                }
                 return true;
             }
 
@@ -495,12 +509,11 @@ namespace Barotrauma
         private bool DeleteSave(GUIButton button, object obj)
         {
             string saveFile = obj as string;
-
-            if (obj == null) return false;
+            if (obj == null) { return false; }
 
             SaveUtil.DeleteSave(saveFile);
-
-            UpdateLoadMenu();
+            prevSaveFiles?.Remove(saveFile);
+            UpdateLoadMenu(prevSaveFiles);
 
             return true;
         }

@@ -11,20 +11,22 @@ namespace Barotrauma
 {
     partial class Explosion
     {
-        private static List<Triplet<Explosion, Vector2, float>> prevExplosions = new List<Triplet<Explosion, Vector2, float>>();
+        private static readonly List<Triplet<Explosion, Vector2, float>> prevExplosions = new List<Triplet<Explosion, Vector2, float>>();
 
-        private Attack attack;
+        private readonly Attack attack;
         
-        private float force;
-        
-        public float CameraShake;
+        private readonly float force;
+
+        private readonly float cameraShake, cameraShakeRange;
+
+        private readonly Color screenColor;
+        private readonly float screenColorRange, screenColorDuration;
 
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
+        private readonly string decal;
+        private readonly float decalSize;
 
-        private float empStrength;
-
-        private string decal;
-        private float decalSize;
+        public float EmpStrength { get; set; }
 
         public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
         {
@@ -33,7 +35,7 @@ namespace Barotrauma
                 SeverLimbsProbability = 1.0f
             };
             this.force = force;
-            this.empStrength = empStrength;
+            this.EmpStrength = empStrength;
             sparks = true;
             shockwave = true;
             smoke = true;
@@ -54,12 +56,17 @@ namespace Barotrauma
             smoke       = element.GetAttributeBool("smoke", true);
             flash       = element.GetAttributeBool("flash", true);
 
-            empStrength = element.GetAttributeFloat("empstrength", 0.0f);
+            EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
 
             decal       = element.GetAttributeString("decal", "");
             decalSize   = element.GetAttributeFloat("decalSize", 1.0f);
 
-            CameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
+            cameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
+            cameraShakeRange = element.GetAttributeFloat("camerashakerange", attack.Range);
+
+            screenColorRange = element.GetAttributeFloat("screencolorrange", attack.Range * 0.1f);
+            screenColor = element.GetAttributeColor("screencolor", Color.Transparent);
+            screenColorDuration = element.GetAttributeFloat("screencolorduration", 0.1f);
         }
 
         public void DisableParticles()
@@ -90,18 +97,26 @@ namespace Barotrauma
             ExplodeProjSpecific(worldPosition, hull);
 
             float displayRange = attack.Range;
-            if (displayRange < 0.1f) return;
 
             Vector2 cameraPos = Character.Controlled != null ? Character.Controlled.WorldPosition : GameMain.GameScreen.Cam.Position;
             float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
-            GameMain.GameScreen.Cam.Shake = CameraShake * Math.Max((displayRange - cameraDist) / displayRange, 0.0f);
-            
+            GameMain.GameScreen.Cam.Shake = cameraShake * Math.Max((cameraShakeRange - cameraDist) / cameraShakeRange, 0.0f);
+#if CLIENT
+            if (screenColor != Color.Transparent)
+            {
+                Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
+                Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
+            }
+#endif
+
+            if (displayRange < 0.1f) { return; }
+
             if (attack.GetStructureDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, attack.GetStructureDamage(1.0f), attacker);
             }
 
-            if (empStrength > 0.0f)
+            if (EmpStrength > 0.0f)
             {
                 float displayRangeSqr = displayRange * displayRange;
                 foreach (Item item in Item.ItemList)
@@ -116,14 +131,14 @@ namespace Barotrauma
                     if (powered == null || !powered.VulnerableToEMP) continue;
                     if (item.Repairables.Any())
                     {
-                        item.Condition -= 100 * empStrength * distFactor;
+                        item.Condition -= 100 * EmpStrength * distFactor;
                     }
 
                     //discharge batteries
                     var powerContainer = item.GetComponent<PowerContainer>();
                     if (powerContainer != null)
                     {
-                        powerContainer.Charge -= powerContainer.Capacity * empStrength * distFactor;
+                        powerContainer.Charge -= powerContainer.Capacity * EmpStrength * distFactor;
                     }
                 }
             }

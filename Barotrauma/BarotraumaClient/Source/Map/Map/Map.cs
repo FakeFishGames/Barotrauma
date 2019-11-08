@@ -578,7 +578,7 @@ namespace Barotrauma
                         Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                         if (rect.Contains(center))
                         {
-                            GUI.DrawString(spriteBatch, center, connection.Biome.Name + " (" + connection.Difficulty + ")", Color.White);
+                            GUI.DrawString(spriteBatch, center, connection.Biome.Identifier + " (" + connection.Difficulty + ")", Color.White);
                         }
                     }
                 }

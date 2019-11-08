@@ -159,8 +159,10 @@ namespace Barotrauma
             public InventorySlot Slot;
 
             public Inventory Inventory;
-
+            public Item Item;
             public bool IsSubSlot;
+            public string Tooltip;
+            public List<ColorData> TooltipColorData;
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
@@ -169,6 +171,57 @@ namespace Barotrauma
                 SlotIndex = slotIndex;
                 Inventory = subInventory;
                 IsSubSlot = isSubSlot;
+                Item = ParentInventory.Items[slotIndex];
+                TooltipColorData = ColorData.GetColorData(GetTooltip(Item), out Tooltip);
+            }
+
+            private string GetTooltip(Item item)
+            {
+                if (item == null) return null;
+
+                string toolTip = "";
+                if (GameMain.DebugDraw)
+                {
+                    toolTip = item.ToString();
+                }
+                else
+                {
+                    string description = item.Description;
+                    if (item.Prefab.Identifier == "idcard")
+                    {
+                        string[] readTags = item.Tags.Split(',');
+                        string idName = null;
+                        string idJob = null;
+                        foreach (string tag in readTags)
+                        {
+                            string[] s = tag.Split(':');
+                            if (s[0] == "name")
+                                idName = s[1];
+                            if (s[0] == "job")
+                                idJob = s[1];
+                        }
+                        if (idName != null)
+                        {
+                            if (idJob == null)
+                            {
+                                description = TextManager.GetWithVariable("IDCardName", "[name]", idName);
+                            }
+                            else
+                            {
+                                description = TextManager.GetWithVariables("IDCardNameJob", new string[2] { "[name]", "[job]" }, new string[2] { idName, idJob }, new bool[2] { false, true });
+                            }
+                            if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                description = description + " " + item.Description;
+                            }
+                        }
+                    }
+                    toolTip = string.IsNullOrEmpty(description) ?
+                        item.Name :
+                        item.Name + '\n' + description;
+                }
+
+                return toolTip;
             }
         }
 
@@ -633,9 +686,9 @@ namespace Barotrauma
             return false;
         }
 
-        protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot)
-        {
-            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot);
+        protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot, List<ColorData> colorData = null)
+        {           
+            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot, colorData);
         }
 
         public void DrawSubInventory(SpriteBatch spriteBatch, int slotIndex)
@@ -900,57 +953,11 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedSlot != null)
+            if (selectedSlot != null && selectedSlot.Item != null)
             {
-                Item item = selectedSlot.ParentInventory.Items[selectedSlot.SlotIndex];
-                if (item != null)
-                {
-                    string toolTip = "";
-                    if (GameMain.DebugDraw)
-                    {
-                        toolTip = item.ToString();
-                    }
-                    else
-                    {
-                        string description = item.Description;
-                        if (item.Prefab.Identifier == "idcard")
-                        {
-                            string[] readTags = item.Tags.Split(',');
-                            string idName = null;
-                            string idJob = null;
-                            foreach (string tag in readTags)
-                            {
-                                string[] s = tag.Split(':');
-                                if (s[0] == "name")
-                                    idName = s[1];
-                                if (s[0] == "job")
-                                    idJob = s[1];
-                            }
-                            if (idName != null)
-                            {
-                                if (idJob == null)
-                                {
-                                    description = TextManager.GetWithVariable("IDCardName", "[name]", idName);
-                                }
-                                else
-                                {
-                                    description = TextManager.GetWithVariables("IDCardNameJob", new string[2] { "[name]", "[job]" }, new string[2] { idName, idJob }, new bool[2] { false, true });
-                                }
-                                if (!string.IsNullOrEmpty(item.Description))
-                                {
-                                    description = description + " " + item.Description;
-                                }
-                            }
-                        }
-                        toolTip = string.IsNullOrEmpty(description) ?
-                            item.Name :
-                            item.Name + '\n' + description;
-                    }
-
-                    Rectangle slotRect = selectedSlot.Slot.Rect;
-                    slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
-                    DrawToolTip(spriteBatch, toolTip, slotRect);
-                }
+                Rectangle slotRect = selectedSlot.Slot.Rect;
+                slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
+                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipColorData);                
             }
         }
 
@@ -983,7 +990,25 @@ namespace Barotrauma
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
 
-                bool canBePut = draggingItem != null && inventory != null && inventory.CanBePut(draggingItem, slotIndex);
+                bool canBePut = false;
+
+                if (draggingItem != null && inventory != null && slotIndex > -1 && slotIndex < inventory.slots.Length)
+                {
+                    if (inventory.CanBePut(draggingItem, slotIndex))
+                    {
+                        canBePut = true;
+                    }
+                    else if (inventory.Items[slotIndex]?.OwnInventory?.CanBePut(draggingItem) ?? false)
+                    {
+                        canBePut = true;
+                    }
+                    else if (inventory.Items[slotIndex] == null && inventory == Character.Controlled.Inventory && 
+                        !draggingItem.AllowedSlots.Any(a => a.HasFlag(Character.Controlled.Inventory.SlotTypes[slotIndex])) &&
+                        Character.Controlled.Inventory.CanBeAutoMovedToCorrectSlots(draggingItem))
+                    {
+                        canBePut = true;
+                    }
+                }
                 if (slot.MouseOn() && canBePut)
                 {
                     GUI.UIGlow.Draw(spriteBatch, rect, Color.LightGreen);

@@ -267,7 +267,7 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                 }
-                else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+                else if (Lights.LightManager.ViewTarget == this)
                 {
                     if (GUI.PauseMenuOpen || IsUnconscious)
                     {
@@ -276,7 +276,7 @@ namespace Barotrauma
                             cam.OffsetAmount = targetOffsetAmount = 0.0f;
                         }
                     }
-                    else
+                    else if (Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
                         Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
                         Structure structure = body?.UserData as Structure;

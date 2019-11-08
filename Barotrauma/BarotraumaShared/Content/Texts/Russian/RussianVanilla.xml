@@ -1824,7 +1824,7 @@
 <dialognobatteries>Какие еще батареи?</dialognobatteries>
 <dialognobatteries>На этой лодке нет никаких батарей!</dialognobatteries>
 <dialognobatteries>Не могу найти батареи!</dialognobatteries>
-<stopchargingbatteries>[itemname] больше не нуждается в зарядке!</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname] больше не нуждается в зарядке!</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname]: минус одна протечка!</dialogleakfixed>
 <dialogleakfixed>[roomname]: выполняю ремонт. Осталось несколько отверстий!</dialogleakfixed>
 <dialogleaksfixed>[roomname]: все протечки устранены!</dialogleaksfixed>

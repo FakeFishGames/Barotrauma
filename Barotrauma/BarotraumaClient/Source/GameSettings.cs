@@ -629,7 +629,7 @@ namespace Barotrauma
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
-                text: keyMapping[(int)InputType.Voice].ToString())
+                text: KeyBindText(InputType.Voice))
             {
                 UserData = InputType.Voice
             };
@@ -812,7 +812,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+                TextManager.Get("back"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>

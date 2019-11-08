@@ -231,7 +231,7 @@ namespace Barotrauma
 #if CLIENT
                 foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
                 {
-                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                    msg = msg.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBindText(inputType));
                 }
                 ri.Msg = msg;
 #endif

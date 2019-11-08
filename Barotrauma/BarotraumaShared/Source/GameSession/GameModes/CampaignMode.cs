@@ -202,7 +202,7 @@ namespace Barotrauma
             character.TeamID = Character.TeamType.FriendlyNPC;
             character.SetCustomInteract(
                 WatchmanInteract,
-                hudText: TextManager.GetWithVariable("TalkHint", "[key]", GameMain.Config.KeyBind(InputType.Select).ToString()));
+                hudText: TextManager.GetWithVariable("TalkHint", "[key]", GameMain.Config.KeyBindText(InputType.Select)));
         }
 
         protected abstract void WatchmanInteract(Character watchman, Character interactor);

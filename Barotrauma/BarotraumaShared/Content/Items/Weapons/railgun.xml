@@ -12,8 +12,8 @@
       </StatusEffect>
       <RailSprite texture="Content/Items/Weapons/Turrets.png" origin="0.52, 0.59" sourcerect="512,256,164,256" depth="0.011" />
       <BarrelSprite texture="Content/Items/Weapons/Turrets.png" origin="0.5, 0.85" sourcerect="768,0,125,336" depth="0.012" />
-      <Crosshair texture="Content/Items/Weapons/crosshair.png" />
-      <CrosshairPointer texture="Content/Items/Weapons/crosshairPointer.png" />
+      <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="256,0,256,256" />
+      <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,0,256,256" />
       <MoveSound file="Content/Items/Weapons/RailgunLoop.ogg" />
       <StartMoveSound file="Content/Items/Weapons/RailgunStart.ogg" />
       <EndMoveSound file="Content/Items/Weapons/RailgunStop.ogg" />
@@ -130,10 +130,10 @@
         <Affliction identifier="internaldamage" strength="100" />
         <Affliction identifier="bleeding" strength="10" />
       </Attack>
-      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
-      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="50000" />
+      <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="50000" />
       <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0" camerashake="100" camerashakerange="50000">
           <Affliction identifier="burn" strength="500" />
           <Affliction identifier="radiationsickness" strength="100" />
           <Affliction identifier="internaldamage" strength="400" />

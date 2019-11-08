@@ -21,6 +21,11 @@ namespace Barotrauma
         private Texture2D damageStencil;       
         private Texture2D distortTexture;
 
+
+        private float BlurStrength = 0.0f;
+        private float DistortStrength = 0.0f;
+        private Vector3 ChromaticAberrationStrength;
+
         public Effect PostProcessEffect
         {
             get { return postProcessEffect; }            
@@ -324,23 +329,21 @@ namespace Barotrauma
                 spriteBatch.End();
             }
             graphics.SetRenderTarget(null);
-
-            float BlurStrength = 0.0f;
-            float DistortStrength = 0.0f;
-            Vector3 chromaticAberrationStrength = GameMain.Config.ChromaticAberrationEnabled ?
-                new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
-
+            
             if (Character.Controlled != null)
             {
-                BlurStrength = Character.Controlled.BlurStrength * 0.005f;
-                DistortStrength = Character.Controlled.DistortStrength;
-                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
-                chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
+                BlurStrength = MathHelper.Lerp(BlurStrength, Character.Controlled.BlurStrength * 0.005f, (float)deltaTime * 10.0f);
+                DistortStrength = MathHelper.Lerp(DistortStrength, Character.Controlled.DistortStrength, (float)deltaTime * 10.0f);
+                Vector3 chromaticAberration = GameMain.Config.ChromaticAberrationEnabled ? new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+                chromaticAberration -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                ChromaticAberrationStrength = Vector3.Lerp(ChromaticAberrationStrength, chromaticAberration, (float)deltaTime * 10.0f);
             }
             else
             {
-                BlurStrength = 0.0f;
-                DistortStrength = 0.0f;
+                BlurStrength = Math.Max(BlurStrength - (float)deltaTime * 0.01f, 0.0f);
+                DistortStrength = Math.Max(DistortStrength - (float)deltaTime * 0.01f, 0.0f);
+                Vector3 chromaticAberration = GameMain.Config.ChromaticAberrationEnabled ? new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+                ChromaticAberrationStrength = Vector3.Lerp(ChromaticAberrationStrength, chromaticAberration, (float)deltaTime * 10.0f);
             }
 
             string postProcessTechnique = "";
@@ -349,10 +352,10 @@ namespace Barotrauma
                 postProcessTechnique += "Blur";
                 postProcessEffect.Parameters["blurDistance"].SetValue(BlurStrength);
             }
-            if (chromaticAberrationStrength != Vector3.Zero)
+            if (ChromaticAberrationStrength != Vector3.Zero)
             {
                 postProcessTechnique += "ChromaticAberration";
-                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(chromaticAberrationStrength);
+                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(ChromaticAberrationStrength);
             }
             if (DistortStrength > 0.0f)
             {

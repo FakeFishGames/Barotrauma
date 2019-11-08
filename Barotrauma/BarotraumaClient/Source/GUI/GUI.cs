@@ -100,6 +100,8 @@ namespace Barotrauma
         public static GUIFrame PauseMenu { get; private set; }
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
 
+        public static bool HideCursor;
+
         public static KeyboardDispatcher KeyboardDispatcher { get; set; }
 
         /// <summary>
@@ -482,7 +484,7 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
 
-            if (GameMain.WindowActive)
+            if (GameMain.WindowActive && !HideCursor)
             {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
@@ -490,6 +492,7 @@ namespace Barotrauma
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
+            HideCursor = false;
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
@@ -844,6 +847,18 @@ namespace Barotrauma
             }
 
             font.DrawString(sb, text, pos, color);
+        }
+
+        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
+        {
+            if (font == null) font = Font;
+            if (backgroundColor != null)
+            {
+                Vector2 textSize = font.MeasureString(text);
+                DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true, depth, 5);
+            }
+
+            font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, colorData);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)

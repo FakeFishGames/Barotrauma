@@ -458,6 +458,11 @@ namespace Barotrauma.Items.Components
 
             if (character != null) { character.LastDamageSource = item; }
 
+#if CLIENT
+            PlaySound(ActionType.OnUse, item.WorldPosition, user: user);
+            PlaySound(ActionType.OnImpact, item.WorldPosition, user: user);
+#endif
+
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
                 if (target.Body.UserData is Limb targetLimb)
@@ -489,6 +494,11 @@ namespace Barotrauma.Items.Components
                             }
                         }
                     }
+                }
+                else
+                {
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f,  user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f,  user: user);
                 }
 #if SERVER
                 if (GameMain.NetworkMember.IsServer)

@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -464,19 +465,24 @@ namespace Barotrauma.Items.Components
                     if (container != null) break;
                 }
 
-                if (container == null || container.ContainableItems.Count == 0) return true;
+                if (container == null || container.ContainableItems.Count == 0) { return true; }
 
-                if (container.Inventory.Items[0] != null && container.Inventory.Items[0].Condition <= 0.0f)
+                if (aiUpdateTimer > 0.0f)
                 {
-                    var removeShellObjective = new AIObjectiveDecontainItem(character, container.Inventory.Items[0], container, objective.objectiveManager);
-                    objective.AddSubObjective(removeShellObjective);
+                    aiUpdateTimer -= deltaTime;
+                    return false;
                 }
-
-                var containShellObjective = new AIObjectiveContainItem(character, container.ContainableItems[0].Identifiers[0], container, objective.objectiveManager);
-                character?.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
-                containShellObjective.targetItemCount = usableProjectileCount + 1;
-                containShellObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
-                objective.AddSubObjective(containShellObjective);                
+                aiUpdateTimer = AIUpdateInterval;
+                if (objective.SubObjectives.None())
+                {
+                    AIDecontainEmptyItems(character, objective);
+                }
+                if (objective.SubObjectives.None())
+                {
+                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1);
+                    loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
+                    character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
+                }             
                 return false;
             }
 

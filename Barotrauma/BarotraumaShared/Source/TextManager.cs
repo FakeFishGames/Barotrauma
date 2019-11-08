@@ -10,7 +10,7 @@ namespace Barotrauma
     public static class TextManager
     {
         //only used if none of the selected content packages contain any text files
-        const string VanillaTextFilePath = "Content/Texts/EnglishVanilla.xml";
+        const string VanillaTextFilePath = "Content/Texts/English/EnglishVanilla.xml";
 
         //key = language
         private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
@@ -288,8 +288,8 @@ namespace Barotrauma
         {
             foreach (InputType inputType in Enum.GetValues(typeof(InputType)))
             {
-                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBind(inputType).ToString());
-                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBind(inputType).ToString());
+                text = text.Replace("[" + inputType.ToString().ToLowerInvariant() + "]", GameMain.Config.KeyBindText(inputType));
+                text = text.Replace("[InputType." + inputType.ToString() + "]", GameMain.Config.KeyBindText(inputType));
             }
             return text;
         }
