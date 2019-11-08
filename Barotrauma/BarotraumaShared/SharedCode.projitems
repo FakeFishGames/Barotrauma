@@ -155,6 +155,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\DelayComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\DivideComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\EqualsComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ExponentiationComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\FunctionComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\GreaterComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />

@@ -1825,7 +1825,7 @@
 <dialognobatteries>Jakie baterie?</dialognobatteries>
 <dialognobatteries>Na tej łodzi nie ma żadnych baterii!</dialognobatteries>
 <dialognobatteries>Nie mogę znaleźć baterii!</dialognobatteries>
-<stopchargingbatteries>[itemname] już się nie ładuje!</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname] już się nie ładuje!</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname] ma jeden przeciek naprawiony!</dialogleakfixed>
 <dialogleakfixed>[roomname] jest w trakcie naprawy. Jeszcze kilka dziur!</dialogleakfixed>
 <dialogleaksfixed>[roomname] ma naprawione przecieki!</dialogleaksfixed>

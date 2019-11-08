@@ -235,7 +235,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(0.5f, false);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
+            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
             bool thirdSlotRemoved = false;
@@ -361,7 +361,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
             yield return new WaitForSeconds(1f, false);
             Repairable repairableJunctionBoxComponent = engineer_brokenJunctionBox.GetComponent<Repairable>();
-            TriggerTutorialSegment(2, GameMain.Config.KeyBind(InputType.Select)); // Repair the junction box
+            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Select)); // Repair the junction box
             do
             {
                 if (!engineer.HasEquippedItem("screwdriver"))
@@ -389,7 +389,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_thirdDoor.IsOpen);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(3, GameMain.Config.KeyBind(InputType.Use), GameMain.Config.KeyBind(InputType.Deselect)); // Connect the junction boxes
+            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Use), GameMain.Config.KeyBindText(InputType.Deselect)); // Connect the junction boxes
             do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             CheckGhostWires();
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)

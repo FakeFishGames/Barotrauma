@@ -407,7 +407,7 @@ namespace Barotrauma
             if (bleedingDamage > 0)
             {
                 float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
-                float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+                float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.5f, 1.5f);
 
                 foreach (ParticleEmitter emitter in character.BloodEmitters)
                 {

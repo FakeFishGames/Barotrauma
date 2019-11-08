@@ -1144,6 +1144,30 @@ namespace Barotrauma
         {
             return keyMapping[(int)inputType];
         }
+        public string KeyBindText(InputType inputType)
+        {
+            KeyOrMouse bind = keyMapping[(int)inputType];
+
+            if (bind.MouseButton != null)
+            {
+                switch (bind.MouseButton)
+                {
+                    case 0:
+                        return TextManager.Get("input.leftmouse");
+                        break;
+
+                    case 1:
+                        return TextManager.Get("input.rightmouse");
+                        break;
+
+                    case 2:
+                        break;
+                        return TextManager.Get("input.middlemouse");
+                }
+            }
+
+            return bind.ToString();
+        }
 
         private void SetDefaultValues(bool resetLanguage = true)
         {

@@ -763,6 +763,7 @@ namespace Barotrauma
                     i--; // Take into account the message boxes removing themselves from the list when closed
                 }
             }
+            ClearFilter();
         }
 
         public void HandleContainerContentsDeletion(Item itemToDelete, Inventory itemInventory)

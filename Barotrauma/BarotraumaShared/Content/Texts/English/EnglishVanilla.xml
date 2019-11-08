@@ -2617,7 +2617,7 @@
   <dialognobatteries>What batteries?</dialognobatteries>
   <dialognobatteries>There aren't any batteries on this boat!</dialognobatteries>
   <dialognobatteries>Can't find any batteries!</dialognobatteries>
-  <stopchargingbatteries>Stopped charging [itemname]!</stopchargingbatteries>
+  <dialogstopchargingbatteries>Stopped charging [itemname]!</dialogstopchargingbatteries>
   <dialogleakfixed>One leak fixed in [roomname]!</dialogleakfixed>
   <dialogleakfixed>Repairing [roomname]. A few more holes to go!</dialogleakfixed>
   <dialogleaksfixed>All leaks repaired in [roomname]!</dialogleaksfixed>
@@ -3723,5 +3723,11 @@
   <tutorialskipwarning>It looks like this might be the first time you've played Barotrauma. We strongly recommend that you give the tutorials a try before starting your journey through the depths of Europa.</tutorialskipwarning>
   <tutorialwarningplaytutorials>Play tutorials</tutorialwarningplaytutorials>
   <tutorialwarningskiptutorials>Skip tutorials</tutorialwarningskiptutorials>
+
+  <input.leftmouse>Left mouse</input.leftmouse>
+  <input.rightmouse>Right mouse</input.rightmouse>
+  <input.middlemouse>Middle mouse</input.middlemouse>
+  
+  <connection.setexponent>set_exponent</connection.setexponent>
   <entityname.keyboard>Keyboard</entityname.keyboard>
 </infotexts>

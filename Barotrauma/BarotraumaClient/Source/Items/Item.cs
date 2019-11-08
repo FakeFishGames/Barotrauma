@@ -176,6 +176,7 @@ namespace Barotrauma
             }
             size *= 0.5f;
 
+            //cache world position so we don't need to calculate it 4 times
             Vector2 worldPosition = WorldPosition;
             if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
             if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;

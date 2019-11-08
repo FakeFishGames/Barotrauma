@@ -1817,7 +1817,7 @@
 <dialognobatteries>電池去哪兒了？</dialognobatteries>
 <dialognobatteries>船上沒有電池了！</dialognobatteries>
 <dialognobatteries>找不到電池！</dialognobatteries>
-<stopchargingbatteries>[itemname]的充電中止了！</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname]的充電中止了！</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname]的洩露已經修好了！</dialogleakfixed>
 <dialogleakfixed>還在修整[roomname]，就剩幾個洞了！</dialogleakfixed>
 <dialogleaksfixed>[roomname]的所有漏洞都修好了！</dialogleaksfixed>

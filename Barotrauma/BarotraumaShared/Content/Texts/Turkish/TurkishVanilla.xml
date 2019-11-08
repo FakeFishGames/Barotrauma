@@ -1825,7 +1825,7 @@
 <dialognobatteries>Ne bataryası?</dialognobatteries>
 <dialognobatteries>Bu gemide batarya falan yok!</dialognobatteries>
 <dialognobatteries>Batarya falan bulamıyorum!</dialognobatteries>
-<stopchargingbatteries>[itemname] şarjı bırakıldı!</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname] şarjı bırakıldı!</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname] 'de bulunan bir sızıntı düzeltildi!</dialogleakfixed>
 <dialogleakfixed>[roomname] onarılıyor. Son birkaç delik!</dialogleakfixed>
 <dialogleaksfixed>[roomname] 'deki bütün sızıntılar onarıldı!</dialogleaksfixed>

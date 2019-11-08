@@ -1825,7 +1825,7 @@
 <dialognobatteries>Quelles batteries ?</dialognobatteries>
 <dialognobatteries>Il n'y a pas de batteries sur ce bateau !</dialognobatteries>
 <dialognobatteries>Impossible de trouver des batteries !</dialognobatteries>
-<stopchargingbatteries>Chargement de [itemname] arrêté !</stopchargingbatteries>
+<dialogstopchargingbatteries>Chargement de [itemname] arrêté !</dialogstopchargingbatteries>
 <dialogleakfixed>Une fuite corrigée dans [roomname] !</dialogleakfixed>
 <dialogleakfixed>Réparation de [roomname]. Encore quelques trous à régler !</dialogleakfixed>
 <dialogleaksfixed>Toutes les fuites de [roomname] réparées !</dialogleaksfixed>

@@ -1824,7 +1824,7 @@
 <dialognobatteries>¿Qué baterías?</dialognobatteries>
 <dialognobatteries>¡No tenemos baterías a bordo!</dialognobatteries>
 <dialognobatteries>¡No encuentro ninguna batería!</dialognobatteries>
-<stopchargingbatteries>¡He dejado de cargar: [itemname]!</stopchargingbatteries>
+<dialogstopchargingbatteries>¡He dejado de cargar: [itemname]!</dialogstopchargingbatteries>
 <dialogleakfixed>¡Fuga arreglada en: [roomname]!</dialogleakfixed>
 <dialogleakfixed>Reparando [roomname]. ¡Unos cuantos agujeros más y listo!</dialogleakfixed>
 <dialogleaksfixed>¡Reparadas todas las fugas en: [roomname]!</dialogleaksfixed>

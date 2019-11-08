@@ -1825,7 +1825,7 @@
 <dialognobatteries>Que baterias?</dialognobatteries>
 <dialognobatteries>Não tem nenhuma bateria nesse barco!</dialognobatteries>
 <dialognobatteries>Não consigo encontrar baterias!</dialognobatteries>
-<stopchargingbatteries>Parei de carregar as [itemname]!</stopchargingbatteries>
+<dialogstopchargingbatteries>Parei de carregar as [itemname]!</dialogstopchargingbatteries>
 <dialogleakfixed>Consertei um vazamento: [roomname]!</dialogleakfixed>
 <dialogleakfixed>Reparando: [roomname]. Faltam mais alguns buracos!</dialogleakfixed>
 <dialogleaksfixed>Reparei todos os vazamentos: [roomname]!</dialogleaksfixed>
