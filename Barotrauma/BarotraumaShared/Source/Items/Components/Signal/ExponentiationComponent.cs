@@ -5,8 +5,19 @@ namespace Barotrauma.Items.Components
 {
     class ExponentiationComponent : ItemComponent
     {
+        private float exponent;
         [InGameEditable, Serialize(1.0f, false, description: "The exponent of the operation.")]
-        public float Exponent { get; set; }
+        public float Exponent
+        {
+            get
+            {
+                return exponent;
+            }
+            set
+            {
+                exponent = value;
+            }
+        }
 
         public ExponentiationComponent(Item item, XElement element)
             : base(item, element)
@@ -20,8 +31,7 @@ namespace Barotrauma.Items.Components
             {
                 case "set_exponent":
                 case "exponent":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float exponent);
-                    Exponent = exponent;
+                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out exponent);
                     break;
                 case "signal_in":
                     float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
