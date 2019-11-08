@@ -9,7 +9,7 @@
     <trigger x="200" y="-50" width="400" height="240" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected="true" propellerpos="-160,-15" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true" />
       <poweronsound file="Content/Items/PowerOnHeavy1.ogg" range="1000" loop="false" />
@@ -41,7 +41,7 @@
     <trigger x="375" y="-43" width="563" height="312" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="4000.0" maxforce="4000" canbeselected="true" propellerpos="-380,20" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="5000.0" volumeproperty="CurrentVolume" loop="true" />
       <poweronsound file="Content/Items/PowerOnHeavy1.ogg" range="3000" loop="false" />
@@ -69,7 +69,7 @@
     <trigger x="180" y="-30" width="200" height="146" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="500.0" maxforce="300" canbeselected="true" propellerpos="-80,0" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true" />
       <propellerdamage damagerange="150" targetforce="500" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="25" />
