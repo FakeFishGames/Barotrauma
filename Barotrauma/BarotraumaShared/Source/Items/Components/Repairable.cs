@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -111,6 +112,18 @@ namespace Barotrauma.Items.Components
                 TextManager.Get(element.GetAttributeString("header", ""), returnNull: true) ??
                 TextManager.Get(item.Prefab.ConfigElement.GetAttributeString("header", ""), returnNull: true) ??
                 element.GetAttributeString("name", "");
+
+            //backwards compatibility
+            var showRepairUIAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().ToLowerInvariant() == "showrepairuithreshold");
+            if (showRepairUIAttribute != null)
+            {
+                float repairThreshold;
+                if (Single.TryParse(showRepairUIAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out repairThreshold))
+                {
+                    AIRepairThreshold = repairThreshold;
+                }
+            }
+
             InitProjSpecific(element);
         }
 
