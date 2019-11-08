@@ -753,11 +753,19 @@ namespace Barotrauma
                     exeName = "DedicatedServer.exe";
                 }
 
-                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
-                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -maxplayers " + maxPlayersBox.Text;
+
+                if (!string.IsNullOrWhiteSpace(passwordBox.Text))
+                {
+                    arguments += " -password \"" + ToolBox.EscapeCharacters(passwordBox.Text) + "\"";
+                }
+                else
+                {
+                    arguments += " -nopassword";
+                }
 
                 int ownerKey = 0;
 

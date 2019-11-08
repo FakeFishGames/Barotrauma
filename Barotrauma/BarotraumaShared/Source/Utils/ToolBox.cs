@@ -437,5 +437,75 @@ namespace Barotrauma
             IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
             return string.Join("/", filtered);
         }
+
+        public static string EscapeCharacters(string str)
+        {
+            return str.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        public static string UnescapeCharacters(string str)
+        {
+            string retVal = "";
+            for (int i=0;i<str.Length;i++)
+            {
+                if (str[i] != '\\')
+                {
+                    retVal += str[i];
+                }
+                else if (i+1<str.Length)
+                {
+                    if (str[i+1] == '\\')
+                    {
+                        retVal += "\\";
+                    }
+                    else if (str[i+1] == '\"')
+                    {
+                        retVal += "\"";
+                    }
+                    i++;
+                }
+            }
+            return retVal;
+        }
+
+        public static string ParseQuotedArgument(string[] arguments, int startIndex, out int endIndex)
+        {
+            if (!arguments[startIndex].StartsWith("\""))
+            {
+                endIndex = startIndex + 1;
+                return UnescapeCharacters(arguments[startIndex]);
+            }
+
+            string retVal = arguments[startIndex].Substring(1);
+            int currIndex = startIndex;
+            while (currIndex < arguments.Length)
+            {
+                currIndex++;
+                retVal += " " + arguments[currIndex];
+                int lastEscaped = arguments[currIndex].IndexOf("\\\"");
+                int lastQuote = arguments[currIndex].IndexOf("\"");
+                if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped+1 < lastQuote))
+                {
+                    break;
+                }
+            }
+
+            retVal = retVal.Substring(0, retVal.Length - 1);
+
+
+            endIndex = currIndex+1;
+
+            return UnescapeCharacters(retVal);
+        }
+
+        public static string[] MergeArguments(string[] arguments)
+        {
+            List<string> mergedArgs = new List<string>();
+            for (int i=0;i<arguments.Length;)
+            {
+                mergedArgs.Add(ParseQuotedArgument(arguments, i, out i));
+            }
+            return mergedArgs.ToArray();
+        }
     }
 }
