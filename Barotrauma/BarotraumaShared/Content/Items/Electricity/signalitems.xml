@@ -1213,7 +1213,7 @@
   <Item name="Keyboard" identifier="keyboard" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
     <Sprite texture="Content/Items/Electricity/detectors.png" depth="0.8" sourcerect="0,105,167,151" origin="0.5,0.5" />
     <Keyboard canbeselected="true" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.5,0.5" anchor="CenterRight" style="ItemUI" />
+      <GuiFrame relativesize="0.35,0.35" anchor="Center" style="ItemUI" />
     </Keyboard>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
