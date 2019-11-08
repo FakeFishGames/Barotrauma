@@ -177,7 +177,7 @@ namespace Barotrauma
                         string[] readTags = valStr.Split(',');
                         int matches = 0;
                         foreach (string tag in readTags)
-                            if (((Item)target).HasTag(tag)) matches++;
+                            if (target is Item item && item.HasTag(tag)) matches++;
 
                         //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
                         return Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
@@ -225,8 +225,7 @@ namespace Barotrauma
                     return success;
                 case ConditionType.SpeciesName:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
-                    Character targetCharacter = target as Character;
-                    if (targetCharacter == null) { return false; }
+                    if (!(target is Character targetCharacter)) { return false; }
                     return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
                 case ConditionType.EntityType:
                     switch (valStr)

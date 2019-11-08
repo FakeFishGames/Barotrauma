@@ -17,12 +17,10 @@ namespace Barotrauma
         private float sortTimer;
         private float crouchRaycastTimer;
         private float reactTimer;
-        private float hullVisibilityTimer;
         private float unreachableClearTimer;
         private bool shouldCrouch;
 
         const float reactionTime = 0.5f;
-        const float hullVisibilityInterval = 0.5f;
         const float crouchRaycastInterval = 1;
         const float sortObjectiveInterval = 1;
         const float clearUnreachableInterval = 30;
@@ -57,23 +55,6 @@ namespace Barotrauma
             private set;
         }
 
-        private IEnumerable<Hull> visibleHulls;
-        public IEnumerable<Hull> VisibleHulls
-        {
-            get
-            {
-                if (visibleHulls == null)
-                {
-                    visibleHulls = Character.GetVisibleHulls();
-                }
-                return visibleHulls;
-            }
-            private set
-            {
-                visibleHulls = value;
-            }
-        }
-
         public HumanAIController(Character c) : base(c)
         {
             if (!c.IsHuman)
@@ -85,7 +66,6 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             reactTimer = Rand.Range(0f, reactionTime);
             sortTimer = Rand.Range(0f, sortObjectiveInterval);
-            hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             InitProjSpecific();
         }
         partial void InitProjSpecific();
@@ -93,6 +73,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (DisableCrewAI || Character.IsUnconscious || Character.Removed) { return; }
+            base.Update(deltaTime);
 
             if (unreachableClearTimer > 0)
             {
@@ -127,15 +108,6 @@ namespace Barotrauma
             CheckCrouching(deltaTime);
             Character.ClearInputs();
             
-            if (hullVisibilityTimer > 0)
-            {
-                hullVisibilityTimer--;
-            }
-            else
-            {
-                hullVisibilityTimer = hullVisibilityInterval;
-                VisibleHulls = Character.GetVisibleHulls();
-            }
             if (sortTimer > 0.0f)
             {
                 sortTimer -= deltaTime;

@@ -182,7 +182,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (StatusEffect effect in ciElement.StatusEffects)
                 {
-                    item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, true, false);
+                    item.ApplyStatusEffect(effect, ciElement.State ? ActionType.OnUse : ActionType.OnSecondaryUse, 1.0f, null, null, null, true, false);
                 }
             }
         }

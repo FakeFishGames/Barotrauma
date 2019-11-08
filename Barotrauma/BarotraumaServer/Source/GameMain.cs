@@ -73,7 +73,7 @@ namespace Barotrauma
         {
             Instance = this;
 
-            CommandLineArgs = args;
+            CommandLineArgs = ToolBox.MergeArguments(args);
 
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
@@ -212,6 +212,9 @@ namespace Barotrauma
                     case "-password":
                         password = CommandLineArgs[i + 1];
                         i++;
+                        break;
+                    case "-nopassword":
+                        password = "";
                         break;
                     case "-upnp":
                     case "-enableupnp":
