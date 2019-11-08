@@ -7,7 +7,10 @@ namespace Barotrauma
 {
     public class GUIScrollBar : GUIComponent
     {
-        public static GUIScrollBar draggingBar;
+        public static GUIScrollBar DraggingBar
+        {
+            get; private set;
+        }
 
         private bool isHorizontal;
 
@@ -19,11 +22,11 @@ namespace Barotrauma
         private float step;
 
         private Vector2? dragStartPos;
-        
+
         public delegate bool OnMovedHandler(GUIScrollBar scrollBar, float barScroll);
         public OnMovedHandler OnMoved;
         public OnMovedHandler OnReleased;
-        
+
         public bool IsBooleanSwitch;
 
         public override string ToolTip
@@ -113,12 +116,12 @@ namespace Barotrauma
         {
             get
             {
-                if (ScrollToValue==null) return (BarScroll * (Range.Y - Range.X)) + Range.X;
+                if (ScrollToValue == null) return (BarScroll * (Range.Y - Range.X)) + Range.X;
                 return ScrollToValue(this, BarScroll);
             }
             set
             {
-                if (ValueToScroll==null) BarScroll = (value - Range.X) / (Range.Y - Range.X);
+                if (ValueToScroll == null) BarScroll = (value - Range.X) / (Range.Y - Range.X);
                 else BarScroll = ValueToScroll(this, value);
             }
         }
@@ -179,13 +182,13 @@ namespace Barotrauma
         public float BarSize
         {
             get { return barSize; }
-            set 
+            set
             {
                 barSize = Math.Min(Math.Max(value, 0.0f), 1.0f);
                 UpdateRect();
             }
         }
-
+        
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
             CanBeFocused = true;
@@ -241,8 +244,9 @@ namespace Barotrauma
                 }
             }
             
-            if (draggingBar == this)
+            if (DraggingBar == this)
             {
+                GUI.ForceMouseOn(this);
                 if (dragStartPos == null) { dragStartPos = PlayerInput.MousePosition; }
 
                 if (!PlayerInput.LeftButtonHeld())
@@ -253,7 +257,7 @@ namespace Barotrauma
                         OnMoved?.Invoke(this, BarScroll);
                     }
                     OnReleased?.Invoke(this, BarScroll);
-                    draggingBar = null;
+                    DraggingBar = null;
                     dragStartPos = null;
 
                 }
@@ -267,7 +271,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.LeftButtonClicked())
                 {
-                    draggingBar?.OnReleased?.Invoke(draggingBar, draggingBar.BarScroll);
+                    DraggingBar?.OnReleased?.Invoke(DraggingBar, DraggingBar.BarScroll);
                     if (IsBooleanSwitch)
                     {
                         MoveButton(new Vector2(
@@ -289,7 +293,7 @@ namespace Barotrauma
             if (!enabled || !PlayerInput.LeftButtonDown()) { return false; }
             if (barSize >= 1.0f) { return false; }
 
-            draggingBar = this;
+            DraggingBar = this;
 
             return true;
         }
