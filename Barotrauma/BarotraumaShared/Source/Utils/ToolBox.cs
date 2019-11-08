@@ -478,8 +478,8 @@ namespace Barotrauma
 
             string retVal = arguments[startIndex].Substring(1);
 
-            int lastEscaped = arguments[startIndex].IndexOf("\\\"");
-            int lastQuote = arguments[startIndex].IndexOf("\"");
+            int lastEscaped = arguments[startIndex].LastIndexOf("\\\"");
+            int lastQuote = arguments[startIndex].LastIndexOf("\"");
             if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped + 1 < lastQuote))
             {
                 endIndex = startIndex + 1;
@@ -491,8 +491,8 @@ namespace Barotrauma
             {
                 currIndex++;
                 retVal += " " + arguments[currIndex];
-                lastEscaped = arguments[currIndex].IndexOf("\\\"");
-                lastQuote = arguments[currIndex].IndexOf("\"");
+                lastEscaped = arguments[currIndex].LastIndexOf("\\\"");
+                lastQuote = arguments[currIndex].LastIndexOf("\"");
                 if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped+1 < lastQuote))
                 {
                     break;
