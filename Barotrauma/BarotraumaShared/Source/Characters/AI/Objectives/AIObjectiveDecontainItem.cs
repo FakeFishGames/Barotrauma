@@ -64,7 +64,12 @@ namespace Barotrauma
             }
             if (targetContainer == null)
             {
-                if (itemToDecontain.Container != sourceContainer.Item)
+                if (sourceContainer == null)
+                {
+                    Abandon = true;
+                    return;
+                }
+                else if (itemToDecontain.Container != sourceContainer.Item)
                 {
                     IsCompleted = true;
                     return;
@@ -80,6 +85,11 @@ namespace Barotrauma
             }
             if (goToObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
+                if (sourceContainer == null)
+                {
+                    Abandon = true;
+                    return;
+                }
                 if (!character.CanInteractWith(sourceContainer.Item, out _, checkLinked: false))
                 {
                     TryAddSubObjective(ref goToObjective,
