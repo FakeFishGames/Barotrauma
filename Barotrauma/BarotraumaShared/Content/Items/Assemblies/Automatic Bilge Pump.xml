@@ -56,7 +56,7 @@
       </input>
       <input name="set_targetlevel" />
     </ConnectionPanel>
-    <Repairable deteriorationspeed="0.1" mindeteriorationdelay="360" maxdeteriorationdelay="720" mindeteriorationcondition="10" showrepairuithreshold="50" fixdurationlowskill="20" fixdurationhighskill="5" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRepairWrench">
+    <Repairable deteriorationspeed="0.1" mindeteriorationdelay="360" maxdeteriorationdelay="720" mindeteriorationcondition="10" AIRepairThreshold="50" fixdurationlowskill="20" fixdurationhighskill="5" pickingtime="0" canbepicked="False" allowingameediting="True" msg="ItemMsgRepairWrench">
       <requireditem identifiers="wrench" type="Equipped" optional="false" />
     </Repairable>
   </Item>
