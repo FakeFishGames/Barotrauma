@@ -531,7 +531,7 @@ namespace Barotrauma.Items.Components
 
                 if (objective.SubObjectives.None())
                 {
-                    AIDecontainEmptyItems(character, objective);
+                    AIDecontainEmptyItems(character, objective, equip: false);
                 }
 
                 // load more fuel if the current maximum output is only 50% of the current load
@@ -543,7 +543,7 @@ namespace Barotrauma.Items.Components
                     if (objective.SubObjectives.None())
                     {
                         int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                        AIContainItems<Reactor>(container, character, objective, itemCount);
+                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false);
                         character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
                     }
                     return false;

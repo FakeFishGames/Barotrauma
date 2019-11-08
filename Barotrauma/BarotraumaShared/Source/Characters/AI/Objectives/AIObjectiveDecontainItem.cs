@@ -20,6 +20,8 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveContainItem containObjective;
 
+        public bool Equip { get; set; }
+
         public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
@@ -101,7 +103,11 @@ namespace Barotrauma
             if (targetContainer != null)
             {
                 TryAddSubObjective(ref containObjective,
-                    constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager) { GetItemPriority = this.GetItemPriority },
+                    constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
+                    {
+                        Equip = this.Equip,
+                        GetItemPriority = this.GetItemPriority
+                    },
                     onCompleted: () => IsCompleted = true,
                     onAbandon: () => targetContainer = null);
             }

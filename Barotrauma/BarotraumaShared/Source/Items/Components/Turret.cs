@@ -459,10 +459,9 @@ namespace Barotrauma.Items.Components
                 foreach (MapEntity e in item.linkedTo)
                 {
                     containerItem = e as Item;
-                    if (containerItem == null) continue;
-
+                    if (containerItem == null) { continue; }
                     container = containerItem.GetComponent<ItemContainer>();
-                    if (container != null) break;
+                    if (container != null) { break; }
                 }
 
                 if (container == null || container.ContainableItems.Count == 0) { return true; }
@@ -473,16 +472,16 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
                 aiUpdateTimer = AIUpdateInterval;
-                if (objective.SubObjectives.None())
+                if (objective.SubObjectives.None() && container != null)
                 {
-                    AIDecontainEmptyItems(character, objective);
+                    AIDecontainEmptyItems(character, objective, equip: true, sourceContainer: container);
                 }
                 if (objective.SubObjectives.None())
                 {
-                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1);
+                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true);
                     loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                     character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
-                }             
+                }
                 return false;
             }
 

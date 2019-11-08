@@ -870,11 +870,12 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount) where T : ItemComponent
+        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip) where T : ItemComponent
         {
             var containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
             {
                 targetItemCount = itemCount,
+                Equip = equip,
                 GetItemPriority = i =>
                 {
                     if (i.ParentInventory?.Owner is Item)
@@ -893,9 +894,9 @@ namespace Barotrauma.Items.Components
             return containObjective;
         }
 
-        protected void AIDecontainEmptyItems(Character character, AIObjective objective)
+        protected void AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
         {
-            var containedItems = item.ContainedItems;
+            var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
             foreach (Item containedItem in containedItems)
             {
                 if (containedItem != null && containedItem.Condition <= 0.0f)
@@ -930,13 +931,21 @@ namespace Barotrauma.Items.Components
                             }
                         }, out Item targetContainer))
                     {
-                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, item.GetComponent<ItemContainer>(), objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, sourceContainer, objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                        decontainObjective.Equip = equip;
                         decontainObjective.Abandoned += () =>
                         {
                             itemIndex = 0;
                             if (targetContainer != null)
                             {
                                 ignoredContainers.Add(targetContainer);
+                            }
+                        };
+                        decontainObjective.Completed += () =>
+                        {
+                            if (targetContainer == null)
+                            {
+                                itemIndex = 0;
                             }
                         };
                         objective.AddSubObjectiveInQueue(decontainObjective);
