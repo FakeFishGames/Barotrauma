@@ -1368,7 +1368,8 @@ namespace Barotrauma
         {
             if (transformDirty) { return false; }
 
-            Vector2 normal = contact.Manifold.LocalNormal;
+            contact.GetWorldManifold(out Vector2 normal, out _);
+            if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
             OnCollisionProjSpecific(f1, f2, contact, impact);
