@@ -145,7 +145,6 @@
   <workshopitemtitle>Title</workshopitemtitle>
   <workshopitemdescription>Description</workshopitemdescription>
   <workshopitemtags>Tags</workshopitemtags>
-  <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can either select an existing submarine or a content package from the 'Your items' menu at the left, or create an entirely new item by clicking the 'Create a new item' button.</workshopitemcreatehelptext>
   <workshopitempreviewimage>Preview Image</workshopitempreviewimage>
   <workshopitembrowse>Browse...</workshopitembrowse>
   <workshopitemcorepackage>Core package</workshopitemcorepackage>
@@ -3710,6 +3709,7 @@
   <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input. If the the "signal_in_x" and "signal_in_y" connections are used, the input is interpreted as a vector and the angle calculated using Atan2.</entitydescription.atancomponent>
   <serverendpoint>Server IP / SteamID</serverendpoint>
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
+  <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can select a submarine or a content package to publish from the 'Your items' menu at the left.</workshopitemcreatehelptext>
 
   <!-- New values as of Oct 22 -->
   <timeformathours>[hours] h</timeformathours>
