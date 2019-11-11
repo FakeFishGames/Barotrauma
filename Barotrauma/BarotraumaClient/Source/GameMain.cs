@@ -653,8 +653,6 @@ namespace Barotrauma
 
             PlayerInput.UpdateVariable();
 
-            Paused = true;
-
             if (SoundManager != null)
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
