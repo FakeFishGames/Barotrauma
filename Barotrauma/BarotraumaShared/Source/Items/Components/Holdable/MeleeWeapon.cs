@@ -86,6 +86,7 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
             item.body.FarseerBody.OnCollision += OnCollision;
             item.body.FarseerBody.IsBullet = true;
+            item.body.PhysEnabled = true;
 
             if (!character.AnimController.InWater)
             {
@@ -230,6 +231,7 @@ namespace Barotrauma.Items.Components
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
             item.body.FarseerBody.IsBullet = false;
+            item.body.PhysEnabled = false;
         }
 
 
