@@ -200,7 +200,7 @@ namespace Barotrauma
                 {
                     SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
                 }
-                if (!insideSteering)
+                if (!insideSteering && character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
                 }
