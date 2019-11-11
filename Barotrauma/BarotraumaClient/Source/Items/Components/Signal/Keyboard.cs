@@ -42,6 +42,12 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            ShowOnDisplay(WelcomeMessage);
+        }
+
         private void SendOutput(string input)
         {
             OutputValue = input;
