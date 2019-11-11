@@ -150,7 +150,7 @@
   <workshopitemtitle>Title</workshopitemtitle>
   <workshopitemdescription>Description</workshopitemdescription>
   <workshopitemtags>Tags</workshopitemtags>
-  <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can either select an existing submarine or a content package from the 'Your items' menu at the left, or create an entirely new item by clicking the 'Create a new item' button.</workshopitemcreatehelptext>
+  <!--<workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can either select an existing submarine or a content package from the 'Your items' menu at the left, or create an entirely new item by clicking the 'Create a new item' button.</workshopitemcreatehelptext>-->
   <workshopitempreviewimage>Preview Image</workshopitempreviewimage>
   <workshopitembrowse>Browse...</workshopitembrowse>
   <workshopitemcorepackage>Core package</workshopitemcorepackage>
@@ -196,7 +196,7 @@
   <workshop.contenttag.itemassembly>Item assembly</workshop.contenttag.itemassembly>
   <workshop.contenttag.language>Language</workshop.contenttag.language>
   <workshoperroronenable>Cannot enable Workshop item '[itemname]'.</workshoperroronenable>
-  <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>
+  <!--<workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota.</workshoppublisherror.limitexceeded>-->
   <workshoppublisherror.limiteduseraccount>Publishing the Workshop item failed. Limited user accounts are not allowed to publish items in the Steam Workshop. You need to spend at least $5 in the Steam store to become a non-limited user.</workshoppublisherror.limiteduseraccount>
   <workshoppublisherror.banned>Publishing the Workshop item failed because your account has been banned.</workshoppublisherror.banned>
   <workshoppublisherror.insufficientprivilege>Publishing the Workshop item failed (insufficient privileges). This can happen due to a hub ban, account lock or a community ban. You may need to contact Steam Support.</workshoppublisherror.insufficientprivilege>
@@ -1089,7 +1089,6 @@
   <!-- Entity editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
-  <charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
 
@@ -1988,7 +1987,7 @@
   <entityname.acoscomponent>Acos Component</entityname.acoscomponent>
   <entitydescription.acoscomponent>Outputs the angle whose cosine is equal to the input.</entitydescription.acoscomponent>
   <entityname.atancomponent>Atan Component</entityname.atancomponent>
-  <entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input.</entitydescription.atancomponent>
+  <!--<entitydescription.atancomponent>Outputs the angle whose tangent is equal to the input.</entitydescription.atancomponent>-->
   <entityname.modulocomponent>Modulo Component</entityname.modulocomponent>
   <entitydescription.modulocomponent>Outputs the remainder when the input is divided by a specific number.</entitydescription.modulocomponent>
   <entityname.roundcomponent>Round Component</entityname.roundcomponent>
