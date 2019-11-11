@@ -85,7 +85,7 @@
 <pausemenuretry>重试</pausemenuretry>
 <pausemenusavequit>保存并退出</pausemenusavequit>
 <pausemenuquit>主菜单</pausemenuquit>
-<pausemenuquitverification>确定要退出吗？未保存的游戏进度将会丢失。</pausemenuquitverification>
+<pausemenuquitverification>确定要返回主菜单吗？所有未保存的进度都将丢失。</pausemenuquitverification>
 <pausemenuretryverification>确定要放弃任务并读取之前的存档吗？所有未保存的游戏进度将会丢失。</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>任务类型</missiontype>
 <random>随机</random>
 <levelseed>关卡种子</levelseed>
-<leveldifficulty>关卡难度</leveldifficulty>
+<leveldifficulty>难度</leveldifficulty>
 <traitors>叛徒</traitors>
 <botcount>Bot 数量</botcount>
 <botspawnmode>Bot生成模式</botspawnmode>
@@ -1395,10 +1395,6 @@
 <entitydescription.extinguisherbracket>可将灭火器挂在墙上。</entitydescription.extinguisherbracket>
 <entityname.weaponholder>武器架</entityname.weaponholder>
 <entitydescription.weaponholder>放置武器的地方。</entitydescription.weaponholder>
-<entityname.windoweddoor>玻璃推拉门</entityname.windoweddoor>
-<entitydescription.windoweddoor>窗门一体。</entitydescription.windoweddoor>
-<entityname.hatch>舱门</entityname.hatch>
-<entitydescription.hatch>一扇水平方向的门。</entitydescription.hatch>
 <entityname.dockingport>纵向对接舱口</entityname.dockingport>
 <entitydescription.dockingport>一个竖直方向的对接舱口，与另一个舱口对接锁定后，形成水密密封，构成潜艇、飞船、建筑物之间的通道。</entitydescription.dockingport>
 <entityname.dockinghatch>横向对接舱口</entityname.dockinghatch>
@@ -2623,7 +2619,7 @@
 <centerarealockedtext>此区域在当前版本无法进入。请静待未来更新！</centerarealockedtext>
 <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>set_text</connection.set_text>
 <connection.stateout>state_out</connection.stateout>
 <connection.turretaimingout>position_out</connection.turretaimingout>
 <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
@@ -2766,7 +2762,6 @@
 <!-- Audio -->
 <dynamicrangecompression>动态距离压缩</dynamicrangecompression>
 <dynamicrangecompressiontooltip>自动调整游戏音量，防止音效混淆。</dynamicrangecompressiontooltip>
-<voipnodevices>未找到音频捕捉设备</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>自动控制</pumpautocontrol>
@@ -2844,11 +2839,7 @@
 <afflictionname.invertcontrols>晕眩</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>病人头晕目眩，无法正确感知周围环境。</afflictiondescription.invertcontrols>
 
-
 <damagebutton>伤害</damagebutton>
-<pending>等待中</pending>
-<inprogress>进行中</inprogress>
-<complete>完成</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>在[targethullname]的一个[target]里找到你的下一项目标。</traitorgoalfindcontainerinfo>
@@ -3132,10 +3123,4 @@
 <easterbunny_goalinfotext_3>让它存活最少3分钟。</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>滴滴——！太好笑了。油彩脸听到这个一定会很乐的。</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>逃离:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>确定要返回主菜单吗？所有未保存的进度都将丢失。</pausemenuquitverification>
-<leveldifficulty>难度</leveldifficulty>
-<connection.set_text>set_text</connection.set_text>
-
 </infotexts>

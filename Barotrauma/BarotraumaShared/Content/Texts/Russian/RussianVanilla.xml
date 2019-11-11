@@ -85,7 +85,7 @@
 <pausemenuretry>Повтор</pausemenuretry>
 <pausemenusavequit>Сохранить и выйти</pausemenusavequit>
 <pausemenuquit>Главное меню</pausemenuquit>
-<pausemenuquitverification>Выйти из игры? Все несохраненные данные будут потеряны.</pausemenuquitverification>
+<pausemenuquitverification>Вернуться в главное меню? Все несохраненные данные будут потеряны.</pausemenuquitverification>
 <pausemenuretryverification>Прервать миссию и загрузить предыдущее сохранение? Все несохраненные данные будут потеряны.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Тип миссии</missiontype>
 <random>Случайно</random>
 <levelseed>Шифр уровня</levelseed>
-<leveldifficulty>Сложность уровня</leveldifficulty>
+<leveldifficulty>Сложность</leveldifficulty>
 <traitors>Предатели</traitors>
 <botcount>Численность ботов</botcount>
 <botspawnmode>Режим появления ботов</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Удерживает огнетушитель на стене.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Оружейная стойка</entityname.weaponholder>
 <entitydescription.weaponholder>Место для хранения оружия.</entitydescription.weaponholder>
-<entityname.windoweddoor>Дверь с окном</entityname.windoweddoor>
-<entitydescription.windoweddoor>Задвижная дверь с встроенным окном.</entitydescription.windoweddoor>
-<entityname.hatch>Люк</entityname.hatch>
-<entitydescription.hatch>Дверь, расположенная в горизонтальной плоскости.</entitydescription.hatch>
 <entityname.dockingport>Стыковочный порт</entityname.dockingport>
 <entitydescription.dockingport>Вертикально ориентированная стыковочная система. При стыковке образует герметичное соединение, позволяющее перемещаться между подлодками, челноками и сооружениями.</entitydescription.dockingport>
 <entityname.dockinghatch>Стыковочный люк</entityname.dockinghatch>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>В текущей версии Barotrauma эта зона недоступна. Пожалуйста, подождите будущих обновлений!</centerarealockedtext>
 <connection.dockingproximitysensor>датчик_близости</connection.dockingproximitysensor>
 <connection.signalx>сигнал_[num]</connection.signalx>
-<connection.set_text>сигнал_[num]</connection.set_text>
+<connection.set_text>назначить_текст</connection.set_text>
 <connection.stateout>состояние_из</connection.stateout>
 <connection.turretaimingout>позиция_из</connection.turretaimingout>
 <connection.turrettriggerout>вызвать_из</connection.turrettriggerout>
@@ -2774,7 +2770,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Компрессия динамического диапазона</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Автоматически настраивает громкость в игре для предотвращения появления звуковых помех.</dynamicrangecompressiontooltip>
-<voipnodevices>Не найдено ни одно устройство захвата звука</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Автоматическое управление</pumpautocontrol>
@@ -2852,11 +2847,7 @@
 <afflictionname.invertcontrols>Дезориентация</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Глаза пациента мечутся из стороны в сторону, похоже, он испытывает проблемы с ориентированием в пространстве.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Урон</damagebutton>
-<pending>На рассмотрении</pending>
-<inprogress>В процессе</inprogress>
-<complete>Завершено</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>[targethullname] - надо срочно отправляться сюда. Там, внутри объекта «[target]», находится ваша следующая цель.</traitorgoalfindcontainerinfo>
@@ -3140,9 +3131,4 @@
 <easterbunny_goalinfotext_3>Сделайте все возможное, чтобы грязевой раптор прожил хотя бы 3 минуты.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>Ко-ко, ко-ко! Это было забавно. Человек с раскрашенным лицом будет просто в шоке, когда узнает, как тут все прошло.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Спастись:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>Вернуться в главное меню? Все несохраненные данные будут потеряны.</pausemenuquitverification>
-<leveldifficulty>Сложность</leveldifficulty>
-<connection.set_text>назначить_текст</connection.set_text>
 </infotexts>

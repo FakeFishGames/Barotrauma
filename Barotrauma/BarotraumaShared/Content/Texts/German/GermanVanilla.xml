@@ -85,7 +85,7 @@
 <pausemenuretry>Nochmal versuchen</pausemenuretry>
 <pausemenusavequit>Speichern und Beenden</pausemenusavequit>
 <pausemenuquit>Hauptmenü</pausemenuquit>
-<pausemenuquitverification>Bist du dir sicher, dass du das Spiel beenden willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuquitverification>
+<pausemenuquitverification>Bist du dir sicher, dass du zum Hauptmenü zurückkehren willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuquitverification>
 <pausemenuretryverification>Bist du dir sicher, dass du die Mission beenden und den vorherigen Spielstand laden willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Missionstyp</missiontype>
 <random>Zufällig</random>
 <levelseed>Level-Seed</levelseed>
-<leveldifficulty>Level-Schwierigkeit</leveldifficulty>
+<leveldifficulty>Schwierigkeit</leveldifficulty>
 <traitors>Verräter</traitors>
 <botcount>Bot-Anzahl</botcount>
 <botspawnmode>Spawn-Modus der Bots</botspawnmode>
@@ -1402,10 +1402,6 @@
 <entitydescription.extinguisherbracket>Zum Befestigen eines Feuerlöschers an einer Wand.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Waffenhalterung</entityname.weaponholder>
 <entitydescription.weaponholder>Hier kannst du deine Waffen bequem lagern.</entitydescription.weaponholder>
-<entityname.windoweddoor>Tür mit Fenster</entityname.windoweddoor>
-<entitydescription.windoweddoor>Eine Schiebetür mit eingebautem Fenster.</entitydescription.windoweddoor>
-<entityname.hatch>Luke</entityname.hatch>
-<entitydescription.hatch>Eine Tür, die aber horizontal öffnet.</entitydescription.hatch>
 <entityname.dockingport>Andockschleuse</entityname.dockingport>
 <entitydescription.dockingport>Eine vertikale Andockschleuse. Zusammen mit einer anderen Andockschleuse bildet sie eine wasserdichte Verbindung zwischen U-Booten, Shuttles und Orten.</entitydescription.dockingport>
 <entityname.dockinghatch>Andockluke</entityname.dockinghatch>
@@ -2630,7 +2626,7 @@
 <centerarealockedtext>Dieses Gebiet ist in dieser Version von Barotrauma nicht zugänglich. Bitte warte auf zukünftige Updates!</centerarealockedtext>
 <connection.dockingproximitysensor>nähesensor</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>text_setzen</connection.set_text>
 <connection.stateout>zustand_aus</connection.stateout>
 <connection.turretaimingout>position_aus</connection.turretaimingout>
 <connection.turrettriggerout>auslöser_aus</connection.turrettriggerout>
@@ -2773,7 +2769,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Dynamikkompression</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Passt die Lautstärke des Spiels automatisch an, um Audioverzerrungen zu verhindern.</dynamicrangecompressiontooltip>
-<voipnodevices>Keine Tonaufnahmegeräte gefunden</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Automatische Steuerung</pumpautocontrol>
@@ -2851,11 +2846,7 @@
 <afflictionname.invertcontrols>Desorientiert</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Die Augen des Patienten huschen nervös hin und her und scheinen Mühe zu haben, die Umgebung wahrzunehmen.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Schaden</damagebutton>
-<pending>Ausstehend</pending>
-<inprogress>Aktiv</inprogress>
-<complete>Abgeschlossen</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Finde dein nächstes Ziel: [target]. Suchgebiet: [targethullname].</traitorgoalfindcontainerinfo>
@@ -3139,10 +3130,5 @@
 <easterbunny_goalinfotext_3>Sorge mit allen Mitteln dafür, dass die Schlammechse mindestens 3 Minuten lang überlebt.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>Tröt, tröt! Das war saulustig! Der geschminkte Mann wird sich kaputtlachen, wenn er hört, wie die Sache gelaufen ist.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Flucht:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>Bist du dir sicher, dass du zum Hauptmenü zurückkehren willst? Dein nicht gespeicherter Fortschritt geht verloren.</pausemenuquitverification>
-<leveldifficulty>Schwierigkeit</leveldifficulty>
-<connection.set_text>text_setzen</connection.set_text>
 
 </infotexts>

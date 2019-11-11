@@ -85,7 +85,7 @@
 <pausemenuretry>重試</pausemenuretry>
 <pausemenusavequit>保存並退出</pausemenusavequit>
 <pausemenuquit>主菜單</pausemenuquit>
-<pausemenuquitverification>確定要退出嗎？未保存的遊戲進度將會丟失。</pausemenuquitverification>
+<pausemenuquitverification>確定要返回主菜單嗎？所有未保存的進度都將丟失。</pausemenuquitverification>
 <pausemenuretryverification>確定要放棄任務並讀取之前的存檔嗎？所有未保存的遊戲進度將會丟失。</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>任務類型</missiontype>
 <random>隨機</random>
 <levelseed>關卡種子</levelseed>
-<leveldifficulty>關卡難度</leveldifficulty>
+<leveldifficulty>難度</leveldifficulty>
 <traitors>叛徒</traitors>
 <botcount>Bot 數量</botcount>
 <botspawnmode>Bot生成模式</botspawnmode>
@@ -1395,10 +1395,6 @@
 <entitydescription.extinguisherbracket>可將滅火器掛在牆上。</entitydescription.extinguisherbracket>
 <entityname.weaponholder>武器架</entityname.weaponholder>
 <entitydescription.weaponholder>放置武器的地方。</entitydescription.weaponholder>
-<entityname.windoweddoor>玻璃推拉門</entityname.windoweddoor>
-<entitydescription.windoweddoor>窗門一體。</entitydescription.windoweddoor>
-<entityname.hatch>艙門</entityname.hatch>
-<entitydescription.hatch>一扇水準方向的門。</entitydescription.hatch>
 <entityname.dockingport>縱向對接艙口</entityname.dockingport>
 <entitydescription.dockingport>一個豎直方向的對接艙口，與另一個艙口對接鎖定後，形成水密密封，構成潛艇、飛船、建築物之間的通道。</entitydescription.dockingport>
 <entityname.dockinghatch>橫向對接艙口</entityname.dockinghatch>
@@ -2623,7 +2619,7 @@
 <centerarealockedtext>此區域在當前版本無法進入。請靜待未來更新！</centerarealockedtext>
 <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>set_text</connection.set_text>
 <connection.stateout>state_out</connection.stateout>
 <connection.turretaimingout>position_out</connection.turretaimingout>
 <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
@@ -2766,7 +2762,6 @@
 <!-- Audio -->
 <dynamicrangecompression>動態距離壓縮</dynamicrangecompression>
 <dynamicrangecompressiontooltip>自動調整遊戲音量，防止音效混淆。</dynamicrangecompressiontooltip>
-<voipnodevices>未找到音訊捕捉設備</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>自動控制</pumpautocontrol>
@@ -2844,11 +2839,7 @@
 <afflictionname.invertcontrols>暈眩</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>病人頭暈目眩，無法正確感知周圍環境。</afflictiondescription.invertcontrols>
 
-
 <damagebutton>傷害</damagebutton>
-<pending>等待中</pending>
-<inprogress>進行中</inprogress>
-<complete>完成</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>在[targethullname]的一個[target]裡找到你的下一項目標。</traitorgoalfindcontainerinfo>

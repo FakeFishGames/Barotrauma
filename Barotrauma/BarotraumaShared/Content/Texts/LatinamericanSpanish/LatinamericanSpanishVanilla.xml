@@ -85,7 +85,7 @@
 <pausemenuretry>Reintentar</pausemenuretry>
 <pausemenusavequit>Guardar y salir</pausemenusavequit>
 <pausemenuquit>Menú principal</pausemenuquit>
-<pausemenuquitverification>¿Seguro que quieres salir del juego? Se perderán todos los progresos no guardados.</pausemenuquitverification>
+<pausemenuquitverification>¿Seguro que quieres volver al menú principal? Se perderán todos los progresos no guardados.</pausemenuquitverification>
 <pausemenuretryverification>¿Seguro que quieres detener la misión y cargar el archivo de guardado anterior? Se perderán todos los progresos no guardados.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Tipo de misión</missiontype>
 <random>Aleatorio</random>
 <levelseed>Generación de nivel</levelseed>
-<leveldifficulty>Dificultad de nivel</leveldifficulty>
+<leveldifficulty>Dificultad</leveldifficulty>
 <traitors>Traidores</traitors>
 <botcount>Contador de bots</botcount>
 <botspawnmode>Modo de aparición de bots</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Sujeta un extintor a la pared.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Soporte para armas</entityname.weaponholder>
 <entitydescription.weaponholder>Un lugar donde guardar tus armas cómodamente.</entitydescription.weaponholder>
-<entityname.windoweddoor>Puerta con ventana</entityname.windoweddoor>
-<entitydescription.windoweddoor>Una puerta corrediza con ventana integrada.</entitydescription.windoweddoor>
-<entityname.hatch>Escotilla</entityname.hatch>
-<entitydescription.hatch>Una puerta, pero en el eje horizontal.</entitydescription.hatch>
 <entityname.dockingport>Puerto de atraque</entityname.dockingport>
 <entitydescription.dockingport>Una interfaz de atraque alineada verticalmente. Se fija a otro puerto de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockingport>
 <entityname.dockinghatch>Escotilla de atraque</entityname.dockinghatch>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>Esta zona es inaccesible en esta versión de Barotrauma. ¡Espera las futuras actualizaciones!</centerarealockedtext>
 <connection.dockingproximitysensor>sensor_proximidad</connection.dockingproximitysensor>
 <connection.signalx>señal_[num]</connection.signalx>
-<connection.set_text>señal_[num]</connection.set_text>
+<connection.set_text>establecer_texto</connection.set_text>
 <connection.stateout>estado_sal</connection.stateout>
 <connection.turretaimingout>posición_sal</connection.turretaimingout>
 <connection.turrettriggerout>disparador_sal</connection.turrettriggerout>
@@ -2774,7 +2770,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Compresión de rango dinámico</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Ajusta el volumen del juego automáticamente para evitar la distorsión del sonido.</dynamicrangecompressiontooltip>
-<voipnodevices>No se encuentran dispositivos de grabación de audio</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Control automático</pumpautocontrol>
@@ -2852,11 +2847,7 @@
 <afflictionname.invertcontrols>Desorientado</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Los ojos del paciente se descontrolan, y aparenta tener problemas para orientarse.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Daño</damagebutton>
-<pending>Pendiente</pending>
-<inprogress>En curso</inprogress>
-<complete>Completado</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Busca tu siguiente objetivo dentro de: [target] en [targethullname].</traitorgoalfindcontainerinfo>
@@ -3140,9 +3131,4 @@
 <easterbunny_goalinfotext_3>Haz todo lo posible por que el fangorraptor sobreviva al menos 3 minutos.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>¡Mec, mec! Fue muy divertido. El hombre pintado va a estar muy contento cuando se entere de cómo salió todo.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Escapa:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>¿Seguro que quieres volver al menú principal? Se perderán todos los progresos no guardados.</pausemenuquitverification>
-<leveldifficulty>Dificultad</leveldifficulty>
-<connection.set_text>establecer_texto</connection.set_text>
 </infotexts>

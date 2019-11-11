@@ -85,7 +85,7 @@
 <pausemenuretry>Réessayer</pausemenuretry>
 <pausemenusavequit>Sauvegarder et quitter</pausemenusavequit>
 <pausemenuquit>Menu principal</pausemenuquit>
-<pausemenuquitverification>Voulez-vous vraiment quitter ? Toute progression non sauvegardée sera perdue.</pausemenuquitverification>
+<pausemenuquitverification>Voulez-vous vraiment retourner au menu principal ? Toute progression non sauvegardée sera perdue.</pausemenuquitverification>
 <pausemenuretryverification>Voulez-vous vraiment interrompre la mission et charger le fichier de sauvegarde précédent ? Toute progression non sauvegardée sera perdue.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Type de mission</missiontype>
 <random>Aléatoire</random>
 <levelseed>Vecteur de niveau</levelseed>
-<leveldifficulty>Difficulté du niveau</leveldifficulty>
+<leveldifficulty>Difficulté</leveldifficulty>
 <traitors>Traîtres</traitors>
 <botcount>Nombre de bots</botcount>
 <botspawnmode>Mode d'apparition des bots</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Permet de maintenir un extincteur sur un mur.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Support d'armes</entityname.weaponholder>
 <entitydescription.weaponholder>Un endroit pour ranger vos armes.</entitydescription.weaponholder>
-<entityname.windoweddoor>Porte fenêtrée</entityname.windoweddoor>
-<entitydescription.windoweddoor>Une porte coulissante avec une fenêtre intégrée.</entitydescription.windoweddoor>
-<entityname.hatch>Écoutille</entityname.hatch>
-<entitydescription.hatch>Une porte placée sur l'axe horizontal.</entitydescription.hatch>
 <entityname.dockingport>Port d'amarrage</entityname.dockingport>
 <entitydescription.dockingport>Une interface d'amarrage alignée verticalement. Elle s'imbrique avec un autre port d'amarrage pour former un conduit étanche et permettre le passage entre différents sous-marins, navettes et emplacements.</entitydescription.dockingport>
 <entityname.dockinghatch>Écoutille d'amarrage</entityname.dockinghatch>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>Cette zone est impossible à atteindre dans cette version de Barotrauma. Veuillez attendre de futures mises à jour !</centerarealockedtext>
 <connection.dockingproximitysensor>capteur_proximité</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>set_text</connection.set_text>
 <connection.stateout>état_sortie</connection.stateout>
 <connection.turretaimingout>position_sortie</connection.turretaimingout>
 <connection.turrettriggerout>déclencher_sortie</connection.turrettriggerout>
@@ -2852,11 +2848,7 @@
 <afflictionname.invertcontrols>Désorienté</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Les yeux du patient partent dans toutes les directions, et ils semblent incapables de s'habituer à ce qui les entoure.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Dégâts</damagebutton>
-<pending>En attente</pending>
-<inprogress>En cours</inprogress>
-<complete>Terminé</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Trouvez votre prochain objectif à l'intérieur de [target] dans [targethullname].</traitorgoalfindcontainerinfo>
@@ -3140,9 +3132,4 @@
 <easterbunny_goalinfotext_3>Faites tout pour que le raptor fangeux survive au moins 3 minutes.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>Tut-tut ! Trop drôle. L'homme peint ne va pas le croire quand il l'apprendra.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Fuyez : \n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>Voulez-vous vraiment retourner au menu principal ? Toute progression non sauvegardée sera perdue.</pausemenuquitverification>
-<leveldifficulty>Difficulté</leveldifficulty>
-<connection.set_text>set_text</connection.set_text>
 </infotexts>

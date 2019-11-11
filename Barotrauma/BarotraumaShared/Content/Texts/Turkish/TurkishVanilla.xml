@@ -85,7 +85,7 @@
 <pausemenuretry>Tekrar Dene</pausemenuretry>
 <pausemenusavequit>Kaydet ve Çık</pausemenusavequit>
 <pausemenuquit>Ana Menü</pausemenuquit>
-<pausemenuquitverification>Oyundan çıkış yapmak istediğinize emin misiniz? Kaydedilmemiş ilerlemeniz kaybolacaktır.</pausemenuquitverification>
+<pausemenuquitverification>Ana menüye dönmek istediğine emin misin? Kaydedilmemiş bütün ilerlemen kaybedilecek.</pausemenuquitverification>
 <pausemenuretryverification>Görevi sonlandırıp önceki dosyayı yüklemek istediğinize emin misiniz? Kaydedilmemiş ilerlemeniz kaybolacaktır.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Görev tipi</missiontype>
 <random>Rastgele</random>
 <levelseed>Seviye tohumu</levelseed>
-<leveldifficulty>Seviye zorluğu</leveldifficulty>
+<leveldifficulty>Zorluk</leveldifficulty>
 <traitors>Hainler</traitors>
 <botcount>Bot sayısı</botcount>
 <botspawnmode>Bot oluşturma modu</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Duvarda bir yangın söndürücü tutar.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Silah Tutucu</entityname.weaponholder>
 <entitydescription.weaponholder>Silahlarınızı düzenli bir şekilde saklayabileceğiniz bir yer.</entitydescription.weaponholder>
-<entityname.windoweddoor>Pencereli Kapı</entityname.windoweddoor>
-<entitydescription.windoweddoor>Entegre penceresi olan sürgülü bir kapı.</entitydescription.windoweddoor>
-<entityname.hatch>Bölme</entityname.hatch>
-<entitydescription.hatch>Bir kapı ama yatay eksende.</entitydescription.hatch>
 <entityname.dockingport>Yuva Portu</entityname.dockingport>
 <entitydescription.dockingport>Dikey olarak hizalanmış bir yerleştirme arabirimi. Su geçirmez bir sızdırmazlık oluşturmak ve denizaltılar, araçlar ve konumlar arasında geçişe izin vermek için başka bir yerleştirme portuna kilitlenir.</entitydescription.dockingport>
 <entityname.dockinghatch>Yuva Bölmesi</entityname.dockinghatch>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>Barotrauma'nın bu versiyonunda bu alan ulaşılamaz. Lütfen gelecek güncellemeleri bekleyin!</centerarealockedtext>
 <connection.dockingproximitysensor>yakınlık_sensörü</connection.dockingproximitysensor>
 <connection.signalx>sinyal_[num]</connection.signalx>
-<connection.set_text>sinyal_[num]</connection.set_text>
+<connection.set_text>ayarla_metin</connection.set_text>
 <connection.stateout>durum_çıktı</connection.stateout>
 <connection.turretaimingout>pozisyon_çıktı</connection.turretaimingout>
 <connection.turrettriggerout>tetik_çıktı</connection.turrettriggerout>
@@ -2774,7 +2770,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Dinamik aralık basıncı</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Ses rahatsızlıklarını önlemek için oyunun sesini otomatik ayarlar.</dynamicrangecompressiontooltip>
-<voipnodevices>Ses yakalama aygıtı bulanamadı</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Otomatik kontrol</pumpautocontrol>
@@ -2852,11 +2847,7 @@
 <afflictionname.invertcontrols>Şaşırmış</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Hastanın gözleri sabit durmuyor ve etrafını algılamakta zorluk yaşıyormuş gibi duruyor.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Hasar</damagebutton>
-<pending>Bekliyor</pending>
-<inprogress>Devam ediyor</inprogress>
-<complete>Tamamlandı</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Sıradaki hedefini [targethullname] içindeki [target] 'de bul.</traitorgoalfindcontainerinfo>
@@ -3140,10 +3131,4 @@
 <easterbunny_goalinfotext_3>Çamur raptörünün en azından 3 dakika boyunca hayatta kalması için her şeyi yap.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>Honk honk! Bu çok komikti. Boyalı adam bunu duyduğunda çok gülecek.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Kaç:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>Ana menüye dönmek istediğine emin misin? Kaydedilmemiş bütün ilerlemen kaybedilecek.</pausemenuquitverification>
-<leveldifficulty>Zorluk</leveldifficulty>
-<connection.set_text>ayarla_metin</connection.set_text>
-
 </infotexts>
