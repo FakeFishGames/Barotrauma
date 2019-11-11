@@ -80,8 +80,11 @@
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
       of the item, and when the condition is 0, the box is considered empty. -->
       <!--  -0.5 per usage = 200 shots per box -->
-      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <SpawnItem identifiers="coilgunbolt" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="coilgunbolt" type="Contained" />
       </StatusEffect>
       <Containable items="coilgunbolt" />
     </ItemContainer>
@@ -132,8 +135,11 @@
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
       of the item, and when the condition is 0, the box is considered empty. -->
       <!--  -0.5 per usage = 200 shots per box -->
-      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <SpawnItem identifiers="physicoriumbolt" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="physicoriumbolt" type="Contained" />
       </StatusEffect>
       <Containable items="physicoriumbolt" />
     </ItemContainer>
@@ -188,8 +194,11 @@
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
       of the item, and when the condition is 0, the box is considered empty. -->
       <!--  -0.5 per usage = 200 shots per box -->
-      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltexplosive" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="coilgunboltexplosive" type="Contained" />
       </StatusEffect>
       <Containable items="coilgunboltexplosive" />
     </ItemContainer>
@@ -242,8 +251,11 @@
       but spawn a new round every time the OnUse effect is triggered. OnUse also reduces the condition
       of the item, and when the condition is 0, the box is considered empty. -->
       <!--  -0.5 per usage = 200 shots per box -->
-      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
         <SpawnItem identifiers="coilgunboltpiercing" spawnposition="ThisInventory" />
+      </StatusEffect>
+      <StatusEffect type="OnUse" target="This" condition="-0.5" disabledeltatime="true">
+        <RequiredItem items="coilgunboltpiercing" type="Contained" />
       </StatusEffect>
       <Containable items="coilgunboltpiercing" />
     </ItemContainer>
