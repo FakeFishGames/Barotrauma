@@ -399,7 +399,7 @@ namespace Barotrauma.Items.Components
                 case "activate":
                 case "use":
                 case "trigger_in":
-                    item.Use(1.0f);
+                    item.Use(1.0f, sender);
                     break;
                 case "toggle":
                     if (signal != "0")
