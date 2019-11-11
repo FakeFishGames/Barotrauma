@@ -435,12 +435,30 @@ namespace Barotrauma
 
         public void SelectNext(bool force = false, bool autoScroll = true)
         {
-            Select(Math.Min(Content.CountChildren - 1, SelectedIndex + 1), force, autoScroll);
+            int index = SelectedIndex + 1;
+            while (index < Content.CountChildren)
+            {
+                if (Content.GetChild(index).Visible)
+                {
+                    Select(index, force, autoScroll);
+                    break;
+                }
+                index++;
+            }
         }
 
         public void SelectPrevious(bool force = false, bool autoScroll = true)
         {
-            Select(Math.Max(0, SelectedIndex - 1), force, autoScroll);
+            int index = SelectedIndex - 1;
+            while (index >= 0)
+            {
+                if (Content.GetChild(index).Visible)
+                {
+                    Select(index, force, autoScroll);
+                    break;
+                }
+                index--;
+            }
         }
 
         public void Select(int childIndex, bool force = false, bool autoScroll = true)
