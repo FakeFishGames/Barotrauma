@@ -779,8 +779,10 @@ namespace Barotrauma
 
             if (IsHumanoid)
             {
-                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams);
-                AnimController.TargetDir = Direction.Right;
+                AnimController = new HumanoidAnimController(this, seed, ragdollParams as HumanRagdollParams)
+                {
+                    TargetDir = Direction.Right
+                };
 
             }
             else
@@ -2050,33 +2052,16 @@ namespace Barotrauma
                         }
                         else
                         {
-                            float distSqr = float.MaxValue;
-                            foreach (Character otherCharacter in CharacterList)
-                            {
-                                if (otherCharacter == c || !otherCharacter.IsRemotePlayer) { continue; }
-                                distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, c.WorldPosition));
-                            }
-
-#if SERVER
-                            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
-                            {
-                                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
-                                if (spectatePos != null)
-                                {
-                                    distSqr = Math.Min(distSqr, Vector2.DistanceSquared(spectatePos.Value, c.WorldPosition));
-                                }
-                            }
-#endif
-
-                            if (distSqr > NetConfig.DisableCharacterDistSqr)
+                            float closestPlayerDist = c.GetDistanceToClosestPlayer();
+                            if (closestPlayerDist > NetConfig.DisableCharacterDist)
                             {
                                 c.Enabled = false;
                                 if (c.IsDead && c.AIController is EnemyAIController)
                                 {
-                                    Entity.Spawner?.AddToRemoveQueue(c);
+                                    Spawner?.AddToRemoveQueue(c);
                                 }
                             }
-                            else if (distSqr < NetConfig.EnableCharacterDistSqr)
+                            else if (closestPlayerDist < NetConfig.EnableCharacterDist)
                             {
                                 c.Enabled = true;
                             }
@@ -2122,6 +2107,8 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime, cam);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
+
+            UpdateDespawn(deltaTime);
 
             if (!Enabled) { return; }
 
@@ -2331,6 +2318,94 @@ namespace Barotrauma
 
             AnimController.ResetPullJoints();
             SelectedConstruction = null;
+        }
+
+        /// <summary>
+        /// How far the character is from the closest human player (including spectators)
+        /// </summary>
+        private float GetDistanceToClosestPlayer()
+        {
+            float distSqr = float.MaxValue;
+            foreach (Character otherCharacter in CharacterList)
+            {
+                if (otherCharacter == this || !otherCharacter.IsRemotePlayer) { continue; }
+                distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, WorldPosition));
+            }
+#if SERVER
+            for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
+            {
+                var spectatePos = GameMain.Server.ConnectedClients[i].SpectatePos;
+                if (spectatePos != null)
+                {
+                    distSqr = Math.Min(distSqr, Vector2.DistanceSquared(spectatePos.Value, WorldPosition));
+                }
+            }
+#else
+            if (this == Controlled) { return 0.0f; }
+            if (controlled != null)
+            {
+                distSqr = Math.Min(distSqr, Vector2.DistanceSquared(Controlled.WorldPosition, WorldPosition));
+            }
+            distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.Position, WorldPosition));
+#endif
+            return (float)Math.Sqrt(distSqr);
+        }
+
+        private float despawnTimer;
+        private const float DespawnDelay = 5.0f * 60.0f; //5 minutes
+        private void UpdateDespawn(float deltaTime)
+        {
+            //clients don't despawn characters unless the server says so
+            if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
+
+            if (!IsDead) { return; }
+
+            float distToClosestPlayer = GetDistanceToClosestPlayer();
+            if (distToClosestPlayer > NetConfig.DisableCharacterDist)
+            {
+                //despawn in 1 second if very far from all human players
+                despawnTimer = Math.Max(despawnTimer, DespawnDelay - 1.0f);
+            }
+
+            despawnTimer += deltaTime;
+            if (despawnTimer < DespawnDelay) { return; }
+
+            if (IsHuman)
+            {
+                var containerPrefab =
+                    (MapEntityPrefab.List.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
+                if (containerPrefab == null)
+                {
+                    DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
+                }
+                else
+                {
+                    Spawner.AddToSpawnQueue(containerPrefab, WorldPosition, onSpawned: onItemContainerSpawned);
+                }
+
+                void onItemContainerSpawned(Item item)
+                {
+                    if (Inventory?.Items == null) { return; }
+                
+                    item.AddTag("name:" + Name);
+                    if (info?.Job != null) { item.AddTag("job:" + info.Job.Name); }               
+
+                    var itemContainer = item?.GetComponent<ItemContainer>();
+                    if (itemContainer == null) { return; }
+                    foreach (Item inventoryItem in Inventory.Items)
+                    {
+                        itemContainer.Inventory.TryPutItem(inventoryItem, user: null);
+                    }
+                }
+            }
+
+            Spawner.AddToRemoveQueue(this);
+        }
+
+        public void DespawnNow()
+        {
+            despawnTimer = DespawnDelay;
         }
 
         private void UpdateSightRange()

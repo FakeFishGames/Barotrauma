@@ -187,7 +187,7 @@ namespace Barotrauma
                 else
                 {
                     string description = item.Description;
-                    if (item.Prefab.Identifier == "idcard")
+                    if (item.Prefab.Identifier == "idcard" || item.Tags.Contains("despawncontainer"))
                     {
                         string[] readTags = item.Tags.Split(',');
                         string idName = null;
@@ -957,7 +957,7 @@ namespace Barotrauma
             {
                 Rectangle slotRect = selectedSlot.Slot.Rect;
                 slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
-                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipColorData);                
+                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipColorData);
             }
         }
 

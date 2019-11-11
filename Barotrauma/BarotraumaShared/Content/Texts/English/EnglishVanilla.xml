@@ -3728,4 +3728,7 @@
   <input.rightmouse>Right mouse</input.rightmouse>
   <input.middlemouse>Middle mouse</input.middlemouse>
   <connection.setexponent>set_exponent</connection.setexponent>
+  <entityname.duffelbag>Duffel Bag</entityname.duffelbag>
+  <entitydescription.duffelbag>The traditional way of storing a deceased seafarer's belongings until they can be delivered to their next of kin (or stolen or sold).</entitydescription.duffelbag>
+
 </infotexts>
