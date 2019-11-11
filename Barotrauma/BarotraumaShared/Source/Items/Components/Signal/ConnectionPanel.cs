@@ -254,6 +254,11 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        {
+            //do nothing
+        }
+
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
