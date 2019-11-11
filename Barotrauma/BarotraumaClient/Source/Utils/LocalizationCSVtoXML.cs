@@ -142,7 +142,7 @@ namespace Barotrauma
                         split[1] = split[1].Replace("\"", ""); // Replaces quotation marks around data that are added when exporting via excel
                         xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
                     }
-                    else if (split[0].Contains(".") && split[0].All(char.IsLower)) // An empty field
+                    else if (split[0].Contains(".") && !split[0].Any(char.IsUpper)) // An empty field
                     {
                         xmlContent.Add($"<{split[0]}><!-- No data --></{split[0]}>");
                     }
