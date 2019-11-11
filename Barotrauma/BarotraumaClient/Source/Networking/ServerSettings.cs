@@ -511,7 +511,7 @@ namespace Barotrauma.Networking
             string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn") + " ";
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
             slider.ToolTip = minRespawnText.RawToolTip;
-            slider.UserData = minRespawnText.RawToolTip;
+            slider.UserData = minRespawnText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(0.0f, 1.0f);
             GetPropertyData("MinRespawnRatio").AssignGUIComponent(slider);
