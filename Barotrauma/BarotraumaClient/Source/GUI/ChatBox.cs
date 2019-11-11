@@ -220,6 +220,7 @@ namespace Barotrauma
                 msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                 msgHolder.RectTransform.SizeChanged += Recalculate;
                 chatBox.RecalculateChildren();
+                chatBox.UpdateScrollBarSize();
             }
 
             CoroutineManager.StartCoroutine(UpdateMessageAnimation(msgHolder, 0.5f));
