@@ -84,6 +84,9 @@ namespace Barotrauma.Items.Components
             if (crosshairSprite == null) { return; }
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
 
+            //camera focused on some other item/device, don't draw the crosshair
+            if (character.ViewTarget != null && (character.ViewTarget is Item item) && item.Prefab.FocusOnSelected) { return; }
+
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory() && !GameMain.Instance.Paused;
             if (GUI.HideCursor)
