@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (GameMain.NetworkMember == null)
                     {
-                        AddNewValue(text);
+                        SendOutput(text);
                     }
                     else
                     {
@@ -42,10 +42,15 @@ namespace Barotrauma.Items.Components
             };
         }
 
-        private void AddNewValue(string newValue)
+        private void SendOutput(string input)
         {
-            OutputValue = newValue;
+            OutputValue = input;
+            item.SendSignal(0, input, "signal_out", null);
+            ShowOnDisplay(input);
+        }
 
+        partial void ShowOnDisplay(string input)
+        {
             while (historyBox.Content.CountChildren > 60)
             {
                 historyBox.RemoveChild(historyBox.Content.Children.First());
@@ -53,7 +58,7 @@ namespace Barotrauma.Items.Components
 
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
-                    "> " + newValue,
+                    "> " + input,
                     textColor: Color.LimeGreen)
             {
                 CanBeFocused = false
@@ -85,7 +90,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            AddNewValue(msg.ReadString());
+            SendOutput(msg.ReadString());
         }
     }
 }

@@ -15,9 +15,12 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
-        public override void Update(float deltaTime, Camera cam)
+        partial void ShowOnDisplay(string input);
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
-            item.SendSignal(0, OutputValue, "signal_out", null);
+            if (connection.Name != "signal_in") return;
+            ShowOnDisplay(signal);
         }
     }
 }
