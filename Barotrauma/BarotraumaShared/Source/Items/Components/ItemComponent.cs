@@ -894,7 +894,10 @@ namespace Barotrauma.Items.Components
             return containObjective;
         }
 
-        protected void AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
+        /// <summary>
+        /// Returns true when done seeking the suitable container.
+        /// </summary>
+        protected bool AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
         {
             var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
             foreach (Item containedItem in containedItems)
@@ -950,8 +953,13 @@ namespace Barotrauma.Items.Components
                         };
                         objective.AddSubObjectiveInQueue(decontainObjective);
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
+            return true;
         }
         #endregion
     }

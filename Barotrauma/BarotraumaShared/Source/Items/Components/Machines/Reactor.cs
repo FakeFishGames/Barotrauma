@@ -522,17 +522,20 @@ namespace Barotrauma.Items.Components
             //characters with insufficient skill levels don't refuel the reactor
             if (degreeOfSuccess > refuelLimit)
             {
+                if (objective.SubObjectives.None())
+                {
+                    if (!AIDecontainEmptyItems(character, objective, equip: false))
+                    {
+                        return false;
+                    }
+                }
+
                 if (aiUpdateTimer > 0.0f)
                 {
                     aiUpdateTimer -= deltaTime;
                     return false;
                 }
                 aiUpdateTimer = AIUpdateInterval;
-
-                if (objective.SubObjectives.None())
-                {
-                    AIDecontainEmptyItems(character, objective, equip: false);
-                }
 
                 // load more fuel if the current maximum output is only 50% of the current load
                 // or if the fuel rod is (almost) deplenished 

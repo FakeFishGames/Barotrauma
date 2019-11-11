@@ -452,7 +452,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
+            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase)))
             {
                 ItemContainer container = null;
                 Item containerItem = null;
@@ -463,18 +463,14 @@ namespace Barotrauma.Items.Components
                     container = containerItem.GetComponent<ItemContainer>();
                     if (container != null) { break; }
                 }
-
                 if (container == null || container.ContainableItems.Count == 0) { return true; }
 
-                if (aiUpdateTimer > 0.0f)
+                if (objective.SubObjectives.None())
                 {
-                    aiUpdateTimer -= deltaTime;
-                    return false;
-                }
-                aiUpdateTimer = AIUpdateInterval;
-                if (objective.SubObjectives.None() && container != null)
-                {
-                    AIDecontainEmptyItems(character, objective, equip: true, sourceContainer: container);
+                    if (!AIDecontainEmptyItems(character, objective, equip: true, sourceContainer: container))
+                    {
+                        return false;
+                    }
                 }
                 if (objective.SubObjectives.None())
                 {
