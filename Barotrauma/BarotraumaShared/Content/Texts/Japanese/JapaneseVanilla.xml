@@ -1442,7 +1442,7 @@
 <entityname.alienshell>物理真皮シェル</entityname.alienshell>
 <entitydescription.alienshell>レールガンから発射するため。</entitydescription.alienshell>
 
-<Alien></Alien>
+<!-- Alien -->
 <entityname.skyholderartifact>スカイエイリアンアーティファクト</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>エイリアンの遺跡で見つかったアーティファクト。</entitydescription.skyholderartifact>
 <entityname.thermalartifact>熱エイリアンアーティファクト</entityname.thermalartifact>
@@ -2861,7 +2861,7 @@
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>[targethullname]において[target]中のあなたの次の目標を発見してください。</traitorgoalfindcontainerinfo>
 <traitorgoaldestroyoxygen>潜水艦の上のすべての非在庫酸素タンクのうち少なくとも[percentage]パーセントを破壊してください。</traitorgoaldestroyoxygen>
-<traitorgoalsabotagedurationinfo>[target]を破壊し、そのステータスが少なくとも[duration]秒の間に[percentage]％以下にしてください。</traitorgoalsabotagedurationinfo>
+<traitorgoalsabotagedurationinfo>[tag]を破壊し、そのステータスが少なくとも[duration]秒の間に[percentage]％以下にしてください。</traitorgoalsabotagedurationinfo>
 <traitorgoalescape>近くのシャトルで脱出する。</traitorgoalescape>
 
 <!-- MVP traitor mission text package -->
@@ -3145,5 +3145,4 @@
 <pausemenuquitverification>メインメニューに戻りますか？保存されていないデータは全て失われます。</pausemenuquitverification>
 <leveldifficulty>難易度</leveldifficulty>
 <connection.set_text>set_text</connection.set_text>
-
 </infotexts>

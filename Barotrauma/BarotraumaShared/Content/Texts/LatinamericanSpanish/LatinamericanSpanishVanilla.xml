@@ -1442,7 +1442,7 @@
 <entityname.alienshell>Cartucho de fisicorio</entityname.alienshell>
 <entitydescription.alienshell>Para disparar con un cañón de riel.</entitydescription.alienshell>
 
-<Alien></Alien>
+<!-- Alien -->
 <entityname.skyholderartifact>Artefacto alienígena del cielo</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>Artefacto hallado en ruinas alienígenas.</entitydescription.skyholderartifact>
 <entityname.thermalartifact>Artefacto alienígena termal</entityname.thermalartifact>
@@ -2437,7 +2437,7 @@
 <!-- Disclaimers -->
 <campaigndisclaimertitle>¡Hola, esto es Barotrauma!</campaigndisclaimertitle>
 <campaigndisclaimertext>Ten en cuenta que Barotrauma se encuentra aún en acceso anticipado, muchos aspectos del juego están incompletos y seguimos trabajando en ellos.\n\nAl modo campaña le faltan todavía muchas de las características que tenemos planeadas para la versión completa y aún no es tan divertido como el multijugador. En la versión actual, jugar de forma individual puede ser más difícil para los jugadores nuevos que jugar con otras personas; aunque la tripulación de la IA te puede dar una mano con algunas tareas, no suele ser tan útil como los jugadores humanos. Si te interesa saber lo que está por venir en futuras actualizaciones, haz clic en el botón de Hoja de ruta de la campaña que está abajo.\n\nTe recomendamos, a pesar de todo, que juegues al menos al tutorial de un jugador antes de lanzarte al multijugador. ¡Buena suerte, marinero!</campaigndisclaimertext>
-<campaignroadmaptitle>Hoja de ruta de la campaña</campaignroadmaptitle>
+<campaignroadmaptitle>Plan de la campaña</campaignroadmaptitle>
 <campaignroadmaptext>- Lugares explorables: por ahora, los lugares del mapa de campaña son básicamente menús donde puedes comprar suministros y contratar a nuevos tripulantes, pero a lo largo del periodo de acceso anticipado se irán convirtiendo en verdaderos lugares físicos en los que puedes entrar y explorar.\n\n- Historia ampliada: podrás saber más cosas sobre el mundo de Barotrauma interactuando con PNJ, además de explorando puestos de avanzada y lugares no creados por el hombre.\n\n- Nuevos tipos de misión: tenemos planes para varios tipos de misión totalmente nuevos, incluidas misiones de transporte de personal y misiones de recuperación en naufragios.\n\n- Equilibrio: actualmente, la economía de la campaña no está muy bien equilibrada, pero empezaremos a centrarnos más en ella en cuanto tengamos más contenido.\n\n- Objetivo final: por el momento, no es posible completar la campaña, pero en futuras versiones, el lugar misterioso del centro del mapa será accesible…</campaignroadmaptext>
 <editordisclaimertitle>Editores</editordisclaimertitle>
 <editordisclaimertext>Los editores de submarinos y personajes son herramientas de modificación que se pueden usar para expandir el juego básico creando tus propios submarinos y monstruos. Las creaciones personalizadas se pueden compartir en Steam Workshop.\n\nPor el momento, los editores solo están disponibles en inglés. El proceso de construcción de un submarino totalmente jugable o de un monstruo funcional puede ser bastante complicado y, por desgracia, no ofrecemos todavía tutoriales dentro del juego ni documentación para los editores. Si quieres crear tu propio contenido personalizado con los editores, tal vez encuentres ayuda siguiendo estos enlaces:</editordisclaimertext>
@@ -3021,7 +3021,7 @@
 <servertag.serious>Serio</servertag.serious>
 <servertagdescription.serious>La tripulación debe concentrarse en completar su objetivo y en trabajar en equipo de manera eficiente. Nada de perder el tiempo con tonterías.</servertagdescription.serious>
 <servertag.roleplay>Juego de rol</servertag.roleplay>
-<servertagdescription.roleplay>La tripulación debe tratar de comportarse como si fuera la tripulación real de un submarino. La cadena de mando es importante, al igual que asumir tus responsabilidades y seguir órdenes. Se deben evitar los comentarios fuera de personaje cuando haya una ronda en marcha.</servertagdescription.roleplay>
+<servertagdescription.roleplay>La tripulación debe tratar de comportarse como si fuera la tripulación real de un submarino. La cadena de mando es importante, al igual que asumir tus responsabilidades y seguir órdenes. Se deben evitar los comentarios fuera de lugar cuando haya una ronda en marcha.</servertagdescription.roleplay>
 <servertag.somethingdifferent>Algo diferente</servertag.somethingdifferent>
 <servertagdescription.somethingdifferent>La partida difiere considerablemente de la dinámica habitual de Barotrauma. Servidores con modificaciones, submarinos muy poco convencionales, batallas campales, carreras de batiscafos, mapas con carreras a muerte... ¡Todo vale!</servertagdescription.somethingdifferent>
 <servertag.rampage>Alboroto</servertag.rampage>
@@ -3145,5 +3145,4 @@
 <pausemenuquitverification>¿Seguro que quieres volver al menú principal? Se perderán todos los progresos no guardados.</pausemenuquitverification>
 <leveldifficulty>Dificultad</leveldifficulty>
 <connection.set_text>establecer_texto</connection.set_text>
-
 </infotexts>

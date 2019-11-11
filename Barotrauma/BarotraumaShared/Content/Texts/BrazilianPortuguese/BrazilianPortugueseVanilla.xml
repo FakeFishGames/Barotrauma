@@ -2968,7 +2968,7 @@
 
 <!-- New Additions for the November update -->
 <submarine.name.kastrull>Kastrull</submarine.name.kastrull>
-<submarine.description.kastrull>O Kastrull é um submarino de ataque confiável, com grande poder de fogo em qualquer situação. Apesar de não ser muito ágil, conta com um drone de caça como padrão. Lembre-se de que com os tanques experimentais de lastro abertos, uma baixa tolerância para alagamentos e diversas estações para tripulantes, uma tripulação grande e experiente poderá tirar o melhor proveito deste submarino.</submarine.description.kastrull>
+<submarine.description.kastrull>O Kastrull é um submarino de ataque confiável, com grande poder de fogo em qualquer situação. Apesar de não ser muito ágil, conta com um drone de caça como padrão. Lembre-se de que uma tripulação grande e experiente poderá tirar o melhor proveito deste submarino com os tanques experimentais de lastro abertos, uma baixa tolerância para alagamentos e diversas estações para tripulantes.</submarine.description.kastrull>
 
 <gamemodedescription.singleplayercampaign>Embarque em uma jornada pelas profundezas de Europa. Viaje de um local a outro, conclua missões para ganhar dinheiro para suprimentos, descubra novos biomas — e talvez um dia você consiga desvendar os segredos de Europa.</gamemodedescription.singleplayercampaign>
 <gamemodedescription.sandbox>Modo de jogo sem objetivos específicos.</gamemodedescription.sandbox>
@@ -3007,8 +3007,8 @@
 <connection.setmodulus>definir_módulo</connection.setmodulus>
 <shuttle>Submersível</shuttle>
 <privacypolicy>Política de privacidade</privacypolicy>
-<entityname.mudraptoregg>Ovo de Raptor de Terra</entityname.mudraptoregg>
-<entitydescription.mudraptoregg>Ovo gosmento e pulsante de raptor de terra. A boca escancarada na parte superior do ovo parece estar em busca de algo para comer.</entitydescription.mudraptoregg>
+<entityname.mudraptoregg>Ovo de Lamaraptor</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Ovo gosmento e pulsante de lamaraptor. A boca escancarada na parte superior do ovo parece estar em busca de algo para comer.</entitydescription.mudraptoregg>
 
 <!-- Server lobby 2.0 -->
 <serverlisttab.all>Todos os servidores</serverlisttab.all>
@@ -3017,7 +3017,7 @@
 <addtofavorites>Adicionar a favoritos</addtofavorites>
 <removefromfavorites>Remover dos favoritos</removefromfavorites>
 <servertag.casual>Casual</servertag.casual>
-<servertagdescription.casual>Se divertir é mais importante do que concluir o objetivo. Uma boa escolha para novos jogadores.</servertagdescription.casual>
+<servertagdescription.casual>É mais importante se divertir do que concluir o objetivo. Uma boa escolha para novos jogadores. </servertagdescription.casual>
 <servertag.serious>Sério</servertag.serious>
 <servertagdescription.serious>Os tripulantes devem se concentrar em trabalhar juntos de maneira eficiente para concluir o objetivo. Sem brincadeiras desnecessárias.</servertagdescription.serious>
 <servertag.roleplay>Roleplay</servertag.roleplay>
@@ -3116,7 +3116,7 @@
 <tainted_welding_traitorobjectivestartmessage2>O receptor emite estalidos e assobios ao receber um sinal fraco: ação direta da Resistência Europana, você tem permissão para prosseguir com a missão: você precisa afundar este submarino de modo a parecer um acidente. Para começar, sabote o equipamento de solda.\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage2>
 <tainted_welding_goalinfotext_2>Substitua o combustível de solda por tanques de oxigênio em pelo menos 70% por cento das máquinas de solda do submarino.</tainted_welding_goalinfotext_2>
 <tainted_welding_objectivesuccessmessage2>Bom trabalho. Tanques de oxigênio costumam queimar ao serem carregados em máquinas de solda.</tainted_welding_objectivesuccessmessage2>
-<tainted_welding_traitorobjectivestartmessage3>Agora você precisa se livrar do combustível confiscado para que a tripulação não possa usar mais tarde:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
+<tainted_welding_traitorobjectivestartmessage3>Agora você precisa se livrar do combustível confiscado para que a tripulação não possa usá-lo mais tarde:\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage3>
 <tainted_welding_objectivesuccessmessage3>Bom trabalho! Agora a tripulação está em uma situação particularmente vulnerável, sem fazer a menor ideia disso.</tainted_welding_objectivesuccessmessage3>
 <tainted_welding_traitorobjectivestartmessage4>Agora, rápido, ative a armadilha!\n[traitorgoalinfos]</tainted_welding_traitorobjectivestartmessage4>
 <tainted_welding_objectivesuccessmessage4>Excelente trabalho, camarada! Os porcos estão condenados.</tainted_welding_objectivesuccessmessage4>
@@ -3136,8 +3136,8 @@
 <easterbunny_traitorobjectivestartmessage2>Cultive o ovo:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
 <easterbunny_goalinfotext_2>Encontre um local seguro para o ovo crescer e o alimente com [catalystitem].</easterbunny_goalinfotext_2>
 <easterbunny_objectivesuccessmessage2>O ovo incha e emite sons estranhos... Você está prestes a ter um filhinho!</easterbunny_objectivesuccessmessage2>
-<easterbunny_traitorobjectivestartmessage3>O ovo racha e um raptor de terra irrompe dele:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
-<easterbunny_goalinfotext_3>Faça tudo que estiver ao seu alcance para que o raptor de terra sobreviva por pelo menos 3 minutos.</easterbunny_goalinfotext_3>
+<easterbunny_traitorobjectivestartmessage3>O ovo racha e um lamaraptor irrompe dele:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Faça tudo que estiver ao seu alcance para que o lamaraptor sobreviva por pelo menos 3 minutos.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>FON, FON! Isso foi hilário. O homem pintado vai se fazer quando souber dessa história.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Fuja:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
 
@@ -3145,5 +3145,4 @@
 <pausemenuquitverification>Quer mesmo voltar ao menu principal? Todo o progresso não salvo será perdido.</pausemenuquitverification>
 <leveldifficulty>Dificuldade</leveldifficulty>
 <connection.set_text>definir_texto</connection.set_text>
-
 </infotexts>

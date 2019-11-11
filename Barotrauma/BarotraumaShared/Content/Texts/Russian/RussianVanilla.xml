@@ -96,7 +96,7 @@
 <serverqueryporttooltip>Порт для связи с браузером серверов Steam и ответа на ping-запросы клиентов. Если клиенты не видят ваш сервер в списке серверов или не могут подтвердить подлинность своих идентификаторов Steam, вам может потребоваться включить перенаправление порта через UPnP или перенаправить порт вручную.</serverqueryporttooltip>
 <maxplayers>Макс. игроков</maxplayers>
 <password>Пароль</password>
-<publicserver>Открытые сервера</publicserver>
+<publicserver>Открытый сервер</publicserver>
 <publicservertooltip>Открытые сервера отображаются в списке доступных серверов на вкладке «Браузер серверов».</publicservertooltip>
 <attemptupnp>Направить порт через UPnP</attemptupnp>
 <attemptupnptooltip>UPnP позволяет перенаправлять порты на маршрутизаторе, чтобы игроки могли подключиться к вашему серверу. Однако не все маршрутизаторы поддерживают технологию UPnP, и, если игроки не смогут подключиться к вашему серверу, вам может потребоваться настроить перенаправление порта вручную (подробные инструкции в файле readme).</attemptupnptooltip>
@@ -396,7 +396,7 @@
 <respawnshuttle>Челнок возрождения</respawnshuttle>
 <editing>Редактирование</editing>
 <error>Ошибка</error>
-<warning>Предупреждение</warning>
+<warning>Внимание</warning>
 <unknown>Неизвестно</unknown>
 <none>Нет</none>
 <any>Любой</any>
@@ -517,7 +517,7 @@
 <respawnshuttledispatching>До запуска челнока возрождения: [time]</respawnshuttledispatching>
 <respawningin>До возрождения игроков: [time]</respawningin>
 <respawnshuttleleavingin>Челнок возрождения покинет уровень через: [time]</respawnshuttleleavingin>
-<camfollowsubmarine>Следуйте за подлодкой</camfollowsubmarine>
+<camfollowsubmarine>Следование за подлодкой</camfollowsubmarine>
 <insufficientskills>Возможно, вам не хватает знаний, чтобы использовать этот предмет! Для этого необходим навык «[requiredskill]» не ниже [requiredlevel] уровня.</insufficientskills>
 <skillincreased>[name] развивает свой навык «[skillname]» до [newlevel] уровня!</skillincreased>
 <endroundsubnotatlevelend>Подлодка не находится ни одного из концов уровня. Хотите прервать миссию и закончить раунд?</endroundsubnotatlevelend>
@@ -668,7 +668,7 @@
 <permissionsremoved>Хозяин сервера удалил все ваши особые разрешения.</permissionsremoved>
 <currentpermissions>Текущие разрешения:</currentpermissions>
 <permissionschanged>Разрешения изменены</permissionschanged>
-<permittedconsolecommands>Разрешенные консольные команды:</permittedconsolecommands>
+<permittedconsolecommands>Разрешенные консольные команды</permittedconsolecommands>
 <pleasewaitroundrunning>Пожалуйста, подождите</pleasewaitroundrunning>
 <roundrunningspectatedisabled>Раунд уже идет, и администратор отключил возможность наблюдения. Вам придется дождаться начала нового раунда.</roundrunningspectatedisabled>
 <roundrunningspectateenabled>Раунд уже идет, но вы можете наблюдать за игрой, пока ждете появления челнока возрождения или начала нового раунда.</roundrunningspectateenabled>
@@ -801,6 +801,7 @@
 
 <!--<missiondescription.killcrawlerswarm2>Большой рой монстров ([monster]) терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>-->
 <!-- Temporary until plural monster names -->
+
 <missiondescription.killcrawlerswarm2>Большой рой ползунов терроризирует суда, следующие по маршруту [location1] - [location2]. Команде, способной нейтрализовать его, полагается достойная награда в размере [reward] кред.</missiondescription.killcrawlerswarm2>
 <missionsonarlabel.killcrawlerswarm2>Рой</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>Рой уничтожен.</missionsuccess.killcrawlerswarm2>
@@ -1578,7 +1579,7 @@
 <label.offlinelabel>Откл.</label.offlinelabel>
 <label.openlabel>Открыть</label.openlabel>
 <label.closelabel>Закрыть</label.closelabel>
-<label.ballasthatch>Люк для сброса балласта</label.ballasthatch>
+<label.ballasthatch>Балластный люк</label.ballasthatch>
 
 <!-- Submarine description -->
 <dimensions>Габариты</dimensions>
@@ -2333,7 +2334,7 @@
 
 <!-- Room 4 -->
 <officer.somethingbig>Магнитная пушка, часть 1</officer.somethingbig>
-<officer.somethingbigobjective><!-- No data --></officer.somethingbigobjective>
+<officer.somethingbigobjective>Зарядите магнитную пушку и включите суперконденсатор</officer.somethingbigobjective>
 <officer.somethingbigtext>Магнитными пушками оборудовано большинство подлодок. Для работы им нужны короткие импульсы тока и ящики боеприпасов.\n\nЧтобы подготовить магнитную пушку, сначала убедитесь, что суперконденсатор заряжен - для этого нужно установить достаточно высокую скорость перезарядки (50% обычно хватает), затем загрузите полные ящики боеприпасов в зарядник магнитной пушки.\n\nПохоже, ящики боеприпасов, заряженные в магнитную пушку, пустые. Чтобы извлечь пустые ящики, перетащите их за пределы зарядника. Чтобы выбросить пустые ящики, удерживайте зеленую стрелку над ящиком с боеприпасами, пока держите его в руках.\n\nЯщики с боеприпасами довольно тяжелые и неповоротливые. Переносить ящик можно только двумя руками, и поместить его в инвентарь нельзя. Чтобы выбросить ящик, перетащите его за пределы ячейки, в которой он находится, или нажмите кнопку «Снять/Убрать», расположенную над той же ячейкой.</officer.somethingbigtext>
 <officer.hammerhead>Магнитная пушка, часть 2</officer.hammerhead>
 <officer.hammerheadobjective>Убейте атакующего Молотоглава</officer.hammerheadobjective>
@@ -2777,7 +2778,7 @@
 
 <!-- Misc -->
 <pumpautocontrol>Автоматическое управление</pumpautocontrol>
-<viewsteamprofile>Просмотр профиля Steam</viewsteamprofile>
+<viewsteamprofile>Профиль Steam</viewsteamprofile>
 <deletefileverification>Вы уверены, что хотите удалить [filename]?</deletefileverification>
 <connection.activate>активировать</connection.activate>
 
@@ -2922,7 +2923,7 @@
 <karmakicked>Вас отключили от сервера, так как уровень вашей кармы упал ниже отметки [banthreshold].</karmakicked>
 <karma.kicksbeforeban>Кол-во отключений до бана</karma.kicksbeforeban>
 <karma.kicksbeforebantooltip>Если игрока отключат от сервера за низкую карму столько раз, то при следующем падении кармы он будет забанен. Значение 0 означает, что игрок будет забанен, если его карма упадет ниже этой отметки.</karma.kicksbeforebantooltip>
-<traitorgoalreachdistancefromsub>Отплывите на [distance] от подлодки.</traitorgoalreachdistancefromsub>
+<traitorgoalreachdistancefromsub>Отплывите на [distance] м от подлодки.</traitorgoalreachdistancefromsub>
 <traitorgoalisoptionalinfotext>Опционально: [infotext]</traitorgoalisoptionalinfotext>
 <traitorgoalwithtimelimitinfotext>[infotext] Достигните этой цели в течение [timelimit].</traitorgoalwithtimelimitinfotext>
 <traitorgoalwithdurationinfotext>[infotext] Цель должна быть достигнута за [duration] сек.</traitorgoalwithdurationinfotext>
@@ -3020,7 +3021,7 @@
 <servertag.serious>Все всерьез</servertag.serious>
 <servertagdescription.serious>Команда должна сосредоточиться на слаженной работе для выполнения задания. Никакой лишней суеты.</servertagdescription.serious>
 <servertag.roleplay>Ролевая игра</servertag.roleplay>
-<servertagdescription.roleplay>Команда старается действовать, как экипаж настоящей подлодки. Важно соблюдать субординацию, выполнять свою работу и приказы командования. Во время раунда следует избегать разговоров не от лица ваших персонажей.</servertagdescription.roleplay>
+<servertagdescription.roleplay>Команда должна действовать, как экипаж настоящей подлодки. Важно соблюдать субординацию, выполнять свою работу и приказы командования. Во время раунда следует избегать разговоров на отвлеченные темы.</servertagdescription.roleplay>
 <servertag.somethingdifferent>Что-то другое</servertag.somethingdifferent>
 <servertagdescription.somethingdifferent>Игровой процесс значительно отличается от обычной игры Barotrauma. Серверы с модами, своеобразные подлодки, раунды Королевской битвы, гонки на челноках, карты на прохождение... Это может быть что угодно!</servertagdescription.somethingdifferent>
 <servertag.rampage>Неистовство</servertag.rampage>
@@ -3104,11 +3105,11 @@
 
 <!-- Acidparty mission -->
 <acidparty_traitormissionstartinfotext>У вас в кармане обнаружилась небрежно нацарапанная записка. Знаешь, что? Вот эта штука в центре луны, ты же про нее в курсе, да? А что если есть способ посмотреть, что это такое, не отправляясь туда физически?</acidparty_traitormissionstartinfotext>
-<acidparty_traitorobjectivestartmessage1>Шаг 1. Найдите делими- удали- де- штуку, на которой есть DEL, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
+<acidparty_traitorobjectivestartmessage1>Шаг 1. Найдите э-э-э... штуку, на которой есть DEL, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage1>
 <acidparty_objectivesuccessmessage1>Наверное, это оно. У меня такого еще не было.</acidparty_objectivesuccessmessage1>
 <acidparty_traitorobjectivestartmessage2>Шаг 2. Иногда на подлодках бывают такие... которые закрывают обзор, ясно? По сути, что они делают, это как бы приземляют тебя, и ты потом видишь как бы сильно узкую картину реальности, да? Так вот, что тебе надо сделать, так это избавиться от них. Эта дрянь называется как-то типа халле-берри-дил или вроде того. \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage2>
 <acidparty_objectivesuccessmessage2>Вроде получилось.</acidparty_objectivesuccessmessage2>
-<acidparty_traitorobjectivestartmessage3>Шаг 3. Правило номер один: надо делиться. Что у нас здесь есть, так это какие-то люди, да? Какие-то люди, которым промыли мозги, так что они теперь боятся всего, что угрожает их представлениям о мире, ясно? Так что, тебе придется найти способ пропихнуть это дерьмо внутрь их системы, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
+<acidparty_traitorobjectivestartmessage3>Шаг 3. Правило номер один: надо делиться. Что у нас здесь есть, так это какие-то люди, да? Какие-то люди, которым промыли мозги, так что они теперь боятся всего, что угрожает их представлениям о мире, ясно? Так что тебе придется найти способ пропихнуть это дерьмо внутрь их системы, ясно? \n[traitorgoalinfos]</acidparty_traitorobjectivestartmessage3>
 <acidparty_objectivesuccessmessage3>Шаг 4. Ложись и слушай волны, дружище.</acidparty_objectivesuccessmessage3>
 
 <!-- Tainted welding mission -->
@@ -3144,5 +3145,4 @@
 <pausemenuquitverification>Вернуться в главное меню? Все несохраненные данные будут потеряны.</pausemenuquitverification>
 <leveldifficulty>Сложность</leveldifficulty>
 <connection.set_text>назначить_текст</connection.set_text>
-
 </infotexts>
