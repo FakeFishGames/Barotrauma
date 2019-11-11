@@ -207,9 +207,10 @@ namespace Barotrauma
                 var item = Item.ItemList[currSearchIndex];
                 if (ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
+                if (item.CurrentHull == null) { continue; }
+                if (item.Condition <= 0) { continue; }
                 if (item.Submarine.TeamID != character.TeamID) { continue; }
                 if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
                 if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
@@ -228,6 +229,7 @@ namespace Barotrauma
                 float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
                 itemPriority *= distanceFactor;
+                itemPriority *= item.Condition / item.MaxCondition;
                 //ignore if the item has a lower priority than the currently selected one
                 if (itemPriority < currItemPriority) { continue; }
                 currItemPriority = itemPriority;

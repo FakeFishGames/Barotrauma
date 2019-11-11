@@ -498,6 +498,14 @@ namespace Barotrauma
         {
             get
             {
+                // It's not a good practice to return null if the method tells that it returns a collection, because:
+                // a) the user has to handle this -> more code and more null reference exceptions
+                // b) it makes it more difficult to make use of chained function calls (which are quite powerful), although '?' makes it possible
+                // c) it's against the functional paradigm that e.g. Linq follows (for good reasons)
+                // In general, it's better to return an empty collection instead,
+                // but changing it here might cause unwanted implications.
+                // Also it can be a minor optimization to return null instead of creating an empty collection, 
+                // but if that's the case I'd prefer caching an empty collection and using that instead. Just something to consider in the future.
                 return ownInventory?.Items.Where(i => i != null);
             }
         }
@@ -1358,6 +1366,8 @@ namespace Barotrauma
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
+            if (transformDirty) { return false; }
+
             Vector2 normal = contact.Manifold.LocalNormal;
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
@@ -1860,6 +1870,7 @@ namespace Barotrauma
             if (body != null)
             {
                 body.Enabled = true;
+                body.PhysEnabled = true;
                 body.ResetDynamics();
                 if (dropper != null)
                 {

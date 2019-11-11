@@ -35,8 +35,10 @@ namespace Barotrauma
             Parent = new GUIFrame(rectT, null, Color);
             EditorBox = new GUIListBox(new RectTransform(Vector2.One * 0.98f, rectT, Anchor.Center), color: Color.Black, style: null)
             {
-                Spacing = 10
+                Spacing = 10,
+                AutoHideScrollBar = false
             };
+            EditorBox.ScrollBar.Visible = true;
             return EditorBox;
         }
 

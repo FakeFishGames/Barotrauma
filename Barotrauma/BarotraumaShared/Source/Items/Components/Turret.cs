@@ -452,37 +452,32 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.ToLowerInvariant() != "fireatwill"))
+            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase)))
             {
                 ItemContainer container = null;
                 Item containerItem = null;
                 foreach (MapEntity e in item.linkedTo)
                 {
                     containerItem = e as Item;
-                    if (containerItem == null) continue;
-
+                    if (containerItem == null) { continue; }
                     container = containerItem.GetComponent<ItemContainer>();
-                    if (container != null) break;
+                    if (container != null) { break; }
                 }
-
                 if (container == null || container.ContainableItems.Count == 0) { return true; }
 
-                if (aiUpdateTimer > 0.0f)
-                {
-                    aiUpdateTimer -= deltaTime;
-                    return false;
-                }
-                aiUpdateTimer = AIUpdateInterval;
                 if (objective.SubObjectives.None())
                 {
-                    AIDecontainEmptyItems(character, objective);
+                    if (!AIDecontainEmptyItems(character, objective, equip: true, sourceContainer: container))
+                    {
+                        return false;
+                    }
                 }
                 if (objective.SubObjectives.None())
                 {
-                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1);
+                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true);
                     loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                     character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
-                }             
+                }
                 return false;
             }
 

@@ -476,8 +476,7 @@ namespace Barotrauma.Items.Components
 
             float zoom = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
 
-            GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
-                GUI.MouseOn == null && !Inventory.IsMouseOnInventory() && !GameMain.Instance.Paused;
+            GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) && GUI.MouseOn == null && !GameMain.Instance.Paused;
             if (GUI.HideCursor)
             {
                 crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);

@@ -71,9 +71,6 @@ namespace Barotrauma
             {
                 targetUpdateTimer -= deltaTime;
             }
-            // We shouldn't need this anymore, because we use the event callbacks to keep the lists in sync.
-            // TODO: if this is _never_ needed, let's remove it.
-            // Right now I'm not certain that the collections always stay in sync, so let's keep this as a safe guard.
             if (syncTimer < 0)
             {
                 syncTimer = syncTime * Rand.Range(0.9f, 1.1f);

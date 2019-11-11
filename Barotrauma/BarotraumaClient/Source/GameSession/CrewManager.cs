@@ -431,7 +431,6 @@ namespace Barotrauma
             }
             else
             {
-                characterArea.CanBeFocused = false;
                 characterArea.CanBeSelected = false;
             }
 
