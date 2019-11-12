@@ -10,7 +10,11 @@ namespace Barotrauma.Items.Components
 
             if (item.CanClientAccess(c))
             {
-                GameServer.Log(c.Character.LogName + " set the output value of " + item.Name + " to " + newOutputValue,
+                if (newOutputValue.Length > MaxMessageLength)
+                {
+                    newOutputValue = newOutputValue.Substring(0, MaxMessageLength);
+                }
+                GameServer.Log(c.Character.LogName + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
             }

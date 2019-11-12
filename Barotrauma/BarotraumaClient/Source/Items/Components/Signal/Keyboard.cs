@@ -14,7 +14,10 @@ namespace Barotrauma.Items.Components
         {
             GUILayoutGroup layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(.9f, .8f), GuiFrame.RectTransform, anchor: Anchor.Center));
 
-            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform));
+            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform))
+            {
+                AutoHideScrollBar = false
+            };
 
             // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
             // This could be removed if GUIListBox supported aligning its children
@@ -25,6 +28,8 @@ namespace Barotrauma.Items.Components
 
             new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
             {
+                MaxTextLength = MaxMessageLength,
+                OverflowClip = true,
                 OnEnterPressed = (GUITextBox textBox, string text) =>
                 {
                     if (GameMain.NetworkMember == null)
@@ -45,11 +50,19 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            ShowOnDisplay(WelcomeMessage);
+            if (!string.IsNullOrEmpty(WelcomeMessage))
+            {
+                ShowOnDisplay(WelcomeMessage);
+            }
         }
 
         private void SendOutput(string input)
         {
+            if (input.Length > MaxMessageLength)
+            {
+                input = input.Substring(0, MaxMessageLength);
+            }
+
             OutputValue = input;
             item.SendSignal(0, input, "signal_out", null);
             ShowOnDisplay(input);
@@ -65,7 +78,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen)
+                    textColor: Color.LimeGreen, wrap: true)
             {
                 CanBeFocused = false
             };
