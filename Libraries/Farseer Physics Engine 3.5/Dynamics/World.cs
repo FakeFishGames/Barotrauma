@@ -113,8 +113,8 @@ namespace FarseerPhysics.Dynamics
             Enabled = true;
             ControllerList = new List<Controller>();
             BreakableBodyList = new List<BreakableBody>();
-            BodyList = new List<Body>(32);
-            JointList = new List<Joint>(32);
+            BodyList = new List<Body>(1000);
+            JointList = new List<Joint>(1000);
 
 #if USE_AWAKE_BODY_SET
             AwakeBodySet = new HashSet<Body>();
