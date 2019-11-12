@@ -404,11 +404,13 @@ namespace Barotrauma
             if (campaign.CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-                if (Steam.SteamManager.USE_STEAM && !SteamAchievementManager.CheatsEnabled)
+#if USE_STEAM
+                if (!SteamAchievementManager.CheatsEnabled)
                 {
                     SteamAchievementManager.CheatsEnabled = true;
                     new GUIMessageBox("Cheats enabled", "Cheat commands have been enabled on the campaign. You will not receive Steam Achievements until you restart the game.");
                 }
+#endif
             }
 
             //backwards compatibility with older save files

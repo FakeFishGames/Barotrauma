@@ -197,13 +197,11 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-
             if (serverPeer is LidgrenServerPeer)
             {
-                if (SteamManager.USE_STEAM)
-                {
-                    registeredToMaster = SteamManager.CreateServer(this, isPublic);
-                }
+#if USE_STEAM
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
+#endif
                 if (isPublic && !GameMain.Config.UseSteamMatchmaking)
                 {
                     CoroutineManager.StartCoroutine(RegisterToMasterServer());
@@ -2285,7 +2283,7 @@ namespace Barotrauma.Networking
                     ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
                     lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                     lidgrenConn.IPEndPoint.Address.ToString();
-                    if (range) { ip = serverSettings.BanList.ToRange(ip); }
+                    if (range) { ip = BanList.ToRange(ip); }
                 }
 
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);

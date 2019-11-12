@@ -95,24 +95,18 @@ namespace Barotrauma
 
         private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
             new Dictionary<Type, Dictionary<string, SerializableProperty>>();
-
-        private readonly PropertyInfo propertyInfo;
-
         public readonly string Name;
         public readonly string NameToLowerInvariant;
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
-        public PropertyInfo PropertyInfo
-        {
-            get { return propertyInfo; }
-        }
+        public PropertyInfo PropertyInfo { get; private set; }
 
-        public SerializableProperty(PropertyDescriptor property, object obj)
+        public SerializableProperty(PropertyDescriptor property)
         {
             Name = property.Name;
             NameToLowerInvariant = Name.ToLowerInvariant();
-            propertyInfo = property.ComponentType.GetProperty(property.Name);
+            PropertyInfo = property.ComponentType.GetProperty(property.Name);
             PropertyType = property.PropertyType;
             Attributes = property.Attributes;
         }
@@ -129,7 +123,7 @@ namespace Barotrauma
 
         public void SetValue(object parentObject, object val)
         {
-            propertyInfo.SetValue(parentObject, val);
+            PropertyInfo.SetValue(parentObject, val);
         }
 
         public bool TrySetValue(object parentObject, string value)
@@ -143,16 +137,16 @@ namespace Barotrauma
                     object enumVal;
                     try
                     {
-                        enumVal = Enum.Parse(propertyInfo.PropertyType, value, true);
+                        enumVal = Enum.Parse(PropertyInfo.PropertyType, value, true);
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
+                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + PropertyInfo.PropertyType + ")", e);
                         return false;
                     }
                     try
                     {
-                        propertyInfo.SetValue(parentObject, enumVal);
+                        PropertyInfo.SetValue(parentObject, enumVal);
                     }
                     catch (Exception e)
                     {
@@ -176,13 +170,13 @@ namespace Barotrauma
                     case "bool":
                         bool boolValue = value == "true" || value == "True";
                         if (TrySetValueWithoutReflection(parentObject, boolValue)) { return true; }
-                        propertyInfo.SetValue(parentObject, boolValue, null);
+                        PropertyInfo.SetValue(parentObject, boolValue, null);
                         break;
                     case "int":
                         if (int.TryParse(value, out int intVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, intVal)) { return true; }
-                            propertyInfo.SetValue(parentObject, intVal, null);
+                            PropertyInfo.SetValue(parentObject, intVal, null);
                         }
                         else
                         {
@@ -193,7 +187,7 @@ namespace Barotrauma
                         if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float floatVal))
                         {
                             if (TrySetValueWithoutReflection(parentObject, floatVal)) { return true; }
-                            propertyInfo.SetValue(parentObject, floatVal, null);
+                            PropertyInfo.SetValue(parentObject, floatVal, null);
                         }
                         else
                         {
@@ -201,25 +195,25 @@ namespace Barotrauma
                         }
                         break;
                     case "string":
-                        propertyInfo.SetValue(parentObject, value, null);
+                        PropertyInfo.SetValue(parentObject, value, null);
                         break;
                     case "point":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint(value));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint(value));
                         break;
                     case "vector2":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2(value));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2(value));
                         break;
                     case "vector3":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3(value));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3(value));
                         break;
                     case "vector4":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4(value));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4(value));
                         break;
                     case "color":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseColor(value));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseColor(value));
                         break;
                     case "rectangle":
-                        propertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
                 }
             }
@@ -236,7 +230,7 @@ namespace Barotrauma
 
         public bool TrySetValue(object parentObject, object value)
         {
-            if (value == null || parentObject == null || propertyInfo == null) return false;
+            if (value == null || parentObject == null || PropertyInfo == null) return false;
 
             try
             {
@@ -247,14 +241,14 @@ namespace Barotrauma
                         object enumVal;
                         try
                         {
-                            enumVal = Enum.Parse(propertyInfo.PropertyType, value.ToString(), true);
+                            enumVal = Enum.Parse(PropertyInfo.PropertyType, value.ToString(), true);
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + propertyInfo.PropertyType + ")", e);
+                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + PropertyInfo.PropertyType + ")", e);
                             return false;
                         }
-                        propertyInfo.SetValue(parentObject, enumVal);
+                        PropertyInfo.SetValue(parentObject, enumVal);
                         return true;
                     }
                     else
@@ -273,25 +267,25 @@ namespace Barotrauma
                         switch (typeName)
                         {
                             case "string":
-                                propertyInfo.SetValue(parentObject, value, null);
+                                PropertyInfo.SetValue(parentObject, value, null);
                                 return true;
                             case "point":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint((string)value));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParsePoint((string)value));
                                 return true;
                             case "vector2":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2((string)value));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector2((string)value));
                                 return true;
                             case "vector3":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3((string)value));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector3((string)value));
                                 return true;
                             case "vector4":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4((string)value));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseVector4((string)value));
                                 return true;
                             case "color":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseColor((string)value));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseColor((string)value));
                                 return true;
                             case "rectangle":
-                                propertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
@@ -306,7 +300,7 @@ namespace Barotrauma
                         return false;
                     }
 
-                    propertyInfo.SetValue(parentObject, value, null);
+                    PropertyInfo.SetValue(parentObject, value, null);
                 }
 
                 catch (Exception e)
@@ -329,7 +323,7 @@ namespace Barotrauma
             try
             {
                 if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
-                propertyInfo.SetValue(parentObject, value, null);
+                PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -350,7 +344,7 @@ namespace Barotrauma
             try
             {
                 if (TrySetValueWithoutReflection(parentObject, value)) { return true; }
-                propertyInfo.SetValue(parentObject, value, null);
+                PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -369,7 +363,7 @@ namespace Barotrauma
         {
             try
             {
-                propertyInfo.SetValue(parentObject, value, null);
+                PropertyInfo.SetValue(parentObject, value, null);
             }
             catch (TargetInvocationException e)
             {
@@ -386,14 +380,14 @@ namespace Barotrauma
 
         public object GetValue(object parentObject)
         {
-            if (parentObject == null || propertyInfo == null) { return false; }
+            if (parentObject == null || PropertyInfo == null) { return false; }
 
             var value = TryGetValueWithoutReflection(parentObject);
             if (value != null) { return value; }
             
             try
             {
-                return propertyInfo.GetValue(parentObject, null);
+                return PropertyInfo.GetValue(parentObject, null);
             }
             catch (TargetInvocationException e)
             {
@@ -561,7 +555,7 @@ namespace Barotrauma
             Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
             foreach (var property in properties)
             {
-                var serializableProperty = new SerializableProperty(property, obj);
+                var serializableProperty = new SerializableProperty(property);
                 dictionary.Add(serializableProperty.NameToLowerInvariant, serializableProperty);
             }
 

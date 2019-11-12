@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERVER;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -189,6 +189,7 @@
     <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
+    <Compile Include="Source\Items\Components\Holdable\LevelResource.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />

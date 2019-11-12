@@ -175,7 +175,8 @@ namespace Barotrauma
             if (CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
-                if (Steam.SteamManager.USE_STEAM && !SteamAchievementManager.CheatsEnabled)
+#if USE_STEAM
+                if (!SteamAchievementManager.CheatsEnabled)
                 {
                     SteamAchievementManager.CheatsEnabled = true;
 #if CLIENT
@@ -184,6 +185,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Cheat commands have been enabled.", Color.Red);
 #endif
                 }
+#endif
             }
 
             foreach (XElement subElement in element.Elements())

@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public const float SkillIncreaseMultiplier = 0.5f;
 
-        private List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
+        private readonly List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
 
         private FabricationRecipe fabricatedItem;
         private float timeUntilReady;

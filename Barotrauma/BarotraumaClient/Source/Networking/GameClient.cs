@@ -1651,14 +1651,11 @@ namespace Barotrauma.Networking
 
                         DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
-                        FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);
-                        BinaryWriter sw = new BinaryWriter(fl);
-
-                        sw.Write(inc.Buffer, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
-
-                        sw.Close();
-                        fl.Close();
-
+                        using (FileStream fl = File.Open("crashreport_object.bin", FileMode.Create))
+                        using (BinaryWriter sw = new BinaryWriter(fl))
+                        {
+                            sw.Write(inc.Buffer, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
+                        }
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
                 }
                 prevBitLength = inc.BitPosition - prevBitPos;

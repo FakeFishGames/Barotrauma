@@ -214,17 +214,15 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            if (Steam.SteamManager.USE_STEAM)
+#if USE_STEAM            
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-                {
-                    ForceUpperCase = true,
-                    Enabled = false,
-                    UserData = Tab.SteamWorkshop,
-                    OnClicked = SelectTab
-                };
-            }
-
+                ForceUpperCase = true,
+                Enabled = false,
+                UserData = Tab.SteamWorkshop,
+                OnClicked = SelectTab
+            };
+#endif
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -869,8 +867,7 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 #if !DEBUG
-            if (Steam.SteamManager.USE_STEAM)
-            {
+#if USE_STEAM
                 if (GameMain.Config.UseSteamMatchmaking)
                 {
                     joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
@@ -878,13 +875,13 @@ namespace Barotrauma
                 }
                 steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                steamWorkshopButton.Enabled = true;
-            }
+#if USE_STEAM
+            steamWorkshopButton.Enabled = true;
+#endif
 #endif
         }
 
@@ -899,8 +896,7 @@ namespace Barotrauma
 
             if (backgroundSprite != null)
             {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, 
-                    blurAmount: 0.0f, 
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
                     aberrationStrength: 0.0f);
             }
 

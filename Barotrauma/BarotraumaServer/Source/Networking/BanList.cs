@@ -62,6 +62,8 @@ namespace Barotrauma.Networking
 
     partial class BanList
     {
+        const string SavePath = "Data/bannedplayers.txt";
+
         partial void InitProjectSpecific()
         {
             if (!File.Exists(SavePath)) { return; }
