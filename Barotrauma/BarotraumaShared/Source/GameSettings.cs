@@ -213,12 +213,13 @@ namespace Barotrauma
             }
         }
 
+        public const float MaxMicrophoneVolume = 10.0f;
         public float MicrophoneVolume
         {
             get { return microphoneVolume; }
             set
             {
-                microphoneVolume = MathHelper.Clamp(value, 0.2f, 10.0f);
+                microphoneVolume = MathHelper.Clamp(value, 0.2f, MaxMicrophoneVolume);
             }
         }
         public string Language

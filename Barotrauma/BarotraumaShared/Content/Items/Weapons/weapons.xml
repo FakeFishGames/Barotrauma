@@ -152,8 +152,9 @@
         <Affliction identifier="gunshotwound" strength="40" />
         <Affliction identifier="internaldamage" strength="30" />
       </Attack>
-      <StatusEffect type="OnImpact" target="Character">
+      <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -198,8 +199,9 @@
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
       </Attack>
-      <StatusEffect type="OnImpact" target="Character">
+      <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -719,8 +721,9 @@
         <Affliction identifier="gunshotwound" strength="6" />
         <Affliction identifier="internaldamage" strength="5" />
       </Attack>
-      <StatusEffect type="OnImpact" target="Character">
+      <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>
@@ -784,8 +787,9 @@
         <Sound file="Content/Items/Weapons/TaserHit2.ogg" type="OnUse" range="3000" />
         <Remove />
       </StatusEffect>
-      <StatusEffect type="OnImpact" target="Character">
+      <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
+        <Conditional hastag="eq door"/>
         <ParticleEmitter particle="spark" copyentityangle="true" anglemin="-10" anglemax="10" particleamount="5" velocitymin="-10" velocitymax="-200" scalemin="0.5" scalemax="1" />
       </StatusEffect>
     </Projectile>

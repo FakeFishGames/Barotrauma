@@ -1068,18 +1068,18 @@ namespace Barotrauma
             return true;
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
             foreach (StatusEffect effect in statusEffectLists[type])
             {
-                ApplyStatusEffect(effect, type, deltaTime, character, limb, isNetworkEvent, false);
+                ApplyStatusEffect(effect, type, deltaTime, character, limb, useTarget, isNetworkEvent, false, worldPosition);
             }
         }
         
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, bool isNetworkEvent = false, bool checkCondition = true)
+        public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
         {
             if (!isNetworkEvent && checkCondition)
             {
@@ -1118,6 +1118,12 @@ namespace Barotrauma
                 if (targets.Count > 0) { hasTargets = true; }
             }
 
+            if (effect.HasTargetType(StatusEffect.TargetType.UseTarget) && useTarget is ISerializableEntity serializableTarget)
+            {
+                hasTargets = true;
+                targets.Add(serializableTarget);
+            }
+
             if (!hasTargets) { return; }
 
             if (effect.HasTargetType(StatusEffect.TargetType.Hull) && CurrentHull != null)
@@ -1133,30 +1139,32 @@ namespace Barotrauma
                 }
             }
 
-            if (effect.HasTargetType(StatusEffect.TargetType.Character))
+            if (character != null)
             {
-                if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                if (effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
-                    targets.Add(characterInventory.Owner as ISerializableEntity);
+                    if (type == ActionType.OnContained && ParentInventory is CharacterInventory characterInventory)
+                    {
+                        targets.Add(characterInventory.Owner as ISerializableEntity);
+                    }
+                    else
+                    {
+                        targets.Add(character);
+                    }
                 }
-                else
+                if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
-                    targets.Add(character);
+                    targets.AddRange(character.AnimController.Limbs.ToList());
                 }
             }
-
             if (effect.HasTargetType(StatusEffect.TargetType.Limb))
             {
                 targets.Add(limb);
             }
-            if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
-            {
-                targets.AddRange(character.AnimController.Limbs.ToList());
-            }
             
             if (Container != null && effect.HasTargetType(StatusEffect.TargetType.Parent)) targets.Add(Container);
             
-            effect.Apply(type, deltaTime, this, targets);            
+            effect.Apply(type, deltaTime, this, targets, worldPosition);            
         }
 
 
@@ -1368,7 +1376,8 @@ namespace Barotrauma
         {
             if (transformDirty) { return false; }
 
-            Vector2 normal = contact.Manifold.LocalNormal;
+            contact.GetWorldManifold(out Vector2 normal, out _);
+            if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
             OnCollisionProjSpecific(f1, f2, contact, impact);
@@ -1576,7 +1585,7 @@ namespace Barotrauma
                 foreach (StatusEffect effect in connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step, null, null, false, false); }
+                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
                 connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
             }
