@@ -1144,14 +1144,10 @@ namespace Barotrauma
                 {
                     case 0:
                         return TextManager.Get("input.leftmouse");
-                        break;
 
                     case 1:
                         return TextManager.Get("input.rightmouse");
-                        break;
-
                     case 2:
-                        break;
                         return TextManager.Get("input.middlemouse");
                 }
             }
