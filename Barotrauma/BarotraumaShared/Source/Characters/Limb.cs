@@ -138,7 +138,12 @@ namespace Barotrauma
             get { return isSevered; }
             set
             {
+                if (isSevered == value) { return; }
                 isSevered = value;
+                if (isSevered)
+                {
+                    ragdoll.SubtractMass(this);
+                }
                 if (!isSevered) severedFadeOutTimer = 0.0f;
 #if CLIENT
                 if (isSevered) damageOverlayStrength = 100.0f;

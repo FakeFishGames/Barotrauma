@@ -170,6 +170,14 @@ namespace Barotrauma
             private set;
         }
 
+        public void SubtractMass(Limb limb)
+        {
+            if (limbs.Contains(limb))
+            {
+                Mass -= limb.Mass;
+            }
+        }
+
         public Limb MainLimb
         {
             get
@@ -579,6 +587,7 @@ namespace Barotrauma
             }
 
             limb.Remove();
+            Mass -= limb.Mass;
             foreach (LimbJoint limbJoint in attachedJoints)
             {
                 GameMain.World.RemoveJoint(limbJoint);
