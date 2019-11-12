@@ -1093,7 +1093,18 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
-        
+
+        public void CreateClientEvent<T>(T ic, object[] extraData) where T : ItemComponent, IClientSerializable
+        {
+            if (GameMain.Client == null) return;
+
+            int index = components.IndexOf(ic);
+            if (index == -1) return;
+
+            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
+            GameMain.Client.CreateEntityEvent(this, data);
+        }
+
         public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();

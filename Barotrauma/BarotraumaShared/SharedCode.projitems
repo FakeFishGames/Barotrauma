@@ -158,6 +158,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ExponentiationComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\FunctionComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\GreaterComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\LightComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MemoryComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ModuloComponent.cs" />
