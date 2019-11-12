@@ -43,7 +43,7 @@ namespace Barotrauma
                 character?.Inventory != null && 
                 character.AllowInput &&
                 !character.LockHands && 
-                character.SelectedConstruction?.GetComponent<Controller>()?.User == character;
+                character.SelectedConstruction?.GetComponent<Controller>()?.User != character;
         }
 
         private static string GetCachedHudText(string textTag, string keyBind)
