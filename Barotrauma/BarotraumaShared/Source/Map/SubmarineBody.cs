@@ -46,7 +46,7 @@ namespace Barotrauma
 
         public readonly PhysicsBody Body;
 
-        private List<PosInfo> positionBuffer = new List<PosInfo>();
+        private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
         public Rectangle Borders
         {
@@ -254,6 +254,10 @@ namespace Barotrauma
             ClientUpdatePosition(deltaTime);
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             
+            Vector2 totalForce = CalculateBuoyancy();
+
+            //-------------------------
+
             //if outside left or right edge of the level
             if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
             {
@@ -273,11 +277,29 @@ namespace Barotrauma
                         Body.LinearVelocity.X,
                         Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
                 }
+
+                if (Position.X < 0)
+                {
+                    float force = Math.Abs(Position.X * 0.5f);
+                    totalForce += Vector2.UnitX * force;
+                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    {
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(force * 0.0001f, 5.0f));
+                    }
+                }
+                else
+                {
+                    float force = (Position.X - Level.Loaded.Size.X) * 0.5f;
+                    totalForce -= Vector2.UnitX * force;
+                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
+                    {
+                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(force * 0.0001f, 5.0f));
+                    }
+                }
             }
 
             //-------------------------
 
-            Vector2 totalForce = CalculateBuoyancy();
             if (Body.LinearVelocity.LengthSquared() > 0.0001f)
             {
                 //TODO: sync current drag with clients?
@@ -384,7 +406,7 @@ namespace Barotrauma
 
         private void UpdateDepthDamage(float deltaTime)
         {
-            if (Position.Y > DamageDepth) return;
+            if (Position.Y > DamageDepth) { return; }
 
             float depth = DamageDepth - Position.Y;
 
