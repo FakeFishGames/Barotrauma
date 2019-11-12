@@ -187,7 +187,8 @@ namespace FarseerPhysics.Collision
             if (_pairCount == _pairCapacity)
             {
                 Pair[] oldBuffer = _pairBuffer;
-                _pairCapacity *= 2;
+                //grow the capacity in smaller increments when it's already large
+                _pairCapacity += Math.Max((int)Math.Sqrt(_pairCapacity), 1) * 10;
                 _pairBuffer = new Pair[_pairCapacity];
                 Array.Copy(oldBuffer, _pairBuffer, _pairCount);
             }
