@@ -274,7 +274,7 @@ namespace FarseerPhysics.Collision
             {
                 Pair primaryPair = _pairBuffer[i];
                 int pairID = primaryPair.ProxyIdA + (primaryPair.ProxyIdB << 16);
-                if (!processedPairs.Contains(pairID)
+                if (!processedPairs.Contains(pairID))
                 {
                     FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
                     FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
