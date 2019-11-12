@@ -11,7 +11,7 @@
   </Item>
   <Item name="Depth Charge Loader" identifier="depthchargeloader" tags="depthchargeammosource" category="Machine" linkable="true" allowedlinks="depthchargelauncher" scale="0.5">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="354,2,125,188" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="depthchargeammo" />
     </ItemContainer>
