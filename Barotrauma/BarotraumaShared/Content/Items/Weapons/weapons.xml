@@ -194,7 +194,7 @@
     <Sprite texture="weapons_new.png" sourcerect="128,3,40,14" depth="0.55" origin="0.5,0.5" />
     <Body width="40" height="14" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
-    <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
+    <Projectile characterusable="false" hitscan="true" removeonhit="true">
       <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="20">
         <Affliction identifier="gunshotwound" strength="15" />
         <Affliction identifier="internaldamage" strength="10" />
@@ -238,7 +238,7 @@
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="80" drawhudwhenequipped="true" crosshairscale="0.2">
+    <RangedWeapon reload="0.125" barrelpos="14,6" spread="10" unskilledspread="16" combatPriority="80" drawhudwhenequipped="true" crosshairscale="0.2">
       <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
       <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
       <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
