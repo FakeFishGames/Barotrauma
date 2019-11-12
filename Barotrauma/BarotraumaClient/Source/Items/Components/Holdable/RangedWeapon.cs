@@ -68,10 +68,15 @@ namespace Barotrauma.Items.Components
                     MathHelper.Clamp(itemPos.X + barrelDir.X * mouseDiff.Length(), 0, GameMain.GraphicsWidth),
                     MathHelper.Clamp(itemPos.Y + barrelDir.Y * mouseDiff.Length(), 0, GameMain.GraphicsHeight));
 
-                float degreeOfSuccess = DegreeOfSuccess(character);
-                float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
+                float spread = GetSpread(character);
+                Projectile projectile = FindProjectile();
+                if (projectile != null)
+                {
+                    spread += MathHelper.ToRadians(projectile.Spread);
+                }
+
                 float crossHairDist = Vector2.Distance(item.WorldPosition, cam.ScreenToWorld(crosshairPos));
-                float spreadDist = (float)Math.Sin(spread) * crossHairDist * 2.0f;
+                float spreadDist = (float)Math.Sin(spread) * crossHairDist;
 
                 currentCrossHairPointerScale = MathHelper.Clamp(spreadDist / Math.Min(crosshairSprite.size.X, crosshairSprite.size.Y), 0.1f, 10.0f);
             }

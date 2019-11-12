@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < HitScanCount; i++)
             {
-                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Rand.Range(-Spread, Spread));
+                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * Rand.Range(-0.5f, 0.5f));
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
                 {
