@@ -458,6 +458,11 @@ namespace Barotrauma.Items.Components
 
             if (character != null) { character.LastDamageSource = item; }
 
+#if CLIENT
+            PlaySound(ActionType.OnUse, item.WorldPosition, user: user);
+            PlaySound(ActionType.OnImpact, item.WorldPosition, user: user);
+#endif
+
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
                 if (target.Body.UserData is Limb targetLimb)
@@ -489,14 +494,26 @@ namespace Barotrauma.Items.Components
                             }
                         }
                     }
-                }
 #if SERVER
-                if (GameMain.NetworkMember.IsServer)
-                {
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse });
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
-                }
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
+                    }
 #endif
+                }
+                else
+                {
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
+#if SERVER
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                    }
+#endif
+                }
             }
 
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;

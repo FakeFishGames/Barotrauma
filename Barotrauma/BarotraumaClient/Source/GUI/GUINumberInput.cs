@@ -233,7 +233,7 @@ namespace Barotrauma
             switch (InputType)
             {
                 case NumberType.Int:
-                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsNumber(c)).ToArray());
+                    TextBox.textFilterFunction = text => new string(text.Where(c => char.IsNumber(c) || c == '-').ToArray());
                     break;
                 case NumberType.Float:
                     TextBox.textFilterFunction = text => new string(text.Where(c => char.IsDigit(c) || c == '.' || c == '-').ToArray());

@@ -314,7 +314,7 @@ namespace Barotrauma.Items.Components
 
                     foreach (StatusEffect effect in recipient.Effects)
                     {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
                     }
                 }
             }
