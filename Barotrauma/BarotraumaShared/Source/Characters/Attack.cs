@@ -147,7 +147,7 @@ namespace Barotrauma
         [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
-        [Serialize(0.0f, true, description: "Applied to the attacking limb."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)"), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Torque { get; private set; }
 
         [Serialize(false, true), Editable]
