@@ -101,9 +101,11 @@ namespace Barotrauma
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
+                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
-                Abandon = true;
+                // Try again
+                targetItem = null;
+                return;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
