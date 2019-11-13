@@ -128,7 +128,7 @@ namespace FarseerPhysics.Dynamics
             return CreatePolygon(verts, density, position, rotation, bodyType);
         }
 
-        public Body CreateCapsule(float width, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCapsuleHorizontal(float width, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
         {
             //Create the middle rectangle
             Vertices rectangle = PolygonTools.CreateRectangle(width / 2, endRadius);
@@ -150,7 +150,7 @@ namespace FarseerPhysics.Dynamics
             //body.CreateFixture(bottomCircle);
             return body;
         }
-        public Body CreateCapsuleHorizontal(float height, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCapsule(float height, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
         {
             //Create the middle rectangle
             Vertices rectangle = PolygonTools.CreateRectangle(endRadius, height / 2);
