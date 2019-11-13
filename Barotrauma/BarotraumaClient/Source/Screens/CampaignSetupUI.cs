@@ -295,7 +295,7 @@ namespace Barotrauma
                 if(!sub.RequiredContentPackagesInstalled)
                 {
                     textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
-                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.ToolTip;
+                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.RawToolTip;
                 }
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
