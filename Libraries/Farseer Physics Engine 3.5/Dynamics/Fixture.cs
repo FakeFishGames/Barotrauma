@@ -317,6 +317,7 @@ namespace FarseerPhysics.Dynamics
                 FixtureProxy proxy = new FixtureProxy();
                 proxy.Fixture = this;
                 proxy.ChildIndex = i;
+                proxy.Body = this.Body;
                 Shape.ComputeAABB(out proxy.AABB, ref xf, i);
                 proxy.ProxyId = broadPhase.AddProxy(ref proxy.AABB);
                 broadPhase.SetProxy(proxy.ProxyId, ref proxy);

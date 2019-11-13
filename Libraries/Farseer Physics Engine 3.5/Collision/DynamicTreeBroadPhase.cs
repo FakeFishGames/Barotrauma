@@ -215,7 +215,7 @@ namespace FarseerPhysics.Collision
 
         public void SetProxy(int proxyId, ref FixtureProxy proxy)
         {
-            _tree.SetUserData(proxyId, proxy);
+            _tree.SetUserData(proxyId, proxy, proxy.Body);
         }
 
         /// <summary>
@@ -263,8 +263,10 @@ namespace FarseerPhysics.Collision
                 // we don't fail to create a pair that may touch later.
                 AABB fatAABB = _tree.GetFatAABB(_queryProxyId);
 
+                object body = _tree.GetBody(_queryProxyId);
+
                 // Query tree, create pairs and add them pair buffer.
-                _tree.Query(_queryCallback, ref fatAABB);
+                _tree.Query(_queryCallback, ref fatAABB, ref body);
             }
 
             // Reset move buffer

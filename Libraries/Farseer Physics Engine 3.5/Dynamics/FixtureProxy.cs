@@ -45,5 +45,6 @@ namespace FarseerPhysics.Dynamics
         public int ChildIndex;
         public Fixture Fixture;
         public int ProxyId;
+        public Body Body;
     }
 }

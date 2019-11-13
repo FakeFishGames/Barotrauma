@@ -31,6 +31,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Collision
@@ -51,6 +52,8 @@ namespace FarseerPhysics.Collision
         // leaf = 0, free node = -1
         internal int Height;
         internal int ParentOrNext;
+
+        public object Body;
 
         internal T UserData;
 
@@ -276,9 +279,10 @@ namespace FarseerPhysics.Collision
         /// <typeparam name="T"></typeparam>
         /// <param name="proxyId">The proxy id.</param>
         /// <param name="userData">The proxy user data.</param>
-        public void SetUserData(int proxyId, T userData)
+        public void SetUserData(int proxyId, T userData, Body body = null)
         {
             _nodes[proxyId].UserData = userData;
+            _nodes[proxyId].Body = body;
         }
 
         /// <summary>
@@ -315,6 +319,13 @@ namespace FarseerPhysics.Collision
             return _nodes[proxyId].AABB;
         }
 
+        public object GetBody(int proxyId)
+        {
+            Debug.Assert(0 <= proxyId && proxyId < _nodeCapacity);
+            return _nodes[proxyId].Body;
+        }
+
+
         /// <summary>
         /// Test overlap of fat AABBs.
         /// </summary>
@@ -333,6 +344,39 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">The callback.</param>
         /// <param name="aabb">The aabb.</param>
+        public void Query(Func<int, bool> callback, ref AABB aabb, ref object body)
+        {
+            _queryStack.Clear();
+            _queryStack.Push(_root);
+
+            while (_queryStack.Count > 0)
+            {
+                int nodeId = _queryStack.Pop();
+                if (nodeId == NullNode)
+                {
+                    continue;
+                }
+
+                //TreeNode<T>* node = &_nodes[nodeId];
+                if (!ReferenceEquals(_nodes[nodeId].Body, body) && AABB.TestOverlap(ref _nodes[nodeId].AABB, ref aabb))
+                {
+                    if (_nodes[nodeId].IsLeaf())
+                    {
+                        bool proceed = callback(nodeId);
+                        if (proceed == false)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        _queryStack.Push(_nodes[nodeId].Child1);
+                        _queryStack.Push(_nodes[nodeId].Child2);
+                    }
+                }
+            }
+        }
+
         public void Query(Func<int, bool> callback, ref AABB aabb)
         {
             _queryStack.Clear();
@@ -347,7 +391,6 @@ namespace FarseerPhysics.Collision
                 }
 
                 //TreeNode<T>* node = &_nodes[nodeId];
-
                 if (AABB.TestOverlap(ref _nodes[nodeId].AABB, ref aabb))
                 {
                     if (_nodes[nodeId].IsLeaf())

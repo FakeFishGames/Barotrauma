@@ -128,21 +128,21 @@ namespace FarseerPhysics.Dynamics
         {
             FixtureProxy proxyA = BroadPhase.GetProxy(proxyIdA);
             FixtureProxy proxyB = BroadPhase.GetProxy(proxyIdB);
-            
-            Fixture fixtureA = proxyA.Fixture;
-            Fixture fixtureB = proxyB.Fixture;
 
-            int indexA = proxyA.ChildIndex;
-            int indexB = proxyB.ChildIndex;
-
-            Body bodyA = fixtureA.Body;
-            Body bodyB = fixtureB.Body;
+            Body bodyA = proxyA.Body;
+            Body bodyB = proxyB.Body;
 
             // Are the fixtures on the same body?
             if (bodyA == bodyB)
             {
                 return;
             }
+
+            Fixture fixtureA = proxyA.Fixture;
+            Fixture fixtureB = proxyB.Fixture;
+
+            int indexA = proxyA.ChildIndex;
+            int indexB = proxyB.ChildIndex;
 
             // Does a contact already exist?
             for (ContactEdge ceB = bodyB.ContactList; ceB != null; ceB = ceB.Next)
