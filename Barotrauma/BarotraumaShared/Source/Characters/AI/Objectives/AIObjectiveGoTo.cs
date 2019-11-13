@@ -100,7 +100,7 @@ namespace Barotrauma
                     character.AIController.SelectTarget(e.AiTarget);
                 }
             }
-            var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+            Hull targetHull = GetTargetHull();
             if (!followControlledCharacter)
             {
                 // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
@@ -205,6 +205,31 @@ namespace Barotrauma
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
                 }
             }
+        }
+
+        private Hull GetTargetHull()
+        {
+            if (Target is Hull h)
+            {
+                return h;
+            }
+            else if (Target is Item i)
+            {
+                return i.CurrentHull;
+            }
+            else if (Target is Character c)
+            {
+                return c.CurrentHull;
+            }
+            else if (Target is Gap g)
+            {
+                return g.FlowTargetHull;
+            }
+            else if (Target is WayPoint wp)
+            {
+                return wp.CurrentHull;
+            }
+            return null;
         }
 
         private bool IsCloseEnough
