@@ -13,7 +13,7 @@ namespace Barotrauma
             ClientOnly = 1 //set to match between clients (used for misc elements that the server doesn't track, but clients want to match anyway)
         }
 
-        private static readonly Random localRandom = new Random();
+        private static Random localRandom = new Random();
         private static readonly Random[] syncedRandom = new MTRandom[] {
             new MTRandom(), new MTRandom()
         };
@@ -21,6 +21,11 @@ namespace Barotrauma
         public static Random GetRNG(RandSync randSync)
         {
             return randSync == RandSync.Unsynced ? localRandom : syncedRandom[(int)randSync];
+        }
+
+        public static void SetLocalRandom(int seed)
+        {
+            localRandom = new Random(seed);
         }
 
         public static void SetSyncedSeed(int seed)
