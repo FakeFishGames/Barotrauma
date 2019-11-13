@@ -2999,8 +2999,8 @@
 <connection.setmodulus>definir_módulo</connection.setmodulus>
 <shuttle>Submersível</shuttle>
 <privacypolicy>Política de privacidade</privacypolicy>
-<entityname.mudraptoregg>Ovo de Lamaraptor</entityname.mudraptoregg>
-<entitydescription.mudraptoregg>Ovo gosmento e pulsante de lamaraptor. A boca escancarada na parte superior do ovo parece estar em busca de algo para comer.</entitydescription.mudraptoregg>
+<entityname.mudraptoregg>Ovo de Raptor de Terra</entityname.mudraptoregg>
+<entitydescription.mudraptoregg>Ovo gosmento e pulsante de raptor de terra. A boca escancarada na parte superior do ovo parece estar em busca de algo para comer.</entitydescription.mudraptoregg>
 
 <!-- Server lobby 2.0 -->
 <serverlisttab.all>Todos os servidores</serverlisttab.all>
@@ -3009,7 +3009,7 @@
 <addtofavorites>Adicionar a favoritos</addtofavorites>
 <removefromfavorites>Remover dos favoritos</removefromfavorites>
 <servertag.casual>Casual</servertag.casual>
-<servertagdescription.casual>É mais importante se divertir do que concluir o objetivo. Uma boa escolha para novos jogadores. </servertagdescription.casual>
+<servertagdescription.casual>É mais importante se divertir do que concluir o objetivo. Uma boa escolha para novos jogadores.</servertagdescription.casual>
 <servertag.serious>Sério</servertag.serious>
 <servertagdescription.serious>Os tripulantes devem se concentrar em trabalhar juntos de maneira eficiente para concluir o objetivo. Sem brincadeiras desnecessárias.</servertagdescription.serious>
 <servertag.roleplay>Roleplay</servertag.roleplay>
@@ -3128,8 +3128,8 @@
 <easterbunny_traitorobjectivestartmessage2>Cultive o ovo:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage2>
 <easterbunny_goalinfotext_2>Encontre um local seguro para o ovo crescer e o alimente com [catalystitem].</easterbunny_goalinfotext_2>
 <easterbunny_objectivesuccessmessage2>O ovo incha e emite sons estranhos... Você está prestes a ter um filhinho!</easterbunny_objectivesuccessmessage2>
-<easterbunny_traitorobjectivestartmessage3>O ovo racha e um lamaraptor irrompe dele:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
-<easterbunny_goalinfotext_3>Faça tudo que estiver ao seu alcance para que o lamaraptor sobreviva por pelo menos 3 minutos.</easterbunny_goalinfotext_3>
+<easterbunny_traitorobjectivestartmessage3>O ovo racha e um raptor de terra irrompe dele:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage3>
+<easterbunny_goalinfotext_3>Faça tudo que estiver ao seu alcance para que o raptor de terra sobreviva por pelo menos 3 minutos.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>FON, FON! Isso foi hilário. O homem pintado vai se fazer quando souber dessa história.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Fuja:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
 </infotexts>
