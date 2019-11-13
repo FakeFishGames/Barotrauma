@@ -5,7 +5,6 @@ using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -91,7 +90,7 @@ namespace Barotrauma
             Body farseerBody = null;
             if (!Hull.hullList.Any())
             {
-                farseerBody = BodyFactory.CreateRectangle(GameMain.World, 1.0f, 1.0f, 1.0f);
+                farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
                 if (showWarningMessages)
                 {
                     DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
@@ -108,20 +107,20 @@ namespace Barotrauma
 
                 Vector2 minExtents = Vector2.Zero, maxExtents = Vector2.Zero;
 
-                farseerBody = BodyFactory.CreateBody(GameMain.World, this);
+                farseerBody = GameMain.World.CreateBody();
+                farseerBody.UserData = this;
                 foreach (Structure wall in Structure.WallList)
                 {
                     if (wall.Submarine != submarine) continue;
 
                     Rectangle rect = wall.Rect;
 
-                    FixtureFactory.AttachRectangle(
+                    farseerBody.CreateRectangle(
                           ConvertUnits.ToSimUnits(wall.BodyWidth),
                           ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
                           -wall.BodyRotation,
-                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset),
-                          farseerBody, this);
+                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset));
 
                     minExtents.X = Math.Min(rect.X, minExtents.X);
                     minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
@@ -134,12 +133,11 @@ namespace Barotrauma
                     if (hull.Submarine != submarine) continue;
 
                     Rectangle rect = hull.Rect;
-                    FixtureFactory.AttachRectangle(
+                    farseerBody.CreateRectangle(
                         ConvertUnits.ToSimUnits(rect.Width),
                         ConvertUnits.ToSimUnits(rect.Height),
                         100.0f,
-                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)),
-                        farseerBody, this);
+                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)));
 
                     minExtents.X = Math.Min(rect.X, minExtents.X);
                     minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
@@ -162,7 +160,7 @@ namespace Barotrauma
 
                     if (width > 0.0f && height > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(simWidth, simHeight, 5.0f, simPos, farseerBody, this).UserData = item;
+                        farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos).UserData = item;
 
                         minExtents.X = Math.Min(item.Position.X - width / 2, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2, minExtents.Y);
@@ -171,9 +169,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(simWidth, simRadius * 2, 5.0f, simPos, farseerBody, this).UserData = item;
-                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos - Vector2.UnitX * simWidth / 2, this).UserData = item;
-                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos + Vector2.UnitX * simWidth / 2, this).UserData = item;
+                        farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos).UserData = item;
+                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2).UserData = item;
+                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2).UserData = item;
                         minExtents.X = Math.Min(item.Position.X - width / 2 - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + width / 2 + radius, maxExtents.X);
@@ -181,9 +179,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
-                        FixtureFactory.AttachRectangle(simRadius * 2, height, 5.0f, simPos, farseerBody, this).UserData = item;
-                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos - Vector2.UnitY * simHeight / 2, this).UserData = item;
-                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos + Vector2.UnitX * simHeight / 2, this).UserData = item;
+                        farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos).UserData = item;
+                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2).UserData = item;
+                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2).UserData = item;
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
@@ -191,7 +189,7 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f)
                     {
-                        FixtureFactory.AttachCircle(simRadius, 5.0f, farseerBody, simPos, this).UserData = item;
+                        farseerBody.CreateCircle(simRadius, 5.0f, simPos).UserData = item;
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);

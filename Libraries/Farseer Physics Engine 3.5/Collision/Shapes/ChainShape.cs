@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -63,8 +68,8 @@ namespace FarseerPhysics.Collision.Shapes
         {
             ShapeType = ShapeType.Chain;
             _radius = Settings.PolygonRadius;
-            
-            Debug.Assert(vertices != null && vertices.Count >= 2);
+
+            Debug.Assert(vertices != null && vertices.Count >= 3);
             Debug.Assert(vertices[0] != vertices[vertices.Count - 1]); // FPE. See http://www.box2d.org/forum/viewtopic.php?f=4&t=7973&p=35363
 
             for (int i = 1; i < vertices.Count; ++i)
@@ -73,7 +78,6 @@ namespace FarseerPhysics.Collision.Shapes
                 Vector2 v2 = vertices[i];
 
                 // If the code crashes here, it means your vertices are too close together.
-                
                 Debug.Assert(Vector2.DistanceSquared(v1, v2) > Settings.LinearSlop * Settings.LinearSlop);
             }
 
@@ -208,11 +212,11 @@ namespace FarseerPhysics.Collision.Shapes
                 i2 = 0;
             }
 
-            Vector2 v1 = MathUtils.Mul(ref transform, Vertices[i1]);
-            Vector2 v2 = MathUtils.Mul(ref transform, Vertices[i2]);
+            Vector2 v1 = Transform.Multiply(Vertices[i1], ref transform);
+            Vector2 v2 = Transform.Multiply(Vertices[i2], ref transform);
 
-            aabb.LowerBound = Vector2.Min(v1, v2);
-            aabb.UpperBound = Vector2.Max(v1, v2);
+            Vector2.Min(ref v1, ref v2, out aabb.LowerBound);
+            Vector2.Max(ref v1, ref v2, out aabb.UpperBound);
         }
 
         protected override void ComputeProperties()

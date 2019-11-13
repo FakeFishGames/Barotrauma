@@ -3,7 +3,6 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -415,7 +414,7 @@ namespace Barotrauma
         {
             if (LimbJoints != null)
             {
-                LimbJoints.ForEach(j => GameMain.World.RemoveJoint(j));
+                LimbJoints.ForEach(j => GameMain.World.Remove(j));
             }
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
             LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
@@ -430,7 +429,8 @@ namespace Barotrauma
             }
 
             // This block was salvaged from the merge of the dev branch to the animation branch. Not sure if every line made it here.
-            outsideCollisionBlocker = BodyFactory.CreateEdge(GameMain.World, -Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f, "blocker");
+            outsideCollisionBlocker = GameMain.World.CreateEdge( -Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f);
+            outsideCollisionBlocker.UserData = "blocker";
             outsideCollisionBlocker.BodyType = BodyType.Static;
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
             outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
@@ -507,7 +507,7 @@ namespace Barotrauma
         public void AddJoint(JointParams jointParams)
         {
             LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
-            GameMain.World.AddJoint(joint);
+            GameMain.World.Add(joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 if (LimbJoints[i] != null) continue;
@@ -590,7 +590,7 @@ namespace Barotrauma
             Mass -= limb.Mass;
             foreach (LimbJoint limbJoint in attachedJoints)
             {
-                GameMain.World.RemoveJoint(limbJoint);
+                GameMain.World.Remove(limbJoint);
             }
         }
           
@@ -1747,7 +1747,7 @@ namespace Barotrauma
 
             if (outsideCollisionBlocker != null)
             {
-                GameMain.World.RemoveBody(outsideCollisionBlocker);
+                GameMain.World.Remove(outsideCollisionBlocker);
                 outsideCollisionBlocker = null;
             }
 
@@ -1755,7 +1755,7 @@ namespace Barotrauma
             {
                 foreach (RevoluteJoint joint in LimbJoints)
                 {
-                    GameMain.World.RemoveJoint(joint);
+                    GameMain.World.Remove(joint);
                 }
                 LimbJoints = null;
             }

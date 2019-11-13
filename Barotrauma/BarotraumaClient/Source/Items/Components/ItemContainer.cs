@@ -201,9 +201,10 @@ namespace Barotrauma.Items.Components
                 if (containedItem.body != null && 
                     Math.Abs(containedItem.body.FarseerBody.Rotation - currentRotation) > 0.001f)
                 {
-                    containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
+                    //TODO: FPE, this should be here
+                    //containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
                 }
-                
+
                 Vector2 origin = containedItem.Sprite.Origin;
                 if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }

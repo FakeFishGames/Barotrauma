@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -36,17 +41,17 @@ namespace FarseerPhysics.Collision
 
         public int CompareTo(Pair other)
         {
-            if (ProxyIdA < other.ProxyIdA)
+            if (ProxyIdB < other.ProxyIdB)
             {
                 return -1;
             }
-            if (ProxyIdA == other.ProxyIdA)
+            if (ProxyIdB == other.ProxyIdB)
             {
-                if (ProxyIdB < other.ProxyIdB)
+                if (ProxyIdA < other.ProxyIdA)
                 {
                     return -1;
                 }
-                if (ProxyIdB == other.ProxyIdB)
+                if (ProxyIdA == other.ProxyIdA)
                 {
                     return 0;
                 }
@@ -77,8 +82,6 @@ namespace FarseerPhysics.Collision
         private Func<int, bool> _queryCallback;
         private int _queryProxyId;
         private DynamicTree<FixtureProxy> _tree = new DynamicTree<FixtureProxy>();
-
-        private readonly HashSet<int> processedPairs = new HashSet<int>();
 
         /// <summary>
         /// Constructs a new broad phase based on the dynamic tree implementation
@@ -112,11 +115,12 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="proxy">The user data.</param>
         /// <returns></returns>
-        public int AddProxy(ref FixtureProxy proxy)
+        public int AddProxy(ref AABB aabb)
         {
-            int proxyId = _tree.AddProxy(ref proxy.AABB, proxy);
+            int proxyId = _tree.AddProxy(ref aabb);
             ++_proxyCount;
             BufferMove(proxyId);
+
             return proxyId;
         }
 
@@ -187,8 +191,7 @@ namespace FarseerPhysics.Collision
             if (_pairCount == _pairCapacity)
             {
                 Pair[] oldBuffer = _pairBuffer;
-                //grow the capacity in smaller increments when it's already large
-                _pairCapacity += Math.Max((int)Math.Sqrt(_pairCapacity), 1) * 10;
+                _pairCapacity *= 2;
                 _pairBuffer = new Pair[_pairCapacity];
                 Array.Copy(oldBuffer, _pairBuffer, _pairCount);
             }
@@ -210,6 +213,11 @@ namespace FarseerPhysics.Collision
             _tree.GetFatAABB(proxyId, out aabb);
         }
 
+        public void SetProxy(int proxyId, ref FixtureProxy proxy)
+        {
+            _tree.SetUserData(proxyId, proxy);
+        }
+
         /// <summary>
         /// Get user data from a proxy. Returns null if the id is invalid.
         /// </summary>
@@ -228,11 +236,10 @@ namespace FarseerPhysics.Collision
         /// <returns></returns>
         public bool TestOverlap(int proxyIdA, int proxyIdB)
         {
-            AABB aabbA, aabbB;
-            _tree.GetFatAABB(proxyIdA, out aabbA);
-            _tree.GetFatAABB(proxyIdB, out aabbB);
-            return AABB.TestOverlap(ref aabbA, ref aabbB);
+            return _tree.TestFatAABBOverlap(proxyIdA, proxyIdB);
         }
+
+        private readonly HashSet<int> processedPairs = new HashSet<int>();
 
         /// <summary>
         /// Update the pairs. This results in pair callbacks. This can only add pairs.
@@ -254,8 +261,7 @@ namespace FarseerPhysics.Collision
 
                 // We have to query the tree with the fat AABB so that
                 // we don't fail to create a pair that may touch later.
-                AABB fatAABB;
-                _tree.GetFatAABB(_queryProxyId, out fatAABB);
+                AABB fatAABB = _tree.GetFatAABB(_queryProxyId);
 
                 // Query tree, create pairs and add them pair buffer.
                 _tree.Query(_queryCallback, ref fatAABB);
@@ -276,9 +282,7 @@ namespace FarseerPhysics.Collision
                 int pairID = primaryPair.ProxyIdA + (primaryPair.ProxyIdB << 16);
                 if (!processedPairs.Contains(pairID))
                 {
-                    FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
-                    FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
-                    callback(ref userDataA, ref userDataB);
+                    callback(primaryPair.ProxyIdA, primaryPair.ProxyIdB);
                     processedPairs.Add(pairID);
                 }
 

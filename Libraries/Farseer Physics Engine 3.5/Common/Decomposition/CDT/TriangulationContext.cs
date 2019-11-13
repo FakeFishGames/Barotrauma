@@ -1,4 +1,9 @@
-﻿/* Poly2Tri
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/* Poly2Tri
  * Copyright (c) 2009-2010, Poly2Tri Contributors
  * http://code.google.com/p/poly2tri/
  *
@@ -53,7 +58,6 @@ namespace FarseerPhysics.Common.Decomposition.CDT
         public bool Terminated { get; set; }
 
         public int StepCount { get; private set; }
-        public virtual bool IsDebugEnabled { get; protected set; }
 
         public void Done()
         {
@@ -68,11 +72,6 @@ namespace FarseerPhysics.Common.Decomposition.CDT
         }
 
         public abstract TriangulationConstraint NewConstraint(TriangulationPoint a, TriangulationPoint b);
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public void Update(string message)
-        {
-        }
 
         public virtual void Clear()
         {

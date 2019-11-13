@@ -124,7 +124,8 @@ namespace Barotrauma.Items.Components
 
             if (openState == 1.0f)
             {
-                Body.Enabled = false;
+                //TODO: FPE, this should be here
+                //Body.Enabled = false;
                 return;
             }
 

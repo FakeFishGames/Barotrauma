@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
@@ -239,9 +244,6 @@ namespace FarseerPhysics.Common
 
             Vector2.Subtract(ref a, ref b, out temp);
 
-#if (XBOX360 || WINDOWS_PHONE)
-output = new Vector2();
-#endif
             output.X = -temp.Y;
             output.Y = temp.X;
 

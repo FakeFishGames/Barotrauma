@@ -237,7 +237,7 @@ namespace Barotrauma.Items.Components
 
                 stickTarget = null;
             }
-            GameMain.World.RemoveJoint(stickJoint);
+            GameMain.World.Remove(stickJoint);
             stickJoint = null;
         }
         
@@ -395,7 +395,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (GameMain.World.JointList.Contains(stickJoint))
                     {
-                        GameMain.World.RemoveJoint(stickJoint);
+                        GameMain.World.Remove(stickJoint);
                     }
 
                     stickJoint = null;
@@ -590,7 +590,7 @@ namespace Barotrauma.Items.Components
 
             item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
-            GameMain.World.AddJoint(stickJoint);
+            GameMain.World.Add(stickJoint);
 
             IsActive = true;
         }
@@ -601,7 +601,7 @@ namespace Barotrauma.Items.Components
             {
                 try
                 {
-                    GameMain.World.RemoveJoint(stickJoint);
+                    GameMain.World.Remove(stickJoint);
                 }
                 catch
                 {

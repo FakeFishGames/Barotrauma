@@ -67,7 +67,7 @@ namespace Barotrauma
             Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
             item = new Item(itemPrefab, position, null);
-            item.body.FarseerBody.IsKinematic = true;
+            item.body.FarseerBody.BodyType = BodyType.Kinematic;
 
             if (item.HasTag("alien"))
             {
@@ -89,7 +89,7 @@ namespace Barotrauma
             switch (State)
             {
                 case 0:
-                    if (item.ParentInventory != null) { item.body.FarseerBody.IsKinematic = false; }
+                    if (item.ParentInventory != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
                     if (item.CurrentHull?.Submarine == null) { return; }
                     State = 1;
                     break;

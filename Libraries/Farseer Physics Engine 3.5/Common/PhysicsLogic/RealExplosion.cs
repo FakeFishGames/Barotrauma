@@ -1,10 +1,15 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common.PhysicsLogic
 {
@@ -98,8 +103,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
         private List<ShapeData> _data = new List<ShapeData>();
         private RayDataComparer _rdc;
 
-        public RealExplosion(World world)
-            : base(world, PhysicsLogicType.Explosion)
+        public RealExplosion(World world) : base(world)
         {
             _rdc = new RayDataComparer();
             _data = new List<ShapeData>();

@@ -125,7 +125,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Item.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Rope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\FireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />

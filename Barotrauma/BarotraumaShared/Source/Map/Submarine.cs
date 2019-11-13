@@ -512,7 +512,7 @@ namespace Barotrauma
         {
             IsOutpost = true;
             ShowSonarMarker = false;
-            PhysicsBody.FarseerBody.IsStatic = true;
+            PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = Character.TeamType.FriendlyNPC;
 
             foreach (MapEntity me in MapEntity.mapEntityList)

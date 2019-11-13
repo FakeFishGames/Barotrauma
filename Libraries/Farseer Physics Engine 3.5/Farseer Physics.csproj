@@ -47,7 +47,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET45</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
@@ -110,6 +110,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="ContentReaders\" />
+    <Folder Include="Factories\" />
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -118,6 +120,8 @@
     <Compile Include="Collision\DynamicTree.cs" />
     <Compile Include="Collision\DynamicTreeBroadPhase.cs" />
     <Compile Include="Collision\IBroadPhase.cs" />
+    <Compile Include="Collision\QuadTree.cs" />
+    <Compile Include="Collision\QuadTreeBroadPhase.cs" />
     <Compile Include="Collision\Shapes\ChainShape.cs" />
     <Compile Include="Collision\Shapes\CircleShape.cs" />
     <Compile Include="Collision\Shapes\EdgeShape.cs" />
@@ -176,24 +180,31 @@
     <Compile Include="Common\LineTools.cs" />
     <Compile Include="Common\Math.cs" />
     <Compile Include="Common\MathHelper.cs" />
+    <Compile Include="Common\Maths\Complex.cs" />
     <Compile Include="Common\Matrix.cs" />
     <Compile Include="Common\Path.cs" />
     <Compile Include="Common\PathManager.cs" />
+    <Compile Include="Common\PhysicsLogic\BreakableBody.cs" />
+    <Compile Include="Common\PhysicsLogic\ControllerFilter.cs" />
     <Compile Include="Common\PhysicsLogic\FilterData.cs" />
     <Compile Include="Common\PhysicsLogic\PhysicsLogic.cs" />
     <Compile Include="Common\PhysicsLogic\RealExplosion.cs" />
     <Compile Include="Common\PhysicsLogic\SimpleExplosion.cs" />
     <Compile Include="Common\PolygonManipulation\CuttingTools.cs" />
+    <Compile Include="Common\PolygonManipulation\SimpleCombiner.cs" />
     <Compile Include="Common\PolygonManipulation\SimplifyTools.cs" />
     <Compile Include="Common\PolygonManipulation\YuPengClipper.cs" />
     <Compile Include="Common\PolygonTools.cs" />
     <Compile Include="Common\Serialization.cs" />
+    <Compile Include="Common\Stopwatch.cs" />
     <Compile Include="Common\TextureTools\MarchingSquares.cs" />
     <Compile Include="Common\TextureTools\Terrain.cs" />
     <Compile Include="Common\TextureTools\TextureConverter.cs" />
     <Compile Include="Common\Vector2.cs" />
     <Compile Include="Common\Vector3.cs" />
     <Compile Include="Common\Vertices.cs" />
+    <Compile Include="Content\BodyContainer.cs" />
+    <Compile Include="Content\PolygonContainer.cs" />
     <Compile Include="Controllers\AbstractForceController.cs" />
     <Compile Include="Controllers\BuoyancyController.cs" />
     <Compile Include="Controllers\Controller.cs" />
@@ -202,12 +213,18 @@
     <Compile Include="Controllers\VelocityLimitController.cs" />
     <Compile Include="ConvertUnits.cs" />
     <Compile Include="DebugViewBase.cs" />
+    <Compile Include="Diagnostics\DebugViewBase.cs" />
+    <Compile Include="Diagnostics\DebugViewFlags.cs" />
     <Compile Include="Dynamics\Body.cs" />
-    <Compile Include="Dynamics\BreakableBody.cs" />
+    <Compile Include="Dynamics\Body.Factory.cs" />
+    <Compile Include="Dynamics\BodyType.cs" />
+    <Compile Include="Dynamics\Category.cs" />
     <Compile Include="Dynamics\ContactManager.cs" />
     <Compile Include="Dynamics\Contacts\Contact.cs" />
+    <Compile Include="Dynamics\Contacts\ContactListHead.cs" />
     <Compile Include="Dynamics\Contacts\ContactSolver.cs" />
     <Compile Include="Dynamics\Fixture.cs" />
+    <Compile Include="Dynamics\FixtureProxy.cs" />
     <Compile Include="Dynamics\Island.cs" />
     <Compile Include="Dynamics\Joints\AngleJoint.cs" />
     <Compile Include="Dynamics\Joints\DistanceJoint.cs" />
@@ -215,6 +232,7 @@
     <Compile Include="Dynamics\Joints\FrictionJoint.cs" />
     <Compile Include="Dynamics\Joints\GearJoint.cs" />
     <Compile Include="Dynamics\Joints\Joint.cs" />
+    <Compile Include="Dynamics\Joints\JointFactory.cs" />
     <Compile Include="Dynamics\Joints\MotorJoint.cs" />
     <Compile Include="Dynamics\Joints\PrismaticJoint.cs" />
     <Compile Include="Dynamics\Joints\PulleyJoint.cs" />
@@ -222,13 +240,19 @@
     <Compile Include="Dynamics\Joints\RopeJoint.cs" />
     <Compile Include="Dynamics\Joints\WeldJoint.cs" />
     <Compile Include="Dynamics\Joints\WheelJoint.cs" />
+    <Compile Include="Dynamics\SolverIterations.cs" />
     <Compile Include="Dynamics\TimeStep.cs" />
     <Compile Include="Dynamics\World.cs" />
+    <Compile Include="Dynamics\World.Factory.cs" />
     <Compile Include="Dynamics\WorldCallbacks.cs" />
-    <Compile Include="Factories\BodyFactory.cs" />
-    <Compile Include="Factories\FixtureFactory.cs" />
-    <Compile Include="Factories\JointFactory.cs" />
-    <Compile Include="Factories\LinkFactory.cs" />
+    <Compile Include="Fluids\1\FluidDefinition.cs" />
+    <Compile Include="Fluids\1\FluidParticle.cs" />
+    <Compile Include="Fluids\1\FluidSystem1.cs" />
+    <Compile Include="Fluids\1\HashGrid.cs" />
+    <Compile Include="Fluids\1\Spring.cs" />
+    <Compile Include="Fluids\1\SpringHash.cs" />
+    <Compile Include="Fluids\2\FluidSystem2.cs" />
+    <Compile Include="Fluids\2\SpartialTable.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

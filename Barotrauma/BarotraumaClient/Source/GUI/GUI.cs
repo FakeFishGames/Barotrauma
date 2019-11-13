@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
 using EventInput;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -314,12 +315,14 @@ namespace Barotrauma
 
                 if (FarseerPhysics.Settings.EnableDiagnostics)
                 {
-                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContinuousPhysicsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    //TODO: FPE reimplement
+
+                    /*DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContinuousPhysicsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                     DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ControllersUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                     DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.AddRemoveTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                     DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.NewContactsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                     DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContactsUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.SolveUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.SolveUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);*/
                 }
             }
 
@@ -330,7 +333,7 @@ namespace Barotrauma
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 DrawString(spriteBatch, new Vector2(10, 40),
-                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == FarseerPhysics.Dynamics.BodyType.Dynamic && b.Enabled).Count} dynamic)",
+                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)

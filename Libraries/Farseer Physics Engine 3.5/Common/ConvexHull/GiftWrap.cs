@@ -1,4 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common.ConvexHull
 {
@@ -53,7 +58,6 @@ namespace FarseerPhysics.Common.ConvexHull
 
                     Vector2 r = vertices[ie] - vertices[hull[m]];
                     Vector2 v = vertices[j] - vertices[hull[m]];
-
                     float c = MathUtils.Cross(ref r, ref v);
                     if (c < 0.0f)
                     {
@@ -83,7 +87,6 @@ namespace FarseerPhysics.Common.ConvexHull
             {
                 result.Add(vertices[hull[i]]);
             }
-
             return result;
         }
     }

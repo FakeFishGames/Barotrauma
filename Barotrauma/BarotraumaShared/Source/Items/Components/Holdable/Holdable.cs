@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
             {
                 Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
                 {
-                    BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic,
+                    BodyType = BodyType.Dynamic,
                     CollidesWith = Physics.CollisionCharacter,
                     CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false
