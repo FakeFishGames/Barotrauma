@@ -1,18 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.489
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lidgren.Network.Linux", "ThirdParty\Lidgren.Network\Lidgren.Network.Linux.csproj", "{758CB33D-6EBD-41EA-BB0C-55B1C97A325F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MGCB.Linux", "Tools\MGCB\MGCB.Linux.csproj", "{4243474D-4C2E-6E69-7578-4D4743422E4C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Build.Tasks.Linux", "Tools\MonoGame.Build.Tasks\MonoGame.Build.Tasks.Linux.csproj", "{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.Content.Pipeline.Linux", "MonoGame.Framework.Content.Pipeline\MonoGame.Framework.Content.Pipeline.Linux.csproj", "{57696462-CE5E-4BC5-80AB-1B959E2420EA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.Framework.Linux", "MonoGame.Framework\MonoGame.Framework.Linux.csproj", "{35253CE1-C864-4CD3-8249-4D1319748E8F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipeline.Linux", "Tools\Pipeline\Pipeline.Linux.csproj", "{65706950-696C-656E-2E4C-696E75785069}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,30 +10,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{758CB33D-6EBD-41EA-BB0C-55B1C97A325F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{758CB33D-6EBD-41EA-BB0C-55B1C97A325F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{758CB33D-6EBD-41EA-BB0C-55B1C97A325F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{758CB33D-6EBD-41EA-BB0C-55B1C97A325F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4243474D-4C2E-6E69-7578-4D4743422E4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4243474D-4C2E-6E69-7578-4D4743422E4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4243474D-4C2E-6E69-7578-4D4743422E4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4243474D-4C2E-6E69-7578-4D4743422E4C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E2D9E2AE-AD75-D3D6-A3BA-75696C642E54}.Release|Any CPU.Build.0 = Release|Any CPU
-		{57696462-CE5E-4BC5-80AB-1B959E2420EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{57696462-CE5E-4BC5-80AB-1B959E2420EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{57696462-CE5E-4BC5-80AB-1B959E2420EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{57696462-CE5E-4BC5-80AB-1B959E2420EA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35253CE1-C864-4CD3-8249-4D1319748E8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{65706950-696C-656E-2E4C-696E75785069}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{65706950-696C-656E-2E4C-696E75785069}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{65706950-696C-656E-2E4C-696E75785069}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{65706950-696C-656E-2E4C-696E75785069}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
