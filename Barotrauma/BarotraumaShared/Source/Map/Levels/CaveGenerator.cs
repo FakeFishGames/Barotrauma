@@ -271,6 +271,7 @@ namespace Barotrauma
                 BodyType = BodyType.Static,
                 CollisionCategories = Physics.CollisionLevel
             };
+            GameMain.World.Add(cellBody);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
