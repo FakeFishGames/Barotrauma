@@ -203,7 +203,7 @@ namespace Barotrauma.Items.Components
                 BodyType = BodyType.Static,
                 Friction = 0.5f
             };
-            Body.SetTransform(
+            Body.SetTransformIgnoreContacts(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
             
