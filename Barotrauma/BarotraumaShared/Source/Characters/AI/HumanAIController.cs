@@ -293,7 +293,7 @@ namespace Barotrauma
                                 itemIndex = 0;
                                 if (targetContainer != null)
                                 {
-                                    var decontainObjective = new AIObjectiveDecontainItem(Character, extinguisher, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                    var decontainObjective = new AIObjectiveDecontainItem(Character, extinguisher, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
                                     decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
                                     ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                     return;
@@ -376,7 +376,7 @@ namespace Barotrauma
                                         itemIndex = 0;
                                         if (targetContainer != null)
                                         {
-                                            var decontainObjective = new AIObjectiveDecontainItem(Character, divingSuit, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                            var decontainObjective = new AIObjectiveDecontainItem(Character, divingSuit, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
                                             decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
                                             ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                             return;
@@ -412,7 +412,7 @@ namespace Barotrauma
                                             itemIndex = 0;
                                             if (targetContainer != null)
                                             {
-                                                var decontainObjective = new AIObjectiveDecontainItem(Character, mask, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
+                                                var decontainObjective = new AIObjectiveDecontainItem(Character, mask, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
                                                 decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
                                                 ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                                 return;
@@ -431,42 +431,37 @@ namespace Barotrauma
             }
             if (findItemState == FindItemState.None || findItemState == FindItemState.OtherItem)
             {
-                if (ObjectiveManager.IsActiveObjective<AIObjectiveContainItem>() || ObjectiveManager.IsActiveObjective<AIObjectiveDecontainItem>()) { return; }
-                if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>() ||
-                    ObjectiveManager.IsCurrentObjective<AIObjectiveOperateItem>() ||
-                    ObjectiveManager.IsCurrentObjective<AIObjectivePumpWater>() ||
-                    ObjectiveManager.IsCurrentObjective<AIObjectiveChargeBatteries>())
+                if (!ObjectiveManager.CurrentObjective.UnequipItems || !ObjectiveManager.GetActiveObjective().UnequipItems) { return; }
+                if (ObjectiveManager.HasActiveObjective<AIObjectiveContainItem>() || ObjectiveManager.HasActiveObjective<AIObjectiveDecontainItem>()) { return; }
+                foreach (var item in Character.Inventory.Items)
                 {
-                    foreach (var item in Character.Inventory.Items)
+                    if (item == null) { continue; }
+                    if (Character.HasEquippedItem(item) && 
+                        (Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand) || 
+                        Character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) ||
+                        Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand | InvSlotType.LeftHand)))
                     {
-                        if (item == null) { continue; }
-                        if (Character.HasEquippedItem(item) && 
-                            (Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand) || 
-                            Character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) ||
-                            Character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand | InvSlotType.LeftHand)))
+                        if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
                         {
-                            if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
+                            if (FindSuitableContainer(Character, item, out Item targetContainer))
                             {
-                                if (FindSuitableContainer(Character, item, out Item targetContainer))
+                                findItemState = FindItemState.None;
+                                itemIndex = 0;
+                                if (targetContainer != null)
                                 {
-                                    findItemState = FindItemState.None;
-                                    itemIndex = 0;
-                                    if (targetContainer != null)
-                                    {
-                                        var decontainObjective = new AIObjectiveDecontainItem(Character, item, targetContainer.GetComponent<ItemContainer>(), ObjectiveManager, targetContainer.GetComponent<ItemContainer>());
-                                        decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
-                                        ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
-                                        return;
-                                    }
-                                    else
-                                    {
-                                        item.Drop(Character);
-                                    }
+                                    var decontainObjective = new AIObjectiveDecontainItem(Character, item, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
+                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                    ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
+                                    return;
                                 }
                                 else
                                 {
-                                    findItemState = FindItemState.OtherItem;
+                                    item.Drop(Character);
                                 }
+                            }
+                            else
+                            {
+                                findItemState = FindItemState.OtherItem;
                             }
                         }
                     }

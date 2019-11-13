@@ -899,6 +899,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         protected bool AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
         {
+            ItemContainer sourceC = sourceContainer ?? (item.OwnInventory?.Owner is Item it ? it.GetComponent<ItemContainer>() : null);
             var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
             foreach (Item containedItem in containedItems)
             {
@@ -910,6 +911,8 @@ namespace Barotrauma.Items.Components
                             var container = i.GetComponent<ItemContainer>();
                             if (container == null) { return 0; }
                             if (container.Inventory.IsFull()) { return 0; }
+                            // Ignore containers that are identical to the source container
+                            if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
                             if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
                             {
                                 if (isRestrictionsDefined)
@@ -934,7 +937,7 @@ namespace Barotrauma.Items.Components
                             }
                         }, out Item targetContainer))
                     {
-                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, sourceContainer, objective.objectiveManager, targetContainer?.GetComponent<ItemContainer>());
+                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>());
                         decontainObjective.Equip = equip;
                         decontainObjective.Abandoned += () =>
                         {
