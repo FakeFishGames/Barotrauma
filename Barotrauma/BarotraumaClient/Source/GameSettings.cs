@@ -610,10 +610,10 @@ namespace Barotrauma
                 barSize: 0.05f)
             {
                 UserData = micVolumeText,
-                BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, 5.0f, MicrophoneVolume)),
+                BarScroll = (float)Math.Sqrt(MathUtils.InverseLerp(0.2f, MaxMicrophoneVolume, MicrophoneVolume)),
                 OnMoved = (scrollBar, scroll) =>
                 {
-                    MicrophoneVolume = MathHelper.Lerp(0.2f, 10.0f, scroll * scroll);
+                    MicrophoneVolume = MathHelper.Lerp(0.2f, MaxMicrophoneVolume, scroll * scroll);
                     MicrophoneVolume = (float)Math.Round(MicrophoneVolume, 1);
                     ChangeSliderText(scrollBar, MicrophoneVolume);
                     scrollBar.Step = 0.05f;
@@ -763,15 +763,16 @@ namespace Barotrauma
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
-                    { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
-                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
+                    { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215) };
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)), font: GUI.SmallFont) { ForceUpperCase = true };
                 inputNameBlocks.Add(inputName);
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform),
-                    text: keyMapping[i].ToString(), font: GUI.SmallFont)
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform),
+                    text: KeyBindText((InputType)i), font: GUI.SmallFont)
                 {
                     UserData = i
                 };
+                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
@@ -1068,48 +1069,42 @@ namespace Barotrauma
             if (PlayerInput.LeftButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(0);
-                keyBox.Text = "Mouse1";
             }
             else if (PlayerInput.RightButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(1);
-                keyBox.Text = "Mouse2";
             }
             else if (PlayerInput.MidButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(2);
-                keyBox.Text = "Mouse3";
             }
             else if (PlayerInput.Mouse4ButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(3);
-                keyBox.Text = "Mouse4";
             }
             else if (PlayerInput.Mouse5ButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(4);
-                keyBox.Text = "Mouse5";
             }
             else if (PlayerInput.MouseWheelUpClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(5);
-                keyBox.Text = "MouseWheelUp";
             }
             else if (PlayerInput.MouseWheelDownClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(6);
-                keyBox.Text = "MouseWheelDown";
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
                 keyMapping[keyIndex] = new KeyOrMouse(key);
-                keyBox.Text = key.ToString("G");
             }
             else
             {
                 yield return CoroutineStatus.Success;
             }
+            keyBox.Text = KeyBindText((InputType)keyIndex);
+            keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
 
             keyBox.Deselect();
             RefreshItemMessages();

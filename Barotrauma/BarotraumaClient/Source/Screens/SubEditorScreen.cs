@@ -724,10 +724,9 @@ namespace Barotrauma
             base.Deselect();
 
             TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
-            }
+#if USE_STEAM
+            Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
+#endif
 
             GUI.ForceMouseOn(null);
 

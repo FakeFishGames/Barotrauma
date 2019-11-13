@@ -73,32 +73,21 @@ namespace Barotrauma
 
         public List<Pair<string, int>> jobPreferences;
 
-        private bool useSteamMatchmaking;
-        private bool requireSteamAuthentication;
         public string QuickStartSubmarineName;
 
-#if DEBUG
-        //steam functionality can be enabled/disabled in debug builds
-        public bool RequireSteamAuthentication
-        {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
-            set { requireSteamAuthentication = value; }
-        }
-        public bool UseSteamMatchmaking
-        {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
-            set { useSteamMatchmaking = value; }
-        }
+#if USE_STEAM
+        public bool RequireSteamAuthentication { get; set; }
+        public bool UseSteamMatchmaking { get; set; }
 #else
         public bool RequireSteamAuthentication
         {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
-            set { requireSteamAuthentication = value; }
+            get { return false; }
+            set { /*do nothing*/ }
         }
         public bool UseSteamMatchmaking
         {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
-            set { useSteamMatchmaking = value; }
+            get { return false; }
+            set { /*do nothing*/ }
         }
 #endif
 
@@ -213,12 +202,13 @@ namespace Barotrauma
             }
         }
 
+        public const float MaxMicrophoneVolume = 10.0f;
         public float MicrophoneVolume
         {
             get { return microphoneVolume; }
             set
             {
-                microphoneVolume = MathHelper.Clamp(value, 0.2f, 10.0f);
+                microphoneVolume = MathHelper.Clamp(value, 0.2f, MaxMicrophoneVolume);
             }
         }
         public string Language
@@ -297,8 +287,9 @@ namespace Barotrauma
             {
 #if DEBUG
                 return false;
-#endif
+#else
                 return sendUserStatistics;
+#endif
             }
             set
             {
@@ -501,9 +492,9 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
                 new XAttribute("aimassistamount", aimAssistAmount),
                 new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
 
@@ -797,9 +788,9 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
                 new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
@@ -977,8 +968,8 @@ namespace Barotrauma
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
-            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
-            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", UseSteamMatchmaking);
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", RequireSteamAuthentication);
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
             PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
@@ -1078,9 +1069,8 @@ namespace Barotrauma
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
-                var voiceSetting = VoiceMode.Disabled;
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
-                if (Enum.TryParse(voiceSettingStr, out voiceSetting))
+                if (Enum.TryParse(voiceSettingStr, out VoiceMode voiceSetting))
                 {
                     VoiceSetting = voiceSetting;
                 }
@@ -1154,15 +1144,19 @@ namespace Barotrauma
                 {
                     case 0:
                         return TextManager.Get("input.leftmouse");
-                        break;
-
                     case 1:
                         return TextManager.Get("input.rightmouse");
-                        break;
-
                     case 2:
-                        break;
                         return TextManager.Get("input.middlemouse");
+                    case 3:
+                        return TextManager.Get("input.mousebutton4");
+                    case 4:
+                        return TextManager.Get("input.mousebutton5");
+                    case 5:
+                        return TextManager.Get("input.mousewheelup");
+                    case 6:
+                        return TextManager.Get("input.mousewheeldown");
+
                 }
             }
 
@@ -1191,8 +1185,8 @@ namespace Barotrauma
             NoiseGateThreshold = -45;
             windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
-            useSteamMatchmaking = true;
-            requireSteamAuthentication = true;
+            UseSteamMatchmaking = true;
+            RequireSteamAuthentication = true;
             QuickStartSubmarineName = string.Empty;
             CharacterHeadIndex = 1;
             CharacterHairIndex = -1;

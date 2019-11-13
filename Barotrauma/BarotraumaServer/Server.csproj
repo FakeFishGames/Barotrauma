@@ -75,7 +75,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\ReleaseWindows\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERVER;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -189,6 +189,7 @@
     <Compile Include="Source\GameSession\GameModes\MissionMode.cs" />
     <Compile Include="Source\GameSession\GameModes\MultiPlayerCampaign.cs" />
     <Compile Include="Source\Items\Components\Door.cs" />
+    <Compile Include="Source\Items\Components\Holdable\LevelResource.cs" />
     <Compile Include="Source\Items\Components\ItemComponent.cs" />
     <Compile Include="Source\Items\Components\ItemLabel.cs" />
     <Compile Include="Source\Items\Components\Machines\Controller.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Source\Items\Components\Repairable.cs" />
     <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="Source\Items\Components\Signal\CustomInterface.cs" />
+    <Compile Include="Source\Items\Components\Signal\Keyboard.cs" />
     <Compile Include="Source\Items\Components\Signal\Wire.cs" />
     <Compile Include="Source\Items\Inventory.cs" />
     <Compile Include="Source\Items\Item.cs" />

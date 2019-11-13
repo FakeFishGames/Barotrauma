@@ -214,17 +214,15 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            if (Steam.SteamManager.USE_STEAM)
+#if USE_STEAM            
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-                {
-                    ForceUpperCase = true,
-                    Enabled = false,
-                    UserData = Tab.SteamWorkshop,
-                    OnClicked = SelectTab
-                };
-            }
-
+                ForceUpperCase = true,
+                Enabled = false,
+                UserData = Tab.SteamWorkshop,
+                OnClicked = SelectTab
+            };
+#endif
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -798,11 +796,19 @@ namespace Barotrauma
                     exeName = "DedicatedServer.exe";
                 }
 
-                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
-                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -maxplayers " + maxPlayersBox.Text;
+
+                if (!string.IsNullOrWhiteSpace(passwordBox.Text))
+                {
+                    arguments += " -password \"" + ToolBox.EscapeCharacters(passwordBox.Text) + "\"";
+                }
+                else
+                {
+                    arguments += " -nopassword";
+                }
 
                 int ownerKey = 0;
 
@@ -861,22 +867,20 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 #if !DEBUG
-            if (Steam.SteamManager.USE_STEAM)
+#if USE_STEAM
+            if (GameMain.Config.UseSteamMatchmaking)
             {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+                joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;            
+#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                steamWorkshopButton.Enabled = true;
-            }
+#if USE_STEAM
+            steamWorkshopButton.Enabled = true;
+#endif
 #endif
         }
 
@@ -891,8 +895,7 @@ namespace Barotrauma
 
             if (backgroundSprite != null)
             {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, 
-                    blurAmount: 0.0f, 
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
                     aberrationStrength: 0.0f);
             }
 

@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
@@ -76,6 +77,8 @@ namespace FarseerPhysics.Collision
         private Func<int, bool> _queryCallback;
         private int _queryProxyId;
         private DynamicTree<FixtureProxy> _tree = new DynamicTree<FixtureProxy>();
+
+        private readonly HashSet<int> processedPairs = new HashSet<int>();
 
         /// <summary>
         /// Constructs a new broad phase based on the dynamic tree implementation
@@ -184,7 +187,8 @@ namespace FarseerPhysics.Collision
             if (_pairCount == _pairCapacity)
             {
                 Pair[] oldBuffer = _pairBuffer;
-                _pairCapacity *= 2;
+                //grow the capacity in smaller increments when it's already large
+                _pairCapacity += Math.Max((int)Math.Sqrt(_pairCapacity), 1) * 10;
                 _pairBuffer = new Pair[_pairCapacity];
                 Array.Copy(oldBuffer, _pairBuffer, _pairCount);
             }
@@ -261,21 +265,27 @@ namespace FarseerPhysics.Collision
             _moveCount = 0;
 
             // Sort the pair buffer to expose duplicates.
-            Array.Sort(_pairBuffer, 0, _pairCount);
+            //Array.Sort(_pairBuffer, 0, _pairCount);
+            processedPairs.Clear();
 
             // Send the pairs back to the client.
             int i = 0;
             while (i < _pairCount)
             {
                 Pair primaryPair = _pairBuffer[i];
-                FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
-                FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
+                int pairID = primaryPair.ProxyIdA + (primaryPair.ProxyIdB << 16);
+                if (!processedPairs.Contains(pairID))
+                {
+                    FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
+                    FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
+                    callback(ref userDataA, ref userDataB);
+                    processedPairs.Add(pairID);
+                }
 
-                callback(ref userDataA, ref userDataB);
                 ++i;
 
                 // Skip any duplicate pairs.
-                while (i < _pairCount)
+                /*while (i < _pairCount)
                 {
                     Pair pair = _pairBuffer[i];
                     if (pair.ProxyIdA != primaryPair.ProxyIdA || pair.ProxyIdB != primaryPair.ProxyIdB)
@@ -283,7 +293,7 @@ namespace FarseerPhysics.Collision
                         break;
                     }
                     ++i;
-                }
+                }*/
             }
 
             // Try to keep the tree balanced.

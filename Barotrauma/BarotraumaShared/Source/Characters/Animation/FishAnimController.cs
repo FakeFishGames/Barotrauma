@@ -694,9 +694,14 @@ namespace Barotrauma
                                 (-transformedStepSize.Y > 0.0f) ? -transformedStepSize.Y : 0.0f);
                             limb.MoveToPos(limb.DebugTargetPos, FootMoveForce);
                         }
+
+                        if (playFootstepSound) 
+                        { 
 #if CLIENT
-                        if (playFootstepSound) { PlayImpactSound(limb); }
+                            PlayImpactSound(limb); 
 #endif
+                        }
+
                         if (CurrentGroundedParams.FootAnglesInRadians.ContainsKey(limb.Params.ID))
                         {
                             SmoothRotateWithoutWrapping(limb,

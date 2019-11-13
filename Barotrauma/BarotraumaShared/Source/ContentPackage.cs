@@ -290,7 +290,7 @@ namespace Barotrauma
                             {
                                 errorMessages.Add($"XML File Invalid. PATH: {file.Path}, ERROR: {e.Message}");
 #if DEBUG
-                                throw e;
+                                throw;
 #endif
                             }
                         }
@@ -437,48 +437,49 @@ namespace Barotrauma
 
         private byte[] CalculateFileHash(ContentFile file)
         {
-            var md5 = MD5.Create();
-
-            List<string> filePaths = new List<string> { file.Path };
-            List<byte> data = new List<byte>();
-
-            switch (file.Type)
+            using (MD5 md5 = MD5.Create())
             {
-                case ContentType.Character:
-                    XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                    var rootElement = doc.Root;
-                    var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                    var speciesName = element.GetAttributeString("speciesname", element.GetAttributeString("name", ""));
-                    var ragdollFolder = RagdollParams.GetFolder(speciesName);
-                    if (Directory.Exists(ragdollFolder))
-                    {
-                        Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
-                    }
-                    var animationFolder = AnimationParams.GetFolder(speciesName);
-                    if (Directory.Exists(animationFolder))
-                    {
-                        Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
-                    }
-                    break;
-            }
+                List<string> filePaths = new List<string> { file.Path };
+                List<byte> data = new List<byte>();
 
-            foreach (string filePath in filePaths)
-            {
-                if (!File.Exists(filePath)) continue;
-                using (var stream = File.OpenRead(filePath))
+                switch (file.Type)
                 {
-                    byte[] fileData = new byte[stream.Length];
-                    stream.Read(fileData, 0, (int)stream.Length);
-                    if (filePath.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
-                    {
-                        string text = System.Text.Encoding.UTF8.GetString(fileData);
-                        text = text.Replace("\n", "").Replace("\r", "");
-                        fileData = System.Text.Encoding.UTF8.GetBytes(text);
-                    }
-                    data.AddRange(fileData);
+                    case ContentType.Character:
+                        XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+                        var rootElement = doc.Root;
+                        var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+                        var speciesName = element.GetAttributeString("speciesname", element.GetAttributeString("name", ""));
+                        var ragdollFolder = RagdollParams.GetFolder(speciesName);
+                        if (Directory.Exists(ragdollFolder))
+                        {
+                            Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
+                        }
+                        var animationFolder = AnimationParams.GetFolder(speciesName);
+                        if (Directory.Exists(animationFolder))
+                        {
+                            Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
+                        }
+                        break;
                 }
-            }
-            return md5.ComputeHash(data.ToArray());
+
+                foreach (string filePath in filePaths)
+                {
+                    if (!File.Exists(filePath)) continue;
+                    using (var stream = File.OpenRead(filePath))
+                    {
+                        byte[] fileData = new byte[stream.Length];
+                        stream.Read(fileData, 0, (int)stream.Length);
+                        if (filePath.EndsWith(".xml", true, System.Globalization.CultureInfo.InvariantCulture))
+                        {
+                            string text = System.Text.Encoding.UTF8.GetString(fileData);
+                            text = text.Replace("\n", "").Replace("\r", "");
+                            fileData = System.Text.Encoding.UTF8.GetBytes(text);
+                        }
+                        data.AddRange(fileData);
+                    }
+                }
+                return md5.ComputeHash(data.ToArray());
+            }            
         }
         
         public static string GetFileExtension(ContentType contentType)

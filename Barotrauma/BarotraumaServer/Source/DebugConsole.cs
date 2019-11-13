@@ -27,14 +27,10 @@ namespace Barotrauma
                 {
                     NewMessage("Client \"" + client.Name + "\" attempted to use the command \"" + names[0] + "\". Cheats must be enabled using \"enablecheats\" before the command can be used.", Color.Red);
                     GameMain.Server.SendConsoleMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", client);
-
-                    if (Steam.SteamManager.USE_STEAM)
-                    {
-                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-                        GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
-                        return;
-                    }
-
+#if USE_STEAM                    
+                    NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+                    GameMain.Server.SendConsoleMessage("Enabling cheats will disable Steam achievements during this play session.", client);
+#endif
                     return;
                 }
 
@@ -919,30 +915,21 @@ namespace Barotrauma
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Enabled cheat commands.", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
-                {
-                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                    GameMain.Server?.UpdateCheatsEnabled();
-                }
-                else
-                {
-                    GameMain.Server?.UpdateCheatsEnabled();
-                }
+#if USE_STEAM                
+                NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+#endif
+                GameMain.Server?.UpdateCheatsEnabled();
+
             }));
             AssignOnClientRequestExecute("enablecheats", (client, cursorPos, args) =>
             {
                 CheatsEnabled = true;
                 SteamAchievementManager.CheatsEnabled = true;
                 NewMessage("Cheat commands have been enabled by \"" + client.Name + "\".", Color.Red);
-                if (Steam.SteamManager.USE_STEAM)
-                {
-                    NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
-                    GameMain.Server?.UpdateCheatsEnabled();
-                }
-                else
-                {
-                    GameMain.Server?.UpdateCheatsEnabled();
-                }
+#if USE_STEAM
+                NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
+#endif
+                GameMain.Server?.UpdateCheatsEnabled();
             });
 
             commands.Add(new Command("traitorlist", "traitorlist: List all the traitors and their targets.", (string[] args) =>
@@ -1157,9 +1144,8 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("mission", "mission [name]/[index]: Select the mission type for the next round. The parameter can either be the name or the index number of the mission type (0 = first mission type, 1 = second mission type, etc).", (string[] args) =>
+            commands.Add(new Command("mission", "mission [name]: Select the mission type for the next round.", (string[] args) =>
             {
-                int index = -1;
                 GameMain.NetLobbyScreen.MissionTypeName = string.Join(" ", args);
                 NewMessage("Set mission to " + GameMain.NetLobbyScreen.MissionTypeName, Color.Cyan);
             },
@@ -1844,8 +1830,7 @@ namespace Barotrauma
                 "campaigndestination|setcampaigndestination",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    var campaign = GameMain.GameSession?.GameMode as CampaignMode;
-                    if (campaign == null)
+                    if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
                     {
                         GameMain.Server.SendConsoleMessage("No campaign active!", senderClient);
                         return;

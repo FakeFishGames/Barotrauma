@@ -114,6 +114,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Wire.cs" />

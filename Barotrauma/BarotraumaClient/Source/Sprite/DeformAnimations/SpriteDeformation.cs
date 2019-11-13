@@ -14,7 +14,7 @@ namespace Barotrauma.SpriteDeformations
         /// A positive value means that this deformation is or could be used for multiple sprites.
         /// This behaviour is not automatic, and has to be implemented for any particular case separately (currently only used in Limbs).
         /// </summary>
-        [Serialize(-1, true), Editable]
+        [Serialize(-1, true), Editable(minValue: -1, maxValue: 100)]
         public int Sync
         {
             get;

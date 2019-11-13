@@ -917,21 +917,30 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ApplyStatusEffect:
                     {
                         ActionType actionType = (ActionType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ActionType)).Length - 1);
-                        byte componentIndex = msg.ReadByte();
-                        ushort targetID = msg.ReadUInt16();
-                        byte targetLimbID = msg.ReadByte();
+                        byte componentIndex         = msg.ReadByte();
+                        ushort targetCharacterID    = msg.ReadUInt16();
+                        byte targetLimbID           = msg.ReadByte();
+                        ushort useTargetID          = msg.ReadUInt16();
+                        Vector2? worldPosition      = null;
+                        bool hasPosition            = msg.ReadBoolean();
+                        if (hasPosition)
+                        {
+                            worldPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                        }
 
                         ItemComponent targetComponent = componentIndex < components.Count ? components[componentIndex] : null;
-                        Character target = FindEntityByID(targetID) as Character;
-                        Limb targetLimb = target != null && targetLimbID < target.AnimController.Limbs.Length ? target.AnimController.Limbs[targetLimbID] : null;
-                        
+                        Character targetCharacter = FindEntityByID(targetCharacterID) as Character;
+                        Limb targetLimb = targetCharacter != null && targetLimbID < targetCharacter.AnimController.Limbs.Length ? 
+                            targetCharacter.AnimController.Limbs[targetLimbID] : null;
+                        Entity useTarget = FindEntityByID(useTargetID);
+
                         if (targetComponent == null)
                         {
-                            ApplyStatusEffects(actionType, 1.0f, target, targetLimb, true);
+                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, true, worldPosition: worldPosition);
                         }
                         else
                         {
-                            targetComponent.ApplyStatusEffects(actionType, 1.0f, target, targetLimb);
+                            targetComponent.ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, worldPosition: worldPosition);
                         }                        
                     }
                     break;
@@ -1084,7 +1093,18 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
-        
+
+        public void CreateClientEvent<T>(T ic, object[] extraData) where T : ItemComponent, IClientSerializable
+        {
+            if (GameMain.Client == null) return;
+
+            int index = components.IndexOf(ic);
+            if (index == -1) return;
+
+            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
+            GameMain.Client.CreateEntityEvent(this, data);
+        }
+
         public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();

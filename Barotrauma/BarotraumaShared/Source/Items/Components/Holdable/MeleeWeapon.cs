@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
             //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                bool aim = picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
+                bool aim = picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
                 if (aim)
                 {
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));

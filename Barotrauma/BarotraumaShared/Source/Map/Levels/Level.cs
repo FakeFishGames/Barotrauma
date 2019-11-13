@@ -485,13 +485,13 @@ namespace Barotrauma
 
             int xPadding = borders.Width / 5;
             int yPadding = borders.Height / 5;
-            pathCells.AddRange(CreateBottomHoles(generationParams.BottomHoleProbability, new Rectangle(
+            pathCells.AddRange(CreateHoles(generationParams.BottomHoleProbability, new Rectangle(
                 xPadding, 0,
-                borders.Width - xPadding * 2, borders.Height - yPadding)));
+                borders.Width - xPadding * 2, borders.Height - yPadding), minWidth));
 
             foreach (VoronoiCell cell in cells)
             {
-                if (cell.Site.Coord.Y < borders.Height / 2) continue;
+                if (cell.Site.Coord.Y < borders.Height / 2) { continue; }
                 cell.Edges.ForEach(e => e.OutsideLevel = true);
             }
 
@@ -749,20 +749,29 @@ namespace Barotrauma
         }
 
 
-        private List<VoronoiCell> CreateBottomHoles(float holeProbability, Rectangle limits)
+        private List<VoronoiCell> CreateHoles(float holeProbability, Rectangle limits, int submarineSize)
         {
             List<VoronoiCell> toBeRemoved = new List<VoronoiCell>();
             foreach (VoronoiCell cell in cells)
             {
-                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > holeProbability) continue;
+                if ((!Mirrored && cell.Center.X > endPosition.X) || (Mirrored && cell.Center.X < StartPosition.X))
+                {
+                    if (cell.Edges.Any(e => e.Point1.Y > Size.Y - submarineSize || e.Point2.Y > Size.Y - submarineSize))
+                    {
+                        toBeRemoved.Add(cell);
+                        continue;
+                    }
+                }
 
-                if (!limits.Contains(cell.Site.Coord.X, cell.Site.Coord.Y)) continue;
+                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > holeProbability) { continue; }
+
+                if (!limits.Contains(cell.Site.Coord.X, cell.Site.Coord.Y)) { continue; }
 
                 float closestDist = 0.0f;
                 WayPoint closestWayPoint = null;
                 foreach (WayPoint wp in WayPoint.WayPointList)
                 {
-                    if (wp.SpawnType != SpawnType.Path) continue;
+                    if (wp.SpawnType != SpawnType.Path){ continue; }
 
                     float dist = Math.Abs(cell.Center.X - wp.WorldPosition.X);
                     if (closestWayPoint == null || dist < closestDist)
@@ -772,7 +781,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (closestWayPoint.WorldPosition.Y < cell.Center.Y) continue;
+                if (closestWayPoint.WorldPosition.Y < cell.Center.Y) { continue; }
 
                 toBeRemoved.Add(cell);
             }

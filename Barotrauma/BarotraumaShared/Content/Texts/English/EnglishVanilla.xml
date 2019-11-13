@@ -3711,10 +3711,17 @@
   <input.leftmouse>Left mouse</input.leftmouse>
   <input.rightmouse>Right mouse</input.rightmouse>
   <input.middlemouse>Middle mouse</input.middlemouse>
+  <input.mousebutton4>Mouse 4</input.mousebutton4>
+  <input.mousebutton5>Mouse 5</input.mousebutton5>
+  <input.mousewheelup>Mouse wheel up</input.mousewheelup>
+  <input.mousewheeldown>Mouse wheel down</input.mousewheeldown>
+  
   <connection.setexponent>set_exponent</connection.setexponent>
   <entityname.duffelbag>Duffel Bag</entityname.duffelbag>
   <entitydescription.duffelbag>The traditional way of storing a deceased seafarer's belongings until they can be delivered to their next of kin (or stolen or sold).</entitydescription.duffelbag>
   <entityname.loosevent>Loose vent</entityname.loosevent>
   <entitydescription.loosevent>A place to stash things of dubious nature.</entitydescription.loosevent>
+  <entityname.keyboard>Keyboard</entityname.keyboard>
+  <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
 
 </infotexts>

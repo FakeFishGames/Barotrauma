@@ -396,7 +396,7 @@ namespace Barotrauma
             }
         }
 
-        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound = true)
+        partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound)
         {
             foreach (Limb limb in new Limb[] { limbJoint.LimbA, limbJoint.LimbB })
             {

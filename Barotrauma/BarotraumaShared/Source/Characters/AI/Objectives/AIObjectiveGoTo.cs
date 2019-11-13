@@ -151,7 +151,8 @@ namespace Barotrauma
                 if (getDivingGearIfNeeded && !character.LockHands)
                 {
                     Character followTarget = Target as Character;
-                    bool needsDivingGear = HumanAIController.NeedsDivingGear(character, targetHull, out bool needsDivingSuit);
+                    bool needsDivingSuit = targetIsOutside;
+                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(character, targetHull, out needsDivingSuit);
                     if (!needsDivingGear && mimic)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
@@ -199,7 +200,7 @@ namespace Barotrauma
                 {
                     SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
                 }
-                if (!insideSteering)
+                if (!insideSteering && character.CurrentHull == null)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
                 }

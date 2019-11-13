@@ -67,7 +67,7 @@
   </Item>
   <Item name="Diving Suit Locker" identifier="divingsuitlocker" tags="container,divingsuitcontainer,divingsuitcontainerwindow" pickdistance="50" scale="0.5">
     <Sprite texture="Lockers.png" depth="0.84" sourcerect="128,686,99,254" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="0,0" iteminterval="0,0" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="0,0" iteminterval="0,0" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.2,0.3" anchor="Center" style="ItemUI" />
       <Containable items="divingsuit" />
     </ItemContainer>
@@ -158,7 +158,7 @@
   </Item>
   <Item name="Fire Extinguisher Bracket" identifier="extinguisherbracket" tags="extinguisherholder" pickdistance="75">
     <Sprite texture="containers.png" depth="0.84" sourcerect="281,3,36,102" canflipx="false" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="20,-60" iteminterval="0,0" itemrotation="0" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="extinguisher" />
     </ItemContainer>
@@ -166,7 +166,7 @@
   <Item name="Weapon Holder" identifier="weaponholder" tags="weaponholder" scale="0.5">
     <Sprite texture="containers.png" depth="0.85" sourcerect="109,271,88,88" canflipx="false" origin="0.5,0.5"/>
     <DecorativeSprite texture="containers.png" depth="0.5" sourcerect="109,188,124,33" canflipx="false" origin="0.5,0.5" />
-    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
+    <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="46,-47" iteminterval="0,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="weapon" />
     </ItemContainer>

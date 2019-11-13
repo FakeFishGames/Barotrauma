@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < HitScanCount; i++)
             {
-                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Rand.Range(-Spread, Spread));
+                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * Rand.Range(-0.5f, 0.5f));
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
                 {
@@ -494,19 +494,26 @@ namespace Barotrauma.Items.Components
                             }
                         }
                     }
+#if SERVER
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, 0, item.WorldPosition });
+                    }
+#endif
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f,  user: user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f,  user: user);
-                }
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
 #if SERVER
-                if (GameMain.NetworkMember.IsServer)
-                {
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse });
-                    GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
-                }
+                    if (GameMain.NetworkMember.IsServer)
+                    {
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                    }
 #endif
+                }
             }
 
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;

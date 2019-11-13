@@ -6,10 +6,9 @@ namespace Barotrauma
 {
     partial class CombatMission
     {
-        private bool[] teamDead = new bool[2];
+        private readonly bool[] teamDead = new bool[2];
 
         private bool initialized = false;
-        private int state = 0;
 
         public override string Description
         {
@@ -93,14 +92,13 @@ namespace Barotrauma
                 if (teamDead[0] && teamDead[1])
                 {
                     GameMain.GameSession.WinningTeam = Character.TeamType.None;
-                    if (GameMain.Server != null) GameMain.Server.EndGame();
+                    if (GameMain.Server != null) { GameMain.Server.EndGame(); }
                 }
                 else if (GameMain.GameSession.WinningTeam != Character.TeamType.None)
                 {
                     GameMain.Server.EndGame();
                 }
             }
-
         }
     }
 }

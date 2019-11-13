@@ -37,6 +37,15 @@ namespace Barotrauma
             }
         }
 
+        private static bool ShouldDrawInventory(Character character)
+        {
+            return 
+                character?.Inventory != null && 
+                character.AllowInput &&
+                !character.LockHands && 
+                character.SelectedConstruction?.GetComponent<Controller>()?.User != character;
+        }
+
         private static string GetCachedHudText(string textTag, string keyBind)
         {
             if (cachedHudTexts.TryGetValue(textTag + keyBind, out string text))
@@ -85,12 +94,10 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f && 
-                        (character.SelectedConstruction == null || character.SelectedConstruction?.GetComponent<Controller>()?.User != character))
+                    if (ShouldDrawInventory(character))
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
-
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
@@ -323,9 +330,8 @@ namespace Barotrauma
                     }
                     drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
                 }
-                if (character.Inventory != null && !character.LockHands)
+                if (ShouldDrawInventory(character))
                 {
-                    character.Inventory.Locked = (character.SelectedConstruction?.GetComponent<Controller>()?.User == character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :

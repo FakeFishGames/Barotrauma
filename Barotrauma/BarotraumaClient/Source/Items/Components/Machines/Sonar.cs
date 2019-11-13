@@ -343,6 +343,29 @@ namespace Barotrauma.Items.Components
                         sonarBlips.Add(flowBlip);
                     }
                 }
+
+                float outsideLevelFlow = 0.0f;
+                if (transducerCenter.X < 0.0f)
+                {
+                    outsideLevelFlow = Math.Abs(transducerCenter.X * 0.001f);
+                }
+                else if (transducerCenter.X > Level.Loaded.Size.X)
+                {
+                    outsideLevelFlow = -(transducerCenter.X - Level.Loaded.Size.X) * 0.001f;
+
+                }
+
+                if (Rand.Range(0.0f, 100.0f) < Math.Abs(outsideLevelFlow))
+                {
+                    Vector2 blipPos = transducerCenter + Rand.Vector(Rand.Range(0.0f, range));
+                    var flowBlip = new SonarBlip(blipPos, Rand.Range(0.5f, 1.0f), 1.0f)
+                    {
+                        Velocity = Vector2.UnitX * outsideLevelFlow * Rand.Range(50.0f, 100.0f),
+                        Size = new Vector2(Rand.Range(0.4f, 5f), 0.2f),
+                        Rotation = 0.0f
+                    };
+                    sonarBlips.Add(flowBlip);                    
+                }
             }
 
             Steering steering = item.GetComponent<Steering>();
