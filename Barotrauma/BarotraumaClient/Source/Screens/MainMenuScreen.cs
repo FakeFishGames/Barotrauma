@@ -868,13 +868,12 @@ namespace Barotrauma
         {
 #if !DEBUG
 #if USE_STEAM
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+            if (GameMain.Config.UseSteamMatchmaking)
+            {
+                joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;            
 #endif
 #else
             joinServerButton.Enabled = true;
