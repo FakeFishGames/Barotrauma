@@ -292,6 +292,11 @@ namespace Barotrauma
                         UserData = sub
                     };
                                
+                if(!sub.RequiredContentPackagesInstalled)
+                {
+                    textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
+                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.ToolTip;
+                }
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
