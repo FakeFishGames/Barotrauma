@@ -1755,7 +1755,10 @@ namespace Barotrauma
             {
                 foreach (RevoluteJoint joint in LimbJoints)
                 {
-                    GameMain.World.Remove(joint);
+                    if (GameMain.World.JointList.Contains(joint))
+                    {
+                        GameMain.World.Remove(joint);
+                    }
                 }
                 LimbJoints = null;
             }
