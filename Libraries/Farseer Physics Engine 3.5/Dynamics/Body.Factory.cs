@@ -62,9 +62,8 @@ namespace FarseerPhysics.Dynamics
 
         public Fixture CreateRectangle(float width, float height, float density, float rotation, Vector2 offset)
         {
-            Vertices rectangleVertices = PolygonTools.CreateRectangle(width / 2, height / 2);
+            Vertices rectangleVertices = PolygonTools.CreateRectangle(width / 2, height / 2, Vector2.Zero, rotation);
             rectangleVertices.Translate(ref offset);
-            rectangleVertices.Rotate(rotation);
             PolygonShape rectangleShape = new PolygonShape(rectangleVertices, density);
             return CreateFixture(rectangleShape);
         }
