@@ -626,7 +626,7 @@ namespace Barotrauma
                     newChunk.Body.BodyType = BodyType.Dynamic;
                     newChunk.Body.FixedRotation = true;
                     newChunk.Body.LinearDamping = 0.5f;
-                    newChunk.Body.GravityScale = 0.0f;
+                    newChunk.Body.IgnoreGravity = true;
                     newChunk.Body.Mass *= 10.0f;
                     extraWalls.Add(newChunk);
                     iceChunkPositions.Remove(selectedPos);

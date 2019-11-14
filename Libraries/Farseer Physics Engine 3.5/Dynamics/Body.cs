@@ -486,13 +486,6 @@ namespace FarseerPhysics.Dynamics
         /// <value><c>true</c> if  it ignores gravity; otherwise, <c>false</c>.</value>
         public bool IgnoreGravity { get; set; }
 
-        public float GravityScale
-        {
-            get { return 1.0f; /*TODO: FPE reimplement*/
-            }
-            set { /*TODO: FPE reimplement*/ }
-        }
-
         /// <summary>
         /// Get the world position of the center of mass.
         /// </summary>

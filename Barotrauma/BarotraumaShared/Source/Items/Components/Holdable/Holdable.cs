@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
                     Enabled = false
                 };
                 Pusher.FarseerBody.FixedRotation = false;
-                Pusher.FarseerBody.GravityScale = 0.0f;
+                Pusher.FarseerBody.IgnoreGravity = true;
             }
 
             handlePos = new Vector2[2];
