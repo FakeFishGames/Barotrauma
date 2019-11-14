@@ -47,6 +47,26 @@ namespace Barotrauma
 
         private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 
+        private readonly Queue<Impact> impactQueue = new Queue<Impact>();
+
+        struct Impact
+        {
+            public Fixture Target;
+            public Vector2 Velocity;
+            public Vector2 ImpactPos;
+            public Vector2 Normal;
+
+            public Impact(Fixture f1, Fixture f2, Contact contact)
+            {
+                Target = f2;
+                contact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> points);
+                if (contact.FixtureA.Body == f1.Body) { contactNormal = -contactNormal; }
+                ImpactPos = points[0];
+                Normal = contactNormal;
+                Velocity = f1.Body.LinearVelocity - f2.Body.LinearVelocity;
+            }
+        }
+
         public Rectangle Borders
         {
             get;
@@ -120,7 +140,7 @@ namespace Barotrauma
                           ConvertUnits.ToSimUnits(wall.BodyHeight),
                           50.0f,
                           -wall.BodyRotation,
-                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset));
+                          ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + wall.BodyOffset)).UserData = wall;
 
                     minExtents.X = Math.Min(rect.X, minExtents.X);
                     minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
@@ -137,7 +157,7 @@ namespace Barotrauma
                         ConvertUnits.ToSimUnits(rect.Width),
                         ConvertUnits.ToSimUnits(rect.Height),
                         100.0f,
-                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2)));
+                        ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2))).UserData = hull;
 
                     minExtents.X = Math.Min(rect.X, minExtents.X);
                     minExtents.Y = Math.Min(rect.Y - rect.Height, minExtents.Y);
@@ -247,8 +267,32 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Body.FarseerBody.IsStatic) { return; }
+            while (impactQueue.Count > 0)
+            {
+                var impact = impactQueue.Dequeue();                
 
+                if (impact.Target.UserData is VoronoiCell cell)
+                {
+                    HandleLevelCollision(impact);
+                }
+                else if (impact.Target.Body.UserData is Structure)
+                {
+                    HandleLevelCollision(impact);
+                }
+                else if (impact.Target.Body.UserData is Submarine otherSub)
+                {
+                    HandleSubCollision(impact, otherSub);
+                }
+                else if (impact.Target.Body.UserData is Limb limb)
+                {
+                    HandleLimbCollision(impact, limb);
+                }
+            }
+
+            //-------------------------
+
+            if (Body.FarseerBody.IsStatic) { return; }
+            
             ClientUpdatePosition(deltaTime);
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             
@@ -445,39 +489,24 @@ namespace Barotrauma
             if (f2.Body.UserData is Limb limb)
             {
                 bool collision = CheckCharacterCollision(contact, limb.character);
-                if (collision) HandleLimbCollision(contact, limb);
+                if (collision)
+                {
+                    lock (impactQueue)
+                    {
+                        impactQueue.Enqueue(new Impact(f1, f2, contact));
+                    }
+                }
                 return collision;
             }
             if (f2.Body.UserData is Character character)
             {
                 return CheckCharacterCollision(contact, character);
             }
-
-            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> _);
-            if (contact.FixtureA.Body == f1.Body)
+           
+            lock (impactQueue)
             {
-                normal = -normal;
+                impactQueue.Enqueue(new Impact(f1, f2, contact));
             }
-
-            if (f2.UserData is VoronoiCell)
-            {
-                HandleLevelCollision(contact, normal);
-                return true;
-            }
-
-            if (f2.Body.UserData is Structure)
-            {
-
-                HandleLevelCollision(contact, normal);
-                return true;
-            }
-
-            if (f2.Body.UserData is Submarine otherSub)
-            {
-                HandleSubCollision(contact, otherSub);
-                return true;
-            }
-
             return true;
         }
 
@@ -514,7 +543,7 @@ namespace Barotrauma
             return false;
         }
 
-        private void HandleLimbCollision(Contact contact, Limb limb)
+        private void HandleLimbCollision(Impact collision, Limb limb)
         {
             if (limb.Mass > MinImpactLimbMass)
             {
@@ -523,12 +552,12 @@ namespace Barotrauma
                     Vector2.UnitY :
                     Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
-                float impact = Math.Min(Vector2.Dot(Velocity - limb.LinearVelocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
+                float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
 
-                ApplyImpact(impact, normal, contact, applyDamage: false);
+                ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, normal, contact, applyDamage: false);
+                    dockedSub.SubBody.ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 }
             }
 
@@ -569,7 +598,7 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the limb
-                ApplyImpact((Vector2.Dot(-Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, levelContact, applyDamage: false);
+                ApplyImpact((Vector2.Dot(-collision.Velocity, contactNormal) / 2.0f) / levelContacts.Count, contactNormal, collision.ImpactPos, applyDamage: false);
             }
             avgContactNormal /= levelContacts.Count;
             
@@ -589,14 +618,11 @@ namespace Barotrauma
                     return;
                 }
 
-
                 Body.LinearVelocity -= velChange;
 
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
-
-                contact.GetWorldManifold(out _, out FixedArray2<Vector2> contactPos);
                 limb.character.LastDamageSource = submarine;
-                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(contactPos[0]), limb, 
+                limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
                     new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
 
                 if (limb.character.IsDead)
@@ -610,35 +636,33 @@ namespace Barotrauma
             }
         }
 
-        private void HandleLevelCollision(Contact contact, Vector2 collisionNormal)
+        private void HandleLevelCollision(Impact impact)
         {
-            float wallImpact = Vector2.Dot(Velocity, -collisionNormal);
+            float wallImpact = Vector2.Dot(impact.Velocity, -impact.Normal);
 
-            ApplyImpact(wallImpact, -collisionNormal, contact);
+            ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
             foreach (Submarine dockedSub in submarine.DockedTo)
             {
-                dockedSub.SubBody.ApplyImpact(wallImpact, -collisionNormal, contact);
+                dockedSub.SubBody.ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
             }
 
 #if CLIENT
-            contact.GetWorldManifold(out _, out FixedArray2<Vector2> particlePos);
-            
             int particleAmount = (int)Math.Min(wallImpact * 10.0f, 50);
             for (int i = 0; i < particleAmount; i++)
             {
                 GameMain.ParticleManager.CreateParticle("iceshards",
-                    ConvertUnits.ToDisplayUnits(particlePos[0]) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
-                    Rand.Vector(Rand.Range(50.0f, 500.0f)) + Velocity);
+                    ConvertUnits.ToDisplayUnits(impact.ImpactPos) + Rand.Vector(Rand.Range(1.0f, 50.0f)),
+                    Rand.Vector(Rand.Range(50.0f, 500.0f)) + impact.Velocity);
             }
 #endif
         }
 
-        private void HandleSubCollision(Contact contact, Submarine otherSub)
+        private void HandleSubCollision(Impact impact, Submarine otherSub)
         {
             Debug.Assert(otherSub != submarine);
 
-            contact.GetWorldManifold(out Vector2 normal, out FixedArray2<Vector2> points);
-            if (contact.FixtureA.Body == otherSub.SubBody.Body.FarseerBody)
+            Vector2 normal = impact.Normal;
+            if (impact.Target.Body == otherSub.SubBody.Body.FarseerBody)
             {
                 normal = -normal;
             }
@@ -647,13 +671,13 @@ namespace Barotrauma
             float otherMass = otherSub.PhysicsBody.Mass + otherSub.DockedTo.Sum(s => s.PhysicsBody.Mass);
             float massRatio = otherMass / (thisMass + otherMass);
 
-            float impact = (Vector2.Dot(Velocity - otherSub.Velocity, normal) / 2.0f) * massRatio;
+            float impulse = (Vector2.Dot(impact.Velocity, normal) / 2.0f) * massRatio;
 
             //apply impact to this sub (the other sub takes care of this in its own collision callback)
-            ApplyImpact(impact, normal, contact);
+            ApplyImpact(impulse, normal, impact.ImpactPos);
             foreach (Submarine dockedSub in submarine.DockedTo)
             {
-                dockedSub.SubBody.ApplyImpact(impact, normal, contact);
+                dockedSub.SubBody.ApplyImpact(impulse, normal, impact.ImpactPos);
             }
 
             //find all contacts between this sub and level walls
@@ -694,7 +718,7 @@ namespace Barotrauma
                 avgContactNormal += contactNormal;
 
                 //apply impacts at the positions where this sub is touching the level
-                ApplyImpact((Vector2.Dot(Velocity - otherSub.Velocity, contactNormal) / 2.0f) * massRatio / levelContacts.Count, contactNormal, levelContact);
+                ApplyImpact((Vector2.Dot(impact.Velocity, contactNormal) / 2.0f) * massRatio / levelContacts.Count, contactNormal, impact.ImpactPos);
             }
             avgContactNormal /= levelContacts.Count;
 
@@ -707,22 +731,19 @@ namespace Barotrauma
                     otherSub.PhysicsBody.LinearVelocity -= Vector2.Normalize(otherSub.PhysicsBody.LinearVelocity) * contactDot;
                 }
 
-                impact = Vector2.Dot(otherSub.Velocity, normal);
-                otherSub.SubBody.ApplyImpact(impact, normal, contact);
+                impulse = Vector2.Dot(otherSub.Velocity, normal);
+                otherSub.SubBody.ApplyImpact(impulse, normal, impact.ImpactPos);
                 foreach (Submarine dockedSub in otherSub.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, normal, contact);
+                    dockedSub.SubBody.ApplyImpact(impulse, normal, impact.ImpactPos);
                 }
             }            
         }
 
-        private void ApplyImpact(float impact, Vector2 direction, Contact contact, bool applyDamage = true)
+        private void ApplyImpact(float impact, Vector2 direction, Vector2 impactPos, bool applyDamage = true)
         {
             if (impact < MinCollisionImpact) { return; }
-
-            contact.GetWorldManifold(out Vector2 tempNormal, out FixedArray2<Vector2> worldPoints);
-            Vector2 lastContactPoint = worldPoints[0];
-            
+                        
             Vector2 impulse = direction * impact * 0.5f;            
             impulse = impulse.ClampLength(MaxCollisionImpact);
 
@@ -750,8 +771,8 @@ namespace Barotrauma
                 if (!submarine.IsOutpost && !submarine.DockedTo.Any(s => s.IsOutpost))
                 {
                     float angularVelocity = 
-                        (lastContactPoint.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
-                        - (lastContactPoint.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
+                        (impactPos.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
+                        - (impactPos.Y - Body.SimPosition.Y) / ConvertUnits.ToSimUnits(submarine.Borders.Height / 2) * impulse.X;
                     GameMain.GameScreen.Cam.AngularVelocity = MathHelper.Clamp(angularVelocity * 0.1f, -1.0f, 1.0f);
                 }
             }
@@ -790,7 +811,7 @@ namespace Barotrauma
             }
             
             var damagedStructures = Explosion.RangedStructureDamage(
-                ConvertUnits.ToDisplayUnits(lastContactPoint), 
+                ConvertUnits.ToDisplayUnits(impactPos), 
                 impact * 50.0f, 
                 applyDamage ? impact * ImpactDamageMultiplier : 0.0f);
 
@@ -812,7 +833,7 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(
                     "StructureBlunt",
                     impact * 10.0f,
-                    ConvertUnits.ToDisplayUnits(lastContactPoint),
+                    ConvertUnits.ToDisplayUnits(impactPos),
                     MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
                     maxDamageStructure.Tags);            
             }
