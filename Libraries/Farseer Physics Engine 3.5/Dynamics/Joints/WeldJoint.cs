@@ -117,16 +117,10 @@ namespace FarseerPhysics.Dynamics.Joints
         /// </summary>
         public Vector2 LocalAnchorB { get; set; }
 
-        public bool KinematicBodyA
-        {
-            get { return false; /*TODO: FPE reimplement*/ }
-            set { /*TODO: FPE reimplement*/ }
-        }
-        public bool KinematicBodyB
-        {
-            get { return false; /*TODO: FPE reimplement*/ }
-            set { /*TODO: FPE reimplement*/ }
-        }
+        /// <summary>
+        /// If true, body B is treated as if it was kinematic (i.e. as if it had infinite mass)
+        /// </summary>
+        public bool KinematicBodyB;
 
         public override Vector2 WorldAnchorA
         {
@@ -175,9 +169,10 @@ namespace FarseerPhysics.Dynamics.Joints
             _localCenterA = BodyA._sweep.LocalCenter;
             _localCenterB = BodyB._sweep.LocalCenter;
             _invMassA = BodyA._invMass;
-            _invMassB = BodyB._invMass;
+            _invMassB = KinematicBodyB ? 0.0f : BodyB._invMass;
             _invIA = BodyA._invI;
             _invIB = BodyB._invI;
+            _invIB = KinematicBodyB ? 0.0f : BodyB._invI;
 
             float aA = data.positions[_indexA].a;
             Vector2 vA = data.velocities[_indexA].v;
