@@ -350,6 +350,10 @@ namespace Barotrauma.Items.Components
                         return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
+
+#if CLIENT
+                equipLimb.UpdateWearableTypesToHide();
+#endif
             }
         }
 
@@ -377,6 +381,9 @@ namespace Barotrauma.Items.Components
                 }
 
                 equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
+#if CLIENT
+                equipLimb.UpdateWearableTypesToHide();
+#endif
 
                 limb[i] = null;
             }

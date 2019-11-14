@@ -204,6 +204,8 @@ namespace Barotrauma
 
         public string HitSoundTag => Params?.Sound?.Tag;
 
+        private List<WearableType> WearableTypesToHide { get; set; } = new List<WearableType>();
+
         partial void InitProjSpecific(XElement element)
         {
             for (int i = 0; i < Params.decorativeSpriteParams.Count; i++)
@@ -564,33 +566,19 @@ namespace Barotrauma
             }
             if (onlyDrawable == null)
             {
-                List<WearableSprite> wearableTypeHidingSprites =
-                    WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0);
-                List<WearableType> typesToHide = new List<WearableType>(); ;
-                if (wearableTypeHidingSprites.Count > 0)
-                {
-                    foreach (WearableSprite sprite in wearableTypeHidingSprites)
-                    {
-                        foreach (WearableType type in sprite.HideWearablesOfType)
-                        {
-                            if (!typesToHide.Contains(type)) { typesToHide.Add(type); }
-                        }
-                    }
-                }
-
-                if (HerpesSprite != null && !typesToHide.Contains(WearableType.Herpes))
+                if (HerpesSprite != null && !WearableTypesToHide.Contains(WearableType.Herpes))
                 {
                     DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
                     depthStep += step;
                 }
-                if (HuskSprite != null && enableHuskSprite && !typesToHide.Contains(WearableType.Husk))
+                if (HuskSprite != null && enableHuskSprite && !WearableTypesToHide.Contains(WearableType.Husk))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
                     depthStep += step;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
-                    if (typesToHide.Contains(wearable.Type)) { continue; }
+                    if (WearableTypesToHide.Contains(wearable.Type)) { continue; }
                     if (wearable.Type == WearableType.Beard && enableHuskSprite && HuskSprite != null) { continue; }
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
@@ -639,6 +627,26 @@ namespace Barotrauma
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
                 DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+            }
+        }
+
+        public void UpdateWearableTypesToHide()
+        {
+            WearableTypesToHide.Clear();
+            List<WearableSprite> wearableTypeHidingSprites =
+                    WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0);
+            if (wearableTypeHidingSprites.Count > 0)
+            {
+                foreach (WearableSprite sprite in wearableTypeHidingSprites)
+                {
+                    foreach (WearableType type in sprite.HideWearablesOfType)
+                    {
+                        if (!WearableTypesToHide.Contains(type))
+                        {
+                            WearableTypesToHide.Add(type);
+                        }
+                    }
+                }
             }
         }
 
