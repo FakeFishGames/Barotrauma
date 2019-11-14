@@ -564,7 +564,7 @@ namespace Barotrauma
             //find all contacts between the limb and level walls
             List<Contact> levelContacts = new List<Contact>();
             ContactEdge contactEdge = limb.body.FarseerBody.ContactList;
-            while (contactEdge.Next != null)
+            while (contactEdge != null)
             {
                 if (contactEdge.Contact.Enabled &&
                     contactEdge.Other.UserData is VoronoiCell &&
