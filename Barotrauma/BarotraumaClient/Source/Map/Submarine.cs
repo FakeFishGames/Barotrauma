@@ -314,7 +314,7 @@ namespace Barotrauma
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), descriptionBox.Content.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("submarine.name." + Name, true) ?? Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
 
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f / leftPanelWidth;
