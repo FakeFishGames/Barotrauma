@@ -231,25 +231,9 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            if (stickJoint == null) return;
+            if (stickJoint == null) { return; }
 
-            if (stickTarget != null)
-            {
-#if DEBUG
-                try
-                {
-#endif
-                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-#if DEBUG
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-                }
-#endif
-
-                stickTarget = null;
-            }
+            stickTarget = null;            
             GameMain.World.Remove(stickJoint);
             stickJoint = null;
         }
@@ -360,7 +344,11 @@ namespace Barotrauma.Items.Components
                 //ignore everything else than characters, sub walls and level walls
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel) &&
+                    !fixture.CollisionCategories.HasFlag(Physics.CollisionItemBlocking))
+                { 
+                    return -1; 
+                }
 
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
@@ -400,27 +388,16 @@ namespace Barotrauma.Items.Components
 
             if (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)  
             {
-                if (stickTarget != null)
-                {
-                    if (GameMain.World.BodyList.Contains(stickTarget))
-                    {
-                        item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                    }
-                    
-                    stickTarget = null;
-                }
-
+                stickTarget = null;
                 if (stickJoint != null)
                 {
                     if (GameMain.World.JointList.Contains(stickJoint))
                     {
                         GameMain.World.Remove(stickJoint);
                     }
-
                     stickJoint = null;
                 }
-                
-                if (!item.body.FarseerBody.IsBullet) IsActive = false; 
+                if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
             }           
         }
 
@@ -632,8 +609,6 @@ namespace Barotrauma.Items.Components
             }
 
             persistentStickJointTimer = PersistentStickJointDuration;
-
-            item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
             GameMain.World.Add(stickJoint);
 

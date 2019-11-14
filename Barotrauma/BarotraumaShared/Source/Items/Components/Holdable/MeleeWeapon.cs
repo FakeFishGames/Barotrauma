@@ -206,31 +206,6 @@ namespace Barotrauma.Items.Components
             if (User != null && User.Removed) { User = null; }
 
             User = character;
-
-            if (item.body?.FarseerBody == null || item.Removed ||
-                !GameMain.World.BodyList.Contains(item.body.FarseerBody))
-            {
-                return;
-            }
-
-            if (User != null)
-            {
-                foreach (Limb limb in User.AnimController.Limbs)
-                {
-                    if (limb.body.FarseerBody != null && GameMain.World.BodyList.Contains(limb.body.FarseerBody))
-                    {
-                        item.body.FarseerBody.RestoreCollisionWith(limb.body.FarseerBody);                        
-                    }
-                }
-            }
-
-            foreach (Limb limb in character.AnimController.Limbs)
-            {
-                if (limb.body.FarseerBody != null && GameMain.World.BodyList.Contains(limb.body.FarseerBody))
-                {
-                    item.body.FarseerBody.IgnoreCollisionWith(limb.body.FarseerBody);
-                }
-            }
         }
 
         private void RestoreCollision()
@@ -269,7 +244,7 @@ namespace Barotrauma.Items.Components
             if (f2.Body.UserData is Limb)
             {
                 targetLimb = (Limb)f2.Body.UserData;
-                if (targetLimb.IsSevered || targetLimb.character == null) { return false; }
+                if (targetLimb.IsSevered || targetLimb.character == null || targetLimb.character == User) { return false; }
                 targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
@@ -285,7 +260,7 @@ namespace Barotrauma.Items.Components
             else if (f2.Body.UserData is Character)
             {
                 targetCharacter = (Character)f2.Body.UserData;
-                if (targetCharacter == picker) return false;
+                if (targetCharacter == picker || targetCharacter == User) { return false; }
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
                 {

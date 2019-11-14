@@ -1764,11 +1764,6 @@ namespace Barotrauma
                         holdable.Pusher.Enabled = true;
                         holdable.Pusher.ResetDynamics();
                         holdable.Pusher.SetTransform(currItemPos, itemAngle);
-                        foreach (Character character in Character.CharacterList)
-                        {
-                            holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
-                        }
-                        holdable.Pusher.FarseerBody.IgnoreCollisionWith(Collider.FarseerBody);
                     }
                     else
                     {

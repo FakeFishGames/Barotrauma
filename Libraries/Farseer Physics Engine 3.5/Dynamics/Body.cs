@@ -1281,14 +1281,14 @@ namespace FarseerPhysics.Dynamics
                 FixtureList[i].IsSensor = isSensor;
         }
 
-        public void IgnoreCollisionWith(Body body)
+        /*public void IgnoreCollisionWith(Body body)
         {
-            /*TODO: FPE reimplement*/
+            TODO: FPE reimplement
         }
         public void RestoreCollisionWith(Body body)
         {
-            /*TODO: FPE reimplement*/
-        }
+            TODO: FPE reimplement
+        }*/
 
         /// <summary>
         /// Makes a clone of the body. Fixtures and therefore shapes are not included.

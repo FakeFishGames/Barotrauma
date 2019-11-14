@@ -1,5 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -70,11 +72,10 @@ namespace Barotrauma.Networking
             {
                 RespawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
                 RespawnShuttle.Load(false);
+                RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
 
                 ResetShuttle();
                 
-                //respawnShuttle.GodMode = true;
-
                 shuttleDoors = new List<Door>();
                 foreach (Item item in Item.ItemList)
                 {
@@ -112,7 +113,13 @@ namespace Barotrauma.Networking
             }
 #endif
         }
-        
+
+        private bool OnShuttleCollision(Fixture sender, Fixture other, Contact contact)
+        {
+            //ignore collisions with the top barrier when returning
+            return CurrentState != State.Returning || other?.Body != Level.Loaded?.TopBarrier;
+        }
+
         public void Update(float deltaTime)
         {
             if (RespawnShuttle == null)
@@ -161,7 +168,6 @@ namespace Barotrauma.Networking
             if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
-                RespawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
 
                 if (shuttleSteering != null)
                 {
@@ -182,8 +188,6 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-            RespawnShuttle.PhysicsBody.FarseerBody.IgnoreCollisionWith(Level.Loaded.TopBarrier);
-
             while (Math.Abs(position.Y - RespawnShuttle.WorldPosition.Y) > 100.0f)
             {
                 Vector2 diff = position - RespawnShuttle.WorldPosition;
@@ -196,8 +200,6 @@ namespace Barotrauma.Networking
 
                 if (RespawnShuttle.SubBody == null) yield return CoroutineStatus.Success;
             }
-
-            RespawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
 
             yield return CoroutineStatus.Success;
         }
@@ -274,7 +276,6 @@ namespace Barotrauma.Networking
 
             RespawnShuttle.SetPosition(new Vector2(Level.Loaded.StartPosition.X, Level.Loaded.Size.Y + RespawnShuttle.Borders.Height));
             RespawnShuttle.Velocity = Vector2.Zero;
-            RespawnShuttle.PhysicsBody.FarseerBody.RestoreCollisionWith(Level.Loaded.TopBarrier);
         }
 
         partial void RespawnCharactersProjSpecific();
