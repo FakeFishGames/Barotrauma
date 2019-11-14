@@ -442,18 +442,19 @@ namespace Barotrauma
         
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
+            string fileName = (string)obj;
+
             if (isMultiplayer)
             {
                 loadGameButton.Enabled = true;
                 deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
+                deleteMpSaveButton.Enabled = GameMain.GameSession?.SavePath != fileName;
                 if (deleteMpSaveButton.Visible)
                 {
                     deleteMpSaveButton.UserData = obj as string;
                 }
                 return true;
             }
-
-            string fileName = (string)obj;
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
             if (doc == null)
