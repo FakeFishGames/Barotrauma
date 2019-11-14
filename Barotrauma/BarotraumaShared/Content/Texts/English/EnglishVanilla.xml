@@ -3721,8 +3721,12 @@
   <entitydescription.duffelbag>The traditional way of storing a deceased seafarer's belongings until they can be delivered to their next of kin (or stolen or sold).</entitydescription.duffelbag>
   <entityname.loosevent>Loose vent</entityname.loosevent>
   <entitydescription.loosevent>A place to stash things of dubious nature.</entitydescription.loosevent>
+  <entityname.loosepanel>Loose vent</entityname.loosepanel>
+  <entitydescription.loosepanel>A place to stash things of dubious nature.</entitydescription.loosepanel>
   <entityname.keyboard>Keyboard</entityname.keyboard>
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
+  
+  <roomname.bilge>Bilge</roomname.bilge>
 
   <!-- Server permission presets -->
   <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
