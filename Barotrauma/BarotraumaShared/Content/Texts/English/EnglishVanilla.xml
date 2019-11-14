@@ -3724,4 +3724,11 @@
   <entityname.keyboard>Keyboard</entityname.keyboard>
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
 
+  <!-- Server permission presets -->
+  <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
+  <permissionpresetdescription.admin>Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands.</permissionpresetdescription.admin>
+  <permissionpresetname.moderator>Moderator</permissionpresetname.moderator>
+  <permissionpresetdescription.moderator>Allowed to manage round settings, kick players and access server logs.</permissionpresetdescription.moderator>
+  <permissionpresetname.none>None</permissionpresetname.none>
+  <permissionpresetdescription.none>No special privileges.</permissionpresetdescription.none>
 </infotexts>

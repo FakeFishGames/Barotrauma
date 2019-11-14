@@ -36,8 +36,9 @@ namespace Barotrauma.Networking
         
         public PermissionPreset(XElement element)
         {
-            Name = element.GetAttributeString("name", "");
-            Description = element.GetAttributeString("description", "");
+            string name = element.GetAttributeString("name", "");
+            Name = TextManager.Get("permissionpresetname." + name, true) ?? name;
+            Description = TextManager.Get("permissionpresetdescription." + name, true) ?? element.GetAttributeString("description", "");
 
             string permissionsStr = element.GetAttributeString("permissions", "");
             if (!Enum.TryParse(permissionsStr, out Permissions))
