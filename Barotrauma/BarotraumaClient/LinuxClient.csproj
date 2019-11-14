@@ -39,7 +39,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'ReleaseLinux|x64' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\ReleaseLinux\</OutputPath>
-    <DefineConstants>TRACE;LINUX;CLIENT</DefineConstants>
+    <DefineConstants>TRACE;LINUX;CLIENT;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>

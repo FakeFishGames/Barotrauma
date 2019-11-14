@@ -292,6 +292,11 @@ namespace Barotrauma
                         UserData = sub
                     };
                                
+                if(!sub.RequiredContentPackagesInstalled)
+                {
+                    textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
+                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.RawToolTip;
+                }
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
@@ -437,18 +442,19 @@ namespace Barotrauma
         
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
+            string fileName = (string)obj;
+
             if (isMultiplayer)
             {
                 loadGameButton.Enabled = true;
                 deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
+                deleteMpSaveButton.Enabled = GameMain.GameSession?.SavePath != fileName;
                 if (deleteMpSaveButton.Visible)
                 {
                     deleteMpSaveButton.UserData = obj as string;
                 }
                 return true;
             }
-
-            string fileName = (string)obj;
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
             if (doc == null)

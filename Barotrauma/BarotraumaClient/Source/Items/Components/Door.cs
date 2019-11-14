@@ -122,10 +122,8 @@ namespace Barotrauma.Items.Components
                     weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
             }
 
-            if (openState == 1.0f)
+            if (openState >= 1.0f)
             {
-                //TODO: FPE, this should be here
-                //Body.Enabled = false;
                 return;
             }
 

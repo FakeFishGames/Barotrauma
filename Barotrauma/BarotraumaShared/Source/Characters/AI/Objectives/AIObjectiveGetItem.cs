@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -15,6 +14,8 @@ namespace Barotrauma
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
         public Func<Item, float> GetItemPriority;
+        public Func<Item, bool> ItemFilter;
+        public float TargetCondition { get; set; } = 1;
 
         //can be either tags or identifiers
         private string[] itemIdentifiers;
@@ -67,7 +68,7 @@ namespace Barotrauma
         private void CheckInventory()
         {
             if (itemIdentifiers == null) { return; }
-            var item = character.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
+            var item = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
             if (item != null)
             {
                 targetItem = item;
@@ -101,9 +102,11 @@ namespace Barotrauma
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
+                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
-                Abandon = true;
+                // Try again
+                targetItem = null;
+                return;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
@@ -205,17 +208,15 @@ namespace Barotrauma
             {
                 currSearchIndex++;
                 var item = Item.ItemList[currSearchIndex];
-                if (ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
                 if (item.CurrentHull == null) { continue; }
-                if (item.Condition <= 0) { continue; }
                 if (item.Submarine.TeamID != character.TeamID) { continue; }
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (!CheckItem(item)) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
@@ -255,7 +256,7 @@ namespace Barotrauma
             }
             else if (itemIdentifiers != null)
             {
-                var matchingItem = character.Inventory.FindItem(i => !ignoredItems.Contains(i) && itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)), recursive: true);
+                var matchingItem = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
                 if (matchingItem != null)
                 {
                     return !equip || character.HasEquippedItem(matchingItem);
@@ -263,6 +264,14 @@ namespace Barotrauma
                 return false;
             }
             return false;
+        }
+
+        private bool CheckItem(Item item)
+        {
+            if (ignoredItems.Contains(item)) { return false; };
+            if (item.Condition < TargetCondition) { return false; }
+            if (ItemFilter != null && !ItemFilter(item)) { return false; }
+            return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
         }
     }
 }

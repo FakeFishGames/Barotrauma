@@ -22,7 +22,14 @@ namespace Barotrauma
 
         public bool Equip { get; set; }
 
-        public AIObjectiveDecontainItem(Character character, Item targetItem, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
+        /// <summary>
+        /// If true drops the item when containing the item fails.
+        /// In both cases abandons the objective.
+        /// Note that has no effect if the target container was not defined (always drops) -> completes when the item is dropped.
+        /// </summary>
+        public bool DropIfFailsToContain { get; set; } = true;
+
+        public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.targetItem = targetItem;
@@ -30,10 +37,10 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        public AIObjectiveDecontainItem(Character character, string itemIdentifier, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, sourceContainer, objectiveManager, targetContainer, priorityModifier) { }
+        public AIObjectiveDecontainItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
+            : this(character, new string[] { itemIdentifier }, objectiveManager, sourceContainer, targetContainer, priorityModifier) { }
 
-        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, ItemContainer sourceContainer, AIObjectiveManager objectiveManager, ItemContainer targetContainer = null, float priorityModifier = 1) 
+        public AIObjectiveDecontainItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, ItemContainer sourceContainer, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
@@ -71,7 +78,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                else if (itemToDecontain.Container != sourceContainer.Item)
+                if (itemToDecontain.Container != sourceContainer.Item)
                 {
                     IsCompleted = true;
                     return;
@@ -106,10 +113,19 @@ namespace Barotrauma
                     constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
                     {
                         Equip = this.Equip,
-                        GetItemPriority = this.GetItemPriority
+                        RemoveEmpty = false,
+                        GetItemPriority = this.GetItemPriority,
+                        ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
                     },
                     onCompleted: () => IsCompleted = true,
-                    onAbandon: () => targetContainer = null);
+                    onAbandon: () =>
+                    {
+                        if (DropIfFailsToContain)
+                        {
+                            itemToDecontain.Drop(character);
+                        }
+                        Abandon = true;
+                    });
             }
             else
             {

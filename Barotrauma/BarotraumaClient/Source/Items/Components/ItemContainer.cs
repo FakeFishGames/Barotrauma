@@ -52,15 +52,6 @@ namespace Barotrauma.Items.Components
         [Serialize(-1.0f, false, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
         public float ContainedSpriteDepth { get; set; }
 
-
-        private float itemRotation;
-        [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
-        public float ItemRotation
-        {
-            get { return MathHelper.ToDegrees(itemRotation); }
-            set { itemRotation = MathHelper.ToRadians(value); }
-        }
-
         [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
 
@@ -146,7 +137,6 @@ namespace Barotrauma.Items.Components
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
             Vector2 transformedItemInterval = ItemInterval * item.Scale;
-            float currentRotation = itemRotation;
 
             if (item.body == null)
             {
@@ -177,8 +167,6 @@ namespace Barotrauma.Items.Components
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
 
                 transformedItemPos += item.DrawPosition;
-
-                currentRotation += item.body.Rotation;
             }
 
             Vector2 currentItemPos = transformedItemPos;
@@ -198,13 +186,6 @@ namespace Barotrauma.Items.Components
                     item.IsHighlighted = false;
                 }
 
-                if (containedItem.body != null && 
-                    Math.Abs(containedItem.body.FarseerBody.Rotation - currentRotation) > 0.001f)
-                {
-                    //TODO: FPE, this should be here
-                    //containedItem.body.SetTransformIgnoreContacts(containedItem.body.SimPosition, currentRotation);
-                }
-
                 Vector2 origin = containedItem.Sprite.Origin;
                 if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
@@ -217,7 +198,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     containedItem.GetSpriteColor(),
                     origin,
-                    - currentRotation,
+                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation),
                     containedItem.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);

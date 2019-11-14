@@ -594,6 +594,21 @@ namespace Barotrauma
                 CharacterHealth.AddToGUIUpdateList();
             }
         }
+
+        public bool IsVisible(Camera cam)
+        {
+            if (!Enabled || AnimController.SimplePhysicsEnabled) { return false; }
+
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                float maxExtent = limb.body.GetMaxExtent();
+                Vector2 worldPos = limb.WorldPosition;
+                if (worldPos.X < cam.WorldView.X - maxExtent || worldPos.X > cam.WorldView.Right + maxExtent) { continue; }
+                if (worldPos.Y < cam.WorldView.Y - cam.WorldView.Height - maxExtent || worldPos.Y > cam.WorldView.Y + maxExtent) { continue; }
+                return true;
+            }
+            return false;
+        }
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {

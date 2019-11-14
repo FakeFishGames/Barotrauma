@@ -30,6 +30,7 @@ namespace Barotrauma
         public virtual bool ConcurrentObjectives => false;
 
         public virtual bool KeepDivingGearOn => false;
+        public virtual bool UnequipItems => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         public float Priority { get; set; }

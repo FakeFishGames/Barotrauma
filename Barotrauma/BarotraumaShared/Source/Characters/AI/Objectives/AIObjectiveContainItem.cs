@@ -29,6 +29,7 @@ namespace Barotrauma
         public bool AllowToFindDivingGear { get; set; } = true;
         public float ConditionLevel { get; set; }
         public bool Equip { get; set; }
+        public bool RemoveEmpty { get; set; } = true;
 
         public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -96,27 +97,36 @@ namespace Barotrauma
             {
                 if (character.CanInteractWith(container.Item, out _, checkLinked: false))
                 {
-                    // Remove empty items, if any
-                    foreach (var emptyItem in container.Inventory.Items)
+                    if (RemoveEmpty)
                     {
-                        if (emptyItem == null) { continue; }
-                        if (emptyItem.Condition <= 0)
+                        foreach (var emptyItem in container.Inventory.Items)
                         {
-                            emptyItem.Drop(character);
+                            if (emptyItem == null) { continue; }
+                            if (emptyItem.Condition <= 0)
+                            {
+                                emptyItem.Drop(character);
+                            }
                         }
                     }
                     // Contain the item
                     if (itemToContain.ParentInventory == character.Inventory)
                     {
-                        character.Inventory.RemoveItem(itemToContain);
-                        if (container.Inventory.TryPutItem(itemToContain, null))
+                        if (!container.Inventory.CanBePut(itemToContain))
                         {
-                            IsCompleted = true;
+                            Abandon = true;
                         }
                         else
                         {
-                            itemToContain.Drop(character);
-                            Abandon = true;
+                            character.Inventory.RemoveItem(itemToContain);
+                            if (container.Inventory.TryPutItem(itemToContain, null))
+                            {
+                                IsCompleted = true;
+                            }
+                            else
+                            {
+                                itemToContain.Drop(character);
+                                Abandon = true;
+                            }
                         }
                     }
                     else

@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override string DebugTag => "charge batteries";
+        public override bool UnequipItems => true;
         private IEnumerable<PowerContainer> batteryList;
 
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
