@@ -1129,7 +1129,10 @@ namespace FarseerPhysics.Dynamics
             if (joint == null)
                 throw new ArgumentNullException("joint");
             if (!JointList.Contains(joint))
-                throw new ArgumentException("You are removing a joint that is not in the simulation.", "joint");
+            {
+                Debug.WriteLine("You are removing a joint that is not in the simulation.\n" + Environment.StackTrace);
+                return;
+            }
 
             bool collideConnected = joint.CollideConnected;
 
