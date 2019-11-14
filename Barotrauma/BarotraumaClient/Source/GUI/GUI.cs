@@ -103,6 +103,9 @@ namespace Barotrauma
         public static bool ScreenChanged;
 
         public static ScalableFont Font => Style?.Font;
+
+        // Usable in CJK as a regular font
+        public static ScalableFont GlobalFont => Style?.GlobalFont;
         public static ScalableFont UnscaledSmallFont => Style?.UnscaledSmallFont;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
