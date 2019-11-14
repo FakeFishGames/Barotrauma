@@ -364,7 +364,7 @@ namespace Barotrauma
         
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (!character.IsVisible(cam)) { return; }
+            if (!character.IsVisible) { return; }
 
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)

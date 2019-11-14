@@ -5,6 +5,7 @@ using System;
 using FarseerPhysics;
 using System.Diagnostics;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -90,6 +91,17 @@ namespace Barotrauma
             cam.UpdateTransform(true);
             Submarine.CullEntities(cam);
 
+            foreach (Character c in Character.CharacterList)
+            {
+                c.AnimController.Limbs.ForEach(l => l.body.UpdateDrawPosition());
+                bool wasVisible = c.IsVisible;
+                c.DoVisibilityCheck(cam);
+                if (c.IsVisible != wasVisible)
+                {
+                    c.AnimController.Limbs.ForEach(l => { if (l.LightSource != null) l.LightSource.Enabled = c.IsVisible; });
+                }
+            }
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -144,7 +156,6 @@ namespace Barotrauma
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
-
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -206,7 +217,7 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible(cam)) { continue; }
+                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
@@ -216,7 +227,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.All(l => l.DeformSprite == null) || !c.IsVisible(cam)) { continue; }
+                if (c.AnimController.Limbs.All(l => l.DeformSprite == null) || !c.IsVisible) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
