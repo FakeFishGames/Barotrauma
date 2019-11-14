@@ -24,7 +24,27 @@ namespace Barotrauma
         /// </summary>
         const float MaxImpactDamage = 0.1f;
 
-        private static List<Ragdoll> list = new List<Ragdoll>();
+        private static readonly List<Ragdoll> list = new List<Ragdoll>();
+
+        struct Impact
+        {
+            public Fixture F1, F2;
+            public Vector2 LocalNormal;
+            public Vector2 Velocity;
+            public Vector2 ImpactPos;
+
+            public Impact(Fixture f1, Fixture f2, Contact contact, Vector2 velocity)
+            {
+                F1 = f1;
+                F2 = f2;
+                Velocity = velocity;
+                LocalNormal = contact.Manifold.LocalNormal;
+                contact.GetWorldManifold(out _, out FarseerPhysics.Common.FixedArray2<Vector2> points);
+                ImpactPos = points[0];
+            }
+        }
+
+        private readonly Queue<Impact> impactQueue = new Queue<Impact>();
 
         protected Hull currentHull;
         
@@ -414,7 +434,10 @@ namespace Barotrauma
         {
             if (LimbJoints != null)
             {
-                LimbJoints.ForEach(j => GameMain.World.Remove(j));
+                foreach (LimbJoint joint in LimbJoints)
+                {
+                    if (GameMain.World.JointList.Contains(joint)) { GameMain.World.Remove(joint); }
+                }
             }
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
             LimbJoints = new LimbJoint[RagdollParams.Joints.Count];
@@ -593,33 +616,46 @@ namespace Barotrauma
                 GameMain.World.Remove(limbJoint);
             }
         }
+
           
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
-
-            if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) return false;
+            if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) { return false; }
 
             //only collide with the ragdoll's own blocker
-            if (f2.Body.UserData as string == "blocker" && f2.Body != outsideCollisionBlocker) return false;
+            if (f2.Body.UserData as string == "blocker" && f2.Body != outsideCollisionBlocker) { return false; }
+
+
+            //using the velocity of the limb would make the impact damage more realistic,
+            //but would also make it harder to edit the animations because the forces/torques
+            //would all have to be balanced in a way that prevents the character from doing
+            //impact damage to itself
+            Vector2 velocity = Collider.LinearVelocity;
+            if (character.Submarine == null && f2.Body.UserData is Submarine)
+            {
+                velocity -= ((Submarine)f2.Body.UserData).Velocity;
+            }
 
             //always collides with bodies other than structures
             if (!(f2.Body.UserData is Structure structure))
             {
-                CalculateImpact(f1, f2, contact);
+                lock (impactQueue)
+                {
+                    impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+                }
                 return true;
             }
 
-            Vector2 colliderBottom = GetColliderBottom();
-            
+            Vector2 colliderBottom = GetColliderBottom();            
             if (structure.IsPlatform)
             {
-                if (ignorePlatforms) return false;
+                if (ignorePlatforms) { return false; }
 
                 //the collision is ignored if the lowest limb is under the platform
                 //if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false;
 
-                if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) return false; 
-                if (f1.Body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) return false; 
+                if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
+                if (f1.Body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
                 
             }
             else if (structure.StairDirection != Direction.None)
@@ -630,20 +666,20 @@ namespace Barotrauma
                 
                 //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
                 float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
-                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) return false;
+                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) { return false; }
 
                 //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
-                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) return false;
-                               
+                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) { return false; }
+
                 //3. collided with the stairs from below
-                if (contact.Manifold.LocalNormal.Y < 0.0f) return false;
+                if (contact.Manifold.LocalNormal.Y < 0.0f) { return false; }
 
                 //4. contact points is above the bottom half of the collider
                 contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
-                if (points[0].Y > Collider.SimPosition.Y) return false;
-                
+                if (points[0].Y > Collider.SimPosition.Y) { return false; }
+
                 //5. in water
-                if (inWater && targetMovement.Y < 0.5f) return false;
+                if (inWater && targetMovement.Y < 0.5f) { return false; }
 
                 //---------------
 
@@ -657,27 +693,19 @@ namespace Barotrauma
                     return false;
             }
 
-            CalculateImpact(f1, f2, contact);
+            lock (impactQueue)
+            {
+                impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+            }
 
             return true;
         }
 
-        private void CalculateImpact(Fixture f1, Fixture f2, Contact contact)
+        private void ApplyImpact(Fixture f1, Fixture f2, Vector2 localNormal, Vector2 impactPos, Vector2 velocity)
         {
             if (character.DisableImpactDamageTimer > 0.0f) return;
 
-            //using the velocity of the limb would make the impact damage more realistic,
-            //but would also make it harder to edit the animations because the forces/torques
-            //would all have to be balanced in a way that prevents the character from doing
-            //impact damage to itself
-            Vector2 velocity = Collider.LinearVelocity;
-            Vector2 normal = contact.Manifold.LocalNormal;
-
-            if (character.Submarine == null && f2.Body.UserData is Submarine)
-            {
-                velocity -= ((Submarine)f2.Body.UserData).Velocity;
-            }
-
+            Vector2 normal = localNormal;
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
             {
@@ -688,8 +716,7 @@ namespace Barotrauma
                 {
                     if (impact > ImpactTolerance)
                     {
-                        contact.GetWorldManifold(out _, out FarseerPhysics.Common.FixedArray2<Vector2> points);
-                        Vector2 impactPos = ConvertUnits.ToDisplayUnits(points[0]);
+                        impactPos = ConvertUnits.ToDisplayUnits(impactPos);
                         if (character.Submarine != null) impactPos += character.Submarine.Position;
 
                         float impactDamage = Math.Min((impact - ImpactTolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
@@ -1061,6 +1088,12 @@ namespace Barotrauma
         public void Update(float deltaTime, Camera cam)
         {
             if (!character.Enabled || Frozen || Invalid) { return; }
+
+            while (impactQueue.Count > 0)
+            {
+                var impact = impactQueue.Dequeue();
+                ApplyImpact(impact.F1, impact.F2, impact.LocalNormal, impact.ImpactPos, impact.Velocity);
+            }
 
             CheckValidity();
 
