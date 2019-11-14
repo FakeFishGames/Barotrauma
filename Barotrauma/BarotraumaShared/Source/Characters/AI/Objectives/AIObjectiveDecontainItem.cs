@@ -22,6 +22,13 @@ namespace Barotrauma
 
         public bool Equip { get; set; }
 
+        /// <summary>
+        /// If true drops the item when containing the item fails.
+        /// In both cases abandons the objective.
+        /// Note that has no effect if the target container was not defined (always drops) -> completes when the item is dropped.
+        /// </summary>
+        public bool DropIfFailsToContain { get; set; } = true;
+
         public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
@@ -111,7 +118,14 @@ namespace Barotrauma
                         ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
                     },
                     onCompleted: () => IsCompleted = true,
-                    onAbandon: () => targetContainer = null);
+                    onAbandon: () =>
+                    {
+                        if (DropIfFailsToContain)
+                        {
+                            itemToDecontain.Drop(character);
+                        }
+                        Abandon = true;
+                    });
             }
             else
             {

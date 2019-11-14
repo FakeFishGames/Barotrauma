@@ -111,15 +111,22 @@ namespace Barotrauma
                     // Contain the item
                     if (itemToContain.ParentInventory == character.Inventory)
                     {
-                        character.Inventory.RemoveItem(itemToContain);
-                        if (container.Inventory.TryPutItem(itemToContain, null))
+                        if (!container.Inventory.CanBePut(itemToContain))
                         {
-                            IsCompleted = true;
+                            Abandon = true;
                         }
                         else
                         {
-                            itemToContain.Drop(character);
-                            Abandon = true;
+                            character.Inventory.RemoveItem(itemToContain);
+                            if (container.Inventory.TryPutItem(itemToContain, null))
+                            {
+                                IsCompleted = true;
+                            }
+                            else
+                            {
+                                itemToContain.Drop(character);
+                                Abandon = true;
+                            }
                         }
                     }
                     else

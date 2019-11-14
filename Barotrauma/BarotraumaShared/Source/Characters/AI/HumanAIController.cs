@@ -83,6 +83,7 @@ namespace Barotrauma
             {
                 unreachableClearTimer = clearUnreachableInterval;
                 UnreachableHulls.Clear();
+                ignoredContainers.Clear();
             }
 
             float maxDistanceToSub = 3000;
@@ -376,8 +377,14 @@ namespace Barotrauma
                                         itemIndex = 0;
                                         if (targetContainer != null)
                                         {
-                                            var decontainObjective = new AIObjectiveDecontainItem(Character, divingSuit, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
-                                            decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                            var decontainObjective = new AIObjectiveDecontainItem(Character, divingSuit, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>())
+                                            {
+                                                DropIfFailsToContain = false
+                                            };
+                                            decontainObjective.Abandoned += () =>
+                                            {
+                                                ignoredContainers.Add(targetContainer);
+                                            };
                                             ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                             return;
                                         }

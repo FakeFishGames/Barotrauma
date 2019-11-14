@@ -859,8 +859,14 @@ namespace Barotrauma.Items.Components
 
         private int itemIndex;
         private List<Item> ignoredContainers = new List<Item>();
+        private Character previousUser;
         protected bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
         {
+            if (previousUser != character)
+            {
+                ignoredContainers.Clear();
+                previousUser = character;
+            }
             suitableContainer = null;
             if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
             {
@@ -890,6 +896,7 @@ namespace Barotrauma.Items.Components
                     return 1.0f;
                 }
             };
+            // TODO: are we sure that we want to abandon the objective here?
             containObjective.Abandoned += () => objective.Abandon = true;
             objective.AddSubObjective(containObjective);
             return containObjective;
@@ -938,8 +945,10 @@ namespace Barotrauma.Items.Components
                             }
                         }, out Item targetContainer))
                     {
-                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>());
-                        decontainObjective.Equip = equip;
+                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>())
+                        {
+                            Equip = equip
+                        };
                         decontainObjective.Abandoned += () =>
                         {
                             itemIndex = 0;
