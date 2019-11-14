@@ -24,6 +24,8 @@ namespace Barotrauma.Items.Components
 
         private readonly HashSet<Entity> hitTargets = new HashSet<Entity>();
 
+        private readonly Queue<Fixture> impactQueue = new Queue<Fixture>();
+
         public Character User { get; private set; }
 
         [Serialize(0.0f, false, description: "An estimation of how close the item has to be to the target for it to hit. Used by AI characters to determine when they're close enough to hit a target.")]
@@ -125,8 +127,14 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) { return; }
-            if (!picker.HasSelectedItem(item)) { IsActive = false; }
+            if (!item.body.Enabled) { impactQueue.Clear(); return; }
+            if (!picker.HasSelectedItem(item)) { impactQueue.Clear(); IsActive = false; }
+
+            while (impactQueue.Count > 0)
+            {
+                var impact = impactQueue.Dequeue();
+                HandleImpact(impact.Body);
+            }
 
             reloadTimer -= deltaTime;
             if (reloadTimer < 0) { reloadTimer = 0; }
@@ -227,6 +235,7 @@ namespace Barotrauma.Items.Components
 
         private void RestoreCollision()
         {
+            impactQueue.Clear();
             item.body.FarseerBody.OnCollision -= OnCollision;
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
@@ -239,15 +248,14 @@ namespace Barotrauma.Items.Components
         {
             if (User == null || User.Removed)
             {
-                RestoreCollision();
-                hitting = false;
-                User = null;
+                impactQueue.Enqueue(f2);
+                return false;
             }
 
             //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls
             if (Submarine.PickBody(User.AnimController.AimSourceSimPos, 
-                item.SimPosition, 
-                collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                item.SimPosition,
+                collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking,
                 allowInsideFixture: true) != null)
             {
                 return false;
@@ -258,14 +266,12 @@ namespace Barotrauma.Items.Components
             Structure targetStructure = null;
             Item targetItem = null;
 
-            attack?.SetUser(User);
-
             if (f2.Body.UserData is Limb)
             {
                 targetLimb = (Limb)f2.Body.UserData;
                 if (targetLimb.IsSevered || targetLimb.character == null) { return false; }
                 targetCharacter = targetLimb.character;
-                if (targetCharacter == picker){ return false; }
+                if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetCharacter)) { return false; }
@@ -324,6 +330,11 @@ namespace Barotrauma.Items.Components
 
             if (attack != null)
             {
+                if (targetLimb == null && targetCharacter == null && targetStructure == null && (targetItem == null || ! targetItem.Prefab.DamagedByMeleeWeapons))
+                {
+                    return false;
+                }
+
                 if (targetLimb != null)
                 {
                     targetLimb.character.LastDamageSource = item;
@@ -383,6 +394,87 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+        private void HandleImpact(Body target)
+        {
+            if (User == null || User.Removed || target == null)
+            {
+                RestoreCollision();
+                hitting = false;
+                User = null;
+                return;
+            }
+            
+            Limb targetLimb = target.UserData as Limb;
+            Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
+            Structure targetStructure = target.UserData as Structure;
+            Item targetItem = target.UserData as Item;
+            
+            if (attack != null)
+            {
+                attack.SetUser(User);
+
+                if (targetLimb != null)
+                {
+                    if (targetLimb.character.Removed) { return; }
+                    targetLimb.character.LastDamageSource = item;
+                    attack.DoDamageToLimb(User, targetLimb, item.WorldPosition, 1.0f);
+                }
+                else if (targetCharacter != null)
+                {
+                    if (targetCharacter.Removed) { return; }
+                    targetCharacter.LastDamageSource = item;
+                    attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
+                }
+                else if (targetStructure != null)
+                {
+                    if (targetStructure.Removed) { return; }
+                    attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
+                {
+                    if (targetItem.Removed) { return; }
+                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+#if SERVER
+            if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
+            {
+                GameMain.Server.CreateEntityEvent(item, new object[] 
+                {
+                    Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
+                    ActionType.OnUse,
+                    null, //itemcomponent
+                    targetCharacter.ID, targetLimb
+                });
+
+                string logStr = picker?.LogName + " used " + item.Name;
+                if (item.ContainedItems != null && item.ContainedItems.Any())
+                {
+                    logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
+                }
+                logStr += " on " + targetCharacter.LogName + ".";
+                Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
+            }
+#endif
+
+            if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
+            {
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: User);
+            }
+
+            if (DeleteOnUse)
+            {
+                Entity.Spawner.AddToRemoveQueue(item);
+            }
         }
     }
 }
