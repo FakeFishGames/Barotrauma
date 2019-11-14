@@ -782,6 +782,7 @@ namespace Barotrauma
                 string filename = exeName;
 #if LINUX || OSX
                 filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+                arguments = ToolBox.EscapeCharacters(arguments);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
