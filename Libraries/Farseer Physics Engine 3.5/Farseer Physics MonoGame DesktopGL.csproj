@@ -137,6 +137,7 @@
     <Compile Include="Collision\DynamicTree.cs" />
     <Compile Include="Collision\DynamicTreeBroadPhase.cs" />
     <Compile Include="Collision\IBroadPhase.cs" />
+    <Compile Include="Collision\QuadTreeBroadPhase.cs" />
     <Compile Include="Collision\Shapes\ChainShape.cs" />
     <Compile Include="Collision\Shapes\CircleShape.cs" />
     <Compile Include="Collision\Shapes\EdgeShape.cs" />
@@ -221,6 +222,8 @@
     <Compile Include="Controllers\VelocityLimitController.cs" />
     <Compile Include="ConvertUnits.cs" />
     <Compile Include="DebugViewBase.cs" />
+    <Compile Include="Diagnostics\DebugViewBase.cs" />
+    <Compile Include="Diagnostics\DebugViewFlags.cs" />
     <Compile Include="Dynamics\Body.cs" />
     <Compile Include="Dynamics\Body.Factory.cs" />
     <Compile Include="Dynamics\BodyType.cs" />
