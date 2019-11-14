@@ -23,6 +23,14 @@
     <Size maxresolution="2560,1600" size="16"/>
     <Size size="24"/>
   </Font>
+  <GlobalFont file="Content/Fonts/Exo2-SemiBold.otf">
+    <Size maxresolution="1024,768" size="11"/>
+    <Size maxresolution="1280,800" size="12"/>
+    <Size maxresolution="1920,1080" size="14"/>
+    <Size maxresolution="2048,1080" size="16"/>
+    <Size maxresolution="2560,1600" size="16"/>
+    <Size size="24"/>
+  </GlobalFont>
   <UnscaledSmallFont file="Content/Fonts/Exo2-SemiBold.otf">
     <override language="Traditional Chinese" file="Content/Fonts/NotoSans/NotoSansTC-Medium.otf" dynamicloading="true" iscjk="true"/>
     <override language="Simplified Chinese" file="Content/Fonts/NotoSans/NotoSansCJKsc-Medium.otf" dynamicloading="true" iscjk="true"/>

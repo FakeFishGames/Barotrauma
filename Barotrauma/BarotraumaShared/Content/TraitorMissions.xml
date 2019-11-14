@@ -319,7 +319,9 @@
       <EndMessageFailure id="traitormissionfailuremessage"/>
       <EndMessageSuccess id="oxygen_sabotage_objectivesuccessmessage2"/>
       <StartMessage id="oxygen_sabotage_traitorobjectivestartmessage2"/>
-      <Goal type="killtarget" targetpercentage="100"/>
+      <Goal type="killtarget" targetpercentage="100">
+            <InfoText id="traitorgoalsabotagedurationinfo" />
+      </Goal>
     </Objective>
   </TraitorMission>
   

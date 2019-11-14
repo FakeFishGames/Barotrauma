@@ -171,10 +171,10 @@ namespace Barotrauma
                 {
                     Text = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), text, textAlignment: textAlignment, wrap: true);
                     GUI.Style.Apply(Text, "", this);
-                    /*Content.Recalculate();
+                    Content.Recalculate();
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
                         new Point(Text.Rect.Width, Text.Rect.Height);
-                    Text.RectTransform.IsFixedSize = true;*/
+                    Text.RectTransform.IsFixedSize = true;
                 }
 
                 if (height == 0)
