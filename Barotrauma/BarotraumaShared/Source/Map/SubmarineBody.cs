@@ -554,10 +554,10 @@ namespace Barotrauma
 
                 float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
 
-                ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
+                ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
+                    dockedSub.SubBody.ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
                 }
             }
 
