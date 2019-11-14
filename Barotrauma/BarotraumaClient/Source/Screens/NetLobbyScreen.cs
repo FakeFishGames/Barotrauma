@@ -579,11 +579,11 @@ namespace Barotrauma
 
             //server log ----------------------------------------------------------------------
 
-            serverLogBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), serverLogHolderHorizontal.RectTransform));
+            serverLogBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), serverLogHolderHorizontal.RectTransform));
 
             //filter tickbox list ------------------------------------------------------------------
 
-            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), serverLogHolderHorizontal.RectTransform) { MinSize = new Point(150, 0) })
+            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), serverLogHolderHorizontal.RectTransform) { MinSize = new Point(150, 0) })
             {
                 OnSelected = (component, userdata) => { return false; }
             };
