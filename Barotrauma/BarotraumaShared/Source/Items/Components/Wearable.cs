@@ -46,6 +46,7 @@ namespace Barotrauma
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
+        public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
         public bool InheritTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
@@ -167,6 +168,7 @@ namespace Barotrauma
             InheritTextureScale = SourceElement.GetAttributeBool("inherittexturescale", false);
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
+            
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
@@ -174,6 +176,20 @@ namespace Barotrauma
             {
                 SheetIndex = index;
             }
+
+            var wearableTypes = SourceElement.GetAttributeStringArray("hidewearablesoftype", null);
+            if (wearableTypes != null && wearableTypes.Length > 0)
+            {
+                foreach (var type in wearableTypes)
+                {
+                    if (Enum.TryParse(type, out WearableType wearableType))
+                    {
+                        if (HideWearablesOfType == null) { HideWearablesOfType = new List<WearableType>(); }
+                        HideWearablesOfType.Add(wearableType);
+                    }
+                }
+            }
+
             IsInitialized = true;
         }
     }
