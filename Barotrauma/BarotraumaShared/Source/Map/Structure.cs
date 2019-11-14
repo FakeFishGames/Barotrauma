@@ -1085,7 +1085,7 @@ namespace Barotrauma
             {
                 Body sensorBody = CreateRectBody(rect, createConvexHull: false);
                 sensorBody.CollisionCategories = Physics.CollisionRepair;
-                sensorBody.IsSensor = true;
+                sensorBody.SetIsSensor(true);
             }
         }
 

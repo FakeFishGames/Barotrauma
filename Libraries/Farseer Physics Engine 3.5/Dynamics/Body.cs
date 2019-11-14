@@ -1272,11 +1272,6 @@ namespace FarseerPhysics.Dynamics
                 FixtureList[i].CollisionGroup = collisionGroup;
         }
 
-        public bool IsSensor
-        {
-            set { SetIsSensor(value); }
-        }
-
         /// <summary>
         /// Warning: This method applies the value on existing Fixtures. It's not a property of Body.
         /// </summary>

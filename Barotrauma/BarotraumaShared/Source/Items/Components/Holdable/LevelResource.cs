@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
                 {
                     UserData = item
                 };
-                trigger.FarseerBody.IsSensor = true;
+                trigger.FarseerBody.SetIsSensor(true);
                 trigger.FarseerBody.BodyType = BodyType.Static;
                 trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
                 trigger.FarseerBody.CollidesWith = Physics.CollisionNone;

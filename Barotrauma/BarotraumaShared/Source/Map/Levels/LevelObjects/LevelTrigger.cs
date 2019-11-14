@@ -201,7 +201,7 @@ namespace Barotrauma
                 };
                 physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
-                physicsBody.FarseerBody.IsSensor = true;
+                physicsBody.FarseerBody.SetIsSensor(true);
                 physicsBody.FarseerBody.BodyType = BodyType.Static;
                 physicsBody.FarseerBody.BodyType = BodyType.Kinematic;
 
