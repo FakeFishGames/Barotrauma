@@ -106,6 +106,7 @@ namespace Barotrauma
                     constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
                     {
                         Equip = this.Equip,
+                        RemoveEmpty = false,
                         GetItemPriority = this.GetItemPriority,
                         ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
                     },

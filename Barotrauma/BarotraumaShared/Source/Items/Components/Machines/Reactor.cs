@@ -546,7 +546,7 @@ namespace Barotrauma.Items.Components
                     if (objective.SubObjectives.None())
                     {
                         int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false);
+                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true);
                         character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
                     }
                     return false;

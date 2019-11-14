@@ -870,12 +870,13 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip) where T : ItemComponent
+        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip, bool removeEmpty) where T : ItemComponent
         {
             var containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
             {
                 targetItemCount = itemCount,
                 Equip = equip,
+                RemoveEmpty = removeEmpty,
                 GetItemPriority = i =>
                 {
                     if (i.ParentInventory?.Owner is Item)
