@@ -1326,7 +1326,7 @@ namespace Barotrauma
                     }
                 }
             }
-            UpdateProjSpecific(deltaTime);
+            UpdateProjSpecific(deltaTime, cam);
         }
 
         private void CheckBodyInRest(float deltaTime)
@@ -1446,7 +1446,7 @@ namespace Barotrauma
             return true;
         }
 
-        partial void UpdateProjSpecific(float deltaTime);
+        partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         partial void Splash(Limb limb, Hull limbHull);
 

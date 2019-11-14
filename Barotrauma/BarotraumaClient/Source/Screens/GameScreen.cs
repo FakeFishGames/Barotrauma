@@ -206,7 +206,7 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) continue;
+                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible(cam)) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
@@ -216,7 +216,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) continue;
+                if (c.AnimController.Limbs.All(l => l.DeformSprite == null) || !c.IsVisible(cam)) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
