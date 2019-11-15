@@ -204,6 +204,7 @@ namespace Barotrauma
 
         public string HitSoundTag => Params?.Sound?.Tag;
 
+        private List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
         private List<WearableType> wearableTypesToHide = new List<WearableType>();
 
         partial void InitProjSpecific(XElement element)
@@ -632,13 +633,19 @@ namespace Barotrauma
 
         public void UpdateWearableTypesToHide()
         {
-            wearableTypesToHide.Clear();
-
-            List<WearableSprite> wearableTypeHidingSprites =
-                    WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0);
-            wearableTypeHidingSprites.AddRange(
+            wearableTypeHidingSprites.Clear();
+            if (WearingItems != null && WearingItems.Count > 0)
+            {
+                wearableTypeHidingSprites.AddRange(
+                    WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0));
+            }
+            if (OtherWearables != null && OtherWearables.Count > 0)
+            {
+                wearableTypeHidingSprites.AddRange(
                     OtherWearables.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0));
+            }
 
+            wearableTypesToHide.Clear();
             if (wearableTypeHidingSprites.Count > 0)
             {
                 foreach (WearableSprite sprite in wearableTypeHidingSprites)
