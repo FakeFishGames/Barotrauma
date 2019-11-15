@@ -12,7 +12,7 @@ namespace Barotrauma
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
-            foreach (ScriptedEvent ev in events)
+            foreach (ScriptedEvent ev in activeEvents)
             {
                 Vector2 drawPos = ev.DebugDrawPos;
                 drawPos.Y = -drawPos.Y;
@@ -80,7 +80,7 @@ namespace Barotrauma
                     "Intensity too high for new events: " + (int)(currentIntensity * 100) + "%/" + (int)(eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
                 y += 15;
             }
-            foreach (ScriptedEventSet eventSet in selectedEventSets)
+            foreach (ScriptedEventSet eventSet in pendingEventSets)
             {
                 float distanceTraveled = MathHelper.Clamp(
                     (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
@@ -113,11 +113,11 @@ namespace Barotrauma
 
                 y += 15;
             }
-            
+
 
             GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
             y += 12;
-            foreach (ScriptedEvent scriptedEvent in events )
+            foreach (ScriptedEvent scriptedEvent in activeEvents)
             {
                 if (scriptedEvent.IsFinished) { continue; }
                 GUI.DrawString(spriteBatch, new Vector2(graphRect.X + 5, y), scriptedEvent.ToString(), Color.White * 0.8f, null, 0, GUI.SmallFont);

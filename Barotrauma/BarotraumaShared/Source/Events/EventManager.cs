@@ -8,8 +8,6 @@ namespace Barotrauma
     {
         const float IntensityUpdateInterval = 5.0f;
 
-        private readonly List<ScriptedEvent> events;
-
         private Level level;
 
         //The "intensity" of the current situation (a value between 0.0 - 1.0).
@@ -23,7 +21,7 @@ namespace Barotrauma
         //the sub is laying broken on the ocean floor or if the players are trying to abuse the system
         //by intentionally keeping the intensity high by causing breaches, damaging themselves or such
         private float eventThreshold = 0.2f;
-        
+
         //New events can't be triggered when the cooldown is active.
         private float eventCoolDown;
 
@@ -33,7 +31,12 @@ namespace Barotrauma
 
         private float roundDuration;
 
-        private readonly List<ScriptedEventSet> selectedEventSets;
+        private readonly List<ScriptedEventSet> pendingEventSets = new List<ScriptedEventSet>();
+
+        private readonly Dictionary<ScriptedEventSet, List<ScriptedEvent>> selectedEvents = new Dictionary<ScriptedEventSet, List<ScriptedEvent>>();
+
+        private readonly List<ScriptedEvent> activeEvents = new List<ScriptedEvent>();
+
 
         private EventManagerSettings settings;
 
@@ -44,16 +47,13 @@ namespace Barotrauma
             get { return currentIntensity; }
         }
 
-        public List<ScriptedEvent> Events
+        public List<ScriptedEvent> ActiveEvents
         {
-            get { return events; }
+            get { return activeEvents; }
         }
         
         public EventManager(GameSession session)
         {
-            events = new List<ScriptedEvent>();
-            selectedEventSets = new List<ScriptedEventSet>();
-
             isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
         }
 
@@ -79,7 +79,11 @@ namespace Barotrauma
 
             this.level = level;
             var initialEventSet = SelectRandomEvents(ScriptedEventSet.List);
-            if (initialEventSet != null) selectedEventSets.Add(initialEventSet);
+            if (initialEventSet != null)
+            {
+                pendingEventSets.Add(initialEventSet);
+                CreateEvents(initialEventSet);
+            }
             /*CreateInitialEvents();
             foreach (ScriptedEvent ev in events)
             {
@@ -96,8 +100,55 @@ namespace Barotrauma
 
         public void EndRound()
         {
-            selectedEventSets.Clear();
-            events.Clear();
+            pendingEventSets.Clear();
+            selectedEvents.Clear();
+        }
+
+        private void CreateEvents(ScriptedEventSet eventSet)
+        {
+            if (eventSet.ChooseRandom)
+            {
+                if (eventSet.EventPrefabs.Count > 0)
+                {
+                    MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                    var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
+                    if (eventPrefab != null)
+                    {
+                        var newEvent = eventPrefab.CreateInstance();
+                        newEvent.Init(true);
+                        DebugConsole.Log("Initialized event " + newEvent.ToString());
+                        if (!selectedEvents.ContainsKey(eventSet))
+                        {
+                            selectedEvents.Add(eventSet, new List<ScriptedEvent>());
+                        }
+                        selectedEvents[eventSet].Add(newEvent);
+                    }
+                }
+                if (eventSet.ChildSets.Count > 0)
+                {
+                    var newEventSet = SelectRandomEvents(eventSet.ChildSets);
+                    if (newEventSet != null) { CreateEvents(newEventSet); }
+                }
+            }
+            else
+            {
+                foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
+                {
+                    var newEvent = eventPrefab.CreateInstance();
+                    newEvent.Init(true);
+                    DebugConsole.Log("Initialized event " + newEvent.ToString());
+                    if (!selectedEvents.ContainsKey(eventSet))
+                    {
+                        selectedEvents.Add(eventSet, new List<ScriptedEvent>());
+                    }
+                    selectedEvents[eventSet].Add(newEvent);
+                }
+
+                foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
+                {
+                    CreateEvents(childEventSet);
+                }
+            }
         }
 
         private ScriptedEventSet SelectRandomEvents(List<ScriptedEventSet> eventSets)
@@ -122,81 +173,37 @@ namespace Barotrauma
             return null;
         }
 
-        private void CreateEvents()
+        private bool CanStartEventSet(ScriptedEventSet eventSet)
         {
-            //don't create new events if docked to the start oupost
-            if (Level.Loaded?.StartOutpost != null && 
-                Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost))
+            float distFromStart = Vector2.Distance(Submarine.MainSub.WorldPosition, level.StartPosition);
+            float distFromEnd = Vector2.Distance(Submarine.MainSub.WorldPosition, level.EndPosition);
+
+            float distanceTraveled = MathHelper.Clamp(
+                (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
+                0.0f, 1.0f);
+
+            //don't create new events if within 50 meters of the start/end of the level
+            if (distanceTraveled <= 0.0f ||
+                distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
+                distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
             {
-                return;
+                return false;
             }
 
-            for (int i = selectedEventSets.Count - 1; i >= 0; i--)
+            if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
+                roundDuration < eventSet.MinMissionTime)
             {
-                ScriptedEventSet eventSet = selectedEventSets[i];
-
-                float distFromStart = Vector2.Distance(Submarine.MainSub.WorldPosition, level.StartPosition);
-                float distFromEnd = Vector2.Distance(Submarine.MainSub.WorldPosition, level.EndPosition);
-
-                float distanceTraveled = MathHelper.Clamp(
-                    (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
-                    0.0f, 1.0f);
-
-                //don't create new events if within 50 meters of the start/end of the level
-                if (distanceTraveled <= 0.0f || 
-                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
-                {
-                    continue;
-                }
-
-                if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
-                    roundDuration < eventSet.MinMissionTime)
-                {
-                    continue;
-                }
-
-                if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
-                {
-                    continue;
-                }
-
-                selectedEventSets.RemoveAt(i);
-
-                if (eventSet.ChooseRandom)
-                {
-                    if (eventSet.EventPrefabs.Count > 0)
-                    {
-                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
-                        var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
-                        if (eventPrefab != null)
-                        {
-                            var newEvent = eventPrefab.CreateInstance();
-                            newEvent.Init(true);
-                            DebugConsole.Log("Initialized event " + newEvent.ToString());
-                            events.Add(newEvent);
-                        }
-                    }
-                    if (eventSet.ChildSets.Count > 0)
-                    {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                        if (newEventSet != null) selectedEventSets.Add(newEventSet);
-                    }
-                }
-                else
-                {
-                    foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
-                    {
-                        var newEvent = eventPrefab.CreateInstance();
-                        newEvent.Init(true);
-                        DebugConsole.Log("Initialized event " + newEvent.ToString());
-                        events.Add(newEvent);
-                    }
-
-                    selectedEventSets.AddRange(eventSet.ChildSets);
-                }
+                return false;
             }
+
+            if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
+            {
+                return false;
+            }
+
+            return true;
         }
+
         
         public void Update(float deltaTime)
         {
@@ -217,24 +224,42 @@ namespace Barotrauma
             }
             else if (currentIntensity < eventThreshold)
             {
-                CreateEvents();
+                //activate pending event sets that can be activated
+                for (int i = pendingEventSets.Count - 1; i >= 0; i--)
+                {
+                    var eventSet = pendingEventSets[i];
+                    if (!CanStartEventSet(eventSet)) { continue; }
+
+                    pendingEventSets.RemoveAt(i);
+
+                    //start events in this set
+                    foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])
+                    {
+                        activeEvents.Add(scriptedEvent);
+                    }
+                    //add child event sets to pending
+                    foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
+                    {
+                        if (selectedEvents.ContainsKey(childEventSet))
+                        {
+                            pendingEventSets.Add(childEventSet);
+                        }
+                    }
+                }
                 eventThreshold = settings.DefaultEventThreshold;
                 eventCoolDown = settings.EventCooldown;
             }
-            
-            foreach (ScriptedEvent ev in events)
+
+            foreach (ScriptedEvent ev in activeEvents)
             {
-                if (!ev.IsFinished)
-                {
-                    ev.Update(deltaTime);
-                }
+                if (!ev.IsFinished) { ev.Update(deltaTime); }                             
             }
         }
                 
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;
-            if (intensityUpdateTimer > 0.0f) return;
+            if (intensityUpdateTimer > 0.0f) { return; }
             intensityUpdateTimer = IntensityUpdateInterval;
 
             // crew health --------------------------------------------------------
