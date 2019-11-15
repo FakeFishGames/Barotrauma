@@ -459,8 +459,8 @@ namespace Barotrauma.Items.Components
             if (character != null) { character.LastDamageSource = item; }
 
 #if CLIENT
-            PlaySound(ActionType.OnUse, item.WorldPosition, user: user);
-            PlaySound(ActionType.OnImpact, item.WorldPosition, user: user);
+            PlaySound(ActionType.OnUse, user: user);
+            PlaySound(ActionType.OnImpact, user: user);
 #endif
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)

@@ -145,6 +145,7 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
+            base.UpdateBroken(deltaTime, cam);
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
