@@ -483,6 +483,8 @@ namespace Barotrauma.Networking
                 if (DateTime.Now > timeOut)
                 {
                     clientPeer?.Close(Lidgren.Network.NetConnection.NoResponseMessage);
+                    var msgBox = new GUIMessageBox(TextManager.Get("ConnectionFailed"), TextManager.Get("CouldNotConnectToServer"));
+                    msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
                     reconnectBox?.Close(); reconnectBox = null;
                     break;
                 }
