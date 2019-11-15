@@ -633,8 +633,12 @@ namespace Barotrauma
         public void UpdateWearableTypesToHide()
         {
             wearableTypesToHide.Clear();
+
             List<WearableSprite> wearableTypeHidingSprites =
                     WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0);
+            wearableTypeHidingSprites.AddRange(
+                    OtherWearables.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0));
+
             if (wearableTypeHidingSprites.Count > 0)
             {
                 foreach (WearableSprite sprite in wearableTypeHidingSprites)
