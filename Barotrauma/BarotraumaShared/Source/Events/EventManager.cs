@@ -87,13 +87,7 @@ namespace Barotrauma
                 CreateEvents(initialEventSet);
             }
 
-            foreach (List<ScriptedEvent> eventList in selectedEvents.Values)
-            {
-                foreach (ScriptedEvent scriptedEvent in eventList)
-                {
-                    PreloadContent(scriptedEvent.GetFilesToPreload());
-                }
-            }
+            PreloadContent(GetFilesToPreload());
 
             roundDuration = 0.0f;
             intensityUpdateTimer = 0.0f;
@@ -101,6 +95,19 @@ namespace Barotrauma
             currentIntensity = targetIntensity;
             eventThreshold = settings.DefaultEventThreshold;
             eventCoolDown = 0.0f;
+        }
+
+        public IEnumerable<ContentFile> GetFilesToPreload()
+        {
+            List<ContentFile> filesToPreload = new List<ContentFile>();
+            foreach (List<ScriptedEvent> eventList in selectedEvents.Values)
+            {
+                foreach (ScriptedEvent scriptedEvent in eventList)
+                {
+                    filesToPreload.AddRange(scriptedEvent.GetFilesToPreload());
+                }
+            }
+            return filesToPreload;
         }
 
         public void PreloadContent(IEnumerable<ContentFile> contentFiles)
