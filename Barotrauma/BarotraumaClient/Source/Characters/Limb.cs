@@ -207,7 +207,7 @@ namespace Barotrauma
         private List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
         private List<WearableType> wearableTypesToHide = new List<WearableType>();
         private bool enableHuskSprite;
-        private bool EnableHuskSprite
+        public bool EnableHuskSprite
         {
             get
             {
@@ -517,7 +517,6 @@ namespace Barotrauma
             
             body.Dir = Dir;
 
-            EnableHuskSprite = character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
             bool hideLimb = Params.Hide || 
