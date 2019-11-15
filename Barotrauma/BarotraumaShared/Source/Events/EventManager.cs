@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -84,11 +86,14 @@ namespace Barotrauma
                 pendingEventSets.Add(initialEventSet);
                 CreateEvents(initialEventSet);
             }
-            /*CreateInitialEvents();
-            foreach (ScriptedEvent ev in events)
+
+            foreach (List<ScriptedEvent> eventList in selectedEvents.Values)
             {
-                ev.Init(false);
-            }*/
+                foreach (ScriptedEvent scriptedEvent in eventList)
+                {
+                    PreloadContent(scriptedEvent.GetFilesToPreload());
+                }
+            }
 
             roundDuration = 0.0f;
             intensityUpdateTimer = 0.0f;
@@ -96,6 +101,28 @@ namespace Barotrauma
             currentIntensity = targetIntensity;
             eventThreshold = settings.DefaultEventThreshold;
             eventCoolDown = 0.0f;
+        }
+
+        public void PreloadContent(IEnumerable<ContentFile> contentFiles)
+        {
+            foreach (ContentFile file in contentFiles)
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+#if CLIENT
+                        if (!Character.TryGetConfigFile(file.Path, out XDocument doc))
+                        {
+                            throw new Exception($"Failed to load the character config file from {file.Path}!");
+                        }
+                        foreach (var soundElement in doc.Root.GetChildElements("sound"))
+                        {
+                            var sound = Submarine.LoadRoundSound(soundElement);
+                        }
+#endif
+                        break;
+                }
+            }
         }
 
         public void EndRound()
