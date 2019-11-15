@@ -12,6 +12,8 @@ namespace Barotrauma
 
         private Level level;
 
+        private readonly List<Sprite> preloadedSprites = new List<Sprite>();
+
         //The "intensity" of the current situation (a value between 0.0 - 1.0).
         //High when a disaster has struck, low when nothing special is going on.
         private float currentIntensity;
@@ -126,6 +128,38 @@ namespace Barotrauma
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);
                         }
+                        string speciesName = doc.Root.GetAttributeString("speciesname", "");
+                        bool humanoid = doc.Root.GetAttributeBool("humanoid", false);
+                        RagdollParams ragdollParams;
+                        if (humanoid)
+                        {
+                            ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(speciesName);
+                        }
+                        else
+                        {
+                            ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName);
+                        }
+                        if (ragdollParams != null)
+                        {
+                            HashSet<string> texturePaths = new HashSet<string>
+                            {
+                                ragdollParams.Texture
+                            };
+                            foreach (RagdollParams.LimbParams limb in ragdollParams.Limbs)
+                            {
+                                if (!string.IsNullOrEmpty(limb.normalSpriteParams?.Texture)) { texturePaths.Add(limb.normalSpriteParams.Texture); }
+                                if (!string.IsNullOrEmpty(limb.deformSpriteParams?.Texture)) { texturePaths.Add(limb.deformSpriteParams.Texture); }
+                                if (!string.IsNullOrEmpty(limb.damagedSpriteParams?.Texture)) { texturePaths.Add(limb.damagedSpriteParams.Texture); }
+                                foreach (var decorativeSprite in limb.decorativeSpriteParams)
+                                {
+                                    if (!string.IsNullOrEmpty(decorativeSprite.Texture)) { texturePaths.Add(decorativeSprite.Texture); }
+                                }
+                            }
+                            foreach (string texturePath in texturePaths)
+                            {
+                                preloadedSprites.Add(new Sprite(texturePath, Vector2.Zero));
+                            }
+                        }
 #endif
                         break;
                 }
@@ -136,6 +170,9 @@ namespace Barotrauma
         {
             pendingEventSets.Clear();
             selectedEvents.Clear();
+
+            preloadedSprites.ForEach(s => s.Remove());
+            preloadedSprites.Clear();
         }
 
         private void CreateEvents(ScriptedEventSet eventSet)
