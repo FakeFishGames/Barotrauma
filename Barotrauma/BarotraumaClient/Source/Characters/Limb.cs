@@ -206,6 +206,33 @@ namespace Barotrauma
 
         private List<WearableSprite> wearableTypeHidingSprites = new List<WearableSprite>();
         private List<WearableType> wearableTypesToHide = new List<WearableType>();
+        private bool enableHuskSprite;
+        private bool EnableHuskSprite
+        {
+            get
+            {
+                return enableHuskSprite;
+            }
+            set
+            {
+                if (HuskSprite != null && value != enableHuskSprite)
+                {
+                    if (value)
+                    {
+                        List<WearableSprite> otherWearablesWithHusk = new List<WearableSprite>() { HuskSprite };
+                        otherWearablesWithHusk.AddRange(OtherWearables);
+                        OtherWearables = otherWearablesWithHusk;
+                        UpdateWearableTypesToHide();
+                    }
+                    else
+                    {
+                        OtherWearables.Remove(HuskSprite);
+                        UpdateWearableTypesToHide();
+                    }
+                }
+                enableHuskSprite = value;
+            }
+        }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -490,11 +517,11 @@ namespace Barotrauma
             
             body.Dir = Dir;
 
-            bool enableHuskSprite = character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
+            EnableHuskSprite = character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
             bool hideLimb = Params.Hide ||
-                enableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
+                EnableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
 
@@ -572,15 +599,9 @@ namespace Barotrauma
                     DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
                     depthStep += step;
                 }
-                if (HuskSprite != null && enableHuskSprite && !wearableTypesToHide.Contains(WearableType.Husk))
-                {
-                    DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
-                    depthStep += step;
-                }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
                     if (wearableTypesToHide.Contains(wearable.Type)) { continue; }
-                    if (wearable.Type == WearableType.Beard && enableHuskSprite && HuskSprite != null) { continue; }
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
                     depthStep += step;
