@@ -520,8 +520,7 @@ namespace Barotrauma
             EnableHuskSprite = character.IsHusk || character.CharacterHealth.GetAffliction<AfflictionHusk>("huskinfection")?.State == AfflictionHusk.InfectionState.Active;
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
-            bool hideLimb = Params.Hide ||
-                EnableHuskSprite && HuskSprite != null && HuskSprite.HideLimb || 
+            bool hideLimb = Params.Hide || 
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
 
