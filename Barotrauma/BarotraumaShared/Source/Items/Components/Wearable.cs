@@ -168,7 +168,6 @@ namespace Barotrauma
             InheritTextureScale = SourceElement.GetAttributeBool("inherittexturescale", false);
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
-            
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
@@ -177,14 +176,14 @@ namespace Barotrauma
                 SheetIndex = index;
             }
 
+            HideWearablesOfType = new List<WearableType>();
             var wearableTypes = SourceElement.GetAttributeStringArray("hidewearablesoftype", null);
             if (wearableTypes != null && wearableTypes.Length > 0)
             {
-                foreach (var type in wearableTypes)
+                foreach (var value in wearableTypes)
                 {
-                    if (Enum.TryParse(type, out WearableType wearableType))
+                    if (Enum.TryParse(value, out WearableType wearableType))
                     {
-                        if (HideWearablesOfType == null) { HideWearablesOfType = new List<WearableType>(); }
                         HideWearablesOfType.Add(wearableType);
                     }
                 }
