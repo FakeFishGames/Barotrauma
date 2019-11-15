@@ -965,8 +965,9 @@ namespace Barotrauma
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
-                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all
-                    if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
+                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all?
+                    if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
+                    if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { continue; }
                 }
                 float priority = CalculatePriority(limb, attackWorldPos);
                 if (priority > currentPriority)

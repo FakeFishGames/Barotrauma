@@ -48,6 +48,9 @@ namespace Barotrauma
 
         public readonly string TargetItemComponentName;
 
+        // Only used by attacks
+        public readonly bool TargetSelf;
+
         private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
 
         private readonly int cancelStatusEffect;
@@ -116,6 +119,7 @@ namespace Barotrauma
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
+            TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
 
             foreach (XElement subElement in attribute.Parent.Elements())
             {

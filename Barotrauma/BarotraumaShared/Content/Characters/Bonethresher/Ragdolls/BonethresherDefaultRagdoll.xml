@@ -23,9 +23,9 @@
     <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="898,278,19,40" origin="0.4330317,0.3952785" depth="0" />
     <attack structuresoundtype="StructureBlunt" context="Water" targettype="Structure" targetlimbtype="None" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" reverse="False" range="75" damagerange="125" duration="0.5" cooldown="5" secondarycooldown="1" cooldownrandomfactor="0.5" structuredamage="50" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="0, 1, 2" force="50" torque="-100" applyforcesonlyonce="False" targetimpulse="300" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0" />
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
-        <Affliction identifier="internaldamage" amount="10" />
+        <Affliction identifier="internaldamage" amount="1000" />
       </StatusEffect>
-    <!--TODO: conditional-->
+    <Conditional vitality="lte 50" targetself="true"/>
   </limb>
   <limb id="3" width="110" height="110" name="Torso" type="Torso" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="552,238,106,149" origin="0.5019933,0.5206165" depth="0.1" subdivisions="5,5">
