@@ -34,7 +34,7 @@ namespace Barotrauma
     {
         public Character.TeamType TeamID = Character.TeamType.None;
 
-        public static string SavePath = "Submarines";
+        public const string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
@@ -448,7 +448,7 @@ namespace Barotrauma
 
             hashTask = new Task(() =>
             {
-                hash = new Md5Hash(doc);
+                hash = new Md5Hash(doc, filePath);
             });
             hashTask.Start();
         }
@@ -1618,7 +1618,7 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement("Submarine"));
             SaveToXElement(doc.Root);
 
-            hash = new Md5Hash(doc);
+            hash = new Md5Hash(doc, filePath, false);
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
             if (previewImage != null)
             {

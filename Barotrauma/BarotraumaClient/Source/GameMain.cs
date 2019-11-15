@@ -189,6 +189,8 @@ namespace Barotrauma
 
             Config = new GameSettings();
 
+            Md5Hash.LoadCache();
+
             ConsoleArguments = args;
 
             ConnectName = null;
