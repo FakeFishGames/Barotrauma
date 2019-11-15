@@ -204,7 +204,7 @@ namespace Barotrauma
 
         public string HitSoundTag => Params?.Sound?.Tag;
 
-        private List<WearableType> WearableTypesToHide { get; set; } = new List<WearableType>();
+        private List<WearableType> wearableTypesToHide = new List<WearableType>();
 
         partial void InitProjSpecific(XElement element)
         {
@@ -566,19 +566,19 @@ namespace Barotrauma
             }
             if (onlyDrawable == null)
             {
-                if (HerpesSprite != null && !WearableTypesToHide.Contains(WearableType.Herpes))
+                if (HerpesSprite != null && !wearableTypesToHide.Contains(WearableType.Herpes))
                 {
                     DrawWearable(HerpesSprite, depthStep, spriteBatch, color * Math.Min(herpesStrength / 10.0f, 1.0f), spriteEffect);
                     depthStep += step;
                 }
-                if (HuskSprite != null && enableHuskSprite && !WearableTypesToHide.Contains(WearableType.Husk))
+                if (HuskSprite != null && enableHuskSprite && !wearableTypesToHide.Contains(WearableType.Husk))
                 {
                     DrawWearable(HuskSprite, depthStep, spriteBatch, color, spriteEffect);
                     depthStep += step;
                 }
                 foreach (WearableSprite wearable in OtherWearables)
                 {
-                    if (WearableTypesToHide.Contains(wearable.Type)) { continue; }
+                    if (wearableTypesToHide.Contains(wearable.Type)) { continue; }
                     if (wearable.Type == WearableType.Beard && enableHuskSprite && HuskSprite != null) { continue; }
                     DrawWearable(wearable, depthStep, spriteBatch, color, spriteEffect);
                     //if there are multiple sprites on this limb, make the successive ones be drawn in front
@@ -632,7 +632,7 @@ namespace Barotrauma
 
         public void UpdateWearableTypesToHide()
         {
-            WearableTypesToHide.Clear();
+            wearableTypesToHide.Clear();
             List<WearableSprite> wearableTypeHidingSprites =
                     WearingItems.FindAll(w => w.HideWearablesOfType != null && w.HideWearablesOfType.Count > 0);
             if (wearableTypeHidingSprites.Count > 0)
@@ -641,9 +641,9 @@ namespace Barotrauma
                 {
                     foreach (WearableType type in sprite.HideWearablesOfType)
                     {
-                        if (!WearableTypesToHide.Contains(type))
+                        if (!wearableTypesToHide.Contains(type))
                         {
-                            WearableTypesToHide.Add(type);
+                            wearableTypesToHide.Add(type);
                         }
                     }
                 }
