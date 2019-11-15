@@ -182,7 +182,7 @@ namespace Barotrauma
             {
                 foreach (var value in wearableTypes)
                 {
-                    if (Enum.TryParse(value, out WearableType wearableType))
+                    if (Enum.TryParse(value, ignoreCase: true, out WearableType wearableType))
                     {
                         HideWearablesOfType.Add(wearableType);
                     }
