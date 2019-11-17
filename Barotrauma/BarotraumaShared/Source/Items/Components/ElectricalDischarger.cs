@@ -166,22 +166,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
-
-        private float GetAvailableBatteryPower()
-        {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-
-            float availablePower = 0.0f;
-            foreach (PowerContainer battery in batteries)
-            {
-                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
-                availablePower += batteryPower;
-            }
-
-            return availablePower;
-        }
-
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             base.UpdateBroken(deltaTime, cam);
