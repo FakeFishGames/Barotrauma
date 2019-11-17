@@ -77,6 +77,26 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             state = msg.ReadBoolean();
+            ushort userID = msg.ReadUInt16();
+            if (userID == 0)
+            {
+                if (user != null)
+                {
+                    IsActive = false;
+                    CancelUsing(user);
+                    user = null;
+                }
+            }
+            else
+            {
+                Character newUser = Entity.FindEntityByID(userID) as Character;
+                if (newUser != user)
+                {
+                    CancelUsing(user);
+                }
+                user = newUser;
+                IsActive = true;
+            }
         }
     }
 }
