@@ -3738,4 +3738,6 @@
 
   <restartrequiredcontentpackage>You need to restart the game for the content package changes to take effect.</restartrequiredcontentpackage>
   <serverrestartrequiredcontentpackage>Before hosting a server, you need to restart the game for the content package changes to take effect.</serverrestartrequiredcontentpackage>
+
+  <serveroffline>The server seems to be offline.</serveroffline>
 </infotexts>
