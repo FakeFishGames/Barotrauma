@@ -2057,6 +2057,15 @@ namespace Barotrauma.Networking
 
             msg.Write(serverSettings.AllowRagdollButton);
 
+            //tell the client what content files they should preload
+            var contentToPreload = GameMain.GameSession.EventManager.GetFilesToPreload();
+            msg.Write((ushort)contentToPreload.Count());
+            foreach (ContentFile contentFile in contentToPreload)
+            {
+                msg.Write((byte)contentFile.Type);
+                msg.Write(contentFile.Path);
+            }
+
             serverSettings.WriteMonsterEnabled(msg);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);

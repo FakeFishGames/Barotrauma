@@ -1125,6 +1125,15 @@ namespace Barotrauma.Networking
 
             bool allowRagdollButton = inc.ReadBoolean();
 
+            ushort contentToPreloadCount = inc.ReadUInt16();
+            List<ContentFile> contentToPreload = new List<ContentFile>();
+            for (int i = 0; i < contentToPreloadCount; i++)
+            {
+                ContentType contentType = (ContentType)inc.ReadByte();
+                string filePath = inc.ReadString();
+                contentToPreload.Add(new ContentFile(filePath, contentType));
+            }
+
             serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
@@ -1239,7 +1248,9 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Failure;
             }
 
-            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
+            if (respawnAllowed) { respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null); }
+
+            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
 
             ServerSettings.ServerDetailsChanged = true;
             gameStarted = true;
