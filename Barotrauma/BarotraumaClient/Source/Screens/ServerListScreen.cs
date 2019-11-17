@@ -424,7 +424,7 @@ namespace Barotrauma
                     ToolTip = mode.Name,
                     Selected = true,
                     OnSelected = (tickBox) => { FilterServers(); return true; },
-                    UserData = mode.Name
+                    UserData = mode.Identifier
                 };
                 gameModeTickBoxes.Add(selectionTick);
                 filterTextList.Add(selectionTick.TextBlock);
