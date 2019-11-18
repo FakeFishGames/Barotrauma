@@ -63,7 +63,7 @@
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears_1.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="4,97,96,96" origin="0.5,0.5" />
+      <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears_1.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="4,97,96,96" origin="0.5,0.5" />
     </Wearable>
   </Item>
   <Item name="" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
