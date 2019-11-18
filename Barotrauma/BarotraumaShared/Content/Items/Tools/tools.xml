@@ -22,7 +22,7 @@
       <Containable items="smallitem" excludeditems="toolbox" />
     </ItemContainer>
   </Item>
-  <Item name="" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="One of the most crucial tools on board the submarine. Also works underwater." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -104,7 +104,7 @@
       </RepairTool>
     </Upgrade>
   </Item>
-  <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="Cuts through various materials using a jet of ionized oxygen." Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -223,7 +223,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="A handheld carbon dioxide extinguisher." impactsoundtag="impact_metal_light">
+  <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />

@@ -7,7 +7,7 @@
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor,locker"
-    description="A machine capable of manufacturing a wide range of items out of basic raw materials."
+    description=""
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="0,513,285,391" depth="0.8"/>
@@ -46,7 +46,7 @@
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor"
-    description="A machine that can be used to manufacture various medicines.">
+    description="">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,0,140,168"/>
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="80" fadein="true" />
@@ -84,7 +84,7 @@
     category="Machine"
 		linkable="true"
     allowedlinks="fabricator,medicalfabricator,locker"
-    description="Disassembles and breaks down items to reusable components and material bars."
+    description=""
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,171,243,335"/>

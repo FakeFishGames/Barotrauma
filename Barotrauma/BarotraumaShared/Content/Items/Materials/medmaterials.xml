@@ -76,7 +76,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="A colony of myxobacteria. Can be processed into antibiotics." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />

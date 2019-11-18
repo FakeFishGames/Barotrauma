@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
+  <Item name="" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -26,7 +26,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="huskeggs" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'." useinhealthinterface="true" scale="0.3">
+  <Item name="" identifier="huskeggs" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.3">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="1200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
@@ -45,7 +45,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="swimbladder" description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="" identifier="swimbladder" description="" Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="349,285,110,130" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="stabilozine" />
@@ -57,7 +57,7 @@
     <Body width="110" height="120" />
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
-  <Item name="" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="Contains large amounts of adrenaline, which can be extracted using a deconstructor." category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="345,148,116,133" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="adrenaline" />
