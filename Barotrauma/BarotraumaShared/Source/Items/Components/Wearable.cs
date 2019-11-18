@@ -46,6 +46,7 @@ namespace Barotrauma
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
+        public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
         public bool InheritTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
@@ -174,6 +175,20 @@ namespace Barotrauma
             {
                 SheetIndex = index;
             }
+
+            HideWearablesOfType = new List<WearableType>();
+            var wearableTypes = SourceElement.GetAttributeStringArray("hidewearablesoftype", null);
+            if (wearableTypes != null && wearableTypes.Length > 0)
+            {
+                foreach (var value in wearableTypes)
+                {
+                    if (Enum.TryParse(value, ignoreCase: true, out WearableType wearableType))
+                    {
+                        HideWearablesOfType.Add(wearableType);
+                    }
+                }
+            }
+
             IsInitialized = true;
         }
     }
@@ -334,6 +349,10 @@ namespace Barotrauma.Items.Components
                         return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
+
+#if CLIENT
+                equipLimb.UpdateWearableTypesToHide();
+#endif
             }
         }
 
@@ -361,6 +380,9 @@ namespace Barotrauma.Items.Components
                 }
 
                 equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
+#if CLIENT
+                equipLimb.UpdateWearableTypesToHide();
+#endif
 
                 limb[i] = null;
             }
