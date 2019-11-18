@@ -1102,23 +1102,23 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1592,1,457,449" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella51deg" description="" body="true" castshadow="true" health="200" bodywidth="215" bodyheight="60" bodyoffset="12,-16" bodyrotation="-51">
+  <shellA name="" identifier="Shella51deg" description="" body="true" castshadow="true" health="200" bodywidth="215" bodyheight="60" bodyoffset="12,-16" bodyrotation="-51">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="388,294,188,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella47deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyrotation="-47">
+  <shellA name="" identifier="Shella47deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyrotation="-47">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="607,351,165,159" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella60deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60">
+  <shellA name="" identifier="Shella60deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="803,288,160,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella18deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyoffset="0,-12" bodyrotation="20">
+  <shellA name="" identifier="Shella18deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyoffset="0,-12" bodyrotation="20">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,380,384,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella70deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0">
+  <shellA name="" identifier="Shella70deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,544,224,384" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.1" />
   </shellA>
@@ -1138,11 +1138,11 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1026,637,454,388" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella61deg" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyrotation="-61">
+  <shellA name="" identifier="Shell A 61 deg" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyrotation="-61">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1156,1071,285,466" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="" identifier="shella17deg" description="" body="true" castshadow="true" health="200" bodywidth="332" bodyheight="60" bodyrotation="-17">
+  <shellA name="" identifier="Shell A 17 deg" description="" body="true" castshadow="true" health="200" bodywidth="332" bodyheight="60" bodyrotation="-17">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="415,802,321,190" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
