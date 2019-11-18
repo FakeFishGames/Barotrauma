@@ -1,933 +1,933 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
   <!-- OUTPOST BACK WALLS START -->
-  <Opbg name="" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Shop A1" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Social Center A1" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,608,2036,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A1" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="" identifier="opbgmaintenancebaya2" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A2" identifier="opbgmaintenancebaya2" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,768,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="" identifier="opbgmaintenancebaya3" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A3" identifier="opbgmaintenancebaya3" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,1440,1926,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
   <!-- OUTPOST BACK WALLS END -->
   <!--LABELS SMALL START-->
-  <label name="" Aliases="Label M Icon Medical " identifier="labelsiconmedical" scale="0.25">
+  <label name="Label Icon Medical" Aliases="Label M Icon Medical " identifier="labelsiconmedical" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Steering " identifier="labelsiconsteering" scale="0.25">
+  <label name="Label Icon Steering" Aliases="Label M Icon Steering " identifier="labelsiconsteering" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Diving " identifier="labelsicondiving" scale="0.25">
+  <label name="Label Icon Diving" Aliases="Label M Icon Diving " identifier="labelsicondiving" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Reactor" identifier="labelsiconreactor" scale="0.25">
+  <label name="Label Icon Reactor" Aliases="Label M Icon Reactor" identifier="labelsiconreactor" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Exit" identifier="labelsiconexit" scale="0.25">
+  <label name="Label Icon Exit" Aliases="Label M Icon Exit" identifier="labelsiconexit" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,256,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Engine" identifier="labelsiconengine" scale="0.25">
+  <label name="Label Icon Engine" Aliases="Label M Icon Engine" identifier="labelsiconengine" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,256,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Weapons" identifier="labelsiconweapons" scale="0.25">
+  <label name="Label Icon Weapons" Aliases="Label M Icon Weapons" identifier="labelsiconweapons" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="513,261,253,248" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Ballast" identifier="labelsiconballast" scale="0.25">
+  <label name="Label Icon Ballast" Aliases="Label M Icon Ballast" identifier="labelsiconballast" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="770,255,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Docking" identifier="labelsicondocking" scale="0.25">
+  <label name="Label Icon Docking" Aliases="Label M Icon Docking" identifier="labelsicondocking" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Cargo" identifier="labelsiconcargo" scale="0.25">
+  <label name="Label Icon Cargo" Aliases="Label M Icon Cargo" identifier="labelsiconcargo" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Electricity" identifier="labelsiconelectricity" scale="0.25">
+  <label name="Label Icon Electricity" Aliases="Label M Icon Electricity" identifier="labelsiconelectricity" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Engineering" identifier="labelsiconengineering" scale="0.25">
+  <label name="Label Icon Engineering" Aliases="Label M Icon Engineering" identifier="labelsiconengineering" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Security" identifier="labelsiconsecurity" scale="0.25">
+  <label name="Label Icon Security" Aliases="Label M Icon Security" identifier="labelsiconsecurity" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,768,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Icon Airlock" identifier="labelsiconairlock" scale="0.25">
+  <label name="Label Icon Airlock" Aliases="Label M Icon Airlock" identifier="labelsiconairlock" scale="0.25">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,768,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter A" identifier="labelslettera" scale="0.35">
+  <label name="Label Letter A" Aliases="Label M Letter A" identifier="labelslettera" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter B" identifier="labelsletterb" scale="0.35">
+  <label name="Label Letter B" Aliases="Label M Letter B" identifier="labelsletterb" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter C" identifier="labelsletterc" scale="0.35">
+  <label name="Label Letter C" Aliases="Label M Letter C" identifier="labelsletterc" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter D" identifier="labelsletterd" scale="0.35">
+  <label name="Label Letter D" Aliases="Label M Letter D" identifier="labelsletterd" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter E" identifier="labelslettere" scale="0.35">
+  <label name="Label Letter E" Aliases="Label M Letter E" identifier="labelslettere" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter F" identifier="labelsletterf" scale="0.35">
+  <label name="Label Letter F" Aliases="Label M Letter F" identifier="labelsletterf" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter G" identifier="labelsletterg" scale="0.35">
+  <label name="Label Letter G" Aliases="Label M Letter G" identifier="labelsletterg" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter H" identifier="labelsletterh" scale="0.35">
+  <label name="Label Letter H" Aliases="Label M Letter H" identifier="labelsletterh" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="897,-1,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter I" identifier="labelsletteri" scale="0.35">
+  <label name="Label Letter I" Aliases="Label M Letter I" identifier="labelsletteri" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter J" identifier="labelsletterj" scale="0.35">
+  <label name="Label Letter J" Aliases="Label M Letter J" identifier="labelsletterj" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter K" identifier="labelsletterk" scale="0.35">
+  <label name="Label Letter K" Aliases="Label M Letter K" identifier="labelsletterk" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter L" identifier="labelsletterl" scale="0.35">
+  <label name="Label Letter L" Aliases="Label M Letter L" identifier="labelsletterl" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter M" identifier="labelsletterm" scale="0.35">
+  <label name="Label Letter M" Aliases="Label M Letter M" identifier="labelsletterm" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter N" identifier="labelslettern" scale="0.35">
+  <label name="Label Letter N" Aliases="Label M Letter N" identifier="labelslettern" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter O" identifier="labelslettero" scale="0.35">
+  <label name="Label Letter O" Aliases="Label M Letter O" identifier="labelslettero" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter P" identifier="labelsletterp" scale="0.35">
+  <label name="Label Letter P" Aliases="Label M Letter P" identifier="labelsletterp" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="905,126,109,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter Q" identifier="labelsletterq" scale="0.35">
+  <label name="Label Letter Q" Aliases="Label M Letter Q" identifier="labelsletterq" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter R" identifier="labelsletterr" scale="0.35">
+  <label name="Label Letter R" Aliases="Label M Letter R" identifier="labelsletterr" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter S" identifier="labelletters" scale="0.35">
+  <label name="Label Letter S" Aliases="Label M Letter S" identifier="labelletters" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter T" identifier="labelslettert" scale="0.35">
+  <label name="Label Letter T" Aliases="Label M Letter T" identifier="labelslettert" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter U" identifier="labelsletteru" scale="0.35">
+  <label name="Label Letter U" Aliases="Label M Letter U" identifier="labelsletteru" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter V" identifier="labelsletterv" scale="0.35">
+  <label name="Label Letter V" Aliases="Label M Letter V" identifier="labelsletterv" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,256,122,126" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter W" identifier="labelsletterw" scale="0.35">
+  <label name="Label Letter W" Aliases="Label M Letter W" identifier="labelsletterw" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="765,256,133,125" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter X" identifier="labelsletterx" scale="0.35">
+  <label name="Label Letter X" Aliases="Label M Letter X" identifier="labelsletterx" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="900,262,122,123" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter Y" identifier="labelslettery" scale="0.35">
+  <label name="Label Letter Y" Aliases="Label M Letter Y" identifier="labelslettery" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Letter Z" identifier="labelsletterz" scale="0.35">
+  <label name="Label Letter Z" Aliases="Label M Letter Z" identifier="labelsletterz" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 1" identifier="labelsnumber1" scale="0.35">
+  <label name="Label Number 1" Aliases="Label M Number 1" identifier="labelsnumber1" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 2" identifier="labelsnumber2" scale="0.35">
+  <label name="Label Number 2" Aliases="Label M Number 2" identifier="labelsnumber2" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.35">
+  <label name="Label Number 3" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 4" identifier="labelsnumber4" scale="0.35">
+  <label name="Label Number 4" Aliases="Label M Number 4" identifier="labelsnumber4" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 5" identifier="labelsnumber5" scale="0.35">
+  <label name="Label Number 5" Aliases="Label M Number 5" identifier="labelsnumber5" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 6" identifier="labelsnumber6" scale="0.35">
+  <label name="Label Number 6" Aliases="Label M Number 6" identifier="labelsnumber6" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="869,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 7" identifier="labelsnumber7" scale="0.35">
+  <label name="Label Number 7" Aliases="Label M Number 7" identifier="labelsnumber7" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 8" identifier="labelsnumber8" scale="0.35">
+  <label name="Label Number 8" Aliases="Label M Number 8" identifier="labelsnumber8" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 9" identifier="labelsnumber9" scale="0.35">
+  <label name="Label Number 9" Aliases="Label M Number 9" identifier="labelsnumber9" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,511,121,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.35">
+  <label name="Label Number 0" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Vertical A" identifier="labelsarroverticala" scale="0.35">
+  <label name="Label Arrow Vertical A" Aliases="Label M Arrow Vertical A" identifier="labelsarroverticala" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,510,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Horizontal A" identifier="labelsarrowhorizontala" scale="0.35">
+  <label name="Label Arrow Horizontal A" Aliases="Label M Arrow Horizontal A" identifier="labelsarrowhorizontala" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,511,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Diagonal A" identifier="labelsarrowdiagonala" scale="0.35">
+  <label name="Label Arrow Diagonal A" Aliases="Label M Arrow Diagonal A" identifier="labelsarrowdiagonala" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Vertical B" identifier="labelsarroverticalb" scale="0.35">
+  <label name="Label Arrow Vertical B" Aliases="Label M Arrow Vertical B" identifier="labelsarroverticalb" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="894,511,131,130" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Horizontal B" identifier="labelsarrowhorizontalb" scale="0.35">
+  <label name="Label Arrow Horizontal B" Aliases="Label M Arrow Horizontal B" identifier="labelsarrowhorizontalb" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,638,126,134" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="" Aliases="Label M Arrow Diagonal B" identifier="labelsarrowdiagonalb" scale="0.35">
+  <label name="Label Arrow Diagonal B" Aliases="Label M Arrow Diagonal B" identifier="labelsarrowdiagonalb" scale="0.35">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,640,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
   <!--OLD LABELS-->
-  <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
+  <doorlabel name="Door Label" identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
     <sprite texture="Content/Map/structures2.png" sourcerect="2,263,76,132" depth="0.85" canflipx="false" />
   </doorlabel>
-  <engineeringLabel identifier="engineeringLabel" width="153">
+  <engineeringLabel name="Engineering Label" identifier="engineeringLabel" width="153">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
   </engineeringLabel>
-  <commandLabel name="" identifier="commandLabel" width="128" height="16">
+  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.97" canflipx="false" />
   </commandLabel>
-  <airlockLabel name="" identifier="airlockLabel" width="99" height="16">
+  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.97" canflipx="false" />
   </airlockLabel>
-  <cabinsLabel name="" identifier="cabinsLabel" width="83" height="16">
+  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.97" canflipx="false" />
   </cabinsLabel>
-  <medicalLabel name="" identifier="medicalLabel" width="110" height="16">
+  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
   </medicalLabel>
-  <arrowUp name="" identifier="arrowUp" width="16" height="16">
+  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.97" />
   </arrowUp>
-  <arrowDown name="" identifier="arrowDown" width="16" height="16">
+  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.97" />
   </arrowDown>
-  <arrowLeft name="" identifier="arrowLeft" width="16" height="16">
+  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.97" />
   </arrowLeft>
-  <arrowRight name="" identifier="arrowRight" width="16" height="16">
+  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.97" />
   </arrowRight>
   <!--LABELS END-->
   <!--  FINS A START-->
-  <fin name="" identifier="finabodyedge01" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Edge 01" identifier="finabodyedge01" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,0,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge02" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Edge 02" identifier="finabodyedge02" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="224,0,192,96" depth="0.985" origin="0.4270749,0.4675465" />
   </fin>
-  <fin name="" identifier="finabodyedge03" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Edge 03" identifier="finabodyedge03" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="224,128,192,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge04" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Edge 04" identifier="finabodyedge04" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="224,224,192,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge05" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Edge 05" identifier="finabodyedge05" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="448,0,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge06" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Edge 06" identifier="finabodyedge06" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="672,0,96,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge07" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Edge 07" identifier="finabodyedge07" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="800,0,64,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyedge08" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Edge 08" identifier="finabodyedge08" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="897,0,32,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside01" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Inside 01" identifier="finabodyinside01" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1120,0,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside02" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Inside 02" identifier="finabodyinside02" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1344,0,192,96" depth="0.985" origin="0.4270749,0.4675465" />
   </fin>
-  <fin name="" identifier="finabodyinside03" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Inside 03" identifier="finabodyinside03" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1344,128,192,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside04" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Inside 04" identifier="finabodyinside04" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="448,224,192,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside05" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Inside 05" identifier="finabodyinside05" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1568,0,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside06" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Inside 06" identifier="finabodyinside06" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1792,0,96,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finbodyinside07" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Inside 07" identifier="finbodyinside07" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1920,0,64,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside08" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Inside 08" identifier="finabodyinside08" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="2016,0,32,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <!--<fin name="" identifier="finabodyinside09" description="Fin construction piece" body="false" resizevertical="true">
+  <!--<fin name="Fin A Body Inside 09" identifier="finabodyinside09" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="2014,3,39,186" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finbodyinside10" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Body Inside 10" identifier="finbodyinside10" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="2014,3,39,186" depth="0.985" origin="0.5,0.5" />
   </fin>-->
-  <fin name="" identifier="finabodyinside11" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 11" identifier="finabodyinside11" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="768,224,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside12" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 12" identifier="finabodyinside12" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="993,224,96,193" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside13" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 13" identifier="finabodyinside13" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1120,352,192,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside14" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 14" identifier="finabodyinside14" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1120,224,192,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside15" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 15" identifier="finabodyinside15" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1984,1152,65,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabodyinside16" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Inside 16" identifier="finabodyinside16" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1344,224,192,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt01" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Belt 1" identifier="finabelt01" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1374,928,22,194" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt02" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Belt 2" identifier="finabelt02" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1312,928,36,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt03" description="Fin construction piece" body="false" resizevertical="true">
+  <fin name="Fin A Wing Belt 3" identifier="finabelt03" description="Fin construction piece" body="false" resizevertical="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1312,1024,34,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt04" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Belt 4" identifier="finabelt04" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,480,192,16" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt05" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Belt 5" identifier="finabelt05" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1936,480,112,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finabelt06" description="Fin construction piece" body="false" resizehorizontal="true">
+  <fin name="Fin A Wing Belt 6" identifier="finabelt06" description="Fin construction piece" body="false" resizehorizontal="true">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1760,480,176,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner01" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 01" identifier="finacorner01" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="-1,225,97,95" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner02" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 02" identifier="finacorner02" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="128,224,64,96" depth="0.985" origin="0.51259,0.4739301" />
   </fin>
-  <fin name="" identifier="finacorner03" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 03" identifier="finacorner03" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,352,96,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner04" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 04" identifier="finacorner04" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="192,352,112,64" depth="0.985" origin="0.3047689,0.2925825" />
   </fin>
-  <fin name="" identifier="finacorner05" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 05" identifier="finacorner05" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="128,352,32,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner06" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 06" identifier="finacorner06" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,288,96,128" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner07" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 07" identifier="finacorner07" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="448,384,64,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner08" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 08" identifier="finacorner08" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="448,224,192,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finacorner09" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 09" identifier="finacorner09" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="448,288,64,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <!--<fin name="" identifier="finacorner10" description="Fin construction piece" body="false">
+  <!--<fin name="Fin A Corner 10" identifier="finacorner10" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="663,384,67,45" depth="0.985" origin="0.5,0.5" />
   </fin>-->
-  <fin name="" identifier="finacorner11" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 11" identifier="finacorner11" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="544,288,128,64" depth="0.985" origin="0.4595993,0.6038165" />
   </fin>
-  <fin name="" identifier="finacorner12" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 12" identifier="finacorner12" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="544,384,32,32" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finacorner13" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 13" identifier="finacorner13" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="512,448,64,96" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finacorner14" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 14" identifier="finacorner14" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="224,448,96,96" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finacorner15" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Corner 15" identifier="finacorner15" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="224,576,64,64" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <!--<fin name="" identifier="finacorner16" description="Fin construction piece" body="false">
+  <!--<fin name="Fin A Corner 16" identifier="finacorner16" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="688,288,64,128" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>-->
-  <fin name="" identifier="finadeco01" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 01" identifier="finadeco01" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1862,934,48,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco02" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 02" identifier="finadeco02" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1920,928,61,58" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco03" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 03" identifier="finadeco03" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1985,928,60,61" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco04" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 04" identifier="finadeco04" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1861,996,56,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco05" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 05" identifier="finadeco05" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1922,995,57,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco06" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 06" identifier="finadeco06" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1993,999,50,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco07" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 07" identifier="finadeco07" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1858,1061,53,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco08" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 08" identifier="finadeco08" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1219,1102,90,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco09" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 09" identifier="finadeco09" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,1226,109,113" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finadeco10" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 10" identifier="finadeco10" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,908,76,74" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart72" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 11" identifier="finawingpart72" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,1003,77,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart19" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 02" identifier="finawingpart19" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1622,805,91,119" depth="0.985" origin="0.4595993,0.6038165" />
   </fin>
-  <fin name="" identifier="finawingpart20" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 01" identifier="finawingpart20" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1580,619,143,170" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finapatch01" description="Fin construction piece" body="false">
+  <fin name="Fin A Patch 1" identifier="finapatch01" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="961,33,128,127" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finapatch02" description="Fin construction piece" body="false">
+  <fin name="Fin A Patch 2" identifier="finapatch02" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1792,1760,257,48" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finapatch03" description="Fin construction piece" body="false">
+  <fin name="Fin A Patch 3" identifier="finapatch03" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1792,1840,64,80" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finapatch04" description="Fin construction piece" body="false">
+  <fin name="Fin A Patch 4" identifier="finapatch04" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1856,1840,80,80" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finapatch05" description="Fin construction piece" body="false">
+  <fin name="Fin A Patch 5" identifier="finapatch05" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1792,1952,128,96" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <!--<fin name="" identifier="finapatch06" description="Fin construction piece" body="false">
+  <!--<fin name="Fin A Patch 6" identifier="finapatch06" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1936,2008,86,44" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>-->
-  <fin name="" identifier="finawingpart22" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 01" identifier="finawingpart22" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,928,128,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart23" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 02" identifier="finawingpart23" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="128,928,128,96" depth="0.985" origin="0.4750288,0.5112525" />
   </fin>
-  <fin name="" identifier="finawingpart24" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 03" identifier="finawingpart24" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="256,928,64,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart25" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 04" identifier="finawingpart25" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,928,192,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart26" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 05" identifier="finawingpart26" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="512,928,224,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart27" description="Fin construction piece" body="false">
+  <fin name="Fin A Special Part 06 Part 27" identifier="finawingpart27" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="736,928,208,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart28" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 01" identifier="finawingpart28" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,1024,128,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart29" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 02" identifier="finawingpart29" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="128,1024,128,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart30" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 03" identifier="finawingpart30" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="256,1024,64,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart31" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 04" identifier="finawingpart31" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,1024,192,192" depth="0.985" origin="0.6148124,0.5381715" />
   </fin>
-  <fin name="" identifier="finawingpart32" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 05" identifier="finawingpart32" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="512,1024,224,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart33" description="Fin construction piece" body="false">
+  <fin name="Fin A Wall 06" identifier="finawingpart33" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="736,1024,480,192" depth="0.985" origin="0.4361971,0.4431255" />
   </fin>
-  <fin name="" identifier="finawingpart09" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve A 01" identifier="finawingpart09" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1024,480,96,112" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart10" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve A 02" identifier="finawingpart10" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1024,592,160,80" depth="0.985" origin="0.5043059,0.5000123" />
   </fin>
-  <fin name="" identifier="finawingpart53" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve B 01" identifier="finawingpart53" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1376,1728,160,128" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart54" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve B 02" identifier="finawingpart54" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1424,1856,112,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart55" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve C 01 " identifier="finawingpart55" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1568,1728,192,144" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart56" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Curve C02" identifier="finawingpart56" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1680,1872,80,176" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart34" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing A 01" identifier="finawingpart34" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1,1345,191,239" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart35" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing A 02" identifier="finawingpart35" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="192,1344,416,240" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart40" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing A 04" identifier="finawingpart40" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="192,1584,416,112" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart41" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing A 03" identifier="finawingpart41" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,1584,192,112" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart42" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing A 05" identifier="finawingpart42" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,1504,160,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart37" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 37" identifier="finawingpart37" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1664,1440,384,128" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart38" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing B 02" identifier="finawingpart38" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="800,1424,400,208" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart39" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing B 01" identifier="finawingpart39" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="800,1344,224,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart36" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing B 03" identifier="finawingpart36" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="800,1632,480,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart43" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 03" identifier="finawingpart43" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1312,1504,224,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart44" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 04" identifier="finawingpart44" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,1568,96,128" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart45" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 02" identifier="finawingpart45" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1312,1408,112,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart46" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 01" identifier="finawingpart46" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1312,1376,68,32" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart67" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 05" identifier="finawingpart67" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1632,1600,128,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart68" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing C 06" identifier="finawingpart68" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1760,1632,256,65" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart05" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 02" identifier="finawingpart05" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,608,192,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart06" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 01" identifier="finawingpart06" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,448,128,160" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart13" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 05" identifier="finawingpart13" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,800,208,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart14" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 06" identifier="finawingpart14" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="816,800,176,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart15" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 03" identifier="finawingpart15" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,704,128,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart16" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing D 04" identifier="finawingpart16" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="736,704,137,97" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart03" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing E 02" identifier="finawingpart03" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,608,160,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart04" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing E 01" identifier="finawingpart04" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,512,112,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart11" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing E 04" identifier="finawingpart11" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,800,256,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart12" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing E 03" identifier="finawingpart12" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="320,704,208,96" depth="0.985" origin="0.4549732,0.4953284" />
   </fin>
-  <fin name="" identifier="finawingpart08" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing F 01" identifier="finawingpart08" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="-1,704,177,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart07" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing F 02" identifier="finawingpart07" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,800,224,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart01" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing G 02" identifier="finawingpart01" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,544,208,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart02" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing G 01" identifier="finawingpart02" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="-1,447,161,97" depth="0.985" origin="0.4956147,0.5034655" />
   </fin>
-  <!--<fin name="" identifier="finawingpart05" description="Fin construction piece" body="false">
+  <!--<fin name="Fin A Wing H 02" identifier="finawingpart05" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,608,197,100" depth="0.985" origin="0.5,0.5" />
     
   </fin>
-  <fin name="" identifier="finawingpart06" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing H 01" identifier="finawingpart06" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,448,129,157" depth="0.985" origin="0.5,0.5" />
     
   </fin>-->
-  <fin name="" identifier="finawingpart17" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 17" identifier="finawingpart17" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1024,704,288,192" depth="0.985" origin="0.695432,0.9253635" />
   </fin>
-  <fin name="" identifier="finawingpart18" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 18" identifier="finawingpart18" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1342,704,257,193" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart21" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 21" identifier="finawingpart21" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1408,1024,448,192" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
-  <fin name="" identifier="finawingpart47" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 47" identifier="finawingpart47" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,1728,176,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart48" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 48" identifier="finawingpart48" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="176,1728,81,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart49" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 49" identifier="finawingpart49" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="288,1728,512,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart50" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 50" identifier="finawingpart50" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="832,1728,240,192" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <!--<fin name="" identifier="finawingpart51" description="Fin construction piece" body="false">
+  <!--<fin name="Fin A Wing Part 51" identifier="finawingpart51" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1408,928,455,65" depth="0.985" origin="0.5,0.5" />
   </fin>-->
-  <fin name="" identifier="finawingpart52" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 52" identifier="finawingpart52" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1072,1824,272,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart57" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 57" identifier="finawingpart57" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1248,480,128,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart58" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 58" identifier="finawingpart58" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1248,528,192,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart59" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 59" identifier="finawingpart59" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1248,576,320,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart60" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 60" identifier="finawingpart60" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="768,448,192,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart61" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 61" identifier="finawingpart61" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1728,576,160,144" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart62" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 62" identifier="finawingpart62" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1728,720,256,176" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart63" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 63" identifier="finawingpart63" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="0,1952,352,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart64" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 64" identifier="finawingpart64" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="384,1952,224,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart65" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 65" identifier="finawingpart65" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="608,1952,288,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart66" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 66" identifier="finawingpart66" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="928,1952,353,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart69" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 69" identifier="finawingpart69" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1760,256,289,64" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart70" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 70" identifier="finawingpart70" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1538,352,510,96" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart71" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 71" identifier="finawingpart71" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,272,224,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="" identifier="finawingpart73" description="Fin construction piece" body="false">
+  <fin name="Fin A Wing Part 73" identifier="finawingpart73" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1664,1280,384,128" depth="0.985" origin="0.5,0.5" />
   </fin>
   <!-- FINS A ENDS -->
   <!-- VENTILATION - Cosmetic -->
   <!-- Pipes-->
-  <ventilation name="" identifier="ventpipea1" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A1" identifier="ventpipea1" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,0,512,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea190deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A1 90deg" identifier="ventpipea190deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="544,0,32,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea2" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A2" identifier="ventpipea2" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,32,448,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea290deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A2 90deg" identifier="ventpipea290deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,0,32,448" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea3" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A3" identifier="ventpipea3" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,96,512,24" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea390deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A3 90deg" identifier="ventpipea390deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,0,24,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea4" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A4" identifier="ventpipea4" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,128,480,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea490deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A4 90deg" identifier="ventpipea490deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="672,0,17,480" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea5" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A5" identifier="ventpipea5" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,160,512,48" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea590deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A5 90deg" identifier="ventpipea590deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="704,0,48,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea6" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A6" identifier="ventpipea6" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,208,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea690deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A6 90deg" identifier="ventpipea690deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea7" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A7" identifier="ventpipea7" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,288,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea790deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A7 90deg" identifier="ventpipea790deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="864,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea8" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A8" identifier="ventpipea8" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,384,256,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea890deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A8 90deg" identifier="ventpipea890deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,0,32,256" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea9" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A9" identifier="ventpipea9" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,448,161,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipea990deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A9 90deg" identifier="ventpipea990deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="992,0,32,160" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipecapa1" description="Decorative ventilation piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe Cap A1" identifier="ventpipecapa1" description="Decorative ventilation piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,383,16,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventpipecapa190deg" description="Decorative ventilation piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe  Cap A1 90deg" identifier="ventpipecapa190deg" description="Decorative ventilation piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,365,32,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventmediumpipebenda1" description="Visual Ventilation Medium Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Pipe Bend A1" identifier="ventmediumpipebenda1" description="Visual Ventilation Medium Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="448,400,32,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventlargepipebenda1" description="Visual Ventilation Large Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Large Pipe Bend A1" identifier="ventlargepipebenda1" description="Visual Ventilation Large Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="352,384,64,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Connectors Cosmetic-->
-  <ventilation name="" identifier="ventconnectora1" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A1" identifier="ventconnectora1" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,512,127,113" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora2" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A2" identifier="ventconnectora2" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,512,208,105" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora3" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A3" identifier="ventconnectora3" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,640,149,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora4" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A4" identifier="ventconnectora4" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,640,192,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora5" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A5" identifier="ventconnectora5" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,768,215,91" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora6" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A6" identifier="ventconnectora6" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,864,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectora7" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A7" identifier="ventconnectora7" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,960,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectorcapa1" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector Cap A1" identifier="ventconnectorcapa1" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,768,59,49" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventconnectorcapa2" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector Cap A2" identifier="ventconnectorcapa2" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,768,26,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Duct Cosmetic-->
-  <ventilation name="" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A1" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventducta190deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A1 90 deg" identifier="ventducta190deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="608,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventducta2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A2" identifier="ventducta2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="736,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventducta290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A2 90 deg" identifier="ventducta290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,544,62,63" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventbendducta1" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Bend Duct A1" identifier="ventbendducta1" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="896,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventbendducta2" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Bend Duct A2" identifier="ventbendducta2" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="960,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventsmallductreducera" description="Visual Vent Small Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Small Duct Reducer A" identifier="ventsmallductreducera" description="Visual Vent Small Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,640,32,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventlargeductreducera" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Large Duct Reducer A" identifier="ventlargeductreducera" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,640,160,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventlargeductreducera1" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Duct Reducer A1" identifier="ventlargeductreducera1" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventlargeductreducera2" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Duct Reducer A2" identifier="ventlargeductreducera2" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="848,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductfana" description="Visual Vent Duct Fan piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Fan A" identifier="ventductfana" description="Visual Vent Duct Fan piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductb1" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B1" identifier="ventductb1" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="472,768,113,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductb190deg" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B1 90 deg" identifier="ventductb190deg" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,864,64,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductlongb2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B2" identifier="ventductlongb2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,841,224,48" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductb290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B2 90 deg" identifier="ventductb290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="953,800,48,224" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductbendb1" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Bend B1" identifier="ventductbendb1" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="505,864,112,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductbendb2" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Bend B2" identifier="ventductbendb2" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,832,128,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductreducerb" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Reducer B" identifier="ventductreducerb" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="473,832,112,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="" identifier="ventductreducerb90deg" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Reducer B 90 deg" identifier="ventductreducerb90deg" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,864,32,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <!-- VENTILATION - Cosmetic ENDS -->
   <!-- TAILS START-->
-  <extA_Tail name="" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
+  <extA_Tail name="Tail Fin Old A" identifier="extA_Tail" description="Submarine tail temp" scale="1.2" body="true" bodywidth="80" bodyheight="330" bodyoffset="-20,0" castshadow="false" health="200">
     <!-- bodywidth="40" bodyheight="300" bodyoffset="0,-100"-->
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="892,0,128,339" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="892,347,128,339" depth="0.85" origin="0.5,0.5" />
   </extA_Tail>
-  <TailFin name="" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFin name="Tail Fin A" identifier="tailfina" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFinA2 name="" identifier="tailfina2" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFinA2 name="Tail Fin A2" identifier="tailfina2" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="0,6,1017,507" depth="0.9" origin="0.5,0.5" />
   </TailFinA2>
-  <TailFin name="" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFin name="Tail Fin B" identifier="tailfinb" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1064,2,988,514" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFin name="Tail Fin C" identifier="tailfinc" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="0,1524,1033,180" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFin name="Tail Fin D" identifier="tailfind" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1041,1026,995,516" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFinD2p1 name="" identifier="tailfind2p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFinD2p1 name="Tail Fin D2 p1" identifier="tailfind2p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1061,1820,288,225" depth="0.9" origin="0.5,0.5" />
   </TailFinD2p1>
-  <TailFinD2p2 name="" identifier="tailfind2p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
+  <TailFinD2p2 name="Tail Fin D2 p2" identifier="tailfind2p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1346,1820,227,227" depth="0.9" origin="0.5,0.5" />
   </TailFinD2p2>
-  <TailFinD2p3 name="" identifier="tailfind2p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFinD2p3 name="Tail Fin D2 p3" identifier="tailfind2p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1571,1820,482,231" depth="0.9" origin="0.5,0.5" />
   </TailFinD2p3>
-  <TailFinD3p1 name="" identifier="tailfind3p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFinD3p1 name="Tail Fin D3 p1" identifier="tailfind3p1" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1021,537,285,490" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p1>
-  <TailFinD3p2 name="" identifier="tailfind3p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
+  <TailFinD3p2 name="Tail Fin D3 p2" identifier="tailfind3p2" description="Submarine tail temp" scale="0.5" resizehorizontal="false" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1300,535,228,494" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p2>
-  <TailFinD3p3 name="" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
+  <TailFinD3p3 name="Tail Fin D3 p3" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1523,535,484,492" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p3>
-  <Front name="" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400">
+  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="586,5,306,500" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="586,513,306,500" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front name="" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400">
+  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,271,975" depth="0.01" origin="0.238248,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="292,0,271,975" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front name="" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="true" health="400">
+  <Front Name="Front E p1" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,0,260,163" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front name="" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="true" health="400">
+  <Front Name="Front E p2" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,160,261,400" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front name="" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="true" health="400">
+  <Front Name="Front E p3" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="0,556,262,128" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </Front>
-  <TailFin name="" identifier="tailfinep1" description="Submarine tail" scale="1" body="true" bodywidth="250" bodyheight="60" bodyrotation="-32" bodyoffset="0,-30" castshadow="false">
+  <TailFin name="Tail Fin E p1" identifier="tailfinep1" description="Submarine tail" scale="1" body="true" bodywidth="250" bodyheight="60" bodyrotation="-32" bodyoffset="0,-30" castshadow="false">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="412,527,311,157" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="" identifier="tailfinep2" description="Submarine tail" scale="1" body="true" bodywidth="200" bodyheight="120" bodyrotation="90" bodyoffset="-40,0" castshadow="false">
+  <TailFin name="Tail Fin E p2" identifier="tailfinep2" description="Submarine tail" scale="1" body="true" bodywidth="200" bodyheight="120" bodyrotation="90" bodyoffset="-40,0" castshadow="false">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="399,683,298,186" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="" identifier="tailfinfp3" description="Submarine tail" scale="1" body="true" bodywidth="250" bodyheight="60" bodyrotation="32" bodyoffset="10,30" castshadow="false">
+  <TailFin name="Tail Fin E p3" identifier="tailfinfp3" description="Submarine tail" scale="1" body="true" bodywidth="250" bodyheight="60" bodyrotation="32" bodyoffset="10,30" castshadow="false">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="422,869,288,156" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <FrontF1P1 name="" identifier="subfrontf1p1" description="Submarine front" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="26" bodyoffset="15,-10" castshadow="false" health="400">
+  <FrontF1P1 Name="Front F1 p1" identifier="subfrontf1p1" description="Submarine front" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="26" bodyoffset="15,-10" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="-1,0,363,156" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.85" origin="0.5,0.5" />
   </FrontF1P1>
-  <FrontF1p2 name="" identifier="subfrontf1p2" description="Submarine front " scale="1.5" body="true" bodywidth="390" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
+  <FrontF1p2 Name="Front F1 p2" identifier="subfrontf1p2" description="Submarine front " scale="1.5" body="true" bodywidth="390" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="74,154,285,279" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.85" origin="0.5,0.5" />
   </FrontF1p2>
-  <FrontF1p3 name="" identifier="subfrontf1p3" description="Submarine front " scale="1.5" body="true" bodywidth="230" bodyheight="60" bodyrotation="-20" bodyoffset="0,0" castshadow="false" health="400">
+  <FrontF1p3 Name="Front F1 p3" identifier="subfrontf1p3" description="Submarine front " scale="1.5" body="true" bodywidth="230" bodyheight="60" bodyrotation="-20" bodyoffset="0,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,432,359,159" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF1p3>
-  <FrontF2p1 name="" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
+  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,752,270,121" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p1>
-  <FrontF2p2 name="" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
+  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
-  <TailFinF1 name="" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="false" castshadow="false">
+  <TailFinF1 name="Tail Fin F1" identifier="tailfinf1" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="375,1,541,216" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF1>
-  <TailFinF2 name="" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="false" castshadow="false">
+  <TailFinF2 name="Tail Fin F2" identifier="tailfinf2" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="378,456,229,124" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF2>
-  <TailFinF3 name="" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="false" castshadow="false">
+  <TailFinF3 name="Tail Fin F3" identifier="tailfinf3" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="355,608,326,174" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF3>
-  <TailFinF4 name="" identifier="tailfinf4" description="Submarine tail" scale="1.5" body="false" castshadow="false">
+  <TailFinF4 name="Tail Fin F4" identifier="tailfinf4" description="Submarine tail" scale="1.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="692,419,269,169" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF4>
-  <TailFin name="" identifier="frontfchaina1" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,815,744,46" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="" identifier="frontfchaina2" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,869,745,24" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <frontpulley name="" identifier="frontpulley" description="Decorative pulley" scale="1" body="false" castshadow="false">
+  <frontpulley name="Front F Pulley" identifier="frontpulley" description="Decorative pulley" scale="1" body="false" castshadow="false">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="281,893,95,80" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </frontpulley>
-  <FrontG1p1 name="" identifier="subfrontg1p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="50" bodyoffset="-10,-10" castshadow="false" health="400">
+  <FrontG1p1 Name="Front G1 p1" identifier="subfrontg1p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="50" bodyoffset="-10,-10" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="-1,0,271,299" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG1p1>
-  <FrontG1p2 name="" identifier="subfrontg1p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
+  <FrontG1p2 Name="Front G1 p2" identifier="subfrontg1p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,299,271,438" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG1p2>
-  <FrontG1p3 name="" identifier="subfrontg1p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="-50" bodyoffset="0,25" castshadow="false" health="400">
+  <FrontG1p3 Name="Front G1 p3" identifier="subfrontg1p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="-50" bodyoffset="0,25" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,737,269,254" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.9" origin="0.5,0.5" />
   </FrontG1p3>
-  <FrontG2p1 name="" identifier="subfrontg2p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="40" bodyoffset="-10,-16" castshadow="false" health="400">
+  <FrontG2p1 Name="Front G2 p1" identifier="subfrontg2p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="40" bodyoffset="-10,-16" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="590,17,260,134" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG2p1>
-  <FrontG2p2 name="" identifier="subfrontg2p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="300" bodyheight="120" bodyrotation="90" bodyoffset="0,0" castshadow="false" health="400">
+  <FrontG2p2 Name="Front G2 p2" identifier="subfrontg2p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="300" bodyheight="120" bodyrotation="90" bodyoffset="0,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="635,149,219,223" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG2p2>
-  <FrontG2p3 name="" identifier="subfrontg2p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="-40" bodyoffset="0,25" castshadow="false" health="400">
+  <FrontG2p3 Name="Front G2 p3" identifier="subfrontg2p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="-40" bodyoffset="0,25" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="593,371,237,130" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.9" origin="0.5,0.5" />
   </FrontG2p3>
@@ -1031,13 +1031,13 @@
   <Wall_H1 name="" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </Wall_H1>
-  <Wall_I1 name="" identifier="FF_Wall_I1" description="Outpost back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I1 name="BackWall Outpost A" identifier="FF_Wall_I1" description="Outpost back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I1>
-  <Wall_I2 name="" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I2 name="BackWall Outpost B" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,256,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I2>
-  <Wall_I3 name="" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I3 name="BackWall Outpost C" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/OutpostWall_C.png" sourcerect="0,0,256,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I3>
   <!-- BACK WALLS ENDS -->
@@ -1469,167 +1469,167 @@
   <smallverticalback2 identifier="smallverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9" />
   </smallverticalback2>
-  <leftwall name="" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
+  <leftwall name="Basic Wall Left" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth="0.85" fliphorizontal="true" />
   </leftwall>
-  <rightwall name="" identifier="rightwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
+  <rightwall name="Basic Wall Right" identifier="rightwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
     <sprite texture="Content/Map/testroom.png" sourcerect="953,214,32,576" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="989,214,32,576" depth="0.85" />
   </rightwall>
-  <topwall name="" identifier="topwall" category="Legacy" description="A horizontal wall with collision detection" width="64" height="32" resizehorizontal="true" body="true" castshadow="true" health="55">
+  <topwall name="Basic Wall Top" identifier="topwall" category="Legacy" description="A horizontal wall with collision detection" width="64" height="32" resizehorizontal="true" body="true" castshadow="true" health="55">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,989,576,32" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="0,953,576,32" depth="0.85" />
   </topwall>
-  <TopWallHeavy name="" identifier="TopWallHeavy" category="Legacy" description="A horizontal wall with collision detection" width="96" height="96" resizehorizontal="true" body="true" castshadow="true" health="200">
+  <TopWallHeavy name="Heavy Wall Top" identifier="TopWallHeavy" category="Legacy" description="A horizontal wall with collision detection" width="96" height="96" resizehorizontal="true" body="true" castshadow="true" health="200">
     <sprite texture="Content/Map/testroom.png" sourcerect="197,347,480,96" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="197,446,480,96" depth="0.85" />
   </TopWallHeavy>
-  <LeftWallHeavy name="" identifier="LeftWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="200">
+  <LeftWallHeavy name="Heavy Wall Left" identifier="LeftWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="200">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" fliphorizontal="true" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" fliphorizontal="true" />
   </LeftWallHeavy>
-  <RightWallHeavy name="" identifier="RightWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="200">
+  <RightWallHeavy name="Heavy Wall Right" identifier="RightWallHeavy" category="Legacy" description="A vertical wall with collision detection" width="96" height="96" resizevertical="true" body="true" castshadow="true" health="200">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" />
   </RightWallHeavy>
-  <CableHolderHorizontal name="" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true">
+  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="533,907,32,16" depth="0.85" />
   </CableHolderHorizontal>
-  <CableHolderHorizontal2 name="" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
+  <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="491,907,32,28" depth="0.85" />
   </CableHolderHorizontal2>
-  <CableHolderHorizontal3 name="" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
+  <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="449,907,32,38" depth="0.85" />
   </CableHolderHorizontal3>
-  <CableHolderVertical name="" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true">
+  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="423,907,16,32" depth="0.85" />
   </CableHolderVertical>
-  <CableHolderVertical2 name="" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
+  <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="386,907,27,32" depth="0.85" />
   </CableHolderVertical2>
-  <CableHolderVertical3 name="" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
+  <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
   </CableHolderVertical3>
-  <topwindow name="" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
+  <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
     <Upgrade gameversion="0.9.2.0" rectheight="49" />
     <sprite texture="Content/Map/testroom.png" sourcerect="208,848,128,49" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="344,848,128,49" depth="0.85" />
   </topwindow>
-  <verticalwindow name="" identifier="verticalwindow" width="128" height="224" body="true" health="100" tags="glass">
+  <verticalwindow name="Window Vertical" identifier="verticalwindow" width="128" height="224" body="true" health="100" tags="glass">
     <sprite texture="Content/Map/testroom.png" sourcerect="368,544,128,224" depth="0.05" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="239,544,128,224" depth="0.85" />
   </verticalwindow>
-  <horizontalresizablewindow name="" identifier="horizontalresizablewindow" category="Legacy" width="128" height="64" body="true" health="100" tags="glass" resizehorizontal="true">
+  <horizontalresizablewindow name="Window Horizontal Resizable" identifier="horizontalresizablewindow" category="Legacy" width="128" height="64" body="true" health="100" tags="glass" resizehorizontal="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="207,771,128,64" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="337,771,128,64" depth="0.85" />
   </horizontalresizablewindow>
-  <verticalresizablewindow name="" identifier="verticalresizablewindow" category="Legacy" width="64" height="128" body="true" health="100" tags="glass" resizevertical="true">
+  <verticalresizablewindow name="Window Vertical Resizable" identifier="verticalresizablewindow" category="Legacy" width="64" height="128" body="true" health="100" tags="glass" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="896,80,64,128" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="961,80,64,128" depth="0.85" />
   </verticalresizablewindow>
-  <largeplatform name="" identifier="largeplatform" allowattachitems="true" width="64" height="51" resizehorizontal="true" body="true" platform="true">
+  <largeplatform name="Platform Large" identifier="largeplatform" allowattachitems="true" width="64" height="51" resizehorizontal="true" body="true" platform="true">
     <Upgrade gameversion="0.9.3.0" rectheight="51" />
     <sprite texture="Content/Map/testroom.png" sourcerect="897,0,126,51" depth="0.9" />
   </largeplatform>
-  <platform name="" identifier="platform" allowattachitems="true" width="64" height="27" resizehorizontal="true" body="true" platform="true">
+  <platform name="Platform Basic" identifier="platform" allowattachitems="true" width="64" height="27" resizehorizontal="true" body="true" platform="true">
     <Upgrade gameversion="0.9.3.0" rectheight="27" />
     <sprite texture="Content/Map/testroom.png" sourcerect="897,52,126,27" depth="0.9" />
   </platform>
-  <roughbgwall name="" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="0.98" />
   </roughbgwall>
-  <cleanbgwall name="" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <cleanbgwall name="BackWall Clean" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth="0.98" />
   </cleanbgwall>
-  <bgpanels name="" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanels name="BackWall Panels" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth="0.98" />
   </bgpanels>
-  <bgpanelswindow name="" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanelswindow name="BackWall Window" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth="0.98" />
   </bgpanelswindow>
-  <bgorangepanels name="" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanels name="BackWall Orange Panels" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth="0.98" />
   </bgorangepanels>
-  <bgorangepanelwindow name="" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanelwindow name="BackWall Orange Panels Window" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth="0.98" />
   </bgorangepanelwindow>
-  <PipesBackground name="" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <PipesBackground name="BackWall Pipes" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth="0.98" />
   </PipesBackground>
-  <SlopeForward name="" identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeForward name="Slope Forwards" identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,0,224,64" depth="0.95" />
   </SlopeForward>
-  <SlopeBack name="" identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <SlopeBack name="Slope Backwards" identifier="SlopeBack" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,64,224,64" depth="0.95" />
   </SlopeBack>
-  <stairsright name="" identifier="stairsright" width="256" height="320" stairangle="45" stairdirection="Right">
+  <stairsright name="Stairs Right" identifier="stairsright" width="256" height="320" stairangle="45" stairdirection="Right">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" depth="0.1" />
   </stairsright>
-  <!--<stairsright name="" identifier="stairsrightsteep" width="192" height="256" stairangle="52" stairdirection="Right">
+  <!--<stairsright name="Stairs Right Steep test" identifier="stairsrightsteep" width="192" height="256" stairangle="52" stairdirection="Right">
     <sprite texture="Content/Map/SteepStairsTest.png" sourcerect="0,0,192,256" depth="0.1" />
   </stairsright>-->
-  <stairsleft name="" identifier="stairsleft" width="256" height="320" stairangle="45" stairdirection="Left">
+  <stairsleft name="Stairs Left" identifier="stairsleft" width="256" height="320" stairangle="45" stairdirection="Left">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth="0.1" />
   </stairsleft>
-  <bunk name="" identifier="bunk" width="173" height="129">
+  <bunk name="Bunk" identifier="bunk" width="173" height="129">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
-  <RuinWallHorizontal name="" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200" noaitarget="true">
+  <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,384,256,80" depth="0.06" />
   </RuinWallHorizontal>
-  <RuinWallVertical name="" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200" noaitarget="true">
+  <RuinWallVertical name="Ruin Wall Vertical" identifier="RuinWallVertical" category="Alien" castshadow="true" width="80" height="256" resizevertical="true" body="true" health="200" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="128,0,80,256" depth="0.061" />
   </RuinWallVertical>
-  <RuinWallHeavyHorizontal name="" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000" noaitarget="true">
+  <RuinWallHeavyHorizontal name="Ruin Wall Heavy Horizontal" identifier="RuinWallHeavyHorizontal" category="Alien" castshadow="true" width="128" height="128" resizehorizontal="true" body="true" health="10000" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,256,256,128" depth="0.06" />
   </RuinWallHeavyHorizontal>
-  <RuinWallHeavyVertical name="" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000" noaitarget="true">
+  <RuinWallHeavyVertical name="Ruin Wall Heavy Vertical" identifier="RuinWallHeavyVertical" category="Alien" castshadow="true" width="128" height="128" resizevertical="true" body="true" health="10000" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,0,128,256" depth="0.061" />
   </RuinWallHeavyVertical>
-  <RuinWallHorizontalSmall name="" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100" noaitarget="true">
+  <RuinWallHorizontalSmall name="Ruin Wall Small Horizontal" identifier="RuinWallHorizontalSmall" category="Alien" castshadow="true" width="256" height="48" resizehorizontal="true" body="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="0,464,256,48" depth="0.062" />
   </RuinWallHorizontalSmall>
-  <RuinWallVerticalSmall name="" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100" noaitarget="true">
+  <RuinWallVerticalSmall name="Ruin Wall Small Vertical" identifier="RuinWallVerticalSmall" category="Alien" castshadow="true" width="48" height="256" resizevertical="true" body="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/AlienWallSet1.png" sourcerect="202,0,54,256" depth="0.063" />
   </RuinWallVerticalSmall>
-  <RuinBack1 name="" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack1 name="Ruin BackWall 1" identifier="RuinBack1" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack1>
-  <RuinBack2 name="" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack2 name="Ruin BackWall 2" identifier="RuinBack2" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,0,512,512" depth="0.981" premultiplyalpha="false" />
   </RuinBack2>
-  <RuinBack3 name="" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack3 name="Ruin BackWall 3" identifier="RuinBack3" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="0,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack3>
-  <RuinBack4 name="" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack4 name="Ruin BackWall 4" identifier="RuinBack4" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground1.png" sourcerect="512,512,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack4>
-  <RuinBack5 name="" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack5 name="Ruin BackWall 5" identifier="RuinBack5" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground2.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack5>
-  <RuinBack6 name="" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
+  <RuinBack6 name="Ruin BackWall 6" identifier="RuinBack6" category="Alien" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" noaitarget="true">
     <sprite texture="Content/Map/AlienBackground2.png" sourcerect="512,0,512,512" depth="0.98" premultiplyalpha="false" />
   </RuinBack6>
-  <RuinBlock name="" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
+  <RuinBlock name="Ruin Prop Block" identifier="RuinBlock" category="Alien" allowattachitems="true" width="514" height="296">
     <sprite texture="Content/Map/ruins.png" sourcerect="0,513,514,296" depth="0.98" />
   </RuinBlock>
-  <RuinFractalBall name="" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512" noaitarget="true">
+  <RuinFractalBall name="Ruin Prop Fractalball" identifier="RuinFractalBall" category="Alien" allowattachitems="true" width="512" height="512" noaitarget="true">
     <sprite texture="Content/Map/AlienRuins.png" sourcerect="1024,512,512,512" depth="0.971" />
   </RuinFractalBall>
-  <RuinClaw name="" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270" noaitarget="true">
+  <RuinClaw name="Ruin Prop Claw" identifier="RuinClaw" category="Alien" allowattachitems="true" width="126" height="270" noaitarget="true">
     <sprite texture="Content/Map/ruins.png" sourcerect="512,517,126,270" depth="0.97" />
   </RuinClaw>
-  <RuinDecal1 name="" identifier="RuinDecal1" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
+  <RuinDecal1 name="Ruin Decal 1" identifier="RuinDecal1" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="0,0,256,256" depth="0.97" />
   </RuinDecal1>
-  <RuinDecal2 name="" identifier="RuinDecal2" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
+  <RuinDecal2 name="Ruin Decal 2" identifier="RuinDecal2" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,0,256,256" depth="0.97" />
   </RuinDecal2>
-  <RuinDecal3 name="" identifier="RuinDecal3" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
+  <RuinDecal3 name="Ruin Decal 3" identifier="RuinDecal3" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="0,256,256,256" depth="0.97" />
   </RuinDecal3>
-  <RuinDecal4 name="" identifier="RuinDecal4" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
+  <RuinDecal4 name="Ruin Decal 4" identifier="RuinDecal4" category="Alien" allowattachitems="true" width="256" height="256" noaitarget="true">
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,256,256,256" depth="0.97" />
   </RuinDecal4>
   <!-- BACKGROUND ROCKS -->
