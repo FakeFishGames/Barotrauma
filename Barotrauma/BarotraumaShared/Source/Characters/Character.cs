@@ -836,6 +836,7 @@ namespace Barotrauma
 #if CLIENT
             head.LoadHuskSprite();
             head.LoadHerpesSprite();
+            head.UpdateWearableTypesToHide();
 #endif
         }
 

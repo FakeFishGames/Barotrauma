@@ -40,7 +40,7 @@ namespace Barotrauma
             {
                 get
                 {
-                    return "Emitter";
+                    return TextManager.Get("particleeditor.emitter");
                 }
             }
 
@@ -103,7 +103,7 @@ namespace Barotrauma
             };
             
             var saveAllButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
-                TextManager.Get("ParticleEditorSaveAll"))
+                TextManager.Get("editor.saveall"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -113,7 +113,7 @@ namespace Barotrauma
             };
 
             var serializeToClipBoardButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
-                TextManager.Get("ParticleEditorCopyToClipboard"))
+                TextManager.Get("editor.copytoclipboard"))
             {
                 OnClicked = (btn, obj) =>
                 {

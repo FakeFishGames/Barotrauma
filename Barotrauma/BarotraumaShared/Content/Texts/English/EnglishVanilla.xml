@@ -483,6 +483,10 @@
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
+  
+  <!-- Generic -->
+  <editor.saveall>Save All</editor.saveall>
+  <editor.copytoclipboard>Copy to Clipboard</editor.copytoclipboard>
 
   <!-- Structure -->
   <entityname.hull>Hull</entityname.hull>
@@ -839,11 +843,9 @@
   <entitydescription.ruinclaw>A decorative prop for alien ruins.</entitydescription.ruinclaw>
 
   <!-- Particle editor -->
-  <particleeditorsaveall>Save all</particleeditorsaveall>
-  <particleeditorcopytoclipboard>Copy to clipboard</particleeditorcopytoclipboard>
-
+  <particleeditor.emitter>Emitter</particleeditor.emitter>
+  
   <!-- Level editor -->
-  <leveleditorsaveall>Save all</leveleditorsaveall>
   <leveleditorlevelseed>Level seed</leveleditorlevelseed>
   <leveleditorgenerate>Generate</leveleditorgenerate>
   <leveleditorlightingenabled>Enable lighting</leveleditorlightingenabled>
