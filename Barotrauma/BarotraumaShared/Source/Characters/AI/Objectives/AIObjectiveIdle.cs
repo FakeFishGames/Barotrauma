@@ -104,9 +104,9 @@ namespace Barotrauma
                 {
                     newTargetTimer = 0;
                 }
-                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0)
+                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0.9f)
                 {
-                    // Don't allow new targets when climbing.
+                    // Don't allow new targets when climbing straight up or down
                     newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
                 }
             }
