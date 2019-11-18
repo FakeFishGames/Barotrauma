@@ -1150,6 +1150,23 @@
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
 
+  <!-- Sprite editor -->
+  <spriteeditor.reloadtexture>Reload Texture</spriteeditor.reloadtexture>
+  <spriteeditor.texturesreloaded>Textures reloaded from [filepath]</spriteeditor.texturesreloaded>
+  <spriteeditor.resetchanges>Reset Changes</spriteeditor.resetchanges>
+  <spriteeditor.resetsuccessful>Changes successfully reset</spriteeditor.resetsuccessful>
+  <spriteeditor.saveselectedsprites>Save Selected Sprites</spriteeditor.saveselectedsprites>
+  <spriteeditor.saveallsprites>Save All Sprites</spriteeditor.saveallsprites>
+  <spriteeditor.zoom>Zoom:</spriteeditor.zoom>
+  <spriteeditor.resetzoom>Reset Zoom</spriteeditor.resetzoom>
+  <spriteeditor.showgrid>Show Grid</spriteeditor.showgrid>
+  <spriteeditor.snaptogrid>Snap to Grid</spriteeditor.snaptogrid>
+  <spriteeditor.backgroundcolor>Background\nColor:</spriteeditor.backgroundcolor>
+  <spriteeditor.colorcomponentr>R</spriteeditor.colorcomponentr>
+  <spriteeditor.colorcomponentg>G</spriteeditor.colorcomponentg>
+  <spriteeditor.colorcomponentb>B</spriteeditor.colorcomponentb>
+  <spriteeditor.allchangessavedto>All changes saved to:</spriteeditor.allchangessavedto>
+
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>
