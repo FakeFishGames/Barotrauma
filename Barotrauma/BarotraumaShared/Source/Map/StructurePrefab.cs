@@ -200,10 +200,10 @@ namespace Barotrauma
             sp.ConfigElement = element;
             if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
-
-            string translatedName = TextManager.Get("EntityName." + sp.identifier, true);
-            if (!string.IsNullOrEmpty(translatedName)) sp.name = translatedName;
-
+            if (string.IsNullOrEmpty(sp.name))
+            {
+                sp.name = TextManager.Get("EntityName." + sp.identifier, returnNull: true) ?? $"Not defined ({sp.identifier})";
+            }
             sp.Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
