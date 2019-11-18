@@ -1,6 +1,6 @@
 ﻿<Items>
   <Item
-    name=""
+    name="Steel Cabinet"
     nameidentifier="steelcabinet"
     Aliases="Steel Cabinet"
     category="Legacy"
@@ -16,7 +16,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Medicine Cabinet"
     nameidentifier="medcabinet"
     Aliases="Medicine Cabinet"
     category="Legacy"
@@ -32,7 +32,7 @@
   </Item>
   
   <Item
-    name=""
+    name="Toxic Cabinet"
     nameidentifier="toxcabinet"
     Aliases="Toxic Cabinet"
     category="Legacy"

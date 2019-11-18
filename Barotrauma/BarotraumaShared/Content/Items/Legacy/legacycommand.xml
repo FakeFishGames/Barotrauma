@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name=""
+    name="Navigation Terminal"
     category="Legacy"
     nameidentifier="navterminal"
     Aliases="Navigation Terminal"
@@ -47,7 +47,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Sonar Monitor"
     category="Legacy"
     nameidentifier="sonarmonitor"
     Aliases="Sonar Monitor"
@@ -84,7 +84,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Status Monitor"
     category="Legacy"
     tags="command"
     nameidentifier="statusmonitor"

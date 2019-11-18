@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name=""
+    name="Engine"
     nameidentifier="engine"
     Aliases="Engine"
     category="Legacy"
@@ -32,7 +32,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Shuttle Engine"
     nameidentifier="shuttleengine"
     Aliases="Shuttle Engine"
     category="Legacy">
