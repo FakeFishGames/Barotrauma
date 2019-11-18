@@ -844,20 +844,20 @@ namespace Barotrauma
 
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                    LoadDefaultConfig(setLanguage: false);
-                    CheckBindings(true);
-                    RefreshItemMessages();
-                    ApplySettings();
-                    if (Screen.Selected == GameMain.MainMenuScreen)
-                    {
-                        GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
-                    }
-                    else
-                    {
-                        ResetSettingsFrame();
-                        CreateSettingsFrame(currentTab);
-                    }
-                    return true;
+                        LoadDefaultConfig(setLanguage: false);
+                        CheckBindings(true);
+                        RefreshItemMessages();
+                        ApplySettings();
+                        if (Screen.Selected == GameMain.MainMenuScreen)
+                        {
+                            GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
+                        }
+                        else
+                        {
+                            ResetSettingsFrame();
+                            CreateSettingsFrame(currentTab);
+                        }
+                        return true;
                     };
                     msgBox.Buttons[0].OnClicked += msgBox.Close;
                     msgBox.Buttons[1].OnClicked = msgBox.Close;
