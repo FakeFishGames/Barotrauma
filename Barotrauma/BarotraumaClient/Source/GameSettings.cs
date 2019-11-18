@@ -816,18 +816,44 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
+            
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("back"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>
                 {
+                    void ExitSettings()
+                    {
+                        if (Screen.Selected == GameMain.MainMenuScreen) { GameMain.MainMenuScreen.ReturnToMainMenu(null, null); }
+                        GUI.SettingsMenuOpen = false;
+                    }
+
                     if (UnsavedSettings)
                     {
-                        LoadPlayerConfig();
+                        var msgBox = new GUIMessageBox(TextManager.Get("ApplySettingsLabel"),
+                                TextManager.Get("ApplySettingsQuestion"),
+                                new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
+
+                        msgBox.Buttons[0].OnClicked = ApplyClicked;
+                        msgBox.Buttons[0].OnClicked += (applyButton, obj) =>
+                        {
+                            ExitSettings();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+
+                        msgBox.Buttons[1].OnClicked += (discardButton, obj) =>
+                        {
+                            LoadPlayerConfig();
+                            ExitSettings();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+
+                        return false;
                     }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
+                    ExitSettings();
                     return true;
                 }
             };
