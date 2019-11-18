@@ -579,18 +579,16 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedDescription = "";
-            if (string.IsNullOrEmpty(nameIdentifier))
+            if (string.IsNullOrEmpty(Description))
             {
-                translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
-            }
-            else
-            {
-                translatedDescription = TextManager.Get("EntityDescription." + nameIdentifier, true);
-            }
-            if (!string.IsNullOrEmpty(translatedDescription))
-            {
-                Description = translatedDescription;
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    Description = TextManager.Get("EntityDescription." + identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
             }
 
             foreach (XElement subElement in element.Elements())

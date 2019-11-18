@@ -278,8 +278,11 @@ namespace Barotrauma
             {
                 sp.Tags.Add("wall");
             }
-            string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
-            if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
+
+            if (string.IsNullOrEmpty(sp.Description))
+            {
+                sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
+            }
 
             //backwards compatibility
             if (element.Attribute("size") == null)
