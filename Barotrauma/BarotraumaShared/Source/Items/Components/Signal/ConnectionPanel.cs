@@ -126,6 +126,9 @@ namespace Barotrauma.Items.Components
 
             if (user == null || user.SelectedConstruction != item)
             {
+#if SERVER
+                if (user != null) { item.CreateServerEvent(this); }
+#endif
                 user = null;
                 return;
             }
@@ -133,6 +136,11 @@ namespace Barotrauma.Items.Components
             if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) { return; }
 
             user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            Update(deltaTime, cam);
         }
 
         partial void UpdateProjSpecific(float deltaTime);
@@ -147,13 +155,16 @@ namespace Barotrauma.Items.Components
             }
 
             user = picker;
+#if SERVER
+            if (user != null) { item.CreateServerEvent(this); }
+#endif
             IsActive = true;
             return true;
         }
         
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character != user) return false;
+            if (character == null || character != user) { return false; }
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)

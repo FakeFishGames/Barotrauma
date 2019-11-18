@@ -40,7 +40,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (user != null && user.SelectedConstruction == item && HasRequiredItems(user, addMessage: false))
+            if (user != null && user.SelectedConstruction == item && HasRequiredItems(user, addMessage: false) && 
+                item.GetComponent<Repairable>()?.CurrentFixer != user)
             {
                 if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
                 {
@@ -129,6 +130,17 @@ namespace Barotrauma.Items.Components
         {
             List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
             List<Wire> newWires = new List<Wire>();
+
+            ushort userID = msg.ReadUInt16();
+
+            if (userID == 0)
+            {
+                user = null;
+            }
+            else
+            {
+                user = Entity.FindEntityByID(userID) as Character;
+            }
 
             foreach (Connection connection in Connections)
             {
