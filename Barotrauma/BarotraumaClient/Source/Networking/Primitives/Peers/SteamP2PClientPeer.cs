@@ -150,6 +150,7 @@ namespace Barotrauma.Networking
             if (timeout < 0.0)
             {
                 Close("Timed out");
+                OnDisconnectMessageReceived?.Invoke("");
                 return;
             }
 
@@ -275,7 +276,7 @@ namespace Barotrauma.Networking
 #if DEBUG
             CoroutineManager.InvokeAfter(() =>
             {
-                if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
+                if (GameMain.Client == null || Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
                 int count = Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedDuplicatesChance ? 2 : 1;
                 for (int i = 0; i < count; i++)
                 {

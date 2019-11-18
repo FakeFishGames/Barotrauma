@@ -533,7 +533,7 @@ namespace Barotrauma.Networking
 
             reconnectBox?.Close(); reconnectBox = null;
 
-            if (connectCancelled) yield return CoroutineStatus.Success;
+            if (connectCancelled) { yield return CoroutineStatus.Success; }
             
             yield return CoroutineStatus.Success;
         }
@@ -878,6 +878,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLostReconnecting") :
                     msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
 
+                reconnectBox?.Close();
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
