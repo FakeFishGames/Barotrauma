@@ -838,7 +838,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (button, data) =>
                 {
-                    // TODO: add a prompt
+                    var msgBox = new GUIMessageBox("",
+                                TextManager.Get("SettingResetVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+
+                    msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
+                    {
                     LoadDefaultConfig(setLanguage: false);
                     CheckBindings(true);
                     RefreshItemMessages();
@@ -853,6 +858,10 @@ namespace Barotrauma
                         CreateSettingsFrame(currentTab);
                     }
                     return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
                 }
             };
 
