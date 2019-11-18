@@ -198,7 +198,6 @@ namespace Barotrauma
                 name = element.GetAttributeString("name", "")
             };
             sp.ConfigElement = element;
-            if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
             if (string.IsNullOrEmpty(sp.name))
             {
