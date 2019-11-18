@@ -665,7 +665,7 @@
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnUse" target="Character" duration="10.0">
-        <Conditional Speciesname="" />
+        <Conditional SpeciesName="husk" />
         <Affliction identifier="internaldamage" amount="4" />
       </StatusEffect>
       <!-- Remove the item when fully used -->
@@ -687,7 +687,7 @@
         <Affliction identifier="internaldamage" amount="3" />
       </StatusEffect>
       <StatusEffect tags="medical,calyxanide" type="OnImpact" target="Character" duration="10.0">
-        <Conditional Speciesname="" />
+        <Conditional SpeciesName="husk" />
         <Affliction identifier="internaldamage" amount="4" />
       </StatusEffect>
     </Projectile>
