@@ -545,7 +545,7 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(name))
             {
-                DebugConsole.ThrowError("Unnamed item in " + filePath + "!");
+                DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
             }
 
             DebugConsole.Log("    " + name);
