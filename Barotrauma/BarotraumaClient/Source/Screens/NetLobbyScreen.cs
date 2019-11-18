@@ -2817,7 +2817,7 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && GameMain.Client.GameStarted && !enabled;
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !enabled;
 
             if (campaignViewButton != null) { campaignViewButton.Visible = enabled; }
             
