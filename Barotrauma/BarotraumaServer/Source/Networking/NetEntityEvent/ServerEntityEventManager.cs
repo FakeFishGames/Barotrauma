@@ -197,12 +197,13 @@ namespace Barotrauma.Networking
 
                 bufferedEvent.IsProcessed = true;
             }
-            
+
             var inGameClients = clients.FindAll(c => c.InGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
                 lastSentToAnyone = inGameClients[0].LastRecvEntityEventID;
                 lastSentToAll = inGameClients[0].LastRecvEntityEventID;
+                
                 if (server.OwnerConnection != null)
                 {
                     var owner = clients.Find(c => c.Connection == server.OwnerConnection);
@@ -240,12 +241,12 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
-                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " 
+                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event "
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
                                 (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.Error);
-                            server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncOldEvent");
+                            server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncOldEvent + "/ServerMessage.ExcessiveDesyncOldEvent");
                         }
                     );
                 }
@@ -259,19 +260,19 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
                         GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
-                        server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncRemovedEvent");
+                        server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncRemovedEvent + "/ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
             }
-            
+
             var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             foreach (Client timedOutClient in timedOutClients)
             {
                 GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
-                GameMain.Server.DisconnectClient(timedOutClient, "", "ServerMessage.SyncTimeout");
+                GameMain.Server.DisconnectClient(timedOutClient, "", DisconnectReason.SyncTimeout + "/ServerMessage.SyncTimeout");
             }
-            
-            bufferedEvents.RemoveAll(b => b.IsProcessed);           
+
+            bufferedEvents.RemoveAll(b => b.IsProcessed);
         }
 
         private void BufferEvent(BufferedEvent bufferedEvent)

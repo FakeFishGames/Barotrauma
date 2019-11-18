@@ -868,9 +868,22 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
+
+            bool eventSyncError = 
+                disconnectReason == DisconnectReason.ExcessiveDesyncOldEvent ||
+                disconnectReason == DisconnectReason.ExcessiveDesyncRemovedEvent ||
+                disconnectReason == DisconnectReason.SyncTimeout;
             
-            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            if (allowReconnect && 
+                (disconnectReason == DisconnectReason.Unknown || eventSyncError))
             {
+                if (eventSyncError)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                    gameStarted = false;
+                    myCharacter = null;
+                }
+
                 DebugConsole.NewMessage("Attempting to reconnect...");
 
                 string msg = TextManager.GetServerMessage(disconnectMsg);
