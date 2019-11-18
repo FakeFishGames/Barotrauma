@@ -611,6 +611,10 @@
   <entitydescription.shella90degcurve>Submarine wall.</entitydescription.shella90degcurve>
   <entityname.shella45degb>Shell A 45 Degrees B</entityname.shella45degb>
   <entitydescription.shella45degb>Submarine wall.</entitydescription.shella45degb>
+  <entityname.shella45degc>Shell A 45 Degrees A</entityname.shella45degc>
+  <entitydescription.shella45degc>Submarine wall.</entitydescription.shella45degc>
+  <entityname.shella45degd>Shell A 45 Degrees B</entityname.shella45degd>
+  <entitydescription.shella45degd>Submarine wall.</entitydescription.shella45degd>
   <entityname.shella57deg>Shell A 57 Degrees</entityname.shella57deg>
   <entitydescription.shella57deg>Submarine wall.</entitydescription.shella57deg>
   <entityname.shella40deg>Shell A 40 Degrees</entityname.shella40deg>
@@ -627,6 +631,8 @@
   <entitydescription.shella54deg>Submarine wall.</entitydescription.shella54deg>
   <entityname.shella38deg>Shell A 38 Degrees</entityname.shella38deg>
   <entitydescription.shella38deg>Submarine wall.</entitydescription.shella38deg>
+  <entityname.shella42deg>Shell A 42</entityname.shella42deg>
+  <entitydescription.shella42deg>Submarine wall.</entitydescription.shella42deg>
   <entityname.shellacombo11>Shell A Combo 1 1</entityname.shellacombo11>
   <entitydescription.shellacombo11>Submarine wall.</entitydescription.shellacombo11>
   <entityname.shellacombo12>Shell A Combo 1 2</entityname.shellacombo12>

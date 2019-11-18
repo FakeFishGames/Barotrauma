@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Fiber Plant" identifier="fiberplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="fiberplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="organicfiber" />
       <Item identifier="organicfiber" />
@@ -19,7 +19,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Elastin Plant" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="elastin" />
       <Item identifier="elastin" />
@@ -38,7 +38,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Aquatic Poppy" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="opium" />
       <Item identifier="opium" />
@@ -57,7 +57,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Sea Yeast Shroom" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="ethanol" />
       <Item identifier="ethanol" />
@@ -76,7 +76,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Slime Bacteria" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="A colony of myxobacteria. Can be processed into antibiotics." cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
     <Deconstruct time="5">
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />

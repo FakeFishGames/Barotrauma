@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>	
 	<Item
-    name="Fabricator"
+    name=""
     tags="fabricator"
     nameidentifier="fabricator"
     aliases="Fabricator"
     category="Legacy"
     linkable="true"
-    description="A machine capable of manufacturing a wide range of items out of basic raw materials.">
+    description="">
 
     <Sprite texture="machines.png" sourcerect="0,128,64,128" depth="0.8"/>
 
@@ -29,13 +29,13 @@
   </Item>
 
   <Item
-    name="Medical Fabricator"
+    name=""
     tags="medicalfabricator"
     nameidentifier="medicalfabricator"
     aliases="Medical Fabricator"
     category="Legacy"
     linkable="true"
-    description="A machine that can be used to manufacture various medicines.">
+    description="">
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="128,0,64,128"/>
 
@@ -56,12 +56,12 @@
   </Item>
 
   <Item
-    name="Deconstructor"
+    name=""
     nameidentifier="deconstructor"
     aliases="Deconstructor"
     category="Legacy"
     linkable="true"   
-    description="Disassembles and breaks down items to reusable components and material bars.">
+    description="">
 
     <Sprite texture="machines.png" depth="0.8" sourcerect="64,128,64,128"/>
 

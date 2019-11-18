@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="UEX" identifier="uex" category="Equipment" description="A simple explosive compound made of sodium and phosphorus." Scale="0.5" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="" identifier="uex" category="Equipment" description="" Scale="0.5" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
@@ -28,7 +28,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="C-4 Block" identifier="c4block" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="" identifier="c4block" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="125" />
@@ -55,7 +55,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Compound N" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60" />
@@ -80,7 +80,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Volatile Compound N" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40" />
@@ -105,7 +105,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="IC-4 Block" identifier="ic4block" description="A compound made of C-4 and incendium." category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
+  <Item name="" identifier="ic4block" description="" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="462,378,50,34" origin="0.5,0.5" />
@@ -129,7 +129,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Detonator" identifier="detonator" description="A device that detonates any contained explosive when receiving a signal." category="Equipment" Tags="smallitem,detonator" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="" identifier="detonator" description="" category="Equipment" Tags="smallitem,detonator" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
@@ -156,7 +156,7 @@
       </input>
     </ConnectionPanel>
   </Item>
-  <Item name="Nitroglycerin" identifier="nitroglycerin" category="Material" description="A highly unstable liquid that may explode when subjected to heat or physical shock." spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="nitroglycerin" category="Material" description="" spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="653,769,37,62" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="481,-1,31,62" depth="0.6" origin="0.5,0.5" />
     <Body width="35" height="60" density="20" />

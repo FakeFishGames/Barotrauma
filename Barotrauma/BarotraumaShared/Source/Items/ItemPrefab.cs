@@ -525,21 +525,28 @@ namespace Barotrauma
             ConfigElement = element;
 
             OriginalName = element.GetAttributeString("name", "");
+            name = OriginalName;
             identifier = element.GetAttributeString("identifier", "");
 
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
-            if (string.IsNullOrEmpty(nameIdentifier))
+            if (string.IsNullOrEmpty(OriginalName))
             {
-                name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
-            }
-            else
-            {
-                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    name = TextManager.Get("EntityName." + identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                }
             }
 
-            if (name == "") { DebugConsole.ThrowError("Unnamed item in " + filePath + "!"); }
+            if (string.IsNullOrEmpty(name))
+            {
+                DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
+            }
 
             DebugConsole.Log("    " + name);
 
@@ -572,16 +579,17 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedDescription = "";
-            if (string.IsNullOrEmpty(nameIdentifier))
+            if (string.IsNullOrEmpty(Description))
             {
-                translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    Description = TextManager.Get("EntityDescription." + identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
             }
-            else
-            {
-                translatedDescription = TextManager.Get("EntityDescription." + nameIdentifier, true);
-            }
-            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
             {

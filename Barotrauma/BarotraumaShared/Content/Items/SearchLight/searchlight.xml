@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Searchlight"
+    name=""
     identifier="searchlight"
     tags="searchlight"
     aliases="Searchlight"
