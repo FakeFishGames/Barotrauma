@@ -1,6 +1,6 @@
 ﻿<Items>
   <Item
-    name="Pump"
+    name=""
     nameidentifier="pump"
     aliases="Pump"
     category="Legacy"
@@ -26,7 +26,7 @@
   </Item>
   
   <Item
-    name="Small Pump"
+    name=""
     nameidentifier="smallpump"
     aliases="Small Pump"
     category="Legacy"

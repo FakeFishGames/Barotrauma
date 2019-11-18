@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-		name="Fabricator"
+		name=""
     identifier="fabricator"
     tags="fabricator"
     category="Machine"
@@ -40,7 +40,7 @@
   </Item>
 
   <Item
-    name="Medical Fabricator"
+    name=""
     identifier="medicalfabricator"
     tags="medicalfabricator"
     category="Machine"
@@ -78,7 +78,7 @@
   </Item>
 
   <Item
-    name="Deconstructor"
+    name=""
     identifier="deconstructor"
     tags="deconstructor"
     category="Machine"

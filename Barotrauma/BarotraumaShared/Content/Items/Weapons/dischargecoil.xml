@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
-  <Item name="Electrical Discharge Coil" identifier="dischargecoil" tags="dischargecoil" category="Machine">
+  <Item name="" identifier="dischargecoil" tags="dischargecoil" category="Machine">
     <!-- TODO: electrical discharge coil sprite -->
     <Sprite texture="Turrets.png" depth="0.01" sourcerect="12,184,232,38" />
     <ElectricalDischarger duration="0.25" outdoorsonly="true" powerconsumption="10000">

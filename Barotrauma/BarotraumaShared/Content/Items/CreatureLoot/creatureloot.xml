@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Alien Blood" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
+  <Item name="" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" description="Blood extracted from an Europan lifeform. Can be further processed into a blood substitute for the treatment of blood loss." Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -26,7 +26,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="Velonaceps Calyx Eggs" identifier="huskeggs" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'." useinhealthinterface="true" scale="0.3">
+  <Item name="" identifier="huskeggs" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="Dormant eggs of the Europan lifeform colloquially referred to as 'husk parasite'." useinhealthinterface="true" scale="0.3">
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="1200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
@@ -45,7 +45,7 @@
       </StatusEffect>
     </MeleeWeapon>
   </Item>
-  <Item name="Swim Bladder" identifier="swimbladder" description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="" identifier="swimbladder" description="Many Europan lifeforms have a swim bladder containing tissue fluids that can be easily processed into stabilozine and saline." Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="349,285,110,130" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="stabilozine" />
@@ -57,7 +57,7 @@
     <Body width="110" height="120" />
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
-  <Item name="Adrenaline Gland" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="Contains large amounts of adrenaline, which can be extracted using a deconstructor." category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="Contains large amounts of adrenaline, which can be extracted using a deconstructor." category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="345,148,116,133" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="adrenaline" />
@@ -68,7 +68,7 @@
     <Body width="110" height="120" />
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
-  <Item name="Crawler Mask" identifier="crawlermask" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate">
+  <Item name="" identifier="crawlermask" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate">
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.6" sourcerect="962,450,59,61" origin="0.5,0.5" />
     <Body width="50" height="45" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
@@ -82,7 +82,7 @@
       </StatusEffect>
     </Wearable>
   </Item>
-  <Item name="Husk Stinger" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.3">
+  <Item name="" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.3">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,576,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,318,172,47" depth="0.55" origin="0.44,0.6" />
     <Body radius="15" width="100" density="50" />
@@ -94,7 +94,7 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="Mudraptor Shell" identifier="mudraptorshell" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.4">
+  <Item name="" identifier="mudraptorshell" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.4">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="962,322,61,61" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="238,10,59,287" origin="0.5,0.5" depth="0.55" />
     <Body width="40" height="145" density="30" />
@@ -102,7 +102,7 @@
       <StatusEffect type="OnActive" target="Character" SpeedMultiplier="0.6" setvalue="true" />
     </Holdable>
   </Item>
-  <Item name="Moloch Shell Fragment" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
+  <Item name="" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" depth="0.6" />
     <Body radius="70" height="80" density="40" />
@@ -115,7 +115,7 @@
     </Wearable>
   </Item>
 
-  <Item name="Small Mudraptor Egg" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.2" impactsoundtag="impact_soft">
+  <Item name="" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.2" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
@@ -146,7 +146,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Medium Mudraptor Egg" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="50" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.4" impactsoundtag="impact_soft">
+  <Item name="" identifier="mediummudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="50" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.4" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />
@@ -177,7 +177,7 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="Large Mudraptor Egg" identifier="largemudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="200" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.6" impactsoundtag="impact_soft">
+  <Item name="" identifier="largemudraptoregg" nameidentifier="mudraptoregg" hideinmenus="true" health="200" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.6" impactsoundtag="impact_soft">
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />

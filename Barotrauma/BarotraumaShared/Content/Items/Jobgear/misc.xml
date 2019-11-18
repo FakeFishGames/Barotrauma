@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Headset" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="Allows remote communication between the crew." cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />
@@ -29,7 +29,7 @@
       <sprite name="Headset Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inherittexturescale="true" hideotherwearables="false" sourcerect="7,106,60,66" origin="0.4850145,0.6084235" />
     </Wearable>
   </Item>
-  <Item name="Duffel Bag" identifier="duffelbag" category="Equipment" tags="mobilecontainer,despawncontainer" fireproof="true" description="" impactsoundtag="impact_soft" scale="0.4">
+  <Item name="" identifier="duffelbag" category="Equipment" tags="mobilecontainer,despawncontainer" fireproof="true" description="" impactsoundtag="impact_soft" scale="0.4">
     <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="0,239,232,118" origin="0.5,0.5" depth="0.56" />
     <Body width="120" radius="45" density="20" friction="1.0" restitution="0.01" />
     <Holdable slots="RightHand,LeftHand" holdpos="0,-80" handle1="0,50" handle2="0,50" aimable="false" msg="ItemMsgPickUpSelect" />

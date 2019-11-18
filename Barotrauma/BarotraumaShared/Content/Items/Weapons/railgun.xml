@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Railgun" identifier="railgun" description="A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets." Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
+  <Item name="" identifier="railgun" description="A heavy turret that uses electromagnetic force to launch shells at very high velocities. Requires very large surges of power (usually supplied by supercapacitors) and has a low rate of fire, and as such it's most often used against large and heavily armored targets." Tags="turret" category="Machine" interactthroughwalls="true" interactdistance="10" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="railgunammosource">
     <Sprite texture="Turrets.png" depth="0.01" sourcerect="512,0,256,256" canflipy="false" />
     <StaticBody width="80" radius="80" />
     <Turret canbeselected="false" characterusable="false" linkable="true" barrelpos="126, 89" rotationlimits="180,360" powerconsumption="20000.0" showchargeindicator="true" showprojectileindicator="true" recoildistance="100" springstiffnesslowskill="2" springstiffnesshighskill="50" springdampinglowskill="0.5" springdampinghighskill="10" rotationspeedlowskill="1" rotationspeedhighskill="8">
@@ -31,7 +31,7 @@
       <input name="trigger_in" displayname="connection.turrettriggerin" />
     </ConnectionPanel>
   </Item>
-  <Item name="Periscope" description="A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun." identifier="periscope" tags="periscope,railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
+  <Item name="" description="A device that can be used to observe the outside of the sub by connecting it to a camera, or to control weapons such as the railgun and coilgun." identifier="periscope" tags="periscope,railgunequipment" category="Machine" type="Controller" disableitemusagewhenselected="true" scale="0.5" isshootable="true" requireaimtouse="false" requireaimtosecondaryuse="false">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.1" sourcerect="2,210,134,203" origin="0.5,0.5" />
     <Controller UserPos="-35.0, -50.0" direction="Right" canbeselected="true" msg="ItemMsgInteractSelect">
       <limbposition limb="Head" position="-10,-135" />
@@ -46,7 +46,7 @@
       <output name="trigger_out" displayname="connection.turrettriggerout" fallbackdisplayname="inputtype.shoot" />
     </ConnectionPanel>
   </Item>
-  <Item name="Railgun Loader" identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+  <Item name="" identifier="railgunloader" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,0,298,276" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="5" slotsperrow="6" itempos="53,-140" iteminterval="48,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
       <GuiFrame relativesize="0.2,0.2" anchor="Center" style="ItemUI" />
@@ -61,21 +61,21 @@
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Railgun Loader Single" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+  <Item name="" identifier="railgunloadersinglevertical" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="0,276,84,236" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="43,-130" iteminterval="0,0" itemrotation="90" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="railgunammo" />
     </ItemContainer>
   </Item>
-  <Item name="Railgun Loader Single" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
+  <Item name="" identifier="railgunloadersinglehorizontal" tags="railgunequipment,railgunammosource" category="Machine" linkable="true" allowedlinks="railgun" scale="0.5">
     <Sprite texture="Loaders.png" depth="0.8" sourcerect="86,278,241,86" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" slotsperrow="1" itempos="130,-43" iteminterval="0,0" itemrotation="180" canbeselected="true" msg="ItemMsgInteractSelect" containedspritedepth="0.79">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="railgunammo" />
     </ItemContainer>
   </Item>
-  <Item name="Railgun Shell" identifier="railgunshell" tags="railgunequipment,railgunammo" preferredcontainers="railgunammocontainer" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="railgunshell" tags="railgunequipment,railgunammo" preferredcontainers="railgunammocontainer" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -108,7 +108,7 @@
       <Containable items="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Nuclear Shell" identifier="nuclearshell" tags="railgunequipment,railgunammo" preferredcontainers="railgunammocontainer" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="nuclearshell" tags="railgunequipment,railgunammo" preferredcontainers="railgunammocontainer" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="200" />
     <Deconstruct time="10">
       <Item identifier="steel" />
@@ -156,7 +156,7 @@
       <Containable items="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="Physicorium Railgun Shell" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="alienshell" tags="railgunequipment,railgunammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="400" />
     <Deconstruct time="20">
       <Item identifier="physicorium" />
