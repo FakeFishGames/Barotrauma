@@ -977,12 +977,14 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            bool midroundSyncingDone = inc.ReadBoolean();
+            inc.ReadPadBits();
             if (gameStarted)
             {
                 if (!c.InGame)
                 {
                     //check if midround syncing is needed due to missed unique events
-                    entityEventManager.InitClientMidRoundSync(c);
+                    if (!midroundSyncingDone) { entityEventManager.InitClientMidRoundSync(c); }
                     c.InGame = true;
                 }
             }

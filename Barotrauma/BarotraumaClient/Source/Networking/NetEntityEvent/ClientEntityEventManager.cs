@@ -27,6 +27,12 @@ namespace Barotrauma.Networking
             get { return firstNewID.HasValue; }
         }
 
+        public bool MidRoundSyncingDone
+        {
+            get;
+            private set;
+        }
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
@@ -142,6 +148,7 @@ namespace Barotrauma.Networking
                 {
                     DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
                         Microsoft.Xna.Framework.Color.Yellow);
+                    MidRoundSyncingDone = true;
                 }
 
                 lastReceivedID = (UInt16)(firstNewID - 1);
@@ -262,6 +269,8 @@ namespace Barotrauma.Networking
 
             events.Clear();
             eventLastSent.Clear();
+
+            MidRoundSyncingDone = false;
         }
     }
 }

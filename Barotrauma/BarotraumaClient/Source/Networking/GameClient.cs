@@ -1339,7 +1339,7 @@ namespace Barotrauma.Networking
 
             ReadPermissions(inc);
 
-            if (gameStarted)
+            if (gameStarted && Screen.Selected != GameMain.GameScreen)
             {
                 new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
@@ -1742,6 +1742,8 @@ namespace Barotrauma.Networking
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.Write((byte)ClientPacketHeader.UPDATE_INGAME);
+            outmsg.Write(entityEventManager.MidRoundSyncingDone);
+            outmsg.WritePadBits();
 
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
