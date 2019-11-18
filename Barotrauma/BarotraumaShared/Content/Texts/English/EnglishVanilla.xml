@@ -896,24 +896,24 @@
   <particle.aliengas>Alien Gas</particle.aliengas>
   
   <!-- Level editor -->
-  <leveleditorlevelseed>Level seed</leveleditorlevelseed>
-  <leveleditorgenerate>Generate</leveleditorgenerate>
-  <leveleditorlightingenabled>Enable lighting</leveleditorlightingenabled>
-  <leveleditorcursorlightenabled>Enable cursor light</leveleditorcursorlightenabled>
-  <leveleditorreloadtextures>Reload textures</leveleditorreloadtextures>
-  <leveleditorspriteeditdone>Done</leveleditorspriteeditdone>
-  <leveleditorlevelobjcommonness>Commonness in [leveltype]</leveleditorlevelobjcommonness>
-  <leveleditoreditsprite>Edit sprite</leveleditoreditsprite>
-  <leveleditorchildobjects>Child objects</leveleditorchildobjects>
-  <leveleditoraddchildobject>Add child object</leveleditoraddchildobject>
-  <leveleditorlightsources>Light sources</leveleditorlightsources>
-  <leveleditoraddlightsource>Add light source</leveleditoraddlightsource>
-  <leveleditorcreatelevelobj>Create a new level object</leveleditorcreatelevelobj>
-  <leveleditorlevelobjname>Name</leveleditorlevelobjname>
-  <leveleditorlevelobjtexturepath>Texture path</leveleditorlevelobjtexturepath>
-  <leveleditorlevelobjnameempty>Please enter a name for the level object.</leveleditorlevelobjnameempty>
-  <leveleditorlevelobjnametaken>The selected name is already in use.</leveleditorlevelobjnametaken>
-  <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
+  <leveleditor.levelseed>Level seed</leveleditor.levelseed>
+  <leveleditor.generate>Generate</leveleditor.generate>
+  <leveleditor.lightingenabled>Enable lighting</leveleditor.lightingenabled>
+  <leveleditor.cursorlightenabled>Enable cursor light</leveleditor.cursorlightenabled>
+  <leveleditor.reloadtextures>Reload textures</leveleditor.reloadtextures>
+  <leveleditor.spriteeditdone>Done</leveleditor.spriteeditdone>
+  <leveleditor.levelobjcommonness>Commonness in [leveltype]</leveleditor.levelobjcommonness>
+  <leveleditor.editsprite>Edit sprite</leveleditor.editsprite>
+  <leveleditor.childobjects>Child objects</leveleditor.childobjects>
+  <leveleditor.addchildobject>Add child object</leveleditor.addchildobject>
+  <leveleditor.lightsources>Light sources</leveleditor.lightsources>
+  <leveleditor.addlightsource>Add light source</leveleditor.addlightsource>
+  <leveleditor.createlevelobj>Create a new level object</leveleditor.createlevelobj>
+  <leveleditor.levelobjname>Name</leveleditor.levelobjname>
+  <leveleditor.levelobjtexturepath>Texture path</leveleditor.levelobjtexturepath>
+  <leveleditor.levelobjnameempty>Please enter a name for the level object.</leveleditor.levelobjnameempty>
+  <leveleditor.levelobjnametaken>The selected name is already in use.</leveleditor.levelobjnametaken>
+  <leveleditor.levelobjtexturenotfound>Could not find the selected texture file.</leveleditor.levelobjtexturenotfound>
 
   <!-- Character editor -->
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
