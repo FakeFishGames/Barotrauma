@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>	
 	<Item
-    name=""
+    name="Fabricator"
     tags="fabricator"
     nameidentifier="fabricator"
     aliases="Fabricator"
@@ -29,7 +29,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Medical Fabricator"
     tags="medicalfabricator"
     nameidentifier="medicalfabricator"
     aliases="Medical Fabricator"
@@ -56,7 +56,7 @@
   </Item>
 
   <Item
-    name=""
+    name="Deconstructor"
     nameidentifier="deconstructor"
     aliases="Deconstructor"
     category="Legacy"
