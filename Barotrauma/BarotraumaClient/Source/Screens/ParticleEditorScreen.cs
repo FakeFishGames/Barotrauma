@@ -86,7 +86,7 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 1.0f), Frame.RectTransform) { MinSize = new Point(150, 0) },
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 1.0f), Frame.RectTransform) { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
@@ -176,7 +176,7 @@ namespace Barotrauma
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
                 var prefabText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    particlePrefab.Name)
+                    particlePrefab.DisplayName)
                 {
                     Padding = Vector4.Zero,
                     UserData = particlePrefab

@@ -839,6 +839,56 @@
   <!-- Particle editor -->
   <particleeditor.emitter>Emitter</particleeditor.emitter>
   
+  <!-- Particles -->
+  <particle.watersplash>Water Splash</particle.watersplash>
+  <particle.mist>Mist</particle.mist>
+  <particle.waterdrop>Water Drop</particle.waterdrop>
+  <particle.dustcloud>Dust Cloud</particle.dustcloud>
+  <particle.bubbles>Bubbles</particle.bubbles>
+  <particle.blood>Blood</particle.blood>
+  <particle.blackblood>Black Blood</particle.blackblood>
+  <particle.whitegoosplash>White Goo Splash</particle.whitegoosplash>
+  <particle.waterblood>Water Blood</particle.waterblood>
+  <particle.blackwaterblood>Black Water Blood</particle.blackwaterblood>
+  <particle.blooddrop>Blood Drop</particle.blooddrop>
+  <particle.bloodtrail>Blood Trail</particle.bloodtrail>
+  <particle.gib>Gib</particle.gib>
+  <particle.heavygib>Heavy Gib</particle.heavygib>
+  <particle.spark>Spark</particle.spark>
+  <particle.artifactspark>Artifact Spark</particle.artifactspark>
+  <particle.shockwave>Shockwave</particle.shockwave>
+  <particle.flame>Flame</particle.flame>
+  <particle.flamethrower>Flamethrower</particle.flamethrower>
+  <particle.flamethrowersmoke>Flamethrower Smoke</particle.flamethrowersmoke>
+  <particle.steam>Steam</particle.steam>
+  <particle.smoke>Smoke</particle.smoke>
+  <particle.hydrosmoke>Hydrosmoke</particle.hydrosmoke>
+  <particle.hydrosmokesmall>Hydrosmoke Small</particle.hydrosmokesmall>
+  <particle.lavasplash>Lava Splash</particle.lavasplash>
+  <particle.lavachunk>Lava Chunk</particle.lavachunk>
+  <particle.explosionfire>Explosion Fire</particle.explosionfire>
+  <particle.explosionsmoke>Explosion Smoke</particle.explosionsmoke>
+  <particle.muzzleflashcoilgun>Muzzle Flash Coilgun</particle.muzzleflashcoilgun>
+  <particle.muzzleflashrailgun>Muzzle Flash Railgun</particle.muzzleflashrailgun>
+  <particle.underwaterexplosion>Underwater Explosion</particle.underwaterexplosion>
+  <!--<particle.risingbubbles>Rising Bubbles</particle.risingbubbles>-->
+  <particle.weld>Weld</particle.weld>
+  <particle.weldspark>Weld Spark</particle.weldspark>
+  <particle.weldsmoke>Weld Smoke</particle.weldsmoke>
+  <particle.plasma>Plasma</particle.plasma>
+  <particle.plasmaspark>Plasma Spark</particle.plasmaspark>
+  <particle.plasmasmoke>Plasma Smoke</particle.plasmasmoke>
+  <particle.largeplasma>Large Plasma</particle.largeplasma>
+  <particle.fleshsmoke>Flesh Smoke</particle.fleshsmoke>
+  <particle.swirlysmoke>Swirly Smoke</particle.swirlysmoke>
+  <particle.ammotrailwater>Ammo Trail Water</particle.ammotrailwater>
+  <particle.extinguisher>Extinguisher</particle.extinguisher>
+  <particle.flare>Flare</particle.flare>
+  <particle.shrapnel>Shrapnel</particle.shrapnel>
+  <particle.iceshards>Ice Shards</particle.iceshards>
+  <particle.brownchunks>Brown Chunks</particle.brownchunks>
+  <particle.aliengas>Alien Gas</particle.aliengas>
+  
   <!-- Level editor -->
   <leveleditorlevelseed>Level seed</leveleditorlevelseed>
   <leveleditorgenerate>Generate</leveleditorgenerate>
