@@ -199,7 +199,7 @@ namespace Barotrauma.Items.Components
                 //sent by the server, or reverting it back to its old state if no msg from server was received
                 PredictedState = open;
                 resetPredictionTimer = CorrectionDelay;
-                if (stateChanged) PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse, item.WorldPosition);
+                if (stateChanged) PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
             }
             else
             {
@@ -207,7 +207,7 @@ namespace Barotrauma.Items.Components
                 if (!isNetworkMessage || open != PredictedState)
                 {
                     StopPicking(null);
-                    PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse, item.WorldPosition);
+                    PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
                 }
             }
 

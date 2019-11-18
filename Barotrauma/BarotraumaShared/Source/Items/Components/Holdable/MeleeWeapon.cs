@@ -242,6 +242,7 @@ namespace Barotrauma.Items.Components
                 RestoreCollision();
                 hitting = false;
                 User = null;
+                return true;
             }
 
             //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls

@@ -32,12 +32,21 @@ namespace Barotrauma
         private float hudInfoHeight;
 
         private List<CharacterSound> sounds;
-
+        
         public bool ExternalHighlight;
+
+        /// <summary>
+        /// Is the character currently visible on the camera. Refresh the value by calling DoVisibilityCheck.
+        /// </summary>
+        public bool IsVisible
+        {
+            get;
+            private set;
+        } = true;
 
         //the Character that the player is currently controlling
         private static Character controlled;
-
+        
         public static Character Controlled
         {
             get { return controlled; }
@@ -594,6 +603,22 @@ namespace Barotrauma
                 CharacterHealth.AddToGUIUpdateList();
             }
         }
+
+        public void DoVisibilityCheck(Camera cam)
+        { 
+            IsVisible = false;
+            if (!Enabled || AnimController.SimplePhysicsEnabled) { return; }
+
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                float maxExtent = ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent());
+                if (limb.LightSource != null) { maxExtent = Math.Max(limb.LightSource.Range, maxExtent); }
+                if (limb.body.DrawPosition.X < cam.WorldView.X - maxExtent || limb.body.DrawPosition.X > cam.WorldView.Right + maxExtent) { continue; }
+                if (limb.body.DrawPosition.Y < cam.WorldView.Y - cam.WorldView.Height - maxExtent || limb.body.DrawPosition.Y > cam.WorldView.Y + maxExtent) { continue; }
+                IsVisible = true;
+                return;
+            }
+        }
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
@@ -610,7 +635,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
 
             if (GameMain.DebugDraw)
             {

@@ -479,7 +479,14 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel.Dispose();
                 loopingSoundChannel = null;
             }
-            if (GuiFrame != null) GUI.RemoveFromUpdateList(GuiFrame, true);
+
+            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            {
+                channel.Dispose();
+                loopingSoundChannel = null;
+            }
+
+            if (GuiFrame != null) { GUI.RemoveFromUpdateList(GuiFrame, true); }
 #endif
 
             if (delayedCorrectionCoroutine != null)

@@ -75,6 +75,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
+            base.UpdateBroken(deltaTime, cam);
             powerDownTimer += deltaTime;
             CurrFlow = 0.0f;
         }

@@ -526,7 +526,7 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Enabled) { c.Draw(spriteBatch, cam); }
+                if (c.IsVisible) { c.Draw(spriteBatch, cam); }
             }
             spriteBatch.End();
 

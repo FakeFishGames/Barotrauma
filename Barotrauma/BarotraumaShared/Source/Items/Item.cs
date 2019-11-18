@@ -368,7 +368,7 @@ namespace Barotrauma
 #if CLIENT
                     foreach (ItemComponent ic in components)
                     {
-                        ic.PlaySound(ActionType.OnBroken, WorldPosition);
+                        ic.PlaySound(ActionType.OnBroken);
                     }
                     if (Screen.Selected == GameMain.SubEditorScreen) return;
 #endif
@@ -1216,7 +1216,7 @@ namespace Barotrauma
                 {
                     SendPendingNetworkUpdates();
                 }                
-            }
+            }            
             
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
@@ -1227,8 +1227,8 @@ namespace Barotrauma
                 {
                     ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
                 }
-
 #if CLIENT
+                ic.UpdateSounds();
                 if (!ic.WasUsed)
                 {
                     ic.StopSounds(ActionType.OnUse);
@@ -1253,7 +1253,7 @@ namespace Barotrauma
                     {
                         if (ic.IsActiveTimer > 0.02f)
                         {
-                            ic.PlaySound(ActionType.OnActive, WorldPosition);
+                            ic.PlaySound(ActionType.OnActive);
                         }
                         ic.IsActiveTimer += deltaTime;
                     }
@@ -1759,7 +1759,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnUse, WorldPosition, character);
+                    ic.PlaySound(ActionType.OnUse, character);
 #endif
     
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
@@ -1792,7 +1792,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 
 #if CLIENT
-                    ic.PlaySound(ActionType.OnSecondaryUse, WorldPosition, character);
+                    ic.PlaySound(ActionType.OnSecondaryUse, character);
 #endif
 
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
@@ -1830,7 +1830,7 @@ namespace Barotrauma
                 ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
 
 #if CLIENT
-                ic.PlaySound(actionType, user.WorldPosition, user);
+                ic.PlaySound(actionType, user);
 #endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);

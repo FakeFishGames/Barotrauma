@@ -362,9 +362,9 @@ namespace Barotrauma
             inversedLimbDrawOrder = depthSortedLimbs.ToArray();
         }
         
-        partial void UpdateProjSpecific(float deltaTime)
+        partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (!character.Enabled || SimplePhysicsEnabled) { return; }
+            if (!character.IsVisible) { return; }
 
             LimbJoints.ForEach(j => j.UpdateDeformations(deltaTime));
             foreach (var deformation in SpriteDeformations)

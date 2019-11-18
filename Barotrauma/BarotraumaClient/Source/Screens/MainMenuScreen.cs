@@ -515,6 +515,12 @@ namespace Barotrauma
                     GameMain.ServerListScreen.Select();
                     break;
                 case Tab.HostServer:
+                    if (GameMain.Config.ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+                    {
+                        new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
+                        selectedTab = 0;
+                        return false;
+                    }
                     SetServerPlayStyle(PlayStyle.Serious);
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {

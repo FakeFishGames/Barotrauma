@@ -813,6 +813,26 @@ namespace Barotrauma
             DrawLine(sb, t, start, end, clr, depth, width);
         }
 
+        public static void DrawLine(SpriteBatch sb, Sprite sprite, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        {
+            Vector2 edge = end - start;
+            // calculate angle to rotate line
+            float angle = (float)Math.Atan2(edge.Y, edge.X);
+
+            sb.Draw(sprite.Texture,
+                new Rectangle(// rectangle defines shape of line and position of start of line
+                    (int)start.X,
+                    (int)start.Y,
+                    (int)edge.Length(), //sb will strech the texture to fill this rectangle
+                    width), //width of line, change this to make thicker line
+                sprite.SourceRect,
+                clr, //colour of line
+                angle,     //angle of line (calulated above)
+                new Vector2(0, sprite.SourceRect.Height / 2), // point in line about which to rotate
+                SpriteEffects.None,
+                depth);
+        }
+
         public static void DrawLine(SpriteBatch sb, Texture2D texture, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
             Vector2 edge = end - start;

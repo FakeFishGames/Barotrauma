@@ -88,7 +88,7 @@ namespace Barotrauma.Tutorials
                 GameMain.GameSession.StartRound(levelSeed);
             }
 
-            GameMain.GameSession.EventManager.Events.Clear();
+            GameMain.GameSession.EventManager.ActiveEvents.Clear();
             GameMain.GameSession.EventManager.Enabled = false;
             GameMain.GameScreen.Select();
 
