@@ -877,7 +877,7 @@
   <particle.muzzleflashcoilgun>Muzzle Flash Coilgun</particle.muzzleflashcoilgun>
   <particle.muzzleflashrailgun>Muzzle Flash Railgun</particle.muzzleflashrailgun>
   <particle.underwaterexplosion>Underwater Explosion</particle.underwaterexplosion>
-  <!--<particle.risingbubbles>Rising Bubbles</particle.risingbubbles>-->
+  <particle.risingbubbles>Rising Bubbles</particle.risingbubbles>
   <particle.weld>Weld</particle.weld>
   <particle.weldspark>Weld Spark</particle.weldspark>
   <particle.weldsmoke>Weld Smoke</particle.weldsmoke>
@@ -896,21 +896,21 @@
   <particle.aliengas>Alien Gas</particle.aliengas>
   
   <!-- Level editor -->
-  <leveleditor.levelseed>Level seed</leveleditor.levelseed>
+  <leveleditor.levelseed>Level Seed</leveleditor.levelseed>
   <leveleditor.generate>Generate</leveleditor.generate>
-  <leveleditor.lightingenabled>Enable lighting</leveleditor.lightingenabled>
-  <leveleditor.cursorlightenabled>Enable cursor light</leveleditor.cursorlightenabled>
-  <leveleditor.reloadtextures>Reload textures</leveleditor.reloadtextures>
+  <leveleditor.lightingenabled>Enable Lighting</leveleditor.lightingenabled>
+  <leveleditor.cursorlightenabled>Enable Cursor Light</leveleditor.cursorlightenabled>
+  <leveleditor.reloadtextures>Reload Textures</leveleditor.reloadtextures>
   <leveleditor.spriteeditdone>Done</leveleditor.spriteeditdone>
   <leveleditor.levelobjcommonness>Commonness in [leveltype]</leveleditor.levelobjcommonness>
-  <leveleditor.editsprite>Edit sprite</leveleditor.editsprite>
-  <leveleditor.childobjects>Child objects</leveleditor.childobjects>
-  <leveleditor.addchildobject>Add child object</leveleditor.addchildobject>
-  <leveleditor.lightsources>Light sources</leveleditor.lightsources>
-  <leveleditor.addlightsource>Add light source</leveleditor.addlightsource>
-  <leveleditor.createlevelobj>Create a new level object</leveleditor.createlevelobj>
+  <leveleditor.editsprite>Edit Sprite</leveleditor.editsprite>
+  <leveleditor.childobjects>Child Objects</leveleditor.childobjects>
+  <leveleditor.addchildobject>Add Child Object</leveleditor.addchildobject>
+  <leveleditor.lightsources>Light Sources</leveleditor.lightsources>
+  <leveleditor.addlightsource>Add Light Source</leveleditor.addlightsource>
+  <leveleditor.createlevelobj>Create a Level Object</leveleditor.createlevelobj>
   <leveleditor.levelobjname>Name</leveleditor.levelobjname>
-  <leveleditor.levelobjtexturepath>Texture path</leveleditor.levelobjtexturepath>
+  <leveleditor.levelobjtexturepath>Texture Path</leveleditor.levelobjtexturepath>
   <leveleditor.levelobjnameempty>Please enter a name for the level object.</leveleditor.levelobjnameempty>
   <leveleditor.levelobjnametaken>The selected name is already in use.</leveleditor.levelobjnametaken>
   <leveleditor.levelobjtexturenotfound>Could not find the selected texture file.</leveleditor.levelobjtexturenotfound>
