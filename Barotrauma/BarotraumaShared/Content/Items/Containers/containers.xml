@@ -172,7 +172,7 @@
     </ItemContainer>
   </Item>
   
-  <Item name="" identifier="loosepanel" tags="hidden" scale="0.65" interactdistance="10">
+  <Item name="Loose Panel" identifier="loosepanel" tags="hidden" scale="0.65" interactdistance="10">
     <sprite texture="Content/Map/FinsA.png" sourcerect="961,33,128,127" depth="0.885" origin="0.5339039,0.4379086" canflipx="false"/>
     <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
@@ -180,7 +180,7 @@
     </ItemContainer>
   </Item>
 
-  <Item name="" identifier="loosepanel2" tags="hidden" scale="0.74" interactdistance="10">
+  <Item name="Loose Panel" identifier="loosepanel2" tags="hidden" scale="0.74" interactdistance="10">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,908,76,74" depth="0.885" origin="0.5,0.5" canflipx="false"/>
     <ItemContainer capacity="1" slotsperrow="1" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
