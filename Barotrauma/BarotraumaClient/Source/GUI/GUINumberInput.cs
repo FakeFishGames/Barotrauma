@@ -165,7 +165,7 @@ namespace Barotrauma
                 // Not sure what's the point of this
                 buttonArea.RectTransform.MinSize = new Point(Rect.Height, 0);
             }*/
-            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
+            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+", font: GUI.GlobalFont);
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -186,7 +186,7 @@ namespace Barotrauma
             };
             PlusButton.Visible = inputType == NumberType.Int;
 
-            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), "-");
+            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), "-", font: GUI.GlobalFont);
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
