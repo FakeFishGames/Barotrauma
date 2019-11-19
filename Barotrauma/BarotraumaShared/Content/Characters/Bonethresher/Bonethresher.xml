@@ -2,17 +2,16 @@
   <ragdolls folder="Content/Characters/Bonethresher/Ragdolls/" />
   <animations folder="Content/Characters/Bonethresher/Animations/" />
   <health vitality="300" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="2" burnreduction="0" healthregeneration="10" constanthealthregeneration="0" healthregenerationwheneating="2" />
-  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="false">
     <target tag="decoy" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
     <target tag="stronger" state="Attack" priority="80" />
     <target tag="human" state="Attack" priority="70" />
-    <target tag="weaker" state="Attack" priority="60" />
     <target tag="light" state="Attack" priority="50" />
     <target tag="wall" state="Attack" priority="50" />
     <target tag="door" state="Attack" priority="50" />
-    <target tag="dead" state="Eat" priority="30" />
     <target tag="room" state="Attack" priority="20" />
+    <target tag="weaker" state="Attack" priority="10" />
     <SwarmBehavior mindistfromclosest="400" maxdistfromcenter="2000" cohesion="0.25" />
   </ai>
   <sound file="Content/Characters/Bonethresher/TIGERTRESHERb_idle1.ogg" state="Idle" range="4000" volume="1" gender="None" />

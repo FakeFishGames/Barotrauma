@@ -1094,9 +1094,9 @@ namespace Barotrauma
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
-            // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            bool retaliate = attacker.Submarine == Character.Submarine && SelectedAiTarget != attacker.AiTarget;
-            bool avoidGunFire = attacker.Submarine != Character.Submarine && Character.Params.AI.AvoidGunfire;
+            // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
+            bool retaliate = SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
+            bool avoidGunFire = Character.Params.AI.AvoidGunfire && attacker.Submarine != Character.Submarine;
             if (State == AIState.Attack && !IsCoolDownRunning)
             {
                 // Don't retaliate or escape while performing an attack
