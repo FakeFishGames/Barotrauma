@@ -3729,6 +3729,9 @@
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
   
   <roomname.bilge>Bilge</roomname.bilge>
+  <settingresetlabel>Confirm reset</settingresetlabel>
+  <unsavedchangeslabel>Unsaved changes</unsavedchangeslabel>
+  <unsavedchangesverification>Are you sure you want to leave without saving the changes made to the settings?</unsavedchangesverification>
 
   <!-- Server permission presets -->
   <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
