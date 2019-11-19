@@ -48,11 +48,27 @@ namespace Barotrauma
 
         public readonly string TargetItemComponentName;
 
+        // Only used by attacks
+        public readonly bool TargetSelf;
+
         private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
 
         private readonly int cancelStatusEffect;
 
-        // TODO: use XElement instead of XAttribute
+        // Remove this after refactoring
+        public static bool IsValid(XAttribute attribute)
+        {
+            switch (attribute.Name.ToString().ToLowerInvariant())
+            {
+                case "targetitemcomponent":
+                case "targetself":
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        // TODO: use XElement instead of XAttribute (how to do without breaking the existing content?)
         public PropertyConditional(XAttribute attribute)
         {
             AttributeName = attribute.Name.ToString().ToLowerInvariant();
@@ -116,6 +132,7 @@ namespace Barotrauma
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
+            TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
 
             foreach (XElement subElement in attribute.Parent.Elements())
             {

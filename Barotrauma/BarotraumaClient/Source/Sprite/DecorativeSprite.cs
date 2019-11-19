@@ -96,8 +96,10 @@ namespace Barotrauma
                 }
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
-                    if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                    conditionalList.Add(new PropertyConditional(attribute));
+                    if (PropertyConditional.IsValid(attribute))
+                    {
+                        conditionalList.Add(new PropertyConditional(attribute));
+                    }
                 }
             }
         }
