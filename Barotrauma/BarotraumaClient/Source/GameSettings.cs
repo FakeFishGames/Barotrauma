@@ -833,7 +833,10 @@ namespace Barotrauma
                     {
                         var msgBox = new GUIMessageBox(TextManager.Get("ApplySettingsLabel"),
                                 TextManager.Get("ApplySettingsQuestion"),
-                                new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
+                                new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") })
+                        {
+                            UserData = "verificationprompt"
+                        };
 
                         msgBox.Buttons[0].OnClicked = ApplyClicked;
                         msgBox.Buttons[0].OnClicked += (applyButton, obj) =>
@@ -866,7 +869,10 @@ namespace Barotrauma
                 {
                     var msgBox = new GUIMessageBox("",
                                 TextManager.Get("SettingResetVerification"),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
 
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
