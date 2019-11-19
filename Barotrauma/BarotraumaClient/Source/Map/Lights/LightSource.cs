@@ -115,6 +115,11 @@ namespace Barotrauma.Lights
 
     class LightSource
     {
+        //how many pixels the position of the light needs to change for the light volume to be recalculated
+        const float MovementRecalculationThreshold = 10.0f;
+        //how many radians the light needs to rotate for the light volume to be recalculated
+        const float RotationRecalculationThreshold = 0.02f;
+
         private static Texture2D lightTexture;
 
         private VertexPositionColorTexture[] vertices;
@@ -171,6 +176,7 @@ namespace Barotrauma.Lights
         private int indexCount;
 
         private Vector2 translateVertices;
+        private float rotateVertices;
 
         private readonly LightSourceParams lightSourceParams;
 
@@ -187,26 +193,32 @@ namespace Barotrauma.Lights
                 position = value;
 
                 //translate light volume manually instead of doing a full recalculation when moving by a small amount
-                if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 10.0f * 10.0f && vertices != null)
+                if (Vector2.DistanceSquared(prevCalculatedPosition, position) < MovementRecalculationThreshold * MovementRecalculationThreshold && vertices != null)
                 {
-                    translateVertices = moveAmount;
+                    translateVertices = position - prevCalculatedPosition;
                     return;
                 }
                 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
-                prevCalculatedPosition = position;
             }
         }
 
+        private float prevCalculatedRotation;
         private float rotation;
         public float Rotation
         {
             get { return rotation; }
             set
             {
-                if (Math.Abs(rotation - value) < 0.01f) return;
+                if (Math.Abs(value - rotation) < 0.001f) { return; }
                 rotation = value;
+
+                if (Math.Abs(rotation - prevCalculatedRotation) < RotationRecalculationThreshold && vertices != null)
+                {
+                    rotateVertices = rotation - prevCalculatedRotation;
+                    return;
+                }
 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
@@ -736,7 +748,7 @@ namespace Barotrauma.Lights
             }
 
             Vector2 drawPos = position;
-            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+            if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
 
             float cosAngle = (float)Math.Cos(Rotation);
             float sinAngle = -(float)Math.Sin(Rotation);
@@ -899,6 +911,9 @@ namespace Barotrauma.Lights
             }
 
             translateVertices = Vector2.Zero;
+            rotateVertices = 0.0f;
+            prevCalculatedPosition = position;
+            prevCalculatedRotation = rotation;
         }
 
         /// <summary>
@@ -987,9 +1002,6 @@ namespace Barotrauma.Lights
                 return;
             }
 
-            Vector3 offset = ParentSub == null ?
-                Vector3.Zero : new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
-            lightEffect.World = Matrix.CreateTranslation(offset) * transform;
 
             if (NeedsRecalculation)
             {
@@ -999,19 +1011,16 @@ namespace Barotrauma.Lights
                 lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
-            else if (translateVertices.LengthSquared() > 1.0f)
-            {
-                for (int i = 0; i < vertexCount; i++)
-                {
-                    var vert = vertices[i];
-                    vert.Position += new Vector3(translateVertices, 0.0f);
-                    vertices[i] = vert;
-                }
-                lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices, 0, vertexCount);
-                translateVertices = Vector2.Zero;
-            }
 
-            if (vertexCount == 0) return;
+
+            Vector2 offset = ParentSub == null ? Vector2.Zero : ParentSub.DrawPosition;
+            lightEffect.World =
+                Matrix.CreateTranslation(-new Vector3(position, 0.0f)) * 
+                Matrix.CreateRotationZ(rotateVertices) * 
+                Matrix.CreateTranslation(new Vector3(position + offset + translateVertices, 0.0f)) *
+                transform;
+
+            if (vertexCount == 0) { return; }
 
             lightEffect.DiffuseColor = (new Vector3(Color.R, Color.G, Color.B) * (Color.A / 255.0f)) / 255.0f;
             if (OverrideLightTexture != null)
