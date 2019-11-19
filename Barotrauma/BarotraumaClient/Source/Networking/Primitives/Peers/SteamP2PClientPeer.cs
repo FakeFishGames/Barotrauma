@@ -83,7 +83,9 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
-            timeout = NetworkConnection.TimeoutThreshold;
+            timeout = Screen.Selected == GameMain.GameScreen ?
+                NetworkConnection.TimeoutThresholdInGame :
+                NetworkConnection.TimeoutThreshold;
 
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;

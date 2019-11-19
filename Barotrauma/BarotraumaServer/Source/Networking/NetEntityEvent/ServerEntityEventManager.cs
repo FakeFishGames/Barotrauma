@@ -126,9 +126,9 @@ namespace Barotrauma.Networking
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
             
-            //remove events that have been sent to all clients, they are redundant now
+            //remove old events that have been sent to all clients, they are redundant now
             //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
-            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) && e.CreateTime < Timing.TotalTime - 10.0f);
+            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) && e.CreateTime < Timing.TotalTime - 15.0f);
 
             if (server.ConnectedClients.Count(c => c.InGame) == 0 && events.Count > 1)
             {
