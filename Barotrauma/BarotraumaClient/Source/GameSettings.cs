@@ -831,31 +831,23 @@ namespace Barotrauma
 
                     if (UnsavedSettings)
                     {
-                        var msgBox = new GUIMessageBox(TextManager.Get("ApplySettingsLabel"),
-                                TextManager.Get("ApplySettingsQuestion"),
-                                new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") })
+                        var msgBox = new GUIMessageBox(TextManager.Get("UnsavedChangesLabel"),
+                                TextManager.Get("UnsavedChangesVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                         {
                             UserData = "verificationprompt"
                         };
-
-                        msgBox.Buttons[0].OnClicked = ApplyClicked;
-                        msgBox.Buttons[0].OnClicked += (applyButton, obj) =>
-                        {
-                            ExitSettings();
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-
-                        msgBox.Buttons[1].OnClicked += (discardButton, obj) =>
+                        msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                         {
                             LoadPlayerConfig();
                             ExitSettings();
                             return true;
                         };
-                        msgBox.Buttons[1].OnClicked += msgBox.Close;
-
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
                         return false;
                     }
+
                     ExitSettings();
                     return true;
                 }
