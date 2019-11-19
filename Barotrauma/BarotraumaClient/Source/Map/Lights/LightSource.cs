@@ -720,7 +720,7 @@ namespace Barotrauma.Lights
 
             float cosAngle = (float)Math.Cos(Rotation);
             float sinAngle = -(float)Math.Sin(Rotation);
-            
+
             Vector2 uvOffset = Vector2.Zero;
             Vector2 overrideTextureDims = Vector2.One;
             if (OverrideLightTexture != null)
@@ -728,15 +728,15 @@ namespace Barotrauma.Lights
                 overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
                 Vector2 origin = OverrideLightTexture.Origin;
-                if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = OverrideLightTexture.SourceRect.Width - origin.X;
-                if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = (OverrideLightTexture.SourceRect.Height - origin.Y);
+                if (LightSpriteEffect == SpriteEffects.FlipHorizontally) { origin.X = OverrideLightTexture.SourceRect.Width - origin.X; }
+                if (LightSpriteEffect == SpriteEffects.FlipVertically) { origin.Y = OverrideLightTexture.SourceRect.Height - origin.Y; }
                 uvOffset = (origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
             }
 
             // Add a vertex for the center of the mesh
             vertices.Add(new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
-                Color.White, new Vector2(0.5f, 0.5f) + uvOffset));
-
+                Color.White, GetUV(new Vector2(0.5f, 0.5f) + uvOffset, LightSpriteEffect)));
+            
             //hacky fix to exc excessively large light volumes (they used to be up to 4x the range of the light if there was nothing to block the rays).
             //might want to tweak the raycast logic in a way that this isn't necessary
             float boundRadius = Range * 1.1f / (1.0f - Math.Max(Math.Abs(uvOffset.X), Math.Abs(uvOffset.Y)));
@@ -800,9 +800,9 @@ namespace Barotrauma.Lights
 
                 //finally, create the vertices
                 VertexPositionColorTexture fullVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X, position.Y + rawDiff.Y, 0),
-                   Color.White, new Vector2(0.5f, 0.5f) + diff);
+                   Color.White, GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect));
                 VertexPositionColorTexture fadeVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X + nDiff.X, position.Y + rawDiff.Y + nDiff.Y, 0),
-                   Color.White * 0.0f, new Vector2(0.5f, 0.5f) + diff);
+                   Color.White * 0.0f, GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect));
 
                 vertices.Add(fullVert);
                 vertices.Add(fadeVert);
@@ -859,9 +859,28 @@ namespace Barotrauma.Lights
                 lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
                 lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), (int)(indexCount * 1.5), BufferUsage.None);
             }
-            
+                        
             lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
             lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
+
+            Vector2 GetUV(Vector2 vert, SpriteEffects effects)
+            {
+                if (effects == SpriteEffects.FlipHorizontally) 
+                { 
+                    vert.X = 1.0f - vert.X; 
+                }
+                else if (effects == SpriteEffects.FlipVertically) 
+                { 
+                    vert.Y = 1.0f - vert.Y; 
+                }
+                else if (effects == (SpriteEffects.FlipHorizontally | SpriteEffects.FlipVertically))
+                {
+                    vert.X = 1.0f - vert.X;
+                    vert.Y = 1.0f - vert.Y;
+                }
+                vert.Y = 1.0f - vert.Y;
+                return vert;
+            }
         }
 
         /// <summary>
@@ -954,6 +973,7 @@ namespace Barotrauma.Lights
                 Vector3.Zero : new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
             lightEffect.World = Matrix.CreateTranslation(offset) * transform;
 
+            needsRecalculation = false;
             if (NeedsRecalculation)
             {
                 var verts = FindRaycastHits();
