@@ -2693,7 +2693,11 @@ namespace Barotrauma
                 recalculateInnerFrame();
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
+            var textBlock = new GUITextBlock(
+              innerFrame.CountChildren == 0 ?
+                  new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center) :
+                  new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter),
+              jobPrefab.Name, textAlignment: Alignment.Center)
             {
                 TextColor = jobPrefab.UIColor,
                 CanBeFocused = false,
