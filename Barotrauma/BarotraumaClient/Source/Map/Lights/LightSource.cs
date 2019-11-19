@@ -117,6 +117,9 @@ namespace Barotrauma.Lights
     {
         private static Texture2D lightTexture;
 
+        private VertexPositionColorTexture[] vertices;
+        private short[] indices;
+
         private List<ConvexHullList> hullsInRange;
                 
         public Texture2D texture;
@@ -167,6 +170,8 @@ namespace Barotrauma.Lights
         private int vertexCount;
         private int indexCount;
 
+        private Vector2 translateVertices;
+
         private readonly LightSourceParams lightSourceParams;
 
         public LightSourceParams LightSourceParams => lightSourceParams;
@@ -177,10 +182,16 @@ namespace Barotrauma.Lights
             get { return position; }
             set
             {
-                if (Math.Abs(position.X - value.X) < 0.1f && Math.Abs(position.Y - value.Y) < 0.1f) return;
+                Vector2 moveAmount = value - position;
+                if (Math.Abs(moveAmount.X) < 0.1f && Math.Abs(moveAmount.Y) < 0.1f) { return; }
                 position = value;
 
-                if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 5.0f * 5.0f) return;
+                //translate light volume manually instead of doing a full recalculation when moving by a small amount
+                if (Vector2.DistanceSquared(prevCalculatedPosition, position) < 10.0f * 10.0f && vertices != null)
+                {
+                    translateVertices = moveAmount;
+                    return;
+                }
                 
                 NeedsHullCheck = true;
                 NeedsRecalculation = true;
@@ -711,9 +722,18 @@ namespace Barotrauma.Lights
             return retVal;
         }
 
+
         private void CalculateLightVertices(List<Vector2> rayCastHits)
         {
-            List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
+            vertexCount = rayCastHits.Count * 2 + 1;
+            indexCount = (rayCastHits.Count) * 9;
+
+            //recreate arrays if they're too small or excessively large
+            if (vertices == null || vertices.Length < vertexCount || vertices.Length > vertexCount * 3)
+            {
+                vertices = new VertexPositionColorTexture[vertexCount];
+                indices = new short[indexCount];
+            }
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
@@ -734,8 +754,8 @@ namespace Barotrauma.Lights
             }
 
             // Add a vertex for the center of the mesh
-            vertices.Add(new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
-                Color.White, GetUV(new Vector2(0.5f, 0.5f) + uvOffset, LightSpriteEffect)));
+            vertices[0] = new VertexPositionColorTexture(new Vector3(position.X, position.Y, 0),
+                Color.White, GetUV(new Vector2(0.5f, 0.5f) + uvOffset, LightSpriteEffect));
             
             //hacky fix to exc excessively large light volumes (they used to be up to 4x the range of the light if there was nothing to block the rays).
             //might want to tweak the raycast logic in a way that this isn't necessary
@@ -804,64 +824,60 @@ namespace Barotrauma.Lights
                 VertexPositionColorTexture fadeVert = new VertexPositionColorTexture(new Vector3(position.X + rawDiff.X + nDiff.X, position.Y + rawDiff.Y + nDiff.Y, 0),
                    Color.White * 0.0f, GetUV(new Vector2(0.5f, 0.5f) + diff, LightSpriteEffect));
 
-                vertices.Add(fullVert);
-                vertices.Add(fadeVert);
+                vertices[1 + i * 2] = fullVert;
+                vertices[1 + i * 2 + 1] = fadeVert;
             }
 
             // Compute the indices to form triangles
-            List<short> indices = new List<short>();
-            for (int i = 0; i < rayCastHits.Count-1; i++)
+            for (int i = 0; i < rayCastHits.Count - 1; i++)
             {
                 //main light body
-                indices.Add(0);
-                indices.Add((short)((i*2 + 3) % vertices.Count));
-                indices.Add((short)((i*2 + 1) % vertices.Count));
-                
+                indices[i * 9] = 0;
+                indices[i * 9 + 1] = (short)((i * 2 + 3) % vertexCount);
+                indices[i * 9 + 2] = (short)((i * 2 + 1) % vertexCount);
+
                 //faded light
-                indices.Add((short)((i*2 + 1) % vertices.Count));
-                indices.Add((short)((i*2 + 3) % vertices.Count));
-                indices.Add((short)((i*2 + 4) % vertices.Count));
+                indices[i * 9 + 3] = (short)((i * 2 + 1) % vertexCount);
+                indices[i * 9 + 4] = (short)((i * 2 + 3) % vertexCount);
+                indices[i * 9 + 5] = (short)((i * 2 + 4) % vertexCount);
 
-                indices.Add((short)((i*2 + 2) % vertices.Count));
-                indices.Add((short)((i*2 + 1) % vertices.Count));
-                indices.Add((short)((i*2 + 4) % vertices.Count));
+                indices[i * 9 + 6] = (short)((i * 2 + 2) % vertexCount);
+                indices[i * 9 + 7] = (short)((i * 2 + 1) % vertexCount);
+                indices[i * 9 + 8] = (short)((i * 2 + 4) % vertexCount);
             }
-            
+
             //main light body
-            indices.Add(0);
-            indices.Add((short)(1));
-            indices.Add((short)(vertices.Count - 2));
-            
+            indices[(rayCastHits.Count - 1) * 9] = 0;
+            indices[(rayCastHits.Count - 1) * 9 + 1] = (short)(1);
+            indices[(rayCastHits.Count - 1) * 9 + 2] = (short)(vertexCount - 2);
+
             //faded light
-            indices.Add((short)(1));
-            indices.Add((short)(vertices.Count-1));
-            indices.Add((short)(vertices.Count-2));
+            indices[(rayCastHits.Count - 1) * 9 + 3] = (short)(1);
+            indices[(rayCastHits.Count - 1) * 9 + 4] = (short)(vertexCount - 1);
+            indices[(rayCastHits.Count - 1) * 9 + 5] = (short)(vertexCount - 2);
 
-            indices.Add((short)(1));
-            indices.Add((short)(2));
-            indices.Add((short)(vertices.Count-1));
-
-            vertexCount = vertices.Count;
-            indexCount = indices.Count;
+            indices[(rayCastHits.Count - 1) * 9 + 6] = (short)(1);
+            indices[(rayCastHits.Count - 1) * 9 + 7] = (short)(2);
+            indices[(rayCastHits.Count - 1) * 9 + 8] = (short)(vertexCount - 1);
 
             //TODO: a better way to determine the size of the vertex buffer and handle changes in size?
             //now we just create a buffer for 64 verts and make it larger if needed
             if (lightVolumeBuffer == null)
             {
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount*1.5)), BufferUsage.None);
-                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), Math.Max(64*3, (int)(indexCount * 1.5)), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, Math.Max(64, (int)(vertexCount * 1.5)), BufferUsage.None);
+                lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), Math.Max(64 * 3, (int)(indexCount * 1.5)), BufferUsage.None);
             }
             else if (vertexCount > lightVolumeBuffer.VertexCount || indexCount > lightVolumeIndexBuffer.IndexCount)
             {
                 lightVolumeBuffer.Dispose();
                 lightVolumeIndexBuffer.Dispose();
 
-                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, (int)(vertexCount*1.5), BufferUsage.None);
+                lightVolumeBuffer = new DynamicVertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, (int)(vertexCount * 1.5), BufferUsage.None);
                 lightVolumeIndexBuffer = new DynamicIndexBuffer(GameMain.Instance.GraphicsDevice, typeof(short), (int)(indexCount * 1.5), BufferUsage.None);
             }
-                        
-            lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices.ToArray());
-            lightVolumeIndexBuffer.SetData<short>(indices.ToArray());
+
+            lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices, 0, vertexCount);
+            lightVolumeIndexBuffer.SetData<short>(indices, 0, indexCount);
 
             Vector2 GetUV(Vector2 vert, SpriteEffects effects)
             {
@@ -881,6 +897,8 @@ namespace Barotrauma.Lights
                 vert.Y = 1.0f - vert.Y;
                 return vert;
             }
+
+            translateVertices = Vector2.Zero;
         }
 
         /// <summary>
@@ -963,7 +981,7 @@ namespace Barotrauma.Lights
 
                 Vector2 drawPos = position;
                 if (ParentSub != null) drawPos += ParentSub.DrawPosition;
-                drawPos.Y = -drawPos.Y;  
+                drawPos.Y = -drawPos.Y;
 
                 spriteBatch.Draw(currentTexture, drawPos, null, Color, -rotation, center, scale, SpriteEffects.None, 1);
                 return;
@@ -981,7 +999,18 @@ namespace Barotrauma.Lights
                 lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
-            
+            else if (translateVertices.LengthSquared() > 1.0f)
+            {
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    var vert = vertices[i];
+                    vert.Position += new Vector3(translateVertices, 0.0f);
+                    vertices[i] = vert;
+                }
+                lightVolumeBuffer.SetData<VertexPositionColorTexture>(vertices, 0, vertexCount);
+                translateVertices = Vector2.Zero;
+            }
+
             if (vertexCount == 0) return;
 
             lightEffect.DiffuseColor = (new Vector3(Color.R, Color.G, Color.B) * (Color.A / 255.0f)) / 255.0f;
