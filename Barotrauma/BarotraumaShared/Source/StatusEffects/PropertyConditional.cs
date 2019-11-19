@@ -55,7 +55,20 @@ namespace Barotrauma
 
         private readonly int cancelStatusEffect;
 
-        // TODO: use XElement instead of XAttribute
+        // Remove this after refactoring
+        public static bool IsValid(XAttribute attribute)
+        {
+            switch (attribute.Name.ToString().ToLowerInvariant())
+            {
+                case "targetitemcomponent":
+                case "targetself":
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        // TODO: use XElement instead of XAttribute (how to do without breaking the existing content?)
         public PropertyConditional(XAttribute attribute)
         {
             AttributeName = attribute.Name.ToString().ToLowerInvariant();

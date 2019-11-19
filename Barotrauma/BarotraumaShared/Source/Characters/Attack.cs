@@ -305,7 +305,10 @@ namespace Barotrauma
                     case "conditional":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            Conditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                Conditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                 }

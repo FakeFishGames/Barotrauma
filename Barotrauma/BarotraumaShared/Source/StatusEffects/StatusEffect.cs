@@ -343,11 +343,12 @@ namespace Barotrauma
                         requiredItems.Add(newRequiredItem);
                         break;
                     case "conditional":
-                        IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
-                        foreach (XAttribute attribute in conditionalAttributes)
+                        foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            propertyConditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                propertyConditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                     case "affliction":

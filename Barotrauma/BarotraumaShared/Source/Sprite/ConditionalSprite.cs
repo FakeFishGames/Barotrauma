@@ -23,7 +23,10 @@ namespace Barotrauma
                     case "conditional":
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            conditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                conditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                     case "sprite":

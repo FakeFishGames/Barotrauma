@@ -266,8 +266,10 @@ namespace Barotrauma.Items.Components
                         IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                IsActiveConditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                     case "requireditem":
