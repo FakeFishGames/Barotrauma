@@ -859,13 +859,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (button, data) =>
                 {
-                    var msgBox = new GUIMessageBox("",
+                    var msgBox = new GUIMessageBox(TextManager.Get("SettingResetLabel"),
                                 TextManager.Get("SettingResetVerification"),
                                 new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                     {
                         UserData = "verificationprompt"
                     };
-
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
                         LoadDefaultConfig(setLanguage: false);
