@@ -973,7 +973,6 @@ namespace Barotrauma.Lights
                 Vector3.Zero : new Vector3(ParentSub.DrawPosition.X, ParentSub.DrawPosition.Y, 0.0f);
             lightEffect.World = Matrix.CreateTranslation(offset) * transform;
 
-            needsRecalculation = false;
             if (NeedsRecalculation)
             {
                 var verts = FindRaycastHits();
