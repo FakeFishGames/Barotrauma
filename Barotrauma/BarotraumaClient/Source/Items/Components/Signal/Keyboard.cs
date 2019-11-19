@@ -41,7 +41,6 @@ namespace Barotrauma.Items.Components
                         item.CreateClientEvent(this, new object[] { text });
                     }
                     textBox.Text = string.Empty;
-                    textBox.Deselect();
                     return true;
                 }
             };
