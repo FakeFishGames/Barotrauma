@@ -856,32 +856,35 @@ namespace Barotrauma
                 if (pathSteering.CurrentPath != null)
                 {
                     // Attack doors
-                    if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
+                    if (canAttackSub)
                     {
-                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget, selectedTargetMemory.Priority);
-                        return;
+                        // If the target is in the same hull, there shouldn't be any doors blocking the path
+                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                            if (door != null && !door.IsOpen && door.Item.Condition > 0)
+                            {
+                                if (SelectedAiTarget != door.Item.AiTarget)
+                                {
+                                    SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
+                                    return;
+                                }
+                            }
+                        }
                     }
-                    else if (canAttackSub && pathSteering.CurrentPath.NextNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget)
+                    // Steer towards the target if in the same room and swimming
+                    if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
                     {
-                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget, selectedTargetMemory.Priority);
-                        return;
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
                     else
                     {
-                        // Steer towards the target if in the same room and swimming
-                        if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        SteeringManager.SteeringSeek(steerPos, 2);
+                        // Switch to Idle when cannot reach the target and if cannot damage the walls
+                        if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                         {
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                        }
-                        else
-                        {
-                            SteeringManager.SteeringSeek(steerPos, 2);
-                            // Switch to Idle when cannot reach the target and if cannot damage the walls
-                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                            {
-                                State = AIState.Idle;
-                                return;
-                            }
+                            State = AIState.Idle;
+                            return;
                         }
                     }
                 }
@@ -968,9 +971,9 @@ namespace Barotrauma
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
-                    if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { continue; }
+                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all
+                    if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
                 }
-                if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
                 float priority = CalculatePriority(limb, attackWorldPos);
                 if (priority > currentPriority)
                 {
@@ -1097,9 +1100,9 @@ namespace Barotrauma
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
-            // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
-            bool retaliate = SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
-            bool avoidGunFire = Character.Params.AI.AvoidGunfire && attacker.Submarine != Character.Submarine;
+            // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
+            bool retaliate = attacker.Submarine == Character.Submarine && SelectedAiTarget != attacker.AiTarget;
+            bool avoidGunFire = attacker.Submarine != Character.Submarine && Character.Params.AI.AvoidGunfire;
             if (State == AIState.Attack && !IsCoolDownRunning)
             {
                 // Don't retaliate or escape while performing an attack
