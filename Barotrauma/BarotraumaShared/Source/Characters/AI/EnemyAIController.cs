@@ -971,9 +971,9 @@ namespace Barotrauma
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
-                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all
                     if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
                 }
+                if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
                 float priority = CalculatePriority(limb, attackWorldPos);
                 if (priority > currentPriority)
                 {
@@ -1100,9 +1100,10 @@ namespace Barotrauma
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
-            // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            bool retaliate = attacker.Submarine == Character.Submarine && SelectedAiTarget != attacker.AiTarget;
-            bool avoidGunFire = attacker.Submarine != Character.Submarine && Character.Params.AI.AvoidGunfire;
+            // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
+            bool retaliate = SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
+            bool avoidGunFire = Character.Params.AI.AvoidGunfire && attacker.Submarine != Character.Submarine;
+
             if (State == AIState.Attack && !IsCoolDownRunning)
             {
                 // Don't retaliate or escape while performing an attack
