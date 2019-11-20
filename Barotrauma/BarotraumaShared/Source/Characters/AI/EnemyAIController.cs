@@ -858,12 +858,12 @@ namespace Barotrauma
                     // Attack doors
                     if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
                     {
-                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget);
+                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget, selectedTargetMemory.Priority);
                         return;
                     }
                     else if (canAttackSub && pathSteering.CurrentPath.NextNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget)
                     {
-                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget);
+                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget, selectedTargetMemory.Priority);
                         return;
                     }
                     else
