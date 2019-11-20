@@ -35,33 +35,36 @@ namespace Barotrauma.Networking
             Inventory,
             Attack,
             Spawning,
+            Wiring,
             ServerMessage,
             ConsoleUsage,
-            Error
+            Error,
         }
 
-        private readonly Color[] messageColor =
+        private readonly Dictionary<MessageType, Color> messageColor = new Dictionary<MessageType, Color>
         {
-            Color.LightBlue,            //Chat
-            new Color(255, 142, 0),     //ItemInteraction
-            new Color(238, 208, 0),     //Inventory
-            new Color(204, 74, 78),     //Attack
-            new Color(163, 73, 164),    //Spawning
-            new Color(157, 225, 160),   //ServerMessage
-            new Color(0, 162, 232),     //ConsoleUsage
-            Color.Red                   //Error
+            { MessageType.Chat, Color.LightBlue },
+            { MessageType.ItemInteraction, new Color(205, 205, 180) },
+            { MessageType.Inventory, new Color(238, 208, 0) },
+            { MessageType.Attack, new Color(204, 74, 78) },
+            { MessageType.Spawning, new Color(163, 73, 164) },
+            { MessageType.Wiring, new Color(238, 208, 0) },
+            { MessageType.ServerMessage, new Color(157, 225, 160) },
+            { MessageType.ConsoleUsage, new Color(0, 162, 232) },
+            { MessageType.Error, Color.Red },
         };
 
-        private readonly string[] messageTypeName =
+        private readonly Dictionary<MessageType, string> messageTypeName = new Dictionary<MessageType, string>
         {
-            "ChatMessage",
-            "ItemInteraction",
-            "InventoryUsage",
-            "AttackDeath",
-            "Spawning",
-            "ServerMessage",
-            "ConsoleUsage",
-            "Error"
+            { MessageType.Chat, "ChatMessage" },
+            { MessageType.ItemInteraction, "ItemInteraction" },
+            { MessageType.Inventory, "InventoryUsage" },
+            { MessageType.Attack, "AttackDeath" },
+            { MessageType.Spawning, "Spawning" },
+            { MessageType.Wiring, "Wiring" },
+            { MessageType.ServerMessage, "ServerMessage" },
+            { MessageType.ConsoleUsage, "ConsoleUsage" },
+            { MessageType.Error, "Error" }
         };
 
         private int linesPerFile = 800;
@@ -72,7 +75,7 @@ namespace Barotrauma.Networking
 
         private int unsavedLineCount;
 
-        private bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
+        private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
 
         public int LinesPerFile
         {
@@ -86,6 +89,12 @@ namespace Barotrauma.Networking
         {
             ServerName = serverName;
             lines = new Queue<LogMessage>();
+
+            foreach (MessageType messageType in Enum.GetValues(typeof(MessageType)))
+            {
+                System.Diagnostics.Debug.Assert(messageColor.ContainsKey(messageType));
+                System.Diagnostics.Debug.Assert(messageTypeName.ContainsKey(messageType));
+            }
         }
 
         public void WriteLine(string line, MessageType messageType)
@@ -93,7 +102,7 @@ namespace Barotrauma.Networking
             //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
 #if SERVER
-            DebugConsole.NewMessage(line, messageColor[(int)messageType]); //TODO: REMOVE
+            DebugConsole.NewMessage(line, messageColor[messageType]); //TODO: REMOVE
 #endif
 
             var newText = new LogMessage(line, messageType);
