@@ -85,7 +85,7 @@
 <pausemenuretry>Reintentar</pausemenuretry>
 <pausemenusavequit>Guardar y salir</pausemenusavequit>
 <pausemenuquit>Menú principal</pausemenuquit>
-<pausemenuquitverification>¿Seguro que quieres salir del juego? Se perderán todos los progresos no guardados.</pausemenuquitverification>
+<pausemenuquitverification>¿Seguro que quieres volver al menú principal? Se perderán todos los progresos no guardados.</pausemenuquitverification>
 <pausemenuretryverification>¿Seguro que quieres detener la misión y cargar el archivo de guardado anterior? Se perderán todos los progresos no guardados.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Tipo de misión</missiontype>
 <random>Aleatorio</random>
 <levelseed>Generación de nivel</levelseed>
-<leveldifficulty>Dificultad de nivel</leveldifficulty>
+<leveldifficulty>Dificultad</leveldifficulty>
 <traitors>Traidores</traitors>
 <botcount>Contador de bots</botcount>
 <botspawnmode>Modo de aparición de bots</botspawnmode>
@@ -802,6 +802,7 @@
 <!--<missiondescription.killcrawlerswarm2>Una gran horda de [monster] ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm2>-->
 <!-- Temporary until plural monster names -->
 <missiondescription.killcrawlerswarm2>Una gran horda de reptadores ha estado aterrorizando a las naves que viajan entre [location1] y [location2]. Han prometido una recompensa de [reward] créditos a la tripulación que consiga neutralizarla.</missiondescription.killcrawlerswarm2>
+
 <missionsonarlabel.killcrawlerswarm2>Horda</missionsonarlabel.killcrawlerswarm2>
 <missionsuccess.killcrawlerswarm2>La horda ha sido eliminada.</missionsuccess.killcrawlerswarm2>
 <missionheader0.killcrawlerswarm2>Objetivo eliminado</missionheader0.killcrawlerswarm2>
@@ -1402,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Sujeta un extintor a la pared.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Soporte para armas</entityname.weaponholder>
 <entitydescription.weaponholder>Un sitio donde guardar tus armas cómodamente.</entitydescription.weaponholder>
-<entityname.windoweddoor>Puerta con ventana</entityname.windoweddoor>
-<entitydescription.windoweddoor>Una puerta corredera con ventana integrada.</entitydescription.windoweddoor>
-<entityname.hatch>Escotilla</entityname.hatch>
-<entitydescription.hatch>Una puerta, pero en el eje horizontal.</entitydescription.hatch>
 <entityname.dockingport>Puerto de atraque</entityname.dockingport>
 <entitydescription.dockingport>Una interfaz de atraque alineada verticalmente. Se fija a otro puerto de atraque para formar un cierre estanco y permitir el paso entre submarinos, batiscafos y destinos.</entitydescription.dockingport>
 <entityname.dockinghatch>Escotilla de atraque</entityname.dockinghatch>
@@ -1441,7 +1438,6 @@
 <entityname.alienshell>Cartucho de fisicorio</entityname.alienshell>
 <entitydescription.alienshell>Para disparar con un cañón de riel.</entitydescription.alienshell>
 
-<Alien></Alien>
 <entityname.skyholderartifact>Artefacto alienígena del cielo</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>Artefacto hallado en ruinas alienígenas.</entitydescription.skyholderartifact>
 <entityname.thermalartifact>Artefacto alienígena termal</entityname.thermalartifact>
@@ -1824,7 +1820,7 @@
 <dialognobatteries>¿Qué baterías?</dialognobatteries>
 <dialognobatteries>¡No tenemos baterías a bordo!</dialognobatteries>
 <dialognobatteries>¡No encuentro ninguna batería!</dialognobatteries>
-<stopchargingbatteries>¡He dejado de cargar: [itemname]!</stopchargingbatteries>
+<dialogstopchargingbatteries>¡He dejado de cargar: [itemname]!</dialogstopchargingbatteries>
 <dialogleakfixed>¡Fuga arreglada en: [roomname]!</dialogleakfixed>
 <dialogleakfixed>Reparando [roomname]. ¡Unos cuantos agujeros más y listo!</dialogleakfixed>
 <dialogleaksfixed>¡Reparadas todas las fugas en: [roomname]!</dialogleaksfixed>
@@ -2436,7 +2432,7 @@
 <!-- Disclaimers -->
 <campaigndisclaimertitle>¡Hola, esto es Barotrauma!</campaigndisclaimertitle>
 <campaigndisclaimertext>Ten en cuenta que Barotrauma se encuentra aún en acceso anticipado, muchos aspectos del juego están incompletos y seguimos trabajando en ellos.\n\nAl modo campaña le faltan todavía muchas de las características que tenemos planeadas para la versión completa y aún no es tan divertido como el multijugador. En la versión actual, jugar de forma individual puede ser más difícil para los jugadores nuevos que jugar con otras personas; aunque la tripulación de la IA te puede echar una mano con algunas tareas, no suele ser tan útil como los jugadores humanos. Si te interesa saber lo que está por venir en futuras actualizaciones, haz clic en el botón de Hoja de ruta de la campaña que está abajo.\n\nTe recomendamos, a pesar de todo, que juegues al menos al tutorial de un jugador antes de lanzarte al multijugador. ¡Buena suerte, marinero!</campaigndisclaimertext>
-<campaignroadmaptitle>Hoja de ruta de la campaña</campaignroadmaptitle>
+<campaignroadmaptitle>Plan de la campaña</campaignroadmaptitle>
 <campaignroadmaptext>- Lugares explorables: por ahora, los sitios del mapa de campaña son básicamente menús donde puedes comprar suministros y contratar a nuevos tripulantes, pero a lo largo del periodo de acceso anticipado se irán convirtiendo en verdaderos lugares físicos en los que puedes entrar y explorar.\n\n- Historia ampliada: podrás saber más cosas sobre el mundo de Barotrauma interactuando con PNJ, además de explorando puestos de avanzada y lugares no creados por el hombre.\n\n- Nuevos tipos de misión: tenemos planes para varios tipos de misión totalmente nuevos, incluidas misiones de transporte de personal y misiones de recuperación en naufragios.\n\n- Equilibrio: actualmente, la economía de la campaña no está muy bien equilibrada, pero empezaremos a centrarnos más en ella en cuanto tengamos más contenido.\n\n- Objetivo final: por el momento, no es posible completar la campaña, pero en futuras versiones, el lugar misterioso del centro del mapa será accesible…</campaignroadmaptext>
 <editordisclaimertitle>Editores</editordisclaimertitle>
 <editordisclaimertext>Los editores de submarinos y personajes son herramientas de modificación que se pueden usar para expandir el juego básico creando tus propios submarinos y monstruos. Las creaciones personalizadas se pueden compartir en Steam Workshop.\n\nPor el momento, los editores solo están disponibles en inglés. El proceso de construcción de un submarino totalmente jugable o de un monstruo funcional puede ser bastante complicado y, por desgracia, no ofrecemos todavía tutoriales dentro del juego ni documentación para los editores. Si quieres probar a crear tu propio contenido personalizado con los editores, tal vez encuentres ayuda siguiendo estos enlaces:</editordisclaimertext>
@@ -2630,7 +2626,7 @@
 <centerarealockedtext>Esta zona es inaccesible en esta versión de Barotrauma. ¡Espera a futuras actualizaciones!</centerarealockedtext>
 <connection.dockingproximitysensor>sensor_proximidad</connection.dockingproximitysensor>
 <connection.signalx>señal_[num]</connection.signalx>
-<connection.set_text>señal_[num]</connection.set_text>
+<connection.set_text>establecer_texto</connection.set_text>
 <connection.stateout>estado_sal</connection.stateout>
 <connection.turretaimingout>posición_sal</connection.turretaimingout>
 <connection.turrettriggerout>disparador_sal</connection.turrettriggerout>
@@ -2773,7 +2769,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Compresión de rango dinámico</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Ajusta el volumen del juego automáticamente para evitar la distorsión del sonido.</dynamicrangecompressiontooltip>
-<voipnodevices>No se encuentran dispositivos de grabación de audio</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Control automático</pumpautocontrol>
@@ -2850,12 +2845,8 @@
 <afflictiondescription.spaceherpes>La cara del paciente se cubre de granos y úlceras de muy mal aspecto.</afflictiondescription.spaceherpes>
 <afflictionname.invertcontrols>Desorientado</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Los ojos del paciente se descontrolan, y aparenta tener problemas para orientarse.</afflictiondescription.invertcontrols>
-
-
+  
 <damagebutton>Daño</damagebutton>
-<pending>Pendiente</pending>
-<inprogress>En curso</inprogress>
-<complete>Completado</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Busca tu siguiente objetivo dentro de: [target] en [targethullname].</traitorgoalfindcontainerinfo>
@@ -3009,7 +3000,7 @@
 <entityname.mudraptoregg>Huevo de fangorraptor</entityname.mudraptoregg>
 <entitydescription.mudraptoregg>Un huevo de fangorraptor palpitante y viscoso. Las fauces abiertas de la parte superior del huevo parecen buscar algo que comer.</entitydescription.mudraptoregg>
 
-<!--<Server lobby 2.0>-->
+<!-- Server lobby 2.0 -->
 <serverlisttab.all>Todos los servidores</serverlisttab.all>
 <serverlisttab.favorites>Favoritos</serverlisttab.favorites>
 <serverlisttab.recent>Recientes</serverlisttab.recent>
@@ -3020,7 +3011,7 @@
 <servertag.serious>Serio</servertag.serious>
 <servertagdescription.serious>La tripulación debe concentrarse en completar su objetivo y en trabajar en equipo de manera eficiente. Nada de perder el tiempo con tonterías.</servertagdescription.serious>
 <servertag.roleplay>Juego de rol</servertag.roleplay>
-<servertagdescription.roleplay>La tripulación debe tratar de comportarse como si fuera la tripulación real de un submarino. La cadena de mando es importante, al igual que asumir tus responsabilidades y seguir órdenes. Se deben evitar los comentarios fuera de personaje cuando haya una ronda en marcha.</servertagdescription.roleplay>
+<servertagdescription.roleplay>La tripulación debe tratar de comportarse como si fuera la tripulación real de un submarino. La cadena de mando es importante, al igual que asumir tus responsabilidades y seguir órdenes. Se deben evitar los comentarios fuera delugar cuando haya una ronda en marcha.</servertagdescription.roleplay>
 <servertag.somethingdifferent>Algo diferente</servertag.somethingdifferent>
 <servertagdescription.somethingdifferent>La partida difiere considerablemente de la dinámica habitual de Barotrauma. Servidores con modificaciones, submarinos muy poco convencionales, batallas campales, carreras de batiscafos, mapas con carreras a muerte... ¡Todo vale!</servertagdescription.somethingdifferent>
 <servertag.rampage>Alboroto</servertag.rampage>
@@ -3139,10 +3130,4 @@
 <easterbunny_goalinfotext_3>Haz todo lo posible por que el fangorraptor sobreviva al menos 3 minutos.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>¡Mec, mec! Ha sido desternillante. Al hombre pintado le va a encantar cuando se entere de cómo ha ido la cosa.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Escapa:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>¿Seguro que quieres volver al menú principal? Se perderán todos los progresos no guardados.</pausemenuquitverification>
-<leveldifficulty>Dificultad</leveldifficulty>
-<connection.set_text>establecer_texto</connection.set_text>
-
 </infotexts>
