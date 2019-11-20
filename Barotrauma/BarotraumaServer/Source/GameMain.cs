@@ -83,6 +83,8 @@ namespace Barotrauma
 
             Config = new GameSettings();
 
+            Md5Hash.LoadCache();
+
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
             

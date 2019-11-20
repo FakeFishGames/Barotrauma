@@ -450,7 +450,7 @@ namespace Barotrauma
 
             hashTask = new Task(() =>
             {
-                hash = new Md5Hash(doc);
+                hash = new Md5Hash(doc, filePath);
             });
             hashTask.Start();
         }
@@ -1629,7 +1629,7 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement("Submarine"));
             SaveToXElement(doc.Root);
 
-            hash = new Md5Hash(doc);
+            hash = new Md5Hash(doc, filePath, false);
             doc.Root.Add(new XAttribute("md5hash", hash.Hash));
             if (previewImage != null)
             {
