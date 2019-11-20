@@ -1470,6 +1470,7 @@ namespace Barotrauma
 
         public bool CanSeeCharacter(Character target)
         {
+            if (target.Removed) { return false; }
             Limb seeingLimb = GetSeeingLimb();
             return target.AnimController.Limbs.Any(l => CanSeeTarget(l, seeingLimb));
         }
