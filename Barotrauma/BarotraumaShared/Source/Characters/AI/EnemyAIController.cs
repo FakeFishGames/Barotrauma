@@ -856,32 +856,35 @@ namespace Barotrauma
                 if (pathSteering.CurrentPath != null)
                 {
                     // Attack doors
-                    if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
+                    if (canAttackSub)
                     {
-                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget);
-                        return;
+                        // If the target is in the same hull, there shouldn't be any doors blocking the path
+                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                            if (door != null && !door.IsOpen && door.Item.Condition > 0)
+                            {
+                                if (SelectedAiTarget != door.Item.AiTarget)
+                                {
+                                    SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
+                                    return;
+                                }
+                            }
+                        }
                     }
-                    else if (canAttackSub && pathSteering.CurrentPath.NextNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget)
+                    // Steer towards the target if in the same room and swimming
+                    if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
                     {
-                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget);
-                        return;
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
                     else
                     {
-                        // Steer towards the target if in the same room and swimming
-                        if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        SteeringManager.SteeringSeek(steerPos, 2);
+                        // Switch to Idle when cannot reach the target and if cannot damage the walls
+                        if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                         {
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                        }
-                        else
-                        {
-                            SteeringManager.SteeringSeek(steerPos, 2);
-                            // Switch to Idle when cannot reach the target and if cannot damage the walls
-                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                            {
-                                State = AIState.Idle;
-                                return;
-                            }
+                            State = AIState.Idle;
+                            return;
                         }
                     }
                 }
