@@ -53,6 +53,10 @@ namespace Barotrauma
         //components that determine the functionality of the item
         private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
         private List<ItemComponent> components;
+        /// <summary>
+        /// Components that are Active or need to be updated for some other reason (status effects, sounds)
+        /// </summary>
+        private readonly List<ItemComponent> updateableComponents = new List<ItemComponent>();
         private List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
@@ -805,6 +809,34 @@ namespace Barotrauma
         {
             allPropertyObjects.Add(component);
             components.Add(component);
+
+            if (component.IsActive)
+            {
+                updateableComponents.Add(component);
+            }
+
+            component.OnActiveStateChanged += (bool isActive) => 
+            {
+                bool hasSounds = false;
+#if CLIENT
+                hasSounds = component.HasSounds;
+#endif
+                //component doesn't need to be updated if it isn't active, doesn't have a parent that could activate it, 
+                //nor status effects, sounds that conditionals that would need to run
+                if (!isActive && 
+                    !hasSounds &&
+                    component.Parent == null &&
+                    (component.IsActiveConditionals == null || !component.IsActiveConditionals.Any()) &&
+                    (component.statusEffectLists == null || !component.statusEffectLists.Any()))
+                {
+                    if (updateableComponents.Contains(component)) { updateableComponents.Remove(component); }
+                }
+                else
+                {
+                    if (!updateableComponents.Contains(component)) { updateableComponents.Add(component); }
+                }
+            };
+
             Type type = component.GetType();
             if (!componentsByType.ContainsKey(type))
             {
@@ -846,7 +878,7 @@ namespace Barotrauma
                 return (T)component;
             }
             
-            return default(T);
+            return default;
         }
 
         public IEnumerable<T> GetComponents<T>()
@@ -865,7 +897,6 @@ namespace Barotrauma
 
             contained.Container = null;            
         }
-
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
@@ -1216,48 +1247,54 @@ namespace Barotrauma
                 {
                     SendPendingNetworkUpdates();
                 }                
-            }            
-            
+            }
+
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
-            foreach (ItemComponent ic in components)
+            for (int i = 0; i < updateableComponents.Count; i++)
             {
+                ItemComponent ic = updateableComponents[i];
+
                 if (ic.Parent != null) { ic.IsActive = ic.Parent.IsActive; }
                 if (ic.IsActiveConditionals != null)
                 {
                     ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
                 }
 #if CLIENT
-                ic.UpdateSounds();
-                if (!ic.WasUsed)
+                if (ic.HasSounds)
                 {
-                    ic.StopSounds(ActionType.OnUse);
-                    ic.StopSounds(ActionType.OnSecondaryUse);
+                    ic.UpdateSounds();
+                    if (!ic.WasUsed)
+                    {
+                        ic.StopSounds(ActionType.OnUse);
+                        ic.StopSounds(ActionType.OnSecondaryUse);
+                    }
                 }
 #endif
                 ic.WasUsed = false;
 
                 ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime);
 
-                if (!ic.IsActive) continue;
-
-                if (broken)
+                if (ic.IsActive)
                 {
-                    ic.UpdateBroken(deltaTime, cam);
-                }
-                else
-                {
-                    ic.Update(deltaTime, cam);
-#if CLIENT
-                    if (ic.IsActive)
+                    if (broken)
                     {
-                        if (ic.IsActiveTimer > 0.02f)
-                        {
-                            ic.PlaySound(ActionType.OnActive);
-                        }
-                        ic.IsActiveTimer += deltaTime;
+                        ic.UpdateBroken(deltaTime, cam);
                     }
+                    else
+                    {
+                        ic.Update(deltaTime, cam);
+#if CLIENT
+                        if (ic.IsActive)
+                        {
+                            if (ic.IsActiveTimer > 0.02f)
+                            {
+                                ic.PlaySound(ActionType.OnActive);
+                            }
+                            ic.IsActiveTimer += deltaTime;
+                        }
 #endif
+                    }
                 }
             }
 
@@ -1296,10 +1333,17 @@ namespace Barotrauma
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
 
-            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
+            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed)
+            {
 
-            ApplyWaterForces();
-            CurrentHull?.ApplyFlowForces(deltaTime, this);
+            }
+            else
+            {
+                ApplyWaterForces();
+                CurrentHull?.ApplyFlowForces(deltaTime, this);
+
+            }
+
         }
                 
         public void UpdateTransform()

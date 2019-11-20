@@ -68,6 +68,8 @@ namespace Barotrauma.Items.Components
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
+        public Action<bool> OnActiveStateChanged;
+
         public float IsActiveTimer;
         public virtual bool IsActive
         {
@@ -84,6 +86,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #endif
+                if (value != IsActive) { OnActiveStateChanged?.Invoke(value); }
                 isActive = value;
             }
         }
