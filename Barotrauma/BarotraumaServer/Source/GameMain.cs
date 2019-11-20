@@ -189,6 +189,13 @@ namespace Barotrauma
                 ownerKey = 0;
             }
             
+#if DEBUG
+            foreach (string s in CommandLineArgs)
+            {
+                Console.WriteLine(s);
+            }
+#endif
+
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
                 switch (CommandLineArgs[i].Trim())
