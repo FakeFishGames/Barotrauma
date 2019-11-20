@@ -611,6 +611,7 @@ namespace Barotrauma
             }
 
             bool canAttack = true;
+            bool pursue = false;
             if (IsCoolDownRunning)
             {
                 switch (AttackingLimb.attack.AfterAttack)
@@ -623,6 +624,7 @@ namespace Barotrauma
                             if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                             {
                                 canAttack = false;
+                                pursue = true;
                             }
                             else
                             {
@@ -661,6 +663,7 @@ namespace Barotrauma
                                         if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                                         {
                                             canAttack = false;
+                                            pursue = true;
                                         }
                                         else
                                         {
@@ -866,7 +869,7 @@ namespace Barotrauma
                     else
                     {
                         // Steer towards the target if in the same room and swimming
-                        if (Character.AnimController.InWater && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
                         {
                             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                         }
