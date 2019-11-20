@@ -3800,4 +3800,8 @@
   <serveroffline>The server seems to be offline.</serveroffline>
 
   <serverlog.wiring>Wiring</serverlog.wiring>
+
+	<!--Keyboard welcome msg-->
+	<keyboardwelcomemsg.humpback>Type 'on' or 'off' to connect batteries to power grid or disconnect them respectively. Enter a number from 0 to 100 to set recharge rate for each battery at once.</keyboardwelcomemsg.humpback>
+
 </infotexts>
