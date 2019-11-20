@@ -438,7 +438,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
-                if (levelResource != null && levelResource.IsActive &&
+                if (levelResource != null && levelResource.Attached &&
                     levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {
