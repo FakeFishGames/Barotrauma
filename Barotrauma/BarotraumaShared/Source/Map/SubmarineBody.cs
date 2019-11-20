@@ -291,7 +291,7 @@ namespace Barotrauma
 
             //-------------------------
 
-            if (Body.FarseerBody.IsStatic) { return; }
+            if (Body.FarseerBody.BodyType == BodyType.Static) { return; }
             
             ClientUpdatePosition(deltaTime);
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }

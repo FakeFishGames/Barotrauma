@@ -836,7 +836,7 @@ namespace Barotrauma
                 MathHelper.Clamp(targetRotation - nextAngle, -MathHelper.Pi, MathHelper.Pi);
             float torque = angle * 60.0f * (force / 100.0f);
 
-            if (body.IsKinematic)
+            if (body.BodyType == BodyType.Kinematic)
             {
                 if (!IsValidValue(torque, "torque")) return;
                 body.AngularVelocity = torque;
