@@ -909,20 +909,6 @@ namespace Barotrauma
             GameMain.World.ProcessChanges();
         }
 
-        private bool IsVanillaSub(Submarine sub)
-        {
-            if (sub == null) { return false; }
-
-            var vanilla = GameMain.VanillaContent;
-            if (vanilla != null)
-            {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
-                string pathToCompare = sub.FilePath.Replace(@"\", @"/").ToLowerInvariant();
-                return (vanillaSubs.Any(s => s.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare));
-            }
-            return false;
-        }
-
         private bool SaveSub(GUIButton button, object obj)
         {
             if (string.IsNullOrWhiteSpace(nameBox.Text))

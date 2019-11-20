@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class MapEntityPrefab
+    partial class MapEntityPrefab : IDisposable
     {
         public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {

@@ -1008,8 +1008,15 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUITickBox tickBox)
         {
-            ContentPackageSelectionDirty = true;
             var contentPackage = tickBox.UserData as ContentPackage;
+
+            var items = contentPackage.GetFilesOfType(ContentType.Item);
+            var characters = contentPackage.GetFilesOfType(ContentType.Character);
+            var subs = contentPackage.GetFilesOfType(ContentType.Submarine);
+            //TODO: remove ContentType.None?
+            var none = contentPackage.GetFilesOfType(ContentType.None);
+
+            ContentPackageSelectionDirty &= contentPackage.Files.Count > (items.Count() + characters.Count() + subs.Count() + none.Count());
             if (contentPackage.CorePackage)
             {
                 if (tickBox.Selected)
@@ -1043,7 +1050,42 @@ namespace Barotrauma
                     DeselectContentPackage(contentPackage);
                 }
             }
-            if (contentPackage.GetFilesOfType(ContentType.Submarine).Any()) { Submarine.RefreshSavedSubs(); }
+            if (subs.Any()) { Submarine.RefreshSavedSubs(); }
+            if (items.Any())
+            {
+                if (tickBox.Selected)
+                {
+                    foreach (var file in items)
+                    {
+                        ItemPrefab.LoadFromFile(file);
+                    }
+                }
+                else
+                {
+                    foreach (var file in items)
+                    {
+                        ItemPrefab.Remove(file);
+                    }
+                }
+                ItemPrefab.InitFabricationRecipes();
+            }
+            if (characters.Any())
+            {
+                if (tickBox.Selected)
+                {
+                    foreach (var file in characters)
+                    {
+                        Character.AddConfigFile(file);
+                    }
+                }
+                else
+                {
+                    foreach (var file in characters)
+                    {
+                        Character.RemoveConfigFile(file);
+                    }
+                }
+            }
             UnsavedSettings = true;
             return true;
         }

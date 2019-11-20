@@ -224,7 +224,7 @@ namespace Barotrauma
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
-                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
+                //contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
             }
         }
@@ -234,7 +234,7 @@ namespace Barotrauma
             if (SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Remove(contentPackage);
-                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
+                //contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
             }
         }

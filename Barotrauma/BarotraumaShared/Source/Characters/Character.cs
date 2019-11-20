@@ -891,8 +891,26 @@ namespace Barotrauma
             return AddConfigFile(file, forceOverride);
         }
 
-        private static bool AddConfigFile(string file, bool forceOverride = false)
+        public static void RemoveConfigFile(string file)
         {
+            if (configFiles.ContainsKey(file))
+            {
+                configFiles.Remove(file);
+                foreach (var kpv in configFilePaths.ToList())
+                {
+                    if (kpv.Value == file)
+                    {
+                        configFilePaths.Remove(kpv.Key);
+                    }
+                }
+            }
+        }
+
+        public static bool AddConfigFile(string file, bool forceOverride = false)
+        {
+            RemoveConfigFile(file);
+            DebugConsole.NewMessage(file);
+
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null)
             {

@@ -128,7 +128,7 @@ namespace Barotrauma
 
     partial class ItemPrefab : MapEntityPrefab
     {
-        private readonly string configFile;
+        public readonly string ConfigFile;
         
         //default size
         protected Vector2 size;                
@@ -156,11 +156,6 @@ namespace Barotrauma
         /// Is this prefab overriding a prefab in another content package
         /// </summary>
         public bool IsOverride;
-
-        public string ConfigFile
-        {
-            get { return configFile; }
-        }
 
         public XElement ConfigElement
         {
@@ -436,82 +431,97 @@ namespace Barotrauma
 
         }
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void Remove(string filePath)
         {
-            if (GameSettings.VerboseLogging)
+            var prefabs = ItemPrefab.List.Where(p => p is ItemPrefab ip && ip.ConfigFile == filePath).Select(p => p as ItemPrefab).ToList();
+            foreach (var itemPrefab in prefabs)
             {
-                DebugConsole.Log("Loading item prefabs: ");
+                itemPrefab.Dispose();
             }
+        }
 
-            foreach (string filePath in filePaths)
+        public static void LoadFromFile(string filePath)
+        {
+            DebugConsole.Log("*** " + filePath + " ***");
+            Remove(filePath);
+
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null) { return; }
+
+            var rootElement = doc.Root;
+            switch (rootElement.Name.ToString().ToLowerInvariant())
             {
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.Log("*** " + filePath + " ***");
-                }
-
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { return; }
-
-                var rootElement = doc.Root;
-                switch (rootElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "item":
-                        new ItemPrefab(rootElement, filePath, false);
-                        break;
-                    case "items":
-                        foreach (var element in rootElement.Elements())
+                case "item":
+                    new ItemPrefab(rootElement, filePath, false);
+                    break;
+                case "items":
+                    foreach (var element in rootElement.Elements())
+                    {
+                        if (element.IsOverride())
                         {
-                            if (element.IsOverride())
+                            var itemElement = element.GetChildElement("item");
+                            if (itemElement != null)
                             {
-                                var itemElement = element.GetChildElement("item");
-                                if (itemElement != null)
-                                {
-                                    new ItemPrefab(itemElement, filePath, true)
-                                    {
-                                        IsOverride = true
-                                    };
-                                }
-                                else
-                                {
-                                    DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {filePath}");
-                                }
-                            }
-                            else
-                            {
-                                new ItemPrefab(element, filePath, false);
-                            }
-                        }
-                        break;
-                    case "override":
-                        var items = rootElement.GetChildElement("items");
-                        if (items != null)
-                        {
-                            foreach (var element in items.Elements())
-                            {
-                                new ItemPrefab(element, filePath, true)
+                                new ItemPrefab(itemElement, filePath, true)
                                 {
                                     IsOverride = true
                                 };
                             }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {filePath}");
+                            }
                         }
-                        foreach (var element in rootElement.GetChildElements("item"))
+                        else
                         {
-                            new ItemPrefab(element, filePath, true);
+                            new ItemPrefab(element, filePath, false);
                         }
-                        break;
-                    default:
-                        DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {filePath}");
-                        break;
-                }
+                    }
+                    break;
+                case "override":
+                    var items = rootElement.GetChildElement("items");
+                    if (items != null)
+                    {
+                        foreach (var element in items.Elements())
+                        {
+                            new ItemPrefab(element, filePath, true)
+                            {
+                                IsOverride = true
+                            };
+                        }
+                    }
+                    foreach (var element in rootElement.GetChildElements("item"))
+                    {
+                        new ItemPrefab(element, filePath, true);
+                    }
+                    break;
+                default:
+                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {filePath}");
+                    break;
+            }
+        }
+
+        public static void LoadAll(IEnumerable<string> filePaths)
+        {
+            DebugConsole.Log("Loading item prefabs: ");
+
+            foreach (string filePath in filePaths)
+            {
+                LoadFromFile(filePath);
             }
 
             //initialize item requirements for fabrication recipes
             //(has to be done after all the item prefabs have been loaded, because the 
             //recipe ingredients may not have been loaded yet when loading the prefab)
+            InitFabricationRecipes();
+        }
+
+        public static void InitFabricationRecipes()
+        {
             foreach (MapEntityPrefab me in List)
             {
                 if (!(me is ItemPrefab itemPrefab)) { continue; }
+                itemPrefab.FabricationRecipes.Clear();
                 foreach (XElement fabricationRecipe in itemPrefab.fabricationRecipeElements)
                 {
                     itemPrefab.FabricationRecipes.Add(new FabricationRecipe(fabricationRecipe, itemPrefab));
@@ -521,7 +531,7 @@ namespace Barotrauma
 
         public ItemPrefab(XElement element, string filePath, bool allowOverriding)
         {
-            configFile = filePath;
+            ConfigFile = filePath;
             ConfigElement = element;
 
             OriginalName = element.GetAttributeString("name", "");

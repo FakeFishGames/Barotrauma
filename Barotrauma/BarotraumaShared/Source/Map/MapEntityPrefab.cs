@@ -13,7 +13,7 @@ namespace Barotrauma
         Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64, ItemAssembly = 128, Legacy = 256
     }
 
-    partial class MapEntityPrefab
+    partial class MapEntityPrefab : IDisposable
     {
         public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
 
@@ -165,6 +165,14 @@ namespace Barotrauma
             };
             List.Add(ep);
             ep.Aliases = new HashSet<string> { "spawnpoint" };
+        }
+
+        partial void PlatformDispose();
+
+        public virtual void Dispose()
+        {
+            PlatformDispose();
+            if (List.Contains(this)) { List.Remove(this); }
         }
 
         public MapEntityPrefab()
