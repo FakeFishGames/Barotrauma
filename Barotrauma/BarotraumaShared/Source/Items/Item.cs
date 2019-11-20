@@ -1313,9 +1313,8 @@ namespace Barotrauma
                         return;
                     }
                 }
+                UpdateNetPosition(deltaTime);
             }
-
-            UpdateNetPosition(deltaTime);
 
             inWater = IsInWater();
             bool waterProof = WaterProof;
@@ -1333,17 +1332,11 @@ namespace Barotrauma
                 ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             }
 
-            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed)
-            {
-
-            }
-            else
+            if (body != null && body.Enabled && inWater && ParentInventory == null && !Removed)
             {
                 ApplyWaterForces();
                 CurrentHull?.ApplyFlowForces(deltaTime, this);
-
             }
-
         }
                 
         public void UpdateTransform()
