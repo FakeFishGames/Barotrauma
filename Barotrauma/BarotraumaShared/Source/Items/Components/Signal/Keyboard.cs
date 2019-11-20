@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     {
         private const int MaxMessageLength = 150;
 
-        [InGameEditable, Serialize("", true, "Message to be displayed on the keyboard display when it is first opened.")]
+        [InGameEditable, Serialize("", true, "Message to be displayed on the keyboard display when it is first opened.", translationTextTag = "keyboardwelcomemsg.")]
         public string WelcomeMessage { get; set; }
         private string OutputValue { get; set; }
 

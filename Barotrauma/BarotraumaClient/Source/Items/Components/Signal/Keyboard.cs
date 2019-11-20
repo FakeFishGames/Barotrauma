@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             if (!string.IsNullOrEmpty(WelcomeMessage))
             {
-                ShowOnDisplay(WelcomeMessage);
+                ShowOnDisplay(TextManager.Get(WelcomeMessage));
             }
         }
 
