@@ -50,9 +50,9 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            if (!string.IsNullOrEmpty(WelcomeMessage))
+            if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
             {
-                ShowOnDisplay(WelcomeMessage);
+                ShowOnDisplay(DisplayedWelcomeMessage);
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Oxygen Tank" identifier="oxygentank" category="Equipment,Misc" Tags="oxygentank,smallitem,oxygensource" cargocontaineridentifier="metalcrate" preferredcontainers="oxygengenerator,oxygentankcontainer" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="oxygentank" category="Equipment,Misc" Tags="oxygentank,smallitem,oxygensource" cargocontaineridentifier="metalcrate" preferredcontainers="oxygengenerator,oxygentankcontainer" scale="0.3" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -27,7 +27,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true" />
     </Holdable>
   </Item>
-  <Item name="Oxygenite Tank" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" preferredcontainers="oxygengenerator,oxygentankcontainer" description="A Tank containing liquid Oxygenite." scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" preferredcontainers="oxygengenerator,oxygentankcontainer" description="" scale="0.3" impactsoundtag="impact_metal_light">
     <Deconstruct time="10">
       <Item identifier="aluminium" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
@@ -53,7 +53,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Diving Mask" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving,divingmask" preferredcontainers="suppliescontainer,divinggearcontainer" cargocontaineridentifier="metalcrate" description="Small enough to carry around in case of need, but won't protect you from the water pressure in the event of a full-blown hull breach." impactsoundtag="impact_metal_light">
+  <Item name="" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving,divingmask" preferredcontainers="suppliescontainer,divinggearcontainer" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
     <Price locationtype="Research" buyprice="55" />
     <Price locationtype="City" buyprice="55" />
     <Price locationtype="Military" buyprice="55" />
@@ -100,7 +100,7 @@
       <Containable items="oxygensource,weldingfuel" />
     </ItemContainer>
   </Item>
-  <Item name="Diving Suit" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" preferredcontainers="divingsuitcontainer" scale="0.5" fireproof="true" description="An atmospheric diving suit capable of withstanding the immense pressure under Europa's crust." impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" preferredcontainers="divingsuitcontainer" scale="0.5" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="City" buyprice="225" />
     <Price locationtype="Military" buyprice="225" />
@@ -215,7 +215,7 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
-  <Item name="Underwater Scooter" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" preferredcontainers="divinggearcontainer" cargocontaineridentifier="metalcrate" description="A battery-powered underwater propulsion device." Scale="0.32" impactsoundtag="impact_metal_light" isshootable="true">
+  <Item name="" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" preferredcontainers="divinggearcontainer" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light" isshootable="true">
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Military" buyprice="150" />

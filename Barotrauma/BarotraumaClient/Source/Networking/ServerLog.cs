@@ -50,10 +50,10 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
                 {
                     Selected = true,
-                    TextColor = messageColor[(int)msgType],
+                    TextColor = messageColor[msgType],
                     OnSelected = (GUITickBox tb) =>
                     {
                         msgTypeHidden[(int)msgType] = !tb.Selected;
@@ -110,10 +110,10 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 16), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[(int)msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 16), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
                 {
                     Selected = true,
-                    TextColor = messageColor[(int)msgType],
+                    TextColor = messageColor[msgType],
                     OnSelected = (GUITickBox tb) =>
                     {
                         msgTypeHidden[(int)msgType] = !tb.Selected;
@@ -149,7 +149,7 @@ namespace Barotrauma.Networking
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
                 line.Text, wrap: true, font: GUI.SmallFont)
             {
-                TextColor = messageColor[(int)line.Type],
+                TextColor = messageColor[line.Type],
                 Visible = !msgTypeHidden[(int)line.Type],
                 CanBeFocused = false,
                 UserData = line

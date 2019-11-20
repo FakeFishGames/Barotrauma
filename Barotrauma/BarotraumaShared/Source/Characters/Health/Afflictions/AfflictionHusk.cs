@@ -106,6 +106,9 @@ namespace Barotrauma
                     character.NeedsAir = false;
                     character.SetStun(0.5f);
                 }
+#if CLIENT
+                character.AnimController.GetLimb(LimbType.Head).EnableHuskSprite = true;
+#endif
             }
         }
 
@@ -116,6 +119,9 @@ namespace Barotrauma
             {
                 huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
                 huskAppendage = null;
+#if CLIENT
+                character.AnimController.GetLimb(LimbType.Head).EnableHuskSprite = false;
+#endif
             }
         }
 
@@ -289,7 +295,7 @@ namespace Barotrauma
         public static string GetNonHuskedSpeciesName(string huskedSpeciesName, AfflictionPrefabHusk prefab)
         {
             string nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
-            return huskedSpeciesName.Remove(nonTag);
+            return huskedSpeciesName.ToLowerInvariant().Remove(nonTag);
         }
     }
 }

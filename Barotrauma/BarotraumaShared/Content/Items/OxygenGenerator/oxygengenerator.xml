@@ -1,6 +1,6 @@
 ﻿<Items>
   <Item
-    name="Oxygen Generator"
+    name=""
     identifier="oxygenerator"
     tags="oxygengenerator"
     category="Machine"
@@ -76,7 +76,7 @@
   </Item>
 
   <Item
-    name="Shuttle Oxygen Generator"
+    name=""
     identifier="shuttleoxygenerator"
     tags="oxygengenerator"
     category="Machine"
@@ -121,7 +121,7 @@
   </Item>
 
   <Item
-    name="Vent"
+    name=""
     identifier="vent"
     tags="vent"
     category="Machine"
@@ -140,7 +140,7 @@
   </Item>
 
   <Item
-    name="Loose Vent"
+    name=""
     identifier="loosevent"
     tags="vent,hidden"
     category="Machine"

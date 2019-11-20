@@ -139,7 +139,7 @@ namespace Barotrauma
             }
             if (seekAmmunition == null)
             {
-                if (TryArm())
+                if (TryArm() && Enemy != null && !Enemy.Removed)
                 {
                     OperateWeapon(deltaTime);
                 }

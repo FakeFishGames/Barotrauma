@@ -130,6 +130,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+#if SERVER
+                if (CurrentFixer != character || currentFixerAction != action)
+                {
+                    item.CreateServerEvent(this);
+                }
+#endif
                 CurrentFixer = character;
                 CurrentFixerAction = action;
                 return true;
@@ -140,12 +146,15 @@ namespace Barotrauma.Items.Components
         {
             if (CurrentFixer == character)
             {
+#if SERVER
+                if (CurrentFixer != character || currentFixerAction != FixActions.None)
+                {
+                    item.CreateServerEvent(this);
+                }
+#endif
                 CurrentFixer.AnimController.Anim = AnimController.Animation.None;
                 CurrentFixer = null;
                 currentFixerAction = FixActions.None;
-#if SERVER
-                item.CreateServerEvent(this);
-#endif
 #if CLIENT
                 repairSoundChannel?.FadeOutAndDispose();
                 repairSoundChannel = null;                
@@ -214,15 +223,15 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            UpdateFixAnimation(CurrentFixer);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
             if (CurrentFixer != null && (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
                 StopRepairing(CurrentFixer);
                 return;
             }
-
-            UpdateFixAnimation(CurrentFixer);
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
 

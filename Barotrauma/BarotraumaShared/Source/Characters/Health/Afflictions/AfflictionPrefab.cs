@@ -41,7 +41,7 @@ namespace Barotrauma
     {
         public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
         {
-            HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
+            HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null).ToLowerInvariant();
             if (HuskedSpeciesName == null)
             {
                 DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-    name="Label"
+    name=""
     identifier="label"
     interactdistance="0"
     resizehorizontal="true"
@@ -13,7 +13,7 @@
   </Item>
 
   <Item
-    name="Text Display"
+    name=""
     identifier="textdisplay">
 
     <Sprite texture="labels.png" depth="0.85" sourcerect="0,0,63,24"/>

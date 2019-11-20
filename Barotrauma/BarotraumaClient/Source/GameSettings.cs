@@ -22,8 +22,6 @@ namespace Barotrauma
 
         private readonly Point MinSupportedResolution = new Point(1024, 540);
 
-        private bool contentPackageSelectionDirty;
-
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
 
@@ -31,6 +29,12 @@ namespace Barotrauma
         private GUIButton[] tabButtons;
 
         public Action OnHUDScaleChanged;
+
+        public bool ContentPackageSelectionDirty
+        {
+            get;
+            private set;
+        }
 
         public GUIFrame SettingsFrame
         {
@@ -1004,7 +1008,7 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUITickBox tickBox)
         {
-            contentPackageSelectionDirty = true;
+            ContentPackageSelectionDirty = true;
             var contentPackage = tickBox.UserData as ContentPackage;
             if (contentPackage.CorePackage)
             {
@@ -1150,10 +1154,10 @@ namespace Barotrauma
         private bool ApplyClicked(GUIButton button, object userData)
         {
             ApplySettings();
-            if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
-            if (contentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+            if (Screen.Selected != GameMain.MainMenuScreen) { GUI.SettingsMenuOpen = false; }
+            if (ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredGeneric"));
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
             }
             return true;
         }

@@ -333,6 +333,7 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
+            base.UpdateBroken(deltaTime, cam);
             IsBroken = true;
         }
 

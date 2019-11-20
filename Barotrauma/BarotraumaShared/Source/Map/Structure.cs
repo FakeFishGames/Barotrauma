@@ -751,16 +751,18 @@ namespace Barotrauma
             var section = Sections[sectionIndex];
 
 #if CLIENT
-            float particleAmount = Math.Min(Health - section.damage, damage) * Rand.Range(0.01f, 1.0f);
-
-            particleAmount = Math.Min(particleAmount + Rand.Range(-5, 1), 5);
+            float dmg = Math.Min(Health - section.damage, damage);
+            float particleAmount = MathHelper.Lerp(0, 25, MathUtils.InverseLerp(0, 100, dmg * Rand.Range(0.75f, 1.25f)));
             for (int i = 0; i < particleAmount; i++)
             {
                 Vector2 particlePos = new Vector2(
                     Rand.Range(section.rect.X, section.rect.Right),
                     Rand.Range(section.rect.Y - section.rect.Height, section.rect.Y));
 
-                if (Submarine != null) particlePos += Submarine.DrawPosition;
+                if (Submarine != null)
+                {
+                    particlePos += Submarine.DrawPosition;
+                }
                 
                 var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)));
                 if (particle == null) break;

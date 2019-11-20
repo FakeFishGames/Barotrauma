@@ -6,8 +6,25 @@ namespace Barotrauma.Items.Components
     {
         private const int MaxMessageLength = 150;
 
-        [InGameEditable, Serialize("", true, "Message to be displayed on the keyboard display when it is first opened.")]
-        public string WelcomeMessage { get; set; }
+        public string DisplayedWelcomeMessage
+        {
+            get;
+            private set;
+        }
+
+        private string welcomeMessage;
+        [InGameEditable, Serialize("", true, "Message to be displayed on the keyboard display when it is first opened.", translationTextTag = "keyboardwelcomemsg.")]
+        public string WelcomeMessage
+        {
+            get { return welcomeMessage; }
+            set
+            {
+                if (welcomeMessage == value) { return; }
+                welcomeMessage = value;
+                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage;
+            }
+        }
+
         private string OutputValue { get; set; }
 
         public Keyboard(Item item, XElement element)

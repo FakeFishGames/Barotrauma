@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
             if (User == null || User.Removed)
             {
                 impactQueue.Enqueue(f2);
-                return false;
+                return true;
             }
 
             //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls

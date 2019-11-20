@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Security Officer's Uniform" identifier="securityuniform" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="Obey my authority!" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="securityuniform" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -24,7 +24,7 @@
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
   </Item>
-  <Item name="Body Armor" identifier="bodyarmor" category="Equipment" tags="smallitem" scale="0.35" cargocontaineridentifier="metalcrate" description="While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board." impactsoundtag="impact_soft">
+  <Item name="" identifier="bodyarmor" category="Equipment" tags="smallitem" scale="0.35" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.35" />
     <Price locationtype="Military" buyprice="225" />
     <Price locationtype="City" buyprice="300" />
@@ -47,7 +47,7 @@
       <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
-  <Item name="Ballistic Helmet" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board." impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -63,10 +63,10 @@
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears_1.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="4,97,96,96" origin="0.5,0.5" />
+      <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears_1.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="4,97,96,96" origin="0.5,0.5" />
     </Wearable>
   </Item>
-  <Item name="Handcuffs" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -87,7 +87,7 @@
     </Wearable>
   </Item>
   <!-- 
-  <Item name="Riot Shield" identifier="riotshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="riotshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light">
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="225" />
     <Price locationtype="Outpost" buyprice="225" />

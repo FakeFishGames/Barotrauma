@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class ElectricalDischarger : Powered
     {
-        private static List<ElectricalDischarger> list = new List<ElectricalDischarger>();
+        private static readonly List<ElectricalDischarger> list = new List<ElectricalDischarger>();
         public static IEnumerable<ElectricalDischarger> List
         {
             get { return list; }
@@ -48,14 +48,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(100.0f, true, description: "How far the discharge can travel from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(500.0f, true, description: "How far the discharge can travel from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
             set;
         }
 
-        [Serialize(10.0f, true, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(25.0f, true, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;
@@ -127,20 +127,42 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             frameOffset = Rand.Int(electricitySprite.FrameCount);
 #endif
-            if (timer > 0.0f)
-            {
-                if (charging)
-                {
-                    if (Voltage > MinVoltage)
-                    {
-                        Discharge();
-                    }
-                }
-                timer -= deltaTime;
-            }
-            else
+            if (timer <= 0.0f)
             {
                 IsActive = false;
+                return;
+            }
+
+            timer -= deltaTime;
+            if (charging)
+            {
+                if (GetAvailableBatteryPower() >= powerConsumption)
+                {
+                    var batteries = item.GetConnectedComponents<PowerContainer>();
+                    float neededPower = powerConsumption;
+                    while (neededPower > 0.0001f && batteries.Count > 0)
+                    {
+                        batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                        float takePower = neededPower / batteries.Count;
+                        takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                        foreach (PowerContainer battery in batteries)
+                        {
+                            neededPower -= takePower;
+                            battery.Charge -= takePower / 3600.0f;
+    #if SERVER
+                            if (GameMain.Server != null)
+                            {
+                                battery.Item.CreateServerEvent(battery);
+                            }
+    #endif
+                        }
+                    }
+                    Discharge();
+                }
+                else if (Voltage > MinVoltage)
+                {
+                    Discharge();
+                }
             }
         }
 

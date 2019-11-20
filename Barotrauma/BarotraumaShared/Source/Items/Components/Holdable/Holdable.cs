@@ -8,11 +8,13 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Holdable : Pickable, IServerSerializable
+    partial class Holdable : Pickable, IServerSerializable, IClientSerializable
     {
+        const float MaxAttachDistance = 150.0f;
+
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
-        private Vector2[] scaledHandlePos;
+        private readonly Vector2[] scaledHandlePos;
 
         private InputType prevPickKey;
         private string prevMsg;
@@ -26,7 +28,7 @@ namespace Barotrauma.Items.Components
         private float swingState;
 
         private bool attachable, attached, attachedByDefault;
-        private PhysicsBody body;
+        private readonly PhysicsBody body;
         public PhysicsBody Pusher
         {
             get;
@@ -248,7 +250,7 @@ namespace Barotrauma.Items.Components
             }
 
             if (Pusher != null) { Pusher.Enabled = false; }
-            if (item.body != null){ item.body.Enabled = true; }
+            if (item.body != null) { item.body.Enabled = true; }
             IsActive = false;
 
             if (picker == null)
@@ -263,7 +265,6 @@ namespace Barotrauma.Items.Components
             {
                 item.body.ResetDynamics();
                 Limb heldHand, arm;
-                Vector2 diff = Vector2.Zero;
                 if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
                 {
                     heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
@@ -277,7 +278,7 @@ namespace Barotrauma.Items.Components
                 if (heldHand != null && arm != null)
                 {
                     //hand simPosition is actually in the wrist so need to move the item out from it slightly
-                    diff = new Vector2(
+                    Vector2 diff = new Vector2(
                         (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
                         (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
                     item.SetTransform(heldHand.SimPosition + diff, 0.0f);
@@ -475,22 +476,53 @@ namespace Barotrauma.Items.Components
             {
                 if (!character.IsKeyDown(InputType.Aim)) { return false; }
                 if (!CanBeAttached()) { return false; }
-#if SERVER
-                if (GameMain.Server != null)
+
+                if (GameMain.NetworkMember != null)
                 {
-                    item.CreateServerEvent(this);
-                    GameServer.Log(character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
-                }
+                    if (character != Character.Controlled)
+                    {
+                        return false;
+                    }
+                    else if (GameMain.NetworkMember.IsServer)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+#if CLIENT
+                        Vector2 attachPos = ConvertUnits.ToSimUnits(GetAttachPosition(character));
+                        GameMain.Client.CreateEntityEvent(item, new object[] 
+                        { 
+                            NetEntityEvent.Type.ComponentState, 
+                            item.GetComponentIndex(this), 
+                            attachPos
+                        });
 #endif
+                    }
+                    return false;
+                }
+                else
+                {
+                    item.Drop(character);
+                    item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f);
+                }
             }
 
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                if (character != null) { item.Drop(character); }
-                AttachToWall();
-            }
+            AttachToWall();           
 
             return true;
+        }
+
+        private Vector2 GetAttachPosition(Character user)
+        {
+            if (user == null) { return item.Position; }
+
+            Vector2 mouseDiff = user.CursorWorldPosition - user.WorldPosition;
+            mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
+
+            return new Vector2(
+                MathUtils.RoundTowardsClosest(user.Position.X + mouseDiff.X, Submarine.GridSize.X),
+                MathUtils.RoundTowardsClosest(user.Position.Y + mouseDiff.Y, Submarine.GridSize.Y));
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -620,55 +652,7 @@ namespace Barotrauma.Items.Components
             requiredItems = tempRequiredItems;
 
             return saveElement;
-        }
-        
-        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            base.ServerWrite(msg, c, extraData);
-            if (!attachable || body == null) { return; }
+        }       
 
-            msg.Write(Attached);
-            msg.Write(body.SimPosition.X);
-            msg.Write(body.SimPosition.Y);
-        }
-
-        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
-        {
-            base.ClientRead(type, msg, sendingTime);
-            bool shouldBeAttached = msg.ReadBoolean();
-            Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-
-            if (!attachable)
-            {
-                DebugConsole.ThrowError("Received an attachment event for an item that's not attachable.");
-                return;
-            }
-
-            if (shouldBeAttached)
-            {
-                if (!attached)
-                {
-                    Drop(false, null);
-                    item.SetTransform(simPosition, 0.0f);
-                    AttachToWall();
-                }
-            }
-            else
-            {
-                if (attached)
-                {
-                    DropConnectedWires(null);
-
-                    if (body != null)
-                    {
-                        item.body = body;
-                        item.body.Enabled = true;
-                    }
-                    IsActive = false;
-
-                    DeattachFromWall();
-                }
-            }
-        }
     }
 }

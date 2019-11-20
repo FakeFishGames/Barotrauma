@@ -303,6 +303,8 @@ namespace Barotrauma.Lights
             //draw characters to obstruct the highlighted items/characters and light sprites
             //---------------------------------------------------------------------------------------------------
 
+            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
+            SolidColorEffect.Parameters["color"].SetValue(Color.Black.ToVector4());
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character character in Character.CharacterList)
             {
@@ -526,7 +528,7 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.IsVisible(cam)) { c.Draw(spriteBatch, cam); }
+                if (c.IsVisible) { c.Draw(spriteBatch, cam); }
             }
             spriteBatch.End();
 

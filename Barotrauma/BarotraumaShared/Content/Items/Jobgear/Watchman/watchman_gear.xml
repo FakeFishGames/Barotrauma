@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Watchman Clothes" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />

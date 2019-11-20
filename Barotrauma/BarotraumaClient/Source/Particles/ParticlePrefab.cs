@@ -16,7 +16,13 @@ namespace Barotrauma.Particles
             get;
             private set;
         }
-                
+
+        public string DisplayName
+        {
+            get;
+            private set;
+        }
+
         [Editable(0.0f, float.MaxValue), Serialize(5.0f, false, description: "How many seconds the particle remains alive.")]
         public float LifeTime { get; private set; }
 
@@ -192,6 +198,7 @@ namespace Barotrauma.Particles
         public ParticlePrefab(XElement element)
         {
             Name = element.Name.ToString();
+            DisplayName = TextManager.Get("particle." + Name, true) ?? Name;
 
             Sprites = new List<Sprite>();
 

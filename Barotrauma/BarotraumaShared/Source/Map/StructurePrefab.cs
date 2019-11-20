@@ -198,12 +198,11 @@ namespace Barotrauma
                 name = element.GetAttributeString("name", "")
             };
             sp.ConfigElement = element;
-            if (string.IsNullOrEmpty(sp.name)) sp.name = element.Name.ToString();
             sp.identifier = element.GetAttributeString("identifier", "");
-
-            string translatedName = TextManager.Get("EntityName." + sp.identifier, true);
-            if (!string.IsNullOrEmpty(translatedName)) sp.name = translatedName;
-
+            if (string.IsNullOrEmpty(sp.name))
+            {
+                sp.name = TextManager.Get("EntityName." + sp.identifier, returnNull: true) ?? $"Not defined ({sp.identifier})";
+            }
             sp.Tags = new HashSet<string>();
             string joinedTags = element.GetAttributeString("tags", "");
             if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
@@ -279,8 +278,11 @@ namespace Barotrauma
             {
                 sp.Tags.Add("wall");
             }
-            string translatedDescription = TextManager.Get("EntityDescription." + sp.identifier, true);
-            if (!string.IsNullOrEmpty(translatedDescription)) sp.Description = translatedDescription;
+
+            if (string.IsNullOrEmpty(sp.Description))
+            {
+                sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
+            }
 
             //backwards compatibility
             if (element.Attribute("size") == null)

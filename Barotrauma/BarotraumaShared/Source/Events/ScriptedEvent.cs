@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -29,6 +31,11 @@ namespace Barotrauma
         public ScriptedEvent(ScriptedEventPrefab prefab)
         {
             this.prefab = prefab;
+        }
+        
+        public virtual IEnumerable<ContentFile> GetFilesToPreload()
+        {
+            return Enumerable.Empty<ContentFile>();
         }
 
         public virtual void Init(bool affectSubImmediately)

@@ -754,12 +754,17 @@ namespace Barotrauma
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
                     .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
+                string nonHuskedSpeciesName = string.Empty;
                 if (matchingAffliction == null)
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
-                    return;
+                    // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
+                    nonHuskedSpeciesName = IsHumanoid ? HumanSpeciesName : "crawler";
                 }
-                string nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                else
+                {
+                    nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                }
                 ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(nonHuskedSpeciesName) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(nonHuskedSpeciesName) as RagdollParams;
                 if (info == null)
                 {
@@ -836,6 +841,7 @@ namespace Barotrauma
 #if CLIENT
             head.LoadHuskSprite();
             head.LoadHerpesSprite();
+            head.UpdateWearableTypesToHide();
 #endif
         }
 
@@ -1464,6 +1470,7 @@ namespace Barotrauma
 
         public bool CanSeeCharacter(Character target)
         {
+            if (target.Removed) { return false; }
             Limb seeingLimb = GetSeeingLimb();
             return target.AnimController.Limbs.Any(l => CanSeeTarget(l, seeingLimb));
         }
@@ -1904,8 +1911,13 @@ namespace Barotrauma
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
                         FocusedCharacter = FindCharacterAtPosition(mouseSimPos);
-                        focusedItem = CanInteract ?
-                            FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
+                        float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
+                        if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
+                        {
+                            //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
+                            aimAssist = 0.0f;
+                        }
+                        focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, aimAssist) : null;
                         findFocusedTimer = 0.05f;
                     }
                 }

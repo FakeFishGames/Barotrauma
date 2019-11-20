@@ -267,8 +267,10 @@ namespace Barotrauma.Items.Components
                         IsActiveConditionals = IsActiveConditionals ?? new List<PropertyConditional>();
                         foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            IsActiveConditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                IsActiveConditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                     case "requireditem":
@@ -479,7 +481,14 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel.Dispose();
                 loopingSoundChannel = null;
             }
-            if (GuiFrame != null) GUI.RemoveFromUpdateList(GuiFrame, true);
+
+            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            {
+                channel.Dispose();
+                loopingSoundChannel = null;
+            }
+
+            if (GuiFrame != null) { GUI.RemoveFromUpdateList(GuiFrame, true); }
 #endif
 
             if (delayedCorrectionCoroutine != null)

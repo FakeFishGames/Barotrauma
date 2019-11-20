@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Depth Charge Tube" identifier="depthchargetube" tags="depthchargelauncher" category="Machine" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="depthchargeammosource" scale="0.5">
+  <Item name="" identifier="depthchargetube" tags="depthchargelauncher" category="Machine" focusonselected="true" offsetonselected="700" linkable="true" allowedlinks="depthchargeammosource" scale="0.5">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.01" sourcerect="259,1,85,149" origin="0.5,0.5" />
     <Turret canbeselected="false" linkable="true" characterusable="false" barrelpos="42, 149" rotationlimits="90,90" powerconsumption="0.0" />
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
@@ -9,14 +9,14 @@
       <input name="trigger_in" displayname="connection.turrettriggerin" />
     </ConnectionPanel>
   </Item>
-  <Item name="Depth Charge Loader" identifier="depthchargeloader" tags="depthchargeammosource" category="Machine" linkable="true" allowedlinks="depthchargelauncher" scale="0.5">
+  <Item name="" identifier="depthchargeloader" tags="depthchargeammosource" category="Machine" linkable="true" allowedlinks="depthchargelauncher" scale="0.5">
     <Sprite texture="TurretsAndDepthCharges.png" depth="0.8" sourcerect="354,2,125,188" origin="0.5,0.5" />
     <ItemContainer hideitems="false" drawinventory="true" capacity="1" itempos="62,-117" itemrotation="-90" canbeselected="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
       <Containable items="depthchargeammo" />
     </ItemContainer>
   </Item>
-  <Item name="Depth Charge Shell" identifier="depthchargeshell" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="depthchargeshell" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -46,7 +46,7 @@
       <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
-  <Item name="Nuclear Depth Charge" identifier="nucleardepthcharge" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="nucleardepthcharge" tags="depthchargeammo" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="300" />
     <Price locationtype="Outpost" buyprice="500" />
@@ -92,7 +92,7 @@
       <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
-  <Item name="Depth Decoy Shell" identifier="depthdecoyshell" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="depthdecoyshell" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Price locationtype="Outpost" buyprice="300" />
@@ -124,7 +124,7 @@
       <Containable items="smallitem,explosive" />
     </ItemContainer>
   </Item>
-  <Item name="Nuclear Depth Decoy" identifier="nucleardepthdecoy" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="nucleardepthdecoy" tags="depthchargeammo,decoy" category="Misc" sonarsize="5" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="300" />
     <Price locationtype="Outpost" buyprice="500" />

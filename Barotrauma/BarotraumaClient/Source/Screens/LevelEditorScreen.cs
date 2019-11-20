@@ -98,7 +98,7 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
-                TextManager.Get("LevelEditorSaveAll"))
+                TextManager.Get("editor.saveall"))
             {
                 OnClicked = (btn, obj) =>
                 {

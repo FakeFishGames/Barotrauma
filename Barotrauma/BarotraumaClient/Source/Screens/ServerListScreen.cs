@@ -426,7 +426,7 @@ namespace Barotrauma
                     ToolTip = mode.Name,
                     Selected = true,
                     OnSelected = (tickBox) => { FilterServers(); return true; },
-                    UserData = mode.Name
+                    UserData = mode.Identifier
                 };
                 gameModeTickBoxes.Add(selectionTick);
                 filterTextList.Add(selectionTick.TextBlock);
@@ -581,7 +581,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            //TODO: error message here?
+                            new GUIMessageBox("", TextManager.Get("ServerOffline"));
                             return false;
                         }
                     }
@@ -1632,7 +1632,14 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
+            if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))
+            {
+                string toolTip = TextManager.Get("ServerOffline");
+                serverContent.Children.ForEach(c => c.ToolTip = toolTip);
+                serverName.TextColor *= 0.8f;
+                serverPlayers.TextColor *= 0.8f;
+            }
+            else if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
             {
                 string toolTip = TextManager.Get("ServerListNoSteamQueryResponse");
                 compatibleBox.Selected = false;

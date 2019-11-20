@@ -135,7 +135,10 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            Item.TryInteract(character, true, true);
+                            if (!Item.TryInteract(character, true, true))
+                            {
+                                Abandon = true;
+                            }
                         }
                         if (previousCondition == -1)
                         {

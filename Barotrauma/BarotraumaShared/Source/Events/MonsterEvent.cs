@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class MonsterEvent : ScriptedEvent
     {
-        private string characterFile;
+        private string speciesName;
 
         private int minAmount, maxAmount;
 
@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private bool spawnDeep;
 
-        private Vector2 spawnPos;
+        private Vector2? spawnPos;
 
         private bool disallowed;
                 
@@ -29,7 +29,7 @@ namespace Barotrauma
         
         public override Vector2 DebugDrawPos
         {
-            get { return spawnPos; }
+            get { return spawnPos.HasValue ? spawnPos.Value : Vector2.Zero; }
         }
         
         public override string ToString()
@@ -51,7 +51,7 @@ namespace Barotrauma
         public MonsterEvent(ScriptedEventPrefab prefab)
             : base (prefab)
         {
-            characterFile = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
@@ -66,7 +66,7 @@ namespace Barotrauma
             }
 
             spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
-            characterFileName = Path.GetFileName(Path.GetDirectoryName(characterFile)).ToLower();
+            characterFileName = Path.GetFileName(Path.GetDirectoryName(speciesName)).ToLower();
 
             if (GameMain.NetworkMember != null)
             {
@@ -78,6 +78,12 @@ namespace Barotrauma
                     if (!GameMain.NetworkMember.ServerSettings.MonsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
                 }
             }
+        }
+
+        public override IEnumerable<ContentFile> GetFilesToPreload()
+        {
+            string path = Character.GetConfigFilePath(speciesName);
+            return new List<ContentFile>() { new ContentFile(path, ContentType.Character) };
         }
 
         public override bool CanAffectSubImmediately(Level level)
@@ -95,13 +101,12 @@ namespace Barotrauma
 
             return false;
         }
-        
+
         public override void Init(bool affectSubImmediately)
         {
-            FindSpawnPosition(affectSubImmediately);
             if (GameSettings.VerboseLogging)
             {
-                DebugConsole.NewMessage("Initialized MonsterEvent (" + characterFile + ")", Color.White);
+                DebugConsole.NewMessage("Initialized MonsterEvent (" + speciesName + ")", Color.White);
             }
         }
 
@@ -131,7 +136,7 @@ namespace Barotrauma
 
         private void FindSpawnPosition(bool affectSubImmediately)
         {
-            if (disallowed) return;
+            if (disallowed) { return; }
 
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
@@ -205,10 +210,14 @@ namespace Barotrauma
                 Finished();
                 return;
             }
-            
-            if (isFinished) return;
 
-            //isActive = false;
+            if (isFinished) { return; }
+
+            if (spawnPos == null)
+            {
+                FindSpawnPosition(affectSubImmediately: true);
+                spawnPending = true;
+            }
 
             bool spawnReady = false;
             if (spawnPending)
@@ -218,21 +227,23 @@ namespace Barotrauma
                 {
                     if (submarine.IsOutpost) { continue; }
                     float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos) < minDist * minDist) return;
+                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) return;
                 }
 
                 spawnPending = false;
 
                 //+1 because Range returns an integer less than the max value
-                int amount = Rand.Range(minAmount, maxAmount + 1, Rand.RandSync.Server);
+                int amount = Rand.Range(minAmount, maxAmount + 1);
                 monsters = new List<Character>();
                 float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
                 for (int i = 0; i < amount; i++)
                 {
                     CoroutineManager.InvokeAfter(() =>
                     {
-                        bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
-                        monsters.Add(Character.Create(characterFile, spawnPos + Rand.Vector(offsetAmount, Rand.RandSync.Server), i.ToString(), null, isClient, true, true));
+                        System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
+
+                        monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));
+
                         if (monsters.Count == amount)
                         {
                             spawnReady = true;
@@ -240,7 +251,7 @@ namespace Barotrauma
                             //otherwise it'll make the spawned characters act as a swarm
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                         }
-                    }, Rand.Range(0f, amount / 2, Rand.RandSync.Server));
+                    }, Rand.Range(0f, amount / 2));
                 }
             }
 

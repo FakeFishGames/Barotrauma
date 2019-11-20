@@ -119,7 +119,6 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                targetItem.TryInteract(character, forceSelectKey: true);
                 if (equip)
                 {
                     int targetSlot = -1;

@@ -96,12 +96,10 @@ namespace Barotrauma.Items.Components
                 DropConnectedWires(picker);
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
-
 #if CLIENT
                 if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItem);
-                PlaySound(ActionType.OnPicked, item.WorldPosition, picker);
+                PlaySound(ActionType.OnPicked,  picker);
 #endif
-
                 return true;
             }
 
