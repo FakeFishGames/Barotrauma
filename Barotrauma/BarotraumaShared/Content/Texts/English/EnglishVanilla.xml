@@ -3798,4 +3798,6 @@
   <serverrestartrequiredcontentpackage>Before hosting a server, you need to restart the game for the content package changes to take effect.</serverrestartrequiredcontentpackage>
 
   <serveroffline>The server seems to be offline.</serveroffline>
+
+  <serverlog.wiring>Wiring</serverlog.wiring>
 </infotexts>

@@ -528,6 +528,12 @@ namespace Barotrauma
             name = OriginalName;
             identifier = element.GetAttributeString("identifier", "");
 
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
+            {
+                category = MapEntityCategory.Misc;
+            }
+            Category = category;
+
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
@@ -542,6 +548,18 @@ namespace Barotrauma
                     name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
                 }
             }
+            else if (Category == MapEntityCategory.Legacy)
+            {
+                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefrore
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                }
+                else
+                {
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                }
+            }
 
             if (string.IsNullOrEmpty(name))
             {
@@ -554,12 +572,6 @@ namespace Barotrauma
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
             Aliases.Add(OriginalName.ToLowerInvariant());
-
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
-            {
-                category = MapEntityCategory.Misc;
-            }
-            Category = category;
             
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();

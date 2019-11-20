@@ -295,7 +295,7 @@ namespace Barotrauma
         public static string GetNonHuskedSpeciesName(string huskedSpeciesName, AfflictionPrefabHusk prefab)
         {
             string nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
-            return huskedSpeciesName.Remove(nonTag);
+            return huskedSpeciesName.ToLowerInvariant().Remove(nonTag);
         }
     }
 }

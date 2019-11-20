@@ -4,12 +4,17 @@ Anid
 Apep
 Arid Troma
 Attis
+Aylesbury
 Bast
 Berith
+Binnsmouth
 Bramerton
 Brunhes
 Chandelle Crevasse
+Dank
 Dolgovskoy
+Dunwice
+Erlangshen
 Gangpo
 Huronia
 Hyldemoer
@@ -23,12 +28,14 @@ Molovsk
 Moulin
 New Nanhui
 New Siberia
+Newellstead
 Nome
-Novyj Moskva
+Novaya Moskva
 Oshan
 Pastonia
 Randkluft
 Riville
+Salthole
 Seosu
 Serac
 Sermilik
@@ -37,10 +44,13 @@ Shinkonai
 Skaani
 Skadi's Cauldron
 Sontu
+St. May
 St. Musk
 Tara
 Thaw
+The Bucket
 Topol
+Undermoist
 Uusi-Turcu
 Vellamo's Crevasse
 Versas

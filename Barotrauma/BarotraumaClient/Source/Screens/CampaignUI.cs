@@ -947,7 +947,9 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(pi);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList);
+                    var priceInfo = pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation);
+                    if (priceInfo == null) { continue; }
+                    itemFrame = CreateItemFrame(pi, priceInfo, myItemList);
                 }
                 itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
                 existingItemFrames.Add(itemFrame);
