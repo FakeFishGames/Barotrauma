@@ -85,7 +85,7 @@
 <pausemenuretry>リトライ</pausemenuretry>
 <pausemenusavequit>保存して終了する</pausemenusavequit>
 <pausemenuquit>メインメニュー</pausemenuquit>
-<pausemenuquitverification>本当にゲームを終了してもよいですか？保存されていない進捗は全て失われます。</pausemenuquitverification>
+<pausemenuquitverification>メインメニューに戻りますか？保存されていないデータは全て失われます。</pausemenuquitverification>
 <pausemenuretryverification>あなたはミッションを中止し、以前保存したファイルをロードしますか？保存されていない進捗は全て失われます。</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>ミッションの種類</missiontype>
 <random>ランダム</random>
 <levelseed>レベルシード</levelseed>
-<leveldifficulty>レベルの難易度</leveldifficulty>
+<leveldifficulty>難易度</leveldifficulty>
 <traitors>裏切り者</traitors>
 <botcount>ボット数</botcount>
 <botspawnmode>ボット復活モード</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>壁に消火器を保持します。</entitydescription.extinguisherbracket>
 <entityname.weaponholder>武器ホルダー</entityname.weaponholder>
 <entitydescription.weaponholder>あなたの武器をきちんと詰め込む場所。</entitydescription.weaponholder>
-<entityname.windoweddoor>窓付きのドア</entityname.windoweddoor>
-<entitydescription.windoweddoor>統合したウィンドウを持つ引き戸。</entitydescription.windoweddoor>
-<entityname.hatch>ハッチ</entityname.hatch>
-<entitydescription.hatch>ドアであるが水平線の上の軸。</entitydescription.hatch>
 <entityname.dockingport>ドッキングポート</entityname.dockingport>
 <entitydescription.dockingport>垂直に位置合わせされたドッキングインタフェース。耐水のシールを形成し、潜水艦、シャトル、および場所の間の通路を可能にする別のドッキングポートにロックします。</entitydescription.dockingport>
 <entityname.dockinghatch>ドッキング・ハッチ</entityname.dockinghatch>
@@ -1442,7 +1438,7 @@
 <entityname.alienshell>物理真皮シェル</entityname.alienshell>
 <entitydescription.alienshell>レールガンから発射するため。</entitydescription.alienshell>
 
-<Alien></Alien>
+<!-- Alien -->
 <entityname.skyholderartifact>スカイエイリアンアーティファクト</entityname.skyholderartifact>
 <entitydescription.skyholderartifact>エイリアンの遺跡で見つかったアーティファクト。</entitydescription.skyholderartifact>
 <entityname.thermalartifact>熱エイリアンアーティファクト</entityname.thermalartifact>
@@ -1825,7 +1821,7 @@
 <dialognobatteries>バッテリーはどこ？</dialognobatteries>
 <dialognobatteries>このボートの上にバッテリーがありません！</dialognobatteries>
 <dialognobatteries>バッテリーが全く見つかりません！</dialognobatteries>
-<stopchargingbatteries>[itemname]へのチャージが中止されました！</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname]へのチャージが中止されました！</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname]において修理された1つのリーク！</dialogleakfixed>
 <dialogleakfixed>[roomname]修復中。まだいくつかの穴があります！</dialogleakfixed>
 <dialogleaksfixed>[roomname]のすべての漏れる所は修復しました！</dialogleaksfixed>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>このエリアは気圧障害のこのバージョンの中でアクセス不能です。どうか将来のアップデートをお待ちください！</centerarealockedtext>
 <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>set_text</connection.set_text>
 <connection.stateout>state_out</connection.stateout>
 <connection.turretaimingout>position_out</connection.turretaimingout>
 <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
@@ -2774,7 +2770,6 @@
 <!-- Audio -->
 <dynamicrangecompression>ダイナミックレンジ圧縮</dynamicrangecompression>
 <dynamicrangecompressiontooltip>オーディオのひずみを防ぐためにゲームのボリュームを自動的に調節します。</dynamicrangecompressiontooltip>
-<voipnodevices>オーディオキャプチャ機器が見つかりませんでした</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>自動制御</pumpautocontrol>
@@ -2852,16 +2847,12 @@
 <afflictionname.invertcontrols>眩暈</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>患者は眩暈がして、周囲の環境に順応するのに苦労をしているようです。</afflictiondescription.invertcontrols>
 
-
 <damagebutton>損害</damagebutton>
-<pending>保留中</pending>
-<inprogress>進行中</inprogress>
-<complete>完了</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>[targethullname]において[target]中のあなたの次の目標を発見してください。</traitorgoalfindcontainerinfo>
 <traitorgoaldestroyoxygen>潜水艦の上のすべての非在庫酸素タンクのうち少なくとも[percentage]パーセントを破壊してください。</traitorgoaldestroyoxygen>
-<traitorgoalsabotagedurationinfo>[target]を破壊し、そのステータスが少なくとも[duration]秒の間に[percentage]％以下にしてください。</traitorgoalsabotagedurationinfo>
+<traitorgoalsabotagedurationinfo>[tag]を破壊し、そのステータスが少なくとも[duration]秒の間に[percentage]％以下にしてください。</traitorgoalsabotagedurationinfo>
 <traitorgoalescape>近くのシャトルで脱出する。</traitorgoalescape>
 
 <!-- MVP traitor mission text package -->
@@ -3140,10 +3131,4 @@
 <easterbunny_goalinfotext_3>マッドラプターが少なくとも３分間生き続けられるように、手段を講じてください。</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>ホンク ホンクッ！それは陽気でした。塗装された男はその様子を聞くと、ここから追い出すつもりだった。</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>避難:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>メインメニューに戻りますか？保存されていないデータは全て失われます。</pausemenuquitverification>
-<leveldifficulty>難易度</leveldifficulty>
-<connection.set_text>set_text</connection.set_text>
-
 </infotexts>

@@ -85,7 +85,7 @@
 <pausemenuretry>Ponów</pausemenuretry>
 <pausemenusavequit>Zapisz i wyjdź</pausemenusavequit>
 <pausemenuquit>Menu główne</pausemenuquit>
-<pausemenuquitverification>Na pewno chcesz wyjść z gry? Niezapisane postępy zostaną utracone.</pausemenuquitverification>
+<pausemenuquitverification>Na pewno chcesz wrócić do menu głównego? Niezapisane postępy zostaną utracone.</pausemenuquitverification>
 <pausemenuretryverification>Na pewno chcesz przerwać misję i wczytać poprzedni zapis? Niezapisane postępy zostaną utracone.</pausemenuretryverification>
 
 <!-- Host server menu -->
@@ -623,7 +623,7 @@
 <missiontype>Rodzaj misji</missiontype>
 <random>Losowa</random>
 <levelseed>Ziarno mapy</levelseed>
-<leveldifficulty>Trudność mapy</leveldifficulty>
+<leveldifficulty>Trudność</leveldifficulty>
 <traitors>Zdrajcy</traitors>
 <botcount>Liczba botów</botcount>
 <botspawnmode>Tryb odradzania się botów</botspawnmode>
@@ -1403,10 +1403,6 @@
 <entitydescription.extinguisherbracket>Umożliwia powieszenie gaśnicy na ścianie.</entitydescription.extinguisherbracket>
 <entityname.weaponholder>Stojak na broń</entityname.weaponholder>
 <entitydescription.weaponholder>Miejsce do przechowywania broni.</entitydescription.weaponholder>
-<entityname.windoweddoor>Drzwi z okienkiem</entityname.windoweddoor>
-<entitydescription.windoweddoor>Drzwi przesuwne z okienkiem.</entitydescription.windoweddoor>
-<entityname.hatch>Właz</entityname.hatch>
-<entitydescription.hatch>Drzwi otwierane do góry.</entitydescription.hatch>
 <entityname.dockingport>Szczelina dokująca</entityname.dockingport>
 <entitydescription.dockingport>Pionowo ustawione złącze dokujące. Łączy się z drugą szczeliną dokującą i tworzy szczelną śluzę pozwalającą na przechodzenie między okrętami, łodziami i miejscami.</entitydescription.dockingport>
 <entityname.dockinghatch>Właz dokujący</entityname.dockinghatch>
@@ -1825,7 +1821,7 @@
 <dialognobatteries>Jakie baterie?</dialognobatteries>
 <dialognobatteries>Na tej łodzi nie ma żadnych baterii!</dialognobatteries>
 <dialognobatteries>Nie mogę znaleźć baterii!</dialognobatteries>
-<stopchargingbatteries>[itemname] już się nie ładuje!</stopchargingbatteries>
+<dialogstopchargingbatteries>[itemname] już się nie ładuje!</dialogstopchargingbatteries>
 <dialogleakfixed>[roomname] ma jeden przeciek naprawiony!</dialogleakfixed>
 <dialogleakfixed>[roomname] jest w trakcie naprawy. Jeszcze kilka dziur!</dialogleakfixed>
 <dialogleaksfixed>[roomname] ma naprawione przecieki!</dialogleaksfixed>
@@ -2631,7 +2627,7 @@
 <centerarealockedtext>Ten obszar jest niedostępny w tej wersji gry Barotrauma. Poczekaj na nadchodzące aktualizacje!</centerarealockedtext>
 <connection.dockingproximitysensor>proximity_sensor</connection.dockingproximitysensor>
 <connection.signalx>signal_[num]</connection.signalx>
-<connection.set_text>signal_[num]</connection.set_text>
+<connection.set_text>ustaw_tekst</connection.set_text>
 <connection.stateout>state_out</connection.stateout>
 <connection.turretaimingout>position_out</connection.turretaimingout>
 <connection.turrettriggerout>trigger_out</connection.turrettriggerout>
@@ -2774,7 +2770,6 @@
 <!-- Audio -->
 <dynamicrangecompression>Kompresja dynamiki</dynamicrangecompression>
 <dynamicrangecompressiontooltip>Automatycznie dopasowuje głośność gry, aby zapobiec zniekształceniom dźwięku.</dynamicrangecompressiontooltip>
-<voipnodevices>Nie wykryto urządzeń rejestrujących dźwięk</voipnodevices>
 
 <!-- Misc -->
 <pumpautocontrol>Kontrola automatyczna</pumpautocontrol>
@@ -2852,11 +2847,7 @@
 <afflictionname.invertcontrols>Dezorientacja</afflictionname.invertcontrols>
 <afflictiondescription.invertcontrols>Pacjent ma problem ze zorientowaniem się w otoczeniu, a jego oczy strzelają na boki.</afflictiondescription.invertcontrols>
 
-
 <damagebutton>Obrażenia</damagebutton>
-<pending>W toku</pending>
-<inprogress>W trakcie</inprogress>
-<complete>Ukończono</complete>
 
 <!-- Traitor goals -->
 <traitorgoalfindcontainerinfo>Następny cel: [target], [targethullname].</traitorgoalfindcontainerinfo>
@@ -3140,10 +3131,4 @@
 <easterbunny_goalinfotext_3>Dołóż wszelkich starań, aby błotozaur przeżył przynajmniej 3 minuty.</easterbunny_goalinfotext_3>
 <easterbunny_objectivesuccessmessage3>Ti-ta ti-ta! To było przezabawne. Malowany człowiek będzie miał niezłą uciechę, jak o tym usłyszy.</easterbunny_objectivesuccessmessage3>
 <easterbunny_traitorobjectivestartmessage4>Ucieczka:\n[traitorgoalinfos]</easterbunny_traitorobjectivestartmessage4>
-
-<!-- Modified values -->
-<pausemenuquitverification>Na pewno chcesz wrócić do menu głównego? Niezapisane postępy zostaną utracone.</pausemenuquitverification>
-<leveldifficulty>Trudność</leveldifficulty>
-<connection.set_text>ustaw_tekst</connection.set_text>
-
 </infotexts>
