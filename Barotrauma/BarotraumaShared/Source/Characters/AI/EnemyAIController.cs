@@ -1151,8 +1151,8 @@ namespace Barotrauma
                     {
                         selectedTargetMemory.Priority = 0;
                     }
-                    return true;
                 }
+                return true;
             }
             return false;
         }
