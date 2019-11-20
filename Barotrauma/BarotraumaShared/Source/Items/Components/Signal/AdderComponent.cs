@@ -1,84 +1,17 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class AdderComponent : ItemComponent
+    class AdderComponent : ArithmeticComponent
     {
-        //an array to keep track of how long ago a signal was received on both inputs
-        protected float[] timeSinceReceived;
-
-        protected float[] receivedSignal;
-
-        //the output is sent if both inputs have received a signal within the timeframe
-        protected float timeFrame;
-
-        [Serialize(999999.0f, true, description: "The output of the item is restricted below this value."),
-            InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
-        public float ClampMax
-        {
-            get;
-            set;
-        }
-
-        [Serialize(-999999.0f, true, description: "The output of the item is restricted above this value."),
-            InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
-        public float ClampMin
-        {
-            get;
-            set;
-        }
-
-        [InGameEditable(DecimalCount = 2),
-            Serialize(0.0f, true, description: "The item must have received signals to both inputs within this timeframe to output the sum of the signals." +
-            " If set to 0, the inputs must be received at the same time.")]
-        public float TimeFrame
-        {
-            get { return timeFrame; }
-            set
-            {
-                timeFrame = Math.Max(0.0f, value);
-            }
-        }
-
         public AdderComponent(Item item, XElement element)
             : base(item, element)
         {
-            timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
-            receivedSignal = new float[2];
-            IsActive = true;
         }
 
-        public override void Update(float deltaTime, Camera cam)
+        protected override float Calculate(float signal1, float signal2)
         {
-            bool sendOutput = true;
-            for (int i = 0; i < timeSinceReceived.Length; i++)
-            {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
-                timeSinceReceived[i] += deltaTime;
-            }
-            if (sendOutput)
-            {
-                float output = receivedSignal[0] + receivedSignal[1];
-                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
-            }
-        }
-
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
-        {
-            switch (connection.Name)
-            {
-                case "signal_in1":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
-                    timeSinceReceived[0] = 0.0f;
-                    break;
-                case "signal_in2":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
-                    timeSinceReceived[1] = 0.0f;
-                    break;
-            }
+            return signal1 + signal2;
         }
     }
 }
