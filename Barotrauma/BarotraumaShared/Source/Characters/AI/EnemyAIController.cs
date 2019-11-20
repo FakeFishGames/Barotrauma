@@ -562,7 +562,7 @@ namespace Barotrauma
                     var door = i.GetComponent<Door>();
                     // Steer through the door manually if it's open or broken
                     // Don't try to enter dry hulls if cannot walk or if the gap is too narrow
-                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
+                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && door.IsOpen)
                     {
                         if (Character.AnimController.CanWalk || door.LinkedGap.FlowTargetHull.WaterPercentage > 25)
                         {
@@ -862,7 +862,7 @@ namespace Barotrauma
                         if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
                         {
                             var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                            if (door != null && !door.IsOpen && door.Item.Condition > 0)
+                            if (door != null && !door.IsOpen)
                             {
                                 if (SelectedAiTarget != door.Item.AiTarget)
                                 {
@@ -1445,7 +1445,7 @@ namespace Barotrauma
                         }
                         if (door.Item.Submarine == null) { continue;}
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
-                        bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
+                        bool isOpen = door.IsOpen;
                         if (!isOpen && (!canAttackSub))
                         {
                             // Ignore doors that are not open if cannot attack items/structures. Open doors should be targeted, so that we can get in if we are aggressive boarders
