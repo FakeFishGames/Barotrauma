@@ -1792,7 +1792,261 @@
   <sp.particleprefab.animduration.description>The duration of the particle's animation cycle (if it's animated).</sp.particleprefab.animduration.description>
   <sp.particleprefab.loopanim.name>Loop Anim</sp.particleprefab.loopanim.name>
   <sp.particleprefab.loopanim.description>Should the sprite animation be looped, or stay at the last frame when the animation finishes.</sp.particleprefab.loopanim.description>
-
+  <sp.hull.roomname.name>Room Name</sp.hull.roomname.name>
+  <sp.hull.roomname.description><!-- No data --></sp.hull.roomname.description>
+  <sp.hull.spritedepth.name>Sprite Depth</sp.hull.spritedepth.name>
+  <sp.hull.spritedepth.description><!-- No data --></sp.hull.spritedepth.description>
+  <sp.hull.scale.name>Scale</sp.hull.scale.name>
+  <sp.hull.scale.description><!-- No data --></sp.hull.scale.description>
+  <sp.wire.pickingtime.name>Picking Time</sp.wire.pickingtime.name>
+  <sp.wire.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.wire.pickingtime.description>
+  <sp.wire.canbepicked.name>Can Be Picked</sp.wire.canbepicked.name>
+  <sp.wire.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.wire.canbepicked.description>
+  <sp.wire.allowingameediting.name>Allow In Game Editing</sp.wire.allowingameediting.name>
+  <sp.wire.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.wire.allowingameediting.description>
+  <sp.wire.msg.name>Msg</sp.wire.msg.name>
+  <sp.wire.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.wire.msg.description>
+  <sp.delaycomponent.delay.name>Delay</sp.delaycomponent.delay.name>
+  <sp.delaycomponent.delay.description>How long the item delays the signals (in seconds).</sp.delaycomponent.delay.description>
+  <sp.delaycomponent.resetwhensignalreceived.name>Reset When Signal Received</sp.delaycomponent.resetwhensignalreceived.name>
+  <sp.delaycomponent.resetwhensignalreceived.description>Should the component discard previously received signals when a new one is received.</sp.delaycomponent.resetwhensignalreceived.description>
+  <sp.delaycomponent.resetwhendifferentsignalreceived.name>Reset When Different Signal Received</sp.delaycomponent.resetwhendifferentsignalreceived.name>
+  <sp.delaycomponent.resetwhendifferentsignalreceived.description>Should the component discard previously received signals when the incoming signal changes.</sp.delaycomponent.resetwhendifferentsignalreceived.description>
+  <sp.delaycomponent.pickingtime.name>Picking Time</sp.delaycomponent.pickingtime.name>
+  <sp.delaycomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.delaycomponent.pickingtime.description>
+  <sp.delaycomponent.canbepicked.name>Can Be Picked</sp.delaycomponent.canbepicked.name>
+  <sp.delaycomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.delaycomponent.canbepicked.description>
+  <sp.delaycomponent.allowingameediting.name>Allow In Game Editing</sp.delaycomponent.allowingameediting.name>
+  <sp.delaycomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.delaycomponent.allowingameediting.description>
+  <sp.delaycomponent.msg.name>Msg</sp.delaycomponent.msg.name>
+  <sp.delaycomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.delaycomponent.msg.description>
+  <sp.andcomponent.timeframe.name>Time Frame</sp.andcomponent.timeframe.name>
+  <sp.andcomponent.timeframe.description>The item sends the output if both inputs have received a non-zero signal within the timeframe. If set to 0, the inputs must receive a signal at the same time.</sp.andcomponent.timeframe.description>
+  <sp.andcomponent.output.name>Output</sp.andcomponent.output.name>
+  <sp.andcomponent.output.description>The signal sent when both inputs have received a non-zero signal.</sp.andcomponent.output.description>
+  <sp.andcomponent.falseoutput.name>False Output</sp.andcomponent.falseoutput.name>
+  <sp.andcomponent.falseoutput.description>The signal sent when both inputs have not received a non-zero signal (if empty, no signal is sent).</sp.andcomponent.falseoutput.description>
+  <sp.andcomponent.pickingtime.name>Picking Time</sp.andcomponent.pickingtime.name>
+  <sp.andcomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.andcomponent.pickingtime.description>
+  <sp.andcomponent.canbepicked.name>Can Be Picked</sp.andcomponent.canbepicked.name>
+  <sp.andcomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.andcomponent.canbepicked.description>
+  <sp.andcomponent.allowingameediting.name>Allow In Game Editing</sp.andcomponent.allowingameediting.name>
+  <sp.andcomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.andcomponent.allowingameediting.description>
+  <sp.andcomponent.msg.name>Msg</sp.andcomponent.msg.name>
+  <sp.andcomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.andcomponent.msg.description>
+  <sp.notcomponent.pickingtime.name>Picking Time</sp.notcomponent.pickingtime.name>
+  <sp.notcomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.notcomponent.pickingtime.description>
+  <sp.notcomponent.canbepicked.name>Can Be Picked</sp.notcomponent.canbepicked.name>
+  <sp.notcomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.notcomponent.canbepicked.description>
+  <sp.notcomponent.allowingameediting.name>Allow In Game Editing</sp.notcomponent.allowingameediting.name>
+  <sp.notcomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.notcomponent.allowingameediting.description>
+  <sp.notcomponent.msg.name>Msg</sp.notcomponent.msg.name>
+  <sp.notcomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.notcomponent.msg.description>
+  <sp.signalcheckcomponent.output.name>Output</sp.signalcheckcomponent.output.name>
+  <sp.signalcheckcomponent.output.description>The signal this item outputs when the received signal matches the target signal.</sp.signalcheckcomponent.output.description>
+  <sp.signalcheckcomponent.falseoutput.name>False Output</sp.signalcheckcomponent.falseoutput.name>
+  <sp.signalcheckcomponent.falseoutput.description>The signal this item outputs when the received signal does not match the target signal.</sp.signalcheckcomponent.falseoutput.description>
+  <sp.signalcheckcomponent.targetsignal.name>Target Signal</sp.signalcheckcomponent.targetsignal.name>
+  <sp.signalcheckcomponent.targetsignal.description>The value to compare the received signals against.</sp.signalcheckcomponent.targetsignal.description>
+  <sp.signalcheckcomponent.pickingtime.name>Picking Time</sp.signalcheckcomponent.pickingtime.name>
+  <sp.signalcheckcomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.signalcheckcomponent.pickingtime.description>
+  <sp.signalcheckcomponent.canbepicked.name>Can Be Picked</sp.signalcheckcomponent.canbepicked.name>
+  <sp.signalcheckcomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.signalcheckcomponent.canbepicked.description>
+  <sp.signalcheckcomponent.allowingameediting.name>Allow In Game Editing</sp.signalcheckcomponent.allowingameediting.name>
+  <sp.signalcheckcomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.signalcheckcomponent.allowingameediting.description>
+  <sp.signalcheckcomponent.msg.name>Msg</sp.signalcheckcomponent.msg.name>
+  <sp.signalcheckcomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.signalcheckcomponent.msg.description>
+  <sp.relaycomponent.maxpower.name>Max Power</sp.relaycomponent.maxpower.name>
+  <sp.relaycomponent.maxpower.description>The maximum amount of power that can pass through the item.</sp.relaycomponent.maxpower.description>
+  <sp.relaycomponent.ison.name>Is On</sp.relaycomponent.ison.name>
+  <sp.relaycomponent.ison.description>Can the relay currently pass power and signals through it.</sp.relaycomponent.ison.description>
+  <sp.relaycomponent.canbeoverloaded.name>Can Be Overloaded</sp.relaycomponent.canbeoverloaded.name>
+  <sp.relaycomponent.canbeoverloaded.description>Can the item be damaged if too much power is supplied to the power grid.</sp.relaycomponent.canbeoverloaded.description>
+  <sp.relaycomponent.overloadvoltage.name>Overload Voltage</sp.relaycomponent.overloadvoltage.name>
+  <sp.relaycomponent.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.relaycomponent.overloadvoltage.description>
+  <sp.relaycomponent.fireprobability.name>Fire Probability</sp.relaycomponent.fireprobability.name>
+  <sp.relaycomponent.fireprobability.description>The probability for a fire to start when the item breaks.</sp.relaycomponent.fireprobability.description>
+  <sp.relaycomponent.minvoltage.name>Min Voltage</sp.relaycomponent.minvoltage.name>
+  <sp.relaycomponent.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.relaycomponent.minvoltage.description>
+  <sp.relaycomponent.powerconsumption.name>Power Consumption</sp.relaycomponent.powerconsumption.name>
+  <sp.relaycomponent.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.relaycomponent.powerconsumption.description>
+  <sp.relaycomponent.vulnerabletoemp.name>Vulnerable To E M P</sp.relaycomponent.vulnerabletoemp.name>
+  <sp.relaycomponent.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.relaycomponent.vulnerabletoemp.description>
+  <sp.relaycomponent.pickingtime.name>Picking Time</sp.relaycomponent.pickingtime.name>
+  <sp.relaycomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.relaycomponent.pickingtime.description>
+  <sp.relaycomponent.canbepicked.name>Can Be Picked</sp.relaycomponent.canbepicked.name>
+  <sp.relaycomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.relaycomponent.canbepicked.description>
+  <sp.relaycomponent.allowingameediting.name>Allow In Game Editing</sp.relaycomponent.allowingameediting.name>
+  <sp.relaycomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.relaycomponent.allowingameediting.description>
+  <sp.relaycomponent.msg.name>Msg</sp.relaycomponent.msg.name>
+  <sp.relaycomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.relaycomponent.msg.description>
+  <sp.oscillatorcomponent.outputtype.name>Output Type</sp.oscillatorcomponent.outputtype.name>
+  <sp.oscillatorcomponent.outputtype.description>What kind of a signal the item outputs. Pulse: periodically sends out a signal of 1. Sine: sends out a sine wave oscillating between -1 and 1. Square: sends out a signal that alternates between 0 and 1.</sp.oscillatorcomponent.outputtype.description>
+  <sp.oscillatorcomponent.frequency.name>Frequency</sp.oscillatorcomponent.frequency.name>
+  <sp.oscillatorcomponent.frequency.description>How fast the signal oscillates, or how fast the pulses are sent (in Hz).</sp.oscillatorcomponent.frequency.description>
+  <sp.oscillatorcomponent.pickingtime.name>Picking Time</sp.oscillatorcomponent.pickingtime.name>
+  <sp.oscillatorcomponent.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.oscillatorcomponent.pickingtime.description>
+  <sp.oscillatorcomponent.canbepicked.name>Can Be Picked</sp.oscillatorcomponent.canbepicked.name>
+  <sp.oscillatorcomponent.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.oscillatorcomponent.canbepicked.description>
+  <sp.oscillatorcomponent.allowingameediting.name>Allow In Game Editing</sp.oscillatorcomponent.allowingameediting.name>
+  <sp.oscillatorcomponent.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.oscillatorcomponent.allowingameediting.description>
+  <sp.oscillatorcomponent.msg.name>Msg</sp.oscillatorcomponent.msg.name>
+  <sp.oscillatorcomponent.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.oscillatorcomponent.msg.description>
+  <sp.lightcomponent.lightcolor.name>Light Color</sp.lightcomponent.lightcolor.name>
+  <sp.lightcomponent.lightcolor.description>The color of the emitted light (R,G,B,A).</sp.lightcomponent.lightcolor.description>
+  <sp.turret.hudtint.name>Hud Tint</sp.turret.hudtint.name>
+  <sp.turret.hudtint.description>Optional screen tint color when the item is being operated (R,G,B,A).</sp.turret.hudtint.description>
+  <sp.turret.reload.name>Reload</sp.turret.reload.name>
+  <sp.turret.reload.description>The period of time the user has to wait between shots.</sp.turret.reload.description>
+  <sp.turret.rotationlimits.name>Rotation Limits</sp.turret.rotationlimits.name>
+  <sp.turret.rotationlimits.description>The range at which the barrel can rotate. TODO</sp.turret.rotationlimits.description>
+  <sp.turret.springstiffnesslowskill.name>Spring Stiffness Low Skill</sp.turret.springstiffnesslowskill.name>
+  <sp.turret.springstiffnesslowskill.description>How much torque is applied to rotate the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the barrel rotate faster.</sp.turret.springstiffnesslowskill.description>
+  <sp.turret.springstiffnesshighskill.name>Spring Stiffness High Skill</sp.turret.springstiffnesshighskill.name>
+  <sp.turret.springstiffnesshighskill.description>How much torque is applied to rotate the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the barrel rotate faster.</sp.turret.springstiffnesshighskill.description>
+  <sp.turret.springdampinglowskill.name>Spring Damping Low Skill</sp.turret.springdampinglowskill.name>
+  <sp.turret.springdampinglowskill.description>How much torque is applied to resist the movement of the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the aiming more snappy, stopping the barrel from swinging around the direction it's being aimed at.</sp.turret.springdampinglowskill.description>
+  <sp.turret.springdampinghighskill.name>Spring Damping High Skill</sp.turret.springdampinghighskill.name>
+  <sp.turret.springdampinghighskill.description>How much torque is applied to resist the movement of the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the aiming more snappy, stopping the barrel from swinging around the direction it's being aimed at.</sp.turret.springdampinghighskill.description>
+  <sp.turret.rotationspeedlowskill.name>Rotation Speed Low Skill</sp.turret.rotationspeedlowskill.name>
+  <sp.turret.rotationspeedlowskill.description>Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it.</sp.turret.rotationspeedlowskill.description>
+  <sp.turret.rotationspeedhighskill.name>Rotation Speed High Skill</sp.turret.rotationspeedhighskill.name>
+  <sp.turret.rotationspeedhighskill.description>Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it.</sp.turret.rotationspeedhighskill.description>
+  <sp.turret.baserotation.name>Base Rotation</sp.turret.baserotation.name>
+  <sp.turret.baserotation.description>The angle of the turret's base in degrees.</sp.turret.baserotation.description>
+  <sp.turret.minvoltage.name>Min Voltage</sp.turret.minvoltage.name>
+  <sp.turret.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.turret.minvoltage.description>
+  <sp.turret.powerconsumption.name>Power Consumption</sp.turret.powerconsumption.name>
+  <sp.turret.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.turret.powerconsumption.description>
+  <sp.turret.vulnerabletoemp.name>Vulnerable To E M P</sp.turret.vulnerabletoemp.name>
+  <sp.turret.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.turret.vulnerabletoemp.description>
+  <sp.turret.pickingtime.name>Picking Time</sp.turret.pickingtime.name>
+  <sp.turret.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.turret.pickingtime.description>
+  <sp.turret.canbepicked.name>Can Be Picked</sp.turret.canbepicked.name>
+  <sp.turret.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.turret.canbepicked.description>
+  <sp.turret.allowingameediting.name>Allow In Game Editing</sp.turret.allowingameediting.name>
+  <sp.turret.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.turret.allowingameediting.description>
+  <sp.turret.msg.name>Msg</sp.turret.msg.name>
+  <sp.turret.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.turret.msg.description>
+  <sp.motionsensor.onlyhumans.name>Only Humans</sp.motionsensor.onlyhumans.name>
+  <sp.motionsensor.onlyhumans.description>Should the sensor only detect the movement of humans?</sp.motionsensor.onlyhumans.description>
+  <sp.motionsensor.ignoredead.name>Ignore Dead</sp.motionsensor.ignoredead.name>
+  <sp.motionsensor.ignoredead.description>Should the sensor ignore the bodies of dead characters?</sp.motionsensor.ignoredead.description>
+  <sp.motionsensor.rangex.name>Range X</sp.motionsensor.rangex.name>
+  <sp.motionsensor.rangex.description>Horizontal detection range.</sp.motionsensor.rangex.description>
+  <sp.motionsensor.rangey.name>Range Y</sp.motionsensor.rangey.name>
+  <sp.motionsensor.rangey.description>Vertical movement detection range.</sp.motionsensor.rangey.description>
+  <sp.motionsensor.detectoffset.name>Detect Offset</sp.motionsensor.detectoffset.name>
+  <sp.motionsensor.detectoffset.description>The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.</sp.motionsensor.detectoffset.description>
+  <sp.motionsensor.output.name>Output</sp.motionsensor.output.name>
+  <sp.motionsensor.output.description>The signal the item outputs when it has detected movement.</sp.motionsensor.output.description>
+  <sp.motionsensor.falseoutput.name>False Output</sp.motionsensor.falseoutput.name>
+  <sp.motionsensor.falseoutput.description>The signal the item outputs when it has not detected movement.</sp.motionsensor.falseoutput.description>
+  <sp.motionsensor.minimumvelocity.name>Minimum Velocity</sp.motionsensor.minimumvelocity.name>
+  <sp.motionsensor.minimumvelocity.description>How fast the objects within the detector's range have to be moving (in m/s).</sp.motionsensor.minimumvelocity.description>
+  <sp.motionsensor.pickingtime.name>Picking Time</sp.motionsensor.pickingtime.name>
+  <sp.motionsensor.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.motionsensor.pickingtime.description>
+  <sp.motionsensor.canbepicked.name>Can Be Picked</sp.motionsensor.canbepicked.name>
+  <sp.motionsensor.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.motionsensor.canbepicked.description>
+  <sp.motionsensor.allowingameediting.name>Allow In Game Editing</sp.motionsensor.allowingameediting.name>
+  <sp.motionsensor.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.motionsensor.allowingameediting.description>
+  <sp.motionsensor.msg.name>Msg</sp.motionsensor.msg.name>
+  <sp.motionsensor.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.motionsensor.msg.description>
+  <sp.waterdetector.output.name>Output</sp.waterdetector.output.name>
+  <sp.waterdetector.output.description>The signal the item sends out when it's underwater.</sp.waterdetector.output.description>
+  <sp.waterdetector.falseoutput.name>False Output</sp.waterdetector.falseoutput.name>
+  <sp.waterdetector.falseoutput.description>The signal the item sends out when it's not underwater.</sp.waterdetector.falseoutput.description>
+  <sp.electricaldischarger.range.name>Range</sp.electricaldischarger.range.name>
+  <sp.electricaldischarger.range.description>How far the discharge can travel from the item.</sp.electricaldischarger.range.description>
+  <sp.electricaldischarger.rangemultiplierinwalls.name>Range Multiplier In Walls</sp.electricaldischarger.rangemultiplierinwalls.name>
+  <sp.electricaldischarger.rangemultiplierinwalls.description>How much further can the discharge be carried when moving across walls.</sp.electricaldischarger.rangemultiplierinwalls.description>
+  <sp.electricaldischarger.duration.name>Duration</sp.electricaldischarger.duration.name>
+  <sp.electricaldischarger.duration.description>The duration of an individual discharge (in seconds).</sp.electricaldischarger.duration.description>
+  <sp.electricaldischarger.outdoorsonly.name>Outdoors Only</sp.electricaldischarger.outdoorsonly.name>
+  <sp.electricaldischarger.outdoorsonly.description>If set to true, the discharge cannot travel inside the submarine nor shock anyone inside.</sp.electricaldischarger.outdoorsonly.description>
+  <sp.electricaldischarger.minvoltage.name>Min Voltage</sp.electricaldischarger.minvoltage.name>
+  <sp.electricaldischarger.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.electricaldischarger.minvoltage.description>
+  <sp.electricaldischarger.powerconsumption.name>Power Consumption</sp.electricaldischarger.powerconsumption.name>
+  <sp.electricaldischarger.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.electricaldischarger.powerconsumption.description>
+  <sp.electricaldischarger.vulnerabletoemp.name>Vulnerable To E M P</sp.electricaldischarger.vulnerabletoemp.name>
+  <sp.electricaldischarger.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.electricaldischarger.vulnerabletoemp.description>
+  <sp.electricaldischarger.pickingtime.name>Picking Time</sp.electricaldischarger.pickingtime.name>
+  <sp.electricaldischarger.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.electricaldischarger.pickingtime.description>
+  <sp.electricaldischarger.canbepicked.name>Can Be Picked</sp.electricaldischarger.canbepicked.name>
+  <sp.electricaldischarger.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.electricaldischarger.canbepicked.description>
+  <sp.electricaldischarger.allowingameediting.name>Allow In Game Editing</sp.electricaldischarger.allowingameediting.name>
+  <sp.electricaldischarger.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.electricaldischarger.allowingameediting.description>
+  <sp.electricaldischarger.msg.name>Msg</sp.electricaldischarger.msg.name>
+  <sp.electricaldischarger.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.electricaldischarger.msg.description>
+  <sp.dockingport.pickingtime.name>Picking Time</sp.dockingport.pickingtime.name>
+  <sp.dockingport.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.dockingport.pickingtime.description>
+  <sp.dockingport.canbepicked.name>Can Be Picked</sp.dockingport.canbepicked.name>
+  <sp.dockingport.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.dockingport.canbepicked.description>
+  <sp.dockingport.allowingameediting.name>Allow In Game Editing</sp.dockingport.allowingameediting.name>
+  <sp.dockingport.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.dockingport.allowingameediting.description>
+  <sp.dockingport.msg.name>Msg</sp.dockingport.msg.name>
+  <sp.dockingport.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.dockingport.msg.description>
+  <sp.powertransfer.canbeoverloaded.name>Can Be Overloaded</sp.powertransfer.canbeoverloaded.name>
+  <sp.powertransfer.canbeoverloaded.description>Can the item be damaged if too much power is supplied to the power grid.</sp.powertransfer.canbeoverloaded.description>
+  <sp.powertransfer.overloadvoltage.name>Overload Voltage</sp.powertransfer.overloadvoltage.name>
+  <sp.powertransfer.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.powertransfer.overloadvoltage.description>
+  <sp.powertransfer.fireprobability.name>Fire Probability</sp.powertransfer.fireprobability.name>
+  <sp.powertransfer.fireprobability.description>The probability for a fire to start when the item breaks.</sp.powertransfer.fireprobability.description>
+  <sp.powertransfer.minvoltage.name>Min Voltage</sp.powertransfer.minvoltage.name>
+  <sp.powertransfer.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.powertransfer.minvoltage.description>
+  <sp.powertransfer.powerconsumption.name>Power Consumption</sp.powertransfer.powerconsumption.name>
+  <sp.powertransfer.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powertransfer.powerconsumption.description>
+  <sp.powertransfer.vulnerabletoemp.name>Vulnerable To E M P</sp.powertransfer.vulnerabletoemp.name>
+  <sp.powertransfer.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.powertransfer.vulnerabletoemp.description>
+  <sp.powertransfer.pickingtime.name>Picking Time</sp.powertransfer.pickingtime.name>
+  <sp.powertransfer.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.powertransfer.pickingtime.description>
+  <sp.powertransfer.canbepicked.name>Can Be Picked</sp.powertransfer.canbepicked.name>
+  <sp.powertransfer.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.powertransfer.canbepicked.description>
+  <sp.powertransfer.allowingameediting.name>Allow In Game Editing</sp.powertransfer.allowingameediting.name>
+  <sp.powertransfer.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.powertransfer.allowingameediting.description>
+  <sp.powertransfer.msg.name>Msg</sp.powertransfer.msg.name>
+  <sp.powertransfer.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.powertransfer.msg.description>
+  <sp.wearable.pickingtime.name>Picking Time</sp.wearable.pickingtime.name>
+  <sp.wearable.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.wearable.pickingtime.description>
+  <sp.wearable.canbepicked.name>Can Be Picked</sp.wearable.canbepicked.name>
+  <sp.wearable.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.wearable.canbepicked.description>
+  <sp.wearable.allowingameediting.name>Allow In Game Editing</sp.wearable.allowingameediting.name>
+  <sp.wearable.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.wearable.allowingameediting.description>
+  <sp.wearable.msg.name>Msg</sp.wearable.msg.name>
+  <sp.wearable.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.wearable.msg.description>
+  <sp.throwable.holdpos.name>Hold Pos</sp.throwable.holdpos.name>
+  <sp.throwable.holdpos.description>The position the character holds the item at (in pixels, as an offset from the character's shoulder). For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.</sp.throwable.holdpos.description>
+  <sp.throwable.holdangle.name>Hold Angle</sp.throwable.holdangle.name>
+  <sp.throwable.holdangle.description>The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).</sp.throwable.holdangle.description>
+  <sp.throwable.swingamount.name>Swing Amount</sp.throwable.swingamount.name>
+  <sp.throwable.swingamount.description>How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).</sp.throwable.swingamount.description>
+  <sp.throwable.swingspeed.name>Swing Speed</sp.throwable.swingspeed.name>
+  <sp.throwable.swingspeed.description>How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).</sp.throwable.swingspeed.description>
+  <sp.throwable.swingwhenholding.name>Swing When Holding</sp.throwable.swingwhenholding.name>
+  <sp.throwable.swingwhenholding.description>Should the item swing around when it's being held.</sp.throwable.swingwhenholding.description>
+  <sp.throwable.swingwhenaiming.name>Swing When Aiming</sp.throwable.swingwhenaiming.name>
+  <sp.throwable.swingwhenaiming.description>Should the item swing around when it's being aimed.</sp.throwable.swingwhenaiming.description>
+  <sp.throwable.swingwhenusing.name>Swing When Using</sp.throwable.swingwhenusing.name>
+  <sp.throwable.swingwhenusing.description>Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).</sp.throwable.swingwhenusing.description>
+  <sp.throwable.pickingtime.name>Picking Time</sp.throwable.pickingtime.name>
+  <sp.throwable.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.throwable.pickingtime.description>
+  <sp.throwable.canbepicked.name>Can Be Picked</sp.throwable.canbepicked.name>
+  <sp.throwable.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.throwable.canbepicked.description>
+  <sp.throwable.allowingameediting.name>Allow In Game Editing</sp.throwable.allowingameediting.name>
+  <sp.throwable.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.throwable.allowingameediting.description>
+  <sp.throwable.msg.name>Msg</sp.throwable.msg.name>
+  <sp.throwable.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.throwable.msg.description>
+  <sp.propulsion.force.name>Force</sp.propulsion.force.name>
+  <sp.propulsion.force.description>The force to apply to the user's body.</sp.propulsion.force.description>
+  <sp.propulsion.pickingtime.name>Picking Time</sp.propulsion.pickingtime.name>
+  <sp.propulsion.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.propulsion.pickingtime.description>
+  <sp.propulsion.canbepicked.name>Can Be Picked</sp.propulsion.canbepicked.name>
+  <sp.propulsion.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.propulsion.canbepicked.description>
+  <sp.propulsion.allowingameediting.name>Allow In Game Editing</sp.propulsion.allowingameediting.name>
+  <sp.propulsion.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.propulsion.allowingameediting.description>
+  <sp.propulsion.msg.name>Msg</sp.propulsion.msg.name>
+  <sp.propulsion.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.propulsion.msg.description>  
+  
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
   <character.carrier>Carrier</character.carrier>

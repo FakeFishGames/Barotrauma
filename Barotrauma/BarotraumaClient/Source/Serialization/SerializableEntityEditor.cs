@@ -304,19 +304,15 @@ namespace Barotrauma
             if (displayName == null)
             {
                 displayName = property.Name.FormatCamelCaseWithSpaces();
-
 #if DEBUG
                 Editable editable = property.GetAttribute<Editable>();
                 if (editable != null)
                 {
-                    if (TextManager.Get(propertyName, true) == null)
+                    if (!MissingLocalizations.Contains($"sp.{propertyName}.name|{displayName}"))
                     {
-                        if (!MissingLocalizations.Contains($"sp.{propertyName}.name|{displayName}"))
-                        {
-                            DebugConsole.NewMessage("Missing Localization for property: " + propertyName);
-                            MissingLocalizations.Add($"sp.{propertyName}.name|{displayName}");
-                            MissingLocalizations.Add($"sp.{propertyName}.description|{property.GetAttribute<Serialize>().Description}");
-                        }
+                        DebugConsole.NewMessage("Missing Localization for property: " + propertyName);
+                        MissingLocalizations.Add($"sp.{propertyName}.name|{displayName}");
+                        MissingLocalizations.Add($"sp.{propertyName}.description|{property.GetAttribute<Serialize>().Description}");
                     }
                 }
 #endif

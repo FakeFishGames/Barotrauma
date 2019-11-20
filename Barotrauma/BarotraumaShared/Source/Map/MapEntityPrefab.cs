@@ -217,9 +217,18 @@ namespace Barotrauma
 
         protected virtual void CreateInstance(Rectangle rect)
         {
+            if (constructor == null) return;
             object[] lobject = new object[] { this, rect };
             constructor.Invoke(lobject);
-        }    
+        }
+
+#if DEBUG
+        public void DebugCreateInstance()
+        {
+            Rectangle rect = new Rectangle(new Point((int)Screen.Selected.Cam.WorldViewCenter.X, (int)Screen.Selected.Cam.WorldViewCenter.Y), new Point((int)Submarine.GridSize.X, (int)Submarine.GridSize.Y));
+            CreateInstance(rect);
+        }
+#endif
 
         public static bool SelectPrefab(object selection)
         {

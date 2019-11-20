@@ -1430,14 +1430,71 @@ namespace Barotrauma
                 LocalizationCSVtoXML.Convert();
             }));
 
-            commands.Add(new Command("checkproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
+            commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
             {
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\propertylocalization.txt";
                 File.WriteAllLines(path, SerializableEntityEditor.MissingLocalizations);
             }));
+
+            commands.Add(new Command("getproperties", "Goes through the MapEntity prefabs and checks their serializable properties for localization issues.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen) return;
+                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+                {
+                    ep.DebugCreateInstance();
+                }
+
+                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                {
+                    var entity = MapEntity.mapEntityList[i] as ISerializableEntity;
+                    if (entity != null)
+                    {
+                        List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+
+                        if (entity is Item item)
+                        {
+                            allProperties.AddRange(item.GetProperties<Editable>());
+                            allProperties.AddRange(item.GetProperties<InGameEditable>());
+                        }
+                        else
+                        {
+                            var properties = new List<SerializableProperty>();
+                            properties.AddRange(SerializableProperty.GetProperties<Editable>(entity));
+                            properties.AddRange(SerializableProperty.GetProperties<InGameEditable>(entity));
+
+                            for (int k = 0; k < properties.Count; k++)
+                            {
+                                allProperties.Add(new Pair<object, SerializableProperty>(entity, properties[k]));
+                            }
+                        }
+
+                        for (int j = 0; j < allProperties.Count; j++)
+                        {
+                            var property = allProperties[j].Second;
+                            string propertyName = (allProperties[j].First.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+                            string displayName = TextManager.Get($"sp.{propertyName}.name", returnNull: true);
+                            if (displayName == null)
+                            {
+                                displayName = property.Name.FormatCamelCaseWithSpaces();
+
+                                Editable editable = property.GetAttribute<Editable>();
+                                if (editable != null)
+                                {
+                                    if (!SerializableEntityEditor.MissingLocalizations.Contains($"sp.{propertyName}.name|{displayName}"))
+                                    {
+                                        NewMessage("Missing Localization for property: " + propertyName);
+                                        SerializableEntityEditor.MissingLocalizations.Add($"sp.{propertyName}.name|{displayName}");
+                                        SerializableEntityEditor.MissingLocalizations.Add($"sp.{propertyName}.description|{property.GetAttribute<Serialize>().Description}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }));
 #endif
 
-            commands.Add(new Command("cleanbuild", "", (string[] args) =>
+                commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;
                 GameMain.Config.SoundVolume = 0.5f;
