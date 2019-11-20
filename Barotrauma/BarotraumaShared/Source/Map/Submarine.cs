@@ -34,7 +34,7 @@ namespace Barotrauma
     {
         public Character.TeamType TeamID = Character.TeamType.None;
 
-        public static string SavePath = "Submarines";
+        public const string SavePath = "Submarines";
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
@@ -88,6 +88,7 @@ namespace Barotrauma
         
         private string filePath;
         private string name;
+        public readonly DateTime LastModifiedTime;
 
         private SubmarineTag tags;
 
@@ -342,6 +343,7 @@ namespace Barotrauma
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
         {
             this.filePath = filePath;
+            LastModifiedTime = File.GetLastWriteTime(filePath);
             try
             {
                 name = displayName = Path.GetFileNameWithoutExtension(filePath);
@@ -1259,11 +1261,19 @@ namespace Barotrauma
 
         public static void RefreshSavedSubs()
         {
+            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
+
             for (int i = savedSubmarines.Count - 1; i>= 0; i--)
             {
+                if (File.Exists(savedSubmarines[i].FilePath) &&
+                    savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) &&
+                    (Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath) ||
+                    contentPackageSubs.Any(fp => Path.GetFullPath(fp).Replace("\\","/") == Path.GetFullPath(savedSubmarines[i].FilePath).Replace("\\", "/"))))
+                {
+                    continue;
+                }
                 savedSubmarines[i].Dispose();
             }
-            System.Diagnostics.Debug.Assert(savedSubmarines.Count == 0);
 
             if (!Directory.Exists(SavePath))
             {
@@ -1305,7 +1315,6 @@ namespace Barotrauma
                 }
             }
 
-            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
             foreach (string subPath in contentPackageSubs)
             {
                 if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subPath)))
@@ -1313,6 +1322,8 @@ namespace Barotrauma
                     filePaths.Add(subPath);
                 }
             }
+
+            filePaths.RemoveAll(p => savedSubmarines.Any(sub => sub.FilePath == p));
 
             foreach (string path in filePaths)
             {
