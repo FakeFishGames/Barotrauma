@@ -1429,6 +1429,12 @@ namespace Barotrauma
             {
                 LocalizationCSVtoXML.Convert();
             }));
+
+            commands.Add(new Command("checkproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
+            {
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\propertylocalization.txt";
+                File.WriteAllLines(path, SerializableEntityEditor.MissingLocalizations);
+            }));
 #endif
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>

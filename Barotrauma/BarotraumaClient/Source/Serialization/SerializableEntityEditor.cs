@@ -12,6 +12,9 @@ namespace Barotrauma
     {
         private int elementHeight;
         private GUILayoutGroup layoutGroup;
+#if DEBUG
+        public static List<string> MissingLocalizations = new List<string>();
+#endif
 
         public int ContentHeight
         {
@@ -297,12 +300,35 @@ namespace Barotrauma
                 value = "";
             }
             string propertyName = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
-            string displayName = TextManager.Get(propertyName, returnNull: true) ?? property.GetAttribute<Editable>().DisplayName;
+            string displayName = TextManager.Get($"sp.{propertyName}.name", returnNull: true);
             if (displayName == null)
             {
                 displayName = property.Name.FormatCamelCaseWithSpaces();
+
+#if DEBUG
+                Editable editable = property.GetAttribute<Editable>();
+                if (editable != null)
+                {
+                    if (TextManager.Get(propertyName, true) == null)
+                    {
+                        if (!MissingLocalizations.Contains($"sp.{propertyName}.name|{displayName}"))
+                        {
+                            DebugConsole.NewMessage("Missing Localization for property: " + propertyName);
+                            MissingLocalizations.Add($"sp.{propertyName}.name|{displayName}");
+                            MissingLocalizations.Add($"sp.{propertyName}.description|{property.GetAttribute<Serialize>().Description}");
+                        }
+                    }
+                }
+#endif
             }
-            string toolTip = property.GetAttribute<Serialize>().Description;
+
+            string toolTip = TextManager.Get($"sp.{propertyName}.description", returnNull: true);
+
+            if (toolTip == null)
+            {
+                toolTip = property.GetAttribute<Serialize>().Description;
+            }
+
             GUIComponent propertyField = null;
             if (value is bool)
             {
