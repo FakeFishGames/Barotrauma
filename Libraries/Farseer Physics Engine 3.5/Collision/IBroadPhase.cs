@@ -25,7 +25,7 @@ namespace FarseerPhysics.Collision
 
         void Query(Func<int, bool> callback, ref AABB aabb);
 
-        void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input);
+        void RayCast(Func<RayCastInput, int, Category, float> callback, ref RayCastInput input, Category collisionCategory = Category.All);
 
         void ShiftOrigin(Vector2 newOrigin);
     }

@@ -324,9 +324,10 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input)
+        /// <param name="collisionCategory">The collision categories of the fixtures to raycast against.</param>
+        public void RayCast(Func<RayCastInput, int, Category, float> callback, ref RayCastInput input, Category collisionCategory = Category.All)
         {
-            _tree.RayCast(callback, ref input);
+            _tree.RayCast(callback, ref input, collisionCategory);
         }
 
         public void ShiftOrigin(Vector2 newOrigin)
