@@ -529,7 +529,15 @@ namespace Barotrauma
                 }
             }
 
-            if (ignorePlatforms)
+            if (currentHull != null)
+            {
+                Vector2 displayFloorPos = ConvertUnits.ToDisplayUnits(new Vector2(Collider.SimPosition.X, floorY));
+                if (currentHull?.Submarine != null) { displayFloorPos += currentHull.Submarine.DrawPosition; }
+                displayFloorPos.Y = -displayFloorPos.Y;
+                GUI.DrawLine(spriteBatch, displayFloorPos, displayFloorPos + new Vector2(floorNormal.X, -floorNormal.Y) * 50.0f, Color.Cyan * 0.5f, 0, 2);
+            }
+
+            if (IgnorePlatforms)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y),

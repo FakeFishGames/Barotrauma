@@ -88,11 +88,13 @@ namespace Barotrauma
         protected Vector2 overrideTargetMovement;
         
         protected float floorY;
+        protected Vector2 floorNormal = Vector2.UnitY;
         protected float surfaceY;
         
         protected bool inWater, headInWater;
         public bool onGround;
-        private bool ignorePlatforms;
+        private Vector2 lastFloorCheckPos;
+        private bool lastFloorCheckIgnoreStairs;
 
         /// <summary>
         /// In sim units. Joint scale applied.
@@ -295,15 +297,8 @@ namespace Barotrauma
             }
         }
 
-        public bool IgnorePlatforms
-        {
-            get { return ignorePlatforms; }
-            set 
-            {
-                ignorePlatforms = value;
-            }
-        }
-        
+        public bool IgnorePlatforms { get; set; }
+
         /// <summary>
         /// Call this to create the ragdoll from the RagdollParams.
         /// </summary>
@@ -604,7 +599,7 @@ namespace Barotrauma
             
             if (structure.IsPlatform)
             {
-                if (ignorePlatforms) return false;
+                if (IgnorePlatforms) return false;
 
                 //the collision is ignored if the lowest limb is under the platform
                 //if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false;
@@ -1001,7 +996,7 @@ namespace Barotrauma
                 Physics.CollisionLevel | Physics.CollisionWall 
                 : Physics.CollisionWall;
 
-            Category collisionCategory = (ignorePlatforms) ?
+            Category collisionCategory = (IgnorePlatforms) ?
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
                 : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
             
@@ -1092,7 +1087,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    floorY = GetFloorY();
+                    RefreshFloorY();
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
                     if (targetMovement.Y < 0.0f)
                     {
@@ -1441,11 +1436,15 @@ namespace Barotrauma
 
         partial void Splash(Limb limb, Hull limbHull);
 
-        protected float GetFloorY(Limb refLimb = null, bool ignoreStairs = false)
+        protected void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)
         {
             PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
-
-            return GetFloorY(refBody.SimPosition, ignoreStairs);            
+            if (Vector2.DistanceSquared(lastFloorCheckPos, refBody.SimPosition) > 0.1f * 0.1f || lastFloorCheckIgnoreStairs != ignoreStairs)
+            {
+                floorY = GetFloorY(refBody.SimPosition, ignoreStairs);
+                lastFloorCheckPos = refBody.SimPosition;
+                lastFloorCheckIgnoreStairs = ignoreStairs;
+            }
         }
 
         protected float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
@@ -1456,7 +1455,6 @@ namespace Barotrauma
             if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) height = Math.Max(height, TorsoPosition.Value);
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
-
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
             float closestFraction = 1;
@@ -1484,6 +1482,7 @@ namespace Barotrauma
 
                 if (fraction < closestFraction)
                 {
+                    floorNormal = normal;
                     closestFraction = fraction;
                 }
 
@@ -1493,6 +1492,7 @@ namespace Barotrauma
 
             if (closestFraction == 1) //raycast didn't hit anything
             {
+                floorNormal = Vector2.UnitY;
                 return (currentHull == null) ? -1000.0f : ConvertUnits.ToSimUnits(currentHull.Rect.Y - currentHull.Rect.Height);
             }
             else
