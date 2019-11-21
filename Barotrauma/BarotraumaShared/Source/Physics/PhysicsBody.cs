@@ -776,7 +776,7 @@ namespace Barotrauma
             ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
         }
 
-        public void Update(float deltaTime)
+        public void Update()
         {
             if (drawOffset.LengthSquared() < 0.01f)
             {

@@ -668,7 +668,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (PhysicsBody body in PhysicsBody.List)
                 {
                     body.SetPrevTransform(body.SimPosition, body.Rotation);
-                    body.Update((float)deltaTime);
+                    body.Update();
                 }
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
