@@ -104,12 +104,13 @@ namespace Barotrauma
                 RemoveRoundSound(roundSounds[i]);
             }
         }
-        
-        //drawing ----------------------------------------------------
 
+        //drawing ----------------------------------------------------
+        private static readonly HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+        private static readonly HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
         public static void CullEntities(Camera cam)
         {
-            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+            visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
                 if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
@@ -126,7 +127,7 @@ namespace Barotrauma
                 }
             }
 
-            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
+            visibleRuins.Clear();
             if (Level.Loaded != null)
             {
                 foreach (Ruin ruin in Level.Loaded.Ruins)
@@ -168,7 +169,6 @@ namespace Barotrauma
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
             }
         }
-
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {

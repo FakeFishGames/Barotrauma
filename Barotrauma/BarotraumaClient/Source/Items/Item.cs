@@ -161,6 +161,12 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
+            // Inside of a container
+            if (container != null)
+            {
+                return false;
+            }
+
             //no drawable components and the body has been disabled = nothing to draw
             if (drawableComponents.Count == 0 && body != null && !body.Enabled)
             {
