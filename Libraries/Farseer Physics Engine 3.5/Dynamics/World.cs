@@ -59,7 +59,7 @@ namespace FarseerPhysics.Dynamics
         private List<Fixture> _testPointAllFixtures;
         private Stopwatch _watch = new Stopwatch();
         private Func<Fixture, Vector2, Vector2, float, float> _rayCastCallback;
-        private Func<RayCastInput, int, Category, float> _rayCastCallbackWrapper;
+        private Func<RayCastInput, int, float> _rayCastCallbackWrapper;
 
         internal Queue<Contact> _contactPool = new Queue<Contact>(256);
         internal bool _worldHasNewFixture;
@@ -395,17 +395,12 @@ namespace FarseerPhysics.Dynamics
             return _queryAABBCallback(proxy.Fixture);
         }
 
-        private float RayCastCallbackWrapper(RayCastInput rayCastInput, int proxyId, Category collisionCategory = Category.All)
+        private float RayCastCallbackWrapper(RayCastInput rayCastInput, int proxyId)
         {
             FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
             Fixture fixture = proxy.Fixture;
-            if (collisionCategory != Category.All && !collisionCategory.HasFlag(fixture.CollisionCategories)) 
-            { 
-                return rayCastInput.MaxFraction; 
-            }
             int index = proxy.ChildIndex;
             bool hit = fixture.RayCast(out RayCastOutput output, ref rayCastInput, index);
-
             if (hit)
             {
                 float fraction = output.Fraction;
