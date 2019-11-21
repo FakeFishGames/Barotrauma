@@ -228,11 +228,11 @@ namespace Barotrauma.Lights
             activeLights.Clear();
             foreach (LightSource light in lights)
             {
-                if (light.Color.A < 1 || light.Range < 1.0f || !light.Enabled) continue;
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) continue;
+                if (!light.Enabled) { continue; }
+                if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) { continue; }
                 activeLights.Add(light);
             }
-
 
             //clear the lightmap
             graphics.Clear(Color.Black);
@@ -244,9 +244,9 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in activeLights)
             {
-                if (!light.IsBackground) continue;
+                if (!light.IsBackground) { continue; }
                 light.DrawSprite(spriteBatch, cam);
-                light.DrawLightVolume(spriteBatch, lightEffect, transform);
+                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
                 backgroundSpritesDrawn = true;
             }
             GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
@@ -288,7 +288,7 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) continue;
+                if (light.IsBackground) { continue; }
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
@@ -349,8 +349,8 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) continue;
-                light.DrawLightVolume(spriteBatch, lightEffect, transform);
+                if (light.IsBackground) { continue; }
+                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
             }
             Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
             lightEffect.World = Matrix.CreateTranslation(Vector3.Zero) * transform;
