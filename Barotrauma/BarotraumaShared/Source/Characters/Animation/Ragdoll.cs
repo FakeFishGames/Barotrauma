@@ -94,7 +94,7 @@ namespace Barotrauma
         protected bool inWater, headInWater;
         public bool onGround;
         private Vector2 lastFloorCheckPos;
-        private bool lastFloorCheckIgnoreStairs;
+        private bool lastFloorCheckIgnoreStairs, lastFloorCheckIgnorePlatforms;
 
         /// <summary>
         /// In sim units. Joint scale applied.
@@ -1087,7 +1087,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    RefreshFloorY();
+                    RefreshFloorY(ignoreStairs: Stairs == null);
                     float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
                     if (targetMovement.Y < 0.0f)
                     {
@@ -1439,11 +1439,12 @@ namespace Barotrauma
         protected void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)
         {
             PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
-            if (Vector2.DistanceSquared(lastFloorCheckPos, refBody.SimPosition) > 0.1f * 0.1f || lastFloorCheckIgnoreStairs != ignoreStairs)
+            if (Vector2.DistanceSquared(lastFloorCheckPos, refBody.SimPosition) > 0.1f * 0.1f || lastFloorCheckIgnoreStairs != ignoreStairs || lastFloorCheckIgnorePlatforms != IgnorePlatforms)
             {
                 floorY = GetFloorY(refBody.SimPosition, ignoreStairs);
                 lastFloorCheckPos = refBody.SimPosition;
                 lastFloorCheckIgnoreStairs = ignoreStairs;
+                lastFloorCheckIgnorePlatforms = IgnorePlatforms;
             }
         }
 
