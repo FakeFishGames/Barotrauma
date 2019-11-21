@@ -244,6 +244,9 @@ namespace Barotrauma
                             ItemPrefab.LoadFromFile(file.Path);
                             shouldRefreshFabricationRecipes = true;
                             break;
+                        case ContentType.Structure:
+                            StructurePrefab.LoadFromFile(file.Path);
+                            break;
                         case ContentType.Submarine:
                             shouldRefreshSubs = true;
                             break;
@@ -262,6 +265,7 @@ namespace Barotrauma
                     {
                         case ContentType.Character:
                         case ContentType.Item:
+                        case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Particles:
@@ -306,6 +310,9 @@ namespace Barotrauma
                             ItemPrefab.Remove(file.Path);
                             shouldRefreshFabricationRecipes = true;
                             break;
+                        case ContentType.Structure:
+                            StructurePrefab.RemoveByFile(file.Path);
+                            break;
                         case ContentType.Submarine:
                             shouldRefreshSubs = true;
                             break;
@@ -324,6 +331,7 @@ namespace Barotrauma
                     {
                         case ContentType.Character:
                         case ContentType.Item:
+                        case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Particles:

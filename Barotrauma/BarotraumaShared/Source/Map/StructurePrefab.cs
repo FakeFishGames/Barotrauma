@@ -10,6 +10,7 @@ namespace Barotrauma
     partial class StructurePrefab : MapEntityPrefab
     {
         public XElement ConfigElement { get; private set; }
+        public string ConfigFile { get; private set; }
 
         private bool canSpriteFlipX, canSpriteFlipY;
 
@@ -158,44 +159,70 @@ namespace Barotrauma
         {            
             foreach (string filePath in filePaths)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { return; }
-                var rootElement = doc.Root;
-                if (rootElement.IsOverride())
+                LoadFromFile(filePath);
+            }
+        }
+        
+        public static void LoadFromFile(string filePath)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null) { return; }
+            var rootElement = doc.Root;
+            if (rootElement.IsOverride())
+            {
+                foreach (var element in rootElement.Elements())
                 {
-                    foreach (var element in rootElement.Elements())
+                    foreach (var childElement in element.Elements())
+                    {
+                        Load(childElement, true, filePath);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var element in rootElement.Elements())
+                {
+                    if (element.IsOverride())
                     {
                         foreach (var childElement in element.Elements())
                         {
-                            Load(childElement, true);
+                            Load(childElement, true, filePath);
                         }
                     }
-                }
-                else
-                {
-                    foreach (var element in rootElement.Elements())
+                    else
                     {
-                        if (element.IsOverride())
-                        {
-                            foreach (var childElement in element.Elements())
-                            {
-                                Load(childElement, true);
-                            }
-                        }
-                        else
-                        {
-                            Load(element, false);
-                        }
+                        Load(element, false, filePath);
                     }
                 }
             }
         }
-        
-        public static StructurePrefab Load(XElement element, bool allowOverride)
+
+        public static void RemoveByFile(string filePath)
+        {
+            List<StructurePrefab> prefabsToRemove = new List<StructurePrefab>();
+            foreach (var list in Prefabs)
+            {
+                foreach (var prefab in list)
+                {
+                    if (prefab is StructurePrefab sp && sp.ConfigFile == filePath)
+                    {
+                        prefabsToRemove.Add(sp);
+                    }
+                }
+            }
+
+            foreach (var sp in prefabsToRemove)
+            {
+                RemoveFromList(sp);
+            }
+        }
+
+        public static StructurePrefab Load(XElement element, bool allowOverride, string filePath)
         {
             StructurePrefab sp = new StructurePrefab
             {
-                name = element.GetAttributeString("name", "")
+                name = element.GetAttributeString("name", ""),
+                ConfigFile = filePath
             };
             sp.ConfigElement = element;
             sp.identifier = element.GetAttributeString("identifier", "");
