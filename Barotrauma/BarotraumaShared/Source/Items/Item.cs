@@ -387,15 +387,18 @@ namespace Barotrauma
                     if (Math.Abs(lastSentCondition - condition) > 1.0f)
                     {
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                     else if (wasInFullCondition != IsFullCondition)
                     {
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                     else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
                         sendConditionUpdateTimer = 0.0f;
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                 }
             }
@@ -837,7 +840,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (!updateableComponents.Contains(component)) { updateableComponents.Add(component); }
+                    if (!updateableComponents.Contains(component)) 
+                    { 
+                        updateableComponents.Add(component);
+                        this.isActive = true;
+                    }
                 }
             };
 
@@ -1234,8 +1241,12 @@ namespace Barotrauma
             }
         }
 
+        private bool isActive = true;
+
         public override void Update(float deltaTime, Camera cam)
         {
+            if (!isActive) { return; }
+
             aiTarget?.Update(deltaTime);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
@@ -1338,7 +1349,15 @@ namespace Barotrauma
                     ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
                 }
             }
+            else
+            {
+                if (updateableComponents.Count == 0 && aiTarget == null && !conditionUpdatePending && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
+                {
+                    isActive = false;
+                }
+            }
         }
+
                 
         public void UpdateTransform()
         {
