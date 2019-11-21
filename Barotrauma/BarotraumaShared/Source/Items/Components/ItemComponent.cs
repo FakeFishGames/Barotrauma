@@ -51,7 +51,18 @@ namespace Barotrauma.Items.Components
 
         public List<Skill> requiredSkills;
 
-        public ItemComponent Parent;
+        private ItemComponent parent;
+        public ItemComponent Parent
+        {
+            get { return parent; }
+            set
+            {
+                if (parent == value) { return; }
+                if (parent != null) { parent.OnActiveStateChanged -= SetActiveState; }
+                if (value != null) { value.OnActiveStateChanged += SetActiveState; }
+                parent = value;
+            }
+        }
 
         public readonly XElement originalElement;
 
@@ -307,15 +318,23 @@ namespace Barotrauma.Items.Components
 
                         break;
                     default:
-                        if (LoadElemProjSpecific(subElement)) break;
+                        if (LoadElemProjSpecific(subElement)) { break; }
                         ItemComponent ic = Load(subElement, item, item.ConfigFile, false);
-                        if (ic == null) break;
+                        if (ic == null) { break; }
 
                         ic.Parent = this;
+                        ic.IsActive = isActive;
+                        OnActiveStateChanged += ic.SetActiveState;
+
                         item.AddComponent(ic);
                         break;
                 }
             }
+        }
+
+        private void SetActiveState(bool isActive)
+        {
+            IsActive = isActive;
         }
 
         public void SetRequiredItems(XElement element)

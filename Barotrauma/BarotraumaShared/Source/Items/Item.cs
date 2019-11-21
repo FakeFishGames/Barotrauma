@@ -1253,7 +1253,6 @@ namespace Barotrauma
             {
                 ItemComponent ic = updateableComponents[i];
 
-                if (ic.Parent != null) { ic.IsActive = ic.Parent.IsActive; }
                 if (ic.IsActiveConditionals != null)
                 {
                     ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
