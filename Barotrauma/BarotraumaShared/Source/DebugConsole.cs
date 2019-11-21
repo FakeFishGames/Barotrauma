@@ -1434,7 +1434,7 @@ namespace Barotrauma
             if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
-                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                var matching = MapEntityPrefab.List.FirstOrDefault(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";

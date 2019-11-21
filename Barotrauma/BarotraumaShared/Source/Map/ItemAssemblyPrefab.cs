@@ -44,11 +44,11 @@ namespace Barotrauma
             foreach (XElement entityElement in doc.Root.Elements())
             {
                 string identifier = entityElement.GetAttributeString("identifier", "");
-                MapEntityPrefab mapEntity = List.Find(p => p.Identifier == identifier);
+                MapEntityPrefab mapEntity = List.FirstOrDefault(p => p.Identifier == identifier);
                 if (mapEntity == null)
                 {
                     string entityName = entityElement.GetAttributeString("name", "");
-                    mapEntity = List.Find(p => p.Name == entityName);
+                    mapEntity = List.FirstOrDefault(p => p.Name == entityName);
                 }
 
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
@@ -64,17 +64,17 @@ namespace Barotrauma
 
             Bounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
             
-            List.Add(this);
+            AddToList(this);
         }
 
         public static void Remove(string filePath)
         {
-            var matchingAssembly = List.Find(prefab => 
+            var matchingAssembly = List.FirstOrDefault(prefab => 
                 prefab is ItemAssemblyPrefab assemblyPrefab && 
                 assemblyPrefab.configPath == filePath);
             if (matchingAssembly != null)
             {
-                List.Remove(matchingAssembly);
+                RemoveFromList(matchingAssembly);
             }
         }
         
@@ -113,7 +113,7 @@ namespace Barotrauma
         
         public void Delete()
         {
-            List.Remove(this);
+            RemoveFromList(this);
             if (File.Exists(configPath))
             {
                 try

@@ -812,7 +812,7 @@ namespace Barotrauma
 
             if (HandleExisting(identifier, allowOverriding, filePath))
             {
-                List.Add(this);
+                AddToList(this);
             }
         }
 
@@ -836,7 +836,7 @@ namespace Barotrauma
                 if (prefab == null)
                 {
                     string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                    prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
                 }
 
             }
@@ -848,7 +848,7 @@ namespace Barotrauma
                 if (prefab == null)
                 {
                     string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                    prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
                 }
             }
 

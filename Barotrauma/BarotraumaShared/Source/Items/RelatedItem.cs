@@ -171,7 +171,7 @@ namespace Barotrauma
                 List<string> convertedIdentifiers = new List<string>();
                 foreach (string itemName in itemNames)
                 {
-                    if (MapEntityPrefab.List.Find(me => me.Name == itemName) is ItemPrefab matchingItem)
+                    if (MapEntityPrefab.List.FirstOrDefault(me => me.Name == itemName) is ItemPrefab matchingItem)
                     {
                         convertedIdentifiers.Add(matchingItem.Identifier);
                     }

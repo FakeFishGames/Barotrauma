@@ -264,7 +264,7 @@ namespace Barotrauma
 
             var children = PreviewElement.Elements().ToList();
 
-            var outfitPrefab = MapEntityPrefab.List.Find(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier)) as ItemPrefab;
+            var outfitPrefab = MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier)) as ItemPrefab;
             if (outfitPrefab == null) { return null; }
             var wearables = outfitPrefab.ConfigElement.Elements("Wearable");
             if (!wearables.Any()) { return null; }

@@ -307,7 +307,7 @@ namespace Barotrauma
             }
             if (sp.HandleExisting(sp.Identifier, allowOverride))
             {
-                List.Add(sp);
+                AddToList(sp);
             }
             return sp;
         }

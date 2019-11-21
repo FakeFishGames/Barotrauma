@@ -129,7 +129,7 @@ namespace Barotrauma
 
                     if (itemContainer == null)
                     {
-                        containerPrefab = MapEntityPrefab.List.Find(ep => 
+                        containerPrefab = MapEntityPrefab.List.FirstOrDefault(ep => 
                             ep.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
                             (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant()))) as ItemPrefab;
 

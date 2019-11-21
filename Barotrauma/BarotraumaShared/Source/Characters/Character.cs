@@ -2385,7 +2385,7 @@ namespace Barotrauma
             if (IsHuman)
             {
                 var containerPrefab =
-                    (MapEntityPrefab.List.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    (MapEntityPrefab.List.FirstOrDefault(me => me.Tags.Contains("despawncontainer")) ??
                     MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
                 if (containerPrefab == null)
                 {

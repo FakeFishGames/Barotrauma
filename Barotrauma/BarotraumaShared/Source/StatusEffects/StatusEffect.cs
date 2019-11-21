@@ -54,7 +54,7 @@ namespace Barotrauma
                     //backwards compatibility
                     DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
                     string itemPrefabName = element.GetAttributeString("name", "");
-                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && (m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName))) as ItemPrefab;
+                    ItemPrefab = MapEntityPrefab.List.FirstOrDefault(m => m is ItemPrefab && (m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName))) as ItemPrefab;
                     if (ItemPrefab == null)
                     {
                         DebugConsole.ThrowError("Error in StatusEffect \""+ parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
@@ -68,7 +68,7 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Invalid item spawn in StatusEffect \"" + parentDebugName + "\" - identifier not found in the element \"" + element.ToString() + "\"");
                     }
-                    ItemPrefab = MapEntityPrefab.List.Find(m => m is ItemPrefab && m.Identifier == itemPrefabIdentifier) as ItemPrefab;
+                    ItemPrefab = MapEntityPrefab.List.FirstOrDefault(m => m is ItemPrefab && m.Identifier == itemPrefabIdentifier) as ItemPrefab;
                     if (ItemPrefab == null)
                     {
                         DebugConsole.ThrowError("Error in StatusEffect config - item prefab with the identifier \"" + itemPrefabIdentifier + "\" not found.");
