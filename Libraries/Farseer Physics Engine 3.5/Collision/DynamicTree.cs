@@ -388,7 +388,8 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(IBroadPhase broadPhase, Func<RayCastInput, int, float> callback, ref RayCastInput input, Category collisionCategory = Category.All)
+        /// <param name="collisionCategory">The collision categories of the fixtures to raycast against.</param>
+        public void RayCast(IBroadPhase broadPhase, Func<RayCastInput, FixtureProxy, float> callback, ref RayCastInput input, Category collisionCategory = Category.All)
         {
             Vector2 p1 = input.Point1;
             Vector2 p2 = input.Point2;
@@ -423,15 +424,6 @@ namespace FarseerPhysics.Collision
                     continue;
                 }
 
-                if (collisionCategory != Category.All)
-                {
-                    FixtureProxy proxy = broadPhase.GetProxy(nodeId);
-                    if (proxy.Fixture != null && !collisionCategory.HasFlag(proxy.Fixture.CollisionCategories))
-                    {
-                        continue;
-                    }                    
-                }
-
                 //TreeNode<T>* node = &_nodes[nodeId];
 
                 if (AABB.TestOverlap(ref _nodes[nodeId].AABB, ref segmentAABB) == false)
@@ -451,12 +443,18 @@ namespace FarseerPhysics.Collision
 
                 if (_nodes[nodeId].IsLeaf())
                 {
+                    FixtureProxy proxy = broadPhase.GetProxy(nodeId);
+                    if (collisionCategory != Category.All && !collisionCategory.HasFlag(proxy.Fixture.CollisionCategories))
+                    {
+                        continue;
+                    }
+
                     RayCastInput subInput;
                     subInput.Point1 = input.Point1;
                     subInput.Point2 = input.Point2;
                     subInput.MaxFraction = maxFraction;
 
-                    float value = callback(subInput, nodeId);
+                    float value = callback(subInput, proxy);
 
                     if (value == 0.0f)
                     {

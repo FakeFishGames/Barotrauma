@@ -59,7 +59,7 @@ namespace FarseerPhysics.Dynamics
         private List<Fixture> _testPointAllFixtures;
         private Stopwatch _watch = new Stopwatch();
         private Func<Fixture, Vector2, Vector2, float, float> _rayCastCallback;
-        private Func<RayCastInput, int, float> _rayCastCallbackWrapper;
+        private Func<RayCastInput, FixtureProxy, float> _rayCastCallbackWrapper;
 
         internal Queue<Contact> _contactPool = new Queue<Contact>(256);
         internal bool _worldHasNewFixture;
@@ -395,9 +395,8 @@ namespace FarseerPhysics.Dynamics
             return _queryAABBCallback(proxy.Fixture);
         }
 
-        private float RayCastCallbackWrapper(RayCastInput rayCastInput, int proxyId)
+        private float RayCastCallbackWrapper(RayCastInput rayCastInput, FixtureProxy proxy)
         {
-            FixtureProxy proxy = ContactManager.BroadPhase.GetProxy(proxyId);
             Fixture fixture = proxy.Fixture;
             int index = proxy.ChildIndex;
             bool hit = fixture.RayCast(out RayCastOutput output, ref rayCastInput, index);
@@ -1340,6 +1339,7 @@ namespace FarseerPhysics.Dynamics
         /// <param name="callback">A user implemented callback class.</param>
         /// <param name="point1">The ray starting point.</param>
         /// <param name="point2">The ray ending point.</param>
+        /// <param name="collisionCategory">The collision categories of the fixtures to raycast against.</param>
         public void RayCast(Func<Fixture, Vector2, Vector2, float, float> callback, Vector2 point1, Vector2 point2, Category collisionCategory = Category.All)
         {
             RayCastInput input = new RayCastInput();
@@ -1348,7 +1348,7 @@ namespace FarseerPhysics.Dynamics
             input.Point2 = point2;
 
             _rayCastCallback = callback;
-            ContactManager.BroadPhase.RayCast(_rayCastCallbackWrapper, ref input);
+            ContactManager.BroadPhase.RayCast(_rayCastCallbackWrapper, ref input, collisionCategory);
             _rayCastCallback = null;
         }
 
