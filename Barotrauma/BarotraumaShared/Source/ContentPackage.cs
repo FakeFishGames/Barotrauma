@@ -216,8 +216,6 @@ namespace Barotrauma
             }
         }
 
-        public bool NeedsRestart;
-
         public override string ToString()
         {
             return Name;

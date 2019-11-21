@@ -515,7 +515,7 @@ namespace Barotrauma
                     GameMain.ServerListScreen.Select();
                     break;
                 case Tab.HostServer:
-                    if (GameMain.Config.ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+                    if (GameMain.Config.ContentPackageSelectionDirty)
                     {
                         new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
                         selectedTab = 0;
@@ -727,8 +727,7 @@ namespace Barotrauma
             GameMain.Config.SaveNewPlayerConfig();
             
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
-                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
-                ContentPackage.List.Any(cp => cp.NeedsRestart))
+                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox(
                     TextManager.Get("RestartRequiredLabel"),

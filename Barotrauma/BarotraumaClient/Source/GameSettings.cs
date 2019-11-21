@@ -30,12 +30,6 @@ namespace Barotrauma
 
         public Action OnHUDScaleChanged;
 
-        public bool ContentPackageSelectionDirty
-        {
-            get;
-            private set;
-        }
-
         public GUIFrame SettingsFrame
         {
             get
@@ -1010,13 +1004,6 @@ namespace Barotrauma
         {
             var contentPackage = tickBox.UserData as ContentPackage;
 
-            var items = contentPackage.GetFilesOfType(ContentType.Item);
-            var characters = contentPackage.GetFilesOfType(ContentType.Character);
-            var subs = contentPackage.GetFilesOfType(ContentType.Submarine);
-            //TODO: remove ContentType.None?
-            var none = contentPackage.GetFilesOfType(ContentType.None);
-
-            ContentPackageSelectionDirty &= contentPackage.Files.Count > (items.Count() + characters.Count() + subs.Count() + none.Count());
             if (contentPackage.CorePackage)
             {
                 if (tickBox.Selected)
@@ -1050,42 +1037,7 @@ namespace Barotrauma
                     DeselectContentPackage(contentPackage);
                 }
             }
-            if (subs.Any()) { Submarine.RefreshSavedSubs(); }
-            if (items.Any())
-            {
-                if (tickBox.Selected)
-                {
-                    foreach (var file in items)
-                    {
-                        ItemPrefab.LoadFromFile(file);
-                    }
-                }
-                else
-                {
-                    foreach (var file in items)
-                    {
-                        ItemPrefab.Remove(file);
-                    }
-                }
-                ItemPrefab.InitFabricationRecipes();
-            }
-            if (characters.Any())
-            {
-                if (tickBox.Selected)
-                {
-                    foreach (var file in characters)
-                    {
-                        Character.AddConfigFile(file);
-                    }
-                }
-                else
-                {
-                    foreach (var file in characters)
-                    {
-                        Character.RemoveConfigFile(file);
-                    }
-                }
-            }
+            
             UnsavedSettings = true;
             return true;
         }
@@ -1197,7 +1149,7 @@ namespace Barotrauma
         {
             ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) { GUI.SettingsMenuOpen = false; }
-            if (ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+            if (ContentPackageSelectionDirty)
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
             }

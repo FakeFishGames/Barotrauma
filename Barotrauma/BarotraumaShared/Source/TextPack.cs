@@ -17,11 +17,11 @@ namespace Barotrauma
 
         private Dictionary<string, List<string>> texts;
         
-        private readonly string filePath;
+        public readonly string FilePath;
 
         public TextPack(string filePath)
         {
-            this.filePath = filePath;
+            this.FilePath = filePath;
             texts = new Dictionary<string, List<string>>();
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
@@ -92,7 +92,7 @@ namespace Barotrauma
         {
             Dictionary<string, int> textCounts = new Dictionary<string, int>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(FilePath);
             if (doc == null) { return; }
 
             foreach (XElement subElement in doc.Root.Elements())

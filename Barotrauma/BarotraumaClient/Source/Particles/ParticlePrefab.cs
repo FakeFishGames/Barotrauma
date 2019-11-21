@@ -17,6 +17,11 @@ namespace Barotrauma.Particles
             private set;
         }
 
+        public string FilePath
+        {
+            get;
+            private set;
+        }
         public string DisplayName
         {
             get;
@@ -195,9 +200,10 @@ namespace Barotrauma.Particles
 
         //----------------------------------------------------
 
-        public ParticlePrefab(XElement element)
+        public ParticlePrefab(XElement element, string filePath)
         {
             Name = element.Name.ToString();
+            FilePath = filePath;
             DisplayName = TextManager.Get("particle." + Name, true) ?? Name;
 
             Sprites = new List<Sprite>();

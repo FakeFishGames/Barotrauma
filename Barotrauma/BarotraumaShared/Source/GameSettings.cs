@@ -219,12 +219,70 @@ namespace Barotrauma
 
         public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
 
+        public bool ContentPackageSelectionDirty
+        {
+            get;
+            private set;
+        }
+
         public void SelectContentPackage(ContentPackage contentPackage)
         {
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
-                //contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
+
+                bool shouldRefreshSubs = false;
+                bool shouldRefreshFabricationRecipes = false;
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    switch (file.Type)
+                    {
+                        case ContentType.Character:
+                            Character.AddConfigFile(file.Path);
+                            break;
+                        case ContentType.Item:
+                            ItemPrefab.LoadFromFile(file.Path);
+                            shouldRefreshFabricationRecipes = true;
+                            break;
+                        case ContentType.Submarine:
+                            shouldRefreshSubs = true;
+                            break;
+                        case ContentType.Text:
+                            TextManager.LoadTextPack(file.Path);
+                            break;
+
+#if CLIENT
+                        case ContentType.Particles:
+                            GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
+                            break;
+#endif
+                    }
+
+                    switch (file.Type)
+                    {
+                        case ContentType.Character:
+                        case ContentType.Item:
+                        case ContentType.Submarine:
+                        case ContentType.Text:
+                        case ContentType.Particles:
+                        case ContentType.None: //TODO: remove
+                            break; //do nothing here if the content type is supported
+                        default:
+                            ContentPackageSelectionDirty = true;
+                            break;
+                    }
+                }
+
+                if (shouldRefreshSubs)
+                {
+                    Submarine.RefreshSavedSubs();
+                }
+
+                if (shouldRefreshFabricationRecipes)
+                {
+                    ItemPrefab.InitFabricationRecipes();
+                }
+
                 ContentPackage.SortContentPackages();
             }
         }
@@ -234,7 +292,59 @@ namespace Barotrauma
             if (SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Remove(contentPackage);
-                //contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
+
+                bool shouldRefreshSubs = false;
+                bool shouldRefreshFabricationRecipes = false;
+                foreach (ContentFile file in contentPackage.Files)
+                {
+                    switch (file.Type)
+                    {
+                        case ContentType.Character:
+                            Character.RemoveConfigFile(file.Path);
+                            break;
+                        case ContentType.Item:
+                            ItemPrefab.Remove(file.Path);
+                            shouldRefreshFabricationRecipes = true;
+                            break;
+                        case ContentType.Submarine:
+                            shouldRefreshSubs = true;
+                            break;
+                        case ContentType.Text:
+                            TextManager.RemoveTextPack(file.Path);
+                            break;
+
+#if CLIENT
+                        case ContentType.Particles:
+                            GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
+                            break;
+#endif
+                    }
+
+                    switch (file.Type)
+                    {
+                        case ContentType.Character:
+                        case ContentType.Item:
+                        case ContentType.Submarine:
+                        case ContentType.Text:
+                        case ContentType.Particles:
+                        case ContentType.None: //TODO: remove
+                            break; //do nothing here if the content type is supported
+                        default:
+                            ContentPackageSelectionDirty = true;
+                            break;
+                    }
+                }
+
+                if (shouldRefreshSubs)
+                {
+                    Submarine.RefreshSavedSubs();
+                }
+
+                if (shouldRefreshFabricationRecipes)
+                {
+                    ItemPrefab.InitFabricationRecipes();
+                }
+
                 ContentPackage.SortContentPackages();
             }
         }

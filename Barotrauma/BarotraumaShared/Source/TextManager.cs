@@ -80,13 +80,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    var textPack = new TextPack(file);
-                    availableLanguages.Add(textPack.Language);
-                    if (!textPacks.ContainsKey(textPack.Language))
-                    {
-                        textPacks.Add(textPack.Language, new List<TextPack>());
-                    }
-                    textPacks[textPack.Language].Add(textPack);
+                    LoadTextPack(file);
                 }
                 catch (Exception e)
                 {
@@ -106,6 +100,44 @@ namespace Barotrauma
                 textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
             Initialized = true;
+        }
+
+        public static void LoadTextPack(string file)
+        {
+            var textPack = new TextPack(file);
+            if (!availableLanguages.Contains(textPack.Language)) { availableLanguages.Add(textPack.Language); }
+            if (!textPacks.ContainsKey(textPack.Language))
+            {
+                textPacks.Add(textPack.Language, new List<TextPack>());
+            }
+            textPacks[textPack.Language].Add(textPack);
+        }
+
+        public static void RemoveTextPack(string file)
+        {
+            List<string> keysToRemove = new List<string>();
+            foreach (var textPackKVP in textPacks)
+            {
+                var textPackLanguage = textPackKVP.Key;
+                var textPackList = textPackKVP.Value;
+                for (int i=0;i<textPackList.Count;i++)
+                {
+                    if (textPackList[i].FilePath == file)
+                    {
+                        textPackList.Remove(textPackList[i]);
+                        if (textPackList.Count == 0)
+                        {
+                            keysToRemove.Add(textPackLanguage);
+                        }
+                    }
+                }
+            }
+
+            foreach (var key in keysToRemove)
+            {
+                availableLanguages.Remove(key);
+                textPacks.Remove(key);
+            }
         }
 
         public static bool ContainsTag(string textTag)

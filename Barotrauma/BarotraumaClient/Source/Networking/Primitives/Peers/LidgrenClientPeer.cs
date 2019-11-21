@@ -169,7 +169,7 @@ namespace Barotrauma.Networking
 
                     outMsg.Write(GameMain.Version.ToString());
 
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent && !cp.NeedsRestart);
+                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
                     outMsg.WriteVariableInt32(mpContentPackages.Count());
                     foreach (ContentPackage contentPackage in mpContentPackages)
                     {
