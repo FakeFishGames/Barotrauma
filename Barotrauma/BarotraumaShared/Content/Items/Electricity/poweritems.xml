@@ -10,11 +10,13 @@
         <Conditional currPowerConsumption="lt -10" />
       </StatusEffect>
     </PowerTransfer>
-    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false">
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="1" IsOn="true" castshadows="false" allowingameediting="false">
+      <Upgrade gameversion="0.9.600.0" lightcolor="255,255,255,0"/>
       <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="0,121,73,121" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq False" />
     </LightComponent>
-    <LightComponent range="10.0" lightcolor="255,255,255,5" powerconsumption="1" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1.5">
+    <LightComponent range="10.0" lightcolor="255,255,255,0" powerconsumption="1" IsOn="false" castshadows="false" allowingameediting="false" blinkfrequency="1.5">
+      <Upgrade gameversion="0.9.600.0" lightcolor="255,255,255,0"/>
       <sprite texture="Content/Items/Electricity/JunctionBox.png" sourcerect="73,121,73,123" depth="0.1" origin="0.5,0.5" alpha="1.0" />
       <IsActive targetitemcomponent="PowerTransfer" overload="eq True" />
     </LightComponent>
