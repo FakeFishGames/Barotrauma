@@ -444,7 +444,9 @@ namespace FarseerPhysics.Collision
                 if (_nodes[nodeId].IsLeaf())
                 {
                     FixtureProxy proxy = broadPhase.GetProxy(nodeId);
-                    if (collisionCategory != Category.All && !collisionCategory.HasFlag(proxy.Fixture.CollisionCategories))
+                    if (collisionCategory != Category.All &&
+                        //!collisionCategory.HasFlag(proxy.Fixture.CollisionCategories)
+                        (collisionCategory & proxy.Fixture.CollisionCategories) == 0)
                     {
                         continue;
                     }

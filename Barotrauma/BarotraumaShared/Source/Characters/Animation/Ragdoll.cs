@@ -1275,6 +1275,7 @@ namespace Barotrauma
                             if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                             break;
                         default:
+                            System.Diagnostics.Debug.Assert(false, "Floor raycast should not have hit a fixture with the collision category " + fixture.CollisionCategories);
                             return -1;
                     }
 
@@ -1285,8 +1286,7 @@ namespace Barotrauma
                     }
 
                     return closestFraction;
-                }
-                , rayStart, rayEnd);
+                }, rayStart, rayEnd, Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
 
                 if (closestFraction < 1.0f && closestFixture != null)
                 {
@@ -1478,6 +1478,7 @@ namespace Barotrauma
                         if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
                         break;
                     default:
+                        System.Diagnostics.Debug.Assert(false, "Floor raycast should not have hit a fixture with the collision category " + fixture.CollisionCategories);
                         return -1;
                 }
 
@@ -1487,8 +1488,7 @@ namespace Barotrauma
                 }
 
                 return closestFraction;
-            }
-            , rayStart, rayEnd);
+            }, rayStart, rayEnd,  Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
 
 
             if (closestFraction == 1) //raycast didn't hit anything

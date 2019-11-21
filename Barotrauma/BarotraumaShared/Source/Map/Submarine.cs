@@ -823,8 +823,7 @@ namespace Barotrauma
                     if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
-            }
-            , rayStart, rayEnd);
+            }, rayStart, rayEnd, collisionCategory ?? Category.All);
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
@@ -874,7 +873,7 @@ namespace Barotrauma
                 }
                 //continue
                 return -1;
-            }, rayStart, rayEnd);
+            }, rayStart, rayEnd, collisionCategory ?? Category.All);
 
             if (allowInsideFixture)
             {
