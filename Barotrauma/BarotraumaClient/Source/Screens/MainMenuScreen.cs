@@ -301,6 +301,7 @@ namespace Barotrauma
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.ProfilingTestBench,
+                ToolTip = "Enables performance indicators and starts the game with a fixed sub, crew and level to make it easier to compare the performance between sessions.",
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -568,6 +569,7 @@ namespace Barotrauma
                 case Tab.ProfilingTestBench:
                     QuickStart(fixedSeed: true);
                     GameMain.ShowPerf = true;
+                    GameMain.ShowFPS = true;
                     break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
