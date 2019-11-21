@@ -159,9 +159,9 @@ namespace Barotrauma.Items.Components
             };
 
             GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
-            modes.AddRadioButton(Mode.AutoPilot, autopilotTickBox);
-            modes.AddRadioButton(Mode.Manual, manualTickBox);
-            modes.Selected = Mode.Manual;
+            modes.AddRadioButton((int)Mode.AutoPilot, autopilotTickBox);
+            modes.AddRadioButton((int)Mode.Manual, manualTickBox);
+            modes.Selected = (int)Mode.Manual;
             
             var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), paddedControlContainer.RectTransform), "InnerFrame");
             var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.8f), autoPilotControls.RectTransform, Anchor.Center))
@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
             };
 
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
-                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont)
+                TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = maintainPos,
@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
 
             levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelStartSelected,
@@ -235,7 +235,7 @@ namespace Barotrauma.Items.Components
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
-                font: GUI.SmallFont)
+                font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
                 Selected = levelEndSelected,
@@ -263,11 +263,11 @@ namespace Barotrauma.Items.Components
             autoPilotControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, autoPilotControls.RectTransform), "InnerFrame");
 
             GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
-            destinations.AddRadioButton(Destination.MaintainPos, maintainPosTickBox);
-            destinations.AddRadioButton(Destination.LevelStart, levelStartTickBox);
-            destinations.AddRadioButton(Destination.LevelEnd, levelEndTickBox);
-            destinations.Selected = maintainPos        ? Destination.MaintainPos :
-                                    levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd;
+            destinations.AddRadioButton((int)Destination.MaintainPos, maintainPosTickBox);
+            destinations.AddRadioButton((int)Destination.LevelStart, levelStartTickBox);
+            destinations.AddRadioButton((int)Destination.LevelEnd, levelEndTickBox);
+            destinations.Selected = (int)(maintainPos        ? Destination.MaintainPos :
+                                          levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd);
             
             string steeringVelX = TextManager.Get("SteeringVelocityX");
             string steeringVelY = TextManager.Get("SteeringVelocityY");
@@ -442,7 +442,7 @@ namespace Barotrauma.Items.Components
             int x = rect.X;
             int y = rect.Y;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f) return;
+            if (Voltage < MinVoltage) { return; }
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
             Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
@@ -649,7 +649,7 @@ namespace Barotrauma.Items.Components
 
             autoPilotControlsDisabler.Visible = !AutoPilot;
 
-            if (voltage < minVoltage && currPowerConsumption > 0.0f)
+            if (Voltage < MinVoltage)
             {
                 tipContainer.Visible = true;
                 tipContainer.Text = noPowerTip;
@@ -819,6 +819,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             maintainPosIndicator?.Remove();
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();

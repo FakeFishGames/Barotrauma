@@ -370,9 +370,9 @@ namespace Barotrauma.Tutorials
                 }
                 else if (IsSelectedItem(engineer_brokenJunctionBox) && repairableJunctionBoxComponent.CurrentFixer == null)
                 {
-                    if (repairableJunctionBoxComponent.RepairButton.Frame.FlashTimer <= 0)
+                    if (repairableJunctionBoxComponent.RepairButton.FlashTimer <= 0)
                     {
-                        repairableJunctionBoxComponent.RepairButton.Frame.Flash();
+                        repairableJunctionBoxComponent.RepairButton.Flash();
                     }
                 }
                 yield return null;

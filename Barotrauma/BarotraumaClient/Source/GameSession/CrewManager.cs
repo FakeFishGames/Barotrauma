@@ -116,7 +116,8 @@ namespace Barotrauma
                 //Spacing = (int)(3 * GUI.Scale),
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
-                CanBeFocused = false
+                CanBeFocused = true,
+                OnSelected = (component, userdata) => false
             };
 
             scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
@@ -442,6 +443,13 @@ namespace Barotrauma
                 SelectedColor = Color.White,
                 ToolTip = characterToolTip
             };
+
+
+            if (GameMain.GameSession?.GameMode?.Mission is CombatMission combatMission)
+            {
+                new GUIFrame(new RectTransform(Vector2.One, characterArea.RectTransform), style: "InnerGlow",
+                    color: character.TeamID == Character.TeamType.Team1 ? Color.SteelBlue : Color.OrangeRed);
+            }
 
             var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
                 characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
@@ -1016,7 +1024,7 @@ namespace Barotrauma
             ToggleCrewAreaOpen = true;
             var characterElement = characterListBox.Content.FindChild(character);
             GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
-            if (orderBtn.Frame.FlashTimer <= 0)
+            if (orderBtn.FlashTimer <= 0)
             {
                 orderBtn.Flash(color, 1.5f, false, flashRectInflate);
             }
@@ -1360,7 +1368,7 @@ namespace Barotrauma
         public void UpdateReports(float deltaTime)
         {
             bool canIssueOrders = false;
-            if (Character.Controlled?.CurrentHull != null && Character.Controlled.SpeechImpediment < 100.0f)
+            if (Character.Controlled?.CurrentHull?.Submarine != null && Character.Controlled.SpeechImpediment < 100.0f)
             {
                 WifiComponent radio = GetHeadset(Character.Controlled, true);
                 canIssueOrders = radio != null && radio.CanTransmit();

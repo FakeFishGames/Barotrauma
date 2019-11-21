@@ -15,13 +15,18 @@ namespace Barotrauma
 
         protected ISteerable host;
 
-        private Vector2 steering;
-
-        private Vector2? avoidObstaclePos;
-        private float rayCastTimer;
-
-        private float wanderAngle;        
+        protected Vector2 steering;
         
+        private float lastRayCastTime;
+
+        private bool avoidRayCastHit;
+
+        public Vector2 AvoidDir { get; private set; }
+        public Vector2 AvoidRayCastHitPosition { get; private set; }
+        public Vector2 AvoidLookAheadPos { get; private set; }
+
+        private float wanderAngle;
+
         public float WanderAngle
         {
             get { return wanderAngle; }
@@ -45,9 +50,9 @@ namespace Barotrauma
             steering += DoSteeringWander(weight);
         }
 
-        public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1, Vector2? heading = null)
+        public void SteeringAvoid(float deltaTime, float lookAheadDistance, float weight = 1)
         {
-            steering += DoSteeringAvoid(deltaTime, lookAheadDistance, weight, heading);
+            steering += DoSteeringAvoid(deltaTime, lookAheadDistance, weight);
         }
 
         public void SteeringManual(float deltaTime, Vector2 velocity)
@@ -107,7 +112,7 @@ namespace Barotrauma
 
         protected virtual Vector2 DoSteeringWander(float weight)
         {
-            Vector2 circleCenter = (host.Steering == Vector2.Zero) ? Rand.Vector(weight) : host.Steering;
+            Vector2 circleCenter = (host.Steering == Vector2.Zero) ? Vector2.UnitY : host.Steering;
             circleCenter = Vector2.Normalize(circleCenter) * CircleDistance;
 
             Vector2 displacement = new Vector2(
@@ -135,70 +140,42 @@ namespace Barotrauma
             {
                 return Vector2.Zero;
             }
+
             float maxDistance = lookAheadDistance;
-            if (rayCastTimer <= 0.0f)
+            if (Timing.TotalTime >= lastRayCastTime + RayCastInterval)
             {
-                Vector2 ahead = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
-                rayCastTimer = RayCastInterval;
-                Body closestBody = Submarine.CheckVisibility(host.SimPosition, ahead);
-                if (closestBody == null)
+                avoidRayCastHit = false;
+                AvoidLookAheadPos = host.SimPosition + Vector2.Normalize(host.Steering) * maxDistance;
+                lastRayCastTime = (float)Timing.TotalTime;
+                Body closestBody = Submarine.CheckVisibility(host.SimPosition, AvoidLookAheadPos);
+                if (closestBody != null)
                 {
-                    avoidObstaclePos = null;
-                    return Vector2.Zero;
-                }
-                else
-                {
-                    // TODO: Doesn't take items into account (like turrets)
-                    if (closestBody.UserData is Structure closestStructure)
-                    {
-                        Vector2 obstaclePosition = Submarine.LastPickedPosition;
-                        if (closestStructure.IsHorizontal)
-                        {
-                            obstaclePosition.Y = closestStructure.SimPosition.Y;
-                        }
-                        else
-                        {
-                            obstaclePosition.X = closestStructure.SimPosition.X;
-                        }
-                        avoidObstaclePos = obstaclePosition;
-                    }
-                    else
-                    {
-                        avoidObstaclePos = Submarine.LastPickedPosition;
-                    }
+                    avoidRayCastHit = true;
+                    AvoidRayCastHitPosition = Submarine.LastPickedPosition;
+                    AvoidDir = Submarine.LastPickedNormal;
+                    //add a bit of randomness
+                    AvoidDir = MathUtils.RotatePoint(AvoidDir, Rand.Range(-0.15f, 0.15f));
+                    //wait a bit longer for the next raycast
+                    lastRayCastTime += RayCastInterval;
                 }
             }
-            else
+
+            if (AvoidDir.LengthSquared() < 0.0001f) { return Vector2.Zero; }
+
+            //if raycast hit nothing, lerp avoid dir to zero
+            if (!avoidRayCastHit)
             {
-                rayCastTimer -= deltaTime;
+                AvoidDir -= Vector2.Normalize(AvoidDir) * deltaTime * 0.5f;
             }
-            if (!avoidObstaclePos.HasValue)
-            {
-                return Vector2.Zero;
-            }
-            Vector2 diff = avoidObstaclePos.Value - host.SimPosition;
+
+            Vector2 diff = AvoidRayCastHitPosition - host.SimPosition;
             float dist = diff.Length();
 
-            if (dist > maxDistance)
-            {
-                return Vector2.Zero;
-            }
-            if (heading.HasValue)
-            {
-                var f = heading ?? host.Steering;
-                // Avoid to left or right depending on the current heading
-                Vector2 relativeVector = Vector2.Normalize(diff) - Vector2.Normalize(f);
-                var dir = relativeVector.X > 0 ? diff.Right() : diff.Left();
-                float factor = 1.0f - Math.Min(dist / maxDistance, 1);
-                return dir * factor * weight;
-            }
-            else
-            {
-                // Doesn't work right because it effectively just slows down or reverses the movement, where as we'd like to go right or left to avoid the target.
-                // There's also another issue, which also affects going right or left: the raycast doesn't hit anything if we turn too much -> avoiding doesn't work well.
-                // Could probably "remember" the avoidance a bit longer so that the avoid steering is not immedieately disgarded, but kept for a while and reduced gradually?
-                return -diff * (1.0f - dist / maxDistance) * weight;
-            }
+            //> 0 when heading in the same direction as the obstacle, < 0 when away from it
+            float dot = MathHelper.Clamp(Vector2.Dot(diff / dist, host.Steering), 0.0f, 1.0f);
+            if (dot < 0) { return Vector2.Zero; }
+
+            return AvoidDir * dot * weight * MathHelper.Clamp(1.0f - dist / lookAheadDistance, 0.0f, 1.0f);            
         }
     }
 }

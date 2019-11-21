@@ -16,7 +16,7 @@ namespace Barotrauma
         private GUIButton button;
         private GUIListBox listBox;
 
-        private RectTransform currentListBoxParent;
+        private RectTransform currentHighestParent;
         private List<RectTransform> parentHierarchy = new List<RectTransform>();
 
         private bool selectMultiple;
@@ -141,6 +141,8 @@ namespace Barotrauma
                 
         public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false) : base(style, rectT)
         {
+            CanBeFocused = true;
+
             this.selectMultiple = selectMultiple;
 
             button = new GUIButton(new RectTransform(Vector2.One, rectT), text, Alignment.CenterLeft, style: "GUIDropDown")
@@ -149,7 +151,7 @@ namespace Barotrauma
             };
             GUI.Style.Apply(button, "", this);
             
-            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, Anchor.BottomLeft, Pivot.TopLeft)
+            listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, Anchor.BottomCenter, Pivot.TopCenter)
             { IsFixedSize = false }, style: null)
             {
                 Enabled = !selectMultiple,
@@ -157,48 +159,55 @@ namespace Barotrauma
             };
             GUI.Style.Apply(listBox.Content, "GUIListBox", this);
 
-            currentListBoxParent = FindListBoxParent();
-            currentListBoxParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+            currentHighestParent = FindHighestParent();
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
             rectT.ParentChanged += (RectTransform newParent) =>
             {
-                currentListBoxParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
                 if (newParent != null)
                 {
-                    currentListBoxParent = FindListBoxParent();
-                    currentListBoxParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+                    currentHighestParent = FindHighestParent();
+                    currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
                 }
             };
         }
 
 
         /// <summary>
-        /// Finds the component after which the listbox should be drawn. Usually the parent of the dropdown, but if the dropdown
-        /// is the child of another GUIListBox, we need to draw our listbox after that because listboxes clip everything outside their rect.
+        /// Finds the component after which the listbox should be drawn 
+        /// //(= the component highest in the hierarchy, to get the listbox 
+        /// //to be rendered on top of all of it's children)
         /// </summary>
-        private RectTransform FindListBoxParent()
+        private RectTransform FindHighestParent()
         {
             parentHierarchy.Clear();
+
+            //collect entire parent hierarchy to a list
             parentHierarchy = new List<RectTransform>() { RectTransform.Parent };
-            while (parentHierarchy.Last().Parent != null)
+            RectTransform parent = parentHierarchy.Last();
+            while (parent?.Parent != null)
             {
-                parentHierarchy.Add(parentHierarchy.Last().Parent);
+                parentHierarchy.Add(parent.Parent);
+                parent = parent.Parent;
             }
-            //find the parent GUIListBox highest in the hierarchy
-            for (int i = parentHierarchy.Count - 1; i >= 0; i--)
+
+            //find the highest parent that has a guicomponent with a style 
+            //(and so should be rendered and not just some empty parent/root element used for constructing a layout)
+            for (int i = parentHierarchy.Count - 1; i > 0; i--)
             {
-                if (parentHierarchy[i].GUIComponent is GUIListBox)
+                if (parentHierarchy[i] is GUICanvas ||
+                    parentHierarchy[i].GUIComponent == null ||
+                    parentHierarchy[i].GUIComponent.Style == null ||
+                    parentHierarchy[i].GUIComponent == Screen.Selected?.Frame)
                 {
-                    if (parentHierarchy[i].Parent != null && parentHierarchy[i].Parent.GUIComponent != null)
-                    {
-                        return parentHierarchy[i].Parent;
-                    }
-                    return parentHierarchy[i];
+                    parentHierarchy.RemoveAt(i);
+                }
+                else
+                {
+                    break;
                 }
             }
-            //or just go with the direct parent if there are no listboxes in the hierarchy
-            parentHierarchy.Clear();
-            parentHierarchy.Add(RectTransform.Parent);
-            return RectTransform.Parent;
+            return parentHierarchy.Last();
         }
                 
         public void AddItem(string text, object userData = null, string toolTip = "")

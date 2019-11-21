@@ -52,7 +52,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull, Vector2 worldPosition)
         {
             if (entity == null) { return; }
 
@@ -70,7 +70,7 @@ namespace Barotrauma
                                 GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                                 return;
                             }
-                            soundChannel = SoundPlayer.PlaySound(sound.Sound, entity.WorldPosition, sound.Volume, sound.Range, hull);
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hull);
                             if (soundChannel != null) { soundChannel.Looping = loopSound; }
                         }
                     }
@@ -96,7 +96,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, entity.WorldPosition, selectedSound.Volume, selectedSound.Range, hull);
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hull);
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
@@ -120,7 +120,7 @@ namespace Barotrauma
                     }
                 }
 
-                emitter.Emit(deltaTime, entity.WorldPosition, hull, angle);
+                emitter.Emit(deltaTime, worldPosition, hull, angle);
             }
             
         }

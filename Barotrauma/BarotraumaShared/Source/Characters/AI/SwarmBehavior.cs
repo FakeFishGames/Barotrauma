@@ -10,9 +10,9 @@ namespace Barotrauma
 {
     class SwarmBehavior
     {
-        private float minDistFromClosest;
-        private float maxDistFromCenter;
-        private float cohesion;
+        private readonly float minDistFromClosest;
+        private readonly float maxDistFromCenter;
+        private readonly float cohesion;
 
         public List<AICharacter> Members { get; private set; } = new List<AICharacter>();
         public HashSet<AICharacter> ActiveMembers { get; private set; } = new HashSet<AICharacter>();
@@ -28,23 +28,29 @@ namespace Barotrauma
             this.ai = ai;
             minDistFromClosest = ConvertUnits.ToSimUnits(element.GetAttributeFloat("mindistfromclosest", 10.0f));
             maxDistFromCenter = ConvertUnits.ToSimUnits(element.GetAttributeFloat("maxdistfromcenter", 1000.0f));
-            cohesion = element.GetAttributeFloat("cohesion", 0.1f);
+            cohesion = element.GetAttributeFloat("cohesion", 1) / 10;
         }
 
         public static void CreateSwarm(IEnumerable<AICharacter> swarm)
         {
+            var aiControllers = new List<EnemyAIController>();
             foreach (AICharacter character in swarm)
             {
                 if (character.AIController is EnemyAIController enemyAI && enemyAI.SwarmBehavior != null)
                 {
-                    enemyAI.SwarmBehavior.Members = swarm.ToList();
+                    aiControllers.Add(enemyAI);
                 }
+            }
+            var filteredMembers = aiControllers.Select(m => m.Character as AICharacter).Where(m => m != null);
+            foreach (EnemyAIController ai in aiControllers)
+            {
+                ai.SwarmBehavior.Members = filteredMembers.ToList();
             }
         }
 
         public void Refresh()
         {
-            Members.RemoveAll(m => m.IsDead || m.Removed);
+            Members.RemoveAll(m => m.IsDead || m.Removed || m.AIController is EnemyAIController ai && ai.State == AIState.Flee);
             foreach (var member in Members)
             {
                 if (!member.AIController.Enabled && member.IsRemotePlayer || Character.Controlled == member || !((EnemyAIController)member.AIController).SwarmBehavior.IsActive)

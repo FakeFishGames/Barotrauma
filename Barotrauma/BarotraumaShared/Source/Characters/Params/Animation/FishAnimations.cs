@@ -140,7 +140,7 @@ namespace Barotrauma
 
     abstract class FishSwimParams : SwimParams, IFishAnimation
     {
-        [Serialize(false, true, description: "TODO"), Editable]
+        [Serialize(false, true, description: "Instead of linear movement (default), use a wave-like movement. Note: WaveAmplitude and WaveLength don't have any effect on this. It's synced with the movement speed."), Editable]
         public bool UseSineMovement { get; set; }
 
         [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
@@ -149,7 +149,7 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
         public bool Mirror { get; set; }
 
-        [Serialize(1f, true), Editable]
+        [Serialize(5f, true), Editable]
         public float WaveAmplitude { get; set; }
 
         [Serialize(10.0f, true), Editable]
@@ -166,6 +166,9 @@ namespace Barotrauma
 
         [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float TailTorque { get; set; }
+
+        [Serialize(1f, true, description: "Multiplier applied based on the angle difference between the tail and the main limb. Increasing the value prevents snake-like characters from getting tangled on themselves. Default = 1 (no boost)"), Editable(MinValueFloat = 1, MaxValueFloat = 100)]
+        public float TailTorqueMultiplier { get; set; }
 
         [Serialize(25.0f, true, description: "How much torque is used to rotate the feet to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
         public float FootTorque { get; set; }

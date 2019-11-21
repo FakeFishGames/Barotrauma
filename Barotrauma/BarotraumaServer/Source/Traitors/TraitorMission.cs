@@ -16,23 +16,16 @@ namespace Barotrauma
     {
         public class TraitorMission
         {
-            private static System.Random random = null;
-
-            public static void InitializeRandom() => random = new System.Random((int)DateTime.UtcNow.Ticks);
-
-            // All traitor related functionality should use the following interface for generating random values
-            public static int Random(int n) => random.Next(n);
-
-            // All traitor related functionality should use the following interface for generating random values
-            public static double RandomDouble() => random.NextDouble();
-
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
             private readonly List<Objective> pendingObjectives = new List<Objective>();
             private readonly List<Objective> completedObjectives = new List<Objective>();
 
-            public virtual bool IsCompleted => pendingObjectives.Count <= 0;
+            /// <summary>
+            /// Has the mission been completed (does not mean that the traitor necessarily won, the mission is considered completed if the traitor fails for whatever reason)
+            /// </summary>
+            public bool IsCompleted => pendingObjectives.Count <= 0;
 
             public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
 
@@ -168,14 +161,8 @@ namespace Barotrauma
                     {
                         ++numCandidates;
                     }
-                    var selected = TraitorManager.WeightedRandom(availableCandidates, 0, numCandidates, Random, t =>
-                    {
-                        var previousClient = server.FindPreviousClientData(t.Item1);
-                        return Math.Max(
-                            previousClient != null ? traitorManager.GetTraitorCount(previousClient) : 0,
-                            traitorManager.GetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? "")));
-                    }, (t, c) => { traitorManager.SetTraitorCount(Tuple.Create(t.Item1.SteamID, t.Item1.Connection?.EndPointString ?? ""), c); }, 2, 3);
 
+                    var selected = ToolBox.SelectWeightedRandom(availableCandidates, availableCandidates.Select(c => Math.Max(c.Item1.RoundsSincePlayedAsTraitor, 0.1f)).ToList(), TraitorManager.Random);
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
                     foreach (var candidate in roleCandidates.Values)
                     {
@@ -189,7 +176,7 @@ namespace Barotrauma
                 return assignedCandidates;
             }
 
-            public virtual bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 foreach (var role in Roles)
                 {
@@ -202,7 +189,7 @@ namespace Barotrauma
                 return AssignTraitors(server, traitorManager, team) != null;
             }
 
-            public virtual bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
                 var assignedCandidates = AssignTraitors(server, traitorManager, team);
                 if (assignedCandidates == null)
@@ -210,11 +197,17 @@ namespace Barotrauma
                     return false;
                 }
 
+                foreach (Client client in server.ConnectedClients)
+                {
+                    client.RoundsSincePlayedAsTraitor++;
+                }
+
                 Traitors.Clear();
                 foreach (var candidate in assignedCandidates)
                 {
                     var traitor = new Traitor(this, candidate.Item1, candidate.Item2.Item1.Character);
                     Traitors.Add(candidate.Item1, traitor);
+                    candidate.Item2.Item1.RoundsSincePlayedAsTraitor = 0;
                 }
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
@@ -250,15 +243,17 @@ namespace Barotrauma
 
             public delegate void TraitorWinHandler();
 
-            public virtual void Update(float deltaTime, TraitorWinHandler winHandler)
+            public void Update(float deltaTime, TraitorWinHandler winHandler)
             {
                 if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
                     return;
                 }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true))
+                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
+                    pendingObjectives.Clear();
+                    Traitors.Clear();
                     return;
                 }
                 var startedObjectives = new List<Objective>();
@@ -321,26 +316,67 @@ namespace Barotrauma
             }
 
             public delegate bool CharacterFilter(Character character);
-            public Character FindKillTarget(Character traitor, CharacterFilter filter)
+            public List<Character> FindKillTarget(Character traitor, CharacterFilter filter, int count = -1, float percentage = -1f)
             {
                 if (traitor == null) { return null; }
 
-                List<Character> validCharacters = Character.CharacterList.FindAll(c =>
-                    c.TeamID == traitor.TeamID &&
-                    c != traitor &&
-                    !c.IsDead &&
-                    (filter == null || filter(c)));
+                List<Character> validCharacters = Character.CharacterList.FindAll(c => c.TeamID == traitor.TeamID &&
+                                                                                  c != traitor && !c.IsDead &&
+                                                                                  (filter == null || filter(c)));
+
+                int targetCount = 1;
+                if (count > 0)
+                {
+                    targetCount = count;
+                }
+                else if (percentage > 0f)
+                {
+                    targetCount = (int)Math.Max(1, Math.Floor(validCharacters.Count * percentage));
+                }
+
+                List<Character> targetCharacters = new List<Character>();
 
                 if (validCharacters.Count > 0)
                 {
-                    return validCharacters[Random(validCharacters.Count)];
+                    for (int i = 0; i < targetCount; i++)
+                    {
+                        if (validCharacters.Count == 0) break;
+                        Character character = validCharacters[TraitorManager.RandomInt(validCharacters.Count)];
+                        targetCharacters.Add(character);
+                        validCharacters.Remove(character);
+                    }
+                    return targetCharacters;
                 }
 
 #if ALLOW_SOLO_TRAITOR
-                return traitor;
+                targetCharacters.Add(traitor);
+                return targetCharacters;
 #else
                 return null;
 #endif
+            }
+
+            public string GetTargetNames(List<Character> targets)
+            {
+                string names = string.Empty;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    names += targets[i].Name;
+
+                    if (i < targets.Count - 1)
+                    {
+                        names += ", ";
+                    }
+                }
+
+                if (names.Length > 0)
+                {
+                    return names;
+                }
+                else
+                {
+                    return TextManager.FormatServerMessage("unknown");
+                }
             }
 
             public TraitorMission(string identifier, string startText, string globalEndMessageSuccessTextId, string globalEndMessageSuccessDeadTextId, string globalEndMessageSuccessDetainedTextId, string globalEndMessageFailureTextId, string globalEndMessageFailureDeadTextId, string globalEndMessageFailureDetainedTextId, IEnumerable<KeyValuePair<string, RoleFilter>> roles, ICollection<Objective> objectives)

@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (voltage < minVoltage)
+            if (Voltage < MinVoltage)
         {
                 Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
@@ -164,7 +164,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (voltage < minVoltage)
+            if (Voltage < MinVoltage)
             {
                 return;
             }

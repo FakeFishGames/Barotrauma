@@ -1,53 +1,56 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveFindDivingGear : AIObjective
     {
-        public override string DebugTag => "find diving gear";
+        public override string DebugTag => $"find diving gear ({gearTag})";
         public override bool ForceRun => true;
+        public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         private readonly string gearTag;
+        private readonly string fallbackTag;
 
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
 
-        public override bool IsCompleted()
-        {
-            for (int i = 0; i < character.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.SlotTypes[i] == InvSlotType.Any || character.Inventory.Items[i] == null) { continue; }
-                if (character.Inventory.Items[i].HasTag(gearTag))
-                {
-                    var containedItems = character.Inventory.Items[i].ContainedItems;
-                    if (containedItems == null) { continue; }
-                    return containedItems.Any(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f);
-                }
-            }
-            return false;
-        }
+        public static float lowOxygenThreshold = 10;
 
-        public override float GetPriority() => MathHelper.Clamp(100 - character.OxygenAvailable, 0, 100);
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveFindDivingGear;
+        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource") || HumanAIController.HasItem(character, fallbackTag, "oxygensource");
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
-            gearTag = needDivingSuit ? "divingsuit" : "diving";
+            gearTag = needDivingSuit ? "divingsuit" : "divingmask";
+            fallbackTag = needDivingSuit ? "divingsuit" : "diving";
         }
 
         protected override void Act(float deltaTime)
         {
-            var item = character.Inventory.FindItemByTag(gearTag);
+            if (character.LockHands)
+            {
+                Abandon = true;
+                return;
+            }
+            var item = character.Inventory.FindItemByIdentifier(gearTag, true) ?? character.Inventory.FindItemByTag(gearTag, true);
+            if (item == null && fallbackTag != gearTag)
+            {
+                item = character.Inventory.FindItemByTag(fallbackTag, true);
+            }
             if (item == null || !character.HasEquippedItem(item))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
-                    character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
-                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true);
-                });
+                    if (item == null)
+                    {
+                        character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
+                    }
+                    return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true) { AllowToFindDivingGear = false };
+                }, 
+                onAbandon: () => Abandon = true,
+                onCompleted: () => RemoveSubObjective(ref getDivingGear));
             }
             else
             {
@@ -55,9 +58,9 @@ namespace Barotrauma
                 if (containedItems == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + item + "\" has no proper inventory");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 // Drop empty tanks
@@ -69,13 +72,54 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(it => (it.Prefab.Identifier == "oxygentank" || it.HasTag("oxygensource")) && it.Condition > 0.0f))
+                if (containedItems.None(it => it.HasTag("oxygensource") && it.Condition > lowOxygenThreshold))
                 {
-                    TryAddSubObjective(ref getOxygen, () =>
+                    var oxygenTank = character.Inventory.FindItemByTag("oxygensource", true);
+                    if (oxygenTank != null)
                     {
-                        character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                        return new AIObjectiveContainItem(character, new string[] { "oxygentank", "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager);
-                    });
+                        var container = item.GetComponent<ItemContainer>();
+                        if (container.Item.ParentInventory == character.Inventory)
+                        {
+                            character.Inventory.RemoveItem(oxygenTank);
+                            if (!container.Inventory.TryPutItem(oxygenTank, null))
+                            {
+                                oxygenTank.Drop(character);
+                                Abandon = true;
+                            }
+                        }
+                        else
+                        {
+                            container.Combine(oxygenTank, character);
+                        }
+                    }
+                    else
+                    {
+                        // Seek oxygen that has min 10% condition left
+                        TryAddSubObjective(ref getOxygen, () =>
+                        {
+                            character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                            return new AIObjectiveContainItem(character, new string[] { "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                            {
+                                AllowToFindDivingGear = false,
+                                ConditionLevel = lowOxygenThreshold
+                            };
+                        }, 
+                        onAbandon: () =>
+                        {
+                            // Try to seek any oxygen sources
+                            TryAddSubObjective(ref getOxygen, () =>
+                            {
+                                return new AIObjectiveContainItem(character, new string[] { "oxygensource" }, item.GetComponent<ItemContainer>(), objectiveManager)
+                                {
+                                    AllowToFindDivingGear = false,
+                                    ConditionLevel = 0
+                                };
+                            },
+                            onAbandon: () => Abandon = true,
+                            onCompleted: () => RemoveSubObjective(ref getOxygen));
+                        },
+                        onCompleted: () => RemoveSubObjective(ref getOxygen));
+                    }
                 }
             }
         }

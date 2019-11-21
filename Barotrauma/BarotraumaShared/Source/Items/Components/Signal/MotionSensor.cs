@@ -25,6 +25,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?")]
+        public bool IgnoreDead
+        {
+            get;
+            set;
+        }
+
+
         [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.")]
         public float RangeX
         {
@@ -109,6 +117,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
+                if (IgnoreDead && c.IsDead) { continue; }
                 if (OnlyHumans && !c.IsHuman) { continue; }
 
                 //do a rough check based on the position of the character's collider first
@@ -137,6 +146,16 @@ namespace Barotrauma.Items.Components
         public override void FlipY(bool relativeToSub)
         {
             detectOffset.Y = -detectOffset.Y;
+        }
+        public override XElement Save(XElement parentElement)
+        {
+            Vector2 prevDetectOffset = detectOffset;
+            //undo flipping before saving
+            if (item.FlippedX) { detectOffset.X = -detectOffset.X; }
+            if (item.FlippedY) { detectOffset.Y = -detectOffset.Y; }
+            XElement element = base.Save(parentElement);
+            detectOffset = prevDetectOffset;
+            return element;
         }
     }
 }

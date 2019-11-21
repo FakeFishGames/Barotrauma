@@ -17,11 +17,11 @@ namespace Barotrauma.Networking
             {
                 if (type.HasFlag(MessageType.Chat))
                 {
-                    Text = $"[{DateTime.Now.ToString()}] {text}";
+                    Text = $"[{DateTime.Now.ToString()}]\n  {text}";
                 }
                 else
                 {
-                    Text = $"[{DateTime.Now.ToString()}] {TextManager.GetServerMessage(text)}";
+                    Text = $"[{DateTime.Now.ToString()}]\n  {TextManager.GetServerMessage(text)}";
                 }
 
                 Type = type;
@@ -101,7 +101,7 @@ namespace Barotrauma.Networking
             lines.Enqueue(newText);
 
 #if CLIENT
-            if (LogFrame != null)
+            if (listBox != null)
             {
                 AddLine(newText);
 

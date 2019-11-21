@@ -41,17 +41,9 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
+    Shoot="0"
+    Deselect="1"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
-  <gameplay>
-    <jobpreferences>
-      <job identifier="captain" />
-      <job identifier="engineer" />
-      <job identifier="mechanic" />
-      <job identifier="securityofficer" />
-      <job identifier="medicaldoctor" />
-      <job identifier="assistant" />
-    </jobpreferences>
-  </gameplay>
 
 </config>

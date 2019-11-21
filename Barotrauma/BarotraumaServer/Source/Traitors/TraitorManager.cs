@@ -11,6 +11,14 @@ namespace Barotrauma
 {
    partial class TraitorManager
     {
+        public static readonly Random Random = new Random((int)DateTime.UtcNow.Ticks);
+
+        // All traitor related functionality should use the following interface for generating random values
+        public static int RandomInt(int n) => Random.Next(n);
+
+        // All traitor related functionality should use the following interface for generating random values
+        public static double RandomDouble() => Random.NextDouble();
+
         public readonly Dictionary<Character.TeamType, Traitor.TraitorMission> Missions = new Dictionary<Character.TeamType, Traitor.TraitorMission>();
 
         public string GetCodeWords(Character.TeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeWords : "";
@@ -21,31 +29,10 @@ namespace Barotrauma
         private float startCountdown = 0.0f;
         private GameServer server;
 
-        private readonly Dictionary<ulong, int> traitorCountsBySteamId = new Dictionary<ulong, int>();
-        private readonly Dictionary<string, int> traitorCountsByEndPoint = new Dictionary<string, int>();
-
         public bool ShouldEndRound
         {
             get;
             set;
-        }
-
-        public int GetTraitorCount(Tuple<ulong, string> steamIdAndEndPoint)
-        {
-            if (steamIdAndEndPoint.Item1 > 0 && traitorCountsBySteamId.TryGetValue(steamIdAndEndPoint.Item1, out var steamIdResult))
-            {
-                return steamIdResult;
-            }
-            return traitorCountsByEndPoint.TryGetValue(steamIdAndEndPoint.Item2, out var endPointResult) ? endPointResult : 0;
-        }
-
-        public void SetTraitorCount(Tuple<ulong, string> steamIdAndEndPoint, int count)
-        {
-            if (steamIdAndEndPoint.Item1 > 0)
-            {
-                traitorCountsBySteamId[steamIdAndEndPoint.Item1] = count;
-            }
-            traitorCountsByEndPoint[steamIdAndEndPoint.Item2] = count;
         }
 
         public bool IsTraitor(Character character)
@@ -80,11 +67,13 @@ namespace Barotrauma
 
             ShouldEndRound = false;
 
-            Traitor.TraitorMission.InitializeRandom();
             this.server = server;
-            startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinStartDelay, server.ServerSettings.TraitorsMaxStartDelay, (float)Traitor.TraitorMission.RandomDouble());
-            traitorCountsBySteamId.Clear();
-            traitorCountsByEndPoint.Clear();
+            startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinStartDelay, server.ServerSettings.TraitorsMaxStartDelay, (float)RandomDouble());
+        }
+
+        public void SkipStartDelay()
+        {
+            startCountdown = 0.01f;
         }
 
         public void Update(float deltaTime)
@@ -134,7 +123,7 @@ namespace Barotrauma
                 if (missionCompleted)
                 {
                     Missions.Clear();
-                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)Traitor.TraitorMission.RandomDouble());
+                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                 }
             }
             else if (startCountdown > 0.0f && server.GameStarted)
@@ -145,7 +134,7 @@ namespace Barotrauma
                     int playerCharactersCount = server.ConnectedClients.Sum(client => client.Character != null && !client.Character.IsDead ? 1 : 0);
                     if (playerCharactersCount < server.ServerSettings.TraitorsMinPlayerCount)
                     {
-                        startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)Traitor.TraitorMission.RandomDouble());
+                        startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                         return;
                     }
                     if (GameMain.GameSession.Mission is CombatMission)
@@ -184,7 +173,7 @@ namespace Barotrauma
                         }
                     }
                     Missions.Clear();
-                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)Traitor.TraitorMission.RandomDouble());
+                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                 }
             }
         }
@@ -197,43 +186,6 @@ namespace Barotrauma
             if (GameMain.Server == null || !Missions.Any()) return "";
 
             return TextManager.JoinServerMessages("\n\n", Missions.Select(mission => mission.Value.GlobalEndMessage).ToArray());
-        }
-
-        public static T WeightedRandom<T>(IList<T> collection, int startIndex, int count, Func<int, int> random, Func<T, int> readSelectedWeight, Action<T, int> writeSelectedWeight, int entryWeight, int selectionWeight) where T : class
-        {
-            if (count <= 0)
-            {
-                return null;
-            }
-            var maxWeight = readSelectedWeight(collection[startIndex]);
-            var totalWeight = entryWeight + maxWeight;
-            for (var i = 1; i < count; ++i)
-            {
-                var weight = readSelectedWeight(collection[startIndex + i]);
-                maxWeight = Math.Max(maxWeight, weight);
-                totalWeight += weight;
-            }
-            maxWeight += entryWeight;
-            totalWeight = count * maxWeight - totalWeight;
-            var selected = random(totalWeight);
-            for(var i = 0; i < count; ++i)
-            {
-                var entry = collection[startIndex + i];
-                var weight = readSelectedWeight(entry);
-                selected -= maxWeight;
-                selected += weight;
-                if (selected <= 0)
-                {
-                    writeSelectedWeight(entry, weight + selectionWeight);
-                    return entry;
-                }
-            }
-            return null;
-        }
-
-        public static T WeightedRandom<T>(IList<T> collection, Func<int, int> random, Func<T, int> readSelectedWeight, Action<T, int> writeSelectedWeight, int entryWeight, int selectionWeight) where T : class
-        {
-            return WeightedRandom<T>(collection, 0, collection.Count, random, readSelectedWeight, writeSelectedWeight, entryWeight, selectionWeight);
         }
     }
 }

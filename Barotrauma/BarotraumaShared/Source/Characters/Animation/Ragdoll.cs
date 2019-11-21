@@ -174,13 +174,16 @@ namespace Barotrauma
         {
             get
             {
-                Limb torso = GetLimb(LimbType.Torso);
-                Limb head = GetLimb(LimbType.Head);
-                var mainLimb = torso ?? head;
+                Limb mainLimb = GetLimb(RagdollParams.MainLimb);
                 if (mainLimb == null)
                 {
-                    //DebugConsole.ThrowError("No head or torso found. Using the first limb as the main limb.");
-                    mainLimb = Limbs.FirstOrDefault();
+                    Limb torso = GetLimb(LimbType.Torso);
+                    Limb head = GetLimb(LimbType.Head);
+                    mainLimb = torso ?? head;
+                    if (mainLimb == null)
+                    {
+                        mainLimb = Limbs.FirstOrDefault();
+                    }
                 }
                 return mainLimb;
             }
@@ -261,10 +264,9 @@ namespace Barotrauma
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
         public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
 
-        public float Dir
-        {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-        }
+        public float Dir => dir == Direction.Left ? -1.0f : 1.0f;
+
+        public Direction Direction => dir;
 
         public bool InWater
         {
@@ -883,9 +885,8 @@ namespace Barotrauma
                     {
                         Collider.SetTransform(ConvertUnits.ToSimUnits(intersection), Collider.Rotation);
                     }
+                    return;
                 }
-
-                return;
             }
 
             if (setSubmarine)
@@ -1105,8 +1106,11 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    if (HeadPosition.HasValue &&
-                        Collider.SimPosition.Y < waterSurface && waterSurface - floorY > HeadPosition * 0.95f)
+                    float standHeight = 
+                        HeadPosition.HasValue ? HeadPosition.Value :
+                        TorsoPosition.HasValue ? TorsoPosition.Value :
+                        Collider.GetMaxExtent() * 0.5f;
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.95f)
                     {
                         inWater = true;
                     }
@@ -1453,7 +1457,7 @@ namespace Barotrauma
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
 
-            //var lowestLimb = FindLowestLimb();
+            Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
             float closestFraction = 1;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
@@ -1466,6 +1470,7 @@ namespace Barotrauma
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
+                        if (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || Stairs != null)) return -1;
                         if (IgnorePlatforms && TargetMovement.Y < -0.5f || Collider.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
@@ -1568,7 +1573,7 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;                        
+            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;     
             float resetDist = allowedDist * 5.0f;
 
             Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;

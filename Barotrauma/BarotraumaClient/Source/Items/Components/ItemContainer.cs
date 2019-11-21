@@ -64,6 +64,10 @@ namespace Barotrauma.Items.Components
         [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
 
+        [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
+            "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
+        public bool ShowContainedStateIndicator { get; set; }
+
         [Serialize(false, false, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
             " May be useful for items such as ammo boxes and magazines that spawn projectiles as needed," +
             " and use the condition to determine how many projectiles can be spawned in total.")]

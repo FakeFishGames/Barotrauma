@@ -242,9 +242,19 @@ namespace Barotrauma.Items.Components
                 User = null;
             }
 
+            //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls
+            if (Submarine.PickBody(User.AnimController.AimSourceSimPos, 
+                item.SimPosition, 
+                collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking, 
+                allowInsideFixture: true) != null)
+            {
+                return false;
+            }
+
             Character targetCharacter = null;
             Limb targetLimb = null;
             Structure targetStructure = null;
+            Item targetItem = null;
 
             attack?.SetUser(User);
 
@@ -292,6 +302,19 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetStructure);
             }
+            else if (f2.Body.UserData is Item)
+            {
+                targetItem = (Item)f2.Body.UserData;
+                if (AllowHitMultiple)
+                {
+                    if (hitTargets.Contains(targetItem)) { return true; }
+                }
+                else
+                {
+                    if (hitTargets.Any(t => t is Item)) { return true; }
+                }
+                hitTargets.Add(targetItem);
+            }
             else
             {
                 return false;
@@ -312,6 +335,10 @@ namespace Barotrauma.Items.Components
                 else if (targetStructure != null)
                 {
                     attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                }
+                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
+                {
+                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
                 }
                 else
                 {

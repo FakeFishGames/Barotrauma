@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    public enum AIState { Idle, Attack, Escape, Eat }
+    public enum AIState { Idle, Attack, Escape, Eat, Flee }
 
     abstract partial class AIController : ISteerable
     {
@@ -11,7 +12,11 @@ namespace Barotrauma
         public readonly Character Character;
 
         private AIState state;
+        private AIState previousState;
 
+        // Update only when the value changes, not when it keeps the same.
+        protected AITarget _lastAiTarget;
+        // Updated each time the value is updated (also when the value is the same).
         protected AITarget _previousAiTarget;
         protected AITarget _selectedAiTarget;
         public AITarget SelectedAiTarget
@@ -21,6 +26,13 @@ namespace Barotrauma
             {
                 _previousAiTarget = _selectedAiTarget;
                 _selectedAiTarget = value;
+                if (_selectedAiTarget != _previousAiTarget)
+                {
+                    if (_previousAiTarget != null)
+                    {
+                        _lastAiTarget = _previousAiTarget;
+                    }
+                }
             }
         }
 
@@ -72,16 +84,38 @@ namespace Barotrauma
             get { return state; }
             set
             {
-                if (state == value) return;
+                if (state == value) { return; }
+                previousState = state;
                 OnStateChanged(state, value);
                 state = value;
+            }
+        }
+
+        public AIState PreviousState => previousState;
+
+        private IEnumerable<Hull> visibleHulls;
+        private float hullVisibilityTimer;
+        const float hullVisibilityInterval = 0.5f;
+        public IEnumerable<Hull> VisibleHulls
+        {
+            get
+            {
+                if (visibleHulls == null)
+                {
+                    visibleHulls = Character.GetVisibleHulls();
+                }
+                return visibleHulls;
+            }
+            private set
+            {
+                visibleHulls = value;
             }
         }
 
         public AIController (Character c)
         {
             Character = c;
-
+            hullVisibilityTimer = Rand.Range(0f, hullVisibilityTimer);
             Enabled = true;
         }
 
@@ -89,7 +123,18 @@ namespace Barotrauma
 
         public virtual void SelectTarget(AITarget target) { }
 
-        public virtual void Update(float deltaTime) { }
+        public virtual void Update(float deltaTime)
+        {
+            if (hullVisibilityTimer > 0)
+            {
+                hullVisibilityTimer--;
+            }
+            else
+            {
+                hullVisibilityTimer = hullVisibilityInterval;
+                VisibleHulls = Character.GetVisibleHulls();
+            }
+        }
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
              

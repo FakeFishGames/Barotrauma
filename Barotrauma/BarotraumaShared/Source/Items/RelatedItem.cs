@@ -98,10 +98,11 @@ namespace Barotrauma
                     if (parentItem == null) { return false; }
                     return CheckContained(parentItem);
                 case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) { return false; }
+                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
                     return parentItem.Container.Condition > 0.0f && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
+                    if (MatchOnEmpty && character.SelectedItems.All(it => it == null)) { return true; }
                     foreach (Item equippedItem in character.SelectedItems)
                     {
                         if (equippedItem == null) { continue; }
@@ -158,7 +159,7 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(Msg)) element.Add(new XAttribute("msg", Msg));
         }
 
-        public static RelatedItem Load(XElement element, string parentDebugName)
+        public static RelatedItem Load(XElement element, bool returnEmpty, string parentDebugName)
         {
             string[] identifiers;
             if (element.Attribute("name") != null)
@@ -205,10 +206,9 @@ namespace Barotrauma
                 }
             }
 
-            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0) { return null; }
+            if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers);
-            
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {

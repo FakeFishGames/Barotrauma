@@ -10,6 +10,7 @@ namespace Barotrauma
     {
         public static readonly List<EventManagerSettings> List = new List<EventManagerSettings>();
 
+        public readonly string Identifier;
         public readonly string Name;
 
         //How much the event threshold increases per second. 0.0005f = 0.03f per minute
@@ -48,28 +49,30 @@ namespace Barotrauma
             foreach (XElement subElement in mainElement.Elements())
             {
                 var element = subElement.IsOverride() ? subElement.FirstElement() : subElement;
-                string name = element.Name.ToString();
-                var duplicate = List.FirstOrDefault(e => e.Name.ToString().Equals(name, StringComparison.OrdinalIgnoreCase));
+                string identifier = element.Name.ToString();
+                var duplicate = List.FirstOrDefault(e => e.Identifier.ToString().Equals(identifier, StringComparison.OrdinalIgnoreCase));
                 if (duplicate != null)
                 {
                     if (allowOverriding || subElement.IsOverride())
                     {
-                        DebugConsole.NewMessage($"Overriding the existing preset '{name}' in the event manager settings using the file '{file}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the existing preset '{identifier}' in the event manager settings using the file '{file}'", Color.Yellow);
                         List.Remove(duplicate);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Error in '{file}': Another element with the name '{name}' found! Each element must have a unique name. Use <override></override> tags if you want to override an existing preset.");
+                        DebugConsole.ThrowError($"Error in '{file}': Another element with the name '{identifier}' found! Each element must have a unique name. Use <override></override> tags if you want to override an existing preset.");
                         continue;
                     }
                 }
                 List.Add(new EventManagerSettings(element));
             }
+            List.Sort((x, y) => { return Math.Sign((x.MinLevelDifficulty + x.MaxLevelDifficulty) / 2.0f - (y.MinLevelDifficulty + y.MaxLevelDifficulty) / 2.0f); });
         }
 
         public EventManagerSettings(XElement element)
         {
-            Name = element.Name.ToString();
+            Identifier = element.Name.ToString();
+            Name = TextManager.Get("difficulty." + Identifier, returnNull: true) ?? Identifier;
             EventThresholdIncrease = element.GetAttributeFloat("EventThresholdIncrease", 0.0005f);
             DefaultEventThreshold = element.GetAttributeFloat("DefaultEventThreshold", 0.2f);
             EventCooldown = element.GetAttributeFloat("EventCooldown", 360.0f);

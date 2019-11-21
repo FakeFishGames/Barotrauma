@@ -45,7 +45,7 @@ namespace Barotrauma
         {
             if (!(this is AICharacter) || IsRemotePlayer)
             {
-                if (!AllowInput)
+                if (!CanMove)
                 {
                     AnimController.Frozen = false;
                     if (memInput.Count > 0)
@@ -156,7 +156,7 @@ namespace Barotrauma
                     UInt16 networkUpdateID = msg.ReadUInt16();
                     byte inputCount = msg.ReadByte();
 
-                    if (AllowInput) Enabled = true;
+                    if (AllowInput) { Enabled = true; }
 
                     for (int i = 0; i < inputCount; i++)
                     {
@@ -470,7 +470,11 @@ namespace Barotrauma
             msg.Write(Enabled);
 
             //character with no characterinfo (e.g. some monster)
-            if (Info == null) return;
+            if (Info == null)
+            {
+                WriteStatus(msg);
+                return;
+            }
 
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
@@ -492,6 +496,7 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
+            WriteStatus(msg);
 
             DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));
         }

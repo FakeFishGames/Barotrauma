@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -23,6 +24,7 @@ namespace Barotrauma
 
     class WearableSprite
     {
+        public string UnassignedSpritePath { get; private set; }
         public string SpritePath { get; private set; }
         public XElement SourceElement { get; private set; }
 
@@ -83,7 +85,7 @@ namespace Barotrauma
                 if (value == _gender) { return; }
                 _gender = value;
                 IsInitialized = false;
-                SpritePath = ParseSpritePath(SourceElement.GetAttributeString("texture", string.Empty));
+                UnassignedSpritePath = ParseSpritePath(SourceElement.GetAttributeString("texture", string.Empty));
                 Init(_gender);
             }
         }
@@ -92,7 +94,7 @@ namespace Barotrauma
         {
             Type = type;
             SourceElement = subElement;
-            SpritePath = subElement.GetAttributeString("texture", string.Empty);
+            UnassignedSpritePath = subElement.GetAttributeString("texture", string.Empty);
             Init();
             switch (type)
             {
@@ -122,42 +124,24 @@ namespace Barotrauma
             Type = WearableType.Item;
             WearableComponent = wearable;
             Variant = Math.Max(variant, 0);
-            SpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
+            UnassignedSpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
             SourceElement = subElement;
         }
 
         private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.ConfigFile)}/{texturePath}";
 
-        public void RefreshPath()
+        public void ParsePath(bool parseSpritePath)
         {
-            if (Variant > 0)
-            {
-                // Restore the tag so that we can parse it again.
-                ReplaceNumbersWith("[VARIANT]");
-            }
-            ParsePath(true);
-        }
-
-        private void ReplaceNumbersWith(string replacement)
-        {
-            var fileName = Path.GetFileName(SpritePath);
-            var path = Path.GetDirectoryName(SpritePath);
-            fileName = fileName.Replace(replacement, c => char.IsNumber(c));
-            SpritePath = Path.Combine(path, fileName);
-        }
-
-        private void ParsePath(bool parseSpritePath)
-        {
+            string tempPath = UnassignedSpritePath;
             if (_gender != Gender.None)
             {
-                SpritePath = SpritePath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
+                tempPath = tempPath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
             }
-            SpritePath = SpritePath.Replace("[VARIANT]", Variant.ToString());
+            SpritePath = tempPath.Replace("[VARIANT]", Variant.ToString());
             if (!File.Exists(SpritePath))
             {
                 // If the variant does not exist, parse the path so that it uses first variant.
-                Variant = 1;
-                ReplaceNumbersWith(Variant.ToString());
+                SpritePath = tempPath.Replace("[VARIANT]", "1");
             }
             if (parseSpritePath)
             {
@@ -169,13 +153,13 @@ namespace Barotrauma
         public void Init(Gender gender = Gender.None)
         {
             if (IsInitialized) { return; }
-            _gender = SpritePath.Contains("[GENDER]") ? gender : Gender.None;
+            _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
             ParsePath(false);
             if (Sprite != null)
             {
                 Sprite.Remove();
             }
-            Sprite = new Sprite(SourceElement, file: SpritePath);
+            Sprite = new Sprite(SourceElement, file: SpritePath, preMultiplyAlpha: true);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
@@ -197,25 +181,60 @@ namespace Barotrauma
 
 namespace Barotrauma.Items.Components
 {
-    class Wearable : Pickable
+    class Wearable : Pickable, IServerSerializable
     {
-        private WearableSprite[] wearableSprites;
-        private LimbType[] limbType;
-        private Limb[] limb;
+        private readonly XElement[] wearableElements;
+        private readonly WearableSprite[] wearableSprites;
+        private readonly LimbType[] limbType;
+        private readonly Limb[] limb;
 
-        private List<DamageModifier> damageModifiers;
+        private readonly List<DamageModifier> damageModifiers;
 
-        public List<DamageModifier> DamageModifiers
+        public IEnumerable<DamageModifier> DamageModifiers
         {
             get { return damageModifiers; }
         }
 
-        private bool autoEquipWhenFull;
-        public bool AutoEquipWhenFull
+        public bool AutoEquipWhenFull { get; private set; }
+
+        public readonly int Variants;
+
+        private int variant;
+        public int Variant
         {
-            get { return autoEquipWhenFull; }
-        }               
-        
+            get { return variant; }
+            set
+            {
+#if SERVER
+                variant = value;
+                item.CreateServerEvent(this);
+#elif CLIENT
+                if (variant == value) { return; }
+
+                Character character = picker;
+                if (character != null)
+                {
+                    Unequip(character);
+                }
+
+                for (int i = 0; i < wearableSprites.Length; i++)
+                {
+                    var subElement = wearableElements[i];
+
+                    wearableSprites[i]?.Sprite?.Remove();
+                    wearableSprites[i] = new WearableSprite(subElement, this, value);
+                }
+
+                if (character != null)
+                {
+                    Equip(character);
+                }
+
+                variant = value;
+#endif
+            }
+        }
+
         public Wearable(Item item, XElement element) : base(item, element)
         {
             this.item = item;
@@ -223,12 +242,13 @@ namespace Barotrauma.Items.Components
             damageModifiers = new List<DamageModifier>();
             
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
-            int variants = element.GetAttributeInt("variants", 0);
-            int variant = variants > 0 ? Rand.Range(1, variants + 1, Rand.RandSync.Server) : 1;
+            Variants = element.GetAttributeInt("variants", 0);
+            variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
             wearableSprites = new WearableSprite[spriteCount];
+            wearableElements = new XElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
-            autoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
+            AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {
@@ -245,6 +265,7 @@ namespace Barotrauma.Items.Components
                             subElement.GetAttributeString("limb", "Head"), true);
 
                         wearableSprites[i] = new WearableSprite(subElement, this, variant);
+                        wearableElements[i] = subElement;
 
                         foreach (XElement lightElement in subElement.Elements())
                         {
@@ -378,6 +399,40 @@ namespace Barotrauma.Items.Components
             {
                 if (wearableSprite != null && wearableSprite.Sprite != null) wearableSprite.Sprite.Remove();
             }
+        }
+
+        public override XElement Save(XElement parentElement)
+        {
+            XElement componentElement = base.Save(parentElement);
+            componentElement.Add(new XAttribute("variant", variant));
+            return componentElement;
+        }
+
+        private int loadedVariant = -1;
+        public override void Load(XElement componentElement, bool usePrefabValues)
+        {
+            base.Load(componentElement, usePrefabValues);
+            loadedVariant = componentElement.GetAttributeInt("variant", -1);
+        }
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            //do this here to prevent creating a network event before the item has been fully initialized
+            if (loadedVariant > 0 && loadedVariant < Variants + 1)
+            {
+                Variant = loadedVariant;
+            }
+        }
+        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        {
+            msg.Write((byte)Variant);
+            base.ServerWrite(msg, c, extraData);
+        }
+
+        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            Variant = (int)msg.ReadByte();
+            base.ClientRead(type, msg, sendingTime);
         }
 
     }

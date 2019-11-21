@@ -29,14 +29,15 @@ namespace Barotrauma
                 return;
             }
 
+            sendUpdateTimer -= deltaTime;
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
                 Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
                 lastSentFireCount != FireSources.Count ||
-                FireSources.Count > 0)
+                FireSources.Count > 0 ||
+                sendUpdateTimer < -NetConfig.SparseHullUpdateInterval)
             {
-                sendUpdateTimer -= deltaTime;
                 if (sendUpdateTimer < 0.0f)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this);

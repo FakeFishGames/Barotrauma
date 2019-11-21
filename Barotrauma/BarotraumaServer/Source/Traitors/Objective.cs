@@ -101,7 +101,7 @@ namespace Barotrauma
                 {
                     for (var i = allGoalsCount; i > 1;)
                     {
-                        int j = TraitorMission.Random(i--);
+                        int j = TraitorManager.RandomInt(i--);
                         var temp = indices[j];
                         indices[j] = indices[i];
                         indices[i] = temp;
@@ -125,10 +125,12 @@ namespace Barotrauma
                         completedGoals.Add(goal);
                     }
                 }
-                if (pendingGoals.Count <= 0)
+
+                if (pendingGoals.Count <= 0 && completedGoals.Count < allGoals.Count)
                 {
                     return false;
                 }
+
                 IsStarted = true;
 
                 traitor.SendChatMessageBox(StartMessageText, traitor.Mission?.Identifier);

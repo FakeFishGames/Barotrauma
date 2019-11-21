@@ -12,6 +12,7 @@ namespace Barotrauma
         public override string DebugTag => "extinguish fire";
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
+        public override bool KeepDivingGearOn => true;
 
         private readonly Hull targetHull;
 
@@ -27,19 +28,23 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c))) { return 0; }
-            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally)
-            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y) * 2.0f;
-            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 10000, dist));
+            if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
+                && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
+            float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
+            yDist = yDist > 100 ? yDist * 3 : 0;
+            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
+            if (targetHull == character.CurrentHull)
+            {
+                distanceFactor = 1;
+            }
             float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
             float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
             float devotion = Math.Min(Priority, 10) / 100;
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 
-        public override bool IsCompleted() => targetHull.FireSources.None();
-
-        public override bool IsDuplicate(AIObjective otherObjective) => otherObjective is AIObjectiveExtinguishFire otherExtinguishFire && otherExtinguishFire.targetHull == targetHull;
+        protected override bool Check() => targetHull.FireSources.None();
 
         protected override void Act(float deltaTime)
         {
@@ -58,9 +63,9 @@ namespace Barotrauma
                 if (extinguisher == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
+                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveExtinguishFire failed - the item \"" + extinguisherItem + "\" has no RepairTool component but is tagged as an extinguisher");
 #endif
-                    abandon = true;
+                    Abandon = true;
                     return;
                 }
                 foreach (FireSource fs in targetHull.FireSources)
@@ -119,7 +124,9 @@ namespace Barotrauma
                     if (move)
                     {
                         //go to the first firesource
-                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager));
+                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager), 
+                            onAbandon: () =>  Abandon = true, 
+                            onCompleted: () => RemoveSubObjective(ref gotoObjective));
                     }
                     break;
                 }

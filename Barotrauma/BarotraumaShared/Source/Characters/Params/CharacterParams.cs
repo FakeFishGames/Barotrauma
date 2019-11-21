@@ -19,6 +19,9 @@ namespace Barotrauma
         [Serialize("", true), Editable]
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
+        public string DisplayName { get; private set; }
+
         [Serialize("", true, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
         public string Group { get; private set; }
 
@@ -46,6 +49,7 @@ namespace Barotrauma
         public readonly List<SoundParams> Sounds = new List<SoundParams>();
         public readonly List<ParticleParams> BloodEmitters = new List<ParticleParams>();
         public readonly List<ParticleParams> GibEmitters = new List<ParticleParams>();
+        public readonly List<ParticleParams> DamageEmitters = new List<ParticleParams>();
         public readonly List<InventoryParams> Inventories = new List<InventoryParams>();
         public HealthParams Health { get; private set; }
         public AIParams AI { get; private set; }
@@ -124,6 +128,12 @@ namespace Barotrauma
                 GibEmitters.Add(emitter);
                 SubParams.Add(emitter);
             }
+            foreach (var element in MainElement.GetChildElements("damageemitter"))
+            {
+                var emitter = new ParticleParams(element, this);
+                GibEmitters.Add(emitter);
+                SubParams.Add(emitter);
+            }
             foreach (var soundElement in MainElement.GetChildElements("sound"))
             {
                 var sound = new SoundParams(soundElement, this);
@@ -193,6 +203,7 @@ namespace Barotrauma
 
         public void AddBloodEmitter() => AddEmitter("bloodemitter");
         public void AddGibEmitter() => AddEmitter("gibemitter");
+        public void AddDamageEmitter() => AddEmitter("damageemitter");
 
         private void AddEmitter(string type)
         {
@@ -204,6 +215,9 @@ namespace Barotrauma
                 case "bloodemitter":
                     TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, BloodEmitters);
                     break;
+                case "damageemitter":
+                    TryAddSubParam(new XElement(type), (e, c) => new ParticleParams(e, c), out _, DamageEmitters);
+                    break;
                 default: throw new NotImplementedException(type);
             }
         }
@@ -211,6 +225,7 @@ namespace Barotrauma
         public bool RemoveSound(SoundParams soundParams) => RemoveSubParam(soundParams);
         public bool RemoveBloodEmitter(ParticleParams emitter) => RemoveSubParam(emitter, BloodEmitters);
         public bool RemoveGibEmitter(ParticleParams emitter) => RemoveSubParam(emitter, GibEmitters);
+        public bool RemoveDamageEmitter(ParticleParams emitter) => RemoveSubParam(emitter, DamageEmitters);
         public bool RemoveInventory(InventoryParams inventory) => RemoveSubParam(inventory, Inventories);
 
         protected bool RemoveSubParam<T>(T subParam, IList<T> collection = null) where T : SubParam
@@ -333,16 +348,16 @@ namespace Barotrauma
             [Serialize(false, true)]
             public bool UseHealthWindow { get; set; }
 
-            [Serialize(0f, true, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float BleedingReduction { get; private set; }
 
-            [Serialize(0f, true, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float BurnReduction { get; private set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float ConstantHealthRegeneration { get; private set; }
 
-            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10)]
+            [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
             public float HealthRegenerationWhenEating { get; private set; }
 
             // TODO: limbhealths, sprite?
@@ -411,10 +426,10 @@ namespace Barotrauma
             [Serialize(1.0f, true, description: "Affects how far the character can hear the targets. Used as a multiplier."), Editable(minValue: 0f, maxValue: 10f)]
             public float Hearing { get; private set; }
 
-            [Serialize(100f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: -1000f, maxValue: 1000f)]
+            [Serialize(100f, true, description: "How much the targeting priority increases each time the character takes damage. Works like the greed value, described above. The default value is 100."), Editable(minValue: -1000f, maxValue: 1000f)]
             public float AggressionHurt { get; private set; }
 
-            [Serialize(10f, true, description: "How much the target priority increase when the character takes damage? Additive."), Editable(minValue: 0f, maxValue: 1000f)]
+            [Serialize(10f, true, description: "How much the targeting priority increases each time the character does damage to the target. The actual priority adjustment is calculated based on the damage percentage multiplied by the greed value. The default value is 10, which means the priority will increase by 1 every time the character does damage 10% of the target's current health. If the damage is 50%, then the priority increase is 5."), Editable(minValue: 0f, maxValue: 1000f)]
             public float AggressionGreed { get; private set; }
 
             [Serialize(0f, true, description: "If the health drops below this threshold, the character flees. In percentages."), Editable(minValue: 0f, maxValue: 100f)]
@@ -423,8 +438,8 @@ namespace Barotrauma
             [Serialize(false, true, description: "Does the character attack ONLY when provoked?"), Editable()]
             public bool AttackOnlyWhenProvoked { get; private set; }
 
-            [Serialize(true, true, description: "When true, the character retaliates quickly when it's taking damage. Enabled by default."), Editable]
-            public bool RetaliateWhenTakingDamage { get; private set; }
+            [Serialize(true, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
+            public bool AvoidGunfire { get; private set; }
 
             [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }

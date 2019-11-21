@@ -121,6 +121,7 @@ namespace Barotrauma.CharacterEditor
                 ResetVariables();
                 Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
                 Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
+                Submarine.MainSub.PhysicsBody.Enabled = false;
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
                 CloneWalls();
                 CalculateMovementLimits();
@@ -716,13 +717,13 @@ namespace Barotrauma.CharacterEditor
             limbEditWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             // Handle limb selection
-            if (editLimbs && PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
+            if (PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
             {
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb == null || limb.ActiveSprite == null) { continue; }
                     // Select limbs on ragdoll
-                    if (!spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
+                    if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
                     {
                         HandleLimbSelection(limb);
                     }
@@ -795,7 +796,7 @@ namespace Barotrauma.CharacterEditor
             }
 
             // GUI
-            spriteBatch.Begin(SpriteSortMode.Deferred, rasterizerState: GameMain.ScissorTestEnable);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             if (drawDamageModifiers)
             {
                 foreach (Limb limb in character.AnimController.Limbs)
@@ -926,14 +927,14 @@ namespace Barotrauma.CharacterEditor
                             {
                                 UpdateOtherLimbs(lastLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
                             }
-                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
                 }
                 else
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
-                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false);
+                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
                 }
             }
             // Debug
@@ -1763,7 +1764,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         case AnimationType.Walk:
                         case AnimationType.Run:
-                            if (!ragdollParams.CanEnterSubmarine) { continue; }
+                            if (!ragdollParams.CanWalk) { continue; }
                             break;
                         case AnimationType.SwimSlow:
                         case AnimationType.SwimFast:
@@ -1903,7 +1904,7 @@ namespace Barotrauma.CharacterEditor
             };
 
             Vector2 buttonSize = new Vector2(1, 0.04f);
-            Vector2 toggleSize = new Vector2(0.03f, 0.03f);
+            Vector2 toggleSize = new Vector2(1.0f, 0.03f);
 
             CreateCharacterSelectionPanel();
             CreateMinorModesPanel(toggleSize);
@@ -3212,6 +3213,10 @@ namespace Barotrauma.CharacterEditor
                 {
                     CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveGibEmitter(emitter));
                 }
+                foreach (var emitter in CharacterParams.DamageEmitters)
+                {
+                    CreateCloseButton(emitter.SerializableEntityEditor, () => CharacterParams.RemoveDamageEmitter(emitter));
+                }
                 foreach (var sound in CharacterParams.Sounds)
                 {
                     CreateCloseButton(sound.SerializableEntityEditor, () => CharacterParams.RemoveSound(sound));
@@ -3228,6 +3233,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddBloodEmitter(), GetCharacterEditorTranslation("AddBloodEmitter"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddGibEmitter(), GetCharacterEditorTranslation("AddGibEmitter"));
+                CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddDamageEmitter(), GetCharacterEditorTranslation("AddDamageEmitter"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddSound(), GetCharacterEditorTranslation("AddSound"));
                 CreateAddButtonAtLast(mainEditor, () => CharacterParams.AddInventory(), GetCharacterEditorTranslation("AddInventory"));
             }
@@ -3590,6 +3596,10 @@ namespace Barotrauma.CharacterEditor
 
         private void HandleLimbSelection(Limb limb)
         {
+            if (!editLimbs)
+            {
+                SetToggle(limbsToggle, true);
+            }
             if (!selectedLimbs.Contains(limb))
             {
                 if (!Widget.EnableMultiSelect)
@@ -4103,7 +4113,7 @@ namespace Barotrauma.CharacterEditor
             // Fish swim only -->
             else if (tail != null && fishSwimParams != null)
             {
-                float amplitudeMultiplier = 0.5f;
+                float amplitudeMultiplier = 20;
                 float lengthMultiplier = 20;
                 int points = 1000;
                 float GetAmplitude() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
@@ -4120,7 +4130,7 @@ namespace Barotrauma.CharacterEditor
                     w.MouseHeld += dTime =>
                     {
                         float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward()).Combine() / Cam.Zoom * lengthMultiplier;
-                        TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 150));
+                        TryUpdateAnimParam("wavelength", MathHelper.Clamp(fishSwimParams.WaveLength - input, 0, 200));
                     };
                     // Additional
                     w.PreDraw += (sp, dTime) =>
@@ -4138,7 +4148,7 @@ namespace Barotrauma.CharacterEditor
                     w.MouseHeld += dTime =>
                     {
                         float input = Vector2.Multiply(ConvertUnits.ToSimUnits(PlayerInput.MouseSpeed), GetScreenSpaceForward().Right()).Combine() * character.AnimController.Dir / Cam.Zoom * amplitudeMultiplier;
-                        TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -4, 4));
+                        TryUpdateAnimParam("waveamplitude", MathHelper.Clamp(fishSwimParams.WaveAmplitude + input, -100, 100));
                     };
                     // Additional
                     w.PreDraw += (sp, dTime) =>
@@ -4407,7 +4417,7 @@ namespace Barotrauma.CharacterEditor
                                 DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation, holdPosition: true);
                             }
                             // Is the direction inversed incorrectly?
-                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation + MathHelper.ToRadians(-joint.LimbB.Params.GetSpriteOrientation()), 20);
+                            Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation - joint.LimbB.Params.GetSpriteOrientation(), 20);
                             GUI.DrawLine(spriteBatch, tformedJointPos, to, Color.Magenta, width: 2);
                             var dotSize = new Vector2(5, 5);
                             var rect = new Rectangle((tformedJointPos - dotSize / 2).ToPoint(), dotSize.ToPoint());
@@ -5010,7 +5020,7 @@ namespace Barotrauma.CharacterEditor
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, bool holdPosition, float rotationOffset = 0)
         {
-            rotationOffset += limb.Params.GetSpriteOrientation();
+            rotationOffset -= limb.Params.GetSpriteOrientation();
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
@@ -5176,7 +5186,7 @@ namespace Barotrauma.CharacterEditor
 
         #region Widgets as methods
         private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
-            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false)
+            float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false, int rounding = 1)
         {
             var angle = value;
             if (!MathUtils.IsValid(angle))
@@ -5195,6 +5205,8 @@ namespace Barotrauma.CharacterEditor
                     ? MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset
                     : -MathUtils.VectorToAngle(d) + MathHelper.PiOver2 - rotationOffset;
                 angle = MathHelper.ToDegrees(wrapAnglePi ? MathUtils.WrapAnglePi(newAngle) : MathUtils.WrapAngleTwoPi(newAngle));
+                angle = (float)Math.Round(angle / rounding) * rounding;
+                if (angle >= 360 || angle <= -360) { angle = 0; }
                 if (displayAngle)
                 {
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);

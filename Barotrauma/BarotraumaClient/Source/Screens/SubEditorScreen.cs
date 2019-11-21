@@ -87,6 +87,13 @@ namespace Barotrauma
             return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Name;
         }
 
+        public string GetSubDescription()
+        {
+            string localizedDescription = TextManager.Get("submarine.description." + GetSubName(), true);
+            if (localizedDescription != null) return localizedDescription;
+            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Description;
+        }
+
         private string GetItemCount()
         {
             return TextManager.AddPunctuation(':', TextManager.Get("Items"), Item.ItemList.Count.ToString());
@@ -1048,8 +1055,10 @@ namespace Barotrauma
             submarineDescriptionCharacterCount = new GUITextBlock(new RectTransform(new Vector2(.5f, 1f), descriptionHeaderGroup.RectTransform), string.Empty, textAlignment: Alignment.TopRight);
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform));
-            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.Center), font: GUI.SmallFont, wrap: true, textAlignment: Alignment.TopLeft);
-            descriptionBox.Padding = new Vector4(10 * GUI.Scale);
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.Center), font: GUI.SmallFont, wrap: true, textAlignment: Alignment.TopLeft)
+            {
+                Padding = new Vector4(10 * GUI.Scale)
+            };
 
             descriptionBox.OnTextChanged += (textBox, text) =>
             {
@@ -1067,6 +1076,8 @@ namespace Barotrauma
                 ChangeSubDescription(textBox, text);
                 return true;
             };
+
+            descriptionBox.Text = GetSubDescription();
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), leftColumn.RectTransform), isHorizontal: true) { AbsoluteSpacing = 5 };
 
@@ -2478,7 +2489,7 @@ namespace Barotrauma
 
             //-------------------- HUD -----------------------------
             
-            spriteBatch.Begin(SpriteSortMode.Deferred);
+            spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
 
             if (Submarine.MainSub != null)
             {
