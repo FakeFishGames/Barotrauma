@@ -586,7 +586,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(Character, item);
                             if (newOrder == null)
                             {
@@ -871,7 +871,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }

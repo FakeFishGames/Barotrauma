@@ -177,7 +177,7 @@ namespace Barotrauma
 
             private string GetTooltip(Item item)
             {
-                if (item == null) return null;
+                if (item == null) { return null; }
 
                 string toolTip = "";
                 if (GameMain.DebugDraw)
@@ -216,6 +216,17 @@ namespace Barotrauma
                             }
                         }
                     }
+                    if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
+                    {
+                        foreach (string itemName in item.OwnInventory.Items.Where(it => it != null).Select(it => it.Name).Distinct())
+                        {
+                            int itemCount = item.OwnInventory.Items.Count(it => it != null && it.Name == itemName);
+                            description += itemCount == 1 ?
+                                "\n    " + itemName :
+                                "\n    " + itemName + " x" + itemCount;
+                        }
+                    }
+
                     toolTip = string.IsNullOrEmpty(description) ?
                         item.Name :
                         item.Name + '\n' + description;
@@ -371,14 +382,17 @@ namespace Barotrauma
                 isSubInventory = subInventory;
             }
 
-            for (int i = 0; i < capacity; i++)
+            if (!subInventory || (OpenState >= 0.99f || OpenState < 0.01f))
             {
-                if (HideSlot(i)) continue;
-                UpdateSlot(slots[i], i, Items[i], subInventory);
-            }
-            if (!isSubInventory)
-            {
-                ControlInput(cam);
+                for (int i = 0; i < capacity; i++)
+                {
+                    if (HideSlot(i)) { continue; }
+                    UpdateSlot(slots[i], i, Items[i], subInventory);
+                }
+                if (!isSubInventory)
+                {
+                    ControlInput(cam);
+                }
             }
         }
 
@@ -572,8 +586,8 @@ namespace Barotrauma
                 subRect.Y = startY;
 
                 subInventory.OpenState = subInventory.HideTimer >= 0.5f ?
-                    Math.Min(subInventory.OpenState + deltaTime * 5.0f, 1.0f) :
-                    Math.Max(subInventory.OpenState - deltaTime * 3.0f, 0.0f);
+                    Math.Min(subInventory.OpenState + deltaTime * 8.0f, 1.0f) :
+                    Math.Max(subInventory.OpenState - deltaTime * 5.0f, 0.0f);
 
                 for (int i = 0; i < itemCapacity; i++)
                 {

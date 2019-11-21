@@ -14,6 +14,7 @@ namespace Barotrauma.Items.Components
 
         private GUITickBox powerIndicator;
         private GUIScrollBar forceSlider;
+        private GUITickBox autoControlIndicator;
 
         public float AnimSpeed
         {
@@ -35,21 +36,25 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.05f
             };
 
-            int indicatorSize = (int)(30 * GUI.Scale);
-
-            powerIndicator = new GUITickBox(new RectTransform(new Point(indicatorSize, indicatorSize), content.RectTransform), 
+            float indicatorSize = 0.3f;
+            powerIndicator = new GUITickBox(new RectTransform(new Vector2(indicatorSize), content.RectTransform), 
                 TextManager.Get("EnginePowered"), style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
 
+            autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(indicatorSize), content.RectTransform), TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), style: "IndicatorLightRed")
+            {
+                CanBeFocused = false
+            };
+
             string powerLabel = TextManager.Get("EngineForce");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), "", textAlignment: Alignment.Center)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), content.RectTransform), "", textAlignment: Alignment.Center)
             {
                 TextGetter = () => { return TextManager.AddPunctuation(':', powerLabel, (int)(targetForce) + " %"); }
             };
 
-            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), barSize: 0.2f, style: "GUISlider")
+            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), barSize: 0.15f, style: "GUISlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -93,6 +98,8 @@ namespace Barotrauma.Items.Components
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             powerIndicator.Selected = hasPower && IsActive;
+            autoControlIndicator.Selected = controlLockTimer > 0.0f;
+            forceSlider.Enabled = controlLockTimer <= 0.0f;
 
             if (!PlayerInput.LeftButtonHeld())
             {

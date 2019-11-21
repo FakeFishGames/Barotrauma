@@ -13,6 +13,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
@@ -43,6 +45,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
@@ -72,6 +76,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
@@ -104,6 +110,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
@@ -136,6 +144,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
@@ -168,6 +178,8 @@
       <sound file="Content/Items/Door/Door3.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Door/Door4.ogg" type="OnUse" range="500.0" />
       <sound file="Content/Items/Tools/Crowbar.ogg" type="OnPicked" range="4000.0" />
+      <sound file="Content/Items/Door/Duct1.ogg" type="OnFailure" selectionmode="Random" range="300" />
+      <sound file="Content/Items/Door/Duct2.ogg" type="OnFailure" range="300" />
       <sound file="Content/Items/Door/DoorBreak1.ogg" type="OnBroken" selectionmode="Random" range="3000" />
       <sound file="Content/Items/Door/DoorBreak2.ogg" type="OnBroken" range="3000" />
     </Door>
