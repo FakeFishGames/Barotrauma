@@ -114,7 +114,8 @@ namespace Barotrauma
                 {
                     UserData = contentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage),
-                    OnSelected = SelectContentPackage
+                    OnSelected = SelectContentPackage,
+                    Enabled = GameMain.Client == null
                 };
                 if (contentPackage.CorePackage)
                 {
