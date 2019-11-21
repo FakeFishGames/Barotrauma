@@ -1428,12 +1428,6 @@
   <sp.structure.textureoffset.description><!-- No data --></sp.structure.textureoffset.description>
   <sp.structure.spritedepth.name>Sprite Depth</sp.structure.spritedepth.name>
   <sp.structure.spritedepth.description><!-- No data --></sp.structure.spritedepth.description>
-  <sp.pump.minvoltage.name>Min Voltage</sp.pump.minvoltage.name>
-  <sp.pump.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.pump.minvoltage.description>
-  <sp.pump.powerconsumption.name>Power Consumption</sp.pump.powerconsumption.name>
-  <sp.pump.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.pump.powerconsumption.description>
-  <sp.pump.vulnerabletoemp.name>Vulnerable To E M P</sp.pump.vulnerabletoemp.name>
-  <sp.pump.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.pump.vulnerabletoemp.description>
   <sp.lightcomponent.range.name>Range</sp.lightcomponent.range.name>
   <sp.lightcomponent.range.description>The range of the emitted light. Higher values are more performance-intensive.</sp.lightcomponent.range.description>
   <sp.lightcomponent.castshadows.name>Cast Shadows</sp.lightcomponent.castshadows.name>
@@ -1444,29 +1438,11 @@
   <sp.lightcomponent.ison.description>Is the light currently on.</sp.lightcomponent.ison.description>
   <sp.lightcomponent.blinkfrequency.name>Blink Frequency</sp.lightcomponent.blinkfrequency.name>
   <sp.lightcomponent.blinkfrequency.description>How rapidly the light blinks on and off (in Hz). 0 = no blinking.</sp.lightcomponent.blinkfrequency.description>
-  <sp.lightcomponent.minvoltage.name>Min Voltage</sp.lightcomponent.minvoltage.name>
-  <sp.lightcomponent.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.lightcomponent.minvoltage.description>
-  <sp.lightcomponent.powerconsumption.name>Power Consumption</sp.lightcomponent.powerconsumption.name>
-  <sp.lightcomponent.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.lightcomponent.powerconsumption.description>
-  <sp.lightcomponent.vulnerabletoemp.name>Vulnerable To E M P</sp.lightcomponent.vulnerabletoemp.name>
-  <sp.lightcomponent.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.lightcomponent.vulnerabletoemp.description>
   <sp.steering.neutralballastlevel.name>Neutral Ballast Level</sp.steering.neutralballastlevel.name>
   <sp.steering.neutralballastlevel.description>How full the ballast tanks should be when the submarine is not being steered upwards/downwards. Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.</sp.steering.neutralballastlevel.description>
-  <sp.steering.minvoltage.name>Min Voltage</sp.steering.minvoltage.name>
-  <sp.steering.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.steering.minvoltage.description>
-  <sp.steering.powerconsumption.name>Power Consumption</sp.steering.powerconsumption.name>
-  <sp.steering.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.steering.powerconsumption.description>
-  <sp.steering.vulnerabletoemp.name>Vulnerable To E M P</sp.steering.vulnerabletoemp.name>
-  <sp.steering.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.steering.vulnerabletoemp.description>
   <sp.sonar.usetransducers.name>Use Transducers</sp.sonar.usetransducers.name>
   <sp.sonar.usetransducers.description>Does the sonar have to be connected to external transducers to work.</sp.sonar.usetransducers.description>
-  <sp.sonar.minvoltage.name>Min Voltage</sp.sonar.minvoltage.name>
-  <sp.sonar.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.sonar.minvoltage.description>
-  <sp.sonar.powerconsumption.name>Power Consumption</sp.sonar.powerconsumption.name>
-  <sp.sonar.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.sonar.powerconsumption.description>
-  <sp.sonar.vulnerabletoemp.name>Vulnerable To E M P</sp.sonar.vulnerabletoemp.name>
-  <sp.sonar.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.sonar.vulnerabletoemp.description>
-  <sp.itemlabel.text.name>Text</sp.itemlabel.text.name>
+   <sp.itemlabel.text.name>Text</sp.itemlabel.text.name>
   <sp.itemlabel.text.description>The text displayed in the label.</sp.itemlabel.text.description>
   <sp.itemlabel.textcolor.name>Text Color</sp.itemlabel.textcolor.name>
   <sp.itemlabel.textcolor.description>The color of the text displayed on the label (R,G,B,A).</sp.itemlabel.textcolor.description>
@@ -1478,12 +1454,6 @@
   <sp.minimap.requireoxygendetectors.description>Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms.</sp.minimap.requireoxygendetectors.description>
   <sp.minimap.showhullintegrity.name>Show Hull Integrity</sp.minimap.showhullintegrity.name>
   <sp.minimap.showhullintegrity.description>Should damaged walls be displayed by the machine.</sp.minimap.showhullintegrity.description>
-  <sp.minimap.minvoltage.name>Min Voltage</sp.minimap.minvoltage.name>
-  <sp.minimap.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.minimap.minvoltage.description>
-  <sp.minimap.powerconsumption.name>Power Consumption</sp.minimap.powerconsumption.name>
-  <sp.minimap.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.minimap.powerconsumption.description>
-  <sp.minimap.vulnerabletoemp.name>Vulnerable To E M P</sp.minimap.vulnerabletoemp.name>
-  <sp.minimap.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.minimap.vulnerabletoemp.description>
   <sp.reactor.maxpoweroutput.name>Max Power Output</sp.reactor.maxpoweroutput.name>
   <sp.reactor.maxpoweroutput.description>How much power (kW) the reactor generates when operating at full capacity.</sp.reactor.maxpoweroutput.description>
   <sp.reactor.meltdowndelay.name>Meltdown Delay</sp.reactor.meltdowndelay.name>
@@ -1492,12 +1462,6 @@
   <sp.reactor.firedelay.description>How long the temperature has to stay critical until the reactor catches fire.</sp.reactor.firedelay.description>
   <sp.reactor.fuelconsumptionrate.name>Fuel Consumption Rate</sp.reactor.fuelconsumptionrate.name>
   <sp.reactor.fuelconsumptionrate.description>How fast the condition of the contained fuel rods deteriorates per second.</sp.reactor.fuelconsumptionrate.description>
-  <sp.reactor.minvoltage.name>Min Voltage</sp.reactor.minvoltage.name>
-  <sp.reactor.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.reactor.minvoltage.description>
-  <sp.reactor.powerconsumption.name>Power Consumption</sp.reactor.powerconsumption.name>
-  <sp.reactor.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.reactor.powerconsumption.description>
-  <sp.reactor.vulnerabletoemp.name>Vulnerable To E M P</sp.reactor.vulnerabletoemp.name>
-  <sp.reactor.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.reactor.vulnerabletoemp.description>
   <sp.powercontainer.maxoutput.name>Max Out Put</sp.powercontainer.maxoutput.name>
   <sp.powercontainer.maxoutput.description>Maximum output of the device when fully charged (kW).</sp.powercontainer.maxoutput.description>
   <sp.powercontainer.capacity.name>Capacity</sp.powercontainer.capacity.name>
@@ -1508,42 +1472,12 @@
   <sp.powercontainer.maxrechargespeed.description>How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.</sp.powercontainer.maxrechargespeed.description>
   <sp.powercontainer.rechargespeed.name>Recharge Speed</sp.powercontainer.rechargespeed.name>
   <sp.powercontainer.rechargespeed.description>The current recharge speed of the device.</sp.powercontainer.rechargespeed.description>
-  <sp.powercontainer.minvoltage.name>Min Voltage</sp.powercontainer.minvoltage.name>
-  <sp.powercontainer.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.powercontainer.minvoltage.description>
-  <sp.powercontainer.powerconsumption.name>Power Consumption</sp.powercontainer.powerconsumption.name>
-  <sp.powercontainer.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powercontainer.powerconsumption.description>
-  <sp.powercontainer.vulnerabletoemp.name>Vulnerable To E M P</sp.powercontainer.vulnerabletoemp.name>
-  <sp.powercontainer.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.powercontainer.vulnerabletoemp.description>
   <sp.oxygengenerator.generatedamount.name>Generated Amount</sp.oxygengenerator.generatedamount.name>
   <sp.oxygengenerator.generatedamount.description>How much oxygen the machine generates when operating at full power.</sp.oxygengenerator.generatedamount.description>
-  <sp.oxygengenerator.minvoltage.name>Min Voltage</sp.oxygengenerator.minvoltage.name>
-  <sp.oxygengenerator.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.oxygengenerator.minvoltage.description>
-  <sp.oxygengenerator.powerconsumption.name>Power Consumption</sp.oxygengenerator.powerconsumption.name>
-  <sp.oxygengenerator.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.oxygengenerator.powerconsumption.description>
-  <sp.oxygengenerator.vulnerabletoemp.name>Vulnerable To E M P</sp.oxygengenerator.vulnerabletoemp.name>
-  <sp.oxygengenerator.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.oxygengenerator.vulnerabletoemp.description>
-  <sp.deconstructor.minvoltage.name>Min Voltage</sp.deconstructor.minvoltage.name>
-  <sp.deconstructor.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.deconstructor.minvoltage.description>
-  <sp.deconstructor.powerconsumption.name>Power Consumption</sp.deconstructor.powerconsumption.name>
-  <sp.deconstructor.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.deconstructor.powerconsumption.description>
-  <sp.deconstructor.vulnerabletoemp.name>Vulnerable To E M P</sp.deconstructor.vulnerabletoemp.name>
-  <sp.deconstructor.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.deconstructor.vulnerabletoemp.description>
-  <sp.fabricator.minvoltage.name>Min Voltage</sp.fabricator.minvoltage.name>
-  <sp.fabricator.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.fabricator.minvoltage.description>
-  <sp.fabricator.powerconsumption.name>Power Consumption</sp.fabricator.powerconsumption.name>
-  <sp.fabricator.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.fabricator.powerconsumption.description>
-  <sp.fabricator.vulnerabletoemp.name>Vulnerable To E M P</sp.fabricator.vulnerabletoemp.name>
-  <sp.fabricator.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.fabricator.vulnerabletoemp.description>
   <sp.engine.maxforce.name>Max Force</sp.engine.maxforce.name>
   <sp.engine.maxforce.description>The amount of force exerted on the submarine when the engine is operating at full power.</sp.engine.maxforce.description>
   <sp.engine.propellerpos.name>Propeller Pos</sp.engine.propellerpos.name>
   <sp.engine.propellerpos.description>The position of the propeller as an offset from the item's center (in pixels). Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.</sp.engine.propellerpos.description>
-  <sp.engine.minvoltage.name>Min Voltage</sp.engine.minvoltage.name>
-  <sp.engine.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.engine.minvoltage.description>
-  <sp.engine.powerconsumption.name>Power Consumption</sp.engine.powerconsumption.name>
-  <sp.engine.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.engine.powerconsumption.description>
-  <sp.engine.vulnerabletoemp.name>Vulnerable To E M P</sp.engine.vulnerabletoemp.name>
-  <sp.engine.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.engine.vulnerabletoemp.description>
   <sp.particleprefab.lifetime.name>Life Time</sp.particleprefab.lifetime.name>
   <sp.particleprefab.lifetime.description>How many seconds the particle remains alive.</sp.particleprefab.lifetime.description>
   <sp.particleprefab.startdelaymin.name>Start Delay Min</sp.particleprefab.startdelaymin.name>
@@ -1634,12 +1568,6 @@
   <sp.relaycomponent.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.relaycomponent.overloadvoltage.description>
   <sp.relaycomponent.fireprobability.name>Fire Probability</sp.relaycomponent.fireprobability.name>
   <sp.relaycomponent.fireprobability.description>The probability for a fire to start when the item breaks.</sp.relaycomponent.fireprobability.description>
-  <sp.relaycomponent.minvoltage.name>Min Voltage</sp.relaycomponent.minvoltage.name>
-  <sp.relaycomponent.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.relaycomponent.minvoltage.description>
-  <sp.relaycomponent.powerconsumption.name>Power Consumption</sp.relaycomponent.powerconsumption.name>
-  <sp.relaycomponent.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.relaycomponent.powerconsumption.description>
-  <sp.relaycomponent.vulnerabletoemp.name>Vulnerable To E M P</sp.relaycomponent.vulnerabletoemp.name>
-  <sp.relaycomponent.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.relaycomponent.vulnerabletoemp.description>
   <sp.oscillatorcomponent.outputtype.name>Output Type</sp.oscillatorcomponent.outputtype.name>
   <sp.oscillatorcomponent.outputtype.description>What kind of a signal the item outputs. Pulse: periodically sends out a signal of 1. Sine: sends out a sine wave oscillating between -1 and 1. Square: sends out a signal that alternates between 0 and 1.</sp.oscillatorcomponent.outputtype.description>
   <sp.oscillatorcomponent.frequency.name>Frequency</sp.oscillatorcomponent.frequency.name>
@@ -1666,12 +1594,6 @@
   <sp.turret.rotationspeedhighskill.description>Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it.</sp.turret.rotationspeedhighskill.description>
   <sp.turret.baserotation.name>Base Rotation</sp.turret.baserotation.name>
   <sp.turret.baserotation.description>The angle of the turret's base in degrees.</sp.turret.baserotation.description>
-  <sp.turret.minvoltage.name>Min Voltage</sp.turret.minvoltage.name>
-  <sp.turret.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.turret.minvoltage.description>
-  <sp.turret.powerconsumption.name>Power Consumption</sp.turret.powerconsumption.name>
-  <sp.turret.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.turret.powerconsumption.description>
-  <sp.turret.vulnerabletoemp.name>Vulnerable To E M P</sp.turret.vulnerabletoemp.name>
-  <sp.turret.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.turret.vulnerabletoemp.description>
   <sp.motionsensor.onlyhumans.name>Only Humans</sp.motionsensor.onlyhumans.name>
   <sp.motionsensor.onlyhumans.description>Should the sensor only detect the movement of humans?</sp.motionsensor.onlyhumans.description>
   <sp.motionsensor.ignoredead.name>Ignore Dead</sp.motionsensor.ignoredead.name>
@@ -1700,24 +1622,12 @@
   <sp.electricaldischarger.duration.description>The duration of an individual discharge (in seconds).</sp.electricaldischarger.duration.description>
   <sp.electricaldischarger.outdoorsonly.name>Outdoors Only</sp.electricaldischarger.outdoorsonly.name>
   <sp.electricaldischarger.outdoorsonly.description>If set to true, the discharge cannot travel inside the submarine nor shock anyone inside.</sp.electricaldischarger.outdoorsonly.description>
-  <sp.electricaldischarger.minvoltage.name>Min Voltage</sp.electricaldischarger.minvoltage.name>
-  <sp.electricaldischarger.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.electricaldischarger.minvoltage.description>
-  <sp.electricaldischarger.powerconsumption.name>Power Consumption</sp.electricaldischarger.powerconsumption.name>
-  <sp.electricaldischarger.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.electricaldischarger.powerconsumption.description>
-  <sp.electricaldischarger.vulnerabletoemp.name>Vulnerable To E M P</sp.electricaldischarger.vulnerabletoemp.name>
-  <sp.electricaldischarger.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.electricaldischarger.vulnerabletoemp.description>
   <sp.powertransfer.canbeoverloaded.name>Can Be Overloaded</sp.powertransfer.canbeoverloaded.name>
   <sp.powertransfer.canbeoverloaded.description>Can the item be damaged if too much power is supplied to the power grid.</sp.powertransfer.canbeoverloaded.description>
   <sp.powertransfer.overloadvoltage.name>Overload Voltage</sp.powertransfer.overloadvoltage.name>
   <sp.powertransfer.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.powertransfer.overloadvoltage.description>
   <sp.powertransfer.fireprobability.name>Fire Probability</sp.powertransfer.fireprobability.name>
   <sp.powertransfer.fireprobability.description>The probability for a fire to start when the item breaks.</sp.powertransfer.fireprobability.description>
-  <sp.powertransfer.minvoltage.name>Min Voltage</sp.powertransfer.minvoltage.name>
-  <sp.powertransfer.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.powertransfer.minvoltage.description>
-  <sp.powertransfer.powerconsumption.name>Power Consumption</sp.powertransfer.powerconsumption.name>
-  <sp.powertransfer.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powertransfer.powerconsumption.description>
-  <sp.powertransfer.vulnerabletoemp.name>Vulnerable To E M P</sp.powertransfer.vulnerabletoemp.name>
-  <sp.powertransfer.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.powertransfer.vulnerabletoemp.description>
   <sp.throwable.holdpos.name>Hold Pos</sp.throwable.holdpos.name>
   <sp.throwable.holdpos.description>The position the character holds the item at (in pixels, as an offset from the character's shoulder). For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.</sp.throwable.holdpos.description>
   <sp.throwable.holdangle.name>Hold Angle</sp.throwable.holdangle.name>
@@ -1745,7 +1655,12 @@
   <sp.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.allowingameediting.description>
   <sp.msg.name>Msg</sp.msg.name>
   <sp.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.msg.description>
-
+  <sp.minvoltage.name>Min Voltage</sp.minvoltage.name>
+  <sp.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.minvoltage.description>
+  <sp.powerconsumption.name>Power Consumption</sp.powerconsumption.name>
+  <sp.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powerconsumption.description>
+  <sp.vulnerabletoemp.name>Vulnerable To E M P</sp.vulnerabletoemp.name>
+  <sp.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.vulnerabletoemp.description>
 
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
