@@ -437,12 +437,11 @@ namespace FarseerPhysics.Collision
 
         public static bool TestOverlap(ref AABB a, ref AABB b)
         {
-            if (b.LowerBound.X - a.UpperBound.X > 0.0f ||
-                b.LowerBound.Y - a.UpperBound.Y > 0.0f ||
-                a.LowerBound.X - b.UpperBound.X > 0.0f ||
-                a.LowerBound.Y - b.UpperBound.Y > 0.0f) return false;
-
-            return true;
+            return
+                b.LowerBound.X - a.UpperBound.X <= 0.0f &&
+                b.LowerBound.Y - a.UpperBound.Y <= 0.0f &&
+                a.LowerBound.X - b.UpperBound.X <= 0.0f &&
+                a.LowerBound.Y - b.UpperBound.Y <= 0.0f;
         }
 
         /// <summary>

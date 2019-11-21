@@ -19,7 +19,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, ProfilingTestBench = 10, SteamWorkshop = 11, Credits = 12, Empty = 13 }
 
         private readonly GUIComponent buttonsParent;
 
@@ -285,11 +285,22 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 40) },
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 80) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 130) },
+                "Profiling", style: "GUIButtonLarge", color: Color.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.ProfilingTestBench,
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -554,6 +565,10 @@ namespace Barotrauma
                 case Tab.QuickStartDev:
                     QuickStart();
                     break;
+                case Tab.ProfilingTestBench:
+                    QuickStart(fixedSeed: true);
+                    GameMain.ShowPerf = true;
+                    break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
                     GameMain.SteamWorkshopScreen.Select();
@@ -601,11 +616,17 @@ namespace Barotrauma
                 btn.Selected = (Tab)btn.UserData == selectedTab;
             }
         }
-        
-#endregion
 
-        private void QuickStart()
+        #endregion
+
+        private void QuickStart(bool fixedSeed = false)
         {
+            if (fixedSeed)
+            {
+                Rand.SetSyncedSeed(1);
+                Rand.SetLocalRandom(1);
+            }
+
             Submarine selectedSub = null;
             string subName = GameMain.Config.QuickStartSubmarineName;
             if (!string.IsNullOrEmpty(subName))
@@ -631,13 +652,13 @@ namespace Barotrauma
                 GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                 missionPrefab: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(ToolBox.RandomSeed(8));
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
-                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub, useSyncedRand: true);
                 if (spawnPoint == null)
                 {
                     DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");

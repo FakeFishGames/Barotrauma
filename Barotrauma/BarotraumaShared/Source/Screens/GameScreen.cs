@@ -85,7 +85,7 @@ namespace Barotrauma
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                body.Update((float)deltaTime);
+                if (body.Enabled) { body.Update(); }               
             }
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -162,9 +162,9 @@ namespace Barotrauma
                 sub.SetPrevTransform(sub.Position);
             }
 
-            foreach (PhysicsBody pb in PhysicsBody.List)
+            foreach (PhysicsBody body in PhysicsBody.List)
             {
-                pb.SetPrevTransform(pb.SimPosition, pb.Rotation);
+                if (body.Enabled) { body.SetPrevTransform(body.SimPosition, body.Rotation); }
             }
             
             MapEntity.UpdateAll((float)deltaTime, cam);
