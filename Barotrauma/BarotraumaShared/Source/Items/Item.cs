@@ -32,7 +32,7 @@ namespace Barotrauma
         public ItemPrefab Prefab => prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
-        
+                
         private HashSet<string> tags;
 
         private Hull currentHull;
@@ -72,9 +72,10 @@ namespace Barotrauma
         private float condition;
 
         private bool inWater;
-                
+        private readonly bool hasWaterStatusEffects;
+
         private Inventory parentInventory;
-        private Inventory ownInventory;
+        private readonly Inventory ownInventory;
 
         private Rectangle defaultRect;
 
@@ -455,9 +456,10 @@ namespace Barotrauma
         public bool InWater
         {
             get 
-            { 
+            {
                 //if the item has an active physics body, inWater is updated in the Update method
-                if (body != null && body.Enabled) return inWater;
+                if (body != null && body.Enabled) { return inWater; }
+                if (hasWaterStatusEffects) { return inWater; }
 
                 //if not, we'll just have to check
                 return IsInWater();
@@ -693,7 +695,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
+            hasWaterStatusEffects = hasStatusEffectsOfType[(int)ActionType.InWater] || hasStatusEffectsOfType[(int)ActionType.NotInWater];
+
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -822,7 +826,7 @@ namespace Barotrauma
                 hasSounds = component.HasSounds;
 #endif
                 //component doesn't need to be updated if it isn't active, doesn't have a parent that could activate it, 
-                //nor status effects, sounds that conditionals that would need to run
+                //nor status effects, sounds or conditionals that would need to run
                 if (!isActive && 
                     !hasSounds &&
                     component.Parent == null &&
@@ -1102,6 +1106,7 @@ namespace Barotrauma
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
+
             foreach (StatusEffect effect in statusEffectLists[type])
             {
                 ApplyStatusEffect(effect, type, deltaTime, character, limb, useTarget, isNetworkEvent, false, worldPosition);
@@ -1211,10 +1216,9 @@ namespace Barotrauma
 
         private bool IsInWater()
         {
-            if (CurrentHull == null) return true;
+            if (CurrentHull == null) { return true; }
                         
             float surfaceY = CurrentHull.Surface;
-
             return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
@@ -1232,13 +1236,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
-            if (aiTarget != null)
-            {
-                aiTarget.Update(deltaTime);
-            }
-
-            bool broken = condition <= 0.0f;
+            aiTarget?.Update(deltaTime);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
@@ -1246,7 +1244,7 @@ namespace Barotrauma
                 if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
                 {
                     SendPendingNetworkUpdates();
-                }                
+                }
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
@@ -1277,7 +1275,7 @@ namespace Barotrauma
 
                 if (ic.IsActive)
                 {
-                    if (broken)
+                    if (condition <= 0.0f)
                     {
                         ic.UpdateBroken(deltaTime, cam);
                     }
@@ -1300,6 +1298,7 @@ namespace Barotrauma
 
             if (Removed) { return; }
 
+            bool needsWaterCheck = hasWaterStatusEffects;
             if (body != null && body.Enabled)
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
@@ -1313,29 +1312,32 @@ namespace Barotrauma
                         return;
                     }
                 }
+                needsWaterCheck = true;
                 UpdateNetPosition(deltaTime);
-            }
-
-            inWater = IsInWater();
-            bool waterProof = WaterProof;
-            if (inWater)
-            {
-                Item container = this.Container;
-                while (!waterProof && container != null)
+                if (inWater)
                 {
-                    waterProof = container.WaterProof;
-                    container = container.Container;
+                    ApplyWaterForces();
+                    CurrentHull?.ApplyFlowForces(deltaTime, this);
                 }
             }
-            if (!broken)
-            {
-                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
-            }
 
-            if (body != null && body.Enabled && inWater && ParentInventory == null && !Removed)
+            if (needsWaterCheck)
             {
-                ApplyWaterForces();
-                CurrentHull?.ApplyFlowForces(deltaTime, this);
+                inWater = IsInWater();
+                bool waterProof = WaterProof;
+                if (inWater)
+                {
+                    Item container = this.Container;
+                    while (!waterProof && container != null)
+                    {
+                        waterProof = container.WaterProof;
+                        container = container.Container;
+                    }
+                }
+                if (hasWaterStatusEffects && condition <= 0.0f)
+                {
+                    ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+                }
             }
         }
                 
