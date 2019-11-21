@@ -188,7 +188,7 @@ namespace Barotrauma
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.Prefabs.FindIndex(l => l.Contains(pi.ItemPrefab)));
+                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
                 msg.Write((UInt16)pi.Quantity);
             }
 
@@ -218,7 +218,7 @@ namespace Barotrauma
             {
                 UInt16 itemPrefabIndex = msg.ReadUInt16();
                 UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.Prefabs[itemPrefabIndex].Last() as ItemPrefab, itemQuantity));
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
             }
 
             if (!sender.HasPermission(ClientPermissions.ManageCampaign))

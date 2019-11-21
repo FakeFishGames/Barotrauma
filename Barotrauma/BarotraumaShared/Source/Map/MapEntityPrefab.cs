@@ -16,26 +16,7 @@ namespace Barotrauma
     partial class MapEntityPrefab : IDisposable
     {
         public readonly static List<List<MapEntityPrefab>> Prefabs = new List<List<MapEntityPrefab>>();
-        public static IEnumerable<MapEntityPrefab> List
-        {
-            get
-            {
-                foreach (var list in Prefabs)
-                {
-                    if (string.IsNullOrWhiteSpace(list.First().Identifier))
-                    {
-                        foreach (MapEntityPrefab prefab in list)
-                        {
-                            yield return prefab;
-                        }
-                    }
-                    else
-                    {
-                        yield return list.Last();
-                    }
-                }
-            }
-        }
+        public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
 
         protected string name;
         protected string identifier;
@@ -334,6 +315,25 @@ namespace Barotrauma
             return (object)selected;            
         }
         
+        private static void UpdateCondensedList()
+        {
+            List.Clear();
+            foreach (var list in Prefabs)
+            {
+                if (string.IsNullOrWhiteSpace(list.First().Identifier))
+                {
+                    foreach (MapEntityPrefab prefab in list)
+                    {
+                        List.Add(prefab);
+                    }
+                }
+                else
+                {
+                    List.Add(list.Last());
+                }
+            }
+        }
+
         public static bool AddToList(MapEntityPrefab prefab)
         {
             string identifier = prefab.Identifier;
@@ -346,6 +346,7 @@ namespace Barotrauma
             }
 
             list.Add(prefab);
+            UpdateCondensedList();
             return true;
         }
 
@@ -362,6 +363,7 @@ namespace Barotrauma
                     Prefabs.Remove(list);
                 }
             }
+            UpdateCondensedList();
         }
 
         protected bool HandleExisting(string identifier, bool allowOverriding, string file = null)
