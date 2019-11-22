@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
@@ -60,7 +61,11 @@ namespace Barotrauma
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (!Objectives.ContainsKey(item))
             {
-                if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { return false; }
+                if (item != character.SelectedConstruction)
+                {
+                    float condition = item.ConditionPercentage;
+                    if (item.Repairables.All(r => condition >= r.AIRepairThreshold)) { return false; }
+                }
             }
             if (RequireAdequateSkills)
             {
@@ -69,7 +74,33 @@ namespace Barotrauma
             return true;
         }
 
-        protected override float TargetEvaluation() => Targets.Max(t => character.SelectedConstruction == t && t.ConditionPercentage < 100 ? 100 : 100 - t.ConditionPercentage);
+        protected override float TargetEvaluation()
+        {
+            if (character.SelectedConstruction != null && Targets.Any(t => character.SelectedConstruction == t && t.ConditionPercentage < 100))
+            {
+                // Don't stop fixing until done
+                return 100;
+            }
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>());
+            int items = Targets.Count;
+            bool anyFixers = otherFixers > 0;
+            float ratio = anyFixers ? items / otherFixers : 1;
+            var result = ratio;
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
+            }
+            else
+            {
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f))
+                {
+                    // Enough fixers
+                    return 0;
+                }
+                return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
+            }
+        }
+
         protected override IEnumerable<Item> GetList() => Item.ItemList;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
