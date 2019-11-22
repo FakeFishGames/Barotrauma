@@ -273,6 +273,7 @@ namespace Barotrauma
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Particles:
+                        case ContentType.Outpost:
                         case ContentType.None: //TODO: remove
                             break; //do nothing here if the content type is supported
                         default:
@@ -343,6 +344,7 @@ namespace Barotrauma
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Particles:
+                        case ContentType.Outpost:
                         case ContentType.None: //TODO: remove
                             break; //do nothing here if the content type is supported
                         default:
