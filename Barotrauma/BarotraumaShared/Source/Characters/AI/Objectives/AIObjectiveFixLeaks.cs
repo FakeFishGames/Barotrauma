@@ -24,7 +24,7 @@ namespace Barotrauma
             float severity = sizeFactor * leak.Open;
             if (!leak.IsRoomToRoom)
             {
-                severity *= 100;
+                severity *= 10;
                 // If there is a leak in the outer walls, the severity cannot be lower than 10, no matter how small the leak
                 return MathHelper.Clamp(severity, 10, 100);
             }
@@ -34,7 +34,26 @@ namespace Barotrauma
             }
         }
 
-        protected override float TargetEvaluation() => Targets.Max(t => GetLeakSeverity(t));
+        protected override float TargetEvaluation()
+        {
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>());
+            int leaks = Targets.Count;
+            float ratio = leaks / Math.Max(1, otherFixers);
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
+            }
+            else
+            {
+                if (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f)
+                {
+                    // Enough fixers
+                    return 0;
+                }
+                return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
+            }
+        }
+
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) 
             => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
