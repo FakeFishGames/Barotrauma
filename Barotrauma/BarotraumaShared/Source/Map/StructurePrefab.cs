@@ -200,9 +200,9 @@ namespace Barotrauma
         public static void RemoveByFile(string filePath)
         {
             List<StructurePrefab> prefabsToRemove = new List<StructurePrefab>();
-            foreach (var list in Prefabs)
+            foreach (var kvp in Prefabs)
             {
-                foreach (var prefab in list)
+                foreach (var prefab in kvp.Value)
                 {
                     if (prefab is StructurePrefab sp && sp.ConfigFile == filePath)
                     {

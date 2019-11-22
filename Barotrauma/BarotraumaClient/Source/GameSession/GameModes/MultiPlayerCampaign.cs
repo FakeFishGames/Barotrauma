@@ -131,7 +131,7 @@ namespace Barotrauma
             msg.Write((UInt16)CargoManager.PurchasedItems.Count);
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
-                msg.Write((UInt16)MapEntityPrefab.List.IndexOf(pi.ItemPrefab));
+                msg.Write(pi.ItemPrefab.Identifier);
                 msg.Write((UInt16)pi.Quantity);
             }
         }
@@ -159,9 +159,9 @@ namespace Barotrauma
             List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
             for (int i = 0; i < purchasedItemCount; i++)
             {
-                UInt16 itemPrefabIndex = msg.ReadUInt16();
+                string itemPrefabIdentifier = msg.ReadString();
                 UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.List[itemPrefabIndex] as ItemPrefab, itemQuantity));
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.Prefabs[itemPrefabIdentifier].Last() as ItemPrefab, itemQuantity));
             }
 
             bool hasCharacterData = msg.ReadBoolean();

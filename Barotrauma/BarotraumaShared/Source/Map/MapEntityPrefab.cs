@@ -15,8 +15,17 @@ namespace Barotrauma
 
     partial class MapEntityPrefab : IDisposable
     {
-        public readonly static List<List<MapEntityPrefab>> Prefabs = new List<List<MapEntityPrefab>>();
-        public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
+        public readonly static Dictionary<string, List<MapEntityPrefab>> Prefabs = new Dictionary<string, List<MapEntityPrefab>>();
+        public static IEnumerable<MapEntityPrefab> List
+        {
+            get
+            {
+                foreach (var kvp in Prefabs)
+                {
+                    yield return kvp.Value.Last();
+                }
+            }
+        }
 
         protected string name;
         protected string identifier;
@@ -315,25 +324,6 @@ namespace Barotrauma
             return (object)selected;            
         }
         
-        private static void UpdateCondensedList()
-        {
-            List.Clear();
-            foreach (var list in Prefabs)
-            {
-                if (string.IsNullOrWhiteSpace(list.First().Identifier))
-                {
-                    foreach (MapEntityPrefab prefab in list)
-                    {
-                        List.Add(prefab);
-                    }
-                }
-                else
-                {
-                    List.Add(list.Last());
-                }
-            }
-        }
-
         public static bool AddToList(MapEntityPrefab prefab)
         {
             string identifier = prefab.Identifier;
@@ -344,15 +334,14 @@ namespace Barotrauma
                 return false;
             }
 
-            List<MapEntityPrefab> list = Prefabs.Find(l => l.Last().Identifier == prefab.Identifier);
-            if (list == null)
+            List<MapEntityPrefab> list = null;
+            if (!Prefabs.TryGetValue(prefab.Identifier, out list))
             {
                 list = new List<MapEntityPrefab>();
-                Prefabs.Add(list);
+                Prefabs.Add(prefab.Identifier, list);
             }
 
             list.Add(prefab);
-            UpdateCondensedList();
             return true;
         }
 
@@ -360,24 +349,23 @@ namespace Barotrauma
         {
             string identifier = prefab.Identifier;
 
-            List<MapEntityPrefab> list = Prefabs.Find(l => l.Contains(prefab));
-            if (list != null)
+            List<MapEntityPrefab> list = null;
+            if (Prefabs.TryGetValue(prefab.Identifier, out list))
             {
                 list.Remove(prefab);
                 if (list.Count == 0)
                 {
-                    Prefabs.Remove(list);
+                    Prefabs.Remove(prefab.Identifier);
                 }
             }
-            UpdateCondensedList();
         }
 
         protected bool HandleExisting(string identifier, bool allowOverriding, string file = null)
         {
             if (!string.IsNullOrEmpty(identifier))
             {
-                List<MapEntityPrefab> list = Prefabs.Find(l => l.Last().Identifier == identifier);
-                if (list != null)
+                List<MapEntityPrefab> list = null;
+                if (Prefabs.TryGetValue(identifier, out list))
                 {
                     if (allowOverriding)
                     {
