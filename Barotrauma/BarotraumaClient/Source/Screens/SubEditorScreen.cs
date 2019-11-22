@@ -557,7 +557,7 @@ namespace Barotrauma
                 if (ep.HideInMenus) { continue; }                
 #endif
 
-                bool legacy = ep.Category == MapEntityCategory.Legacy;
+                bool legacy = ep.Category.HasFlag(MapEntityCategory.Legacy);
 
                 float relWidth = 1.0f / entitiesPerRow;
                 GUIFrame frame = new GUIFrame(new RectTransform(

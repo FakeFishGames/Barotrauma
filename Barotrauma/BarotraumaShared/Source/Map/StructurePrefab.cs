@@ -293,6 +293,14 @@ namespace Barotrauma
             }
             sp.Category = category;
 
+            if (category.HasFlag(MapEntityCategory.Legacy))
+            {
+                if (string.IsNullOrWhiteSpace(sp.identifier))
+                {
+                    sp.identifier = "legacystructure_" + sp.name.ToLowerInvariant().Replace(" ", "");
+                }
+            }
+
             sp.Aliases = 
                 (element.GetAttributeStringArray("aliases", null) ?? 
                 element.GetAttributeStringArray("Aliases", new string[0])).ToHashSet();
@@ -327,7 +335,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            if (string.IsNullOrEmpty(sp.identifier))
             {
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");

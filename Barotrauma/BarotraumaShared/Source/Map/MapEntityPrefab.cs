@@ -338,6 +338,12 @@ namespace Barotrauma
         {
             string identifier = prefab.Identifier;
 
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                DebugConsole.ThrowError(prefab.Name + " has no identifier!");
+                return false;
+            }
+
             List<MapEntityPrefab> list = Prefabs.Find(l => l.Last().Identifier == prefab.Identifier);
             if (list == null)
             {

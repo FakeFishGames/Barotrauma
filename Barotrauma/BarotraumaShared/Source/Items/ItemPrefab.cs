@@ -558,9 +558,9 @@ namespace Barotrauma
                     name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
                 }
             }
-            else if (Category == MapEntityCategory.Legacy)
+            else if (Category.HasFlag(MapEntityCategory.Legacy))
             {
-                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefrore
+                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
                     name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
@@ -568,6 +568,11 @@ namespace Barotrauma
                 else
                 {
                     name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                }
+
+                if (string.IsNullOrWhiteSpace(identifier))
+                {
+                    identifier = "legacyitem_" + OriginalName.ToLowerInvariant().Replace(" ", "");
                 }
             }
 
@@ -802,7 +807,7 @@ namespace Barotrauma
                 sprite.EntityID = identifier;
             }
             
-            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            if (string.IsNullOrEmpty(identifier))
             {
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
