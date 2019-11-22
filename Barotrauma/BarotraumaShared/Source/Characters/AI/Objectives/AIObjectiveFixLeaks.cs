@@ -37,15 +37,19 @@ namespace Barotrauma
         protected override float TargetEvaluation()
         {
             int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>());
-            int leaks = Targets.Count;
+            int totalLeaks = Targets.Count();
+            if (totalLeaks == 0) { return 0; }
+            int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
+            int leaks = totalLeaks - secondaryLeaks;
             bool anyFixers = otherFixers > 0;
-            float ratio = anyFixers ? leaks / otherFixers : 1;
             if (objectiveManager.CurrentOrder == this)
             {
+                float ratio = anyFixers ? totalLeaks / otherFixers : 1;
                 return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
             }
             else
             {
+                float ratio = leaks == 0 ? 1 : anyFixers ? leaks / otherFixers : 1;
                 if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f))
                 {
                     // Enough fixers
