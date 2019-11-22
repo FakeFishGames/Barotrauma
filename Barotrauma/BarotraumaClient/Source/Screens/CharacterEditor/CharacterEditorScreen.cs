@@ -2669,7 +2669,7 @@ namespace Barotrauma.CharacterEditor
                 }, elementCount: 8, style: null);
                 jobDropDown.ListBox.Color = new Color(jobDropDown.ListBox.Color.R, jobDropDown.ListBox.Color.G, jobDropDown.ListBox.Color.B, byte.MaxValue);
                 jobDropDown.AddItem("None");
-                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Value.Name, j.Value.Identifier));
+                JobPrefab.List.ForEach(j => jobDropDown.AddItem(j.Name, j.Identifier));
                 jobDropDown.SelectItem(selectedJob);
                 jobDropDown.OnSelected = (component, data) =>
                 {

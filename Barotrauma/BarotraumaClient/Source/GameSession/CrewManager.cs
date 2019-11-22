@@ -337,7 +337,7 @@ namespace Barotrauma
             foreach (Order order in Order.PrefabList)
             {
                 if (order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                if (!JobPrefab.List.Values.Any(jp => jp.AppropriateOrders.Contains(order.Identifier)) &&
+                if (!JobPrefab.List.Any(jp => jp.AppropriateOrders.Contains(order.Identifier)) &&
                     (order.AppropriateJobs == null || !order.AppropriateJobs.Any()))
                 {
                     orders.Insert(0, order);

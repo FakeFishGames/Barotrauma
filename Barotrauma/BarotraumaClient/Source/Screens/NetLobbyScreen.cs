@@ -1357,12 +1357,12 @@ namespace Barotrauma
                     while (i < GameMain.Config.JobPreferences.Count)
                     {
                         var jobIdent = GameMain.Config.JobPreferences[i];
-                        if (!JobPrefab.List.ContainsKey(jobIdent.First))
+                        if (!JobPrefab.Prefabs.ContainsKey(jobIdent.First))
                         {
                             GameMain.Config.JobPreferences.RemoveAt(i);
                             continue;
                         }
-                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.List[jobIdent.First], jobIdent.Second);
+                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.Prefabs[jobIdent.First].Last(), jobIdent.Second);
                         break;
                     }
 
@@ -1718,9 +1718,9 @@ namespace Barotrauma
             playerFrame.Text = client.Name;
             
             Color color = Color.White;
-            if (JobPrefab.List.ContainsKey(client.PreferredJob))
+            if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
             {
-                color = JobPrefab.List[client.PreferredJob].UIColor;
+                color = JobPrefab.Prefabs[client.PreferredJob].Last().UIColor;
             }
             playerFrame.Color = color * 0.4f;
             playerFrame.HoverColor = color * 0.6f;
@@ -2547,11 +2547,11 @@ namespace Barotrauma
 
             GUIButton jobButton = null;
 
-            var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
+            var availableJobs = JobPrefab.Prefabs.Values.Select(l => l.Last()).Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
             ).Select(j => new Pair<JobPrefab, int>(j, 1));
             availableJobs = availableJobs.Concat(
-                JobPrefab.List.Values.Where(jobPrefab =>
+                JobPrefab.Prefabs.Values.Select(l => l.Last()).Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
             ).Select(j => JobList.Content.FindChild(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == j).UserData as Pair<JobPrefab, int>));
             availableJobs = availableJobs.ToList();

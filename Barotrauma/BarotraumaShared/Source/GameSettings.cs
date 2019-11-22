@@ -240,6 +240,9 @@ namespace Barotrauma
                         case ContentType.Character:
                             Character.AddConfigFile(file.Path);
                             break;
+                        case ContentType.Jobs:
+                            JobPrefab.LoadFromFile(file.Path);
+                            break;
                         case ContentType.Item:
                             ItemPrefab.LoadFromFile(file.Path);
                             shouldRefreshFabricationRecipes = true;
@@ -264,6 +267,7 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
+                        case ContentType.Jobs:
                         case ContentType.Item:
                         case ContentType.Structure:
                         case ContentType.Submarine:
@@ -306,6 +310,9 @@ namespace Barotrauma
                         case ContentType.Character:
                             Character.RemoveConfigFile(file.Path);
                             break;
+                        case ContentType.Jobs:
+                            JobPrefab.RemoveByFile(file.Path);
+                            break;
                         case ContentType.Item:
                             ItemPrefab.Remove(file.Path);
                             shouldRefreshFabricationRecipes = true;
@@ -330,6 +337,7 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
+                        case ContentType.Jobs:
                         case ContentType.Item:
                         case ContentType.Structure:
                         case ContentType.Submarine:

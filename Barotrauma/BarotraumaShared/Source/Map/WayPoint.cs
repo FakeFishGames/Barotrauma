@@ -654,7 +654,7 @@ namespace Barotrauma
             {
                 w.assignedJob = 
                     JobPrefab.Get(jobIdentifier) ??
-                    JobPrefab.List.Values.FirstOrDefault(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
+                    JobPrefab.List.FirstOrDefault(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);

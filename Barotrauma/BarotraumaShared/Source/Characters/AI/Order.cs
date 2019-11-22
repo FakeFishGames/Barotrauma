@@ -199,7 +199,7 @@ namespace Barotrauma
             if (character.Info == null || character.Info.Job == null) { return false; }
             if (character.Info.Job.Prefab.AppropriateOrders.Any(appropriateOrderId => Identifier == appropriateOrderId)) { return true; }
 
-            if (!JobPrefab.List.Values.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
+            if (!JobPrefab.List.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
                 (AppropriateJobs == null || AppropriateJobs.Length == 0))
             {
                 return true;
