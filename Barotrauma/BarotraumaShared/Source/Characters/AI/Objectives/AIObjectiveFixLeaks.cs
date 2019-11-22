@@ -38,14 +38,15 @@ namespace Barotrauma
         {
             int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>());
             int leaks = Targets.Count;
-            float ratio = leaks / Math.Max(1, otherFixers);
+            bool anyFixers = otherFixers > 0;
+            float ratio = anyFixers ? leaks / otherFixers : 1;
             if (objectiveManager.CurrentOrder == this)
             {
                 return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
             }
             else
             {
-                if (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f)
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f))
                 {
                     // Enough fixers
                     return 0;
