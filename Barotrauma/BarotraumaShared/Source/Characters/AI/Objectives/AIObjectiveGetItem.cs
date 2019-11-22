@@ -94,7 +94,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
 #endif
-                        Abandon = true;
+                        Reset();
                     }
                     objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                     return;
@@ -106,7 +106,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
                 // Try again
-                ResetTarget();
+                Reset();
                 return;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
@@ -178,22 +178,18 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            requiredCondition = () => targetItem.GetRootContainer() == rootContainer
+                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer
                         };
                     },
                     onAbandon: () =>
                     {
                         ignoredItems.Add(targetItem);
-                        ResetTarget();
-                        RemoveSubObjective(ref goToObjective);
+                        Reset();
                     },
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
         }
 
-        /// <summary>
-        /// searches for an item that matches the desired item and adds a goto subobjective if one is found
-        /// </summary>
         private void FindTargetItem()
         {
             if (itemIdentifiers == null)
@@ -278,8 +274,10 @@ namespace Barotrauma
             return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
         }
 
-        private void ResetTarget()
+        public override void Reset()
         {
+            base.Reset();
+            RemoveSubObjective(ref goToObjective);
             targetItem = null;
             moveToTarget = null;
             rootContainer = null;

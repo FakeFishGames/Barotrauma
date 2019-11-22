@@ -15,7 +15,14 @@ namespace Barotrauma
         private float waitUntilPathUnreachable;
         private bool getDivingGearIfNeeded;
 
+        /// <summary>
+        /// Doesn't allow the objective to complete if this condition is false
+        /// </summary>
         public Func<bool> requiredCondition;
+        /// <summary>
+        /// Aborts the objective when this condition is true
+        /// </summary>
+        public Func<bool> abortCondition;
         public Func<PathNode, bool> startNodeFilter;
         public Func<PathNode, bool> endNodeFilter;
 
@@ -252,6 +259,11 @@ namespace Barotrauma
             // Then the custom condition
             // And finally check if can interact (heaviest)
             if (Target == null)
+            {
+                Abandon = true;
+                return false;
+            }
+            if (abortCondition != null && abortCondition())
             {
                 Abandon = true;
                 return false;
