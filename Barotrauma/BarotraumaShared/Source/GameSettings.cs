@@ -274,7 +274,7 @@ namespace Barotrauma
                         case ContentType.Text:
                         case ContentType.Particles:
                         case ContentType.Outpost:
-                        case ContentType.None: //TODO: remove
+                        case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
                             ContentPackageSelectionDirty = true;
@@ -345,7 +345,7 @@ namespace Barotrauma
                         case ContentType.Text:
                         case ContentType.Particles:
                         case ContentType.Outpost:
-                        case ContentType.None: //TODO: remove
+                        case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
                             ContentPackageSelectionDirty = true;
