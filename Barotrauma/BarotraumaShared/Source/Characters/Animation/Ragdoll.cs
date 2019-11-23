@@ -87,7 +87,7 @@ namespace Barotrauma
         //a Character to the position sent by server in multiplayer mode
         protected Vector2 overrideTargetMovement;
         
-        protected float floorY;
+        protected float floorY, standOnFloorY;
         protected Vector2 floorNormal = Vector2.UnitY;
         protected float surfaceY;
         
@@ -95,6 +95,7 @@ namespace Barotrauma
         public bool onGround;
         private Vector2 lastFloorCheckPos;
         private bool lastFloorCheckIgnoreStairs, lastFloorCheckIgnorePlatforms;
+
 
         /// <summary>
         /// In sim units. Joint scale applied.
@@ -1179,138 +1180,22 @@ namespace Barotrauma
 
                 limb.Update(deltaTime);
             }
-            
-            bool onStairs = Stairs != null;
-            Stairs = null;
 
-            var contacts = Collider.FarseerBody.ContactList;
-            while (Collider.FarseerBody.Enabled && contacts != null && contacts.Contact != null)
+            if (!inWater && character.AllowInput && levitatingCollider && Collider.LinearVelocity.Y > -ImpactTolerance && onGround)
             {
-                if (contacts.Contact.Enabled && contacts.Contact.IsTouching)
+                float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + ColliderHeightFromFloor;
+                if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && onGround)
                 {
-                    contacts.Contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
-
-                    switch (contacts.Contact.FixtureA.CollisionCategories)
+                    if (Stairs != null)
                     {
-                        case Physics.CollisionStairs:
-                            Structure structure = contacts.Contact.FixtureA.Body.UserData as Structure;
-                            if (structure != null && onStairs)
-                            {
-                                Stairs = structure;
-                            }
-                            break;
+                        Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
+                            (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
                     }
-                    //    case Physics.CollisionPlatform:
-                    //        Structure platform = contacts.Contact.FixtureA.Body.UserData as Structure;
-                    //        if (IgnorePlatforms || colliderBottom.Y < ConvertUnits.ToSimUnits(platform.Rect.Y - 15))
-                    //        {
-                    //            contacts = contacts.Next;
-                    //            continue;
-                    //        }
-                    //        break;
-                    //    case Physics.CollisionWall:
-                    //        break;
-                    //    default:
-                    //            contacts = contacts.Next;
-                    //            continue;
-                    //}
-
-
-                    if (points[0].Y < Collider.SimPosition.Y)
+                    else
                     {
-                        floorY = Math.Max(floorY, points[0].Y);
-
-                        onGround = true;
-                        onFloorTimer = 0.1f;
+                        Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
                     }
-
-
-                }
-
-                contacts = contacts.Next;
-            }
-
-            //the ragdoll "stays on ground" for 50 millisecs after separation
-            if (onFloorTimer <= 0.0f)
-            {
-                onGround = false;
-            }
-            else
-            {
-                onFloorTimer -= deltaTime;
-            }
-
-            Vector2 rayStart = Collider.SimPosition;
-            Vector2 rayEnd = rayStart;
-            rayEnd.Y -= Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor*1.2f;
-
-            Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
-            if (!inWater && !character.IsDead && character.Stun <= 0f && levitatingCollider && Collider.LinearVelocity.Y > -ImpactTolerance)
-            {
-                float closestFraction = 1.0f;
-                Fixture closestFixture = null;
-                GameMain.World.RayCast((fixture, point, normal, fraction) =>
-                {
-                    switch (fixture.CollisionCategories)
-                    {
-                        case Physics.CollisionStairs:
-                            Structure structure = fixture.Body.UserData as Structure;
-                            if (inWater && targetMovement.Y < 0.5f) return -1;
-                            if (colliderBottomDisplay.Y < structure.Rect.Y - structure.Rect.Height + 30 && TargetMovement.Y < 0.5f && !onStairs) return -1;
-                            if (character.SelectedBy != null) return -1;
-                            break;
-                        case Physics.CollisionPlatform:
-                            Structure platform = fixture.Body.UserData as Structure;
-                            //ignore platforms if collider is below it
-                            // OR allow the character to "lift" itself above it if heading upwards and not on stairs
-                            if (IgnorePlatforms || (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || onStairs))) return -1;
-                            break;
-                        case Physics.CollisionWall:
-                        case Physics.CollisionLevel:
-                            if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
-                            break;
-                        default:
-                            System.Diagnostics.Debug.Assert(false, "Floor raycast should not have hit a fixture with the collision category " + fixture.CollisionCategories);
-                            return -1;
-                    }
-
-                    if (fraction < closestFraction)
-                    {
-                        closestFraction = fraction;
-                        closestFixture = fixture;
-                    }
-
-                    return closestFraction;
-                }, rayStart, rayEnd, Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
-
-                if (closestFraction < 1.0f && closestFixture != null)
-                {
-                    onGround = true;
-
-                    switch (closestFixture.CollisionCategories)
-                    {
-                        case Physics.CollisionStairs:
-                            Stairs = closestFixture.Body.UserData as Structure;
-                            onStairs = true;
-                            break;
-                    }
-
-                    float tfloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
-                    float targetY = tfloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + ColliderHeightFromFloor;
-
-                    if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f)
-                    {
-                        if (onStairs)
-                        {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X,
-                               (targetY < Collider.SimPosition.Y ? Math.Sign(targetY - Collider.SimPosition.Y) : (targetY - Collider.SimPosition.Y)) * 5.0f);
-                        }
-                        else
-                        {
-                            Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, (targetY - Collider.SimPosition.Y) * 5.0f);
-                        }
-                    }
-                }
+                }                
             }
             UpdateProjSpecific(deltaTime);
         }
@@ -1436,7 +1321,7 @@ namespace Barotrauma
 
         partial void Splash(Limb limb, Hull limbHull);
 
-        protected void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)
+        private void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)
         {
             PhysicsBody refBody = refLimb == null ? Collider : refLimb.body;
             if (Vector2.DistanceSquared(lastFloorCheckPos, refBody.SimPosition) > 0.1f * 0.1f || lastFloorCheckIgnoreStairs != ignoreStairs || lastFloorCheckIgnorePlatforms != IgnorePlatforms)
@@ -1448,33 +1333,65 @@ namespace Barotrauma
             }
         }
 
-        protected float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
+
+        private float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
         {
+            onGround = false;
+            Stairs = null;
             Vector2 rayStart = simPosition;
             float height = ColliderHeightFromFloor;
-            if (HeadPosition.HasValue && MathUtils.IsValid(HeadPosition.Value)) height = Math.Max(height, HeadPosition.Value);
-            if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) height = Math.Max(height, TorsoPosition.Value);
+            if (HeadPosition.HasValue && MathUtils.IsValid(HeadPosition.Value)) { height = Math.Max(height, HeadPosition.Value); }
+            if (TorsoPosition.HasValue && MathUtils.IsValid(TorsoPosition.Value)) { height = Math.Max(height, TorsoPosition.Value); }
 
             Vector2 rayEnd = rayStart - new Vector2(0.0f, height);
+            Vector2 onGroundRayEnd = rayStart - Vector2.UnitY * (Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f);
             Vector2 colliderBottomDisplay = ConvertUnits.ToDisplayUnits(GetColliderBottom());
 
+            Fixture standOnFloorFixture = null;
+            float standOnFloorFraction = 1;
             float closestFraction = 1;
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 switch (fixture.CollisionCategories)
                 {
                     case Physics.CollisionStairs:
-                        if (ignoreStairs) return -1;
-                        if (inWater && TargetMovement.Y < 0.5f) return -1;
+                        if (inWater && TargetMovement.Y < 0.5f) { return -1; }
+
+                        if (character.SelectedBy == null && fraction < standOnFloorFraction)
+                        {
+                            Structure structure = fixture.Body.UserData as Structure;
+                            if (colliderBottomDisplay.Y >= structure.Rect.Y - structure.Rect.Height + 30 || TargetMovement.Y > 0.5f || Stairs != null)
+                            {
+                                standOnFloorFraction = fraction;
+                                standOnFloorFixture = fixture;
+                            }
+                        }
+
+                        if (ignoreStairs) { return -1; }
                         break;
                     case Physics.CollisionPlatform:
                         Structure platform = fixture.Body.UserData as Structure;
+
+                        if (!IgnorePlatforms && fraction < standOnFloorFraction)
+                        {
+                            if (colliderBottomDisplay.Y >= platform.Rect.Y - 16 || (targetMovement.Y > 0.0f && Stairs == null))
+                            {
+                                standOnFloorFraction = fraction;
+                                standOnFloorFixture = fixture;
+                            }
+                        }
+
                         if (colliderBottomDisplay.Y < platform.Rect.Y - 16 && (targetMovement.Y <= 0.0f || Stairs != null)) return -1;
                         if (IgnorePlatforms && TargetMovement.Y < -0.5f || Collider.Position.Y < platform.Rect.Y) return -1;
                         break;
                     case Physics.CollisionWall:
                     case Physics.CollisionLevel:
-                        if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) return -1;
+                        if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) { return -1; }
+                        if (fraction < standOnFloorFraction)
+                        {
+                            standOnFloorFraction = fraction;
+                            standOnFloorFixture = fixture;
+                        }
                         break;
                     default:
                         System.Diagnostics.Debug.Assert(false, "Floor raycast should not have hit a fixture with the collision category " + fixture.CollisionCategories);
@@ -1490,6 +1407,18 @@ namespace Barotrauma
                 return closestFraction;
             }, rayStart, rayEnd,  Physics.CollisionStairs | Physics.CollisionPlatform | Physics.CollisionWall | Physics.CollisionLevel);
 
+            if (standOnFloorFixture != null)
+            {
+                standOnFloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * standOnFloorFraction;
+                if (rayStart.Y - standOnFloorY < Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f)
+                {
+                    onGround = true;
+                    if (standOnFloorFixture.CollisionCategories == Physics.CollisionStairs)
+                    {
+                        Stairs = standOnFloorFixture.Body.UserData as Structure;
+                    }
+                }
+            }
 
             if (closestFraction == 1) //raycast didn't hit anything
             {
