@@ -983,13 +983,6 @@ namespace Barotrauma.Steam
                 }
                 GameMain.Config.SelectContentPackage(newPackage);
                 GameMain.Config.SaveNewPlayerConfig();
-                foreach (ContentFile cf in newPackage.Files)
-                {
-                    if (cf.Type == ContentType.Submarine)
-                    {
-                        Submarine.RefreshSavedSub(cf.Path);
-                    }
-                }
             }
             errorMsg = "";
             return true;
@@ -1157,8 +1150,6 @@ namespace Barotrauma.Steam
             }
             if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
 
-            bool wasSub = contentPackage.Files.Any(f => f.Type == ContentType.Submarine);
-
             HashSet<string> directories = new HashSet<string>();
             try
             {
@@ -1195,6 +1186,10 @@ namespace Barotrauma.Steam
                 }
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
+                foreach (var cp in GameMain.Config.SelectedContentPackages.Where(p => !ContentPackage.List.Contains(p)))
+                {
+                    GameMain.Config.DeselectContentPackage(cp);
+                }
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
                 ContentPackage.SortContentPackages();
                 GameMain.Config.SaveNewPlayerConfig();
@@ -1204,11 +1199,6 @@ namespace Barotrauma.Steam
                 errorMsg = "Disabling the workshop item \"" + item.Title + "\" failed. " + e.Message;
                 DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                 return false;
-            }
-
-            if (wasSub)
-            {
-                Submarine.RefreshSavedSubs();
             }
 
             errorMsg = "";
