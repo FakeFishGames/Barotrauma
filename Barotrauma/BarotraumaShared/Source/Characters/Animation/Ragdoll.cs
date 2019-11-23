@@ -1261,24 +1261,21 @@ namespace Barotrauma
         private bool CheckValidity(PhysicsBody body)
         {
             string errorMsg = null;
-            string bodyName = body.UserData is Limb limb ?
-                "Limb (" + limb.type + ")" :
-                "Collider";
             if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
             {
-                errorMsg = bodyName + " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: " + character.Name + "), resetting the ragdoll.";
             }
             else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
             {
-                errorMsg = bodyName + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
             }
             else if (!MathUtils.IsValid(body.Rotation))
             {
-                errorMsg = bodyName + " rotation invalid (" + body.Rotation + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: " + character.Name + "), resetting the ragdoll.";
             }
             else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
             {
-                errorMsg = bodyName + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
+                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + "), resetting the ragdoll.";
             }
             if (errorMsg != null)
             {
@@ -1314,6 +1311,12 @@ namespace Barotrauma
                 SetInitialLimbPositions();
                 return false;
             }
+
+            string GetBodyName()
+            {
+                return body.UserData is Limb limb ? "Limb (" + limb.type + ")" : "Collider";
+            }
+
             return true;
         }
 
