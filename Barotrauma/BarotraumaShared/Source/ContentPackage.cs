@@ -501,13 +501,7 @@ namespace Barotrauma
                 if (string.IsNullOrEmpty(temp)) { break; }
                 path = temp;
             }
-            switch (contentFile.Type)
-            {
-                case ContentType.Submarine:
-                    return path == "Submarines" || path == "Mods";
-                default:
-                    return path == "Mods";
-            }
+            return path == "Mods";
         }
         /// <summary>
         /// Are mods allowed to install a file into the specified path. If a content package XML includes files
