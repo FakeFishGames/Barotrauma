@@ -68,7 +68,7 @@ namespace Barotrauma
 
         public Md5Hash(FileStream fileStream, string filename = null, bool tryLoadFromCache = true)
         {
-            if (tryLoadFromCache)
+            if (tryLoadFromCache && !string.IsNullOrWhiteSpace(filename))
             {
                 lock (cache)
                 {
@@ -105,7 +105,7 @@ namespace Barotrauma
 
         public Md5Hash(XDocument doc, string filename = null, bool tryLoadFromCache = true)
         {
-            if (tryLoadFromCache)
+            if (tryLoadFromCache && !string.IsNullOrWhiteSpace(filename))
             {
                 lock (cache)
                 {

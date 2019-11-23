@@ -811,56 +811,7 @@ namespace Barotrauma.Steam
             string installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage));
             contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
 
-            if (contentPackage == null && tempContentPackage.GameVersion <= new Version(0, 9, 1, 0))
-            {
-                //try finding the content package from the non-legacy path
-                installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage, legacy: false));
-                contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
-            }
-
-            if (tempContentPackage.GameVersion > new Version(0, 9, 1, 0))
-            {
-                itemEditor.Folder = Path.GetDirectoryName(installedContentPackagePath);
-            }
-            else //legacy support
-            {
-                try
-                {
-                    tempContentPackage.GameVersion = GameMain.Version;
-                    string newPath = GetWorkshopItemContentPackagePath(tempContentPackage);
-                    string newDir = Path.GetDirectoryName(newPath);
-                    contentPackage.Path = newPath;
-                    itemEditor.Folder = newDir;
-                    if (!Directory.Exists(newDir)) { Directory.CreateDirectory(newDir); }
-                    if (Path.GetFullPath(newPath) != installedContentPackagePath)
-                    {
-                        if (File.Exists(newPath)) { File.Delete(newPath); }
-                        File.Move(installedContentPackagePath, newPath);
-                    }
-                    //move all files inside the Mods folder
-                    foreach (ContentFile cf in contentPackage.Files)
-                    {
-                        string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(cf.Path), Path.GetFullPath(newDir));
-                        if (relativePath.StartsWith(".."))
-                        {
-                            string destinationPath = Path.Combine(newDir, cf.Path);
-                            if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) { Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)); }
-                            if (File.Exists(destinationPath)) { File.Delete(destinationPath); }
-                            File.Move(cf.Path, destinationPath);
-                            cf.Path = destinationPath;
-                        }
-                    }
-                    contentPackage.GameVersion = GameMain.Version;
-                    contentPackage.Save(contentPackage.Path);
-                }
-                catch (Exception e)
-                {
-                    string errorMsg = TextManager.GetWithVariable("WorkshopErrorOnEnable", "[itemname]", TextManager.EnsureUTF8(existingItem.Title));
-                    new GUIMessageBox(TextManager.Get("Error"), errorMsg);
-                    DebugConsole.ThrowError(errorMsg, e);
-                    return false;
-                }
-            }
+            itemEditor.Folder = Path.GetDirectoryName(installedContentPackagePath);
 
             string previewImagePath = Path.GetFullPath(Path.Combine(itemEditor.Folder, PreviewImageName));
             itemEditor.PreviewImage = previewImagePath;
@@ -964,7 +915,10 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            ContentPackage contentPackage = new ContentPackage(metaDataFilePath);
+            ContentPackage contentPackage = new ContentPackage(metaDataFilePath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
             if (!contentPackage.IsCompatible())
@@ -995,6 +949,24 @@ namespace Barotrauma.Steam
                 SteamWorkshopUrl = item.Url,
                 InstallTime = item.Modified > item.Created ? item.Modified : item.Created
             };
+
+            if (contentPackage.GameVersion <= new Version(0, 9, 1, 0))
+            {
+                string fileName = contentPackage.Name;
+                fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+
+                foreach (ContentFile contentFile in newPackage.Files)
+                {
+                    contentFile.Path = contentFile.Path.Replace('\\', '/');
+
+                    string[] splitPath = contentFile.Path.Split('/');
+                    if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != fileName)
+                    {
+                        contentFile.Path = Path.Combine("Mods", fileName, contentFile.Path);
+                    }
+                }
+            }
+
             if (!Directory.Exists(Path.GetDirectoryName(newContentPackagePath)))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(newContentPackagePath));
@@ -1066,7 +1038,17 @@ namespace Barotrauma.Steam
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
+                    contentFile.Path = contentFile.Path.Replace('\\', '/');
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+
+                    string fileName = contentPackage.Name;
+                    fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+
+                    string[] splitPath = contentFile.Path.Split('/');
+                    if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != fileName)
+                    {
+                        contentFile.Path = Path.Combine("Mods", fileName, contentFile.Path);
+                    }
 
                     //path not allowed -> the content file must be a reference to an external file (such as some vanilla file outside the Mods folder)
                     if (!ContentPackage.IsModFilePathAllowed(contentFile))
@@ -1410,19 +1392,12 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        public static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
-        {
-            return GetWorkshopItemContentPackagePath(contentPackage, legacy: contentPackage.GameVersion <= new Version(0, 9, 1, 0));
-        }
-
-        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage, bool legacy)
+        private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
             string fileName = contentPackage.Name;
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
-            return legacy ?
-                Path.Combine("Data", "ContentPackages", fileName + ".xml") :
-                Path.Combine("Mods", fileName, MetadataFileName);
+            return Path.Combine("Mods", fileName, MetadataFileName);
         }
 
         #endregion
