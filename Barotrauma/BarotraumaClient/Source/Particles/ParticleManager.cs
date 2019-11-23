@@ -179,7 +179,7 @@ namespace Barotrauma.Particles
 
         public List<ParticlePrefab> GetPrefabList()
         {
-            return prefabs.Values.SelectMany(l => l).ToList();
+            return prefabs.Values.Select(l => l.Last()).ToList();
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
