@@ -522,11 +522,6 @@ namespace Barotrauma
                 OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
-            tickBoxHolder.Children.ForEach(c => 
-            {
-                if (c is GUITickBox tb) { tb.RectTransform.MinSize = new Point(0, 32); }
-            });
-
             GUITextBlock.AutoScaleAndNormalize(tickBoxHolder.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
 
             //spacing
