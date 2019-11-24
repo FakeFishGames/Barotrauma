@@ -575,6 +575,10 @@ namespace Barotrauma
 
         public void ApplyFlowForces(float deltaTime, Item item)
         {
+            if (item.body.Mass <= 0.0f)
+            {
+                return;
+            }
             foreach (var gap in ConnectedGaps.Where(gap => gap.Open > 0))
             {
                 var distance = MathHelper.Max(Vector2.DistanceSquared(item.Position, gap.Position) / 1000, 1f);
