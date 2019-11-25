@@ -20,8 +20,6 @@ namespace Barotrauma
         public float MinValueFloat = float.MinValue, MaxValueFloat = float.MaxValue;
         public float ValueStep;
 
-        public string DisplayName;
-
         /// <summary>
         /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
         /// </summary>

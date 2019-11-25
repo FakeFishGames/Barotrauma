@@ -483,7 +483,7 @@
   <editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
   <editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
   <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
-  
+
   <!-- Generic -->
   <editor.saveall>Save All</editor.saveall>
   <editor.copytoclipboard>Copy to Clipboard</editor.copytoclipboard>
@@ -794,27 +794,49 @@
   <entityname.platform>Platform Basic</entityname.platform>
   <entitydescription.platform>Walkable platform which a character may optionally drop down from or climb on.</entitydescription.platform>
   <entityname.roughbgwall>Back Wall Rough</entityname.roughbgwall>
-  <entitydescription.roughbgwall><!-- No data --></entitydescription.roughbgwall>
+  <entitydescription.roughbgwall>
+    <!-- No data -->
+  </entitydescription.roughbgwall>
   <entityname.cleanbgwall>Back Wall Clean</entityname.cleanbgwall>
-  <entitydescription.cleanbgwall><!-- No data --></entitydescription.cleanbgwall>
+  <entitydescription.cleanbgwall>
+    <!-- No data -->
+  </entitydescription.cleanbgwall>
   <entityname.bgpanels>Back Wall Panels</entityname.bgpanels>
-  <entitydescription.bgpanels><!-- No data --></entitydescription.bgpanels>
+  <entitydescription.bgpanels>
+    <!-- No data -->
+  </entitydescription.bgpanels>
   <entityname.bgpanelswindow>Back Wall Window</entityname.bgpanelswindow>
-  <entitydescription.bgpanelswindow><!-- No data --></entitydescription.bgpanelswindow>
+  <entitydescription.bgpanelswindow>
+    <!-- No data -->
+  </entitydescription.bgpanelswindow>
   <entityname.bgorangepanels>Back Wall Orange Panels</entityname.bgorangepanels>
-  <entitydescription.bgorangepanels><!-- No data --></entitydescription.bgorangepanels>
+  <entitydescription.bgorangepanels>
+    <!-- No data -->
+  </entitydescription.bgorangepanels>
   <entityname.bgorangepanelwindow>Back Wall Orange Panels Window</entityname.bgorangepanelwindow>
-  <entitydescription.bgorangepanelwindow><!-- No data --></entitydescription.bgorangepanelwindow>
+  <entitydescription.bgorangepanelwindow>
+    <!-- No data -->
+  </entitydescription.bgorangepanelwindow>
   <entityname.pipesbackground>Back Wall Pipes</entityname.pipesbackground>
-  <entitydescription.pipesbackground><!-- No data --></entitydescription.pipesbackground>
+  <entitydescription.pipesbackground>
+    <!-- No data -->
+  </entitydescription.pipesbackground>
   <entityname.slopeforward>Slope Forwards</entityname.slopeforward>
-  <entitydescription.slopeforward><!-- No data --></entitydescription.slopeforward>
+  <entitydescription.slopeforward>
+    <!-- No data -->
+  </entitydescription.slopeforward>
   <entityname.slopeback>Slope Backwards</entityname.slopeback>
-  <entitydescription.slopeback><!-- No data --></entitydescription.slopeback>
+  <entitydescription.slopeback>
+    <!-- No data -->
+  </entitydescription.slopeback>
   <entityname.stairsright>Stairs Right</entityname.stairsright>
-  <entitydescription.stairsright><!-- No data --></entitydescription.stairsright>
+  <entitydescription.stairsright>
+    <!-- No data -->
+  </entitydescription.stairsright>
   <entityname.stairsleft>Stairs Left</entityname.stairsleft>
-  <entitydescription.stairsleft><!-- No data --></entitydescription.stairsleft>
+  <entitydescription.stairsleft>
+    <!-- No data -->
+  </entitydescription.stairsleft>
   <entityname.bunk>Bunk</entityname.bunk>
   <entitydescription.bunk>Crew can sleep here.</entitydescription.bunk>
   <entityname.ruinwallhorizontal>Ruin Wall Horizontal</entityname.ruinwallhorizontal>
@@ -842,9 +864,9 @@
   <entityname.ruinclaw>Ruin Prop Claw</entityname.ruinclaw>
   <entitydescription.ruinclaw>A decorative prop for alien ruins.</entitydescription.ruinclaw>
 
-  <!-- Particle editor -->
+  <!-- Particle Editor -->
   <particleeditor.emitter>Emitter</particleeditor.emitter>
-  
+
   <!-- Particles -->
   <particle.watersplash>Water Splash</particle.watersplash>
   <particle.mist>Mist</particle.mist>
@@ -877,7 +899,7 @@
   <particle.muzzleflashcoilgun>Muzzle Flash Coilgun</particle.muzzleflashcoilgun>
   <particle.muzzleflashrailgun>Muzzle Flash Railgun</particle.muzzleflashrailgun>
   <particle.underwaterexplosion>Underwater Explosion</particle.underwaterexplosion>
-  <!--<particle.risingbubbles>Rising Bubbles</particle.risingbubbles>-->
+  <particle.risingbubbles>Rising Bubbles</particle.risingbubbles>
   <particle.weld>Weld</particle.weld>
   <particle.weldspark>Weld Spark</particle.weldspark>
   <particle.weldsmoke>Weld Smoke</particle.weldsmoke>
@@ -894,28 +916,28 @@
   <particle.iceshards>Ice Shards</particle.iceshards>
   <particle.brownchunks>Brown Chunks</particle.brownchunks>
   <particle.aliengas>Alien Gas</particle.aliengas>
-  
-  <!-- Level editor -->
-  <leveleditorlevelseed>Level seed</leveleditorlevelseed>
-  <leveleditorgenerate>Generate</leveleditorgenerate>
-  <leveleditorlightingenabled>Enable lighting</leveleditorlightingenabled>
-  <leveleditorcursorlightenabled>Enable cursor light</leveleditorcursorlightenabled>
-  <leveleditorreloadtextures>Reload textures</leveleditorreloadtextures>
-  <leveleditorspriteeditdone>Done</leveleditorspriteeditdone>
-  <leveleditorlevelobjcommonness>Commonness in [leveltype]</leveleditorlevelobjcommonness>
-  <leveleditoreditsprite>Edit sprite</leveleditoreditsprite>
-  <leveleditorchildobjects>Child objects</leveleditorchildobjects>
-  <leveleditoraddchildobject>Add child object</leveleditoraddchildobject>
-  <leveleditorlightsources>Light sources</leveleditorlightsources>
-  <leveleditoraddlightsource>Add light source</leveleditoraddlightsource>
-  <leveleditorcreatelevelobj>Create a new level object</leveleditorcreatelevelobj>
-  <leveleditorlevelobjname>Name</leveleditorlevelobjname>
-  <leveleditorlevelobjtexturepath>Texture path</leveleditorlevelobjtexturepath>
-  <leveleditorlevelobjnameempty>Please enter a name for the level object.</leveleditorlevelobjnameempty>
-  <leveleditorlevelobjnametaken>The selected name is already in use.</leveleditorlevelobjnametaken>
-  <leveleditorlevelobjtexturenotfound>Could not find the selected texture file.</leveleditorlevelobjtexturenotfound>
 
-  <!-- Character editor -->
+  <!-- Level Editor -->
+  <leveleditor.levelseed>Level Seed</leveleditor.levelseed>
+  <leveleditor.generate>Generate</leveleditor.generate>
+  <leveleditor.lightingenabled>Enable Lighting</leveleditor.lightingenabled>
+  <leveleditor.cursorlightenabled>Enable Cursor Light</leveleditor.cursorlightenabled>
+  <leveleditor.reloadtextures>Reload Textures</leveleditor.reloadtextures>
+  <leveleditor.spriteeditdone>Done</leveleditor.spriteeditdone>
+  <leveleditor.levelobjcommonness>Commonness in [leveltype]</leveleditor.levelobjcommonness>
+  <leveleditor.editsprite>Edit Sprite</leveleditor.editsprite>
+  <leveleditor.childobjects>Child Objects</leveleditor.childobjects>
+  <leveleditor.addchildobject>Add Child Object</leveleditor.addchildobject>
+  <leveleditor.lightsources>Light Sources</leveleditor.lightsources>
+  <leveleditor.addlightsource>Add Light Source</leveleditor.addlightsource>
+  <leveleditor.createlevelobj>Create a Level Object</leveleditor.createlevelobj>
+  <leveleditor.levelobjname>Name</leveleditor.levelobjname>
+  <leveleditor.levelobjtexturepath>Texture Path</leveleditor.levelobjtexturepath>
+  <leveleditor.levelobjnameempty>Please enter a name for the level object.</leveleditor.levelobjnameempty>
+  <leveleditor.levelobjnametaken>The selected name is already in use.</leveleditor.levelobjnametaken>
+  <leveleditor.levelobjtexturenotfound>Could not find the selected texture file.</leveleditor.levelobjtexturenotfound>
+
+  <!-- Character Editor -->
   <charactereditor.creatingnewjoint>Creating a new joint</charactereditor.creatingnewjoint>
   <charactereditor.selectanchor1pos>Select the anchor position for the joint</charactereditor.selectanchor1pos>
   <charactereditor.selectlimbtoconnect>Select another limb to connect it with the joint</charactereditor.selectlimbtoconnect>
@@ -989,7 +1011,7 @@
   <charactereditor.copycharacter>Copy Character</charactereditor.copycharacter>
   <charactereditor.copycharactertooltip>Create a copy of the current character</charactereditor.copycharactertooltip>
   <charactereditor.nofieldforparameterfound>No field for [parameter] found!</charactereditor.nofieldforparameterfound>
-  <charactereditor.holdleftalttoadjustcyclespeed>Hold "Left Alt" to adjust the cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
+  <charactereditor.holdleftalttoadjustcyclespeed>Hold Left Alt to adjust the cycle speed</charactereditor.holdleftalttoadjustcyclespeed>
   <charactereditor.cyclespeed>Cycle Speed</charactereditor.cyclespeed>
   <charactereditor.movementspeed>Movement Speed</charactereditor.movementspeed>
   <charactereditor.headangle>Head Angle</charactereditor.headangle>
@@ -1007,7 +1029,7 @@
   <charactereditor.legmovementspeed>Leg Movement Speed</charactereditor.legmovementspeed>
   <charactereditor.legmovementamount>Leg Movement Amount</charactereditor.legmovementamount>
   <charactereditor.handmovementamount>Hand Movement Amount</charactereditor.handmovementamount>
-  <charactereditor.holdleftalttomanipulatejoint>Hold "Left Alt" to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
+  <charactereditor.holdleftalttomanipulatejoint>Hold Left Alt to manipulate the other end of the joint</charactereditor.holdleftalttomanipulatejoint>
   <charactereditor.origin>Origin</charactereditor.origin>
   <charactereditor.position>Position: [coordinates]</charactereditor.position>
   <charactereditor.size>Size</charactereditor.size>
@@ -1031,8 +1053,8 @@
   <charactereditor.loadhtml>Load HTML</charactereditor.loadhtml>
   <charactereditor.htmlpath>Path to the HTML file...</charactereditor.htmlpath>
   <charactereditor.selectfile>Select File</charactereditor.selectfile>
-  <charactereditor.missingtorsoorhead>You need to define at least one limb as "Torso" or "Head"!</charactereditor.missingtorsoorhead>
-  <charactereditor.missinglimbtype>You need to define one and only one limb as "[limbtype]"!</charactereditor.missinglimbtype>
+  <charactereditor.missingtorsoorhead>You need to define at least one limb as Torso or Head!</charactereditor.missingtorsoorhead>
+  <charactereditor.missinglimbtype>You need to define one and only one limb as [limbtype]!</charactereditor.missinglimbtype>
   <charactereditor.charactercreated>Character [name] Created</charactereditor.charactercreated>
   <charactereditor.limbtype>Limb Type</charactereditor.limbtype>
   <charactereditor.sourcerectangle>Source Rectangle</charactereditor.sourcerectangle>
@@ -1075,7 +1097,7 @@
   <charactereditor.existingjointfound>A joint between limb [limbid1] and [limbid2] already found!</charactereditor.existingjointfound>
   <charactereditor.unrestrict>Unrestrict</charactereditor.unrestrict>
 
-  <!-- Submarine editor -->
+  <!-- Submarine Editor -->
   <items>Items</items>
   <structures>Structures</structures>
   <totalhullvolume>Total hull volume</totalhullvolume>
@@ -1144,11 +1166,501 @@
   <nonlinkedgapswarning>The submarine contains gaps that aren't linked to any hulls. Gaps should always overlap with at least one hull (= a gap that leads outside the sub) or two hulls if it's a gap between rooms.</nonlinkedgapswarning>
   <cannoteditvanillasubs>Cannot edit the submarines defined in the Vanilla content package!</cannoteditvanillasubs>
 
-  <!-- Entity editor -->
+  <!-- Entity Editor -->
   <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
   <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
   <subeditorlights>Lights</subeditorlights>
   <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
+
+  <!-- Sprite Editor -->
+  <spriteeditor.reloadtexture>Reload Texture</spriteeditor.reloadtexture>
+  <spriteeditor.texturesreloaded>Textures reloaded from [filepath]</spriteeditor.texturesreloaded>
+  <spriteeditor.resetchanges>Reset Changes</spriteeditor.resetchanges>
+  <spriteeditor.resetsuccessful>Changes successfully reset</spriteeditor.resetsuccessful>
+  <spriteeditor.saveselectedsprites>Save Selected Sprites</spriteeditor.saveselectedsprites>
+  <spriteeditor.saveallsprites>Save All Sprites</spriteeditor.saveallsprites>
+  <spriteeditor.zoom>Zoom:</spriteeditor.zoom>
+  <spriteeditor.resetzoom>Reset Zoom</spriteeditor.resetzoom>
+  <spriteeditor.showgrid>Show Grid</spriteeditor.showgrid>
+  <spriteeditor.snaptogrid>Snap to Grid</spriteeditor.snaptogrid>
+  <spriteeditor.backgroundcolor>Background\nColor:</spriteeditor.backgroundcolor>
+  <spriteeditor.colorcomponentr>R</spriteeditor.colorcomponentr>
+  <spriteeditor.colorcomponentg>G</spriteeditor.colorcomponentg>
+  <spriteeditor.colorcomponentb>B</spriteeditor.colorcomponentb>
+  <spriteeditor.allchangessavedto>All changes saved to:</spriteeditor.allchangessavedto>
+
+  <!-- Serializable Properties -->
+  <sp.emitter.anglerange.name>Angle Range</sp.emitter.anglerange.name>
+  <sp.emitter.anglerange.description><!-- No data --></sp.emitter.anglerange.description>
+  <sp.emitter.velocityrange.name>Velocity Range</sp.emitter.velocityrange.name>
+  <sp.emitter.velocityrange.description><!-- No data --></sp.emitter.velocityrange.description>
+  <sp.emitter.scalerange.name>Scale Range</sp.emitter.scalerange.name>
+  <sp.emitter.scalerange.description><!-- No data --></sp.emitter.scalerange.description>
+  <sp.emitter.particleburstamount.name>Particle Burst Amount</sp.emitter.particleburstamount.name>
+  <sp.emitter.particleburstamount.description><!-- No data --></sp.emitter.particleburstamount.description>
+  <sp.emitter.particleburstinterval.name>Particle Burst Interval</sp.emitter.particleburstinterval.name>
+  <sp.emitter.particleburstinterval.description><!-- No data --></sp.emitter.particleburstinterval.description>
+  <sp.emitter.particlespersecond.name>Particles Per Second</sp.emitter.particlespersecond.name>
+  <sp.emitter.particlespersecond.description><!-- No data --></sp.emitter.particlespersecond.description>
+  <sp.lightsourceparams.color.name>Color</sp.lightsourceparams.color.name>
+  <sp.lightsourceparams.color.description><!-- No data --></sp.lightsourceparams.color.description>
+  <sp.lightsourceparams.range.name>Range</sp.lightsourceparams.range.name>
+  <sp.lightsourceparams.range.description><!-- No data --></sp.lightsourceparams.range.description>
+  <sp.levelgenerationparams.ambientlightcolor.name>Ambient Light Color</sp.levelgenerationparams.ambientlightcolor.name>
+  <sp.levelgenerationparams.ambientlightcolor.description><!-- No data --></sp.levelgenerationparams.ambientlightcolor.description>
+  <sp.levelgenerationparams.backgroundtexturecolor.name>Background Texture Color</sp.levelgenerationparams.backgroundtexturecolor.name>
+  <sp.levelgenerationparams.backgroundtexturecolor.description><!-- No data --></sp.levelgenerationparams.backgroundtexturecolor.description>
+  <sp.levelgenerationparams.backgroundcolor.name>Background Color</sp.levelgenerationparams.backgroundcolor.name>
+  <sp.levelgenerationparams.backgroundcolor.description><!-- No data --></sp.levelgenerationparams.backgroundcolor.description>
+  <sp.levelgenerationparams.wallcolor.name>Wall Color</sp.levelgenerationparams.wallcolor.name>
+  <sp.levelgenerationparams.wallcolor.description><!-- No data --></sp.levelgenerationparams.wallcolor.description>
+  <sp.levelgenerationparams.levelobjectamount.name>Level Object Amount</sp.levelgenerationparams.levelobjectamount.name>
+  <sp.levelgenerationparams.levelobjectamount.description>The total number of level objects (vegetation, vents, etc) in the level.</sp.levelgenerationparams.levelobjectamount.description>
+  <sp.levelgenerationparams.minwidth.name>Min Width</sp.levelgenerationparams.minwidth.name>
+  <sp.levelgenerationparams.minwidth.description><!-- No data --></sp.levelgenerationparams.minwidth.description>
+  <sp.levelgenerationparams.maxwidth.name>Max Width</sp.levelgenerationparams.maxwidth.name>
+  <sp.levelgenerationparams.maxwidth.description><!-- No data --></sp.levelgenerationparams.maxwidth.description>
+  <sp.levelgenerationparams.height.name>Height</sp.levelgenerationparams.height.name>
+  <sp.levelgenerationparams.height.description><!-- No data --></sp.levelgenerationparams.height.description>
+  <sp.levelgenerationparams.voronoisiteinterval.name>Voronoi Site Interval</sp.levelgenerationparams.voronoisiteinterval.name>
+  <sp.levelgenerationparams.voronoisiteinterval.description>How far from each other voronoi sites are placed. Sites determine shape of the voronoi graph which the level walls are generated from. (Decreasing this value causes the number of sites, and the complexity of the level, to increase exponentially - be careful when adjusting)</sp.levelgenerationparams.voronoisiteinterval.description>
+  <sp.levelgenerationparams.voronoisitevariance.name>Voronoi Site Variance</sp.levelgenerationparams.voronoisitevariance.name>
+  <sp.levelgenerationparams.voronoisitevariance.description>How much random variation to apply to the positions of the voronoi sites on each axis. Small values produce roughly rectangular level walls. The larger the values are, the less uniform the shapes get.</sp.levelgenerationparams.voronoisitevariance.description>
+  <sp.levelgenerationparams.cellsubdivisionlength.name>Cell Subdivision Length</sp.levelgenerationparams.cellsubdivisionlength.name>
+  <sp.levelgenerationparams.cellsubdivisionlength.description>The edges of the individual wall cells are subdivided into edges of this size. Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.</sp.levelgenerationparams.cellsubdivisionlength.description>
+  <sp.levelgenerationparams.cellroundingamount.name>Cell Rounding Amount</sp.levelgenerationparams.cellroundingamount.name>
+  <sp.levelgenerationparams.cellroundingamount.description>How much the individual wall cells are rounded. Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.</sp.levelgenerationparams.cellroundingamount.description>
+  <sp.levelgenerationparams.cellirregularity.name>Cell Irregularity</sp.levelgenerationparams.cellirregularity.name>
+  <sp.levelgenerationparams.cellirregularity.description>How much random variance is applied to the edges of the cells. Note that the final shape of the cells is also affected by the CellSubdivisionLength parameter.</sp.levelgenerationparams.cellirregularity.description>
+  <sp.levelgenerationparams.mainpathnodeintervalrange.name>Main Path Node Interval Range</sp.levelgenerationparams.mainpathnodeintervalrange.name>
+  <sp.levelgenerationparams.mainpathnodeintervalrange.description>The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.</sp.levelgenerationparams.mainpathnodeintervalrange.description>
+  <sp.levelgenerationparams.smalltunnelcount.name>Small Tunnel Count</sp.levelgenerationparams.smalltunnelcount.name>
+  <sp.levelgenerationparams.smalltunnelcount.description>The number of small tunnels placed along the main path.</sp.levelgenerationparams.smalltunnelcount.description>
+  <sp.levelgenerationparams.smalltunnellengthrange.name>Small Tunnel Length Range</sp.levelgenerationparams.smalltunnellengthrange.name>
+  <sp.levelgenerationparams.smalltunnellengthrange.description>The minimum and maximum length of small tunnels placed along the main path.</sp.levelgenerationparams.smalltunnellengthrange.description>
+  <sp.levelgenerationparams.itemcount.name>Item Count</sp.levelgenerationparams.itemcount.name>
+  <sp.levelgenerationparams.itemcount.description><!-- No data --></sp.levelgenerationparams.itemcount.description>
+  <sp.levelgenerationparams.floatingicechunkcount.name>Floating Ice Chunk Count</sp.levelgenerationparams.floatingicechunkcount.name>
+  <sp.levelgenerationparams.floatingicechunkcount.description><!-- No data --></sp.levelgenerationparams.floatingicechunkcount.description>
+  <sp.levelgenerationparams.seafloordepth.name>Sea Floor Depth</sp.levelgenerationparams.seafloordepth.name>
+  <sp.levelgenerationparams.seafloordepth.description>How far below the level the sea floor is placed.</sp.levelgenerationparams.seafloordepth.description>
+  <sp.levelgenerationparams.seafloorvariance.name>Sea Floor Variance</sp.levelgenerationparams.seafloorvariance.name>
+  <sp.levelgenerationparams.seafloorvariance.description>Variance of the depth of the sea floor. Smaller values produce a smoother sea floor.</sp.levelgenerationparams.seafloorvariance.description>
+  <sp.levelgenerationparams.mountaincountmin.name>Mountain Count Min</sp.levelgenerationparams.mountaincountmin.name>
+  <sp.levelgenerationparams.mountaincountmin.description>The minimum number of mountains on the sea floor.</sp.levelgenerationparams.mountaincountmin.description>
+  <sp.levelgenerationparams.mountaincountmax.name>Mountain Count Max</sp.levelgenerationparams.mountaincountmax.name>
+  <sp.levelgenerationparams.mountaincountmax.description>The maximum number of mountains on the sea floor.</sp.levelgenerationparams.mountaincountmax.description>
+  <sp.levelgenerationparams.mountainheightmin.name>Mountain Height Min</sp.levelgenerationparams.mountainheightmin.name>
+  <sp.levelgenerationparams.mountainheightmin.description>The minimum height of the mountains on the sea floor.</sp.levelgenerationparams.mountainheightmin.description>
+  <sp.levelgenerationparams.mountainheightmax.name>Mountain Height Max</sp.levelgenerationparams.mountainheightmax.name>
+  <sp.levelgenerationparams.mountainheightmax.description>The maximum height of the mountains on the sea floor.</sp.levelgenerationparams.mountainheightmax.description>
+  <sp.levelgenerationparams.ruincount.name>Ruin Count</sp.levelgenerationparams.ruincount.name>
+  <sp.levelgenerationparams.ruincount.description>The number of alien ruins in the level.</sp.levelgenerationparams.ruincount.description>
+  <sp.levelgenerationparams.bottomholeprobability.name>Bottom Hole Probability</sp.levelgenerationparams.bottomholeprobability.name>
+  <sp.levelgenerationparams.bottomholeprobability.description>The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open.</sp.levelgenerationparams.bottomholeprobability.description>
+  <sp.levelgenerationparams.waterparticlescale.name>Water Particle Scale</sp.levelgenerationparams.waterparticlescale.name>
+  <sp.levelgenerationparams.waterparticlescale.description>Scale of the water particle texture.</sp.levelgenerationparams.waterparticlescale.description>
+  <sp.levelobjectprefab.minsize.name>Min Size</sp.levelobjectprefab.minsize.name>
+  <sp.levelobjectprefab.minsize.description><!-- No data --></sp.levelobjectprefab.minsize.description>
+  <sp.levelobjectprefab.maxsize.name>Max Size</sp.levelobjectprefab.maxsize.name>
+  <sp.levelobjectprefab.maxsize.description><!-- No data --></sp.levelobjectprefab.maxsize.description>
+  <sp.levelobjectprefab.alignment.name>Alignment</sp.levelobjectprefab.alignment.name>
+  <sp.levelobjectprefab.alignment.description>Which sides of a wall the object can spawn on.</sp.levelobjectprefab.alignment.description>
+  <sp.levelobjectprefab.spawnpos.name>Spawn Pos</sp.levelobjectprefab.spawnpos.name>
+  <sp.levelobjectprefab.spawnpos.description><!-- No data --></sp.levelobjectprefab.spawnpos.description>
+  <sp.levelobjectprefab.depthrange.name>Depth Range</sp.levelobjectprefab.depthrange.name>
+  <sp.levelobjectprefab.depthrange.description><!-- No data --></sp.levelobjectprefab.depthrange.description>
+  <sp.levelobjectprefab.clusteringamount.name>Clustering Amount</sp.levelobjectprefab.clusteringamount.name>
+  <sp.levelobjectprefab.clusteringamount.description>The tendency for the prefab to form clusters. Used as an exponent for perlin noise values that are used to determine the probability for an object to spawn at a specific position.</sp.levelobjectprefab.clusteringamount.description>
+  <sp.levelobjectprefab.clusteringgroup.name>Clustering Group</sp.levelobjectprefab.clusteringgroup.name>
+  <sp.levelobjectprefab.clusteringgroup.description>A value between 0-1 that determines the z-coordinate to sample perlin noise from when determining the probability  for an object to spawn at a specific position. Using the same (or close) value for different objects means the objects tend to form clusters in the same areas.</sp.levelobjectprefab.clusteringgroup.description>
+  <sp.levelobjectprefab.alignwithsurface.name>Align With Surface</sp.levelobjectprefab.alignwithsurface.name>
+  <sp.levelobjectprefab.alignwithsurface.description>Should the object be rotated to align it with the wall surface it spawns on.</sp.levelobjectprefab.alignwithsurface.description>
+  <sp.levelobjectprefab.minsurfacewidth.name>Min Surface Width</sp.levelobjectprefab.minsurfacewidth.name>
+  <sp.levelobjectprefab.minsurfacewidth.description>Minimum length of a graph edge the object can spawn on.</sp.levelobjectprefab.minsurfacewidth.description>
+  <sp.levelobjectprefab.randomrotation.name>Random Rotation</sp.levelobjectprefab.randomrotation.name>
+  <sp.levelobjectprefab.randomrotation.description>How much the rotation of the object can vary (min and max values in degrees).</sp.levelobjectprefab.randomrotation.description>
+  <sp.levelobjectprefab.swingamount.name>Swing Amount</sp.levelobjectprefab.swingamount.name>
+  <sp.levelobjectprefab.swingamount.description>How much the object swings (in degrees).</sp.levelobjectprefab.swingamount.description>
+  <sp.levelobjectprefab.swingfrequency.name>Swing Frequency</sp.levelobjectprefab.swingfrequency.name>
+  <sp.levelobjectprefab.swingfrequency.description>How fast the object swings.</sp.levelobjectprefab.swingfrequency.description>
+  <sp.levelobjectprefab.scaleoscillation.name>Scale Oscillation</sp.levelobjectprefab.scaleoscillation.name>
+  <sp.levelobjectprefab.scaleoscillation.description>How much the scale of the object oscillates on each axis. A value of 0.5,0.5 would make the object's scale oscillate from 100% to 150%.</sp.levelobjectprefab.scaleoscillation.description>
+  <sp.levelobjectprefab.scaleoscillationfrequency.name>Scale Oscillation Frequency</sp.levelobjectprefab.scaleoscillationfrequency.name>
+  <sp.levelobjectprefab.scaleoscillationfrequency.description>How fast the object's scale oscillates.</sp.levelobjectprefab.scaleoscillationfrequency.description>
+  <sp.levelobjectprefab.commonness.name>Commonness</sp.levelobjectprefab.commonness.name>
+  <sp.levelobjectprefab.commonness.description>How likely it is for the object to spawn in a level. This is relative to the commonness of the other objects - for example, having an object with a commonness of 1 and another with a commonness of 10 would mean the latter appears in levels 10 times as frequently as the former. The commonness value can be overridden on specific level types.</sp.levelobjectprefab.commonness.description>
+  <sp.levelobjectprefab.sonardisruption.name>Sonar Disruption</sp.levelobjectprefab.sonardisruption.name>
+  <sp.levelobjectprefab.sonardisruption.description>How much the object disrupts submarine's sonar.</sp.levelobjectprefab.sonardisruption.description>
+  <sp.noisedeformationparams.frequency.name>Frequency</sp.noisedeformationparams.frequency.name>
+  <sp.noisedeformationparams.frequency.description>The frequency of the noise.</sp.noisedeformationparams.frequency.description>
+  <sp.noisedeformationparams.amplitude.name>Amplitude</sp.noisedeformationparams.amplitude.name>
+  <sp.noisedeformationparams.amplitude.description>How much the noise distorts the sprite.</sp.noisedeformationparams.amplitude.description>
+  <sp.noisedeformationparams.changespeed.name>Change Speed</sp.noisedeformationparams.changespeed.name>
+  <sp.noisedeformationparams.changespeed.description>How fast the noise changes.</sp.noisedeformationparams.changespeed.description>
+  <sp.noisedeformationparams.sync.name>Sync</sp.noisedeformationparams.sync.name>
+  <sp.noisedeformationparams.sync.description><!-- No data -->  </sp.noisedeformationparams.sync.description>
+  <sp.noisedeformationparams.blendmode.name>Blend Mode</sp.noisedeformationparams.blendmode.name>
+  <sp.noisedeformationparams.blendmode.description><!-- No data --></sp.noisedeformationparams.blendmode.description>
+  <sp.noisedeformationparams.strength.name>Strength</sp.noisedeformationparams.strength.name>
+  <sp.noisedeformationparams.strength.description><!-- No data --></sp.noisedeformationparams.strength.description>
+  <sp.noisedeformationparams.maxrotation.name>Max Rotation</sp.noisedeformationparams.maxrotation.name>
+  <sp.noisedeformationparams.maxrotation.description><!-- No data --></sp.noisedeformationparams.maxrotation.description>
+  <sp.noisedeformationparams.usemovementsine.name>Use Movement Sine</sp.noisedeformationparams.usemovementsine.name>
+  <sp.noisedeformationparams.usemovementsine.description><!-- No data --></sp.noisedeformationparams.usemovementsine.description>
+  <sp.noisedeformationparams.stopwhenhostisdead.name>Stop When Host Is Dead</sp.noisedeformationparams.stopwhenhostisdead.name>
+  <sp.noisedeformationparams.stopwhenhostisdead.description><!-- No data --></sp.noisedeformationparams.stopwhenhostisdead.description>
+  <sp.noisedeformationparams.sineoffset.name>Sine Offset</sp.noisedeformationparams.sineoffset.name>
+  <sp.noisedeformationparams.sineoffset.description><!-- No data --></sp.noisedeformationparams.sineoffset.description>
+  <sp.customdeformationparams.frequency.name>Frequency</sp.customdeformationparams.frequency.name>
+  <sp.customdeformationparams.frequency.description>How fast the deformation oscillates back and forth. For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.</sp.customdeformationparams.frequency.description>
+  <sp.customdeformationparams.amplitude.name>Amplitude</sp.customdeformationparams.amplitude.name>
+  <sp.customdeformationparams.amplitude.description>The strength of the deformation.</sp.customdeformationparams.amplitude.description>
+  <sp.customdeformationparams.sync.name>Sync</sp.customdeformationparams.sync.name>
+  <sp.customdeformationparams.sync.description><!-- No data --></sp.customdeformationparams.sync.description>
+  <sp.customdeformationparams.blendmode.name>Blend Mode</sp.customdeformationparams.blendmode.name>
+  <sp.customdeformationparams.blendmode.description><!-- No data --></sp.customdeformationparams.blendmode.description>
+  <sp.customdeformationparams.strength.name>Strength</sp.customdeformationparams.strength.name>
+  <sp.customdeformationparams.strength.description><!-- No data --></sp.customdeformationparams.strength.description>
+  <sp.customdeformationparams.maxrotation.name>Max Rotation</sp.customdeformationparams.maxrotation.name>
+  <sp.customdeformationparams.maxrotation.description><!-- No data --></sp.customdeformationparams.maxrotation.description>
+  <sp.customdeformationparams.usemovementsine.name>Use Movement Sine</sp.customdeformationparams.usemovementsine.name>
+  <sp.customdeformationparams.usemovementsine.description><!-- No data --></sp.customdeformationparams.usemovementsine.description>
+  <sp.customdeformationparams.stopwhenhostisdead.name>Stop When Host Is Dead</sp.customdeformationparams.stopwhenhostisdead.name>
+  <sp.customdeformationparams.stopwhenhostisdead.description><!-- No data --></sp.customdeformationparams.stopwhenhostisdead.description>
+  <sp.customdeformationparams.sineoffset.name>Sine Offset</sp.customdeformationparams.sineoffset.name>
+  <sp.customdeformationparams.sineoffset.description><!-- No data --></sp.customdeformationparams.sineoffset.description>
+  <sp.inflateparams.frequency.name>Frequency</sp.inflateparams.frequency.name>
+  <sp.inflateparams.frequency.description><!-- No data --></sp.inflateparams.frequency.description>
+  <sp.inflateparams.scale.name>Scale</sp.inflateparams.scale.name>
+  <sp.inflateparams.scale.description><!-- No data --></sp.inflateparams.scale.description>
+  <sp.inflateparams.sync.name>Sync</sp.inflateparams.sync.name>
+  <sp.inflateparams.sync.description><!-- No data --></sp.inflateparams.sync.description>
+  <sp.inflateparams.blendmode.name>Blend Mode</sp.inflateparams.blendmode.name>
+  <sp.inflateparams.blendmode.description><!-- No data --></sp.inflateparams.blendmode.description>
+  <sp.inflateparams.strength.name>Strength</sp.inflateparams.strength.name>
+  <sp.inflateparams.strength.description><!-- No data --></sp.inflateparams.strength.description>
+  <sp.inflateparams.maxrotation.name>Max Rotation</sp.inflateparams.maxrotation.name>
+  <sp.inflateparams.maxrotation.description><!-- No data --></sp.inflateparams.maxrotation.description>
+  <sp.inflateparams.usemovementsine.name>Use Movement Sine</sp.inflateparams.usemovementsine.name>
+  <sp.inflateparams.usemovementsine.description><!-- No data --></sp.inflateparams.usemovementsine.description>
+  <sp.inflateparams.stopwhenhostisdead.name>Stop When Host Is Dead</sp.inflateparams.stopwhenhostisdead.name>
+  <sp.inflateparams.stopwhenhostisdead.description><!-- No data --></sp.inflateparams.stopwhenhostisdead.description>
+  <sp.inflateparams.sineoffset.name>Sine Offset</sp.inflateparams.sineoffset.name>
+  <sp.inflateparams.sineoffset.description><!-- No data --></sp.inflateparams.sineoffset.description>
+  <sp.item.hiddeningame.name>Hidden In Game</sp.item.hiddeningame.name>
+  <sp.item.hiddeningame.description><!-- No data --></sp.item.hiddeningame.description>
+  <sp.item.noninteractable.name>Non Interactable</sp.item.noninteractable.name>
+  <sp.item.noninteractable.description><!-- No data --></sp.item.noninteractable.description>
+  <sp.item.scale.name>Scale</sp.item.scale.name>
+  <sp.item.scale.description><!-- No data --></sp.item.scale.description>
+  <sp.item.spritecolor.name>Sprite Color</sp.item.spritecolor.name>
+  <sp.item.spritecolor.description><!-- No data --></sp.item.spritecolor.description>
+  <sp.item.inventoryiconcolor.name>Inventory Icon Color</sp.item.inventoryiconcolor.name>
+  <sp.item.inventoryiconcolor.description><!-- No data --></sp.item.inventoryiconcolor.description>
+  <sp.item.containercolor.name>Container Color</sp.item.containercolor.name>
+  <sp.item.containercolor.description>Changes the color of the item this item is contained inside. Only has an effect if either of the UseContainedSpriteColor or UseContainedInventoryIconColor property of the container is set to true.</sp.item.containercolor.description>
+  <sp.item.condition.name>Condition</sp.item.condition.name>
+  <sp.item.condition.description><!-- No data --></sp.item.condition.description>
+  <sp.item.tags.name>Tags</sp.item.tags.name>
+  <sp.item.tags.description><!-- No data --></sp.item.tags.description>
+  <sp.item.displaysidebysidewhenlinked.name>Display Side By Side When Linked</sp.item.displaysidebysidewhenlinked.name>
+  <sp.item.displaysidebysidewhenlinked.description>Enable if you want to display the item HUD side by side with another item's HUD, when linked together. Disclaimer: It's possible or even likely that the views block each other, if they were not designed to be viewed together!</sp.item.displaysidebysidewhenlinked.description>
+  <sp.item.spritedepth.name>Sprite Depth</sp.item.spritedepth.name>
+  <sp.item.spritedepth.description><!-- No data --></sp.item.spritedepth.description>
+  <sp.itemcontainer.itempos.name>Item Pos</sp.itemcontainer.itempos.name>
+  <sp.itemcontainer.itempos.description>The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).</sp.itemcontainer.itempos.description>
+  <sp.itemcontainer.iteminterval.name>Item Interval</sp.itemcontainer.iteminterval.name>
+  <sp.itemcontainer.iteminterval.description>The interval at which the contained items are spaced apart from each other (in pixels).</sp.itemcontainer.iteminterval.description>
+  <sp.itemcontainer.containablerestrictions.name>Containable Restrictions</sp.itemcontainer.containablerestrictions.name>
+  <sp.itemcontainer.containablerestrictions.description>Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.</sp.itemcontainer.containablerestrictions.description>
+  <sp.controller.istoggle.name>Is Toggle</sp.controller.istoggle.name>
+  <sp.controller.istoggle.description>When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.</sp.controller.istoggle.description>
+  <sp.connectionpanel.locked.name>Locked</sp.connectionpanel.locked.name>
+  <sp.connectionpanel.locked.description>Locked connection panels cannot be rewired in-game.</sp.connectionpanel.locked.description>
+  <sp.holdable.holdpos.name>Hold Pos</sp.holdable.holdpos.name>
+  <sp.holdable.holdpos.description>The position the character holds the item at (in pixels, as an offset from the character's shoulder). For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.</sp.holdable.holdpos.description>
+  <sp.holdable.holdangle.name>Hold Angle</sp.holdable.holdangle.name>
+  <sp.holdable.holdangle.description>The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).</sp.holdable.holdangle.description>
+  <sp.holdable.swingamount.name>Swing Amount</sp.holdable.swingamount.name>
+  <sp.holdable.swingamount.description>How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).</sp.holdable.swingamount.description>
+  <sp.holdable.swingspeed.name>Swing Speed</sp.holdable.swingspeed.name>
+  <sp.holdable.swingspeed.description>How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).</sp.holdable.swingspeed.description>
+  <sp.holdable.swingwhenholding.name>Swing When Holding</sp.holdable.swingwhenholding.name>
+  <sp.holdable.swingwhenholding.description>Should the item swing around when it's being held.</sp.holdable.swingwhenholding.description>
+  <sp.holdable.swingwhenaiming.name>Swing When Aiming</sp.holdable.swingwhenaiming.name>
+  <sp.holdable.swingwhenaiming.description>Should the item swing around when it's being aimed.</sp.holdable.swingwhenaiming.description>
+  <sp.holdable.swingwhenusing.name>Swing When Using</sp.holdable.swingwhenusing.name>
+  <sp.holdable.swingwhenusing.description>Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).</sp.holdable.swingwhenusing.description>
+  <sp.door.openingspeed.name>Opening Speed</sp.door.openingspeed.name>
+  <sp.door.openingspeed.description>How quickly the door opens.</sp.door.openingspeed.description>
+  <sp.door.closingspeed.name>Closing Speed</sp.door.closingspeed.name>
+  <sp.door.closingspeed.description>How quickly the door closes.</sp.door.closingspeed.description>
+  <sp.door.isopen.name>Is Open</sp.door.isopen.name>
+  <sp.door.isopen.description>Is the door currently open.</sp.door.isopen.description>
+  <sp.repairable.deteriorationspeed.name>Deterioration Speed</sp.repairable.deteriorationspeed.name>
+  <sp.repairable.deteriorationspeed.description>How fast the condition of the item deteriorates per second.</sp.repairable.deteriorationspeed.description>
+  <sp.repairable.mindeteriorationdelay.name>Min Deterioration Delay</sp.repairable.mindeteriorationdelay.name>
+  <sp.repairable.mindeteriorationdelay.description>Minimum initial delay before the item starts to deteriorate.</sp.repairable.mindeteriorationdelay.description>
+  <sp.repairable.maxdeteriorationdelay.name>Max Deterioration Delay</sp.repairable.maxdeteriorationdelay.name>
+  <sp.repairable.maxdeteriorationdelay.description>Maximum initial delay before the item starts to deteriorate.</sp.repairable.maxdeteriorationdelay.description>
+  <sp.repairable.mindeteriorationcondition.name>Min Deterioration Condition</sp.repairable.mindeteriorationcondition.name>
+  <sp.repairable.mindeteriorationcondition.description>The item won't deteriorate spontaneously if the condition is below this value. For example, if set to 10, the condition will spontaneously drop to 10 and then stop dropping (unless the item is damaged further by external factors). Percentages of max condition.</sp.repairable.mindeteriorationcondition.description>
+  <sp.repairable.showrepairuithreshold.name>Show Repair U I Threshold</sp.repairable.showrepairuithreshold.name>
+  <sp.repairable.showrepairuithreshold.description>The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition.</sp.repairable.showrepairuithreshold.description>
+  <sp.repairable.fixdurationlowskill.name>Fix Duration Low Skill</sp.repairable.fixdurationlowskill.name>
+  <sp.repairable.fixdurationlowskill.description>The amount of time it takes to fix the item with insufficient skill levels.</sp.repairable.fixdurationlowskill.description>
+  <sp.repairable.fixdurationhighskill.name>Fix Duration High Skill</sp.repairable.fixdurationhighskill.name>
+  <sp.repairable.fixdurationhighskill.description>The amount of time it takes to fix the item with sufficient skill levels.</sp.repairable.fixdurationhighskill.description>
+  <sp.structure.specialtag.name>Special Tag</sp.structure.specialtag.name>
+  <sp.structure.specialtag.description><!-- No data --></sp.structure.specialtag.description>
+  <sp.structure.spritecolor.name>Sprite Color</sp.structure.spritecolor.name>
+  <sp.structure.spritecolor.description><!-- No data --></sp.structure.spritecolor.description>
+  <sp.structure.usedropshadow.name>Use Drop Shadow</sp.structure.usedropshadow.name>
+  <sp.structure.usedropshadow.description><!-- No data --></sp.structure.usedropshadow.description>
+  <sp.structure.dropshadowoffset.name>Drop Shadow Offset</sp.structure.dropshadowoffset.name>
+  <sp.structure.dropshadowoffset.description>The position of the drop shadow relative to the structure. If set to zero, the shadow is positioned automatically so that it points towards the sub's center of mass.</sp.structure.dropshadowoffset.description>
+  <sp.structure.scale.name>Scale</sp.structure.scale.name>
+  <sp.structure.scale.description><!-- No data --></sp.structure.scale.description>
+  <sp.structure.texturescale.name>Texture Scale</sp.structure.texturescale.name>
+  <sp.structure.texturescale.description><!-- No data --></sp.structure.texturescale.description>
+  <sp.structure.textureoffset.name>Texture Offset</sp.structure.textureoffset.name>
+  <sp.structure.textureoffset.description><!-- No data --></sp.structure.textureoffset.description>
+  <sp.structure.spritedepth.name>Sprite Depth</sp.structure.spritedepth.name>
+  <sp.structure.spritedepth.description><!-- No data --></sp.structure.spritedepth.description>
+  <sp.lightcomponent.range.name>Range</sp.lightcomponent.range.name>
+  <sp.lightcomponent.range.description>The range of the emitted light. Higher values are more performance-intensive.</sp.lightcomponent.range.description>
+  <sp.lightcomponent.castshadows.name>Cast Shadows</sp.lightcomponent.castshadows.name>
+  <sp.lightcomponent.castshadows.description>Should structures cast shadows when light from this light source hits them. Disabling shadows increases the performance of the game, and is recommended for lights with a short range.</sp.lightcomponent.castshadows.description>
+  <sp.lightcomponent.drawbehindsubs.name>Draw Behind Subs</sp.lightcomponent.drawbehindsubs.name>
+  <sp.lightcomponent.drawbehindsubs.description>Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. It's recommended to enable this on decorative lights outside the submarine's hull.</sp.lightcomponent.drawbehindsubs.description>
+  <sp.lightcomponent.ison.name>Is On</sp.lightcomponent.ison.name>
+  <sp.lightcomponent.ison.description>Is the light currently on.</sp.lightcomponent.ison.description>
+  <sp.lightcomponent.blinkfrequency.name>Blink Frequency</sp.lightcomponent.blinkfrequency.name>
+  <sp.lightcomponent.blinkfrequency.description>How rapidly the light blinks on and off (in Hz). 0 = no blinking.</sp.lightcomponent.blinkfrequency.description>
+  <sp.steering.neutralballastlevel.name>Neutral Ballast Level</sp.steering.neutralballastlevel.name>
+  <sp.steering.neutralballastlevel.description>How full the ballast tanks should be when the submarine is not being steered upwards/downwards. Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.</sp.steering.neutralballastlevel.description>
+  <sp.sonar.usetransducers.name>Use Transducers</sp.sonar.usetransducers.name>
+  <sp.sonar.usetransducers.description>Does the sonar have to be connected to external transducers to work.</sp.sonar.usetransducers.description>
+  <sp.itemlabel.text.name>Text</sp.itemlabel.text.name>
+  <sp.itemlabel.text.description>The text displayed in the label.</sp.itemlabel.text.description>
+  <sp.itemlabel.textcolor.name>Text Color</sp.itemlabel.textcolor.name>
+  <sp.itemlabel.textcolor.description>The color of the text displayed on the label (R,G,B,A).</sp.itemlabel.textcolor.description>
+  <sp.itemlabel.textscale.name>Text Scale</sp.itemlabel.textscale.name>
+  <sp.itemlabel.textscale.description>The scale of the text displayed on the label.</sp.itemlabel.textscale.description>
+  <sp.minimap.requirewaterdetectors.name>Require Water Detectors</sp.minimap.requirewaterdetectors.name>
+  <sp.minimap.requirewaterdetectors.description>Does the machine require inputs from water detectors in order to show the water levels inside rooms.</sp.minimap.requirewaterdetectors.description>
+  <sp.minimap.requireoxygendetectors.name>Require Oxygen Detectors</sp.minimap.requireoxygendetectors.name>
+  <sp.minimap.requireoxygendetectors.description>Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms.</sp.minimap.requireoxygendetectors.description>
+  <sp.minimap.showhullintegrity.name>Show Hull Integrity</sp.minimap.showhullintegrity.name>
+  <sp.minimap.showhullintegrity.description>Should damaged walls be displayed by the machine.</sp.minimap.showhullintegrity.description>
+  <sp.reactor.maxpoweroutput.name>Max Power Output</sp.reactor.maxpoweroutput.name>
+  <sp.reactor.maxpoweroutput.description>How much power (kW) the reactor generates when operating at full capacity.</sp.reactor.maxpoweroutput.description>
+  <sp.reactor.meltdowndelay.name>Meltdown Delay</sp.reactor.meltdowndelay.name>
+  <sp.reactor.meltdowndelay.description>How long the temperature has to stay critical until a meltdown occurs.</sp.reactor.meltdowndelay.description>
+  <sp.reactor.firedelay.name>Fire Delay</sp.reactor.firedelay.name>
+  <sp.reactor.firedelay.description>How long the temperature has to stay critical until the reactor catches fire.</sp.reactor.firedelay.description>
+  <sp.reactor.fuelconsumptionrate.name>Fuel Consumption Rate</sp.reactor.fuelconsumptionrate.name>
+  <sp.reactor.fuelconsumptionrate.description>How fast the condition of the contained fuel rods deteriorates per second.</sp.reactor.fuelconsumptionrate.description>
+  <sp.powercontainer.maxoutput.name>Max Out Put</sp.powercontainer.maxoutput.name>
+  <sp.powercontainer.maxoutput.description>Maximum output of the device when fully charged (kW).</sp.powercontainer.maxoutput.description>
+  <sp.powercontainer.capacity.name>Capacity</sp.powercontainer.capacity.name>
+  <sp.powercontainer.capacity.description>The maximum capacity of the device (kW * min). For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.</sp.powercontainer.capacity.description>
+  <sp.powercontainer.charge.name>Charge</sp.powercontainer.charge.name>
+  <sp.powercontainer.charge.description>The current charge of the device.</sp.powercontainer.charge.description>
+  <sp.powercontainer.maxrechargespeed.name>Max Recharge Speed</sp.powercontainer.maxrechargespeed.name>
+  <sp.powercontainer.maxrechargespeed.description>How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.</sp.powercontainer.maxrechargespeed.description>
+  <sp.powercontainer.rechargespeed.name>Recharge Speed</sp.powercontainer.rechargespeed.name>
+  <sp.powercontainer.rechargespeed.description>The current recharge speed of the device.</sp.powercontainer.rechargespeed.description>
+  <sp.oxygengenerator.generatedamount.name>Generated Amount</sp.oxygengenerator.generatedamount.name>
+  <sp.oxygengenerator.generatedamount.description>How much oxygen the machine generates when operating at full power.</sp.oxygengenerator.generatedamount.description>
+  <sp.engine.maxforce.name>Max Force</sp.engine.maxforce.name>
+  <sp.engine.maxforce.description>The amount of force exerted on the submarine when the engine is operating at full power.</sp.engine.maxforce.description>
+  <sp.engine.propellerpos.name>Propeller Pos</sp.engine.propellerpos.name>
+  <sp.engine.propellerpos.description>The position of the propeller as an offset from the item's center (in pixels). Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.</sp.engine.propellerpos.description>
+  <sp.particleprefab.lifetime.name>Life Time</sp.particleprefab.lifetime.name>
+  <sp.particleprefab.lifetime.description>How many seconds the particle remains alive.</sp.particleprefab.lifetime.description>
+  <sp.particleprefab.startdelaymin.name>Start Delay Min</sp.particleprefab.startdelaymin.name>
+  <sp.particleprefab.startdelaymin.description>How long it takes for the particle to appear after spawning it.</sp.particleprefab.startdelaymin.description>
+  <sp.particleprefab.startdelaymax.name>Start Delay Max</sp.particleprefab.startdelaymax.name>
+  <sp.particleprefab.startdelaymax.description>How long it takes for the particle to appear after spawning it.</sp.particleprefab.startdelaymax.description>
+  <sp.particleprefab.angularvelocitymin.name>Angular Velocity Min</sp.particleprefab.angularvelocitymin.name>
+  <sp.particleprefab.angularvelocitymin.description><!-- No data --></sp.particleprefab.angularvelocitymin.description>
+  <sp.particleprefab.angularvelocitymax.name>Angular Velocity Max</sp.particleprefab.angularvelocitymax.name>
+  <sp.particleprefab.angularvelocitymax.description><!-- No data --></sp.particleprefab.angularvelocitymax.description>
+  <sp.particleprefab.startrotationmin.name>Start Rotation Min</sp.particleprefab.startrotationmin.name>
+  <sp.particleprefab.startrotationmin.description>The minimum initial rotation of the particle (in degrees).</sp.particleprefab.startrotationmin.description>
+  <sp.particleprefab.startrotationmax.name>Start Rotation Max</sp.particleprefab.startrotationmax.name>
+  <sp.particleprefab.startrotationmax.description>The maximum initial rotation of the particle (in degrees).</sp.particleprefab.startrotationmax.description>
+  <sp.particleprefab.rotatetodirection.name>Rotate To Direction</sp.particleprefab.rotatetodirection.name>
+  <sp.particleprefab.rotatetodirection.description>Should the particle face the direction it's moving towards.</sp.particleprefab.rotatetodirection.description>
+  <sp.particleprefab.drag.name>Drag</sp.particleprefab.drag.name>
+  <sp.particleprefab.drag.description>Drag applied to the particle when it's moving through air.</sp.particleprefab.drag.description>
+  <sp.particleprefab.waterdrag.name>Water Drag</sp.particleprefab.waterdrag.name>
+  <sp.particleprefab.waterdrag.description>Drag applied to the particle when it's moving through water.</sp.particleprefab.waterdrag.description>
+  <sp.particleprefab.velocitychange.name>Velocity Change</sp.particleprefab.velocitychange.name>
+  <sp.particleprefab.velocitychange.description>How much the velocity of the particle changes per second.</sp.particleprefab.velocitychange.description>
+  <sp.particleprefab.velocitychangewater.name>Velocity Change Water</sp.particleprefab.velocitychangewater.name>
+  <sp.particleprefab.velocitychangewater.description>How much the velocity of the particle changes per second when in water.</sp.particleprefab.velocitychangewater.description>
+  <sp.particleprefab.collisionradius.name>Collision Radius</sp.particleprefab.collisionradius.name>
+  <sp.particleprefab.collisionradius.description>Drag applied to the particle when it's moving through water.</sp.particleprefab.collisionradius.description>
+  <sp.particleprefab.usecollision.name>Use Collision</sp.particleprefab.usecollision.name>
+  <sp.particleprefab.usecollision.description>Does the particle collide with the walls of the submarine and the level.</sp.particleprefab.usecollision.description>
+  <sp.particleprefab.deleteoncollision.name>Delete On Collision</sp.particleprefab.deleteoncollision.name>
+  <sp.particleprefab.deleteoncollision.description>Does the particle disappear when it collides with something.</sp.particleprefab.deleteoncollision.description>
+  <sp.particleprefab.friction.name>Friction</sp.particleprefab.friction.name>
+  <sp.particleprefab.friction.description>The friction coefficient of the particle, i.e. how much it slows down when it's sliding against a surface.</sp.particleprefab.friction.description>
+  <sp.particleprefab.restitution.name>Restitution</sp.particleprefab.restitution.name>
+  <sp.particleprefab.restitution.description>How much of the particle's velocity is conserved when it collides with something, i.e. the bounciness of the particle. (1.0 = the particle stops completely).</sp.particleprefab.restitution.description>
+  <sp.particleprefab.startsizemin.name>Start Size Min</sp.particleprefab.startsizemin.name>
+  <sp.particleprefab.startsizemin.description>The minimum initial size of the particle.</sp.particleprefab.startsizemin.description>
+  <sp.particleprefab.startsizemax.name>Start Size Max</sp.particleprefab.startsizemax.name>
+  <sp.particleprefab.startsizemax.description>The maximum initial size of the particle.</sp.particleprefab.startsizemax.description>
+  <sp.particleprefab.sizechangemin.name>Size Change Min</sp.particleprefab.sizechangemin.name>
+  <sp.particleprefab.sizechangemin.description>How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.</sp.particleprefab.sizechangemin.description>
+  <sp.particleprefab.sizechangemax.name>Size Change Max</sp.particleprefab.sizechangemax.name>
+  <sp.particleprefab.sizechangemax.description>How much the size of the particle changes per second. The rate of growth for each particle is randomize between SizeChangeMin and SizeChangeMax.</sp.particleprefab.sizechangemax.description>
+  <sp.particleprefab.growtime.name>Grow Time</sp.particleprefab.growtime.name>
+  <sp.particleprefab.growtime.description>How many seconds it takes for the particle to grow to it's initial size.</sp.particleprefab.growtime.description>
+  <sp.particleprefab.startcolor.name>Start Color</sp.particleprefab.startcolor.name>
+  <sp.particleprefab.startcolor.description>The initial color of the particle.</sp.particleprefab.startcolor.description>
+  <sp.particleprefab.endcolor.name>End Color</sp.particleprefab.endcolor.name>
+  <sp.particleprefab.endcolor.description>The color of the particle at the end of its lifetime.</sp.particleprefab.endcolor.description>
+  <sp.particleprefab.drawtarget.name>Draw Target</sp.particleprefab.drawtarget.name>
+  <sp.particleprefab.drawtarget.description>Should the particle be rendered in air, water or both.</sp.particleprefab.drawtarget.description>
+  <sp.particleprefab.blendstate.name>Blend State</sp.particleprefab.blendstate.name>
+  <sp.particleprefab.blendstate.description>The type of blending to use when rendering the particle.</sp.particleprefab.blendstate.description>
+  <sp.particleprefab.animduration.name>Anim Duration</sp.particleprefab.animduration.name>
+  <sp.particleprefab.animduration.description>The duration of the particle's animation cycle (if it's animated).</sp.particleprefab.animduration.description>
+  <sp.particleprefab.loopanim.name>Loop Anim</sp.particleprefab.loopanim.name>
+  <sp.particleprefab.loopanim.description>Should the sprite animation be looped, or stay at the last frame when the animation finishes.</sp.particleprefab.loopanim.description>
+  <sp.hull.roomname.name>Room Name</sp.hull.roomname.name>
+  <sp.hull.roomname.description><!-- No data --></sp.hull.roomname.description>
+  <sp.hull.spritedepth.name>Sprite Depth</sp.hull.spritedepth.name>
+  <sp.hull.spritedepth.description><!-- No data --></sp.hull.spritedepth.description>
+  <sp.hull.scale.name>Scale</sp.hull.scale.name>
+  <sp.hull.scale.description><!-- No data --></sp.hull.scale.description>
+  <sp.delaycomponent.delay.name>Delay</sp.delaycomponent.delay.name>
+  <sp.delaycomponent.delay.description>How long the item delays the signals (in seconds).</sp.delaycomponent.delay.description>
+  <sp.delaycomponent.resetwhensignalreceived.name>Reset When Signal Received</sp.delaycomponent.resetwhensignalreceived.name>
+  <sp.delaycomponent.resetwhensignalreceived.description>Should the component discard previously received signals when a new one is received.</sp.delaycomponent.resetwhensignalreceived.description>
+  <sp.delaycomponent.resetwhendifferentsignalreceived.name>Reset When Different Signal Received</sp.delaycomponent.resetwhendifferentsignalreceived.name>
+  <sp.delaycomponent.resetwhendifferentsignalreceived.description>Should the component discard previously received signals when the incoming signal changes.</sp.delaycomponent.resetwhendifferentsignalreceived.description>
+  <sp.andcomponent.timeframe.name>Time Frame</sp.andcomponent.timeframe.name>
+  <sp.andcomponent.timeframe.description>The item sends the output if both inputs have received a non-zero signal within the timeframe. If set to 0, the inputs must receive a signal at the same time.</sp.andcomponent.timeframe.description>
+  <sp.andcomponent.output.name>Output</sp.andcomponent.output.name>
+  <sp.andcomponent.output.description>The signal sent when both inputs have received a non-zero signal.</sp.andcomponent.output.description>
+  <sp.andcomponent.falseoutput.name>False Output</sp.andcomponent.falseoutput.name>
+  <sp.andcomponent.falseoutput.description>The signal sent when both inputs have not received a non-zero signal (if empty, no signal is sent).</sp.andcomponent.falseoutput.description>
+  <sp.signalcheckcomponent.output.name>Output</sp.signalcheckcomponent.output.name>
+  <sp.signalcheckcomponent.output.description>The signal this item outputs when the received signal matches the target signal.</sp.signalcheckcomponent.output.description>
+  <sp.signalcheckcomponent.falseoutput.name>False Output</sp.signalcheckcomponent.falseoutput.name>
+  <sp.signalcheckcomponent.falseoutput.description>The signal this item outputs when the received signal does not match the target signal.</sp.signalcheckcomponent.falseoutput.description>
+  <sp.signalcheckcomponent.targetsignal.name>Target Signal</sp.signalcheckcomponent.targetsignal.name>
+  <sp.signalcheckcomponent.targetsignal.description>The value to compare the received signals against.</sp.signalcheckcomponent.targetsignal.description>
+  <sp.relaycomponent.maxpower.name>Max Power</sp.relaycomponent.maxpower.name>
+  <sp.relaycomponent.maxpower.description>The maximum amount of power that can pass through the item.</sp.relaycomponent.maxpower.description>
+  <sp.relaycomponent.ison.name>Is On</sp.relaycomponent.ison.name>
+  <sp.relaycomponent.ison.description>Can the relay currently pass power and signals through it.</sp.relaycomponent.ison.description>
+  <sp.relaycomponent.canbeoverloaded.name>Can Be Overloaded</sp.relaycomponent.canbeoverloaded.name>
+  <sp.relaycomponent.canbeoverloaded.description>Can the item be damaged if too much power is supplied to the power grid.</sp.relaycomponent.canbeoverloaded.description>
+  <sp.relaycomponent.overloadvoltage.name>Overload Voltage</sp.relaycomponent.overloadvoltage.name>
+  <sp.relaycomponent.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.relaycomponent.overloadvoltage.description>
+  <sp.relaycomponent.fireprobability.name>Fire Probability</sp.relaycomponent.fireprobability.name>
+  <sp.relaycomponent.fireprobability.description>The probability for a fire to start when the item breaks.</sp.relaycomponent.fireprobability.description>
+  <sp.oscillatorcomponent.outputtype.name>Output Type</sp.oscillatorcomponent.outputtype.name>
+  <sp.oscillatorcomponent.outputtype.description>What kind of a signal the item outputs. Pulse: periodically sends out a signal of 1. Sine: sends out a sine wave oscillating between -1 and 1. Square: sends out a signal that alternates between 0 and 1.</sp.oscillatorcomponent.outputtype.description>
+  <sp.oscillatorcomponent.frequency.name>Frequency</sp.oscillatorcomponent.frequency.name>
+  <sp.oscillatorcomponent.frequency.description>How fast the signal oscillates, or how fast the pulses are sent (in Hz).</sp.oscillatorcomponent.frequency.description>
+  <sp.lightcomponent.lightcolor.name>Light Color</sp.lightcomponent.lightcolor.name>
+  <sp.lightcomponent.lightcolor.description>The color of the emitted light (R,G,B,A).</sp.lightcomponent.lightcolor.description>
+  <sp.turret.hudtint.name>Hud Tint</sp.turret.hudtint.name>
+  <sp.turret.hudtint.description>Optional screen tint color when the item is being operated (R,G,B,A).</sp.turret.hudtint.description>
+  <sp.turret.reload.name>Reload</sp.turret.reload.name>
+  <sp.turret.reload.description>The period of time the user has to wait between shots.</sp.turret.reload.description>
+  <sp.turret.rotationlimits.name>Rotation Limits</sp.turret.rotationlimits.name>
+  <sp.turret.rotationlimits.description>The range at which the barrel can rotate. TODO</sp.turret.rotationlimits.description>
+  <sp.turret.springstiffnesslowskill.name>Spring Stiffness Low Skill</sp.turret.springstiffnesslowskill.name>
+  <sp.turret.springstiffnesslowskill.description>How much torque is applied to rotate the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the barrel rotate faster.</sp.turret.springstiffnesslowskill.description>
+  <sp.turret.springstiffnesshighskill.name>Spring Stiffness High Skill</sp.turret.springstiffnesshighskill.name>
+  <sp.turret.springstiffnesshighskill.description>How much torque is applied to rotate the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the barrel rotate faster.</sp.turret.springstiffnesshighskill.description>
+  <sp.turret.springdampinglowskill.name>Spring Damping Low Skill</sp.turret.springdampinglowskill.name>
+  <sp.turret.springdampinglowskill.description>How much torque is applied to resist the movement of the barrel when the item is used by a character with insufficient skills to operate it. Higher values make the aiming more snappy, stopping the barrel from swinging around the direction it's being aimed at.</sp.turret.springdampinglowskill.description>
+  <sp.turret.springdampinghighskill.name>Spring Damping High Skill</sp.turret.springdampinghighskill.name>
+  <sp.turret.springdampinghighskill.description>How much torque is applied to resist the movement of the barrel when the item is used by a character with sufficient skills to operate it. Higher values make the aiming more snappy, stopping the barrel from swinging around the direction it's being aimed at.</sp.turret.springdampinghighskill.description>
+  <sp.turret.rotationspeedlowskill.name>Rotation Speed Low Skill</sp.turret.rotationspeedlowskill.name>
+  <sp.turret.rotationspeedlowskill.description>Maximum angular velocity of the barrel when used by a character with insufficient skills to operate it.</sp.turret.rotationspeedlowskill.description>
+  <sp.turret.rotationspeedhighskill.name>Rotation Speed High Skill</sp.turret.rotationspeedhighskill.name>
+  <sp.turret.rotationspeedhighskill.description>Maximum angular velocity of the barrel when used by a character with sufficient skills to operate it.</sp.turret.rotationspeedhighskill.description>
+  <sp.turret.baserotation.name>Base Rotation</sp.turret.baserotation.name>
+  <sp.turret.baserotation.description>The angle of the turret's base in degrees.</sp.turret.baserotation.description>
+  <sp.motionsensor.onlyhumans.name>Only Humans</sp.motionsensor.onlyhumans.name>
+  <sp.motionsensor.onlyhumans.description>Should the sensor only detect the movement of humans?</sp.motionsensor.onlyhumans.description>
+  <sp.motionsensor.ignoredead.name>Ignore Dead</sp.motionsensor.ignoredead.name>
+  <sp.motionsensor.ignoredead.description>Should the sensor ignore the bodies of dead characters?</sp.motionsensor.ignoredead.description>
+  <sp.motionsensor.rangex.name>Range X</sp.motionsensor.rangex.name>
+  <sp.motionsensor.rangex.description>Horizontal detection range.</sp.motionsensor.rangex.description>
+  <sp.motionsensor.rangey.name>Range Y</sp.motionsensor.rangey.name>
+  <sp.motionsensor.rangey.description>Vertical movement detection range.</sp.motionsensor.rangey.description>
+  <sp.motionsensor.detectoffset.name>Detect Offset</sp.motionsensor.detectoffset.name>
+  <sp.motionsensor.detectoffset.description>The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.</sp.motionsensor.detectoffset.description>
+  <sp.motionsensor.output.name>Output</sp.motionsensor.output.name>
+  <sp.motionsensor.output.description>The signal the item outputs when it has detected movement.</sp.motionsensor.output.description>
+  <sp.motionsensor.falseoutput.name>False Output</sp.motionsensor.falseoutput.name>
+  <sp.motionsensor.falseoutput.description>The signal the item outputs when it has not detected movement.</sp.motionsensor.falseoutput.description>
+  <sp.motionsensor.minimumvelocity.name>Minimum Velocity</sp.motionsensor.minimumvelocity.name>
+  <sp.motionsensor.minimumvelocity.description>How fast the objects within the detector's range have to be moving (in m/s).</sp.motionsensor.minimumvelocity.description>
+  <sp.waterdetector.output.name>Output</sp.waterdetector.output.name>
+  <sp.waterdetector.output.description>The signal the item sends out when it's underwater.</sp.waterdetector.output.description>
+  <sp.waterdetector.falseoutput.name>False Output</sp.waterdetector.falseoutput.name>
+  <sp.waterdetector.falseoutput.description>The signal the item sends out when it's not underwater.</sp.waterdetector.falseoutput.description>
+  <sp.electricaldischarger.range.name>Range</sp.electricaldischarger.range.name>
+  <sp.electricaldischarger.range.description>How far the discharge can travel from the item.</sp.electricaldischarger.range.description>
+  <sp.electricaldischarger.rangemultiplierinwalls.name>Range Multiplier In Walls</sp.electricaldischarger.rangemultiplierinwalls.name>
+  <sp.electricaldischarger.rangemultiplierinwalls.description>How much further can the discharge be carried when moving across walls.</sp.electricaldischarger.rangemultiplierinwalls.description>
+  <sp.electricaldischarger.duration.name>Duration</sp.electricaldischarger.duration.name>
+  <sp.electricaldischarger.duration.description>The duration of an individual discharge (in seconds).</sp.electricaldischarger.duration.description>
+  <sp.electricaldischarger.outdoorsonly.name>Outdoors Only</sp.electricaldischarger.outdoorsonly.name>
+  <sp.electricaldischarger.outdoorsonly.description>If set to true, the discharge cannot travel inside the submarine nor shock anyone inside.</sp.electricaldischarger.outdoorsonly.description>
+  <sp.powertransfer.canbeoverloaded.name>Can Be Overloaded</sp.powertransfer.canbeoverloaded.name>
+  <sp.powertransfer.canbeoverloaded.description>Can the item be damaged if too much power is supplied to the power grid.</sp.powertransfer.canbeoverloaded.description>
+  <sp.powertransfer.overloadvoltage.name>Overload Voltage</sp.powertransfer.overloadvoltage.name>
+  <sp.powertransfer.overloadvoltage.description>How much power has to be supplied to the grid relative to the load before item starts taking damage. E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.</sp.powertransfer.overloadvoltage.description>
+  <sp.powertransfer.fireprobability.name>Fire Probability</sp.powertransfer.fireprobability.name>
+  <sp.powertransfer.fireprobability.description>The probability for a fire to start when the item breaks.</sp.powertransfer.fireprobability.description>
+  <sp.throwable.holdpos.name>Hold Pos</sp.throwable.holdpos.name>
+  <sp.throwable.holdpos.description>The position the character holds the item at (in pixels, as an offset from the character's shoulder). For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.</sp.throwable.holdpos.description>
+  <sp.throwable.holdangle.name>Hold Angle</sp.throwable.holdangle.name>
+  <sp.throwable.holdangle.description>The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).</sp.throwable.holdangle.description>
+  <sp.throwable.swingamount.name>Swing Amount</sp.throwable.swingamount.name>
+  <sp.throwable.swingamount.description>How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).</sp.throwable.swingamount.description>
+  <sp.throwable.swingspeed.name>Swing Speed</sp.throwable.swingspeed.name>
+  <sp.throwable.swingspeed.description>How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).</sp.throwable.swingspeed.description>
+  <sp.throwable.swingwhenholding.name>Swing When Holding</sp.throwable.swingwhenholding.name>
+  <sp.throwable.swingwhenholding.description>Should the item swing around when it's being held.</sp.throwable.swingwhenholding.description>
+  <sp.throwable.swingwhenaiming.name>Swing When Aiming</sp.throwable.swingwhenaiming.name>
+  <sp.throwable.swingwhenaiming.description>Should the item swing around when it's being aimed.</sp.throwable.swingwhenaiming.description>
+  <sp.throwable.swingwhenusing.name>Swing When Using</sp.throwable.swingwhenusing.name>
+  <sp.throwable.swingwhenusing.description>Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).</sp.throwable.swingwhenusing.description>
+  <sp.propulsion.force.name>Force</sp.propulsion.force.name>
+  <sp.propulsion.force.description>The force to apply to the user's body.</sp.propulsion.force.description>
+  <sp.keyboard.welcomemessage.name>Welcome Message</sp.keyboard.welcomemessage.name>
+  <sp.keyboard.welcomemessage.description>The message to be displayed when opened.</sp.keyboard.welcomemessage.description>
+  
+  <sp.pickingtime.name>Picking Time</sp.pickingtime.name>
+  <sp.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.pickingtime.description>
+  <sp.canbepicked.name>Can Be Picked</sp.canbepicked.name>
+  <sp.canbepicked.description>Can the item be picked up (or interacted with, if the pick action does something else than picking up the item).</sp.canbepicked.description>
+  <sp.allowingameediting.name>Allow In Game Editing</sp.allowingameediting.name>
+  <sp.allowingameediting.description>Can the properties of the component be edited in-game (only applicable if the component has in-game editable properties).</sp.allowingameediting.description>
+  <sp.msg.name>Msg</sp.msg.name>
+  <sp.msg.description>A text displayed next to the item when it's highlighted (generally instructs how to interact with the item, e.g. [Mouse1] Pick up).</sp.msg.description>
+  <sp.minvoltage.name>Min Voltage</sp.minvoltage.name>
+  <sp.minvoltage.description>The minimum voltage required for the device to function. The voltage is calculated as power / powerconsumption, meaning that a device with a power consumption of 1000 kW would need at least 500 kW of power to work if the minimum voltage is set to 0.5.</sp.minvoltage.description>
+  <sp.powerconsumption.name>Power Consumption</sp.powerconsumption.name>
+  <sp.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powerconsumption.description>
+  <sp.vulnerabletoemp.name>Vulnerable To E M P</sp.vulnerabletoemp.name>
+  <sp.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.vulnerabletoemp.description>
 
   <!-- Characters -->
   <MyCharacter>My character</MyCharacter>
