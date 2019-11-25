@@ -41,9 +41,9 @@ namespace Barotrauma
 
             Color = element.GetAttributeColor("color", Color.Transparent);
             textColor = element.GetAttributeColor("textcolor", Color.Black);
-            HoverColor = element.GetAttributeColor("hovercolor", Color.Transparent);
-            SelectedColor = element.GetAttributeColor("selectedcolor", Color.Transparent);
-            PressedColor = element.GetAttributeColor("pressedcolor", Color.Transparent);
+            HoverColor = element.GetAttributeColor("hovercolor", Color);
+            SelectedColor = element.GetAttributeColor("selectedcolor", Color);
+            PressedColor = element.GetAttributeColor("pressedcolor", Color);
             OutlineColor = element.GetAttributeColor("outlinecolor", Color.Transparent);
 
             foreach (XElement subElement in element.Elements())

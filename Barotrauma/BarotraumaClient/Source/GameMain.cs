@@ -770,13 +770,20 @@ namespace Barotrauma
                             GUI.TogglePauseMenu();
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
-                        else if (Character.Controlled == null ||
-                            ((Character.Controlled.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
+                        else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null))
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
+                        }
+
+                        bool itemHudActive()
+                        {
+                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            return 
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                                ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
 

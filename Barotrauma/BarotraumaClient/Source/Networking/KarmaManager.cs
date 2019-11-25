@@ -94,8 +94,7 @@ namespace Barotrauma
             };
 
             string labelText = TextManager.Get("Karma." + propertyName);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform),
-                labelText, font: GUI.SmallFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform), labelText, font: GUI.SmallFont)
             {
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
@@ -103,7 +102,7 @@ namespace Barotrauma
             var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform), GUINumberInput.NumberType.Int)
             {
                 MinValueInt = min,
-                MaxValueFloat = max
+                MaxValueInt = max
             };
             GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, numInput);
         }

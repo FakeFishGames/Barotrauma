@@ -816,18 +816,39 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
+            
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("back"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>
                 {
+                    void ExitSettings()
+                    {
+                        if (Screen.Selected == GameMain.MainMenuScreen) { GameMain.MainMenuScreen.ReturnToMainMenu(null, null); }
+                        GUI.SettingsMenuOpen = false;
+                    }
+
                     if (UnsavedSettings)
                     {
-                        LoadPlayerConfig();
+                        var msgBox = new GUIMessageBox(TextManager.Get("UnsavedChangesLabel"),
+                                TextManager.Get("UnsavedChangesVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        {
+                            UserData = "verificationprompt"
+                        };
+                        msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
+                        {
+                            LoadPlayerConfig();
+                            ExitSettings();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
                     }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
+
+                    ExitSettings();
                     return true;
                 }
             };
@@ -838,21 +859,32 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (button, data) =>
                 {
-                    // TODO: add a prompt
-                    LoadDefaultConfig(setLanguage: false);
-                    CheckBindings(true);
-                    RefreshItemMessages();
-                    ApplySettings();
-                    if (Screen.Selected == GameMain.MainMenuScreen)
+                    var msgBox = new GUIMessageBox(TextManager.Get("SettingResetLabel"),
+                                TextManager.Get("SettingResetVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                     {
-                        GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
-                    }
-                    else
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                        ResetSettingsFrame();
-                        CreateSettingsFrame(currentTab);
-                    }
-                    return true;
+                        LoadDefaultConfig(setLanguage: false);
+                        CheckBindings(true);
+                        RefreshItemMessages();
+                        ApplySettings();
+                        if (Screen.Selected == GameMain.MainMenuScreen)
+                        {
+                            GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
+                        }
+                        else
+                        {
+                            ResetSettingsFrame();
+                            CreateSettingsFrame(currentTab);
+                        }
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
                 }
             };
 

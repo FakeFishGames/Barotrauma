@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.ConditionPercentage < ShowRepairUIThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition)));
+            return !item.IsFullCondition || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition)));
         }
 
         partial void InitProjSpecific(XElement element)
@@ -159,7 +159,7 @@ namespace Barotrauma.Items.Components
             progressBar.BarSize = item.Condition / item.MaxCondition;
             progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
 
-            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && item.ConditionPercentage <= ShowRepairUIThreshold;
+            RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition;
             RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
                 repairButtonText : 
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);

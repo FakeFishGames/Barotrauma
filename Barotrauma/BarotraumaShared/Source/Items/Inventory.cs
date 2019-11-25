@@ -134,7 +134,11 @@ namespace Barotrauma
             {
                 if (Items[i].Combine(item, user))
                 {
-                    System.Diagnostics.Debug.Assert(Items[i] != null);
+                    //item in the slot removed as a result of combining -> put this item in the now free slot
+                    if (Items[i] == null)
+                    {
+                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
+                    }
                     return true;
                 }
             }

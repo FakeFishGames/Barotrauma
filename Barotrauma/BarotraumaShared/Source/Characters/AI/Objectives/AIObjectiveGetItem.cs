@@ -20,7 +20,7 @@ namespace Barotrauma
         //can be either tags or identifiers
         private string[] itemIdentifiers;
         public IEnumerable<string> Identifiers => itemIdentifiers;
-        private Item targetItem, moveToTarget;
+        private Item targetItem, moveToTarget, rootContainer;
         public Item TargetItem => targetItem;
         private int currSearchIndex;
         public string[] ignoredContainerIdentifiers;
@@ -72,7 +72,8 @@ namespace Barotrauma
             if (item != null)
             {
                 targetItem = item;
-                moveToTarget = item.GetRootContainer() ?? item;
+                rootContainer = item.GetRootContainer();
+                moveToTarget = rootContainer ?? item;
             }
         }
 
@@ -93,7 +94,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
 #endif
-                        Abandon = true;
+                        Reset();
                     }
                     objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                     return;
@@ -105,7 +106,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
                 // Try again
-                targetItem = null;
+                Reset();
                 return;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
@@ -174,22 +175,21 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear);
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear)
+                        {
+                            // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
+                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer
+                        };
                     },
                     onAbandon: () =>
                     {
-                        targetItem = null;
-                        moveToTarget = null;
                         ignoredItems.Add(targetItem);
-                        RemoveSubObjective(ref goToObjective);
+                        Reset();
                     },
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
         }
 
-        /// <summary>
-        /// searches for an item that matches the desired item and adds a goto subobjective if one is found
-        /// </summary>
         private void FindTargetItem()
         {
             if (itemIdentifiers == null)
@@ -235,6 +235,7 @@ namespace Barotrauma
                 currItemPriority = itemPriority;
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
+                this.rootContainer = rootContainer;
             }
             //if searched through all the items and a target wasn't found, can't be completed
             if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
@@ -271,6 +272,15 @@ namespace Barotrauma
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
             return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            RemoveSubObjective(ref goToObjective);
+            targetItem = null;
+            moveToTarget = null;
+            rootContainer = null;
         }
     }
 }

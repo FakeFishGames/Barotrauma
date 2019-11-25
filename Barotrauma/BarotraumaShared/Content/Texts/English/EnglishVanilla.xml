@@ -2295,7 +2295,6 @@
   <entityname.bluejumpsuit>Blue Jumpsuit</entityname.bluejumpsuit>
   <entitydescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit>
   <entityname.toolbox>Toolbox</entityname.toolbox>
-  <entitydescription.toolbox>A portable container for storing tools</entitydescription.toolbox>
   <entityname.headset>Headset</entityname.headset>
   <entitydescription.headset>Allows remote communication among the crew.</entitydescription.headset>
   <entityname.clownmask>Clown Mask</entityname.clownmask>
@@ -4265,7 +4264,8 @@
   <serverendpoint>Server IP / SteamID</serverendpoint>
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
   <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can select a submarine or a content package to publish from the 'Your items' menu at the left.</workshopitemcreatehelptext>
-
+  <entitydescription.toolbox>A portable container for storing tools.</entitydescription.toolbox>
+  
   <!-- New values as of Oct 22 -->
   <timeformathours>[hours] h</timeformathours>
   <timeformatminutes>[minutes] m</timeformatminutes>
@@ -4278,6 +4278,7 @@
   <tutorialskipwarning>It looks like this might be the first time you've played Barotrauma. We strongly recommend that you give the tutorials a try before starting your journey through the depths of Europa.</tutorialskipwarning>
   <tutorialwarningplaytutorials>Play tutorials</tutorialwarningplaytutorials>
   <tutorialwarningskiptutorials>Skip tutorials</tutorialwarningskiptutorials>
+
   <input.leftmouse>Left mouse</input.leftmouse>
   <input.rightmouse>Right mouse</input.rightmouse>
   <input.middlemouse>Middle mouse</input.middlemouse>
@@ -4297,6 +4298,9 @@
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
   
   <roomname.bilge>Bilge</roomname.bilge>
+  <settingresetlabel>Confirm reset</settingresetlabel>
+  <unsavedchangeslabel>Unsaved changes</unsavedchangeslabel>
+  <unsavedchangesverification>Are you sure you want to leave without saving the changes made to the settings?</unsavedchangesverification>
 
   <!-- Server permission presets -->
   <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
@@ -4315,5 +4319,9 @@
 
 	<!--Keyboard welcome msg-->
 	<keyboardwelcomemsg.humpback>Type 'on' or 'off' to connect batteries to power grid or disconnect them respectively. Enter a number from 0 to 100 to set recharge rate for each battery at once.</keyboardwelcomemsg.humpback>
+
+  <quickuseaction.puttoequippeditem>Put to [equippeditem]</quickuseaction.puttoequippeditem>
+  <serversettingsbanafterwrongpassword>Ban after incorrect password</serversettingsbanafterwrongpassword>
+  <serversettingspasswordretriesbeforeban>Password retries before a ban</serversettingspasswordretriesbeforeban>
 
 </infotexts>
