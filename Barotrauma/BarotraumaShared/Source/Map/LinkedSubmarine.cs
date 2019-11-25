@@ -180,14 +180,22 @@ namespace Barotrauma
             }
 
             linkedSub.filePath = element.GetAttributeString("filepath", "");
-            int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]); 
+            int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]);
             for (int i = 0; i < linkedToIds.Length; i++)
             {
                 linkedSub.linkedToID.Add((ushort)linkedToIds[i]);
+                if (Screen.Selected == GameMain.SubEditorScreen)
+                {
+                    if (FindEntityByID((ushort)linkedToIds[i]) is MapEntity linked)
+                    {
+                        linkedSub.linkedTo.Add(linked);
+                    }
+                }
             }
             linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
-            
+
+
             return linkedSub.loadSub ? linkedSub : null;
         }
 
