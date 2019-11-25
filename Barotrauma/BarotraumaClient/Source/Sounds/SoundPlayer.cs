@@ -108,6 +108,13 @@ namespace Barotrauma
         
         public static IEnumerable<object> Init()
         {
+            musicClips?.Clear();
+            SplashSounds?.ForEach(s => s.Dispose()); SplashSounds?.Clear();
+            FlowSounds?.ForEach(s => s.Dispose()); FlowSounds?.Clear();
+            waterAmbiences?.ForEach(s => s.Dispose()); waterAmbiences?.Clear();
+            damageSounds?.ForEach(s => s.sound.Dispose()); damageSounds?.Clear();
+            miscSounds?.ForEach(g => g.ForEach(s => s.Dispose())); miscSounds = null;
+
             OverrideMusicType = null;
 
             var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);

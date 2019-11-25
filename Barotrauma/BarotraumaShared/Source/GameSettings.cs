@@ -233,6 +233,7 @@ namespace Barotrauma
 
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
+                bool shouldRefreshSoundPlayer = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -256,8 +257,10 @@ namespace Barotrauma
                         case ContentType.Text:
                             TextManager.LoadTextPack(file.Path);
                             break;
-
 #if CLIENT
+                        case ContentType.Sounds:
+                            shouldRefreshSoundPlayer = true;
+                            break;
                         case ContentType.Particles:
                             GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
                             break;
@@ -274,6 +277,7 @@ namespace Barotrauma
                         case ContentType.Text:
                         case ContentType.Particles:
                         case ContentType.Outpost:
+                        case ContentType.Sounds:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
@@ -292,6 +296,13 @@ namespace Barotrauma
                     ItemPrefab.InitFabricationRecipes();
                 }
 
+#if CLIENT
+                if (shouldRefreshSoundPlayer)
+                {
+                    SoundPlayer.Init();
+                }
+#endif
+
                 ContentPackage.SortContentPackages();
             }
         }
@@ -304,6 +315,7 @@ namespace Barotrauma
 
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
+                bool shouldRefreshSoundPlayer = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -327,8 +339,10 @@ namespace Barotrauma
                         case ContentType.Text:
                             TextManager.RemoveTextPack(file.Path);
                             break;
-
 #if CLIENT
+                        case ContentType.Sounds:
+                            shouldRefreshSoundPlayer = true;
+                            break;
                         case ContentType.Particles:
                             GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
                             break;
@@ -345,6 +359,7 @@ namespace Barotrauma
                         case ContentType.Text:
                         case ContentType.Particles:
                         case ContentType.Outpost:
+                        case ContentType.Sounds:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
@@ -362,6 +377,13 @@ namespace Barotrauma
                 {
                     ItemPrefab.InitFabricationRecipes();
                 }
+
+#if CLIENT
+                if (shouldRefreshSoundPlayer)
+                {
+                    SoundPlayer.Init();
+                }
+#endif
 
                 ContentPackage.SortContentPackages();
             }
