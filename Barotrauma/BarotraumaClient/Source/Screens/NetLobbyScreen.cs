@@ -2123,9 +2123,17 @@ namespace Barotrauma
                         {
                             voipAmplitude = client.VoipSound?.CurrentAmplitude ?? 0.0f;
                         }
-                        else if (VoipCapture.Instance.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
+                        else
                         {
-                            voipAmplitude = VoipCapture.Instance?.LastAmplitude ?? 0.0;
+                            var voip = VoipCapture.Instance;
+                            if (voip == null)
+                            {
+                                voipAmplitude = 0;
+                            }
+                            else if (voip.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
+                            {
+                                voipAmplitude = voip.LastAmplitude;
+                            }
                         }
                         VoipClient.UpdateVoiceIndicator(soundIcon, (float)voipAmplitude, (float)deltaTime);
                     }
