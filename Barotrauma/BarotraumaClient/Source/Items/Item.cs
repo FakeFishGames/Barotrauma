@@ -1013,6 +1013,8 @@ namespace Barotrauma
                 return;
             }
 
+            isActive = true;
+
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;
             float newAngularVelocity = body.AngularVelocity;

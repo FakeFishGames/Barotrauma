@@ -1353,6 +1353,9 @@ namespace Barotrauma
             {
                 if (updateableComponents.Count == 0 && aiTarget == null && !conditionUpdatePending && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
                 {
+#if CLIENT
+                    positionBuffer.Clear();
+#endif
                     isActive = false;
                 }
             }
