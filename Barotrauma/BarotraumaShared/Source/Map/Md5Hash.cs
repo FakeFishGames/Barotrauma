@@ -23,7 +23,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrWhiteSpace(line)) { continue; }
                 string[] parts = line.Split('|');
-                string path = parts[0];
+                string path = parts[0].Replace('\\','/');
                 string hashStr = parts[1];
                 long timeLong = long.Parse(parts[2]);
 
@@ -68,15 +68,19 @@ namespace Barotrauma
 
         public Md5Hash(FileStream fileStream, string filename = null, bool tryLoadFromCache = true)
         {
-            if (tryLoadFromCache && !string.IsNullOrWhiteSpace(filename))
+            if (!string.IsNullOrWhiteSpace(filename))
             {
-                lock (cache)
+                filename = filename.Replace('\\', '/');
+                if (tryLoadFromCache)
                 {
-                    if (cache.ContainsKey(filename))
+                    lock (cache)
                     {
-                        Hash = cache[filename].Item1.Hash;
-                        ShortHash = cache[filename].Item1.ShortHash;
-                        return;
+                        if (cache.ContainsKey(filename))
+                        {
+                            Hash = cache[filename].Item1.Hash;
+                            ShortHash = cache[filename].Item1.ShortHash;
+                            return;
+                        }
                     }
                 }
             }
@@ -105,15 +109,19 @@ namespace Barotrauma
 
         public Md5Hash(XDocument doc, string filename = null, bool tryLoadFromCache = true)
         {
-            if (tryLoadFromCache && !string.IsNullOrWhiteSpace(filename))
+            if (!string.IsNullOrWhiteSpace(filename))
             {
-                lock (cache)
+                filename = filename.Replace('\\', '/');
+                if (tryLoadFromCache)
                 {
-                    if (cache.ContainsKey(filename))
+                    lock (cache)
                     {
-                        Hash = cache[filename].Item1.Hash;
-                        ShortHash = cache[filename].Item1.ShortHash;
-                        return;
+                        if (cache.ContainsKey(filename))
+                        {
+                            Hash = cache[filename].Item1.Hash;
+                            ShortHash = cache[filename].Item1.ShortHash;
+                            return;
+                        }
                     }
                 }
             }
