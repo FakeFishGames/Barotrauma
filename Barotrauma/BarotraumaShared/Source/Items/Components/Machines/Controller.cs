@@ -293,7 +293,7 @@ namespace Barotrauma.Items.Components
 
         private void CancelUsing(Character character)
         {
-            if (character == null || character.Removed) return;
+            if (character == null || character.Removed) { return; }
 
             foreach (LimbPos lb in limbPositions)
             {
@@ -304,18 +304,21 @@ namespace Barotrauma.Items.Components
                 limb.PullJointEnabled = false;
             }
 
-            if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;
+            if (character.SelectedConstruction == this.item) { character.SelectedConstruction = null; }
 
             character.AnimController.Anim = AnimController.Animation.None;
             if (character == Character.Controlled)
             {
                 HideHUDs(false);
             }
+#if SERVER
+            item.CreateServerEvent(this);
+#endif
         }
 
         public override bool Select(Character activator)
         {
-            if (activator == null || activator.Removed) return false;
+            if (activator == null || activator.Removed) { return false; }
 
             //someone already using the item
             if (user != null && !user.Removed)
@@ -330,10 +333,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                user = activator;                    
+                user = activator;
                 IsActive = true;
             }
-
+#if SERVER
+            item.CreateServerEvent(this);
+#endif
             item.SendSignal(0, "1", "signal_out", user);
             return true;
         }

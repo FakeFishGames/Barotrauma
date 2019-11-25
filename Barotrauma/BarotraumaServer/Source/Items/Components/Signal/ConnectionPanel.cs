@@ -32,7 +32,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-
             List<Wire> clientSideDisconnectedWires = new List<Wire>();
             ushort disconnectedWireCount = msg.ReadUInt16();
             for (int i = 0; i < disconnectedWireCount; i++)
@@ -179,6 +178,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
+            msg.Write(user == null ? (ushort)0 : user.ID);
             ClientWrite(msg, extraData);
         }
     }

@@ -277,7 +277,7 @@ namespace Barotrauma.Items.Components
 
             if (reload > 0.0f) return false;
 
-            if (GetAvailablePower() < powerConsumption)
+            if (GetAvailableBatteryPower() < powerConsumption)
             {
 #if CLIENT
                 if (!flashLowPower && character != null && character == Character.Controlled)
@@ -411,7 +411,7 @@ namespace Barotrauma.Items.Components
                 character.AIController.SelectTarget(null);
             }
 
-            if (GetAvailablePower() < powerConsumption)
+            if (GetAvailableBatteryPower() < powerConsumption)
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
 
@@ -539,21 +539,6 @@ namespace Barotrauma.Items.Components
             }
 
             return false;
-        }
-
-        private float GetAvailablePower()
-        {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-
-            float availablePower = 0.0f;
-            foreach (PowerContainer battery in batteries)
-            {
-                float batteryPower = Math.Min(battery.Charge*3600.0f, battery.MaxOutPut);
-
-                availablePower += batteryPower;
-            }
-
-            return availablePower;
         }
 
         private void GetAvailablePower(out float availableCharge, out float availableCapacity)

@@ -622,6 +622,19 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(true, true)]
+        public bool BanAfterWrongPassword
+        {
+            get;
+            set;
+        }
+
+        [Serialize(3, true)]
+        public int MaxPasswordRetriesBeforeBan
+        {
+            get;
+            private set;
+        }
 
         [Serialize("", true)]
         public string SelectedSubmarine

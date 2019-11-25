@@ -300,8 +300,14 @@ namespace Barotrauma
                 }
 
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, targetOffsetAmount, 0.05f);
+                DoInteractionUpdate(deltaTime, mouseSimPos);
+            }
 
-                if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
+            if (!GUI.PauseMenuOpen && !GUI.SettingsMenuOpen)
+            {
+                if (SelectedConstruction != null &&
+                    (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
+                    ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
                     {
@@ -315,8 +321,6 @@ namespace Barotrauma
                     findFocusedTimer = 0.2f;
                     SelectedConstruction = null;
                 }
-
-                DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
             DisableControls = false;

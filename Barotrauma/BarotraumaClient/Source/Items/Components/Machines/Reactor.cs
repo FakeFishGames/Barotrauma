@@ -432,7 +432,7 @@ namespace Barotrauma.Items.Components
             AutoTemp = autoTempSlider.BarScroll < 0.5f;
             shutDown = onOffSwitch.BarScroll > 0.5f;
 
-            if ((sliderControlsContainer.Rect.Contains(PlayerInput.MousePosition) || sliderControlsContainer.Children.Contains(GUIScrollBar.draggingBar)) &&
+            if ((sliderControlsContainer.Rect.Contains(PlayerInput.MousePosition) || sliderControlsContainer.Children.Contains(GUIScrollBar.DraggingBar)) &&
                 !PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
             {
                 Character.DisableControls = true;
@@ -465,12 +465,12 @@ namespace Barotrauma.Items.Components
                 {
                     LastUser = Character.Controlled;
                     unsentChanges = true;
-                    if (input.X != 0.0f && GUIScrollBar.draggingBar != fissionRateScrollBar)
+                    if (input.X != 0.0f && GUIScrollBar.DraggingBar != fissionRateScrollBar)
                     {
                         targetFissionRate = MathHelper.Clamp(targetFissionRate + input.X, 0.0f, 100.0f);
                         fissionRateScrollBar.BarScroll += input.X / 100.0f;
                     }
-                    if (input.Y != 0.0f && GUIScrollBar.draggingBar != turbineOutputScrollBar)
+                    if (input.Y != 0.0f && GUIScrollBar.DraggingBar != turbineOutputScrollBar)
                     {
                         targetTurbineOutput = MathHelper.Clamp(targetTurbineOutput + input.Y, 0.0f, 100.0f);
                         turbineOutputScrollBar.BarScroll += input.Y / 100.0f;

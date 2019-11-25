@@ -85,7 +85,11 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (IsClient) { return; }
+            if (IsClient)
+            {
+                if (item.ParentInventory != null) { item.body.FarseerBody.IsKinematic = false; }
+                return;
+            }
             switch (State)
             {
                 case 0:

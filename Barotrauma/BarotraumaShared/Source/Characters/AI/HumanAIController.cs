@@ -55,6 +55,8 @@ namespace Barotrauma
             private set;
         }
 
+        public float CurrentHullSafety { get; private set; }
+
         public HumanAIController(Character c) : base(c)
         {
             if (!c.IsHuman)
@@ -586,7 +588,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(Character, item);
                             if (newOrder == null)
                             {
@@ -815,19 +817,6 @@ namespace Barotrauma
                 item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
         }
 
-        public static void DoForEachCrewMember(Character character, Action<HumanAIController> action)
-        {
-            if (character == null) { return; }
-            foreach (var c in Character.CharacterList)
-            {
-                if (c == null || c.IsDead || c.Removed) { continue; }
-                if (c.AIController is HumanAIController humanAi && humanAi.IsFriendly(character))
-                {
-                    action(humanAi);
-                }
-            }
-        }
-
         /// <summary>
         /// Updates the hull safety for all ai characters in the team.
         /// </summary>
@@ -836,7 +825,6 @@ namespace Barotrauma
             DoForEachCrewMember(character, (humanAi) => humanAi.RefreshHullSafety(hull));
         }
 
-        public float CurrentHullSafety { get; private set; }
         private void RefreshHullSafety(Hull hull)
         {
             if (GetHullSafety(hull, Character, VisibleHulls) > HULL_SAFETY_THRESHOLD)
@@ -871,7 +859,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }
@@ -926,8 +914,6 @@ namespace Barotrauma
             DoForEachCrewMember(caller, humanAI =>
                 humanAI.ObjectiveManager.GetObjective<T1>()?.ReportedTargets.Remove(target));
         }
-
-        public float GetCurrentHullSafety() => GetHullSafety(Character.CurrentHull, Character, VisibleHulls);
 
         public float GetHullSafety(Hull hull, Character character, IEnumerable<Hull> visibleHulls = null)
         {
@@ -993,13 +979,82 @@ namespace Barotrauma
 
         public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
 
-        public bool IsFriendly(Character other) => IsFriendly(Character, other);
-
         public static bool IsFriendly(Character me, Character other) => 
             (other.TeamID == me.TeamID || 
             other.TeamID == Character.TeamType.FriendlyNPC || 
             me.TeamID == Character.TeamType.FriendlyNPC) && (other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group));
 
         public static bool IsActive(Character other) => !other.Removed && !other.IsDead && !other.IsUnconscious;
+
+        public static bool IsTrueForAllCrewMembers(Character character, Func<HumanAIController, bool> predicate)
+        {
+            if (character == null) { return false; }
+            foreach (var c in Character.CharacterList)
+            {
+                if (FilterCrewMember(character, c))
+                {
+                    if (!predicate(c.AIController as HumanAIController))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        public static bool IsTrueForAnyCrewMember(Character character, Func<HumanAIController, bool> predicate)
+        {
+            if (character == null) { return false; }
+            foreach (var c in Character.CharacterList)
+            {
+                if (FilterCrewMember(character, c))
+                {
+                    if (predicate(c.AIController as HumanAIController))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static int CountCrew(Character character, Func<HumanAIController, bool> predicate = null)
+        {
+            if (character == null) { return 0; }
+            int count = 0;
+            foreach (var c in Character.CharacterList)
+            {
+                if (FilterCrewMember(character, c))
+                {
+                    if (predicate == null || predicate(c.AIController as HumanAIController))
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        public static void DoForEachCrewMember(Character character, Action<HumanAIController> action)
+        {
+            if (character == null) { return; }
+            foreach (var c in Character.CharacterList)
+            {
+                if (FilterCrewMember(character, c))
+                {
+                    action(c.AIController as HumanAIController);
+                }
+            }
+        }
+
+        private static bool FilterCrewMember(Character self, Character other) => other != null && !other.IsDead && !other.Removed && other.AIController is HumanAIController humanAi && humanAi.IsFriendly(self);
+
+        #region Wrappers
+        public bool IsFriendly(Character other) => IsFriendly(Character, other);
+        public void DoForEachCrewMember(Action<HumanAIController> action) => DoForEachCrewMember(Character, action);
+        public bool IsTrueForAnyCrewMember(Func<HumanAIController, bool> predicate) => IsTrueForAnyCrewMember(Character, predicate);
+        public bool IsTrueForAllCrewMembers(Func<HumanAIController, bool> predicate) => IsTrueForAllCrewMembers(Character, predicate);
+        public int CountCrew(Func<HumanAIController, bool> predicate = null) => CountCrew(Character, predicate);
+        #endregion
     }
 }

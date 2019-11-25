@@ -477,41 +477,47 @@ namespace Barotrauma
 
         public static string ParseQuotedArgument(string[] arguments, int startIndex, out int endIndex)
         {
-            if (!arguments[startIndex].StartsWith("\""))
+#if WINDOWS
+            endIndex = startIndex + 1;
+            return arguments[startIndex];
+#else
+            string retVal = "";
+            int currIndex = startIndex;
+            bool escaped = false;
+            if (arguments[startIndex][0] != '\"')
             {
-                endIndex = startIndex + 1;
+                endIndex = startIndex+1;
                 return UnescapeCharacters(arguments[startIndex]);
             }
-
-            string retVal = arguments[startIndex].Substring(1);
-
-            int lastEscaped = arguments[startIndex].LastIndexOf("\\\"");
-            int lastQuote = arguments[startIndex].LastIndexOf("\"");
-            if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped + 1 < lastQuote))
-            {
-                endIndex = startIndex + 1;
-                return UnescapeCharacters(retVal.Substring(0, retVal.Length - 1));
-            }
-
-            int currIndex = startIndex;
             while (currIndex < arguments.Length)
             {
-                currIndex++;
-                retVal += " " + arguments[currIndex];
-                lastEscaped = arguments[currIndex].LastIndexOf("\\\"");
-                lastQuote = arguments[currIndex].LastIndexOf("\"");
-                if (lastQuote >= 0 && (lastEscaped < 0 || lastEscaped+1 < lastQuote))
+                for (int i=currIndex == startIndex ? 1 : 0;i<arguments[currIndex].Length;i++)
                 {
-                    break;
+                    if (!escaped)
+                    {
+                        if (arguments[currIndex][i] == '\\')
+                        {
+                            escaped = true;
+                        }
+                        else if (arguments[currIndex][i] == '\"')
+                        {
+                            endIndex = currIndex+1;
+                            return UnescapeCharacters(retVal);
+                        }
+                    }
+                    else
+                    {
+                        escaped = false;
+                    }
+                    retVal += arguments[currIndex][i];
                 }
+                retVal += " ";
+                currIndex++;
             }
 
-            retVal = retVal.Substring(0, retVal.Length - 1);
-
-
-            endIndex = currIndex+1;
-
-            return UnescapeCharacters(retVal);
+            endIndex = arguments.Length;
+            return retVal;
+#endif
         }
 
         public static string[] MergeArguments(string[] arguments)

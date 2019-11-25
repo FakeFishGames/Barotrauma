@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
+                        color: requiredItem.ItemPrefab.InventoryIconColor * (availableIngredients.Any(i => IsItemValidIngredient(i, requiredItem)) ? 1.0f : 0.3f),
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
                     
                     if (slotRect.Contains(PlayerInput.MousePosition))

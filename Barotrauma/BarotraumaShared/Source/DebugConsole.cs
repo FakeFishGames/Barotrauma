@@ -702,6 +702,22 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
+            commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>
+            {
+                if (args.Length == 0) { return; }
+                Character character = FindMatchingCharacter(args, false);
+                if (character == null) { return; }
+
+                Entity.Spawner?.AddToRemoveQueue(character);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);

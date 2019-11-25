@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -56,8 +57,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(80.0f, true, description: "The condition of the item has to be below this before the repair UI becomes usable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
-        public float ShowRepairUIThreshold
+        [Serialize(80.0f, true, description: "The condition of the item has to be below this for AI characters to repair it. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float AIRepairThreshold
         {
             get;
             set;
@@ -111,6 +112,18 @@ namespace Barotrauma.Items.Components
                 TextManager.Get(element.GetAttributeString("header", ""), returnNull: true) ??
                 TextManager.Get(item.Prefab.ConfigElement.GetAttributeString("header", ""), returnNull: true) ??
                 element.GetAttributeString("name", "");
+
+            //backwards compatibility
+            var showRepairUIAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().ToLowerInvariant() == "showrepairuithreshold");
+            if (showRepairUIAttribute != null)
+            {
+                float repairThreshold;
+                if (Single.TryParse(showRepairUIAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out repairThreshold))
+                {
+                    AIRepairThreshold = repairThreshold;
+                }
+            }
+
             InitProjSpecific(element);
         }
 
@@ -130,6 +143,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+#if SERVER
+                if (CurrentFixer != character || currentFixerAction != action)
+                {
+                    item.CreateServerEvent(this);
+                }
+#endif
                 CurrentFixer = character;
                 CurrentFixerAction = action;
                 return true;
@@ -140,12 +159,15 @@ namespace Barotrauma.Items.Components
         {
             if (CurrentFixer == character)
             {
+#if SERVER
+                if (CurrentFixer != character || currentFixerAction != FixActions.None)
+                {
+                    item.CreateServerEvent(this);
+                }
+#endif
                 CurrentFixer.AnimController.Anim = AnimController.Animation.None;
                 CurrentFixer = null;
                 currentFixerAction = FixActions.None;
-#if SERVER
-                item.CreateServerEvent(this);
-#endif
 #if CLIENT
                 repairSoundChannel?.FadeOutAndDispose();
                 repairSoundChannel = null;                
@@ -214,20 +236,20 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            UpdateFixAnimation(CurrentFixer);
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
             if (CurrentFixer != null && (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
                 StopRepairing(CurrentFixer);
                 return;
             }
 
-            UpdateFixAnimation(CurrentFixer);
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-
             float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (item.ConditionPercentage < ShowRepairUIThreshold)
+            if (!item.IsFullCondition)
             {
                 wasBroken = true;
             }

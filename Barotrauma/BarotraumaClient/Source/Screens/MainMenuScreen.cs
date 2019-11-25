@@ -19,7 +19,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, ProfilingTestBench = 10, SteamWorkshop = 11, Credits = 12, Empty = 13 }
 
         private readonly GUIComponent buttonsParent;
 
@@ -28,7 +28,7 @@ namespace Barotrauma
         private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox/*, useUpnpBox*/;
+        private GUITickBox isPublicBox, wrongPasswordBanBox;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -285,11 +285,23 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 40) },
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 80) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 130) },
+                "Profiling", style: "GUIButtonLarge", color: Color.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.ProfilingTestBench,
+                ToolTip = "Enables performance indicators and starts the game with a fixed sub, crew and level to make it easier to compare the performance between sessions.",
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -554,6 +566,11 @@ namespace Barotrauma
                 case Tab.QuickStartDev:
                     QuickStart();
                     break;
+                case Tab.ProfilingTestBench:
+                    QuickStart(fixedSeed: true);
+                    GameMain.ShowPerf = true;
+                    GameMain.ShowFPS = true;
+                    break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
                     GameMain.SteamWorkshopScreen.Select();
@@ -601,11 +618,17 @@ namespace Barotrauma
                 btn.Selected = (Tab)btn.UserData == selectedTab;
             }
         }
-        
-#endregion
 
-        private void QuickStart()
+        #endregion
+
+        private void QuickStart(bool fixedSeed = false)
         {
+            if (fixedSeed)
+            {
+                Rand.SetSyncedSeed(1);
+                Rand.SetLocalRandom(1);
+            }
+
             Submarine selectedSub = null;
             string subName = GameMain.Config.QuickStartSubmarineName;
             if (!string.IsNullOrEmpty(subName))
@@ -631,13 +654,13 @@ namespace Barotrauma
                 GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                 missionPrefab: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(ToolBox.RandomSeed(8));
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
-                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub, useSyncedRand: true);
                 if (spawnPoint == null)
                 {
                     DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
@@ -804,6 +827,7 @@ namespace Barotrauma
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
+                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -816,8 +840,7 @@ namespace Barotrauma
                 }
 
                 int ownerKey = 0;
-
-                if (Steam.SteamManager.GetSteamID()!=0)
+                if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
@@ -830,6 +853,7 @@ namespace Barotrauma
                 string filename = exeName;
 #if LINUX || OSX
                 filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+                arguments = ToolBox.EscapeCharacters(arguments);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
@@ -1165,17 +1189,15 @@ namespace Barotrauma
             {
                 Censor = true
             };
-            
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
+
+            var tickboxArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-            
-            /* TODO: remove UPnP altogether?
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
-            {
-                ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };*/
+
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {

@@ -191,6 +191,13 @@ namespace Barotrauma
                 ownerKey = 0;
             }
             
+#if DEBUG
+            foreach (string s in CommandLineArgs)
+            {
+                Console.WriteLine(s);
+            }
+#endif
+
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
                 switch (CommandLineArgs[i].Trim())
@@ -258,6 +265,10 @@ namespace Barotrauma
                         Server.ServerSettings.PlayStyle = playStyle;
                         i++;
                         break;
+                    case "-banafterwrongpassword":
+                        bool.TryParse(CommandLineArgs[i + 1], out bool banAfterWrongPassword);
+                        Server.ServerSettings.BanAfterWrongPassword = banAfterWrongPassword;
+                        break;
                 }
             }
         }
@@ -308,6 +319,7 @@ namespace Barotrauma
                     Server.Update((float)Timing.Step);
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
+                    TaskPool.Update();
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;

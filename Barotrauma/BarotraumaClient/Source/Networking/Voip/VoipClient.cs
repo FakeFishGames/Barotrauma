@@ -18,6 +18,8 @@ namespace Barotrauma.Networking
 
         private UInt16 storedBufferID = 0;
 
+        private static Rectangle[] voiceIconSheetRects;
+
         public VoipClient(GameClient gClient,ClientPeer nClient)
         {
             gameClient = gClient;
@@ -134,6 +136,40 @@ namespace Barotrauma.Networking
                         GameMain.SoundManager.VoipAttenuatedGain = 0.5f;
                     }
                 }
+            }
+        }
+
+        public static void UpdateVoiceIndicator(GUIImage soundIcon, float voipAmplitude, float deltaTime)
+        {
+            if (voiceIconSheetRects == null)
+            {
+                var soundIconStyle = GUI.Style.GetComponentStyle("GUISoundIcon");
+                Point sourceRectSize = soundIconStyle.Sprites.First().Value.First().Sprite.SourceRect.Size;
+                var indexPieces = soundIconStyle.Element.Attribute("sheetindices").Value.Split(';');
+                voiceIconSheetRects = new Rectangle[indexPieces.Length];
+                for (int i = 0; i < indexPieces.Length; i++)
+                {
+                    Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
+                    voiceIconSheetRects[i] = new Rectangle(location, sourceRectSize);
+                }
+            }
+
+            Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
+            userdata.Second = Math.Max(voipAmplitude, userdata.Second - deltaTime);
+
+            if (userdata.Second <= 0.0f)
+            {
+                soundIcon.Visible = false;
+            }
+            else
+            {
+                soundIcon.Visible = true;
+                int sheetIndex = 0;
+                sheetIndex = (int)Math.Floor(userdata.Second * voiceIconSheetRects.Length);
+                sheetIndex = MathHelper.Clamp(sheetIndex, 0, voiceIconSheetRects.Length - 1);
+                soundIcon.SourceRect = voiceIconSheetRects[sheetIndex];
+                soundIcon.OverrideState = GUIComponent.ComponentState.None;
+                soundIcon.HoverColor = Color.White;
             }
         }
 

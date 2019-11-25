@@ -562,7 +562,7 @@ namespace Barotrauma
                     var door = i.GetComponent<Door>();
                     // Steer through the door manually if it's open or broken
                     // Don't try to enter dry hulls if cannot walk or if the gap is too narrow
-                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
+                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && door.IsOpen)
                     {
                         if (Character.AnimController.CanWalk || door.LinkedGap.FlowTargetHull.WaterPercentage > 25)
                         {
@@ -611,6 +611,7 @@ namespace Barotrauma
             }
 
             bool canAttack = true;
+            bool pursue = false;
             if (IsCoolDownRunning)
             {
                 switch (AttackingLimb.attack.AfterAttack)
@@ -623,6 +624,7 @@ namespace Barotrauma
                             if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                             {
                                 canAttack = false;
+                                pursue = true;
                             }
                             else
                             {
@@ -661,6 +663,7 @@ namespace Barotrauma
                                         if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                                         {
                                             canAttack = false;
+                                            pursue = true;
                                         }
                                         else
                                         {
@@ -853,32 +856,35 @@ namespace Barotrauma
                 if (pathSteering.CurrentPath != null)
                 {
                     // Attack doors
-                    if (canAttackSub && pathSteering.CurrentPath.CurrentNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget)
+                    if (canAttackSub)
                     {
-                        SelectTarget(pathSteering.CurrentPath.CurrentNode.ConnectedDoor.Item.AiTarget);
-                        return;
+                        // If the target is in the same hull, there shouldn't be any doors blocking the path
+                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                            if (door != null && !door.IsOpen)
+                            {
+                                if (SelectedAiTarget != door.Item.AiTarget)
+                                {
+                                    SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
+                                    return;
+                                }
+                            }
+                        }
                     }
-                    else if (canAttackSub && pathSteering.CurrentPath.NextNode?.ConnectedDoor != null && SelectedAiTarget != pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget)
+                    // Steer towards the target if in the same room and swimming
+                    if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
                     {
-                        SelectTarget(pathSteering.CurrentPath.NextNode.ConnectedDoor.Item.AiTarget);
-                        return;
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
                     else
                     {
-                        // Steer towards the target if in the same room and swimming
-                        if (Character.AnimController.InWater && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        SteeringManager.SteeringSeek(steerPos, 2);
+                        // Switch to Idle when cannot reach the target and if cannot damage the walls
+                        if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                         {
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                        }
-                        else
-                        {
-                            SteeringManager.SteeringSeek(steerPos, 2);
-                            // Switch to Idle when cannot reach the target and if cannot damage the walls
-                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                            {
-                                State = AIState.Idle;
-                                return;
-                            }
+                            State = AIState.Idle;
+                            return;
                         }
                     }
                 }
@@ -965,7 +971,7 @@ namespace Barotrauma
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
-                    if (attack.Conditionals.Any(c => !c.TargetSelf && !c.Matches(se))) { continue; }
+                    if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
                 }
                 if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
                 float priority = CalculatePriority(limb, attackWorldPos);
@@ -1097,6 +1103,7 @@ namespace Barotrauma
             // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
             bool retaliate = SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
             bool avoidGunFire = Character.Params.AI.AvoidGunfire && attacker.Submarine != Character.Submarine;
+
             if (State == AIState.Attack && !IsCoolDownRunning)
             {
                 // Don't retaliate or escape while performing an attack
@@ -1148,8 +1155,8 @@ namespace Barotrauma
                     {
                         selectedTargetMemory.Priority = 0;
                     }
-                    return true;
                 }
+                return true;
             }
             return false;
         }
@@ -1439,7 +1446,7 @@ namespace Barotrauma
                         }
                         if (door.Item.Submarine == null) { continue;}
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
-                        bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
+                        bool isOpen = door.IsOpen;
                         if (!isOpen && (!canAttackSub))
                         {
                             // Ignore doors that are not open if cannot attack items/structures. Open doors should be targeted, so that we can get in if we are aggressive boarders

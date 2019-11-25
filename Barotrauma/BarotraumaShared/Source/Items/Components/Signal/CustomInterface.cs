@@ -11,7 +11,8 @@ namespace Barotrauma.Items.Components
         {
             public bool ContinuousSignal;
             public bool State;
-            public string Connection;
+            public string ConnectionName;
+            public Connection Connection;
             [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
             [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked."), Editable]
@@ -26,7 +27,7 @@ namespace Barotrauma.Items.Components
             public CustomInterfaceElement(XElement element)
             {
                 Label = element.GetAttributeString("text", "");
-                Connection = element.GetAttributeString("connection", "");
+                ConnectionName = element.GetAttributeString("connection", "");
                 Signal = element.GetAttributeString("signal", "1");
 
                 foreach (XElement subElement in element.Elements())
@@ -136,6 +137,14 @@ namespace Barotrauma.Items.Components
             UpdateLabelsProjSpecific();
         }
 
+        public override void OnItemLoaded()
+        {
+            foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
+            {
+                ciElement.Connection = item.Connections?.FirstOrDefault(c => c.Name == ciElement.ConnectionName);
+            }
+        }
+
         partial void UpdateLabelsProjSpecific();
 
         partial void InitProjSpecific(XElement element);     
@@ -143,7 +152,7 @@ namespace Barotrauma.Items.Components
         private void ButtonClicked(CustomInterfaceElement btnElement)
         {
             if (btnElement == null) return;
-            if (!string.IsNullOrEmpty(btnElement.Connection))
+            if (btnElement.Connection != null)
             {
                 item.SendSignal(0, btnElement.Signal, btnElement.Connection, sender: null, source: item);
             }
@@ -155,17 +164,18 @@ namespace Barotrauma.Items.Components
 
         private void TickBoxToggled(CustomInterfaceElement tickBoxElement, bool state)
         {
-            if (tickBoxElement == null) return;
+            if (tickBoxElement == null) { return; }
             tickBoxElement.State = state;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            UpdateProjSpecific();
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
             {
                 if (!ciElement.ContinuousSignal) { continue; }
                 //TODO: allow changing output when a tickbox is not selected
-                if (!string.IsNullOrEmpty(ciElement.Signal))
+                if (!string.IsNullOrEmpty(ciElement.Signal) && ciElement.Connection != null)
                 {
                     item.SendSignal(0, ciElement.State ? ciElement.Signal : "0", ciElement.Connection, sender: null, source: item);
                 }
@@ -176,6 +186,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        partial void UpdateProjSpecific();
 
         public override XElement Save(XElement parentElement)
         {

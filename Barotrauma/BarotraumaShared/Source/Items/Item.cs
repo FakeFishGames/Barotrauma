@@ -923,18 +923,30 @@ namespace Barotrauma
 
         public override void Move(Vector2 amount)
         {
+            Move(amount, ignoreContacts: false);
+        }
+
+        public void Move(Vector2 amount, bool ignoreContacts)
+        {
             base.Move(amount);
 
             if (ItemList != null && body != null)
             {
-                body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
+                if (ignoreContacts)
+                {
+                    body.SetTransformIgnoreContacts(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
+                }
+                else
+                {
+                    body.SetTransform(body.SimPosition + ConvertUnits.ToSimUnits(amount), body.Rotation);
+                }
             }
             foreach (ItemComponent ic in components)
             {
                 ic.Move(amount);
             }
 
-            if (body != null && (Submarine==null || !Submarine.Loading)) FindHull();
+            if (body != null && (Submarine == null || !Submarine.Loading)) { FindHull(); }
         }
 
         public Rectangle TransformTrigger(Rectangle trigger, bool world = false)

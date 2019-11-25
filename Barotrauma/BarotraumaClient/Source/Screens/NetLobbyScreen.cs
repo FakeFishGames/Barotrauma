@@ -91,9 +91,7 @@ namespace Barotrauma
         public GUIFrame JobSelectionFrame;
 
         public GUIListBox JobList;
-
-        private Rectangle[] voipSheetRects;
-
+        
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -1672,7 +1670,7 @@ namespace Barotrauma
                 UserData = client
             };
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                "GUISoundIcon")
+                sprite: GUI.Style.GetComponentStyle("GUISoundIcon").Sprites[GUIComponent.ComponentState.None].FirstOrDefault().Sprite, scaleToFit: true)
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
@@ -1680,19 +1678,7 @@ namespace Barotrauma
                 OverrideState = GUIComponent.ComponentState.None,
                 HoverColor = Color.White
             };
-
-            if (voipSheetRects == null)
-            {
-                Point sourceRectSize = soundIcon.Style.Sprites.First().Value.First().Sprite.SourceRect.Size;
-                var indexPieces = soundIcon.Style.Element.Attribute("sheetindices").Value.Split(';');
-                voipSheetRects = new Rectangle[indexPieces.Length];
-                for (int i = 0; i < indexPieces.Length; i++)
-                {
-                    Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
-                    voipSheetRects[i] = new Rectangle(location, sourceRectSize);
-                }
-            }
-
+            
             new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
                 "GUISoundIconDisabled")
             {
@@ -1753,7 +1739,7 @@ namespace Barotrauma
             if (playerFrame == null) { return; }
             var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
             Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
-            userdata.Second = 0.18f;
+            userdata.Second = Math.Max(userdata.Second,   0.18f);
             soundIcon.Visible = true;
         }
 
@@ -1781,24 +1767,23 @@ namespace Barotrauma
                 RelativeSpacing = 0.03f
             };
 
-            var headerContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+            var headerContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true
             };
             
-            var nameText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1.0f), headerContainer.RectTransform), 
+            var nameText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), headerContainer.RectTransform), 
                 text: selectedClient.Name, font: GUI.LargeFont);
+            nameText.Text = ToolBox.LimitString(nameText.Text, nameText.Font, nameText.Rect.Width);
 
             if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
             {
-                var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), headerContainer.RectTransform, Anchor.TopCenter),
+                var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), headerContainer.RectTransform, Anchor.TopCenter) { MaxSize = new Point(int.MaxValue, (int)(40 * GUI.Scale)) },
                         TextManager.Get("ViewSteamProfile"))
                 {
                     UserData = selectedClient
                 };
-
-                GUITextBlock.AutoScaleAndNormalize(nameText, viewSteamProfileButton.TextBlock);
-
+                viewSteamProfileButton.TextBlock.AutoScale = true;
                 viewSteamProfileButton.OnClicked = (bt, userdata) =>
                 {
                     Steam.SteamManager.Instance.Overlay.OpenUrl("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
@@ -2054,7 +2039,7 @@ namespace Barotrauma
             }
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
-                TextManager.Get("Close"))
+                TextManager.Get("Close"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = ClosePlayerFrame
@@ -2131,34 +2116,26 @@ namespace Barotrauma
             {
                 if (child.UserData is Client client)
                 {
-                    var soundIcon = child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
-                    if (soundIcon != null)
+                    if (child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") is GUIImage soundIcon)
                     {
-                        Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
-                        if (userdata.Second >= 0.0f)
+                        double voipAmplitude = 0.0f;
+                        if (client.ID != GameMain.Client.ID)
                         {
-                            userdata.Second = userdata.Second - (float)deltaTime;
-
-                            if (userdata.Second < 0.0f)
+                            voipAmplitude = client.VoipSound?.CurrentAmplitude ?? 0.0f;
+                        }
+                        else
+                        {
+                            var voip = VoipCapture.Instance;
+                            if (voip == null)
                             {
-                                soundIcon.Visible = false;
+                                voipAmplitude = 0;
                             }
-                            else
+                            else if (voip.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
                             {
-                                int sheetIndex = 0;
-                                if (client.ID != GameMain.Client.ID)
-                                {
-                                    sheetIndex = (int)Math.Floor((client.VoipSound?.CurrentAmplitude ?? 0.0f) * (voipSheetRects.Length - 0.99f));
-                                }
-                                else
-                                {
-                                    sheetIndex = (int)Math.Floor((VoipCapture.Instance?.LastAmplitude ?? 0.0) * (voipSheetRects.Length - 0.99f));
-                                }
-                                if (sheetIndex < 0) { sheetIndex = 0; }
-                                if (sheetIndex > voipSheetRects.Length-1) { sheetIndex = voipSheetRects.Length-1; }
-                                soundIcon.sprites.First().Value.First().Sprite.SourceRect = voipSheetRects[sheetIndex];
+                                voipAmplitude = voip.LastAmplitude;
                             }
                         }
+                        VoipClient.UpdateVoiceIndicator(soundIcon, (float)voipAmplitude, (float)deltaTime);
                     }
                 }
             }
@@ -2822,7 +2799,7 @@ namespace Barotrauma
 
             subList.Enabled = !enabled && AllowSubSelection;
             shuttleList.Enabled = !enabled && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
-            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && GameMain.Client.GameStarted && !enabled;
+            StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !enabled;
 
             if (campaignViewButton != null) { campaignViewButton.Visible = enabled; }
             
