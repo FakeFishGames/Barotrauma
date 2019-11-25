@@ -506,7 +506,7 @@ namespace Barotrauma
 
         public void Resize(Point absoluteSize, bool resizeChildren = true)
         {
-            nonScaledSize = absoluteSize;
+            nonScaledSize = absoluteSize.Clamp(MinSize, MaxSize);
             RecalculateRelativeSize();
             RecalculateAll(resize: false, scale: false, withChildren: false);
             RecalculateChildren(resizeChildren, false);
