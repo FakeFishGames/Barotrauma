@@ -161,7 +161,7 @@ namespace Barotrauma
             {
                 string itemPrefabIdentifier = msg.ReadString();
                 UInt16 itemQuantity = msg.ReadUInt16();
-                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.Prefabs[itemPrefabIdentifier].Last() as ItemPrefab, itemQuantity));
+                purchasedItems.Add(new PurchasedItem(MapEntityPrefab.Prefabs[itemPrefabIdentifier].Last(p => p is ItemPrefab) as ItemPrefab, itemQuantity));
             }
 
             bool hasCharacterData = msg.ReadBoolean();

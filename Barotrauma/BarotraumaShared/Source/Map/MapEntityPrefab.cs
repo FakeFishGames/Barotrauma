@@ -22,7 +22,11 @@ namespace Barotrauma
             {
                 foreach (var kvp in Prefabs)
                 {
-                    yield return kvp.Value.Last();
+                    //TODO: go through identifiers and solve all collisions instead of doing this
+                    foreach (var t in kvp.Value.Select(p => p.GetType()).Distinct())
+                    {
+                        yield return kvp.Value.Last(p => p.GetType()==t);
+                    }
                 }
             }
         }
