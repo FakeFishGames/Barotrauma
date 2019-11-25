@@ -316,7 +316,7 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)DeliveryMethod.Reliable);
             outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
             outMsg.Write((byte)ConnectionInitialization.Password);
-            byte[] saltedPw = ServerSettings.SaltPassword(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
+            byte[] saltedPw = ServerSettings.SaltPassword(Encoding.UTF8.GetBytes(password), passwordSalt);
             outMsg.Write((byte)saltedPw.Length);
             outMsg.Write(saltedPw, 0, saltedPw.Length);
 

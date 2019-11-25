@@ -195,6 +195,11 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                doc.Root.SetAttributeValue("password", password);
+            }
             
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             
