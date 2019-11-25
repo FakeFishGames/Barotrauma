@@ -175,9 +175,8 @@ namespace Barotrauma.Items.Components
             else
             {
                 currPowerConsumption = MathHelper.Lerp(currPowerConsumption, rechargeSpeed, 0.05f);
-                Charge += currPowerConsumption * Voltage / 3600.0f;
-            }
-                       
+                Charge += currPowerConsumption * Math.Min(Voltage, 1.0f) / 3600.0f;
+            }                       
 
             if (charge <= 0.0f)
             {
