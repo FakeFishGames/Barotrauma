@@ -529,7 +529,7 @@ namespace Barotrauma
             {
                 if (args.Length < 2) return;
 
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a =>
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
                     a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() ||
                     a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
                 if (afflictionPrefab == null)

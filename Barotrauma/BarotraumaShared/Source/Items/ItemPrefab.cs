@@ -431,7 +431,7 @@ namespace Barotrauma
 
         }
 
-        public static void Remove(string filePath)
+        public static void RemoveByFile(string filePath)
         {
             var prefabs = ItemPrefab.List.Where(p => p is ItemPrefab ip && ip.ConfigFile == filePath).Select(p => p as ItemPrefab).ToList();
             foreach (var itemPrefab in prefabs)
@@ -443,7 +443,7 @@ namespace Barotrauma
         public static void LoadFromFile(string filePath)
         {
             DebugConsole.Log("*** " + filePath + " ***");
-            Remove(filePath);
+            RemoveByFile(filePath);
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return; }
@@ -772,7 +772,7 @@ namespace Barotrauma
 
                         string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
 
-                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.FindAll(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier);
+                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.Where(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier).ToList();
                         if (matchingAfflictions.Count == 0)
                         {
                             DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - couldn't define as a treatment, no treatments with the identifier or type \"" + treatmentIdentifier + "\" were found.");

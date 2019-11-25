@@ -39,7 +39,7 @@ namespace Barotrauma
 
     class AfflictionPrefabHusk : AfflictionPrefab
     {
-        public AfflictionPrefabHusk(XElement element, Type type = null) : base(element, type)
+        public AfflictionPrefabHusk(XElement element, string filePath, Type type = null) : base(element, filePath, type)
         {
             HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null);
             if (HuskedSpeciesName == null)
@@ -172,7 +172,19 @@ namespace Barotrauma
         public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
 
-        public static List<AfflictionPrefab> List = new List<AfflictionPrefab>();
+        public static Dictionary<string, List<AfflictionPrefab>> Prefabs = new Dictionary<string, List<AfflictionPrefab>>();
+        public static IEnumerable<AfflictionPrefab> List
+        {
+            get
+            {
+                foreach (var kvp in Prefabs)
+                {
+                    yield return kvp.Value.Last();
+                }
+            }
+        }
+
+        public readonly string FilePath;
 
         //Arbitrary string that is used to identify the type of the affliction.
         //Afflictions with the same type stack up, and items may be configured to cure specific types of afflictions.
@@ -230,134 +242,7 @@ namespace Barotrauma
         {
             foreach (string filePath in filePaths)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
-                }
-                foreach (XElement element in mainElement.Elements())
-                {
-                    bool isOverride = element.IsOverride();
-                    XElement sourceElement = isOverride ? element.FirstElement() : element;
-                    string elementName = sourceElement.Name.ToString().ToLowerInvariant();
-                    string identifier = sourceElement.GetAttributeString("identifier", null);
-                    if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase) &&
-                        !elementName.Equals("damageoverlay", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (string.IsNullOrWhiteSpace(identifier))
-                        {
-                            DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{filePath}'");
-                            continue;
-                        }
-                        var duplicate = List.FirstOrDefault(a => a.Identifier == identifier);
-                        if (duplicate != null)
-                        {
-                            if (isOverride)
-                            {
-                                DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{filePath}'", Color.Yellow);
-                                List.Remove(duplicate);
-                            }
-                            else
-                            {
-                                DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{filePath}'");
-                                continue;
-                            }
-                        }
-                    }
-                    string type = sourceElement.GetAttributeString("type", "");
-                    switch (sourceElement.Name.ToString().ToLowerInvariant())
-                    {
-                        case "cprsettings":
-                            type = "cprsettings";
-                            break;
-                        case "damageoverlay":
-                            type = "damageoverlay";
-                            break;
-                    }
-
-                    AfflictionPrefab prefab = null;
-                    switch (type)
-                    {
-                        case "damageoverlay":
-#if CLIENT
-                            if (CharacterHealth.DamageOverlay != null)
-                            {
-                                if (isOverride)
-                                {
-                                    DebugConsole.NewMessage($"Overriding damage overlay with '{filePath}'", Color.Yellow);
-                                }
-                                else
-                                {
-                                    DebugConsole.ThrowError($"Error in '{filePath}': damage overlay already loaded. Add <override></override> tags as the parent of the custom damage overlay sprite to allow overriding the vanilla one.");
-                                    break;
-                                }
-                            }
-                            CharacterHealth.DamageOverlay?.Remove();
-                            CharacterHealth.DamageOverlay = new Sprite(element);
-#endif
-                            break;
-                        case "bleeding":
-                            prefab = new AfflictionPrefab(sourceElement, typeof(AfflictionBleeding));
-                            break;
-                        case "huskinfection":
-                            prefab = new AfflictionPrefabHusk(sourceElement, typeof(AfflictionHusk));
-                            break;
-                        case "cprsettings":
-                            if (CPRSettings.IsLoaded)
-                            {
-                                if (isOverride)
-                                {
-                                    DebugConsole.NewMessage($"Overriding the CPR settings with '{filePath}'", Color.Yellow);
-                                }
-                                else
-                                {
-                                    DebugConsole.ThrowError($"Error in '{filePath}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
-                                    break;
-                                }
-                            }
-                            CPRSettings.Load(sourceElement);
-                            break;
-                        case "damage":
-                        case "burn":
-                        case "oxygenlow":
-                        case "bloodloss":
-                        case "stun":
-                        case "pressure":
-                        case "internaldamage":
-                            prefab = new AfflictionPrefab(sourceElement, typeof(Affliction));
-                            break;
-                        default:
-                            prefab = new AfflictionPrefab(sourceElement);
-                            break;
-                    }
-                    switch (identifier)
-                    {
-                        case "internaldamage":
-                            InternalDamage = prefab;
-                            break;
-                        case "bleeding":
-                            Bleeding = prefab;
-                            break;
-                        case "burn":
-                            Burn = prefab;
-                            break;
-                        case "oxygenlow":
-                            OxygenLow = prefab;
-                            break;
-                        case "bloodloss":
-                            Bloodloss = prefab;
-                            break;
-                        case "pressure":
-                            Pressure = prefab;
-                            break;
-                        case "stun":
-                            Stun = prefab;
-                            break;
-                    }
-                    if (prefab != null) { List.Add(prefab); }
-                }
+                LoadFromFile(filePath);
             }
 
             if (InternalDamage == null) DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs.");
@@ -369,8 +254,166 @@ namespace Barotrauma
             if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
         }
 
-        public AfflictionPrefab(XElement element, Type type = null)
+        public static void LoadFromFile(string filePath)
         {
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            if (doc == null) { return; }
+            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+            if (doc.Root.IsOverride())
+            {
+                DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
+            }
+            foreach (XElement element in mainElement.Elements())
+            {
+                bool isOverride = element.IsOverride();
+                XElement sourceElement = isOverride ? element.FirstElement() : element;
+                string elementName = sourceElement.Name.ToString().ToLowerInvariant();
+                string identifier = sourceElement.GetAttributeString("identifier", null);
+                if (!elementName.Equals("cprsettings", StringComparison.OrdinalIgnoreCase) &&
+                    !elementName.Equals("damageoverlay", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (string.IsNullOrWhiteSpace(identifier))
+                    {
+                        DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{filePath}'");
+                        continue;
+                    }
+                    if (Prefabs.ContainsKey(identifier))
+                    {
+                        if (isOverride)
+                        {
+                            DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{filePath}'", Color.Yellow);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{filePath}'");
+                            continue;
+                        }
+                    }
+                }
+                string type = sourceElement.GetAttributeString("type", "");
+                switch (sourceElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "cprsettings":
+                        type = "cprsettings";
+                        break;
+                    case "damageoverlay":
+                        type = "damageoverlay";
+                        break;
+                }
+
+                AfflictionPrefab prefab = null;
+                switch (type)
+                {
+                    case "damageoverlay":
+#if CLIENT
+                        if (CharacterHealth.DamageOverlay != null)
+                        {
+                            if (isOverride)
+                            {
+                                DebugConsole.NewMessage($"Overriding damage overlay with '{filePath}'", Color.Yellow);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Error in '{filePath}': damage overlay already loaded. Add <override></override> tags as the parent of the custom damage overlay sprite to allow overriding the vanilla one.");
+                                break;
+                            }
+                        }
+                        CharacterHealth.DamageOverlay?.Remove();
+                        CharacterHealth.DamageOverlay = new Sprite(element);
+#endif
+                        break;
+                    case "bleeding":
+                        prefab = new AfflictionPrefab(sourceElement, filePath, typeof(AfflictionBleeding));
+                        break;
+                    case "huskinfection":
+                        prefab = new AfflictionPrefabHusk(sourceElement, filePath, typeof(AfflictionHusk));
+                        break;
+                    case "cprsettings":
+                        if (CPRSettings.IsLoaded)
+                        {
+                            if (isOverride)
+                            {
+                                DebugConsole.NewMessage($"Overriding the CPR settings with '{filePath}'", Color.Yellow);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Error in '{filePath}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
+                                break;
+                            }
+                        }
+                        CPRSettings.Load(sourceElement);
+                        break;
+                    case "damage":
+                    case "burn":
+                    case "oxygenlow":
+                    case "bloodloss":
+                    case "stun":
+                    case "pressure":
+                    case "internaldamage":
+                        prefab = new AfflictionPrefab(sourceElement, filePath, typeof(Affliction));
+                        break;
+                    default:
+                        prefab = new AfflictionPrefab(sourceElement, filePath);
+                        break;
+                }
+                switch (identifier)
+                {
+                    case "internaldamage":
+                        InternalDamage = prefab;
+                        break;
+                    case "bleeding":
+                        Bleeding = prefab;
+                        break;
+                    case "burn":
+                        Burn = prefab;
+                        break;
+                    case "oxygenlow":
+                        OxygenLow = prefab;
+                        break;
+                    case "bloodloss":
+                        Bloodloss = prefab;
+                        break;
+                    case "pressure":
+                        Pressure = prefab;
+                        break;
+                    case "stun":
+                        Stun = prefab;
+                        break;
+                }
+                if (prefab != null)
+                {
+                    if (!Prefabs.ContainsKey(identifier))
+                    {
+                        Prefabs.Add(identifier, new List<AfflictionPrefab>());
+                    }
+                    Prefabs[identifier].Add(prefab);
+                }
+            }
+        }
+
+        public static void RemoveByFile(string filePath)
+        {
+            List<string> keysToRemove = new List<string>();
+            foreach (var kvp in Prefabs)
+            {
+                List<AfflictionPrefab> prefabsToRemove = kvp.Value.Where(p => p.FilePath == filePath).ToList();
+                foreach (var prefab in prefabsToRemove)
+                {
+                    kvp.Value.Remove(prefab);
+                }
+
+                if (kvp.Value.Count == 0) { keysToRemove.Add(kvp.Key); }
+            }
+            foreach (string key in keysToRemove)
+            {
+                Prefabs.Remove(key);
+            }
+        }
+
+        public AfflictionPrefab(XElement element, string filePath, Type type = null)
+        {
+            FilePath = filePath;
+
             typeName = type == null ? element.Name.ToString() : type.Name;
             if (typeName == "InternalDamage" && type == null)
             {

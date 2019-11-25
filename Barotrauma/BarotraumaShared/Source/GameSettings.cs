@@ -257,6 +257,9 @@ namespace Barotrauma
                         case ContentType.Text:
                             TextManager.LoadTextPack(file.Path);
                             break;
+                        case ContentType.Afflictions:
+                            AfflictionPrefab.LoadFromFile(file.Path);
+                            break;
 #if CLIENT
                         case ContentType.Sounds:
                             shouldRefreshSoundPlayer = true;
@@ -275,6 +278,7 @@ namespace Barotrauma
                         case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
+                        case ContentType.Afflictions:
                         case ContentType.Particles:
                         case ContentType.Outpost:
                         case ContentType.Sounds:
@@ -327,7 +331,7 @@ namespace Barotrauma
                             JobPrefab.RemoveByFile(file.Path);
                             break;
                         case ContentType.Item:
-                            ItemPrefab.Remove(file.Path);
+                            ItemPrefab.RemoveByFile(file.Path);
                             shouldRefreshFabricationRecipes = true;
                             break;
                         case ContentType.Structure:
@@ -338,6 +342,9 @@ namespace Barotrauma
                             break;
                         case ContentType.Text:
                             TextManager.RemoveTextPack(file.Path);
+                            break;
+                        case ContentType.Afflictions:
+                            AfflictionPrefab.RemoveByFile(file.Path);
                             break;
 #if CLIENT
                         case ContentType.Sounds:
@@ -357,6 +364,7 @@ namespace Barotrauma
                         case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
+                        case ContentType.Afflictions:
                         case ContentType.Particles:
                         case ContentType.Outpost:
                         case ContentType.Sounds:

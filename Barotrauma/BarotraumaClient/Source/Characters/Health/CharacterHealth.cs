@@ -1375,7 +1375,7 @@ namespace Barotrauma
             byte afflictionCount = inc.ReadByte();
             for (int i = 0; i < afflictionCount; i++)
             {
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List[inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1)];
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()].Last();
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
                 newAfflictions.Add(new Pair<AfflictionPrefab, float>(afflictionPrefab, afflictionStrength));
@@ -1409,7 +1409,7 @@ namespace Barotrauma
             for (int i = 0; i < limbAfflictionCount; i++)
             {
                 int limbIndex = inc.ReadRangedInteger(0, limbHealths.Count - 1);
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List[inc.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1)];
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()].Last();
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
                 newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], afflictionPrefab, afflictionStrength));

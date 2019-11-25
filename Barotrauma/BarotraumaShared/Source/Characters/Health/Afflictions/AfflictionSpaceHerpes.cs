@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Barotrauma
@@ -44,7 +45,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var invertControlsAffliction = AfflictionPrefab.List.Find(ap => ap.Identifier == "invertcontrols");
+                        var invertControlsAffliction = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == "invertcontrols");
                         characterHealth.ApplyAffliction(null, new Affliction(invertControlsAffliction, 5.0f));
                     }
                 }
