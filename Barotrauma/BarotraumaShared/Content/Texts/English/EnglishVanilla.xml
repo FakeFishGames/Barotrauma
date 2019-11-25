@@ -1442,7 +1442,7 @@
   <sp.steering.neutralballastlevel.description>How full the ballast tanks should be when the submarine is not being steered upwards/downwards. Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.</sp.steering.neutralballastlevel.description>
   <sp.sonar.usetransducers.name>Use Transducers</sp.sonar.usetransducers.name>
   <sp.sonar.usetransducers.description>Does the sonar have to be connected to external transducers to work.</sp.sonar.usetransducers.description>
-   <sp.itemlabel.text.name>Text</sp.itemlabel.text.name>
+  <sp.itemlabel.text.name>Text</sp.itemlabel.text.name>
   <sp.itemlabel.text.description>The text displayed in the label.</sp.itemlabel.text.description>
   <sp.itemlabel.textcolor.name>Text Color</sp.itemlabel.textcolor.name>
   <sp.itemlabel.textcolor.description>The color of the text displayed on the label (R,G,B,A).</sp.itemlabel.textcolor.description>
@@ -1646,7 +1646,7 @@
   <sp.propulsion.force.description>The force to apply to the user's body.</sp.propulsion.force.description>
   <sp.keyboard.welcomemessage.name>Welcome Message</sp.keyboard.welcomemessage.name>
   <sp.keyboard.welcomemessage.description>The message to be displayed when opened.</sp.keyboard.welcomemessage.description>
-
+  
   <sp.pickingtime.name>Picking Time</sp.pickingtime.name>
   <sp.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.pickingtime.description>
   <sp.canbepicked.name>Can Be Picked</sp.canbepicked.name>

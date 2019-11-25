@@ -1494,7 +1494,7 @@ namespace Barotrauma
             }));
 #endif
 
-                commands.Add(new Command("cleanbuild", "", (string[] args) =>
+            commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
                 GameMain.Config.MusicVolume = 0.5f;
                 GameMain.Config.SoundVolume = 0.5f;
