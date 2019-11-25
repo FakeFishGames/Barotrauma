@@ -12,6 +12,9 @@ namespace Barotrauma
     {
         private int elementHeight;
         private GUILayoutGroup layoutGroup;
+#if DEBUG
+        public static List<string> MissingLocalizations = new List<string>();
+#endif
 
         public int ContentHeight
         {
@@ -300,13 +303,35 @@ namespace Barotrauma
             {
                 value = "";
             }
-            string propertyName = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
-            string displayName = TextManager.Get(propertyName, returnNull: true) ?? property.GetAttribute<Editable>().DisplayName;
+
+            string propertyTag = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+            string fallbackTag = property.PropertyInfo.Name.ToLowerInvariant();
+            string displayName = TextManager.Get($"sp.{propertyTag}.name", true, $"sp.{fallbackTag}.name");
+            
             if (displayName == null)
-            {
+            {   
                 displayName = property.Name.FormatCamelCaseWithSpaces();
+#if DEBUG
+                Editable editable = property.GetAttribute<Editable>();
+                if (editable != null)
+                {
+                    if (!MissingLocalizations.Contains($"sp.{propertyTag}.name|{displayName}"))
+                    {
+                        DebugConsole.NewMessage("Missing Localization for property: " + propertyTag);
+                        MissingLocalizations.Add($"sp.{propertyTag}.name|{displayName}");
+                        MissingLocalizations.Add($"sp.{propertyTag}.description|{property.GetAttribute<Serialize>().Description}");
+                    }
+                }
+#endif
             }
-            string toolTip = property.GetAttribute<Serialize>().Description;
+
+            string toolTip = TextManager.Get($"sp.{propertyTag}.description", true, !string.IsNullOrEmpty(fallbackTag) ? $"sp.{fallbackTag}.description" : null);
+
+            if (toolTip == null)
+            {
+                toolTip = property.GetAttribute<Serialize>().Description;
+            }
+
             GUIComponent propertyField = null;
             if (value is bool)
             {
