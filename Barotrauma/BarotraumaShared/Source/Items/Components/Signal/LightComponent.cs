@@ -251,6 +251,9 @@ namespace Barotrauma.Items.Components
                 light.Range = range;
 #endif
             }
+
+            if (powerIn == null) { Voltage -= deltaTime; }
+
             if (item.AiTarget != null)
             {
                 UpdateAITarget(item.AiTarget);
