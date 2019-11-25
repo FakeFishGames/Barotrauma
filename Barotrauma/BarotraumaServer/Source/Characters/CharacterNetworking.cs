@@ -445,14 +445,14 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityId)
         {
             if (GameMain.Server == null) return;
             
             int msgLength = msg.LengthBytes;
 
             msg.Write(Info == null);
-            msg.Write(ID);
+            msg.Write(entityId);
             msg.Write(SpeciesName);
             msg.Write(seed);
 

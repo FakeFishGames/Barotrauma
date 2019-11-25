@@ -1289,6 +1289,7 @@ namespace Barotrauma.Networking
 
             gameStarted = false;
             Character.Controlled = null;
+            SpawnAsTraitor = false;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
             respawnManager = null;

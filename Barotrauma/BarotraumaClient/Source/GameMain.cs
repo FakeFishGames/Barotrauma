@@ -853,6 +853,8 @@ namespace Barotrauma
 
                 SteamManager.Update((float)Timing.Step);
 
+                TaskPool.Update();
+
                 SoundManager?.Update();
 
                 Timing.Accumulator -= Timing.Step;

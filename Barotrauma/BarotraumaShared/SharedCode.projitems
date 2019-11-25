@@ -285,6 +285,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MTRandom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Rand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TaskPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
   </ItemGroup>

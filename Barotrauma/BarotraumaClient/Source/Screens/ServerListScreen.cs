@@ -13,6 +13,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -1800,7 +1801,7 @@ namespace Barotrauma
             GameMain.Config.PlayerName = clientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
 
-            CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName));
+            CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName), "ConnectToServer");
 
             return true;
         }
@@ -1829,40 +1830,31 @@ namespace Barotrauma
 
         public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
-            if (activePings.Contains(serverInfo.IP)) { return; }
-            activePings.Add(serverInfo.IP);
+            if (CoroutineManager.IsCoroutineRunning("ConnectToServer")) { return; }
+
+            lock (activePings)
+            {
+                if (activePings.Contains(serverInfo.IP)) { return; }
+                activePings.Add(serverInfo.IP);
+            }
 
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
-            {
-                IsBackground = true
-            };
-            pingThread.Start();
-
-            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
-        }
-
-        private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
-        {
-			DateTime timeOutTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: timeOut);
-            while (DateTime.Now < timeOutTime)
-            {
-                if (serverInfo.PingChecked)
+            TaskPool.Add(PingServerAsync(serverInfo?.IP, 1000),
+                new Tuple<ServerInfo, GUITextBlock>(serverInfo, serverPingText),
+                (rtt, obj) =>
                 {
-                    if (serverInfo.Ping != -1)
+                    var info = obj.Item1;
+                    var text = obj.Item2;
+                    info.Ping = rtt.Result; info.PingChecked = true;
+                    text.TextColor = GetPingTextColor(info.Ping);
+                    text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
+                    lock (activePings)
                     {
-                        serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
-					}
-                    serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
-                    activePings.Remove(serverInfo.IP);
-                    yield return CoroutineStatus.Success;
-                }
-
-                yield return CoroutineStatus.Running;
-            }
-            yield return CoroutineStatus.Success;
+                        activePings.Remove(serverInfo.IP);
+                    }
+                });
         }
 
         private Color GetPingTextColor(int ping)
@@ -1871,18 +1863,27 @@ namespace Barotrauma
             return ToolBox.GradientLerp(ping / 200.0f, Color.LightGreen, Color.Yellow * 0.8f, Color.Red * 0.75f);
         }
 
-        public void PingServer(ServerInfo serverInfo, int timeOut)
+        public async Task<int> PingServerAsync(string ip, int timeOut)
         {
-            if (string.IsNullOrWhiteSpace(serverInfo?.IP))
+            await Task.Yield();
+            int activePingCount = 100;
+            while (activePingCount > 25)
             {
-                serverInfo.PingChecked = true;
-                serverInfo.Ping = -1;
-                return;
+                lock (activePings)
+                {
+                    activePingCount = activePings.Count;
+                }
+                await Task.Delay(25);
+            }
+
+            if (string.IsNullOrWhiteSpace(ip))
+            {
+                return -1;
             }
 
             long rtt = -1;
             IPAddress address = null;
-            IPAddress.TryParse(serverInfo.IP, out address);
+            IPAddress.TryParse(ip, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported
@@ -1909,8 +1910,8 @@ namespace Barotrauma
                     }
                     catch (PingException ex)
                     {
-                        string errorMsg = "Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + (ex?.InnerException?.Message ?? ex.Message);
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + serverInfo.IP, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
+                        string errorMsg = "Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message);
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
 #if DEBUG
                         DebugConsole.NewMessage(errorMsg, Color.Red);
 #endif
@@ -1918,10 +1919,9 @@ namespace Barotrauma
                 }
             }
 
-            serverInfo.PingChecked = true;
-            serverInfo.Ping = (int)rtt;
+            return (int)rtt;
         }
-        
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);

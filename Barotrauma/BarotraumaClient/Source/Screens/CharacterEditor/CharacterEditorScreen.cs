@@ -722,6 +722,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb == null || limb.ActiveSprite == null) { continue; }
+                    if (selectedJoints.Any(j => j.LimbA == limb || j.LimbB == limb)) { continue; }
                     // Select limbs on ragdoll
                     if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
                     {
