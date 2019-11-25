@@ -68,16 +68,34 @@ namespace Barotrauma
                 if (c == character) { continue; }
                 if (!HumanAIController.IsFriendly(c)) { continue; }
                 if (c.SelectedConstruction != target.Item) { continue; }
-                // If the other character is ordered to operate the item, let him do it
+                // If the other character is player, don't try to operate
+                if (c.IsRemotePlayer || Character.Controlled == c) { return true; }
                 if (c.AIController is HumanAIController humanAi)
                 {
+                    // If the other character is ordered to operate the item, let him do it
                     if (humanAi.ObjectiveManager.IsCurrentOrder<AIObjectiveOperateItem>())
                     {
                         return true;
                     }
+                    else
+                    {
+                        if (target is Steering)
+                        {
+                            // Steering is hard-coded -> cannot use the required skills collection defined in the xml
+                            return character.GetSkillLevel("helm") <= c.GetSkillLevel("helm");
+                        }
+                        else
+                        {
+                            return target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c);
+                        }
+                    }
                 }
-                // Else only the capable will ignore this objective
-                return target.DegreeOfSuccess(character) < target.DegreeOfSuccess(c);
+                else
+                {
+                    // Shouldn't go here, unless we allow non-humans to operate items
+                    return false;
+                }
+
             }
             return false;
         }

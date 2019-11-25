@@ -640,9 +640,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (lastUser != character && lastUser != null && lastUser.SelectedConstruction == item)
+            if (lastUser != null && lastUser != character && lastUser != lastAIUser)
             {
-                character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
+                if (lastUser.SelectedConstruction == item)
+                {
+                    character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
+                }
             }
 
             LastUser = lastAIUser = character;
