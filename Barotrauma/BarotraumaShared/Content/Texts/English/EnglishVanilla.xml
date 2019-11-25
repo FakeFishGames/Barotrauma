@@ -4324,4 +4324,6 @@
   <serversettingsbanafterwrongpassword>Ban after incorrect password</serversettingsbanafterwrongpassword>
   <serversettingspasswordretriesbeforeban>Password retries before a ban</serversettingspasswordretriesbeforeban>
 
+  <label.hatchoverride>Hatch Override</label.hatchoverride>
+
 </infotexts>
