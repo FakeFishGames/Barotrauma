@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -24,8 +25,18 @@ namespace Barotrauma
             this.FilePath = filePath;
             texts = new Dictionary<string, List<string>>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null) { return; }
+            XDocument doc = null;
+            for (int i=0;i<3;i++)
+            {
+                doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc != null) { break; }
+                Thread.Sleep(1000);
+            }
+            if (doc == null)
+            {
+                Language = "Unknown";
+                return;
+            }
 
             Language = doc.Root.GetAttributeString("language", "Unknown");
             TranslatedName = doc.Root.GetAttributeString("translatedname", Language);
