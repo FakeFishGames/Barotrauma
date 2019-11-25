@@ -131,38 +131,14 @@
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
             <Conditional IsDead="false" />
           </StatusEffect>
-          <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="1.0,1.0" />
+          <LightTexture texture="Content/Lights/divinghelmetlight.png" origin="0.05, 0.5" size="1.0,1.0" />
         </LightComponent>
         <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
           <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
             <Conditional IsDead="false" />
           </StatusEffect>
-          <LightTexture texture="Content/Lights/lightcone.png" origin="0.05, 0.5" size="1.0,1.0" />
-        </LightComponent>
-        <!-- Visor & Spotlight
-		    <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
-          <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
-            <Conditional IsDead="false" />
-          </StatusEffect>
           <LightTexture texture="Content/Lights/divinghelmetlight.png" origin="0.05, 0.5" size="1.0,1.0" />
         </LightComponent>
-        -->
-        <!-- Visor Light
-        <LightComponent lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
-          <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
-            <Conditional IsDead="false" />
-          </StatusEffect>
-          <LightTexture texture="Content/Lights/divinghelmetvisorlight.png" origin="0.5, 0.5" size="0.2,0.2" />
-        </LightComponent>
-    	  -->
-        <!-- Spotlight
-    	  <LightComponent range="200.0" lightcolor="250,224,165,255" powerconsumption="10" IsOn="true">
-          <StatusEffect type="OnWearing" target="This,Character" Voltage="1.0" setvalue="true" comparison="Or">
-            <Conditional IsDead="false" />
-          </StatusEffect>
-          <LightTexture texture="Content/Lights/lightcone.png" origin="0.025, 0.5" size="1.0,1.0" />
-        </LightComponent>
-    	  -->
       </sprite>
       <sprite texture="DivingSuit_Torso.png" limb="Torso" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="DivingSuit_Legs.png" limb="Waist" inheritlimbdepth="true" hidelimb="true" hideotherwearables="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
