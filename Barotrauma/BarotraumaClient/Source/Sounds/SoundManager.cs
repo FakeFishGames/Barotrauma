@@ -110,7 +110,7 @@ namespace Barotrauma.Sounds
                 //It assumes a linear falloff model, and assumes that audio
                 //is simply added together to produce the final result.
                 //Adjustments may be needed under certain scenarios.
-                for (int i=0;i<2;i++)
+                for (int i = 0; i < 2; i++)
                 {
                     foreach (SoundChannel soundChannel in playingChannels[i].Where(ch => ch != null))
                     {
@@ -127,7 +127,7 @@ namespace Barotrauma.Sounds
                 return aggregateAmplitude;
             }
         }
-        
+
         public float CompressionDynamicRangeGain { get; private set; }
 
         private float voipAttenuatedGain;
