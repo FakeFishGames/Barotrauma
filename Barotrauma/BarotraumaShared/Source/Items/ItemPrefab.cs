@@ -529,6 +529,11 @@ namespace Barotrauma
             }
         }
 
+        public static string GenerateLegacyIdentifier(string name)
+        {
+            return "legacyitem_" + name.ToLowerInvariant().Replace(" ", "");
+        }
+
         public ItemPrefab(XElement element, string filePath, bool allowOverriding)
         {
             ConfigFile = filePath;
@@ -572,7 +577,7 @@ namespace Barotrauma
 
                 if (string.IsNullOrWhiteSpace(identifier))
                 {
-                    identifier = "legacyitem_" + OriginalName.ToLowerInvariant().Replace(" ", "");
+                    identifier = GenerateLegacyIdentifier(OriginalName);
                 }
             }
 
@@ -832,29 +837,16 @@ namespace Barotrauma
             ItemPrefab prefab;
             if (string.IsNullOrEmpty(identifier))
             {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = Find(name, "", showErrorMessages: false) as ItemPrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = Find(name) as ItemPrefab;
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-
+                //legacy support
+                identifier = GenerateLegacyIdentifier(name);
             }
-            else
-            {
-                prefab = Find(null, identifier, showErrorMessages: false) as ItemPrefab;
+            prefab = Find(p => p is ItemPrefab && p.Identifier==identifier) as ItemPrefab;
 
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
+            //not found, see if we can find a prefab with a matching alias
+            if (prefab == null)
+            {
+                string lowerCaseName = name.ToLowerInvariant();
+                prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
             }
 
             if (prefab == null)

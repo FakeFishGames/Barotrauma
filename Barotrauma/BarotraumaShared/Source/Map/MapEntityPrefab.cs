@@ -287,6 +287,15 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Find a matching map entity prefab
+        /// </summary>
+        /// <param name="predicate">A predicate that returns true on the desired prefab.</param>
+        public static MapEntityPrefab Find(Predicate<MapEntityPrefab> predicate)
+        {
+            return List.FirstOrDefault(p => predicate(p));
+        }
+
+        /// <summary>
         /// Check if the name or any of the aliases of this prefab match the given name.
         /// </summary>
         public bool NameMatches(string name, bool caseSensitive = false)

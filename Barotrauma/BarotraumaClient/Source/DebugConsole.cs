@@ -1102,6 +1102,15 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("getprefabinfo", "", (string[] args) =>
+            {
+                var prefab = MapEntityPrefab.Find(null, args[0]);
+                if (prefab != null)
+                {
+                    DebugConsole.NewMessage(prefab.Name + " " + prefab.Identifier + " " + prefab.GetType().ToString());
+                }
+            }));
+
             commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>
             {
                 float defaultZoom = Screen.Selected.Cam.DefaultZoom;
