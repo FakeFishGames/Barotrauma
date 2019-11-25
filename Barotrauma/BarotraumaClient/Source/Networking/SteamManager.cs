@@ -1186,7 +1186,8 @@ namespace Barotrauma.Steam
                 }
 
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
-                foreach (var cp in GameMain.Config.SelectedContentPackages.Where(p => !ContentPackage.List.Contains(p)))
+                var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => !ContentPackage.List.Contains(p)).ToList();
+                foreach (var cp in packagesToDeselect)
                 {
                     GameMain.Config.DeselectContentPackage(cp);
                 }
