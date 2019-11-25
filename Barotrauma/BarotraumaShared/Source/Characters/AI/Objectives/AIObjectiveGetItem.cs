@@ -21,6 +21,7 @@ namespace Barotrauma
         private string[] itemIdentifiers;
         public IEnumerable<string> Identifiers => itemIdentifiers;
         private Item targetItem, moveToTarget, rootContainer;
+        private bool isDoneSeeking;
         public Item TargetItem => targetItem;
         private int currSearchIndex;
         public string[] ignoredContainerIdentifiers;
@@ -84,21 +85,11 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (targetItem == null)
+            if (!isDoneSeeking)
             {
                 FindTargetItem();
-                if (targetItem == null || moveToTarget == null)
-                {
-                    if (targetItem != null && moveToTarget == null)
-                    {
-#if DEBUG
-                        DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
-#endif
-                        Reset();
-                    }
-                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                    return;
-                }
+                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                return;
             }
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
@@ -237,13 +228,16 @@ namespace Barotrauma
                 moveToTarget = rootContainer ?? item;
                 this.rootContainer = rootContainer;
             }
-            //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
+            if (currSearchIndex >= Item.ItemList.Count - 1)
             {
+                isDoneSeeking = true;
+                if (targetItem == null)
+                {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
 #endif
-                Abandon = true;
+                    Abandon = true;
+                }
             }
         }
 
@@ -281,6 +275,8 @@ namespace Barotrauma
             targetItem = null;
             moveToTarget = null;
             rootContainer = null;
+            isDoneSeeking = false;
+            currSearchIndex = 0;
         }
     }
 }
