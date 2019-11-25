@@ -277,9 +277,7 @@ namespace Barotrauma
             properties.ForEach(ep => CreateNewField(ep, entity));
 
             //scale the size of this component and the layout group to fit the children
-            int contentHeight = ContentHeight;
-            RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
-            layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
+            Recalculate();
         }
 
         public void AddCustomContent(GUIComponent component, int childIndex)
@@ -289,12 +287,7 @@ namespace Barotrauma
             Recalculate();
         }
 
-        public void Recalculate()
-        {
-            int contentHeight = ContentHeight;
-            RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
-            layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
-        }
+        public void Recalculate() => RectTransform.Resize(new Point(RectTransform.NonScaledSize.X, ContentHeight));
 
         public GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
