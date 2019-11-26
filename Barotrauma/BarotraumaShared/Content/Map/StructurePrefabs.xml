@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
+  <!-- Everything is categorized as 'Structure' unless explicitly categorized otherwise -->
   <!-- OUTPOST BACK WALLS START -->
   <Opbg name="Outpost Shop A1" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
@@ -357,43 +358,43 @@
   <!--<fin name="Fin A Corner 16" identifier="finacorner16" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="688,288,64,128" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>-->
-  <fin name="Fin A Deco 01" identifier="finadeco01" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 01" identifier="finadeco01" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1862,934,48,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 02" identifier="finadeco02" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 02" identifier="finadeco02" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1920,928,61,58" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 03" identifier="finadeco03" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 03" identifier="finadeco03" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1985,928,60,61" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 04" identifier="finadeco04" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 04" identifier="finadeco04" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1861,996,56,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 05" identifier="finadeco05" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 05" identifier="finadeco05" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1922,995,57,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 06" identifier="finadeco06" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 06" identifier="finadeco06" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1993,999,50,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 07" identifier="finadeco07" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 07" identifier="finadeco07" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1858,1061,53,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 08" identifier="finadeco08" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 08" identifier="finadeco08" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1219,1102,90,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 09" identifier="finadeco09" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 09" identifier="finadeco09" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,1226,109,113" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 10" identifier="finadeco10" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 10" identifier="finadeco10" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,908,76,74" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 11" identifier="finawingpart72" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 11" identifier="finawingpart72" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,1003,77,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Decal 02" identifier="finawingpart19" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 02" identifier="finawingpart19" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1622,805,91,119" depth="0.985" origin="0.4595993,0.6038165" />
   </fin>
-  <fin name="Fin A Decal 01" identifier="finawingpart20" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 01" identifier="finawingpart20" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1580,619,143,170" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
   <fin name="Fin A Patch 1" identifier="finapatch01" description="Fin construction piece" body="false">
