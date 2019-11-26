@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -9,6 +10,8 @@ namespace Barotrauma.Items.Components
     {
         private GUIListBox historyBox;
         private GUITextBlock fillerBlock;
+        private GUITextBox inputBox;
+        private bool shouldSelectInputBox;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -26,7 +29,7 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
             {
                 MaxTextLength = MaxMessageLength,
                 OverflowClip = true,
@@ -99,6 +102,25 @@ namespace Barotrauma.Items.Components
             historyBox.RecalculateChildren();
             historyBox.UpdateScrollBarSize();
             historyBox.ScrollBar.BarScrollValue = 1;
+        }
+
+        public override bool Select(Character character)
+        {
+            shouldSelectInputBox = true;
+            return base.Select(character);
+        }
+
+        // This method is overrided instead of the UpdateHUD method because this ensures the input box is selected
+        // even when the keyboard component is selected for the very first time. Doing the input box selection in the
+        // UpdateHUD method only selects the input box on every keyboard selection except for the very first time.
+        public override void AddToGUIUpdateList()
+        {
+            base.AddToGUIUpdateList();
+            if (shouldSelectInputBox)
+            {
+                inputBox.Select();
+                shouldSelectInputBox = false;
+            }
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
