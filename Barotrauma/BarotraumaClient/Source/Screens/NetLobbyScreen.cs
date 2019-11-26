@@ -2445,7 +2445,7 @@ namespace Barotrauma
                     headSprite.SourceRect = new Rectangle(CharacterInfo.CalculateOffset(headSprite, head.Value.ToPoint()), headSprite.SourceRect.Size);
                     characterSprites.Add(headSprite);
 
-                    if (row == null || itemsInRow >= 4)
+                    if (itemsInRow >= 4 || row == null || gender != (Gender)row.UserData)
                     {
                         row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true)
                         {
