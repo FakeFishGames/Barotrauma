@@ -1174,11 +1174,11 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
+  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="89" bodyheight="70" bodyoffset="-6,-4" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="585,1449,99,93" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
+  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="105" bodyheight="73" bodyoffset="-4,-7" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="750,1443,115,103" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
