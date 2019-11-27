@@ -2282,10 +2282,18 @@
   <entitydescription.idcard>Allows limited access to areas of the sub.</entitydescription.idcard>
   <entityname.alienpistol>Alien Pistol</entityname.alienpistol>
   <entitydescription.alienpistol>A handgun powered by alien power cells.</entitydescription.alienpistol>
-  <entityname.captainscap>Captain's Cap</entityname.captainscap>
-  <entitydescription.captainscap>A token of the captain's unquestionable authority.</entitydescription.captainscap>
-  <entityname.captainsuniform>Captain's Uniform</entityname.captainsuniform>
-  <entitydescription.captainsuniform>Makes you look like you might be in charge.</entitydescription.captainsuniform>
+  <entityname.captainscap1>Captain's Cap 1</entityname.captainscap1>
+  <entitydescription.captainscap1>A token of the captain's unquestionable authority.</entitydescription.captainscap1>
+  <entityname.captainsuniform1>Captain's Uniform 1</entityname.captainsuniform1>
+  <entitydescription.captainsuniform1>Makes you look like you might be in charge.</entitydescription.captainsuniform1>
+  <entityname.captainscap2>Captain's Cap 2</entityname.captainscap2>
+  <entitydescription.captainscap2>A token of the captain's unquestionable authority.</entitydescription.captainscap2>
+  <entityname.captainsuniform2>Captain's Uniform 2</entityname.captainsuniform2>
+  <entitydescription.captainsuniform2>Makes you look like you might be in charge.</entitydescription.captainsuniform2>
+  <entityname.captainscap3>Captain's Cap 3</entityname.captainscap3>
+  <entitydescription.captainscap3>A token of the captain's unquestionable authority.</entitydescription.captainscap3>
+  <entityname.captainsuniform3>Captain's Uniform 3</entityname.captainsuniform3>
+  <entitydescription.captainsuniform3>Makes you look like you might be in charge.</entitydescription.captainsuniform3>
   <entityname.healthscanner>Health Scanner HUD</entityname.healthscanner>
   <entitydescription.healthscanner>A heads-up display that shows information about the vital signs and status of nearby humans.</entitydescription.healthscanner>
   <entityname.doctorsuniform>Doctor's Uniform</entityname.doctorsuniform>

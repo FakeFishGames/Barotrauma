@@ -15,8 +15,8 @@
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
-      <Item identifier="captainscap" equip="true"/>
-      <Item identifier="captainsuniform" equip="true" outfit="true"/>
+      <Item identifier="captainscap1" equip="true"/>
+      <Item identifier="captainsuniform1" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
