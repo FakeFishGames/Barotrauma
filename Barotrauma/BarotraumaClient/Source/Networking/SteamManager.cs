@@ -962,7 +962,11 @@ namespace Barotrauma.Steam
                     string[] splitPath = contentFile.Path.Split('/');
                     if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != fileName)
                     {
-                        contentFile.Path = Path.Combine("Mods", fileName, contentFile.Path);
+                        string newPath = Path.Combine("Mods", fileName, contentFile.Path);
+                        if (File.Exists(newPath))
+                        {
+                            contentFile.Path = newPath;
+                        }
                     }
                 }
             }

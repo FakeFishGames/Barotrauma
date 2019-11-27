@@ -298,6 +298,7 @@ namespace Barotrauma
                         case ContentType.Particles:
                         case ContentType.Decals:
                         case ContentType.Outpost:
+                        case ContentType.ServerExecutable:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
@@ -400,6 +401,7 @@ namespace Barotrauma
                         case ContentType.Particles:
                         case ContentType.Decals:
                         case ContentType.Outpost:
+                        case ContentType.ServerExecutable:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
