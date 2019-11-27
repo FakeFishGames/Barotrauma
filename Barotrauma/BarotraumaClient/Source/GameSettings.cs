@@ -110,7 +110,8 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in ContentPackage.List)
             {
-                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name,
+                    style: contentPackage.CorePackage ? "GUIRadioButton" : "GUITickBox")
                 {
                     UserData = contentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage),
@@ -145,6 +146,17 @@ namespace Barotrauma
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }
+
+            contentPackageList.Content.RectTransform.SortChildren((rt1,rt2) =>
+            {
+                if (!(rt1.GUIComponent.UserData is ContentPackage cp1) || !(rt2.GUIComponent.UserData is ContentPackage cp2))
+                {
+                    return 0;
+                }
+                if (cp1.CorePackage && !cp2.CorePackage) { return -1; }
+                if (cp2.CorePackage && !cp1.CorePackage) { return 1; }
+                return 0;
+            });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));

@@ -61,6 +61,7 @@ namespace Barotrauma
 
         public static void Init()
         {
+            List.Clear();
             var files = GameMain.Instance.GetFilesOfType(ContentType.Missions);
             foreach (string file in files)
             {

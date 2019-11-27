@@ -9,6 +9,8 @@ namespace Barotrauma.Particles
     {
         public readonly string Name;
 
+        public readonly string FilePath;
+
         public readonly List<Sprite> Sprites;
 
         public readonly Color Color;
@@ -17,9 +19,11 @@ namespace Barotrauma.Particles
         public readonly float FadeOutTime;
         public readonly float FadeInTime;
 
-        public DecalPrefab(XElement element)
+        public DecalPrefab(XElement element, string filePath)
         {
             Name = element.Name.ToString();
+
+            FilePath = filePath;
 
             Sprites = new List<Sprite>();
 

@@ -260,12 +260,24 @@ namespace Barotrauma
                         case ContentType.Afflictions:
                             AfflictionPrefab.LoadFromFile(file.Path);
                             break;
+                        case ContentType.RuinConfig:
+                            RuinGeneration.RuinGenerationParams.ClearAll();
+                            break;
+                        case ContentType.RandomEvents:
+                            ScriptedEventSet.LoadPrefabs();
+                            break;
+                        case ContentType.Missions:
+                            MissionPrefab.Init();
+                            break;
 #if CLIENT
                         case ContentType.Sounds:
                             shouldRefreshSoundPlayer = true;
                             break;
                         case ContentType.Particles:
                             GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
+                            break;
+                        case ContentType.Decals:
+                            GameMain.DecalManager.LoadFromFile(file.Path);
                             break;
 #endif
                     }
@@ -279,9 +291,13 @@ namespace Barotrauma
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Afflictions:
-                        case ContentType.Particles:
-                        case ContentType.Outpost:
+                        case ContentType.RuinConfig:
+                        case ContentType.RandomEvents:
+                        case ContentType.Missions:
                         case ContentType.Sounds:
+                        case ContentType.Particles:
+                        case ContentType.Decals:
+                        case ContentType.Outpost:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:
@@ -346,12 +362,24 @@ namespace Barotrauma
                         case ContentType.Afflictions:
                             AfflictionPrefab.RemoveByFile(file.Path);
                             break;
+                        case ContentType.RuinConfig:
+                            RuinGeneration.RuinGenerationParams.ClearAll();
+                            break;
+                        case ContentType.RandomEvents:
+                            ScriptedEventSet.LoadPrefabs();
+                            break;
+                        case ContentType.Missions:
+                            MissionPrefab.Init();
+                            break;
 #if CLIENT
                         case ContentType.Sounds:
                             shouldRefreshSoundPlayer = true;
                             break;
                         case ContentType.Particles:
                             GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
+                            break;
+                        case ContentType.Decals:
+                            GameMain.DecalManager.RemoveByFile(file.Path);
                             break;
 #endif
                     }
@@ -365,9 +393,13 @@ namespace Barotrauma
                         case ContentType.Submarine:
                         case ContentType.Text:
                         case ContentType.Afflictions:
-                        case ContentType.Particles:
-                        case ContentType.Outpost:
+                        case ContentType.RuinConfig:
+                        case ContentType.RandomEvents:
+                        case ContentType.Missions:
                         case ContentType.Sounds:
+                        case ContentType.Particles:
+                        case ContentType.Decals:
+                        case ContentType.Outpost:
                         case ContentType.None:
                             break; //do nothing here if the content type is supported
                         default:

@@ -166,6 +166,11 @@ namespace Barotrauma.RuinGeneration
             }
         }
 
+        public static void ClearAll()
+        {
+            paramsList.Clear();
+        }
+
         public static void SaveAll()
         {
             XmlWriterSettings settings = new XmlWriterSettings
