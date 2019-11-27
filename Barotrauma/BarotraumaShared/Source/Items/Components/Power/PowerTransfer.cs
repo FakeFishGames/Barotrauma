@@ -276,9 +276,9 @@ namespace Barotrauma.Items.Components
 
             if (!(this is RelayComponent))
             {
-                if (PowerConnections.Any(p => !p.IsOutput))
+                if (PowerConnections.Any(p => !p.IsOutput) && PowerConnections.Any(p => p.IsOutput))
                 {
-                    DebugConsole.ThrowError("Error in item \"" + Name + "\" - PowerTransfer components should not have separate power inputs, but transfer power between wires connected to the same power output. " +
+                    DebugConsole.ThrowError("Error in item \"" + Name + "\" - PowerTransfer components should not have separate power inputs and outputs, but transfer power between wires connected to the same power connection. " +
                         "If you want power to pass from input to output, change the component to a RelayComponent.");
                 }
             }
