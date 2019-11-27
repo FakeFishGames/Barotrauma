@@ -161,6 +161,12 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
+            // Inside of a container
+            if (container != null)
+            {
+                return false;
+            }
+
             //no drawable components and the body has been disabled = nothing to draw
             if (drawableComponents.Count == 0 && body != null && !body.Enabled)
             {
@@ -1003,6 +1009,8 @@ namespace Barotrauma
                 positionBuffer.Clear();
                 return;
             }
+
+            isActive = true;
 
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;

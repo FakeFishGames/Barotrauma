@@ -140,6 +140,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 user = Entity.FindEntityByID(userID) as Character;
+                base.IsActive = true;
             }
 
             foreach (Connection connection in Connections)
@@ -174,6 +175,7 @@ namespace Barotrauma.Items.Components
                 Wire wireComponent = wireItem.GetComponent<Wire>();
                 if (wireComponent == null) { continue; }
                 DisconnectedWires.Add(wireComponent);
+                base.IsActive = true;
             }
 
             foreach (Wire wire in prevWires)

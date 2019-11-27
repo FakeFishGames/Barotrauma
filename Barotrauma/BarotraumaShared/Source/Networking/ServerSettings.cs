@@ -357,7 +357,7 @@ namespace Barotrauma.Networking
         public Dictionary<ItemPrefab, int> ExtraCargo { get; private set; }
 
         private float selectedLevelDifficulty;
-        private byte[] password;
+        private string password;
 
         public float AutoRestartTimer;
 
@@ -530,7 +530,7 @@ namespace Barotrauma.Networking
 #if CLIENT
             set
             {
-                password = value ? (password ?? new byte[1]) : null;
+                password = value ? (password ?? "_") : null;
             }
 #endif
         }
@@ -831,7 +831,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                this.password = Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password));
+                this.password = password;
             }
         }
 
@@ -850,7 +850,7 @@ namespace Barotrauma.Networking
         public bool IsPasswordCorrect(byte[] input, int salt)
         {
             if (!HasPassword) return true;
-            byte[] saltedPw = SaltPassword(password, salt);
+            byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
             DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
             if (input.Length != saltedPw.Length) return false;
             for (int i=0;i<input.Length;i++)

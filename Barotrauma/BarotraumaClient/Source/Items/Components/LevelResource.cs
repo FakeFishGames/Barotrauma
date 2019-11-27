@@ -10,6 +10,7 @@ namespace Barotrauma.Items.Components
             if (deattachTimer >= DeattachDuration)
             {
                 holdable.DeattachFromWall();
+                trigger.Enabled = false;
             }
         }
     }

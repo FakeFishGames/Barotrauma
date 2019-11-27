@@ -209,7 +209,7 @@ namespace Barotrauma.Networking
             NetOutgoingMessage outMsg = netClient.CreateMessage();
             outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
             outMsg.Write((byte)ConnectionInitialization.Password);
-            byte[] saltedPw = ServerSettings.SaltPassword(NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
+            byte[] saltedPw = ServerSettings.SaltPassword(Encoding.UTF8.GetBytes(password), passwordSalt);
             outMsg.Write((byte)saltedPw.Length);
             outMsg.Write(saltedPw, 0, saltedPw.Length);
             NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
