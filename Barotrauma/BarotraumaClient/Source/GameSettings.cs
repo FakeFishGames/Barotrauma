@@ -137,12 +137,11 @@ namespace Barotrauma
                         TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
                         new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
                 }
-                else if (contentPackage.Invalid)
+                else if (contentPackage.HasErrors)
                 {
-                    tickBox.Enabled = false;
-                    tickBox.TextColor = Color.Red * 0.6f;
+                    tickBox.TextColor = new Color(255,150,150);
                     tickBox.ToolTip = tickBox.TextBlock.ToolTip =
-                        TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", contentPackage.Name) +
+                        TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", contentPackage.Name) +
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
             }

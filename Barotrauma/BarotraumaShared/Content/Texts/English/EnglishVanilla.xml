@@ -472,7 +472,6 @@
   <wrongfiletype>Wrong file type!</wrongfiletype>
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
   <failed>Failed</failed>
-  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
   <openlinkinbrowserprompt>Do you want to open the link [link] in your web browser?</openlinkinbrowserprompt>
   <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
@@ -4325,5 +4324,8 @@
   <serversettingspasswordretriesbeforeban>Password retries before a ban</serversettingspasswordretriesbeforeban>
 
   <label.hatchoverride>Hatch Override</label.hatchoverride>
+
+  <!-- replaces InvalidContentPackage -->
+  <contentpackagehaserrors>Errors found in content package '[packagename]'; some of its features may not work correctly.</contentpackagehaserrors>
 
 </infotexts>

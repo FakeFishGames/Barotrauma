@@ -193,16 +193,16 @@ namespace Barotrauma
             }
         }
 
-        private bool? invalid;
-        public bool Invalid
+        private bool? hasErrors;
+        public bool HasErrors
         {
             get
             {
-                if (!invalid.HasValue)
+                if (!hasErrors.HasValue)
                 {
-                    invalid = !CheckValidity(out _);
+                    hasErrors = !CheckErrors(out _);
                 }
-                return invalid.Value;
+                return hasErrors.Value;
             }
         }
 
@@ -211,7 +211,7 @@ namespace Barotrauma
         {
             get
             {
-                if (errorMessages == null) { CheckValidity(out _); }
+                if (errorMessages == null) { CheckErrors(out _); }
                 return errorMessages;
             }
         }
@@ -258,7 +258,7 @@ namespace Barotrauma
             return missingContentTypes.Count == 0;
         }
 
-        public bool CheckValidity(out List<string> errorMessages)
+        public bool CheckErrors(out List<string> errorMessages)
         {
             this.errorMessages = errorMessages = new List<string>();
             foreach (ContentFile file in Files)
@@ -306,8 +306,8 @@ namespace Barotrauma
             VerifyFiles(out List<string> missingFileMessages);
 
             errorMessages.AddRange(missingFileMessages);
-            invalid = errorMessages.Count > 0;
-            return !invalid.Value;
+            hasErrors = errorMessages.Count > 0;
+            return !hasErrors.Value;
         }
 
         /// <summary>

@@ -1303,7 +1303,7 @@ namespace Barotrauma
                         createItemFileList.Flash(Color.Red);
                     }
 
-                    if (!itemContentPackage.CheckValidity(out List<string> errorMessages))
+                    if (!itemContentPackage.CheckErrors(out List<string> errorMessages))
                     {
                         new GUIMessageBox(
                             TextManager.GetWithVariable("workshopitempublishfailed", "[itemname]", itemEditor.Title),

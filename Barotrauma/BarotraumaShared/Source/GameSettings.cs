@@ -836,7 +836,7 @@ namespace Barotrauma
         {
             var missingPackagePaths = new List<string>();
             var incompatiblePackages = new List<ContentPackage>();
-            var invalidPackages = new List<ContentPackage>();
+            var packagesWithErrors = new List<ContentPackage>();
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
@@ -853,21 +853,16 @@ namespace Barotrauma
                         Color.Red);
                     incompatiblePackages.Add(matchingContentPackage);
                 }
-                else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
-                {
-                    DebugConsole.NewMessage(
-                        $"Content package \"{matchingContentPackage.Name}\" is invalid: " + string.Join(", ", errorMessages),
-                        Color.Red);
-                    invalidPackages.Add(matchingContentPackage);
-                    //never consider the vanilla content package invalid
-                    //(otherwise a player might brick the game by, for example, deleting vanilla content files)
-                    if (matchingContentPackage == GameMain.VanillaContent)
-                    {
-                        SelectedContentPackages.Add(matchingContentPackage);
-                    }
-                }
                 else
                 {
+                    if (!matchingContentPackage.CheckErrors(out List<string> errorMessages))
+                    {
+                        DebugConsole.NewMessage(
+                        $"Errors found in content package \"{matchingContentPackage.Name}\": " + string.Join(", ", errorMessages),
+                        Color.Red);
+                        packagesWithErrors.Add(matchingContentPackage);
+                    }
+                    //add content packages with errors as they are generally able to load most of their assets
                     SelectedContentPackages.Add(matchingContentPackage);
                 }
             }
@@ -886,7 +881,7 @@ namespace Barotrauma
             EnsureCoreContentPackageSelected();
 
             //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || invalidPackages.Count > 0) { SaveNewPlayerConfig(); }
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || packagesWithErrors.Count > 0) { SaveNewPlayerConfig(); }
 
             //display error messages after all content packages have been loaded
             //to make sure the package that contains text files has been loaded before we attempt to use TextManager
@@ -894,9 +889,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageNotFound", "[packagepath]", missingPackagePath));
             }
-            foreach (ContentPackage invalidPackage in invalidPackages)
+            foreach (ContentPackage invalidPackage in packagesWithErrors)
             {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", invalidPackage.Name), createMessageBox: true);
+                DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", invalidPackage.Name), createMessageBox: true);
             }
             foreach (ContentPackage incompatiblePackage in incompatiblePackages)
             {
