@@ -957,17 +957,7 @@ namespace Barotrauma.Steam
 
                 foreach (ContentFile contentFile in newPackage.Files)
                 {
-                    contentFile.Path = contentFile.Path.Replace('\\', '/');
-
-                    string[] splitPath = contentFile.Path.Split('/');
-                    if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != fileName)
-                    {
-                        string newPath = Path.Combine("Mods", fileName, contentFile.Path);
-                        if (File.Exists(newPath))
-                        {
-                            contentFile.Path = newPath;
-                        }
-                    }
+                    CorrectContentFilePath(contentFile, fileName, true);
                 }
             }
 
@@ -987,6 +977,8 @@ namespace Barotrauma.Steam
                 }
                 GameMain.Config.SelectContentPackage(newPackage);
                 GameMain.Config.SaveNewPlayerConfig();
+
+                GameMain.Config.WarnIfContentPackageSelectionDirty();
             }
             errorMsg = "";
             return true;
@@ -1041,11 +1033,7 @@ namespace Barotrauma.Steam
                     string fileName = contentPackage.Name;
                     fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
-                    string[] splitPath = contentFile.Path.Split('/');
-                    if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != fileName)
-                    {
-                        contentFile.Path = Path.Combine("Mods", fileName, contentFile.Path);
-                    }
+                    CorrectContentFilePath(contentFile, fileName, false);
 
                     //path not allowed -> the content file must be a reference to an external file (such as some vanilla file outside the Mods folder)
                     if (!ContentPackage.IsModFilePathAllowed(contentFile))
@@ -1198,6 +1186,8 @@ namespace Barotrauma.Steam
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
                 ContentPackage.SortContentPackages();
                 GameMain.Config.SaveNewPlayerConfig();
+
+                GameMain.Config.WarnIfContentPackageSelectionDirty();
             }
             catch (Exception e)
             {
@@ -1269,8 +1259,12 @@ namespace Barotrauma.Steam
             }
             if (checkContentFiles)
             {
+                string fileName = contentPackage.Name;
+                fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
+                    CorrectContentFilePath(contentFile, fileName, true);
                     if (!File.Exists(contentFile.Path)) { return false; }
                 }
             }
@@ -1393,6 +1387,21 @@ namespace Barotrauma.Steam
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
             return Path.Combine("Mods", fileName, MetadataFileName);
+        }
+
+        private static void CorrectContentFilePath(ContentFile contentFile, string packageName, bool checkIfFileExists=false)
+        {
+            contentFile.Path = contentFile.Path.Replace('\\', '/');
+
+            string[] splitPath = contentFile.Path.Split('/');
+            if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != packageName)
+            {
+                string newPath = Path.Combine("Mods", packageName, contentFile.Path);
+                if (!checkIfFileExists || File.Exists(newPath))
+                {
+                    contentFile.Path = newPath;
+                }
+            }
         }
 
         #endregion

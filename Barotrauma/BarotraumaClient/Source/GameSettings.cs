@@ -1193,11 +1193,17 @@ namespace Barotrauma
         {
             ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) { GUI.SettingsMenuOpen = false; }
+            WarnIfContentPackageSelectionDirty();
+            return true;
+        }
+
+        public void WarnIfContentPackageSelectionDirty()
+        {
             if (ContentPackageSelectionDirty)
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
+                ContentPackageSelectionDirty = false;
             }
-            return true;
         }
     }
 }

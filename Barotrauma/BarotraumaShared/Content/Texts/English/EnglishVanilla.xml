@@ -4309,7 +4309,6 @@
   <permissionpresetname.none>None</permissionpresetname.none>
   <permissionpresetdescription.none>No special privileges.</permissionpresetdescription.none>
 
-  <restartrequiredcontentpackage>You need to restart the game for the content package changes to take effect.</restartrequiredcontentpackage>
   <serverrestartrequiredcontentpackage>Before hosting a server, you need to restart the game for the content package changes to take effect.</serverrestartrequiredcontentpackage>
 
   <serveroffline>The server seems to be offline.</serveroffline>
@@ -4325,7 +4324,8 @@
 
   <label.hatchoverride>Hatch Override</label.hatchoverride>
 
-  <!-- replaces InvalidContentPackage -->
+  <!-- changed as of Nov 27 -->
   <contentpackagehaserrors>Errors found in content package '[packagename]'; some of its features may not work correctly.</contentpackagehaserrors>
+  <restartrequiredcontentpackage>You need to restart the game for some content package changes to take effect.</restartrequiredcontentpackage>
 
 </infotexts>

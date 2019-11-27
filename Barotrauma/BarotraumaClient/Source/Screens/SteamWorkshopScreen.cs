@@ -462,7 +462,7 @@ namespace Barotrauma
                             ToolTip = TextManager.Get("WorkshopItemEnabled"),
                             UserData = item,
                         };
-                        enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(item);
+                        enabledTickBox.Selected = SteamManager.CheckWorkshopItemEnabled(enabledTickBox.UserData as Facepunch.Steamworks.Workshop.Item);
                         enabledTickBox.OnSelected = ToggleItemEnabled;
                     }
                 }
