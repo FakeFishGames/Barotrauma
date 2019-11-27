@@ -234,6 +234,9 @@ namespace Barotrauma
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
                 bool shouldRefreshSoundPlayer = false;
+                bool shouldRefreshRuinGenerationParams = false;
+                bool shouldRefreshScriptedEventSets = false;
+                bool shouldRefreshMissionPrefabs = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -261,13 +264,13 @@ namespace Barotrauma
                             AfflictionPrefab.LoadFromFile(file.Path);
                             break;
                         case ContentType.RuinConfig:
-                            RuinGeneration.RuinGenerationParams.ClearAll();
+                            shouldRefreshRuinGenerationParams = true;
                             break;
                         case ContentType.RandomEvents:
-                            ScriptedEventSet.LoadPrefabs();
+                            shouldRefreshScriptedEventSets = true;
                             break;
                         case ContentType.Missions:
-                            MissionPrefab.Init();
+                            shouldRefreshMissionPrefabs = true;
                             break;
 #if CLIENT
                         case ContentType.Sounds:
@@ -318,6 +321,21 @@ namespace Barotrauma
                     ItemPrefab.InitFabricationRecipes();
                 }
 
+                if (shouldRefreshRuinGenerationParams)
+                {
+                    RuinGeneration.RuinGenerationParams.ClearAll();
+                }
+
+                if (shouldRefreshScriptedEventSets)
+                {
+                    ScriptedEventSet.LoadPrefabs();
+                }
+
+                if (shouldRefreshMissionPrefabs)
+                {
+                    MissionPrefab.Init();
+                }
+
 #if CLIENT
                 if (shouldRefreshSoundPlayer)
                 {
@@ -338,6 +356,9 @@ namespace Barotrauma
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
                 bool shouldRefreshSoundPlayer = false;
+                bool shouldRefreshRuinGenerationParams = false;
+                bool shouldRefreshScriptedEventSets = false;
+                bool shouldRefreshMissionPrefabs = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -365,13 +386,13 @@ namespace Barotrauma
                             AfflictionPrefab.RemoveByFile(file.Path);
                             break;
                         case ContentType.RuinConfig:
-                            RuinGeneration.RuinGenerationParams.ClearAll();
+                            shouldRefreshRuinGenerationParams = true;
                             break;
                         case ContentType.RandomEvents:
-                            ScriptedEventSet.LoadPrefabs();
+                            shouldRefreshScriptedEventSets = true;
                             break;
                         case ContentType.Missions:
-                            MissionPrefab.Init();
+                            shouldRefreshMissionPrefabs = true;
                             break;
 #if CLIENT
                         case ContentType.Sounds:
@@ -420,6 +441,21 @@ namespace Barotrauma
                 if (shouldRefreshFabricationRecipes)
                 {
                     ItemPrefab.InitFabricationRecipes();
+                }
+
+                if (shouldRefreshRuinGenerationParams)
+                {
+                    RuinGeneration.RuinGenerationParams.ClearAll();
+                }
+
+                if (shouldRefreshScriptedEventSets)
+                {
+                    ScriptedEventSet.LoadPrefabs();
+                }
+
+                if (shouldRefreshMissionPrefabs)
+                {
+                    MissionPrefab.Init();
                 }
 
 #if CLIENT
