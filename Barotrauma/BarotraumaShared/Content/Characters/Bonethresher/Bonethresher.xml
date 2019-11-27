@@ -1,4 +1,4 @@
-﻿<Character speciesname="Bonethresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="thresher">
+﻿<Character speciesname="Bonethresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" group="thresher">
   <ragdolls folder="Content/Characters/Bonethresher/Ragdolls/" />
   <animations folder="Content/Characters/Bonethresher/Animations/" />
   <health vitality="300" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="2" burnreduction="0" healthregeneration="10" constanthealthregeneration="0" healthregenerationwheneating="2" />

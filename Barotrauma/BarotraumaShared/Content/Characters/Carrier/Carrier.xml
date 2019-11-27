@@ -28,6 +28,7 @@
     hearing="1.0">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="100"/>
+    <targetpriority tag="sonar" state="Attack" priority="80" />
     <targetpriority tag="room" state="Attack" priority="50"/>
     <targetpriority tag="stronger" state="Escape" priority="50"/>
   </ai>
