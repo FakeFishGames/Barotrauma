@@ -1,28 +1,17 @@
-﻿using System.Globalization;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class MultiplyComponent : AdderComponent
+    class MultiplyComponent : ArithmeticComponent
     {
         public MultiplyComponent(Item item, XElement element)
             : base(item, element)
         {
-            IsActive = true;
         }
 
-        public override void Update(float deltaTime, Camera cam)
+        protected override float Calculate(float signal1, float signal2)
         {
-            bool sendOutput = true;
-            for (int i = 0; i < timeSinceReceived.Length; i++)
-            {
-                if (timeSinceReceived[i] > timeFrame) sendOutput = false;
-                timeSinceReceived[i] += deltaTime;
-            }
-            if (sendOutput)
-            {
-                item.SendSignal(0, (receivedSignal[0] * receivedSignal[1]).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
-            }
+            return signal1 * signal2;
         }
     }
 }

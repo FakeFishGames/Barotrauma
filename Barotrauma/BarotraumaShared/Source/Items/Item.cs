@@ -32,7 +32,7 @@ namespace Barotrauma
         public ItemPrefab Prefab => prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
-        
+                
         private HashSet<string> tags;
 
         private Hull currentHull;
@@ -53,6 +53,10 @@ namespace Barotrauma
         //components that determine the functionality of the item
         private Dictionary<Type, ItemComponent> componentsByType = new Dictionary<Type, ItemComponent>();
         private List<ItemComponent> components;
+        /// <summary>
+        /// Components that are Active or need to be updated for some other reason (status effects, sounds)
+        /// </summary>
+        private readonly List<ItemComponent> updateableComponents = new List<ItemComponent>();
         private List<IDrawableComponent> drawableComponents;
 
         public PhysicsBody body;
@@ -68,9 +72,10 @@ namespace Barotrauma
         private float condition;
 
         private bool inWater;
-                
+        private readonly bool hasWaterStatusEffects;
+
         private Inventory parentInventory;
-        private Inventory ownInventory;
+        private readonly Inventory ownInventory;
 
         private Rectangle defaultRect;
 
@@ -382,15 +387,18 @@ namespace Barotrauma
                     if (Math.Abs(lastSentCondition - condition) > 1.0f)
                     {
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                     else if (wasInFullCondition != IsFullCondition)
                     {
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                     else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
                     {
                         sendConditionUpdateTimer = 0.0f;
                         conditionUpdatePending = true;
+                        isActive = true;
                     }
                 }
             }
@@ -451,9 +459,10 @@ namespace Barotrauma
         public bool InWater
         {
             get 
-            { 
+            {
                 //if the item has an active physics body, inWater is updated in the Update method
-                if (body != null && body.Enabled) return inWater;
+                if (body != null && body.Enabled) { return inWater; }
+                if (hasWaterStatusEffects) { return inWater; }
 
                 //if not, we'll just have to check
                 return IsInWater();
@@ -689,7 +698,9 @@ namespace Barotrauma
                     }
                 }
             }
-            
+
+            hasWaterStatusEffects = hasStatusEffectsOfType[(int)ActionType.InWater] || hasStatusEffectsOfType[(int)ActionType.NotInWater];
+
             if (body != null)
             {
                 body.Submarine = submarine;
@@ -805,6 +816,38 @@ namespace Barotrauma
         {
             allPropertyObjects.Add(component);
             components.Add(component);
+
+            if (component.IsActive)
+            {
+                updateableComponents.Add(component);
+            }
+
+            component.OnActiveStateChanged += (bool isActive) => 
+            {
+                bool hasSounds = false;
+#if CLIENT
+                hasSounds = component.HasSounds;
+#endif
+                //component doesn't need to be updated if it isn't active, doesn't have a parent that could activate it, 
+                //nor status effects, sounds or conditionals that would need to run
+                if (!isActive && 
+                    !hasSounds &&
+                    component.Parent == null &&
+                    (component.IsActiveConditionals == null || !component.IsActiveConditionals.Any()) &&
+                    (component.statusEffectLists == null || !component.statusEffectLists.Any()))
+                {
+                    if (updateableComponents.Contains(component)) { updateableComponents.Remove(component); }
+                }
+                else
+                {
+                    if (!updateableComponents.Contains(component)) 
+                    { 
+                        updateableComponents.Add(component);
+                        this.isActive = true;
+                    }
+                }
+            };
+
             Type type = component.GetType();
             if (!componentsByType.ContainsKey(type))
             {
@@ -846,7 +889,7 @@ namespace Barotrauma
                 return (T)component;
             }
             
-            return default(T);
+            return default;
         }
 
         public IEnumerable<T> GetComponents<T>()
@@ -865,7 +908,6 @@ namespace Barotrauma
 
             contained.Container = null;            
         }
-
 
         public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
         {
@@ -1083,6 +1125,7 @@ namespace Barotrauma
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, Vector2? worldPosition = null)
         {
             if (!hasStatusEffectsOfType[(int)type]) { return; }
+
             foreach (StatusEffect effect in statusEffectLists[type])
             {
                 ApplyStatusEffect(effect, type, deltaTime, character, limb, useTarget, isNetworkEvent, false, worldPosition);
@@ -1192,10 +1235,9 @@ namespace Barotrauma
 
         private bool IsInWater()
         {
-            if (CurrentHull == null) return true;
+            if (CurrentHull == null) { return true; }
                         
             float surfaceY = CurrentHull.Surface;
-
             return CurrentHull.WaterVolume > 0.0f && Position.Y < surfaceY;
         }
 
@@ -1211,15 +1253,13 @@ namespace Barotrauma
             }
         }
 
+        private bool isActive = true;
+
         public override void Update(float deltaTime, Camera cam)
         {
-            base.Update(deltaTime, cam);
-            if (aiTarget != null)
-            {
-                aiTarget.Update(deltaTime);
-            }
+            if (!isActive) { return; }
 
-            bool broken = condition <= 0.0f;
+            aiTarget?.Update(deltaTime);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
@@ -1227,54 +1267,60 @@ namespace Barotrauma
                 if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
                 {
                     SendPendingNetworkUpdates();
-                }                
-            }            
-            
+                }
+            }
+
             ApplyStatusEffects(ActionType.Always, deltaTime, null);
 
-            foreach (ItemComponent ic in components)
+            for (int i = 0; i < updateableComponents.Count; i++)
             {
-                if (ic.Parent != null) { ic.IsActive = ic.Parent.IsActive; }
+                ItemComponent ic = updateableComponents[i];
+
                 if (ic.IsActiveConditionals != null)
                 {
                     ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
                 }
 #if CLIENT
-                ic.UpdateSounds();
-                if (!ic.WasUsed)
+                if (ic.HasSounds)
                 {
-                    ic.StopSounds(ActionType.OnUse);
-                    ic.StopSounds(ActionType.OnSecondaryUse);
+                    ic.UpdateSounds();
+                    if (!ic.WasUsed)
+                    {
+                        ic.StopSounds(ActionType.OnUse);
+                        ic.StopSounds(ActionType.OnSecondaryUse);
+                    }
                 }
 #endif
                 ic.WasUsed = false;
 
                 ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime);
 
-                if (!ic.IsActive) continue;
-
-                if (broken)
+                if (ic.IsActive)
                 {
-                    ic.UpdateBroken(deltaTime, cam);
-                }
-                else
-                {
-                    ic.Update(deltaTime, cam);
-#if CLIENT
-                    if (ic.IsActive)
+                    if (condition <= 0.0f)
                     {
-                        if (ic.IsActiveTimer > 0.02f)
-                        {
-                            ic.PlaySound(ActionType.OnActive);
-                        }
-                        ic.IsActiveTimer += deltaTime;
+                        ic.UpdateBroken(deltaTime, cam);
                     }
+                    else
+                    {
+                        ic.Update(deltaTime, cam);
+#if CLIENT
+                        if (ic.IsActive)
+                        {
+                            if (ic.IsActiveTimer > 0.02f)
+                            {
+                                ic.PlaySound(ActionType.OnActive);
+                            }
+                            ic.IsActiveTimer += deltaTime;
+                        }
 #endif
+                    }
                 }
             }
 
             if (Removed) { return; }
 
+            bool needsWaterCheck = hasWaterStatusEffects;
             if (body != null && body.Enabled)
             {
                 System.Diagnostics.Debug.Assert(body.FarseerBody.FixtureList != null);
@@ -1288,31 +1334,45 @@ namespace Barotrauma
                         return;
                     }
                 }
-            }
-
-            UpdateNetPosition(deltaTime);
-
-            inWater = IsInWater();
-            bool waterProof = WaterProof;
-            if (inWater)
-            {
-                Item container = this.Container;
-                while (!waterProof && container != null)
+                needsWaterCheck = true;
+                UpdateNetPosition(deltaTime);
+                if (inWater)
                 {
-                    waterProof = container.WaterProof;
-                    container = container.Container;
+                    ApplyWaterForces();
+                    CurrentHull?.ApplyFlowForces(deltaTime, this);
                 }
             }
-            if (!broken)
+
+            if (needsWaterCheck)
             {
-                ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+                inWater = IsInWater();
+                bool waterProof = WaterProof;
+                if (inWater)
+                {
+                    Item container = this.Container;
+                    while (!waterProof && container != null)
+                    {
+                        waterProof = container.WaterProof;
+                        container = container.Container;
+                    }
+                }
+                if (hasWaterStatusEffects && condition <= 0.0f)
+                {
+                    ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+                }
             }
-
-            if (body == null || !body.Enabled || !inWater || ParentInventory != null || Removed) { return; }
-
-            ApplyWaterForces();
-            CurrentHull?.ApplyFlowForces(deltaTime, this);
+            else
+            {
+                if (updateableComponents.Count == 0 && aiTarget == null && !conditionUpdatePending && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
+                {
+#if CLIENT
+                    positionBuffer.Clear();
+#endif
+                    isActive = false;
+                }
+            }
         }
+
                 
         public void UpdateTransform()
         {

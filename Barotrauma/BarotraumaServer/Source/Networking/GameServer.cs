@@ -1400,7 +1400,7 @@ namespace Barotrauma.Networking
                     if (item.PositionUpdateInterval == float.PositiveInfinity) { continue; }
                     float updateInterval = item.GetPositionUpdateInterval(c);
                     c.PositionUpdateLastSent.TryGetValue(item.ID, out float lastSent);
-                    if (lastSent > Lidgren.Network.NetTime.Now - item.PositionUpdateInterval) { continue; }
+                    if (lastSent > Lidgren.Network.NetTime.Now - updateInterval) { continue; }
                     if (!c.PendingPositionUpdates.Contains(item)) c.PendingPositionUpdates.Enqueue(item);
                 }
             }
