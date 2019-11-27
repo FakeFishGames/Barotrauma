@@ -1002,7 +1002,7 @@ namespace Barotrauma
             doc = null;
             if (configFiles.None()) { LoadAllConfigFiles(); }
             if (string.IsNullOrWhiteSpace(file)) { return false; }
-            var cfgEnum = configFiles.Where(cf => cf.Value.Last().FilePath == file);
+            var cfgEnum = configFiles.Where(cf => cf.Value.Last().FilePath.Replace("\\","/") == file.Replace("\\", "/"));
             if (cfgEnum.Any()) { doc = cfgEnum.Last().Value.Last().Document; }
             return doc != null;
         }

@@ -101,15 +101,16 @@ namespace Barotrauma
 
         public IEnumerable<ContentFile> GetFilesToPreload()
         {
-            List<ContentFile> filesToPreload = new List<ContentFile>();
             foreach (List<ScriptedEvent> eventList in selectedEvents.Values)
             {
                 foreach (ScriptedEvent scriptedEvent in eventList)
                 {
-                    filesToPreload.AddRange(scriptedEvent.GetFilesToPreload());
+                    foreach (ContentFile contentFile in scriptedEvent.GetFilesToPreload())
+                    {
+                        yield return contentFile;
+                    }
                 }
             }
-            return filesToPreload;
         }
 
         public void PreloadContent(IEnumerable<ContentFile> contentFiles)
@@ -128,7 +129,20 @@ namespace Barotrauma
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);
                         }
-                        string speciesName = doc.Root.GetAttributeString("speciesname", "");
+                        string speciesName = doc.Root.GetAttributeString("speciesname", null);
+                        if (string.IsNullOrWhiteSpace(speciesName))
+                        {
+                            speciesName = doc.Root.GetAttributeString("name", null);
+                            if (!string.IsNullOrWhiteSpace(speciesName))
+                            {
+                                DebugConsole.NewMessage($"Error in {file.Path}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+                            }
+                            else
+                            {
+                                throw new Exception($"Species name null in {file.Path}");
+                            }
+                        }
+
                         bool humanoid = doc.Root.GetAttributeBool("humanoid", false);
                         RagdollParams ragdollParams;
                         if (humanoid)

@@ -52,6 +52,10 @@ namespace Barotrauma
             : base (prefab)
         {
             speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            if (string.IsNullOrEmpty(speciesName))
+            {
+                throw new Exception("speciesname is null!");
+            }
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
@@ -83,7 +87,15 @@ namespace Barotrauma
         public override IEnumerable<ContentFile> GetFilesToPreload()
         {
             string path = Character.GetConfigFilePath(speciesName);
-            return new List<ContentFile>() { new ContentFile(path, ContentType.Character) };
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                DebugConsole.ThrowError($"Failed to find config file for species \"{speciesName}\"");
+                yield break;
+            }
+            else
+            {
+                yield return new ContentFile(path, ContentType.Character);
+            }
         }
 
         public override bool CanAffectSubImmediately(Level level)
