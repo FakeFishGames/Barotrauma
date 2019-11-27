@@ -144,13 +144,11 @@ namespace Barotrauma
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
             graphics.Clear(Color.Transparent);
-            //Draw resizeable background structures (= background walls) and wall background sprites 
+            //Draw background structures and wall background sprites 
             //(= the background texture that's revealed when a wall is destroyed) into the background render target
             //These will be visible through the LOS effect.
-            //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (s.ResizeVertical || s.ResizeHorizontal) && !s.DrawDamageEffect);
-            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && !(s.ResizeVertical && s.ResizeHorizontal) && s.Prefab.BackgroundSprite != null);
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s);
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -181,10 +179,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.None, null, null, cam.Transform);
             GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
-            //Draw resizeable background structures (= background walls) and wall background sprites 
-            //(= the background texture that's revealed when a wall is destroyed) into the background render target
-            //These will be visible through the LOS effect.
-            //Could be drawn with one Submarine.DrawBack call, but we can avoid sorting by depth by doing it like this.
+
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None);
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
@@ -198,7 +193,7 @@ namespace Barotrauma
             spriteBatch.End();
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
+            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) continue;

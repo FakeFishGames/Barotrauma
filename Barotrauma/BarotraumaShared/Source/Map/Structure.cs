@@ -125,7 +125,7 @@ namespace Barotrauma
         {
             get
             {
-                return Prefab.Body;
+                return Prefab.Body && !IsPlatform;
             }
         }
 
