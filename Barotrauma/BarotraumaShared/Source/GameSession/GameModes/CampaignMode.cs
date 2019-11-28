@@ -23,6 +23,8 @@ namespace Barotrauma
 
         public bool PurchasedHullRepairs, PurchasedLostShuttles, PurchasedItemRepairs;
 
+        public bool InitialSuppliesSpawned;
+
         protected Map map;
         public Map Map
         {

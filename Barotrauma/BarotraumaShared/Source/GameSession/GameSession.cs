@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -184,11 +185,25 @@ namespace Barotrauma
                     Submarine.MainSubs[1].Load(false);
                 }
             }
-            
+
             if (Submarine.IsFileCorrupted)
             {
                 DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
                 return;
+            }
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                if (!(GameMode is CampaignMode campaign) || !campaign.InitialSuppliesSpawned)
+                {
+                    for (int i = 0; i < Submarine.MainSubs.Length; i++)
+                    {
+                        if (Submarine.MainSubs[i] == null) { continue; }
+                        List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
+                        subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.IsOutpost));
+                        AutoItemPlacer.Place(subs);
+                    }
+                }
             }
 
             if (level != null)
@@ -257,9 +272,9 @@ namespace Barotrauma
 
             Entity.Spawner = new EntitySpawner();
 
-            if (GameMode.Mission != null) Mission = GameMode.Mission;
-            if (GameMode != null) GameMode.Start();
-            if (GameMode.Mission != null) Mission.Start(Level.Loaded);
+            if (GameMode.Mission != null) { Mission = GameMode.Mission; }
+            if (GameMode != null) { GameMode.Start(); }
+            if (GameMode.Mission != null) { Mission.Start(Level.Loaded); }
 
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();

@@ -126,6 +126,34 @@ namespace Barotrauma
         }
     }
 
+    class PreferredContainer
+    {
+        public readonly HashSet<string> Identifiers = new HashSet<string>();
+        public float SpawnProbability { get; private set; }
+        public int MinAmount { get; private set; }
+        public int MaxAmount { get; private set; }
+
+        public PreferredContainer(XElement element)
+        {
+            Identifiers = XMLExtensions.GetAttributeStringArray(element, "identifiers", new string[0]).ToHashSet();
+            SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
+            MinAmount = element.GetAttributeInt("minamount", 0);
+            MaxAmount = Math.Max(MinAmount, element.GetAttributeInt("maxamount", 0));
+
+            if (element.Attribute("spawnprobability") == null)
+            {
+                //if spawn probability is not defined but amount is, assume the probability is 1
+                if (MaxAmount > 0) { SpawnProbability = 1.0f; } 
+            }
+            else if (element.Attribute("minamount") == null && element.Attribute("maxamount") == null)
+            {
+                //spawn probability defined but amount isn't, assume amount is 1
+                MinAmount = MaxAmount = 1;
+                SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
+            }
+        }
+    }
+
     partial class ItemPrefab : MapEntityPrefab
     {
         private readonly string configFile;
@@ -336,16 +364,12 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool ShowContentsInTooltip { get; private set; }
 
-        private HashSet<string> preferredContainers = new HashSet<string>();
-        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
-        public string PreferredContainers
+        //Containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.
+        public List<PreferredContainer> PreferredContainers
         {
-            get { return string.Join(",", preferredContainers); }
-            set
-            {
-                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
-            }
-        }
+            get;
+            private set;
+        } = new List<PreferredContainer>();
 
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
@@ -725,6 +749,17 @@ namespace Barotrauma
                     case "fabricableitem":
                         fabricationRecipeElements.Add(subElement);
                         break;
+                    case "preferredcontainer":
+                        var preferredContainer = new PreferredContainer(subElement);
+                        if (preferredContainer.Identifiers.Count == 0)
+                        {
+                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no identifiers or tags ({subElement.ToString()}).");
+                        }
+                        else
+                        {
+                            PreferredContainers.Add(preferredContainer);
+                        }
+                        break;
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10, 10)
                         {
@@ -859,16 +894,19 @@ namespace Barotrauma
 
         public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
         {
-            isPreferencesDefined = preferredContainers.Any();
+            isPreferencesDefined = PreferredContainers.Any();
             if (!isPreferencesDefined) { return true; }
-            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+            return PreferredContainers.Any(preferredContainer =>
+                    preferredContainer.Identifiers.Any(id =>
+                        itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id)));
         }
 
         public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
         {
-            isPreferencesDefined = preferredContainers.Any();
+            isPreferencesDefined = PreferredContainers.Any();
             if (!isPreferencesDefined) { return true; }
-            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
+            return PreferredContainers.Any(preferredContainer =>
+                    identifiersOrTags.Any(id => preferredContainer.Identifiers.Contains(id)));
         }
     }
 }
