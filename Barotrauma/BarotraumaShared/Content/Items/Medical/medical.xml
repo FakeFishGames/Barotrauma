@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <!-- Ingredients / base chemicals **************************************************************************************** -->
-  <Elastin name="" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" scale="0.2" impactsoundtag="impact_soft">
+  <Elastin name="" identifier="elastin" category="Material" Tags="smallitem,chem" cargocontaineridentifier="chemicalcrate" scale="0.2" impactsoundtag="impact_soft">
+      <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -18,7 +19,8 @@
       </StatusEffect>
     </Holdable>
   </Elastin>
-  <Opium name="" identifier="opium" category="Material" Tags="smallitem,chem" preferredcontainers="medcontainer" description="" cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
+  <Opium name="" identifier="opium" category="Material" Tags="smallitem,chem" description="" cargocontaineridentifier="chemicalcrate" scale="0.2" useinhealthinterface="true">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -61,7 +63,8 @@
       </StatusEffect>
     </MeleeWeapon>
   </Opium>
-  <Antibiotics name="" identifier="antibiotics" category="Material" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
+  <Antibiotics name="" identifier="antibiotics" category="Material" Tags="smallitem,chem,medical,syringe" description="" cargocontaineridentifier="chemicalcrate" scale="0.3" useinhealthinterface="true">
+    <PreferredContainer identifiers="medcontainer" minamount="0" maxamount="2"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -110,7 +113,8 @@
       </StatusEffect>
     </Projectile>
   </Antibiotics>
-  <Stabilozine name="" identifier="stabilozine" category="Material" tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" cargocontaineridentifier="chemicalcrate" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Stabilozine name="" identifier="stabilozine" category="Material" tags="smallitem,chem,medical,syringe" cargocontaineridentifier="chemicalcrate" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -154,7 +158,8 @@
       </StatusEffect>
     </Projectile>
   </Stabilozine>
-  <Ethanol name="" identifier="ethanol" category="Material" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Ethanol name="" identifier="ethanol" category="Material" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="1" maxamount="2"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15" />
     <Price locationtype="Military" buyprice="15" />
@@ -176,7 +181,8 @@
       </StatusEffect>
     </Holdable>
   </Ethanol>
-  <Adrenaline name="" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <Adrenaline name="" identifier="adrenaline" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="0" maxamount="2"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -200,7 +206,8 @@
       <!-- TODO: some effect for adrenaline -->
     </Projectile>
   </Adrenaline>
-  <SulphuricAcid name="" identifier="sulphuricacid" category="Material" cargocontaineridentifier="chemicalcrate" preferredcontainers="toxcontainer" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+  <SulphuricAcid name="" identifier="sulphuricacid" category="Material" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" minamount="2" maxamount="3"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
@@ -222,7 +229,9 @@
   </SulphuricAcid>
   
   <!-- meds **************************************************************************************** -->
-  <Bandage name="" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="" scale="0.3" impactsoundtag="impact_soft">
+  <Bandage name="" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="" scale="0.3" impactsoundtag="impact_soft">
+    <PreferredContainer identifiers="medcontainer" minamount="3" maxamount="4"/>
+    <PreferredContainer identifiers="suppliescabinet" minamount="1" maxamount="2"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -265,7 +274,8 @@
     </MeleeWeapon>
   </Bandage>
   
-  <Plastiseal name="" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_soft">
+  <Plastiseal name="" identifier="antibleeding2" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_soft">
+    <PreferredContainer identifiers="medcontainer" minamount="1" maxamount="2"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="30" />
     <Price locationtype="Military" buyprice="40" />
@@ -310,7 +320,8 @@
     </MeleeWeapon>
   </Plastiseal>
   
-  <AntibioticGlue name="" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <AntibioticGlue name="" identifier="antibleeding3" category="Equipment" Tags="smallitem,medical" cargocontaineridentifier="chemicalcrate" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="Research" buyprice="20" />
@@ -357,7 +368,9 @@
     </MeleeWeapon>
   </AntibioticGlue>
   
-  <Morphine name="" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Morphine name="" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="3" maxamount="4"/>
+    <PreferredContainer identifiers="suppliescabinet" minamount="0" maxamount="1"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
@@ -423,7 +436,9 @@
     </Projectile>
   </Morphine>
   
-  <Fentanyl name="" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Fentanyl name="" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
+    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.1"/>
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="130" />
@@ -491,7 +506,9 @@
     </Projectile>
   </Fentanyl>
   
-  <Saline name="" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
+  <Saline name="" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
+    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -528,7 +545,9 @@
     </Holdable>
   </Saline>
   
-  <BloodPack name="" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
+  <BloodPack name="" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
+    <PreferredContainer identifiers="medcontainer" minamount="2" maxamount="3"/>
+    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
@@ -567,7 +586,8 @@
     </Holdable>
   </BloodPack>
   
-  <Deusizine name="" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Deusizine name="" identifier="deusizine" aliases="Auxiliriozine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.05"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="Military" buyprice="200" />
@@ -625,7 +645,8 @@
     </Projectile>
   </Deusizine>
   
-  <Calyxanide name="" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Calyxanide name="" identifier="calyxanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" minamount="0" maxamount="2"/>
     <Price locationtype="Research" buyprice="375" />
     <Price locationtype="Military" buyprice="350" />
     <Price locationtype="City" buyprice="500" />
@@ -693,7 +714,8 @@
     </Projectile>
     
   </Calyxanide>
-  <Haloperidol name="" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_metal_light">
+  <Haloperidol name="" identifier="antipsychosis" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="220" />
     <Price locationtype="Military" buyprice="250" />
@@ -742,7 +764,8 @@
     </Projectile>
   </Haloperidol>
   
-  <Naloxone name="" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_metal_light">
+  <Naloxone name="" identifier="antinarc" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.8"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
@@ -798,7 +821,8 @@
     </Projectile>
   </Naloxone>
   
-  <MorbusineAntidote name="" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <MorbusineAntidote name="" identifier="morbusineantidote" aliases="Morbusanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
@@ -837,7 +861,8 @@
     </Projectile>
   </MorbusineAntidote>
   
-  <CyanideAntidote name="" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <CyanideAntidote name="" identifier="cyanideantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="130" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
@@ -876,7 +901,8 @@
     </Projectile>
   </CyanideAntidote>
   
-  <SufforinAntidote name="" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <SufforinAntidote name="" identifier="sufforinantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
@@ -915,7 +941,8 @@
     </Projectile>
   </SufforinAntidote>
   
-  <DeliriumineAntidote name="" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <DeliriumineAntidote name="" identifier="deliriumineantidote" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="450" />
     <Price locationtype="City" buyprice="450" />
@@ -958,7 +985,8 @@
     </Projectile>
   </DeliriumineAntidote>
   
-  <AntiRad name="" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <AntiRad name="" identifier="antirad" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="225" />
     <Price locationtype="Military" buyprice="250" />
     <Price locationtype="City" buyprice="250" />
@@ -998,7 +1026,9 @@
     </Projectile>
   </AntiRad>
   
-  <LiquidOxygenite name="" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" impacttolerance="8" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <LiquidOxygenite name="" identifier="liquidoxygenite" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" impacttolerance="8" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.05"/>
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.05"/>    
     <SuitableTreatment identifier="internaldamage" suitability="-15" />
     <SuitableTreatment identifier="oxygenlow" suitability="90" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="10">
@@ -1053,7 +1083,8 @@
     </Projectile>
   </LiquidOxygenite>
   
-  <TonicLiquid name="" identifier="tonicliquid" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <TonicLiquid name="" identifier="tonicliquid" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.5"/>
     <SuitableTreatment identifier="internaldamage" suitability="-10" />
     <SuitableTreatment identifier="damage" suitability="-10" />
     <SuitableTreatment identifier="burn" suitability="-10" />
@@ -1087,7 +1118,8 @@
     </MeleeWeapon>
   </TonicLiquid>
   
-  <Methamphetamine name="" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Methamphetamine name="" identifier="meth" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.1"/>
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="50" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
@@ -1138,7 +1170,8 @@
     </Projectile>
   </Methamphetamine>
   
-  <AnabolicSteroids name="" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <AnabolicSteroids name="" identifier="steroids" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.1"/>
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="150" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
@@ -1179,7 +1212,8 @@
     </Projectile>
   </AnabolicSteroids>
   
-  <Hyperzine name="" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="medcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Hyperzine name="" identifier="hyperzine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcontainer" spawnprobability="0.1"/>
     <Price locationtype="Research" buyprice="300" />
     <Price locationtype="Military" buyprice="350" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="25">
@@ -1227,7 +1261,8 @@
   </Hyperzine>
   
   <!-- poisons and harmful chemicals **************************************************************************************** -->
-  <Morbusine name="" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Morbusine name="" identifier="morbusine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.01"/>
     <Price locationtype="Research" buyprice="450" />
     <Price locationtype="Military" buyprice="1000" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1263,7 +1298,8 @@
     </Projectile>
   </Morbusine>
   
-  <ChloralHydrate name="" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <ChloralHydrate name="" identifier="chloralhydrate" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" minamount="0" maxamount="3"/>
     <Price locationtype="Research" buyprice="30" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -1303,7 +1339,8 @@
     </Projectile>
   </ChloralHydrate>
   
-  <Cyanide name="" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Cyanide name="" identifier="cyanide" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.05"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="200" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1339,7 +1376,8 @@
     </Projectile>
   </Cyanide>
   
-  <Radiotoxin name="" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Radiotoxin name="" identifier="radiotoxin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.05"/>
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1375,7 +1413,8 @@
     </Projectile>
   </Radiotoxin>
   
-  <Sufforin name="" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Sufforin name="" identifier="sufforin" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.05"/>
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="500" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
@@ -1411,7 +1450,8 @@
     </Projectile>
   </Sufforin>
   
-  <Deliriumine name="" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" preferredcontainers="toxcontainer" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+  <Deliriumine name="" identifier="deliriumine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.05"/>
     <Price locationtype="Research" buyprice="250" />
     <Price locationtype="Military" buyprice="600" />
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="30">
