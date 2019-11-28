@@ -1,6 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="titanite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="titanium" />
       <Item identifier="titanium" />
@@ -19,6 +21,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="brockite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="phosphorus" />
       <Item identifier="thorium" />
@@ -35,6 +39,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="thorianite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="thorium" />
       <Item identifier="thorium" />
@@ -51,6 +57,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="amblygonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="lithium" />
       <Item identifier="aluminium" />
@@ -68,6 +76,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="sphalerite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="zinc" />
       <Item identifier="zinc" />
@@ -85,6 +95,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="pyromorphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="chlorine" />
       <Item identifier="chlorine" />
@@ -101,6 +113,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="quartz" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="silicon" />
       <Item identifier="silicon" />
@@ -116,6 +130,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="diamond" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="carbon" />
       <Item identifier="carbon" />
@@ -132,6 +148,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="hydroxyapatite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="calcium" />
       <Item identifier="phosphorus" />
@@ -149,6 +167,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="uraniumore" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="uranium" />
       <Item identifier="uranium" />
@@ -166,6 +186,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="ilmenite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="titanium" />
     </Deconstruct>
@@ -181,6 +203,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="stannite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="copper" />
       <Item identifier="iron" />
@@ -198,6 +222,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chalcopyrite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="copper" />
     </Deconstruct>
@@ -213,6 +239,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="esperite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="zinc" />
       <Item identifier="zinc" />
@@ -230,6 +258,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="galena" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="lead" />
       <Item identifier="lead" />
@@ -247,6 +277,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="triphylite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="lithium" />
     </Deconstruct>
@@ -262,6 +294,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="langbeinite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="potassium" />
       <Item identifier="magnesium" />
@@ -279,6 +313,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chamosite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="iron" />
@@ -297,6 +333,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="ironore" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="iron" />
       <Item identifier="iron" />
@@ -315,6 +353,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="polyhalite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="potassium" />
       <Item identifier="calcium" />
@@ -331,6 +371,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="graphite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="carbon" />
       <Item identifier="carbon" />
@@ -347,6 +389,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="sylvite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="sodium" />
       <Item identifier="potassium" />
@@ -364,6 +408,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="lazulite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="phosphorus" />
       <Item identifier="iron" />
@@ -380,6 +426,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="bornite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="copper" />
     </Deconstruct>
@@ -395,6 +443,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="cassiterite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="tin" />
       <Item identifier="tin" />
@@ -412,6 +462,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="cryolite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="sodium" />
       <Item identifier="sodium" />
@@ -428,6 +480,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="aragonite" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="calcium" />
     </Deconstruct>
@@ -443,6 +497,8 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgUsePlasmaCutter" handle1="0,0" pickingtime="5.0" attachable="true" reattachable="false" />
   </Item>
   <Item name="" identifier="chrysoprase" category="Material" Tags="smallitem,ore" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="mineralcontainer" spawnprobability="0.1"/>
     <Deconstruct time="5">
       <Item identifier="silicon" />
     </Deconstruct>
