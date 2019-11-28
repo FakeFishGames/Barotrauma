@@ -10,8 +10,47 @@ namespace Barotrauma
     {
         const int MaxPreviousConversations = 20;
 
-        private static List<NPCConversation> list = new List<NPCConversation>();
-        
+        private class ConversationCollection
+        {
+            public readonly string Identifier;
+
+            public readonly Dictionary<string, List<NPCConversation>> Conversations;
+
+            public ConversationCollection(string identifier)
+            {
+                Identifier = identifier;
+                Conversations = new Dictionary<string, List<NPCConversation>>();
+            }
+
+            public void Add(string language, string filePath, XElement subElement)
+            {
+                if (!Conversations.ContainsKey(language))
+                {
+                    Conversations.Add(language, new List<NPCConversation>());
+                }
+                Conversations[language].Add(new NPCConversation(subElement, filePath));
+            }
+
+            public void RemoveByFile(string filePath)
+            {
+                List<string> keysToRemove = new List<string>();
+                foreach (var kpv in Conversations)
+                {
+                    kpv.Value.RemoveAll(c => c.FilePath == filePath);
+                    if (kpv.Value.Count == 0) { keysToRemove.Add(kpv.Key); }
+                }
+
+                foreach (var key in keysToRemove)
+                {
+                    Conversations.Remove(key);
+                }
+            }
+        }
+
+        private static Dictionary<string, ConversationCollection> allConversations = new Dictionary<string, ConversationCollection>();
+
+        public readonly string FilePath;
+
         public readonly string Line;
 
         public readonly List<JobPrefab> AllowedJobs;
@@ -27,73 +66,68 @@ namespace Barotrauma
         private readonly List<string> allowedSpeakerTags;
         public static void LoadAll(IEnumerable<string> filePaths)
         {
-            //language, identifier, filepath
-            List<Tuple<string, string, string>> contentPackageFiles = new List<Tuple<string, string, string>>();
-            foreach (string filePath in filePaths)
+            foreach (var filePath in filePaths)
             {
                 if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { continue; }
-                string language = doc.Root.GetAttributeString("Language", "English");
-                string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
-                contentPackageFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
-            }
-
-            List<Tuple<string, string, string>> translationFiles = new List<Tuple<string, string, string>>();
-            foreach (string filePath in Directory.GetFiles(Path.Combine("Content", "NPCConversations")))
-            {
-                if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { continue; }
-                string language = doc.Root.GetAttributeString("Language", "English");
-                string identifier = doc.Root.GetAttributeString("Identifier", "unknown");
-                translationFiles.Add(new Tuple<string, string, string>(language, identifier, filePath));
-            }
-
-
-            //get the languages and identifiers of the files
-            for (int i = 0; i < contentPackageFiles.Count; i++)
-            {
-                var contentPackageFile = contentPackageFiles[i];
-                //correct language, all good
-                if (contentPackageFile.Item1 == TextManager.Language) continue;
-
-                //attempt to find a translation file with the correct language and a matching identifier
-                //if it fails, we'll just use the original file with the incorrect language
-                var translation = translationFiles.Find(t => t.Item1 == TextManager.Language && t.Item2 == contentPackageFile.Item2);
-                if (translation != null) contentPackageFiles[i] = translation; //replace with the translation file                
-            }
-
-            foreach (var file in contentPackageFiles)
-            {
-                Load(file.Item3);
+                Load(filePath);
             }
         }
 
-        private static void Load(string file)
+        public static void Load(string file)
         {
             XDocument doc = XMLExtensions.TryLoadXml(file);
             if (doc == null) { return; }
 
             string language = doc.Root.GetAttributeString("Language", "English");
-            if (language != TextManager.Language) return;
+            string identifier = doc.Root.GetAttributeString("identifier", null);
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                DebugConsole.ThrowError($"Conversations file '{file}' has no identifier!");
+                return;
+            }
 
             foreach (XElement subElement in doc.Root.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "conversation":
-                        list.Add(new NPCConversation(subElement));
+                        if (!allConversations.ContainsKey(identifier))
+                        {
+                            allConversations.Add(identifier, new ConversationCollection(identifier));
+                        }
+                        allConversations[identifier].Add(language, file, subElement);
                         break;
                     case "personalitytrait":
-                        new NPCPersonalityTrait(subElement);
+                        new NPCPersonalityTrait(subElement, file);
                         break;
                 }
             }
         }
 
-        public NPCConversation(XElement element)
+        public static void RemoveByFile(string filePath)
         {
+            List<string> keysToRemove = new List<string>();
+            foreach (var kpv in allConversations)
+            {
+                kpv.Value.RemoveByFile(filePath);
+                if (!kpv.Value.Conversations.Any())
+                {
+                    keysToRemove.Add(kpv.Key);
+                }
+            }
+
+            foreach (string key in keysToRemove)
+            {
+                allConversations.Remove(key);
+            }
+
+            NPCPersonalityTrait.List.RemoveAll(npt => npt.FilePath == filePath);
+        }
+
+        public NPCConversation(XElement element, string filePath)
+        {
+            FilePath = filePath;
+
             Line = element.GetAttributeString("line", "");
 
             speakerIndex = element.GetAttributeInt("speaker", 0);
@@ -124,7 +158,7 @@ namespace Barotrauma
             Responses = new List<NPCConversation>();
             foreach (XElement subElement in element.Elements())
             {
-                Responses.Add(new NPCConversation(subElement));
+                Responses.Add(new NPCConversation(subElement, filePath));
             }
         }
 
@@ -167,7 +201,8 @@ namespace Barotrauma
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
             List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
 
-            CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: list);
+            CreateConversation(availableSpeakers, assignedSpeakers, null, lines,
+                availableConversations: allConversations.Values.SelectMany(cc => cc.Conversations.Where(kpv => kpv.Key == TextManager.Language).SelectMany(kpv => kpv.Value)).ToList());
             return lines;
         }
 
@@ -175,7 +210,8 @@ namespace Barotrauma
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
             List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
-            var availableConversations = list.FindAll(conversation => requiredFlags.All(f => conversation.Flags.Contains(f)));
+            var availableConversations = allConversations.Values.SelectMany(cc => cc.Conversations.SelectMany(
+                    kpv => kpv.Value.Where(conversation => kpv.Key == TextManager.Language && requiredFlags.All(f => conversation.Flags.Contains(f))))).ToList();
             if (availableConversations.Count > 0)
             {
                 CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: availableConversations, ignoreFlags: true);
@@ -324,12 +360,18 @@ namespace Barotrauma
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-            for (int i = 0; i < list.Count; i++)
+            foreach (string key in allConversations.Keys)
             {
-                NPCConversation current = list[i];
-                WriteConversation(sb, current, 0);
-                WriteSubConversations(sb, current.Responses, 1);
-                WriteEmptyRow(sb);
+                foreach (string lang in allConversations[key].Conversations.Keys)
+                {
+                    if (lang != TextManager.Language) { continue; }
+                    foreach (var current in allConversations[key].Conversations[lang])
+                    {
+                        WriteConversation(sb, current, 0);
+                        WriteSubConversations(sb, current.Responses, 1);
+                        WriteEmptyRow(sb);
+                    }
+                }
             }
 
             StreamWriter file = new StreamWriter(@"NPCConversations.csv");

@@ -160,6 +160,22 @@ namespace Barotrauma
 
         public static void Init()
         {
+            instance?.ConnectionSprite?.Remove();
+            instance?.BackgroundTileSprites.ForEach(s => s.Remove());
+#if CLIENT
+            instance?.MapCircle?.Remove();
+            instance?.LocationIndicator?.Remove();
+            instance?.DecorativeMapSprite?.Remove();
+            instance?.DecorativeGraphSprite?.Remove();
+            instance?.DecorativeLineTop?.Remove();
+            instance?.DecorativeLineBottom?.Remove();
+            instance?.DecorativeLineCorner?.Remove();
+            instance?.ReticleLarge?.Remove();
+            instance?.ReticleMedium?.Remove();
+            instance?.ReticleSmall?.Remove();
+#endif
+            instance = null;
+
             var files = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.MapGenerationParameters);
             if (!files.Any())
             {

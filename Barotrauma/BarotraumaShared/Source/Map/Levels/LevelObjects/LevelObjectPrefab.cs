@@ -267,6 +267,7 @@ namespace Barotrauma
 
         public static void LoadAll()
         {
+            list.Clear();
             var files = GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs);
             if (files.Count() > 0)
             {

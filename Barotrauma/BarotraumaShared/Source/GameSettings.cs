@@ -237,6 +237,10 @@ namespace Barotrauma
                 bool shouldRefreshRuinGenerationParams = false;
                 bool shouldRefreshScriptedEventSets = false;
                 bool shouldRefreshMissionPrefabs = false;
+                bool shouldRefreshLevelObjectPrefabs = false;
+                bool shouldRefreshLocationTypes = false;
+                bool shouldRefreshMapGenerationParams = false;
+                bool shouldRefreshLevelGenerationParams = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -244,12 +248,18 @@ namespace Barotrauma
                         case ContentType.Character:
                             Character.AddConfigFile(file.Path);
                             break;
+                        case ContentType.NPCConversations:
+                            NPCConversation.Load(file.Path);
+                            break;
                         case ContentType.Jobs:
                             JobPrefab.LoadFromFile(file.Path);
                             break;
                         case ContentType.Item:
                             ItemPrefab.LoadFromFile(file.Path);
                             shouldRefreshFabricationRecipes = true;
+                            break;
+                        case ContentType.ItemAssembly:
+                            new ItemAssemblyPrefab(file.Path);
                             break;
                         case ContentType.Structure:
                             StructurePrefab.LoadFromFile(file.Path);
@@ -272,6 +282,18 @@ namespace Barotrauma
                         case ContentType.Missions:
                             shouldRefreshMissionPrefabs = true;
                             break;
+                        case ContentType.LevelObjectPrefabs:
+                            shouldRefreshLevelObjectPrefabs = true;
+                            break;
+                        case ContentType.LocationTypes:
+                            shouldRefreshLocationTypes = true;
+                            break;
+                        case ContentType.MapGenerationParameters:
+                            shouldRefreshMapGenerationParams = true;
+                            break;
+                        case ContentType.LevelGenerationParameters:
+                            shouldRefreshLevelGenerationParams = true;
+                            break;
 #if CLIENT
                         case ContentType.Sounds:
                             shouldRefreshSoundPlayer = true;
@@ -288,8 +310,10 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
+                        case ContentType.NPCConversations:
                         case ContentType.Jobs:
                         case ContentType.Item:
+                        case ContentType.ItemAssembly:
                         case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
@@ -297,6 +321,10 @@ namespace Barotrauma
                         case ContentType.RuinConfig:
                         case ContentType.RandomEvents:
                         case ContentType.Missions:
+                        case ContentType.LevelObjectPrefabs:
+                        case ContentType.LocationTypes:
+                        case ContentType.MapGenerationParameters:
+                        case ContentType.LevelGenerationParameters:
                         case ContentType.Sounds:
                         case ContentType.Particles:
                         case ContentType.Decals:
@@ -311,36 +339,18 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldRefreshSubs)
-                {
-                    Submarine.RefreshSavedSubs();
-                }
-
-                if (shouldRefreshFabricationRecipes)
-                {
-                    ItemPrefab.InitFabricationRecipes();
-                }
-
-                if (shouldRefreshRuinGenerationParams)
-                {
-                    RuinGeneration.RuinGenerationParams.ClearAll();
-                }
-
-                if (shouldRefreshScriptedEventSets)
-                {
-                    ScriptedEventSet.LoadPrefabs();
-                }
-
-                if (shouldRefreshMissionPrefabs)
-                {
-                    MissionPrefab.Init();
-                }
+                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
 
 #if CLIENT
-                if (shouldRefreshSoundPlayer)
-                {
-                    SoundPlayer.Init();
-                }
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init(); }
 #endif
 
                 ContentPackage.SortContentPackages();
@@ -359,6 +369,10 @@ namespace Barotrauma
                 bool shouldRefreshRuinGenerationParams = false;
                 bool shouldRefreshScriptedEventSets = false;
                 bool shouldRefreshMissionPrefabs = false;
+                bool shouldRefreshLevelObjectPrefabs = false;
+                bool shouldRefreshLocationTypes = false;
+                bool shouldRefreshMapGenerationParams = false;
+                bool shouldRefreshLevelGenerationParams = false;
                 foreach (ContentFile file in contentPackage.Files)
                 {
                     switch (file.Type)
@@ -366,12 +380,18 @@ namespace Barotrauma
                         case ContentType.Character:
                             Character.RemoveConfigFile(file.Path);
                             break;
+                        case ContentType.NPCConversations:
+                            NPCConversation.RemoveByFile(file.Path);
+                            break;
                         case ContentType.Jobs:
                             JobPrefab.RemoveByFile(file.Path);
                             break;
                         case ContentType.Item:
                             ItemPrefab.RemoveByFile(file.Path);
                             shouldRefreshFabricationRecipes = true;
+                            break;
+                        case ContentType.ItemAssembly:
+                            ItemAssemblyPrefab.Remove(file.Path);
                             break;
                         case ContentType.Structure:
                             StructurePrefab.RemoveByFile(file.Path);
@@ -394,6 +414,18 @@ namespace Barotrauma
                         case ContentType.Missions:
                             shouldRefreshMissionPrefabs = true;
                             break;
+                        case ContentType.LevelObjectPrefabs:
+                            shouldRefreshLevelObjectPrefabs = true;
+                            break;
+                        case ContentType.LocationTypes:
+                            shouldRefreshLocationTypes = true;
+                            break;
+                        case ContentType.MapGenerationParameters:
+                            shouldRefreshMapGenerationParams = true;
+                            break;
+                        case ContentType.LevelGenerationParameters:
+                            shouldRefreshLevelGenerationParams = true;
+                            break;
 #if CLIENT
                         case ContentType.Sounds:
                             shouldRefreshSoundPlayer = true;
@@ -410,8 +442,10 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
+                        case ContentType.NPCConversations:
                         case ContentType.Jobs:
                         case ContentType.Item:
+                        case ContentType.ItemAssembly:
                         case ContentType.Structure:
                         case ContentType.Submarine:
                         case ContentType.Text:
@@ -419,6 +453,10 @@ namespace Barotrauma
                         case ContentType.RuinConfig:
                         case ContentType.RandomEvents:
                         case ContentType.Missions:
+                        case ContentType.LevelObjectPrefabs:
+                        case ContentType.LocationTypes:
+                        case ContentType.MapGenerationParameters:
+                        case ContentType.LevelGenerationParameters:
                         case ContentType.Sounds:
                         case ContentType.Particles:
                         case ContentType.Decals:
@@ -433,36 +471,18 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldRefreshSubs)
-                {
-                    Submarine.RefreshSavedSubs();
-                }
-
-                if (shouldRefreshFabricationRecipes)
-                {
-                    ItemPrefab.InitFabricationRecipes();
-                }
-
-                if (shouldRefreshRuinGenerationParams)
-                {
-                    RuinGeneration.RuinGenerationParams.ClearAll();
-                }
-
-                if (shouldRefreshScriptedEventSets)
-                {
-                    ScriptedEventSet.LoadPrefabs();
-                }
-
-                if (shouldRefreshMissionPrefabs)
-                {
-                    MissionPrefab.Init();
-                }
+                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
 
 #if CLIENT
-                if (shouldRefreshSoundPlayer)
-                {
-                    SoundPlayer.Init();
-                }
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init(); }
 #endif
 
                 ContentPackage.SortContentPackages();

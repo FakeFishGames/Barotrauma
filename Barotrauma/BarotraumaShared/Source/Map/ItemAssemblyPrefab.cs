@@ -69,10 +69,9 @@ namespace Barotrauma
 
         public static void Remove(string filePath)
         {
-            var matchingAssembly = List.FirstOrDefault(prefab => 
-                prefab is ItemAssemblyPrefab assemblyPrefab && 
-                assemblyPrefab.configPath == filePath);
-            if (matchingAssembly != null)
+            var matchingAssemblies = Prefabs.SelectMany(prefabList =>
+                prefabList.Value.Where(prefab => prefab is ItemAssemblyPrefab iap && iap.configPath == filePath)).ToList();
+            foreach (var matchingAssembly in matchingAssemblies)
             {
                 RemoveFromList(matchingAssembly);
             }
