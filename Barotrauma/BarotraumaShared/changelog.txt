@@ -1,4 +1,42 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.5.2
+---------------------------------------------------------------------------------------------------------
+
+Networking/multiplayer fixes:
+- Fixed a bug that occasionally caused clients to disconnect with an "entity not found" error in the multiplayer. In technical terms, the issue occurred when the server spawned an entity with a given ID, sent a network event for that entity, and then spawned another entity that took up the ID of the previous entity. This could happen, for example, if in the multiplayer campaign a player happens to get an item with the same ID as an item in the inventory of another player who isn't currently present, and the other player joins the server. There are still most likely additional bugs that can cause similar error messages, so this fix will probably not get rid of the errors entirely.
+- Fixed start button staying disabled in the server lobby when switching from the campaign mode to another game mode.
+- Fixed clients occasionally getting disconnected due to the campaign store. Happened if a location had changed from one type to another (for example, natural formation to outpost), the players had bought something that wasn't originally available from the location and a new client joined.
+- Fixed server having a password even if the password box is left empty in the in-game "host server" menu when hosting with the Linux version.
+- Fixed server name being shortened to one word when hosting from the in-game "host server" menu with the Linux version.
+- Fixed server name length not being restricted when set from serversettings.xml or using console commands.
+- Fixed traitors remaining as traitors client-side after restarting the round, allowing them to access the sabotage interface despite not having a traitor objective.
+- Fixed characters occasionally not selecting/deselecting a periscope client-side, causing them to walk in place or not grab the periscope.
+- Fixed male asian heads not appearing in the server lobby.
+- Fixed campaign servers never being filtered out from the server browser when filtering based on game mode.
+- Fixed clients not displaying the "could not connect" popup if the initial connection to a server times out.
+
+Electricity fixes:
+- Fixed junction boxes not passing signals to relays.
+- Fixed devices not receiving power if they're connected directly to batteries/supercapacitors with no relays or junction boxes in between.
+- Fixed light components that receive power from somewhere else than a power input connection not going out when they lose power (e.g. lights on the diving suits).
+- Fixed pumps and batteries operating/recharging faster when receiving overvoltage, with no upper limit, making it possible to for example operate pumps at 10x the speed by connecting them to a relay that's receiving 10x more power than is being drawn from it.
+- Fixed LightComponents being toggled twice when they receive a signal to the toggle connection.
+
+Misc fixes:
+- Fixed "last used" listbox overlapping with the entity visibility tickboxes in the submarine editor on low resolutions. 
+- Fixed misaligned colliders on the "Shell A Cap 0 deg A/B" wall pieces.
+- Fixed links disappearing between linked subs and docking ports when loading in the sub editor.
+- Fixed lights on devices (junction boxes, nav terminals, reactor) being rendered on top of characters.
+- Fixed lights lagging a little behind moving objects (e.g. diving suit light).
+- Character editor: don't switch to the limb mode when clicking a limb in the joint edit mode. Fixes difficulties in using the joint angle widgets when the widgets are interloping limb source rects.
+- Fixed monsters attacking doors that are open.
+- Monsters keep pursuing the target if the behavior is "pursue" even when they cannot attack.
+- Bots stop operating devices if a player starts operating them (unless they have been ordered to operate the device).
+- Fixed bots playing the rewiring sound when repairing an item with a screwdriver.
+- Fixed bots sometimes stopping behind a closed door when trying to extinguish a fire.
+- Fixed chat messages occasionally extending below the lower bound of the chatbox
+
+---------------------------------------------------------------------------------------------------------
 v0.9.5.1
 ---------------------------------------------------------------------------------------------------------
 
@@ -8,8 +46,7 @@ v0.9.5.1
 - Nerfed Hammerhead Spawns.
 - Fixed occasional disconnections when the Hammerhead Matriarch releases her spawns.
 - Fixed Hammerhead Matriarch exploding twice when it attacks.
-- Fixed bots sometimes getting stuck in an objective loop, causing them to repeatedly drop and pick up
-diving suits or spam doors.
+- Fixed bots sometimes getting stuck in an objective loop, causing them to repeatedly drop and pick up diving suits or spam doors.
 - Fixed bots being allowed to go outside without a diving suit.
 - Fixed characters with a rectangular main collider being unable to use path finding.
 - Fixed microphone volume scrollbar resetting to the maximum value when opening the settings menu.
