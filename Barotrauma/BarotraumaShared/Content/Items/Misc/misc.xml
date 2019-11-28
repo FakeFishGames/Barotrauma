@@ -19,6 +19,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="harmonica" category="Misc" Tags="smallitem" scale="0.5" description="" price="300" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Upgrade gameversion="0.9.2.0" scale="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,256,64,64" origin="0.5,0.5" />
     <Sprite texture="Misc.png" sourcerect="102,16,58,21" depth="0.5" origin="0.5,0.5" />
@@ -29,6 +30,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="accordion" category="Misc" Tags="smallitem" scale="0.5" description="" price="300" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Upgrade gameversion="0.9.2.0" scale="0.5" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="576,956,64,64" origin="0.5,0.5" />
     <Sprite texture="Misc.png" sourcerect="164,5,92,110" depth="0.55" origin="0.5,0.5" />
@@ -38,6 +40,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="captainspipe" category="Misc" Tags="smallitem" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="511,957,64,64" origin="0.5,0.5" />
     <Sprite texture="Misc.png" sourcerect="105,73,50,30" depth="0.55" origin="0.5,0.5" />
     <Body width="58" height="20" />
