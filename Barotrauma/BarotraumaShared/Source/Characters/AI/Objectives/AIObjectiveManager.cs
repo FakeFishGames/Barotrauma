@@ -293,7 +293,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
                     {
                         IsLoop = true,
-                        // Don't override auto pilot unless it's an order by a player
+                        // Don't override unless it's an order by a player
                         Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
                     };
                     break;
@@ -302,7 +302,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
                     {
                         IsLoop = true,
-                        // Don't override auto control unless it's an order by a player
+                        // Don't override unless it's an order by a player
                         Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
                     };
                     break;

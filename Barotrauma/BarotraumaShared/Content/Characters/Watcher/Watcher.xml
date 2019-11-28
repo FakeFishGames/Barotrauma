@@ -25,15 +25,16 @@
   <sound file="Content/Characters/Watcher/watch6.ogg" state="Idle" range="500"/>
 
   <ai
-    attackpriorityhumans="0.0"
-    attackpriorityrooms="0.0"
     combatstrength="1000"
     attackonlywhenprovoked="true"
     sight="1.0"
     hearing="0.0">
-    <targetpriority tag="decoy" state="Attack" priority="600" />
-    <targetpriority tag="human" state="Idle" priority="10"/>
-    <targetpriority tag="light" state="Idle" priority="10"/>
+    <target tag="decoy" state="Attack" priority="600" />
+    <target tag="stronger" state="Escape" priority="15" />
+    <target tag="sonar" state="Attack" priority="10" />
+    <target tag="human" state="Idle" priority="10"/>
+    <target tag="light" state="Idle" priority="10"/>
+    <target tag="room" state="Attack" priority="10" />
   </ai>
 
 </Character>

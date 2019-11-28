@@ -279,7 +279,7 @@ namespace Barotrauma.Items.Components
                     var pc = powerSource.Item.GetComponent<PowerContainer>();
                     if (pc != null)
                     {
-                        float voltage = -pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
+                        float voltage = pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
                         powered.voltage += voltage;
                     }
                 }

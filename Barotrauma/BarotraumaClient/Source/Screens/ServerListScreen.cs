@@ -748,6 +748,12 @@ namespace Barotrauma
 
         public void AddToRecentServers(ServerInfo info)
         {
+            if (!string.IsNullOrEmpty(info.IP))
+            {
+                //don't add localhost to recent servers
+                if (IPAddress.TryParse(info.IP, out IPAddress ip) && IPAddress.IsLoopback(ip)) { return; }
+            }
+
             info.Recent = true;
             ServerInfo existingInfo = recentServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (existingInfo == null)

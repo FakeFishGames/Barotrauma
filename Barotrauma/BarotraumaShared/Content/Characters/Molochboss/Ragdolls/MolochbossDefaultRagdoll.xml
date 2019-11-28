@@ -16,7 +16,7 @@
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="0.5,0 0.5,0 0.5,0 0.5,0 0,0" row2="0.75,0 0.75,0 1,0 0.75,0 0,0" row3="0,0 0.5,0 0.5,0 0.5,0 0.75,0" row4="0.1,0 0.1,0 0.1,0 0.1,0 0.25,0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="2" amplitude="0.2" blendmode="add" row0="0,0 0,0 0,0 0,0 0," row1="0,0 0,0.5 0,0.5 0,0 0,0" row2="0,0 0,0.75 0,1 0,0.75 0,0" row3="0,1 0,1 0,1 0,1 0,1" row4="0,0.5 0,0.25 0,0.75 0,0.25 0,0.5" usemovementsine="true" sineoffset="0.75" />
     </deformablesprite>
-    <damagemodifier isarmor="false" armorsector="75,285" afflictiontypes="bleeding,damage" damagemultiplier="2" damagesound="LimbSlash" deflectprojectiles="false" />
+    <damagemodifier armorsector="75,285" afflictiontypes="bleeding,damage" damagemultiplier="2" damagesound="LimbSlash" deflectprojectiles="false" />
   </limb>
   <limb id="7" name="TentacleArm11" type="LeftArm" width="100" height="300" notes="2bl_TentacleArm11" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="0,663,147,327" origin="0.5,0.5" depth="0.2" subdivisions="5,5">

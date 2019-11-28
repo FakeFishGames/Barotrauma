@@ -37,7 +37,7 @@
 
   <limb id = "5" width="30" height="239">
     <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,0,53,238" size="-1,1" depth="0.05" origin="0.5,0.5"/>
-    <attack cooldown="8" range="150" damagerange="120" duration="0.5" torque="150" structuresoundtype="StructureSlash">
+    <attack cooldown="8" range="150" damagerange="120" duration="0.5" torque="150" structuresoundtype="StructureSlash" severlimbsprobability="0.8">
       <Affliction identifier="internaldamage" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
       <!--<Affliction identifier="stun" strength="0.5"/>-->

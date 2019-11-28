@@ -989,8 +989,8 @@
   <Wall_B name="" identifier="FF_Wall_B" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="513,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_B>
-  <Wall_BP name="" identifier="FF_Wall_BP" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,672,510,256" depth="0.98" premultiplyalpha="false" />
+  <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,673,510,253" depth="0.98" premultiplyalpha="false" />
   </Wall_BP>
   <Wall_BC name="" identifier="bwbc" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
@@ -1013,8 +1013,8 @@
   <Wall_D3 name="" identifier="FF_Wall_D3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,464,687,224" depth="0.98" premultiplyalpha="false" />
   </Wall_D3>
-  <Wall_E name="" identifier="FF_Wall_E" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
-    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="513,672,510,256" depth="0.98" premultiplyalpha="false" />
+  <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+    <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="513,673,510,254" depth="0.98" premultiplyalpha="false" />
   </Wall_E>
   <!--<Wall_F name="" identifier="FF_Wall_F" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
@@ -1174,11 +1174,11 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
+  <shellA name="Shell A Cap 0 deg A" identifier="shellacap0dega" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="89" bodyheight="70" bodyoffset="-6,-4" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="585,1449,99,93" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodyheight="60" noaitarget="true">
+  <shellA name="Shell A Cap 0 deg B" identifier="shellacap0degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="105" bodyheight="73" bodyoffset="-4,-7" noaitarget="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="750,1443,115,103" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>

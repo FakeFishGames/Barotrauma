@@ -1,4 +1,4 @@
-﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="" group="thresher">
+﻿<Character speciesname="Tigerthresher" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" group="thresher">
   <ragdolls folder="Content/Characters/Tigerthresher/Ragdolls/" />
   <animations folder="Content/Characters/Tigerthresher/Animations/" />
   <health vitality="150" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="3" />
