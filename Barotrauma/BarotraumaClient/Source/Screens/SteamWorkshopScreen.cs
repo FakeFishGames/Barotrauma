@@ -1218,17 +1218,19 @@ namespace Barotrauma
                 }
             };
 
-
+            var bottomRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), createItemContent.RectTransform), isHorizontal: true);
             //the item has been already published if it has a non-zero ID -> allow adding a changenote
             if (itemEditor.Id > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemChangenote"))
+                var changeNoteLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), bottomRow.RectTransform));
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), changeNoteLayout.RectTransform), TextManager.Get("WorkshopItemChangenote"))
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
                 };
 
 
-                var changenoteContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), createItemContent.RectTransform));
+                var changenoteContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), changeNoteLayout.RectTransform));
                 var changenoteBox = new GUITextBox(new RectTransform(Vector2.One, changenoteContainer.Content.RectTransform), "", textAlignment: Alignment.TopLeft, wrap: true)
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
@@ -1243,6 +1245,35 @@ namespace Barotrauma
                     return true;
                 };
             }
+            else
+            {
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), bottomRow.RectTransform), style: null);
+            }
+            
+            var visibilityLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomRow.RectTransform));
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), visibilityLayout.RectTransform), TextManager.Get("WorkshopItemVisibility"))
+            {
+                ToolTip = TextManager.Get("WorkshopItemVisibilityTooltip")
+            };
+
+            var visibilityListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), visibilityLayout.RectTransform));
+            foreach (Facepunch.Steamworks.Workshop.Editor.VisibilityType visibilityType in Enum.GetValues(typeof(Facepunch.Steamworks.Workshop.Editor.VisibilityType)))
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), visibilityListBox.Content.RectTransform), TextManager.Get("WorkshopItemVisibility."+visibilityType.ToString()))
+                {
+                    UserData = visibilityType
+                };
+            }
+            visibilityListBox.Select(itemEditor.Visibility);
+            visibilityListBox.OnSelected = (lb, ud) =>
+            {
+                if (!(ud is Facepunch.Steamworks.Workshop.Editor.VisibilityType visibilityType)) { return false; }
+                itemEditor.Visibility = visibilityType;
+
+                return true;
+            };
 
             var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), isHorizontal: true)
             {

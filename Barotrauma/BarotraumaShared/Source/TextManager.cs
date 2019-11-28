@@ -78,6 +78,7 @@ namespace Barotrauma
 
             foreach (string file in textFiles)
             {
+#if !DEBUG
                 try
                 {
                     LoadTextPack(file);
@@ -86,6 +87,9 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
                 }
+#else
+                LoadTextPack(file);
+#endif
             }
 
             if (textPacks.Count == 0)

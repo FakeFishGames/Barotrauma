@@ -787,7 +787,7 @@ namespace Barotrauma.Steam
             }
 
             itemEditor = instance.client.Workshop.EditItem(existingItem.Id);
-            itemEditor.Visibility = Workshop.Editor.VisibilityType.Public;
+            itemEditor.Visibility = existingItem.Visibility;
             itemEditor.Title = existingItem.Title;
             itemEditor.Tags = existingItem.Tags.ToList();
             itemEditor.Description = existingItem.Description;
