@@ -58,30 +58,7 @@ namespace Barotrauma
         /// </summary>
         public bool InStairs => currentPath != null && currentPath.Nodes.Any(n => n.Stairs != null);
 
-        public bool IsNextNodeLadder
-        {
-            get
-            {
-                if (currentPath == null) { return false; }
-                if (currentPath.NextNode == null) { return false; }
-                if (currentPath.NextNode.Ladders != null)
-                {
-                    return true;
-                }
-                else
-                {
-                    // Check if the node after the next node is ladder.
-                    int index = currentPath.CurrentIndex + 2;
-                    if (currentPath.Nodes.Count > index)
-                    {
-                        var node = currentPath.Nodes[index];
-                        if (node == null) { return false; }
-                        return node.Ladders != null;
-                    }
-                    return false;
-                }
-            }
-        }
+        public bool IsNextNodeLadder => GetNextLadder() != null;
 
         public bool IsNextLadderSameAsCurrent
         {
@@ -92,25 +69,8 @@ namespace Barotrauma
                 if (currentPath.NextNode == null) { return false; }
                 var currentLadder = currentPath.CurrentNode.Ladders;
                 if (currentLadder == null) { return false; }
-                var nextLadder = currentPath.NextNode.Ladders;
-                if (nextLadder != null)
-                {
-                    return currentLadder == nextLadder;
-                }
-                else
-                {
-                    // Check if the node after the next node is in the same ladder as the current.
-                    int index = currentPath.CurrentIndex + 2;
-                    if (currentPath.Nodes.Count > index)
-                    {
-                        var node = currentPath.Nodes[index];
-                        if (node == null) { return false; }
-                        nextLadder = node.Ladders;
-                        bool isSame = nextLadder != null && nextLadder == currentLadder;
-                        return isSame;
-                    }
-                    return false;
-                }
+                var nextLadder = GetNextLadder();
+                return nextLadder != null && nextLadder == currentLadder;
             }
         }
 
@@ -146,6 +106,30 @@ namespace Barotrauma
         public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
             steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter);
+        }
+
+        /// <summary>
+        /// Seeks the ladder from the current and the next two nodes.
+        /// </summary>
+        public Ladder GetNextLadder()
+        {
+            if (currentPath == null) { return null; }
+            if (currentPath.NextNode == null) { return null; }
+            if (currentPath.NextNode.Ladders != null)
+            {
+                return currentPath.NextNode.Ladders;
+            }
+            else
+            {
+                int index = currentPath.CurrentIndex + 2;
+                if (currentPath.Nodes.Count > index)
+                {
+                    var node = currentPath.Nodes[index];
+                    if (node == null) { return null; }
+                    return node.Ladders;
+                }
+                return null;
+            }
         }
 
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
@@ -230,7 +214,7 @@ namespace Barotrauma
                     }
                     else if (character.Submarine != currentPath.CurrentNode.Submarine)
                     {
-                        pos -= FarseerPhysics.ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position - character.Submarine.Position);
+                        pos -= ConvertUnits.ToSimUnits(currentPath.CurrentNode.Submarine.Position - character.Submarine.Position);
                     }
                 }
             }
@@ -251,14 +235,13 @@ namespace Barotrauma
             if (character.IsClimbing && !isDiving)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
+                Ladder nextLadder = GetNextLadder();
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
-
                 if (nextLadderSameAsCurrent)
                 {
                     //climbing ladders -> don't move horizontally
                     diff.X = 0.0f;
                 }
-
                 //at the same height as the waypoint
                 if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 1.25f)
                 {
@@ -267,20 +250,29 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
+                    // If the next waypoint is horizontally far, we don't want to keep holding the ladders
+                    if (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50)
+                    {
+                        character.AnimController.Anim = AnimController.Animation.None;
+                        character.SelectedConstruction = null;
+                    }
+                    else if (!nextLadderSameAsCurrent)
+                    {
+                        // Try to change the ladder (hatches between two submarines)
+                        if (character.SelectedConstruction != nextLadder.Item && nextLadder.Item.IsInsideTrigger(character.WorldPosition))
+                        {
+                            nextLadder.Item.TryInteract(character, false, true);
+                        }
+                    }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     float margin = 0.1f;
-                    bool aboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
-                    if (aboveFloor || IsNextNodeLadder)
+                    bool isAboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
+                    if (nextLadder != null || isAboveFloor)
                     {
-                        if (!nextLadderSameAsCurrent || currentPath.NextNode == null && aboveFloor)
-                        {
-                            character.AnimController.Anim = AnimController.Animation.None;
-                            character.SelectedConstruction = null;
-                        }
                         currentPath.SkipToNextNode();
                     }
                 }
-                else if (nextLadderSameAsCurrent)
+                else if (nextLadder != null)
                 {
                     //if the current node is below the character and the next one is above (or vice versa)
                     //and both are on ladders, we can skip directly to the next one
