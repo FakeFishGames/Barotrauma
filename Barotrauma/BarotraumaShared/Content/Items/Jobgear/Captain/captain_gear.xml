@@ -35,13 +35,13 @@
     </Wearable>
   </Item>
   <!-- HATS END -->
-  <!-- UNIFORMS START -->ad
+  <!-- UNIFORMS START -->
   <Item name="" identifier="captainsuniform1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" origin="0.5,0.5" />
+    <InventoryIcon name="Captain's Uniform 1 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="0,136,63,56" origin="0.5,0.5" />
     <Sprite name="Captain's Uniform 1" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,1,184,75" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
@@ -64,7 +64,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" origin="0.5,0.5" />
+    <InventoryIcon name="Captain's Uniform 2 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="65,146,63,46" origin="0.5,0.5" />
     <Sprite name="Captain's Uniform 2" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,1,184,75" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
@@ -87,7 +87,7 @@
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
-    <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,320,64,64" origin="0.5,0.5" />
+    <InventoryIcon name="Captain's Uniform 3 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="129,143,62,49" origin="0.5,0.5" />
     <Sprite name="Captain's Uniform 3" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,1,184,75" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
