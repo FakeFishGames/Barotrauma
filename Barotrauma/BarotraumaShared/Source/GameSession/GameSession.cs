@@ -194,7 +194,8 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (!(GameMode is CampaignMode campaign) || !campaign.InitialSuppliesSpawned)
+                CampaignMode campaign = GameMode as CampaignMode;
+                if (campaign == null || !campaign.InitialSuppliesSpawned)
                 {
                     for (int i = 0; i < Submarine.MainSubs.Length; i++)
                     {
@@ -203,6 +204,7 @@ namespace Barotrauma
                         subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.IsOutpost));
                         AutoItemPlacer.Place(subs);
                     }
+                    if (campaign != null) { campaign.InitialSuppliesSpawned = true; }
                 }
             }
 
