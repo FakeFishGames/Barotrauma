@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="wire" category="Electrical" Tags="smallitem,wire" spritecolor="210,215,218,255" InventoryIconColor="210,215,218,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -16,6 +17,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="redwire" category="Electrical" Tags="smallitem,wire" spritecolor="254,23,17,255" InventoryIconColor="254,23,17,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -35,6 +37,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="bluewire" category="Electrical" Tags="smallitem,wire" spritecolor="51,121,173,255" InventoryIconColor="51,121,173,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -54,6 +57,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="orangewire" category="Electrical" Tags="smallitem,wire" spritecolor="255,140,13,255" InventoryIconColor="255,140,13,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -73,6 +77,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="greenwire" category="Electrical" Tags="smallitem,wire" spritecolor="56,143,111,255" InventoryIconColor="56,143,111,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -92,6 +97,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="blackwire" category="Electrical" Tags="smallitem,wire" spritecolor="50,50,50,255" InventoryIconColor="50,50,50,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -111,6 +117,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="brownwire" category="Electrical" Tags="smallitem,wire" spritecolor="123,77,62,255" InventoryIconColor="123,77,62,255" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.01"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Outpost" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
@@ -130,6 +137,7 @@
     <Wire />
   </Item>
   <Item name="" identifier="fpgacircuit" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="City" buyprice="60" />
     <Price locationtype="Outpost" buyprice="60" />
@@ -148,6 +156,7 @@
     <Holdable slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
   <Item name="" identifier="andcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -177,6 +186,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="equalscomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -205,6 +215,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="greatercomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -233,6 +244,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="addercomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -261,6 +273,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="colorcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -291,6 +304,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="subtractcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -319,6 +333,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="multiplycomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -347,6 +362,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="dividecomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -375,6 +391,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="powcomponent" category="Electrical" Tags="smallitem,logic" linkable="false" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -403,6 +420,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="orcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -432,6 +450,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="xorcomponent" category="Electrical" Tags="smallitem,logic" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -461,6 +480,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="notcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -488,6 +508,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="sincomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -515,6 +536,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="coscomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -542,6 +564,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="tancomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -569,6 +592,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="asincomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -596,6 +620,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="acoscomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -623,6 +648,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="atancomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -652,6 +678,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="roundcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -679,6 +706,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="ceilcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -706,6 +734,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="floorcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -733,6 +762,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="factorialcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -760,6 +790,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="abscomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -787,6 +818,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="squarerootcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -814,6 +846,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="modulocomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -842,6 +875,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="relaycomponent" category="Electrical" Tags="smallitem,signal,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -878,6 +912,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="delaycomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -905,6 +940,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="memorycomponent" category="Electrical" Tags="smallitem,logic" linkable="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -933,6 +969,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="lightcomponent" category="Electrical" Tags="smallitem,lightcomponent" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -964,6 +1001,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="lightcomponent90" nameidentifier="lightcomponent" Aliases="Light Component 90Deg" category="Electrical" Tags="smallitem,lightcomponent" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -995,6 +1033,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="oxygendetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -1022,6 +1061,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="waterdetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -1049,6 +1089,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="smokedetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -1076,6 +1117,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="motiondetector" category="Electrical" Tags="smallitem,sensor" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Upgrade gameversion="0.9.5.0" scale="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
@@ -1103,6 +1145,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="signalcheckcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1132,6 +1175,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="regexcomponent" category="Electrical" Tags="smallitem,logic" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1159,6 +1203,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="oscillator" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1187,6 +1232,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="wificomponent" category="Electrical" Tags="smallitem,signal" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />
@@ -1214,6 +1260,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="emergencysiren" category="Electrical" Tags="smallitem,sound" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -1243,6 +1290,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="alarmbuzzer" category="Electrical" Tags="smallitem,sound" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light" isshootable="true">
+    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="80" />
     <Price locationtype="Outpost" buyprice="80" />

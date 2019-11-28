@@ -171,6 +171,8 @@
     </Repairable>
   </Item>
   <Item name="" identifier="batterycell" category="Equipment,Electrical" tags="smallitem,loadable,mobilebattery" scale="0.3" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="headset,stunbaton,underwaterscooter,handheldsonar,sonarbeacon" spawnprobability="1.0"/>
     <Upgrade gameversion="0.9.2.0" scale="0.3"/>
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="125" />

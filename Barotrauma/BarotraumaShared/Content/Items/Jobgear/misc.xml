@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />
