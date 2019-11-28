@@ -52,8 +52,8 @@ namespace Barotrauma
             }
         }
 
-        public readonly XElement Items;
-        public readonly List<string> ItemNames = new List<string>();
+        public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
+        public readonly Dictionary<int, List<string>> ItemNames = new Dictionary<int, List<string>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
@@ -157,19 +157,21 @@ namespace Barotrauma
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
+
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
             Identifier = Identifier.ToLowerInvariant();
-
             Element = element;
 
+            int variant = 0;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "items":
-                        Items = subElement;
+                        ItemSets.Add(variant, subElement);
                         loadItemNames(subElement);
+                        variant++;
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -189,12 +191,14 @@ namespace Barotrauma
 
             void loadItemNames(XElement parentElement)
             {
+                List<string> itemNames = new List<string>();
+                ItemNames.Add(variant, itemNames);
                 foreach (XElement itemElement in parentElement.Elements())
                 {
                     if (itemElement.Element("name") != null)
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
-                        ItemNames.Add(itemElement.GetAttributeString("name", ""));
+                        itemNames.Add(itemElement.GetAttributeString("name", ""));
                         continue;
                     }
 
@@ -202,7 +206,7 @@ namespace Barotrauma
                     if (string.IsNullOrWhiteSpace(itemIdentifier))
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
-                        ItemNames.Add("");
+                        itemNames.Add("");
                     }
                     else
                     {
@@ -210,11 +214,11 @@ namespace Barotrauma
                         if (prefab == null)
                         {
                             DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \"" + itemIdentifier + "\" not found.");
-                            ItemNames.Add("");
+                            itemNames.Add("");
                         }
                         else
                         {
-                            ItemNames.Add(prefab.Name);
+                            itemNames.Add(prefab.Name);
                         }
                     }
                     loadItemNames(itemElement);
@@ -292,7 +296,6 @@ namespace Barotrauma
 
             return outfitPreviews;
         }
-
 
         public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => List.Values.GetRandom(sync);
 

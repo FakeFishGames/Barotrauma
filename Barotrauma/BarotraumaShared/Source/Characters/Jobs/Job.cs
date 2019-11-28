@@ -28,7 +28,7 @@ namespace Barotrauma
 
         public XElement SpawnItems
         {
-            get { return prefab.Items; }
+            get { return prefab.ItemSets[Variant]; }
         }
         
         public List<Skill> Skills
