@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="" scale="0.5">
-    <Sprite name="Clown Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="100,181,90,73" origin="0.5,0.5" scale="0.5" />
+    <Sprite name="Clown Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="414,318,89,71" origin="0.5,0.5" scale="0.5" />
     <Body width="40" radius="30" density="15" />
     <Deconstruct time="10">
       <Item identifier="bikehorn" />
     </Deconstruct>
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
-      <sprite name="Clown Mask Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="98,180,93,75" origin="0.5299707,0.6146431" />
+      <sprite name="Clown Mask Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" sourcerect="414,318,89,71" origin="0.5,0.6" />
       <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false" />
     </Wearable>
   </Item>
