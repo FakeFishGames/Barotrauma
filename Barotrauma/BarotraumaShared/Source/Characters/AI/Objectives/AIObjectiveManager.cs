@@ -253,7 +253,8 @@ namespace Barotrauma
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,
-                        mimic = true
+                        mimic = true,
+                        DialogueIdentifier = "dialogcannotreachplace"
                     };
                     break;
                 case "wait":

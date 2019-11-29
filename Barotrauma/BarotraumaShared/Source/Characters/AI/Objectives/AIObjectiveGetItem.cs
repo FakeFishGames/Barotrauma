@@ -169,7 +169,9 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer
+                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer,
+                            DialogueIdentifier = "dialogcannotreachtarget",
+                            TargetName = moveToTarget.Name
                         };
                     },
                     onAbandon: () =>

@@ -421,7 +421,7 @@ namespace Barotrauma
             }
             if (character.CurrentHull != retreatTarget)
             {
-                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true), 
+                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true),
                     onAbandon: () => Abandon = true, 
                     onCompleted: () => RemoveSubObjective(ref retreatObjective));
             }
@@ -446,7 +446,9 @@ namespace Barotrauma
             TryAddSubObjective(ref followTargetObjective,
                 constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
-                    IgnoreIfTargetDead = true
+                    IgnoreIfTargetDead = true,
+                    DialogueIdentifier = "dialogcannotreachtarget",
+                    TargetName = Enemy.DisplayName
                 },
                 onAbandon: () =>
                 {

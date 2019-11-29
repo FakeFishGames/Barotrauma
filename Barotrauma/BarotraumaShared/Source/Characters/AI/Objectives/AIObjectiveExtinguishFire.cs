@@ -122,7 +122,11 @@ namespace Barotrauma
                     if (move)
                     {
                         //go to the first firesource
-                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager), 
+                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager)
+                        {
+                            DialogueIdentifier = "dialogcannotreachfire",
+                            TargetName = fs.Hull.DisplayName
+                        }, 
                             onAbandon: () =>  Abandon = true, 
                             onCompleted: () => RemoveSubObjective(ref gotoObjective));
                     }

@@ -116,8 +116,10 @@ namespace Barotrauma
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
                     AllowGoingOutside = objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>(),
-                    CloseEnough = reach
-                }, 
+                    CloseEnough = reach,
+                    DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
+                    TargetName = Leak.FlowTargetHull?.DisplayName
+                },
                 onAbandon: () =>
                 {
                     if (Check()) { IsCompleted = true; }

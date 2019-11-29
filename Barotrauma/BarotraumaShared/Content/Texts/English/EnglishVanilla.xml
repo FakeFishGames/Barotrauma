@@ -4325,5 +4325,12 @@
   <serversettingspasswordretriesbeforeban>Password retries before a ban</serversettingspasswordretriesbeforeban>
 
   <label.hatchoverride>Hatch Override</label.hatchoverride>
+  
+  <!--New character dialog-->
+  <dialogcannotreachtarget>Can't reach [name]!</dialogcannotreachtarget>
+  <dialogcannotreachplace>Can't get there!</dialogcannotreachplace>
+  <dialogcannotreachfire>Can't get to the fire at [name]!</dialogcannotreachfire>
+  <dialogcannotreachleak>Can't get to the leak near [name]!</dialogcannotreachleak>
+  <dialogcannotreachpatient>Can't get to the patient! ([name])</dialogcannotreachpatient>
 
 </infotexts>
