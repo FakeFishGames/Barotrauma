@@ -1199,10 +1199,10 @@ namespace Barotrauma
 
         public void WarnIfContentPackageSelectionDirty()
         {
-            if (ContentPackageSelectionDirty)
+            if (ContentPackageSelectionDirtyNotification)
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
-                ContentPackageSelectionDirty = false;
+                ContentPackageSelectionDirtyNotification = false;
             }
         }
     }

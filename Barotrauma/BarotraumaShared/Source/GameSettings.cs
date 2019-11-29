@@ -219,6 +219,12 @@ namespace Barotrauma
 
         public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
 
+        public bool ContentPackageSelectionDirtyNotification
+        {
+            get;
+            set;
+        }
+
         public bool ContentPackageSelectionDirty
         {
             get;
@@ -335,6 +341,7 @@ namespace Barotrauma
                             break; //do nothing here if the content type is supported
                         default:
                             ContentPackageSelectionDirty = true;
+                            ContentPackageSelectionDirtyNotification = true;
                             break;
                     }
                 }
@@ -467,6 +474,7 @@ namespace Barotrauma
                             break; //do nothing here if the content type is supported
                         default:
                             ContentPackageSelectionDirty = true;
+                            ContentPackageSelectionDirtyNotification = true;
                             break;
                     }
                 }
