@@ -958,7 +958,7 @@ namespace Barotrauma
             float fireFactor = 1;
             if (!ignoreFire)
             {
-                Func<Hull, float> calculateFire = h => h.FireSources.Count * 0.5f + h.FireSources.Sum(fs => fs.DamageRange) / h.Size.X;
+                float calculateFire(Hull h) => h.FireSources.Count * 0.5f + h.FireSources.Sum(fs => fs.DamageRange) / h.Size.X;
                 // Even the smallest fire reduces the safety by 50%
                 float fire = visibleHulls == null ? calculateFire(hull) : visibleHulls.Sum(h => calculateFire(h));
                 fireFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
@@ -966,7 +966,7 @@ namespace Barotrauma
             float enemyFactor = 1;
             if (!ignoreEnemies)
             {
-                Func<Character, bool> isValidTarget = e => IsActive(e) && !IsFriendly(character, e);
+                bool isValidTarget(Character e) => IsActive(e) && !IsFriendly(character, e);
                 int enemyCount = visibleHulls == null ?
                     Character.CharacterList.Count(e => e.CurrentHull == hull && isValidTarget(e)) :
                     Character.CharacterList.Count(e => visibleHulls.Contains(e.CurrentHull) && isValidTarget(e));
