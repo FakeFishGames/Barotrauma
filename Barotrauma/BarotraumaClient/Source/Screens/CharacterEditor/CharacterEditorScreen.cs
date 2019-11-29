@@ -2729,11 +2729,19 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                character.Params.Save();
-                GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
-                character.AnimController.SaveRagdoll();
-                GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
-                AnimParams.ForEach(p => p.Save());
+                if (!string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
+                {
+                    DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");
+                    return false;
+                }
+                else
+                {
+                    character.Params.Save();
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    character.AnimController.SaveRagdoll();
+                    GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    AnimParams.ForEach(p => p.Save());
+                }
                 return true;
             };
             // Spacing
