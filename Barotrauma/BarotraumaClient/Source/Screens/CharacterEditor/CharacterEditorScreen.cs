@@ -99,6 +99,7 @@ namespace Barotrauma.CharacterEditor
         private Rectangle spriteSheetRect;
 
         private Rectangle CalculateSpritesheetRectangle() => 
+            Textures == null || Textures.None() ? Rectangle.Empty :
             new Rectangle(
                 spriteSheetOffsetX, 
                 spriteSheetOffsetY, 
