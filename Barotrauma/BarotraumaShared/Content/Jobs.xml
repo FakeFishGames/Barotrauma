@@ -32,10 +32,6 @@
     <PortraitClothing>
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
-    <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
-    </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
       <Order identifier="steer" option="maintainposition" prioritymodifier="0.5"/>
