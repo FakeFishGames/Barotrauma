@@ -974,7 +974,7 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
                             GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }

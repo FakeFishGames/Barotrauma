@@ -691,7 +691,7 @@ namespace Barotrauma
                     }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
-                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
+                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.PrimaryMouseButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
                     }

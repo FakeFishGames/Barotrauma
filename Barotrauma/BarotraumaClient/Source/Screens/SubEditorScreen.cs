@@ -2376,18 +2376,18 @@ namespace Barotrauma
                 }
             }
 
-            if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
+            if (PlayerInput.PrimaryMouseButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
             {
                 entityFilterBox.Deselect();
             }
 
             if (loadFrame != null)
             {
-                if (PlayerInput.RightButtonClicked()) loadFrame = null;
+                if (PlayerInput.SecondaryMouseButtonClicked()) loadFrame = null;
             }
             else if (saveFrame != null)
             {
-                if (PlayerInput.RightButtonClicked()) saveFrame = null;
+                if (PlayerInput.SecondaryMouseButtonClicked()) saveFrame = null;
             }            
 
             if ((CharacterMode || WiringMode) && dummyCharacter != null)
@@ -2506,7 +2506,7 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
+            if (!PlayerInput.PrimaryMouseButtonHeld()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
         }

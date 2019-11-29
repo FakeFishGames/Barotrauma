@@ -227,13 +227,13 @@ namespace Barotrauma
             if (!enabled) { return; }
             
             Frame.State = GUI.MouseOn == Frame ? ComponentState.Hover : ComponentState.None;
-            if (Frame.State == ComponentState.Hover && PlayerInput.LeftButtonHeld())
+            if (Frame.State == ComponentState.Hover && PlayerInput.PrimaryMouseButtonHeld())
             {
                 Frame.State = ComponentState.Pressed;
             }            
 
             if (IsBooleanSwitch && 
-                (!PlayerInput.LeftButtonHeld() || (GUI.MouseOn != this && !IsParentOf(GUI.MouseOn))))
+                (!PlayerInput.PrimaryMouseButtonHeld() || (GUI.MouseOn != this && !IsParentOf(GUI.MouseOn))))
             {
                 int dir = Math.Sign(barScroll - (minValue + maxValue) / 2.0f);
                 if (dir == 0) dir = 1;
@@ -249,7 +249,7 @@ namespace Barotrauma
                 GUI.ForceMouseOn(this);
                 if (dragStartPos == null) { dragStartPos = PlayerInput.MousePosition; }
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if (IsBooleanSwitch && GUI.MouseOn == Bar && Vector2.Distance(dragStartPos.Value, PlayerInput.MousePosition) < 5)
                     {
@@ -269,7 +269,7 @@ namespace Barotrauma
             }
             else if (GUI.MouseOn == Frame)
             {
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     DraggingBar?.OnReleased?.Invoke(DraggingBar, DraggingBar.BarScroll);
                     if (IsBooleanSwitch)
@@ -290,7 +290,7 @@ namespace Barotrauma
 
         private bool SelectBar()
         {
-            if (!enabled || !PlayerInput.LeftButtonDown()) { return false; }
+            if (!enabled || !PlayerInput.PrimaryMouseButtonDown()) { return false; }
             if (barSize >= 1.0f) { return false; }
 
             DraggingBar = this;

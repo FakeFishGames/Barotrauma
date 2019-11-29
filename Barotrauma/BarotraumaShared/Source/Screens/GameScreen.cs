@@ -202,7 +202,7 @@ namespace Barotrauma
 #endif
 
 #if CLIENT
-            if (!PlayerInput.LeftButtonHeld())
+            if (!PlayerInput.PrimaryMouseButtonHeld())
             {
                 Inventory.draggingSlot = null;
                 Inventory.draggingItem = null;

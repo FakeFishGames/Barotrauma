@@ -1084,7 +1084,7 @@ namespace Barotrauma
         {
             yield return CoroutineStatus.Running;
 
-            while (PlayerInput.LeftButtonHeld() || PlayerInput.LeftButtonClicked())
+            while (PlayerInput.PrimaryMouseButtonHeld() || PlayerInput.PrimaryMouseButtonClicked())
             {
                 //wait for the mouse to be released, so that we don't interpret clicking on the textbox as the keybinding
                 yield return CoroutineStatus.Running;
@@ -1104,31 +1104,31 @@ namespace Barotrauma
 
             if (PlayerInput.LeftButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(0);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.LeftMouse);
             }
             else if (PlayerInput.RightButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(1);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.RightMouse);
             }
             else if (PlayerInput.MidButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(2);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MiddleMouse);
             }
             else if (PlayerInput.Mouse4ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(3);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton4);
             }
             else if (PlayerInput.Mouse5ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(4);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton5);
             }
             else if (PlayerInput.MouseWheelUpClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(5);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelUp);
             }
             else if (PlayerInput.MouseWheelDownClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(6);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelDown);
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {

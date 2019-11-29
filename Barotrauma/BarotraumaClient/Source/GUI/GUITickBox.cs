@@ -176,12 +176,12 @@ namespace Barotrauma
             {
                 box.State = ComponentState.Hover;
 
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     box.State = ComponentState.Selected;                    
                 }
 
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     if (radioButtonGroup == null)
                     {

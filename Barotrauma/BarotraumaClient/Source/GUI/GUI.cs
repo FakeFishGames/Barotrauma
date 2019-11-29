@@ -709,7 +709,7 @@ namespace Barotrauma
                 if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
-                    if ((!PlayerInput.LeftButtonHeld() && !PlayerInput.LeftButtonClicked()) || c == prevMouseOn)
+                    if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
                     {
                         MouseOn = c;
                     }
@@ -957,13 +957,13 @@ namespace Barotrauma
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
-                clicked = PlayerInput.LeftButtonHeld();
+                clicked = PlayerInput.PrimaryMouseButtonHeld();
 
                 color = clicked ?
                     new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) :
                     new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
 
-                if (!isHoldable) clicked = PlayerInput.LeftButtonClicked();
+                if (!isHoldable) clicked = PlayerInput.PrimaryMouseButtonClicked();
             }
 
             DrawRectangle(sb, rect, color, true);

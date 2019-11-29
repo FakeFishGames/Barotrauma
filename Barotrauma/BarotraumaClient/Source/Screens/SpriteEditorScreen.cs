@@ -439,7 +439,7 @@ namespace Barotrauma
                     foreach (Sprite sprite in loadedSprites)
                     {
                         if (sprite.Texture != selectedTexture) continue;
-                        if (PlayerInput.LeftButtonClicked())
+                        if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(zoom), sprite.SourceRect.Size.Multiply(zoom));
                             if (scaledRect.Contains(PlayerInput.MousePosition))
