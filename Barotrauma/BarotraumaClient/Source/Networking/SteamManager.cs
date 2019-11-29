@@ -1115,12 +1115,16 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Disables a workshop item by removing the files from the game folder.
         /// </summary>
-        public static bool DisableWorkShopItem(Workshop.Item item, out string errorMsg)
+        public static bool DisableWorkShopItem(Workshop.Item item, bool noLog, out string errorMsg)
         {
+            errorMsg = null;
             if (!item.Installed)
             {
                 errorMsg = "Cannot disable workshop item \"" + item.Title + "\" because it has not been installed.";
-                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                if (!noLog)
+                {
+                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                }
                 return false;
             }
 
@@ -1192,7 +1196,10 @@ namespace Barotrauma.Steam
             catch (Exception e)
             {
                 errorMsg = "Disabling the workshop item \"" + item.Title + "\" failed. " + e.Message;
-                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                if (!noLog)
+                {
+                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                }
                 return false;
             }
 
@@ -1375,7 +1382,7 @@ namespace Barotrauma.Steam
             errorMsg = "";
             if (!item.Installed) { return false; }
             bool wasSelected = CheckWorkshopItemSelected(item);
-            if (!DisableWorkShopItem(item, out errorMsg)) { return false; }
+            if (!DisableWorkShopItem(item, false, out errorMsg)) { return false; }
             if (!EnableWorkShopItem(item, allowFileOverwrite: false, errorMsg: out errorMsg, selectContentPackage: wasSelected)) { return false; }
 
             return true;

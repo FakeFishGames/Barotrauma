@@ -168,7 +168,7 @@ namespace Barotrauma.RuinGeneration
 
         public static void ClearAll()
         {
-            paramsList.Clear();
+            paramsList?.Clear();
         }
 
         public static void SaveAll()

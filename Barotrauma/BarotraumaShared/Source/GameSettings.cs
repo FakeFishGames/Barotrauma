@@ -231,6 +231,17 @@ namespace Barotrauma
             private set;
         }
 
+        private int ContentFileLoadOrder(ContentFile a)
+        {
+            switch (a.Type)
+            {
+                case ContentType.Text:
+                    return -1;
+                default:
+                    return 0;
+            }
+        }
+
         public void SelectContentPackage(ContentPackage contentPackage)
         {
             if (!SelectedContentPackages.Contains(contentPackage))
@@ -247,7 +258,7 @@ namespace Barotrauma
                 bool shouldRefreshLocationTypes = false;
                 bool shouldRefreshMapGenerationParams = false;
                 bool shouldRefreshLevelGenerationParams = false;
-                foreach (ContentFile file in contentPackage.Files)
+                foreach (ContentFile file in contentPackage.Files.OrderBy(ContentFileLoadOrder))
                 {
                     switch (file.Type)
                     {
@@ -357,7 +368,7 @@ namespace Barotrauma
                 if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
 
 #if CLIENT
-                if (shouldRefreshSoundPlayer) { SoundPlayer.Init(); }
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
 
                 ContentPackage.SortContentPackages();
@@ -380,7 +391,7 @@ namespace Barotrauma
                 bool shouldRefreshLocationTypes = false;
                 bool shouldRefreshMapGenerationParams = false;
                 bool shouldRefreshLevelGenerationParams = false;
-                foreach (ContentFile file in contentPackage.Files)
+                foreach (ContentFile file in contentPackage.Files.OrderBy(ContentFileLoadOrder))
                 {
                     switch (file.Type)
                     {
@@ -479,19 +490,22 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
-                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
-                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
-                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
-                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
-                if (shouldRefreshLocationTypes) { LocationType.Init(); }
-                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
-                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+                if (!contentPackage.CorePackage) //deselecting a core package will lead to errors so don't reload these bits just yet
+                {
+                    if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                    if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                    if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                    if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                    if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                    if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                    if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                    if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                    if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
 
 #if CLIENT
-                if (shouldRefreshSoundPlayer) { SoundPlayer.Init(); }
+                    if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
+                }
 
                 ContentPackage.SortContentPackages();
             }

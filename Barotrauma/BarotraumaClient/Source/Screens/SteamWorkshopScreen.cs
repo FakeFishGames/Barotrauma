@@ -219,7 +219,6 @@ namespace Barotrauma
             itemContentPackage = null;
             itemEditor = null;
 
-            RefreshItemLists();
             SelectTab(Tab.Mods);
         }
 
@@ -238,6 +237,22 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
             }
+
+            if (Screen.Selected == this)
+            {
+                switch (tab)
+                {
+                    case Tab.Mods:
+                        RefreshSubscribedItems();
+                        break;
+                    case Tab.Browse:
+                        RefreshPopularItems();
+                        break;
+                    case Tab.Publish:
+                        RefreshPublishedItems();
+                        break;
+                }
+            }
         }
 
         public void SubscribeToPackages(List<string> packageUrls)
@@ -249,15 +264,23 @@ namespace Barotrauma
             GameMain.SteamWorkshopScreen.Select();
         }
 
-        private void RefreshItemLists()
+        private void RefreshSubscribedItems()
         {
-            SteamManager.GetSubscribedWorkshopItems((items) => 
+            SteamManager.GetSubscribedWorkshopItems((items) =>
             {
                 //filter out the items published by the player (they're shown in the publish tab)
                 var mySteamID = SteamManager.GetSteamID();
                 OnItemsReceived(items.Where(it => it.OwnerId != mySteamID).ToList(), subscribedItemList);
             });
+        }
+
+        private void RefreshPopularItems()
+        {
             SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
+        }
+
+        private void RefreshPublishedItems()
+        {
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
             RefreshMyItemList();
         }
@@ -658,7 +681,11 @@ namespace Barotrauma
         {
             var item = (Facepunch.Steamworks.Workshop.Item)userdata;
             if (!item.Subscribed) { item.Subscribe(); }
-            item.Download(onInstalled: RefreshItemLists);
+            item.Download(onInstalled: () =>
+            {
+                SteamManager.EnableWorkShopItem(item, false, out _);
+                RefreshSubscribedItems();
+            });
 
             var parentElement = btn.Parent;
             parentElement.RemoveChild(btn);
@@ -687,7 +714,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!SteamManager.DisableWorkShopItem(item, out errorMsg))
+                if (!SteamManager.DisableWorkShopItem(item, false, out errorMsg))
                 {
                     tickBox.Enabled = false;
                 }
@@ -837,6 +864,7 @@ namespace Barotrauma
                     UserData = item,
                     OnClicked = (btn, userdata) =>
                     {
+                        SteamManager.DisableWorkShopItem(item, true, out _);
                         item.UnSubscribe();
                         subscribedItemList.RemoveChild(subscribedItemList.Content.GetChildByUserData(item));
                         itemPreviewFrame.ClearChildren();
@@ -1556,7 +1584,6 @@ namespace Barotrauma
             }
 
             createItemFrame.ClearChildren();
-            RefreshItemLists();
             SelectTab(Tab.Browse);
         }
 
