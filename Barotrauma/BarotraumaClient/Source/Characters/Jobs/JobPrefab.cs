@@ -34,7 +34,8 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
+            // TODO: Fix item list in multiplayer lobby
+            /*new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                 TextManager.Get("Items", fallBackTag: "mapentitycategory.equipment"), font: GUI.LargeFont);
             foreach (string itemName in ItemNames.Distinct())
             {
@@ -42,7 +43,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                     "   - " + (count == 1 ? itemName : itemName + " x" + count),
                     font: GUI.SmallFont);
-            }
+            }*/
 
             return backFrame;
         }
