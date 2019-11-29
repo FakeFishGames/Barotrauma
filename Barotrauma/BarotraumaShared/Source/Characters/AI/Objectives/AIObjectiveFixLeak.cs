@@ -115,7 +115,7 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
-                    AllowGoingOutside = objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>(),
+                    AllowGoingOutside = !Leak.IsRoomToRoom && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() && HumanAIController.HasDivingSuit(character, conditionPercentage: 50),
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
                     TargetName = Leak.FlowTargetHull?.DisplayName

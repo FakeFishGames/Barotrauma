@@ -260,7 +260,7 @@ namespace Barotrauma
                 case "wait":
                     newObjective = new AIObjectiveGoTo(character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = true
+                        AllowGoingOutside = character.CurrentHull == null
                     };
                     break;
                 case "fixleaks":
