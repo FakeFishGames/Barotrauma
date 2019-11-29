@@ -657,12 +657,6 @@ namespace Barotrauma.CharacterEditor
             }
             if (!isFrozen)
             {
-                if (character.AnimController.Invalid)
-                {
-                    Reset(new Character[] { character });
-                    SpawnCharacter(currentCharacterConfig);
-                }
-
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
 
