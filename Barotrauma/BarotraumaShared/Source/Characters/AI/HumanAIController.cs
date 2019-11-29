@@ -979,10 +979,12 @@ namespace Barotrauma
 
         public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
 
-        public static bool IsFriendly(Character me, Character other) => 
-            (other.TeamID == me.TeamID || 
-            other.TeamID == Character.TeamType.FriendlyNPC || 
-            me.TeamID == Character.TeamType.FriendlyNPC) && (other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group));
+        public static bool IsFriendly(Character me, Character other)
+        {
+            bool sameSpecies = other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+            bool differentTeam = me.TeamID == Character.TeamType.Team1 && other.TeamID == Character.TeamType.Team2 || me.TeamID == Character.TeamType.Team2 && other.TeamID == Character.TeamType.Team1;
+            return sameSpecies && !differentTeam;
+        }
 
         public static bool IsActive(Character other) => !other.Removed && !other.IsDead && !other.IsUnconscious;
 
