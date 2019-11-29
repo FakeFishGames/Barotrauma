@@ -29,6 +29,32 @@
         <Item identifier="revolverround"/>
       </Item>
     </Items>
+    <Items>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="captainscap2" equip="true"/>
+      <Item identifier="captainsuniform2" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+      <Item identifier="shotgun" equip="false">
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+        <Item identifier="shotgunshell"/>
+      </Item>
+    </Items>
+    <Items>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="captainscap3" equip="true"/>
+      <Item identifier="captainsuniform3" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+      <Item identifier="fraggrenade" equip="false" />
+      <Item identifier="fraggrenade" equip="false" />
+    </Items>
     <PortraitClothing>
       <sprite name="Portrait Clothing Captain" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="2,0"/>
     </PortraitClothing>
