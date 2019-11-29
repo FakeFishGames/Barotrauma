@@ -249,6 +249,10 @@ namespace Barotrauma
             {
                 return wp.CurrentHull;
             }
+            else if (Target is FireSource fs)
+            {
+                return fs.Hull;
+            }
             return null;
         }
 
