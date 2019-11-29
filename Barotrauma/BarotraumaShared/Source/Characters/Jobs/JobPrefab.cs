@@ -58,7 +58,6 @@ namespace Barotrauma
         public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
 
-
         [Serialize("1,1,1,1", false)]
         public Color UIColor
         {
@@ -170,8 +169,9 @@ namespace Barotrauma
                 {
                     case "items":
                         ItemSets.Add(variant, subElement);
-                        loadItemNames(subElement);
-                        variant++;
+                        var itemNames = new List<string>();
+                        loadItemNames(subElement, itemNames);
+                        ItemNames.Add(variant++, itemNames);
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -189,10 +189,8 @@ namespace Barotrauma
                 }
             }
 
-            void loadItemNames(XElement parentElement)
+            void loadItemNames(XElement parentElement, List<string> itemNames)
             {
-                List<string> itemNames = new List<string>();
-                ItemNames.Add(variant, itemNames);
                 foreach (XElement itemElement in parentElement.Elements())
                 {
                     if (itemElement.Element("name") != null)
@@ -221,7 +219,7 @@ namespace Barotrauma
                             itemNames.Add(prefab.Name);
                         }
                     }
-                    loadItemNames(itemElement);
+                    loadItemNames(itemElement, itemNames);
                 }
             }
 
