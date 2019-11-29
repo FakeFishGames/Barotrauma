@@ -151,8 +151,6 @@ namespace Barotrauma
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
 
-        public XElement PreviewElement { get; private set; }
-
         public JobPrefab(XElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
@@ -230,12 +228,6 @@ namespace Barotrauma
             {
                 ClothingElement = element.Element("portraitclothing");
             }
-
-            PreviewElement = element.Element("PreviewSprites");
-            if (PreviewElement == null)
-            {
-                PreviewElement = element.Element("previewsprites");
-            }
         }
         
         public class OutfitPreview
@@ -259,36 +251,34 @@ namespace Barotrauma
         public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 dimensions)
         {
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
-            dimensions = PreviewElement.GetAttributeVector2("dims", Vector2.One);
-            if (PreviewElement == null) { return outfitPreviews; }
+            dimensions = Vector2.One;
              
             var equipIdentifiers = Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            var children = PreviewElement.Elements().ToList();
+            var outfitPrefabs = MapEntityPrefab.List.FindAll(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier));
+            if (!outfitPrefabs.Any()) { return null; }
 
-            var outfitPrefab = MapEntityPrefab.List.Find(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier)) as ItemPrefab;
-            if (outfitPrefab == null) { return null; }
-            var wearables = outfitPrefab.ConfigElement.Elements("Wearable");
-            if (!wearables.Any()) { return null; }
-
-            int variantCount = wearables.First().GetAttributeInt("variants", 1);
-
-            for (int i = 0; i < variantCount; i++)
+            for (int i = 0; i < outfitPrefabs.Count; i++)
             {
                 var outfitPreview = new OutfitPreview();
+
+                // TODO: Perhaps store these
+                var previewElement = (outfitPrefabs[i] as ItemPrefab).ConfigElement.Element("PreviewSprites");
+                if (previewElement == null) { previewElement = (outfitPrefabs[i] as ItemPrefab).ConfigElement.Element("PreviewSprites"); }
+                if (previewElement == null) { continue; }
+
+                dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
+
+                var children = previewElement.Elements().ToList();
                 for (int n = 0; n < children.Count; n++)
                 {
                     XElement spriteElement = children[n];
                     string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
-                    string textureVariant = spriteTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(textureVariant))
-                    {
-                        textureVariant = spriteTexture.Replace("[VARIANT]", "1");
-                    }
-                    var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
-                    torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
-                    outfitPreview.AddSprite(torsoSprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
+                    var sprite = new Sprite(spriteElement, file: spriteTexture);
+                    sprite.size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
+                    outfitPreview.AddSprite(sprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
                 }
+                
                 outfitPreviews.Add(outfitPreview);
             }
 
