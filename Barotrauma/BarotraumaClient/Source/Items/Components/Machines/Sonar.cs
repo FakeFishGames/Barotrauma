@@ -549,16 +549,6 @@ namespace Barotrauma.Items.Components
 
             Vector2 transducerCenter = GetTransducerPos();
 
-            if (item.Submarine != null && !DetectSubmarineWalls)
-            {
-                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
-                transducerCenter += DisplayOffset;
-                DrawOwnSubmarineBorders(spriteBatch, transducerCenter, signalStrength);
-            }
-            else
-            {
-                DisplayOffset = Vector2.Zero;
-            }
 
             if (sonarBlips.Count > 0)
             {
@@ -573,6 +563,17 @@ namespace Barotrauma.Items.Components
 
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend);
+            }
+
+            if (item.Submarine != null && !DetectSubmarineWalls)
+            {
+                DrawDockingPorts(spriteBatch, transducerCenter, signalStrength);
+                transducerCenter += DisplayOffset;
+                DrawOwnSubmarineBorders(spriteBatch, transducerCenter, signalStrength);
+            }
+            else
+            {
+                DisplayOffset = Vector2.Zero;
             }
 
             float directionalPingVisibility = useDirectionalPing && currentMode == Mode.Active ? 1.0f : showDirectionalIndicatorTimer;
@@ -774,6 +775,7 @@ namespace Barotrauma.Items.Components
                 {
                     size.Y = 0.0f;
                 }
+                GUI.DrawLine(spriteBatch, center + offset - size - Vector2.Normalize(size) * zoom, center + offset + size + Vector2.Normalize(size) * zoom, Color.Black * signalStrength * 0.5f, width: (int)(zoom * 5.0f));
                 GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, Color.LightGreen * signalStrength, width: (int)(zoom * 2.5f));
             }
         }
