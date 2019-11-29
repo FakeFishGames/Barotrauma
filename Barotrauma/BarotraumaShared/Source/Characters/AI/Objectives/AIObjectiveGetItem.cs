@@ -27,6 +27,7 @@ namespace Barotrauma
         public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
+        private bool checkInventory;
 
         public bool AllowToFindDivingGear { get; set; } = true;
 
@@ -60,15 +61,12 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-            if (checkInventory)
-            {
-                CheckInventory();
-            }
+            this.checkInventory = checkInventory;
         }
 
-        private void CheckInventory()
+        private bool CheckInventory()
         {
-            if (itemIdentifiers == null) { return; }
+            if (itemIdentifiers == null) { return false; }
             var item = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
             if (item != null)
             {
@@ -76,6 +74,7 @@ namespace Barotrauma
                 rootContainer = item.GetRootContainer();
                 moveToTarget = rootContainer ?? item;
             }
+            return item != null;
         }
 
         protected override void Act(float deltaTime)
@@ -85,11 +84,21 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (!isDoneSeeking)
+            if (itemIdentifiers != null && !isDoneSeeking)
             {
-                FindTargetItem();
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                return;
+                if (checkInventory)
+                {
+                    if (CheckInventory())
+                    {
+                        isDoneSeeking = true;
+                    }
+                }
+                if (!isDoneSeeking)
+                {
+                    FindTargetItem();
+                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                    return;
+                }
             }
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
