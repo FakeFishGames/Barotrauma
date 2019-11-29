@@ -120,6 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
+                targetItem.ParentInventory?.RemoveItem(targetItem);
                 if (equip)
                 {
                     int targetSlot = -1;
@@ -143,6 +144,7 @@ namespace Barotrauma
                     }
                     if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
                     {
+                        targetItem.Equip(character);
                         IsCompleted = true;
                     }
                     else
@@ -155,7 +157,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    targetItem.ParentInventory.RemoveItem(targetItem);
                     if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
                     {
                         IsCompleted = true;
