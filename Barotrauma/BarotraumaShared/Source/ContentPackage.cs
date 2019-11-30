@@ -95,8 +95,6 @@ namespace Barotrauma
             get { return corePackageRequiredFiles; }
         }
         
-        private static FileSystemWatcher fileSystemWatcher;
-
         public string Name { get; set; }
 
         public string Path

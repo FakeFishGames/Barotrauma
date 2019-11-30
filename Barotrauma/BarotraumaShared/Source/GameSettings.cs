@@ -231,6 +231,11 @@ namespace Barotrauma
             private set;
         }
 
+        public bool SuppressModFolderWatcher;
+
+
+        private FileSystemWatcher modsFolderWatcher;
+
         private int ContentFileLoadOrder(ContentFile a)
         {
             switch (a.Type)
@@ -594,6 +599,63 @@ namespace Barotrauma
             }
 
             LoadPlayerConfig();
+
+            modsFolderWatcher = new FileSystemWatcher("Mods");
+            modsFolderWatcher.Filter = "*";
+            modsFolderWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            modsFolderWatcher.Created += OnModFolderUpdate;
+            modsFolderWatcher.Deleted += OnModFolderUpdate;
+            modsFolderWatcher.Renamed += OnModFolderUpdate;
+            modsFolderWatcher.EnableRaisingEvents = true;
+        }
+
+        private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
+        {
+            if (SuppressModFolderWatcher) { return; }
+            switch (e.ChangeType)
+            {
+                case WatcherChangeTypes.Created:
+                    {
+                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        {
+                            var cp = new ContentPackage(cpPath);
+                            ContentPackage.List.Add(cp);
+                        }
+                    }
+                    break;
+                case WatcherChangeTypes.Deleted:
+                    {
+                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        foreach (var cp in toRemove)
+                        {
+                            DeselectContentPackage(cp);
+                            ContentPackage.List.Remove(cp);
+                        }
+                    }
+                    break;
+                case WatcherChangeTypes.Renamed:
+                    {
+                        RenamedEventArgs renameArgs = e as RenamedEventArgs;
+
+                        string cpPath = Path.GetFullPath(Path.Combine(renameArgs.OldFullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        foreach (var cp in toRemove)
+                        {
+                            GameMain.Config.DeselectContentPackage(cp);
+                            ContentPackage.List.Remove(cp);
+                        }
+
+                        cpPath = Path.GetFullPath(Path.Combine(renameArgs.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        {
+                            var cp = new ContentPackage(cpPath);
+                            ContentPackage.List.Add(cp);
+                        }
+                    }
+                    break;
+            }
         }
 
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)

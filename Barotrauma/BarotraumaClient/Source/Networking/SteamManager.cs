@@ -936,6 +936,8 @@ namespace Barotrauma.Steam
                 return false;
             }
 
+            GameMain.Config.SuppressModFolderWatcher = true;
+
             CopyWorkShopItem(item, contentPackage, newContentPackagePath, metaDataFilePath, allowFileOverwrite, out errorMsg);
 
             var newPackage = new ContentPackage(contentPackage.Path, newContentPackagePath)
@@ -968,6 +970,9 @@ namespace Barotrauma.Steam
 
                 GameMain.Config.WarnIfContentPackageSelectionDirty();
             }
+
+            GameMain.Config.SuppressModFolderWatcher = false;
+
             errorMsg = "";
             return true;
         }
@@ -1119,8 +1124,10 @@ namespace Barotrauma.Steam
                 SteamWorkshopUrl = item.Url
             };
 
+            GameMain.Config.SuppressModFolderWatcher = true;
             try
             {
+
                 var toRemove = ContentPackage.List.Where(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl).ToList();
                 var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
                 foreach (var cp in packagesToDeselect)
@@ -1157,6 +1164,7 @@ namespace Barotrauma.Steam
                 }
                 return false;
             }
+            GameMain.Config.SuppressModFolderWatcher = false;
 
             errorMsg = "";
             return true;
