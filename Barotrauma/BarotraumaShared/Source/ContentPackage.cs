@@ -117,7 +117,15 @@ namespace Barotrauma
         {
             get 
             {
-                if (md5Hash == null) CalculateHash();
+                if (md5Hash == null)
+                {
+                    md5Hash = Md5Hash.FetchFromCache(Path);
+                    if (md5Hash == null)
+                    {
+                        CalculateHash();
+                        md5Hash.SaveToCache(Path);
+                    }
+                }
                 return md5Hash; 
             }
         }
@@ -399,9 +407,9 @@ namespace Barotrauma
                 DebugConsole.NewMessage("****************************** Calculating cp hash " + Name);
             }
 
-            foreach (ContentFile file in Files)
+            foreach (ContentFile file in Files.Concat(new ContentFile[] { new ContentFile(Path, ContentType.None) }))
             {
-                if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
+                if (!multiplayerIncompatibleContent.Contains(file.Type) && file.Path != Path) { continue; }
 
                 try
                 {
@@ -463,6 +471,28 @@ namespace Barotrauma
                 foreach (string filePath in filePaths)
                 {
                     if (!File.Exists(filePath)) continue;
+
+                    string modPath = null;
+                    string modPathBS = null;
+                    string modPathWithoutWorkshopId = null;
+
+                    string[] splitPath = filePath.Replace('\\', '/').Split('/');
+                    if (splitPath.Length >= 2 && splitPath[0]=="Mods")
+                    {
+                        splitPath = splitPath.Take(2).ToArray();
+                        modPath = System.IO.Path.Combine(splitPath).Replace('\\','/');
+
+                        modPathBS = modPath.Replace('/', '\\');
+
+                        modPathWithoutWorkshopId = System.IO.Path.Combine("Mods", Name).Replace('\\', '/');
+
+                        if (modPathWithoutWorkshopId.ToLowerInvariant() == modPath.ToLowerInvariant())
+                        {
+                            modPath = null;
+                        }
+
+                    }
+
                     using (var stream = File.OpenRead(filePath))
                     {
                         byte[] fileData = new byte[stream.Length];
@@ -471,6 +501,11 @@ namespace Barotrauma
                         {
                             string text = System.Text.Encoding.UTF8.GetString(fileData);
                             text = text.Replace("\n", "").Replace("\r", "");
+                            if (!string.IsNullOrWhiteSpace(modPath))
+                            {
+                                text = text.Replace(modPath, modPathWithoutWorkshopId);
+                                text = text.Replace(modPathBS, modPathWithoutWorkshopId);
+                            }
                             fileData = System.Text.Encoding.UTF8.GetBytes(text);
                         }
                         data.AddRange(fileData);
