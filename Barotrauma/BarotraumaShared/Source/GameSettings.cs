@@ -247,6 +247,247 @@ namespace Barotrauma
             }
         }
 
+        public void SelectCorePackage(ContentPackage contentPackage)
+        {
+            ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
+
+            SelectedContentPackages.Remove(otherCorePackage);
+            SelectedContentPackages.Add(contentPackage);
+
+            List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 =>
+                !contentPackage.Files.Any(f2 =>
+                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 =>
+                !otherCorePackage.Files.Any(f2 =>
+                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            bool shouldRefreshSubs = false;
+            bool shouldRefreshFabricationRecipes = false;
+            bool shouldRefreshSoundPlayer = false;
+            bool shouldRefreshRuinGenerationParams = false;
+            bool shouldRefreshScriptedEventSets = false;
+            bool shouldRefreshMissionPrefabs = false;
+            bool shouldRefreshLevelObjectPrefabs = false;
+            bool shouldRefreshLocationTypes = false;
+            bool shouldRefreshMapGenerationParams = false;
+            bool shouldRefreshLevelGenerationParams = false;
+
+            foreach (ContentFile file in filesToRemove.OrderBy(ContentFileLoadOrder))
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                        Character.RemoveConfigFile(file.Path);
+                        break;
+                    case ContentType.NPCConversations:
+                        NPCConversation.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Jobs:
+                        JobPrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Item:
+                        ItemPrefab.RemoveByFile(file.Path);
+                        shouldRefreshFabricationRecipes = true;
+                        break;
+                    case ContentType.ItemAssembly:
+                        ItemAssemblyPrefab.Remove(file.Path);
+                        break;
+                    case ContentType.Structure:
+                        StructurePrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Submarine:
+                        shouldRefreshSubs = true;
+                        break;
+                    case ContentType.Text:
+                        TextManager.RemoveTextPack(file.Path);
+                        break;
+                    case ContentType.Afflictions:
+                        AfflictionPrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.RuinConfig:
+                        shouldRefreshRuinGenerationParams = true;
+                        break;
+                    case ContentType.RandomEvents:
+                        shouldRefreshScriptedEventSets = true;
+                        break;
+                    case ContentType.Missions:
+                        shouldRefreshMissionPrefabs = true;
+                        break;
+                    case ContentType.LevelObjectPrefabs:
+                        shouldRefreshLevelObjectPrefabs = true;
+                        break;
+                    case ContentType.LocationTypes:
+                        shouldRefreshLocationTypes = true;
+                        break;
+                    case ContentType.MapGenerationParameters:
+                        shouldRefreshMapGenerationParams = true;
+                        break;
+                    case ContentType.LevelGenerationParameters:
+                        shouldRefreshLevelGenerationParams = true;
+                        break;
+#if CLIENT
+                    case ContentType.Sounds:
+                        shouldRefreshSoundPlayer = true;
+                        break;
+                    case ContentType.Particles:
+                        GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
+                        break;
+                    case ContentType.Decals:
+                        GameMain.DecalManager.RemoveByFile(file.Path);
+                        break;
+#endif
+                }
+
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                    case ContentType.NPCConversations:
+                    case ContentType.Jobs:
+                    case ContentType.Item:
+                    case ContentType.ItemAssembly:
+                    case ContentType.Structure:
+                    case ContentType.Submarine:
+                    case ContentType.Text:
+                    case ContentType.Afflictions:
+                    case ContentType.RuinConfig:
+                    case ContentType.RandomEvents:
+                    case ContentType.Missions:
+                    case ContentType.LevelObjectPrefabs:
+                    case ContentType.LocationTypes:
+                    case ContentType.MapGenerationParameters:
+                    case ContentType.LevelGenerationParameters:
+                    case ContentType.Sounds:
+                    case ContentType.Particles:
+                    case ContentType.Decals:
+                    case ContentType.Outpost:
+                    case ContentType.BackgroundCreaturePrefabs:
+                    case ContentType.ServerExecutable:
+                    case ContentType.None:
+                        break; //do nothing here if the content type is supported
+                    default:
+                        ContentPackageSelectionDirty = true;
+                        ContentPackageSelectionDirtyNotification = true;
+                        break;
+                }
+            }
+
+            foreach (ContentFile file in filesToAdd.OrderBy(ContentFileLoadOrder))
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                        Character.AddConfigFile(file.Path);
+                        break;
+                    case ContentType.NPCConversations:
+                        NPCConversation.Load(file.Path);
+                        break;
+                    case ContentType.Jobs:
+                        JobPrefab.LoadFromFile(file.Path);
+                        break;
+                    case ContentType.Item:
+                        ItemPrefab.LoadFromFile(file.Path);
+                        shouldRefreshFabricationRecipes = true;
+                        break;
+                    case ContentType.ItemAssembly:
+                        new ItemAssemblyPrefab(file.Path);
+                        break;
+                    case ContentType.Structure:
+                        StructurePrefab.LoadFromFile(file.Path);
+                        break;
+                    case ContentType.Submarine:
+                        shouldRefreshSubs = true;
+                        break;
+                    case ContentType.Text:
+                        TextManager.LoadTextPack(file.Path);
+                        break;
+                    case ContentType.Afflictions:
+                        AfflictionPrefab.LoadFromFile(file.Path);
+                        break;
+                    case ContentType.RuinConfig:
+                        shouldRefreshRuinGenerationParams = true;
+                        break;
+                    case ContentType.RandomEvents:
+                        shouldRefreshScriptedEventSets = true;
+                        break;
+                    case ContentType.Missions:
+                        shouldRefreshMissionPrefabs = true;
+                        break;
+                    case ContentType.LevelObjectPrefabs:
+                        shouldRefreshLevelObjectPrefabs = true;
+                        break;
+                    case ContentType.LocationTypes:
+                        shouldRefreshLocationTypes = true;
+                        break;
+                    case ContentType.MapGenerationParameters:
+                        shouldRefreshMapGenerationParams = true;
+                        break;
+                    case ContentType.LevelGenerationParameters:
+                        shouldRefreshLevelGenerationParams = true;
+                        break;
+#if CLIENT
+                    case ContentType.Sounds:
+                        shouldRefreshSoundPlayer = true;
+                        break;
+                    case ContentType.Particles:
+                        GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
+                        break;
+                    case ContentType.Decals:
+                        GameMain.DecalManager.LoadFromFile(file.Path);
+                        break;
+#endif
+                }
+
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                    case ContentType.NPCConversations:
+                    case ContentType.Jobs:
+                    case ContentType.Item:
+                    case ContentType.ItemAssembly:
+                    case ContentType.Structure:
+                    case ContentType.Submarine:
+                    case ContentType.Text:
+                    case ContentType.Afflictions:
+                    case ContentType.RuinConfig:
+                    case ContentType.RandomEvents:
+                    case ContentType.Missions:
+                    case ContentType.LevelObjectPrefabs:
+                    case ContentType.LocationTypes:
+                    case ContentType.MapGenerationParameters:
+                    case ContentType.LevelGenerationParameters:
+                    case ContentType.Sounds:
+                    case ContentType.Particles:
+                    case ContentType.Decals:
+                    case ContentType.Outpost:
+                    case ContentType.BackgroundCreaturePrefabs:
+                    case ContentType.ServerExecutable:
+                    case ContentType.None:
+                        break; //do nothing here if the content type is supported
+                    default:
+                        ContentPackageSelectionDirty = true;
+                        ContentPackageSelectionDirtyNotification = true;
+                        break;
+                }
+            }
+
+            if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+            if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+            if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+            if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+            if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+            if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+            if (shouldRefreshLocationTypes) { LocationType.Init(); }
+            if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+            if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+
+#if CLIENT
+            if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
+#endif
+
+            ContentPackage.SortContentPackages();
+        }
+
         public void SelectContentPackage(ContentPackage contentPackage)
         {
             if (!SelectedContentPackages.Contains(contentPackage))
@@ -495,22 +736,19 @@ namespace Barotrauma
                     }
                 }
 
-                if (!contentPackage.CorePackage) //deselecting a core package will lead to errors so don't reload these bits just yet
-                {
-                    if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
-                    if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
-                    if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-                    if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
-                    if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
-                    if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
-                    if (shouldRefreshLocationTypes) { LocationType.Init(); }
-                    if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
-                    if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
 
 #if CLIENT
-                    if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
-                }
 
                 ContentPackage.SortContentPackages();
             }
