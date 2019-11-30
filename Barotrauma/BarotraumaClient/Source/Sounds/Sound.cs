@@ -2,6 +2,7 @@
 using OpenAL;
 using Microsoft.Xna.Framework;
 using System.IO;
+using System.Xml.Linq;
 
 namespace Barotrauma.Sounds
 {
@@ -20,6 +21,12 @@ namespace Barotrauma.Sounds
         }
 
         public string Filename
+        {
+            get;
+            protected set;
+        }
+
+        public XElement XElement
         {
             get;
             protected set;
@@ -78,12 +85,13 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement=null)
         {
             Owner = owner;
             Filename = Path.GetFullPath(filename);
             Stream = stream;
             StreamsReliably = streamsReliably;
+            XElement = xElement;
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;

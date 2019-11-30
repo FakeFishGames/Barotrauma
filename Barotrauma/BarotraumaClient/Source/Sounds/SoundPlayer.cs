@@ -38,6 +38,8 @@ namespace Barotrauma
         public readonly bool DuckVolume;
 
         public readonly Vector2 IntensityRange;
+
+        public readonly XElement Element;
                 
         public BackgroundMusic(XElement element)
         {
@@ -45,6 +47,7 @@ namespace Barotrauma
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
+            this.Element = element;
         }
     }
 
@@ -105,16 +108,24 @@ namespace Barotrauma
         public static float? OverrideMusicDuration;
 
         public static int SoundCount;
-        
+
+        private static List<XElement> loadedSoundElements;
+
+        private static bool SoundElementsEquivalent(XElement a, XElement b)
+        {
+            string filePathA = a.GetAttributeString("file", "");
+            float baseGainA = a.GetAttributeFloat("volume", 1.0f);
+            float rangeA = a.GetAttributeFloat("range", 1000.0f);
+            string filePathB = b.GetAttributeString("file", "");
+            float baseGainB = b.GetAttributeFloat("volume", 1.0f);
+            float rangeB = b.GetAttributeFloat("range", 1000.0f);
+            return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&
+                   filePathA == filePathB && MathUtils.NearlyEqual(baseGainA, baseGainB) &&
+                   MathUtils.NearlyEqual(rangeA, rangeB);
+        }
+
         public static IEnumerable<object> Init()
         {
-            musicClips?.Clear();
-            SplashSounds?.ForEach(s => s.Dispose()); SplashSounds?.Clear();
-            FlowSounds?.ForEach(s => s.Dispose()); FlowSounds?.Clear();
-            waterAmbiences?.ForEach(s => s.Dispose()); waterAmbiences?.Clear();
-            damageSounds?.ForEach(s => s.sound.Dispose()); damageSounds?.Clear();
-            miscSounds?.ForEach(g => g.ForEach(s => s.Dispose())); miscSounds = null;
-
             OverrideMusicType = null;
 
             var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);
@@ -146,12 +157,17 @@ namespace Barotrauma
             yield return CoroutineStatus.Running;
                                     
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
-            damageSounds = new List<DamageSound>();
-            musicClips = new List<BackgroundMusic>();
+            damageSounds = damageSounds ?? new List<DamageSound>();
+            musicClips = musicClips ?? new List<BackgroundMusic>();
             
             foreach (XElement soundElement in soundElements)
             {
                 yield return CoroutineStatus.Running;
+
+                if (loadedSoundElements != null && loadedSoundElements.Any(e => SoundElementsEquivalent(e, soundElement)))
+                {
+                    continue;
+                }
 
                 try
                 {
@@ -196,6 +212,39 @@ namespace Barotrauma
                 }                
             }
 
+            musicClips.RemoveAll(mc => !soundElements.Any(e => SoundElementsEquivalent(mc.Element, e)));
+
+            SplashSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            SplashSounds.RemoveAll(s => s.Disposed);
+
+            FlowSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            FlowSounds.RemoveAll(s => s.Disposed);
+
+            waterAmbiences.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            waterAmbiences.RemoveAll(s => s.Disposed);
+
+            damageSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.sound.XElement, e))) { s.sound.Dispose(); }
+            });
+            damageSounds.RemoveAll(s => s.sound.Disposed);
+
+            miscSounds?.ForEach(g => g.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+                else { miscSoundList.Add(new KeyValuePair<string, Sound>(g.Key, s)); }
+            }));
+
+
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
             flowVolumeLeft = new float[FlowSounds.Count];
             flowVolumeRight = new float[FlowSounds.Count];
@@ -207,6 +256,8 @@ namespace Barotrauma
             miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
 
             Initialized = true;
+
+            loadedSoundElements = soundElements;
 
             yield return CoroutineStatus.Success;
 
@@ -585,7 +636,7 @@ namespace Barotrauma
             for (int i = 0; i < MaxMusicChannels; i++)
             {
                 //nothing should be playing on this channel
-                if (targetMusic[i] == null)
+                if (targetMusic[i] == null || !musicClips.Any(mc => mc.File == targetMusic[i].File))
                 {
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
