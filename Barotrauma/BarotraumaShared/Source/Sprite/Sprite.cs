@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
 using System.IO;
+using System;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
@@ -13,10 +14,19 @@ namespace Barotrauma
     {
         public static IEnumerable<Sprite> LoadedSprites
         {
-            get { return list; }
+            get
+            {
+                foreach (var s in list)
+                {
+                    if (s.TryGetTarget(out Sprite spr))
+                    {
+                        yield return spr;
+                    }
+                }
+            }
         }
 
-        private static HashSet<Sprite> list = new HashSet<Sprite>();
+        private static List<WeakReference<Sprite>> list = new List<WeakReference<Sprite>>();
 
         /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
@@ -108,7 +118,7 @@ namespace Barotrauma
         {
             lock (list)
             {
-                list.Add(elem);
+                list.Add(new WeakReference<Sprite>(elem));
             }
         }
 
@@ -209,10 +219,15 @@ namespace Barotrauma
         {
             lock (list)
             {
-                list.Remove(this);
+                list.RemoveAll(wRef => wRef.TryGetTarget(out Sprite s) && s==this);
             }
 
             DisposeTexture();
+        }
+
+        ~Sprite()
+        {
+            Remove();
         }
 
         partial void DisposeTexture();

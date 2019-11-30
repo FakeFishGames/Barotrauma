@@ -37,7 +37,7 @@ namespace Barotrauma
 
             rotation = newRotation;
 
-            list.Add(this);
+            list.Add(new WeakReference<Sprite>(this));
         }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
@@ -70,7 +70,7 @@ namespace Barotrauma
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             }
-            foreach (Sprite s in list)
+            foreach (Sprite s in LoadedSprites)
             {
                 if (s == this) { continue; }
                 if (s.FullPath == FullPath && s.texture != null) { s.texture = texture; }
@@ -110,7 +110,7 @@ namespace Barotrauma
                 return t;
             }
             file = Path.GetFullPath(file);
-            foreach (Sprite s in list)
+            foreach (Sprite s in LoadedSprites)
             {
                 if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) { return s.texture; }
             }
@@ -318,7 +318,7 @@ namespace Barotrauma
             {
                 lock (list)
                 {
-                    foreach (Sprite s in list)
+                    foreach (Sprite s in LoadedSprites)
                     {
                         if (s.FullPath == FullPath) return;
                     }
