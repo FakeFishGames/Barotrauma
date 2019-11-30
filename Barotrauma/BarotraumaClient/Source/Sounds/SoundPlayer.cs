@@ -174,7 +174,15 @@ namespace Barotrauma
                     switch (soundElement.Name.ToString().ToLowerInvariant())
                     {
                         case "music":
-                            musicClips.AddIfNotNull(new BackgroundMusic(soundElement));
+                            var newMusicClip = new BackgroundMusic(soundElement);
+                            musicClips.AddIfNotNull(newMusicClip);
+                            if (loadedSoundElements != null)
+                            {
+                                if (newMusicClip.Type.ToLowerInvariant() == "menu")
+                                {
+                                    targetMusic[0] = newMusicClip;
+                                }
+                            }
                             break;
                         case "splash":
                             SplashSounds.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
@@ -636,7 +644,7 @@ namespace Barotrauma
             for (int i = 0; i < MaxMusicChannels; i++)
             {
                 //nothing should be playing on this channel
-                if (targetMusic[i] == null || !musicClips.Any(mc => mc.File == targetMusic[i].File))
+                if (targetMusic[i] == null)
                 {
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
@@ -644,6 +652,11 @@ namespace Barotrauma
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
                         if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
                     }
+                }
+                //something should be playing, but the targetMusic is invalid
+                else if (!musicClips.Any(mc => mc.File == targetMusic[i].File))
+                {
+                    targetMusic[i] = GetSuitableMusicClips(targetMusic[i].Type, 0.0f).GetRandom();
                 }
                 //something should be playing, but the channel is playing nothing or an incorrect clip
                 else if (currentMusic[i] == null || targetMusic[i].File != currentMusic[i].Filename)
