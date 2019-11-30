@@ -84,7 +84,7 @@ namespace Barotrauma
         {
             if (!ContainsKey(prefab.Identifier)) { return; }
             if (!prefabs[prefab.Identifier].Contains(prefab)) { return; }
-            if (prefabs[prefab.Identifier].IndexOf(prefab)==0 && prefabs[prefab.Identifier].Count > 1)
+            if (prefabs[prefab.Identifier].IndexOf(prefab)==0)
             {
                 prefabs[prefab.Identifier][0] = null;
             }
@@ -94,7 +94,8 @@ namespace Barotrauma
             }
             prefab.Dispose();
 
-            if (prefabs[prefab.Identifier].Count <= 0)
+            if (prefabs[prefab.Identifier].Count <= 0 ||
+                (prefabs[prefab.Identifier].Count == 1 && prefabs[prefab.Identifier][0] == null))
             {
                 prefabs.Remove(prefab.Identifier);
             }
