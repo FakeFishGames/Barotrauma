@@ -128,8 +128,19 @@ namespace Barotrauma
 
     partial class ItemPrefab : MapEntityPrefab
     {
-        public readonly string ConfigFile;
-        
+        private string name;
+        public override string Name { get { return name; } }
+
+        public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
         //default size
         protected Vector2 size;                
 
@@ -146,11 +157,6 @@ namespace Barotrauma
         public List<Rectangle> Triggers;
 
         private List<XElement> fabricationRecipeElements = new List<XElement>();
-
-        /// <summary>
-        /// Original, non-translated name as defined in the xml
-        /// </summary>
-        public readonly string OriginalName;
 
         /// <summary>
         /// Is this prefab overriding a prefab in another content package
@@ -436,11 +442,7 @@ namespace Barotrauma
 
         public static void RemoveByFile(string filePath)
         {
-            var prefabs = ItemPrefab.List.Where(p => p is ItemPrefab ip && ip.ConfigFile == filePath).Select(p => p as ItemPrefab).ToList();
-            foreach (var itemPrefab in prefabs)
-            {
-                itemPrefab.Dispose();
-            }
+            Prefabs.RemoveByFile(filePath);
         }
 
         public static void LoadFromFile(string filePath)
@@ -539,11 +541,11 @@ namespace Barotrauma
 
         public ItemPrefab(XElement element, string filePath, bool allowOverriding)
         {
-            ConfigFile = filePath;
+            FilePath = filePath;
             ConfigElement = element;
 
-            OriginalName = element.GetAttributeString("name", "");
-            name = OriginalName;
+            originalName = element.GetAttributeString("name", "");
+            name = originalName;
             identifier = element.GetAttributeString("identifier", "");
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
@@ -555,7 +557,7 @@ namespace Barotrauma
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
-            if (string.IsNullOrEmpty(OriginalName))
+            if (string.IsNullOrEmpty(originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
@@ -571,16 +573,16 @@ namespace Barotrauma
                 // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                    name = TextManager.Get("EntityName." + identifier, true) ?? originalName;
                 }
                 else
                 {
-                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? originalName;
                 }
 
                 if (string.IsNullOrWhiteSpace(identifier))
                 {
-                    identifier = GenerateLegacyIdentifier(OriginalName);
+                    identifier = GenerateLegacyIdentifier(originalName);
                 }
             }
 
@@ -594,7 +596,7 @@ namespace Barotrauma
             Aliases = new HashSet<string>
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
-            Aliases.Add(OriginalName.ToLowerInvariant());
+            Aliases.Add(originalName.ToLowerInvariant());
             
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();
@@ -823,10 +825,7 @@ namespace Barotrauma
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
-            if (HandleExisting(identifier, allowOverriding, filePath))
-            {
-                AddToList(this);
-            }
+            Prefabs.Add(this, allowOverriding);
         }
 
         public PriceInfo GetPrice(Location location)

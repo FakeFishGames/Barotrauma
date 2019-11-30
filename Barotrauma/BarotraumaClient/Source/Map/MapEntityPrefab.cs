@@ -4,7 +4,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class MapEntityPrefab : IDisposable
+    abstract partial class MapEntityPrefab : IPrefab, IDisposable
     {
         public virtual void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
@@ -48,7 +48,7 @@ namespace Barotrauma
         }
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {
-            GUI.Font.DrawString(spriteBatch, name, pos, color);
+            GUI.Font.DrawString(spriteBatch, originalName, pos, color);
         }
     }
 }

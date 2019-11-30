@@ -36,13 +36,13 @@ namespace Barotrauma.Items.Components
                     case "crosshair":
                         {
                             string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                            crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
                         }
                         break;
                     case "crosshairpointer":
                         {
                             string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.ConfigFile));
+                            crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
                         }
                         break;
                     case "particleemitter":

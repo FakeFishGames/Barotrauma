@@ -10,9 +10,21 @@ namespace Barotrauma
 {
     partial class ItemAssemblyPrefab : MapEntityPrefab
     {
+        private string name;
+        public override string Name { get { return name; } }
+
+        public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
         private readonly XElement configElement;
-        private readonly string configPath;
-                
+        
         public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
@@ -23,12 +35,12 @@ namespace Barotrauma
 
         public ItemAssemblyPrefab(string filePath)
         {
-            configPath = filePath;
+            FilePath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return; }
 
-            name = doc.Root.GetAttributeString("name", "");
-            identifier = doc.Root.GetAttributeString("identifier", null) ?? name.ToLowerInvariant().Replace(" ", "");
+            originalName = doc.Root.GetAttributeString("name", "");
+            identifier = doc.Root.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
             configElement = doc.Root;
 
             Category = MapEntityCategory.ItemAssembly;
@@ -63,18 +75,13 @@ namespace Barotrauma
             }
 
             Bounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-            
-            AddToList(this);
+
+            Prefabs.Add(this, false);
         }
 
         public static void Remove(string filePath)
         {
-            var matchingAssemblies = Prefabs.SelectMany(prefabList =>
-                prefabList.Value.Where(prefab => prefab is ItemAssemblyPrefab iap && iap.configPath == filePath)).ToList();
-            foreach (var matchingAssembly in matchingAssemblies)
-            {
-                RemoveFromList(matchingAssembly);
-            }
+            Prefabs.RemoveByFile(filePath);
         }
         
         protected override void CreateInstance(Rectangle rect)
@@ -84,7 +91,7 @@ namespace Barotrauma
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub)
         {
-            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, configPath);
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
             if (entities.Count == 0) return entities;
 
             Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
@@ -112,12 +119,12 @@ namespace Barotrauma
         
         public void Delete()
         {
-            RemoveFromList(this);
-            if (File.Exists(configPath))
+            Dispose();
+            if (File.Exists(FilePath))
             {
                 try
                 {
-                    File.Delete(configPath);
+                    File.Delete(FilePath);
                 }
                 catch (Exception e)
                 {

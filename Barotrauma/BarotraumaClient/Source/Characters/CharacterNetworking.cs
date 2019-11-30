@@ -425,7 +425,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName].Last();
+                        causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
                     }
                 }
 

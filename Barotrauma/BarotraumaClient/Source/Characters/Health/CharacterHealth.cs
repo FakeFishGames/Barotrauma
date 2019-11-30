@@ -15,6 +15,8 @@ namespace Barotrauma
 
         public static Sprite DamageOverlay;
 
+        public static string DamageOverlayFile;
+
         private static string[] strengthTexts;
 
         private GUIButton cprButton;
@@ -1375,7 +1377,7 @@ namespace Barotrauma
             byte afflictionCount = inc.ReadByte();
             for (int i = 0; i < afflictionCount; i++)
             {
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()].Last();
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()];
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
                 newAfflictions.Add(new Pair<AfflictionPrefab, float>(afflictionPrefab, afflictionStrength));
@@ -1409,7 +1411,7 @@ namespace Barotrauma
             for (int i = 0; i < limbAfflictionCount; i++)
             {
                 int limbIndex = inc.ReadRangedInteger(0, limbHealths.Count - 1);
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()].Last();
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs[inc.ReadString()];
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
 
                 newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], afflictionPrefab, afflictionStrength));

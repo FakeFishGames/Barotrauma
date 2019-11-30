@@ -129,7 +129,7 @@ namespace Barotrauma
             SourceElement = subElement;
         }
 
-        private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.ConfigFile)}/{texturePath}";
+        private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{texturePath}";
 
         public void ParsePath(bool parseSpritePath)
         {

@@ -87,7 +87,7 @@ namespace Barotrauma
         public const string Tag = "[speciesname]";
     }
 
-    class AfflictionPrefab
+    class AfflictionPrefab : IPrefab, IDisposable
     {
         public class Effect
         {
@@ -180,19 +180,28 @@ namespace Barotrauma
         public static AfflictionPrefab Pressure;
         public static AfflictionPrefab Stun;
 
-        public static Dictionary<string, List<AfflictionPrefab>> Prefabs = new Dictionary<string, List<AfflictionPrefab>>();
+        public static readonly PrefabCollection<AfflictionPrefab> Prefabs = new PrefabCollection<AfflictionPrefab>();
+
+        private bool disposed = false;
+        public void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
         public static IEnumerable<AfflictionPrefab> List
         {
             get
             {
-                foreach (var kvp in Prefabs)
+                foreach (var prefab in Prefabs)
                 {
-                    yield return kvp.Value.Last();
+                    yield return prefab;
                 }
             }
         }
 
-        public readonly string FilePath;
+        public string FilePath { get; private set; }
 
         //Arbitrary string that is used to identify the type of the affliction.
         //Afflictions with the same type stack up, and items may be configured to cure specific types of afflictions.
@@ -205,7 +214,9 @@ namespace Barotrauma
         //(e.g. mental health problems on head, lack of oxygen on torso...)
         public readonly LimbType IndicatorLimb;
 
-        public readonly string Identifier;
+        public string Identifier { get; private set; }
+        public string OriginalName { get { return Identifier; } }
+        public ContentPackage ContentPackage { get; private set; }
 
         public readonly string Name, Description;
         public readonly bool IsBuff;
@@ -328,6 +339,7 @@ namespace Barotrauma
                         }
                         CharacterHealth.DamageOverlay?.Remove();
                         CharacterHealth.DamageOverlay = new Sprite(element);
+                        CharacterHealth.DamageOverlayFile = filePath;
 #endif
                         break;
                     case "bleeding":
@@ -390,11 +402,7 @@ namespace Barotrauma
                 }
                 if (prefab != null)
                 {
-                    if (!Prefabs.ContainsKey(identifier))
-                    {
-                        Prefabs.Add(identifier, new List<AfflictionPrefab>());
-                    }
-                    Prefabs[identifier].Add(prefab);
+                    Prefabs.Add(prefab, isOverride);
                 }
             }
         }
@@ -402,22 +410,15 @@ namespace Barotrauma
         public static void RemoveByFile(string filePath)
         {
             if (CPRSettings.FilePath == filePath) { CPRSettings.Unload(); }
-
-            List<string> keysToRemove = new List<string>();
-            foreach (var kvp in Prefabs)
+#if CLIENT
+            if (CharacterHealth.DamageOverlayFile == filePath)
             {
-                List<AfflictionPrefab> prefabsToRemove = kvp.Value.Where(p => p.FilePath == filePath).ToList();
-                foreach (var prefab in prefabsToRemove)
-                {
-                    kvp.Value.Remove(prefab);
-                }
+                CharacterHealth.DamageOverlay?.Remove();
+                CharacterHealth.DamageOverlay = null;
+            }
+#endif
 
-                if (kvp.Value.Count == 0) { keysToRemove.Add(kvp.Key); }
-            }
-            foreach (string key in keysToRemove)
-            {
-                Prefabs.Remove(key);
-            }
+            Prefabs.RemoveByFile(filePath);
         }
 
         public AfflictionPrefab(XElement element, string filePath, Type type = null)

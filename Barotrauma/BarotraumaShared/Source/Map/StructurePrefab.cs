@@ -9,8 +9,23 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
+        public static readonly PrefabCollection<StructurePrefab> Prefabs = new PrefabCollection<StructurePrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
+        private string name;
+        public override string Name
+        {
+            get { return name; }
+        }
+
         public XElement ConfigElement { get; private set; }
-        public string ConfigFile { get; private set; }
 
         private bool canSpriteFlipX, canSpriteFlipY;
 
@@ -200,11 +215,11 @@ namespace Barotrauma
         public static void RemoveByFile(string filePath)
         {
             List<StructurePrefab> prefabsToRemove = new List<StructurePrefab>();
-            foreach (var kvp in Prefabs)
+            foreach (var kvp in Prefabs.AllPrefabs)
             {
-                foreach (var prefab in kvp.Value)
+                foreach (var sp in kvp.Value)
                 {
-                    if (prefab is StructurePrefab sp && sp.ConfigFile == filePath)
+                    if (sp.FilePath == filePath)
                     {
                         prefabsToRemove.Add(sp);
                     }
@@ -213,7 +228,7 @@ namespace Barotrauma
 
             foreach (var sp in prefabsToRemove)
             {
-                RemoveFromList(sp);
+                sp.Dispose();
             }
         }
 
@@ -221,9 +236,10 @@ namespace Barotrauma
         {
             StructurePrefab sp = new StructurePrefab
             {
-                name = element.GetAttributeString("name", ""),
-                ConfigFile = filePath
+                originalName = element.GetAttributeString("name", ""),
+                FilePath = filePath
             };
+            sp.name = sp.originalName;
             sp.ConfigElement = element;
             sp.identifier = element.GetAttributeString("identifier", "");
             if (string.IsNullOrEmpty(sp.name))
@@ -340,10 +356,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (sp.HandleExisting(sp.Identifier, allowOverride))
-            {
-                AddToList(sp);
-            }
+            Prefabs.Add(sp, allowOverride);
             return sp;
         }
 

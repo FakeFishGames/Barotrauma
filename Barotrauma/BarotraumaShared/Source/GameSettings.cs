@@ -241,7 +241,11 @@ namespace Barotrauma
             switch (a.Type)
             {
                 case ContentType.Text:
+                    return -2;
+                case ContentType.Afflictions:
                     return -1;
+                case ContentType.ItemAssembly:
+                    return 1;
                 default:
                     return 0;
             }

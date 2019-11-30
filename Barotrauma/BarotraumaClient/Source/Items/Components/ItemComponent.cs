@@ -452,7 +452,7 @@ namespace Barotrauma.Items.Components
 
                     if (!filePath.Contains("/") && !filePath.Contains("\\") && !filePath.Contains(Path.DirectorySeparatorChar))
                     {
-                        filePath = Path.Combine(Path.GetDirectoryName(item.Prefab.ConfigFile), filePath);
+                        filePath = Path.Combine(Path.GetDirectoryName(item.Prefab.FilePath), filePath);
                     }
 
                     ActionType type;
