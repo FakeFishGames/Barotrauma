@@ -1383,6 +1383,10 @@ namespace Barotrauma.Steam
                     CorrectXMLFilePaths(package, doc.Root);
                     doc.Save(dest);
                 }
+                else
+                {
+                    File.Copy(src, dest, overwrite: overwrite);
+                }
             }
             else
             {
