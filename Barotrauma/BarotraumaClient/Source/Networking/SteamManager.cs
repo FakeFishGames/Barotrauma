@@ -1114,32 +1114,35 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
-            string installedContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
+            ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName))
+            {
+                SteamWorkshopUrl = item.Url
+            };
 
             try
             {
-                ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
-                var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => !ContentPackage.List.Contains(p)).ToList();
+                var toRemove = ContentPackage.List.Where(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl).ToList();
+                var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
                 foreach (var cp in packagesToDeselect)
                 {
                     GameMain.Config.DeselectContentPackage(cp);
+
+                    try
+                    {
+                        Directory.Delete(Path.GetDirectoryName(cp.Path), true);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError($"An error occurred while attempting to delete {Path.GetDirectoryName(cp.Path)}", e);
+                    }
                 }
+                ContentPackage.List.RemoveAll(cp => toRemove.Contains(cp));
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
 
                 ContentPackage.SortContentPackages();
                 GameMain.Config.SaveNewPlayerConfig();
 
                 GameMain.Config.WarnIfContentPackageSelectionDirty();
-
-                try
-                {
-                    Directory.Delete(Path.GetDirectoryName(installedContentPackagePath), true);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("An error occurred while attempting to delete mod files", e);
-                }
             }
             catch (Exception e)
             {
