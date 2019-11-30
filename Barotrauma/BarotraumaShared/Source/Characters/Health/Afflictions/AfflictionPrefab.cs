@@ -9,6 +9,7 @@ namespace Barotrauma
 {
     public static class CPRSettings
     {
+        public static string FilePath { get; private set; }
         public static bool IsLoaded { get; private set; }
         public static float ReviveChancePerSkill { get; private set; }
         public static float ReviveChanceExponent { get; private set; }
@@ -20,7 +21,7 @@ namespace Barotrauma
         public static float DamageSkillThreshold { get; private set; }
         public static float DamageSkillMultiplier { get; private set; }
 
-        public static void Load(XElement element)
+        public static void Load(XElement element, string filePath)
         {
             ReviveChancePerSkill = Math.Max(element.GetAttributeFloat("revivechanceperskill", 0.01f), 0.0f);
             ReviveChanceExponent = Math.Max(element.GetAttributeFloat("revivechanceexponent", 2.0f), 0.0f);
@@ -34,6 +35,13 @@ namespace Barotrauma
             DamageSkillThreshold = MathHelper.Clamp(element.GetAttributeFloat("damageskillthreshold", 40.0f), 0.0f, 100.0f);
             DamageSkillMultiplier = MathHelper.Clamp(element.GetAttributeFloat("damageskillmultiplier", 0.1f), 0.0f, 100.0f);
             IsLoaded = true;
+            FilePath = filePath;
+        }
+
+        public static void Unload()
+        {
+            IsLoaded = false;
+            FilePath = null;
         }
     }
 
@@ -341,7 +349,7 @@ namespace Barotrauma
                                 break;
                             }
                         }
-                        CPRSettings.Load(sourceElement);
+                        CPRSettings.Load(sourceElement, filePath);
                         break;
                     case "damage":
                     case "burn":
@@ -393,6 +401,8 @@ namespace Barotrauma
 
         public static void RemoveByFile(string filePath)
         {
+            if (CPRSettings.FilePath == filePath) { CPRSettings.Unload(); }
+
             List<string> keysToRemove = new List<string>();
             foreach (var kvp in Prefabs)
             {

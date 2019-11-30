@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Barotrauma.Steam
 {
@@ -292,7 +293,7 @@ namespace Barotrauma.Steam
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \"" + url + "\"!", e);
+                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \"" + url + "\"! "+Environment.StackTrace, e);
             }
 
             return 0;
@@ -793,7 +794,7 @@ namespace Barotrauma.Steam
             itemEditor.Description = existingItem.Description;
             itemEditor.WorkshopUploadAppId = AppID;
 
-            if (!CheckWorkshopItemEnabled(existingItem, checkContentFiles: false))
+            if (!CheckWorkshopItemEnabled(existingItem))
             {
                 if (!EnableWorkShopItem(existingItem, false, out string errorMsg))
                 {
@@ -807,7 +808,7 @@ namespace Barotrauma.Steam
                 }
             }
 
-            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName));
+            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem.Directory.FullName, MetadataFileName)) { SteamWorkshopUrl = existingItem.Url };
             string installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage));
             contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
 
@@ -935,14 +936,7 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            if (contentPackage.GameVersion > new Version(0, 9, 1, 0))
-            {
-                SaveUtil.CopyFolder(item.Directory.FullName, Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage)), copySubDirs: true, overwriteExisting: true);
-            }
-            else //legacy support
-            {
-                EnableWorkShopItemLegacy(item, contentPackage, newContentPackagePath, metaDataFilePath, allowFileOverwrite, out errorMsg);
-            }
+            CopyWorkShopItem(item, contentPackage, newContentPackagePath, metaDataFilePath, allowFileOverwrite, out errorMsg);
 
             var newPackage = new ContentPackage(contentPackage.Path, newContentPackagePath)
             {
@@ -950,15 +944,9 @@ namespace Barotrauma.Steam
                 InstallTime = item.Modified > item.Created ? item.Modified : item.Created
             };
 
-            if (contentPackage.GameVersion <= new Version(0, 9, 1, 0))
+            foreach (ContentFile contentFile in newPackage.Files)
             {
-                string fileName = contentPackage.Name;
-                fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
-
-                foreach (ContentFile contentFile in newPackage.Files)
-                {
-                    CorrectContentFilePath(contentFile, fileName, true);
-                }
+                contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage, true);
             }
 
             if (!Directory.Exists(Path.GetDirectoryName(newContentPackagePath)))
@@ -984,7 +972,7 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        private static bool EnableWorkShopItemLegacy(Workshop.Item item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath, bool allowFileOverwrite, out string errorMsg)
+        private static bool CopyWorkShopItem(Workshop.Item item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath, bool allowFileOverwrite, out string errorMsg)
         {
             errorMsg = "";
 
@@ -996,10 +984,7 @@ namespace Barotrauma.Steam
                 string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
                 string fullPath = Path.GetFullPath(relativePath);
                 if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
-                if (ContentPackage.IsModFilePathAllowed(relativePath))
-                {
-                    nonContentFiles.Add(relativePath);
-                }
+                nonContentFiles.Add(relativePath);
             }
 
             if (!allowFileOverwrite)
@@ -1029,11 +1014,16 @@ namespace Barotrauma.Steam
                 {
                     contentFile.Path = contentFile.Path.Replace('\\', '/');
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
+                    if (!File.Exists(sourceFile))
+                    {
+                        string[] splitPath = contentFile.Path.Split('/');
+                        if (splitPath.Length >= 2 && splitPath[0] == "Mods")
+                        {
+                            sourceFile = Path.Combine(item.Directory.FullName, string.Join("/",splitPath.Skip(2)));
+                        }
+                    }
 
-                    string fileName = contentPackage.Name;
-                    fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
-
-                    CorrectContentFilePath(contentFile, fileName, false);
+                    contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage, false);
 
                     //path not allowed -> the content file must be a reference to an external file (such as some vanilla file outside the Mods folder)
                     if (!ContentPackage.IsModFilePathAllowed(contentFile))
@@ -1070,20 +1060,16 @@ namespace Barotrauma.Steam
 
                     //make sure the destination directory exists
                     Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
-                    File.Copy(sourceFile, contentFile.Path, overwrite: true);
+                    CorrectContentFileCopy(contentPackage, sourceFile, contentFile.Path, overwrite: true);
                 }
 
                 foreach (string nonContentFile in nonContentFiles)
                 {
                     string sourceFile = Path.Combine(item.Directory.FullName, nonContentFile);
                     if (!File.Exists(sourceFile)) { continue; }
-                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
-                    {
-                        DebugConsole.ThrowError(TextManager.GetWithVariable("WorkshopErrorIllegalPathOnEnable", "[filename]", nonContentFile));
-                        continue;
-                    }
-                    Directory.CreateDirectory(Path.GetDirectoryName(nonContentFile));
-                    File.Copy(sourceFile, nonContentFile, overwrite: true);
+                    string destinationPath = CorrectContentFilePath(nonContentFile, contentPackage, false);
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                    CorrectContentFileCopy(contentPackage, sourceFile, destinationPath, overwrite: true);
                 }
             }
             catch (Exception e)
@@ -1131,56 +1117,8 @@ namespace Barotrauma.Steam
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item.Directory.FullName, MetadataFileName));
             string installedContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
-            var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
-            List<string> nonContentFiles = new List<string>();
-            foreach (string file in allPackageFiles)
-            {
-                if (file == MetadataFileName) { continue; }
-                string relativePath = UpdaterUtil.GetRelativePath(file, item.Directory.FullName);
-                string fullPath = Path.GetFullPath(relativePath);
-                if (contentPackage.Files.Any(f => { string fp = Path.GetFullPath(f.Path); return fp == fullPath; })) { continue; }
-                if (ContentPackage.IsModFilePathAllowed(relativePath))
-                {
-                    nonContentFiles.Add(relativePath);
-                }
-            }
-            if (File.Exists(installedContentPackagePath)) { File.Delete(installedContentPackagePath); }
-
-            HashSet<string> directories = new HashSet<string>();
             try
             {
-                foreach (ContentFile contentFile in contentPackage.Files)
-                {
-                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
-                    {
-                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
-                        continue;
-                    }
-                    if (!File.Exists(contentFile.Path)) { continue; }
-                    File.Delete(contentFile.Path);
-                    directories.Add(Path.GetDirectoryName(contentFile.Path));
-                }
-                foreach (string nonContentFile in nonContentFiles)
-                {
-                    if (!ContentPackage.IsModFilePathAllowed(nonContentFile))
-                    {
-                        //Workshop items are not allowed to add or modify files in the Content or Data folders;
-                        continue;
-                    }
-                    if (!File.Exists(nonContentFile)) { continue; }
-                    File.Delete(nonContentFile);
-                    directories.Add(Path.GetDirectoryName(nonContentFile));
-                }
-
-                foreach (string directory in directories)
-                {
-                    if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) { continue; }
-                    if (Directory.GetFiles(directory, "*", SearchOption.AllDirectories).Count() == 0)
-                    {
-                        Directory.Delete(directory, recursive: true);
-                    }
-                }
-
                 ContentPackage.List.RemoveAll(cp => System.IO.Path.GetFullPath(cp.Path) == System.IO.Path.GetFullPath(installedContentPackagePath));
                 var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => !ContentPackage.List.Contains(p)).ToList();
                 foreach (var cp in packagesToDeselect)
@@ -1188,10 +1126,20 @@ namespace Barotrauma.Steam
                     GameMain.Config.DeselectContentPackage(cp);
                 }
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
+
                 ContentPackage.SortContentPackages();
                 GameMain.Config.SaveNewPlayerConfig();
 
                 GameMain.Config.WarnIfContentPackageSelectionDirty();
+
+                try
+                {
+                    Directory.Delete(Path.GetDirectoryName(installedContentPackagePath), true);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("An error occurred while attempting to delete mod files", e);
+                }
             }
             catch (Exception e)
             {
@@ -1224,7 +1172,7 @@ namespace Barotrauma.Steam
             return contentPackage.IsCompatible();
         }
 
-        public static bool CheckWorkshopItemEnabled(Workshop.Item item, bool checkContentFiles = true)
+        public static bool CheckWorkshopItemEnabled(Workshop.Item item)
         {
             if (!item.Installed) { return false; }
 
@@ -1257,24 +1205,24 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            ContentPackage contentPackage = new ContentPackage(metaDataPath);
+            ContentPackage contentPackage = new ContentPackage(metaDataPath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
             //make sure the contentpackage file is present 
             if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) &&
-                !ContentPackage.List.Any(cp => cp.Name == contentPackage.Name))
+                !ContentPackage.List.Any(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl))
             {
                 return false;
             }
-            if (checkContentFiles)
+            /*if (checkContentFiles)
             {
-                string fileName = contentPackage.Name;
-                fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
-
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    CorrectContentFilePath(contentFile, fileName, true);
+                    contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage, true);
                     if (!File.Exists(contentFile.Path)) { return false; }
                 }
-            }
+            }*/
 
             return true;
         }
@@ -1390,25 +1338,75 @@ namespace Barotrauma.Steam
 
         private static string GetWorkshopItemContentPackagePath(ContentPackage contentPackage)
         {
-            string fileName = contentPackage.Name;
-            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
+            string packageName = contentPackage.Name;
+            packageName = ToolBox.RemoveInvalidFileNameChars(packageName);
+            packageName = packageName + "_" + GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
 
-            return Path.Combine("Mods", fileName, MetadataFileName);
+            return Path.Combine("Mods", packageName, MetadataFileName);
         }
 
-        private static void CorrectContentFilePath(ContentFile contentFile, string packageName, bool checkIfFileExists=false)
+        private static void CorrectXMLFilePaths(ContentPackage package, XElement element)
         {
-            contentFile.Path = contentFile.Path.Replace('\\', '/');
-
-            string[] splitPath = contentFile.Path.Split('/');
-            if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != packageName)
+            foreach (var attr in element.Attributes())
             {
-                string newPath = Path.Combine("Mods", packageName, contentFile.Path);
-                if (!checkIfFileExists || File.Exists(newPath))
+                if ((attr.Name.ToString()== "file" ||
+                    attr.Name.ToString() == "folder" ||
+                    attr.Name.ToString() == "texture") &&
+                    attr.Value.Replace('\\','/').Contains("/"))
                 {
-                    contentFile.Path = newPath;
+                    attr.Value = CorrectContentFilePath(attr.Value, package, true);
                 }
             }
+
+            foreach (var child in element.Elements())
+            {
+                CorrectXMLFilePaths(package, child);
+            }
+        }
+
+        private static void CorrectContentFileCopy(ContentPackage package, string src, string dest, bool overwrite)
+        {
+            if (Path.GetExtension(src).ToLowerInvariant()==".xml")
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(src);
+                if (doc != null)
+                {
+                    CorrectXMLFilePaths(package, doc.Root);
+                    doc.Save(dest);
+                }
+            }
+            else
+            {
+                File.Copy(src, dest, overwrite: overwrite);
+            }
+        }
+
+        private static string CorrectContentFilePath(string contentFilePath, ContentPackage package, bool checkIfFileExists=false)
+        {
+            string packageName = Path.GetDirectoryName(GetWorkshopItemContentPackagePath(package));
+
+            contentFilePath = contentFilePath.Replace('\\', '/');
+
+            string[] splitPath = contentFilePath.Split('/');
+            if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != packageName)
+            {
+                string newPath;
+                if (splitPath.Length >= 2 && splitPath[0] == "Mods")
+                {
+                    splitPath = splitPath.Skip(2).ToArray();
+                    newPath = Path.Combine(packageName, string.Join("/", splitPath));
+                }
+                else
+                {
+                    newPath = Path.Combine(packageName, contentFilePath);
+                }
+                if (!checkIfFileExists || !File.Exists(contentFilePath))
+                {
+                    contentFilePath = newPath;
+                }
+            }
+
+            return contentFilePath.Replace('\\','/');
         }
 
         #endregion
