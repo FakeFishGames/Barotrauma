@@ -1126,7 +1126,10 @@ namespace Barotrauma.Steam
                 foreach (var cp in packagesToDeselect)
                 {
                     GameMain.Config.DeselectContentPackage(cp);
+                }
 
+                foreach (var cp in toRemove)
+                {
                     try
                     {
                         Directory.Delete(Path.GetDirectoryName(cp.Path), true);
@@ -1136,6 +1139,7 @@ namespace Barotrauma.Steam
                         DebugConsole.ThrowError($"An error occurred while attempting to delete {Path.GetDirectoryName(cp.Path)}", e);
                     }
                 }
+
                 ContentPackage.List.RemoveAll(cp => toRemove.Contains(cp));
                 GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
 
