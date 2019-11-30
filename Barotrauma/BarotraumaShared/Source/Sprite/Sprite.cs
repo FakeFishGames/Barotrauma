@@ -219,7 +219,7 @@ namespace Barotrauma
         {
             lock (list)
             {
-                list.RemoveAll(wRef => wRef.TryGetTarget(out Sprite s) && s==this);
+                list.RemoveAll(wRef => !wRef.TryGetTarget(out Sprite s) || s==this);
             }
 
             DisposeTexture();
