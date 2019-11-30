@@ -219,7 +219,7 @@ namespace Barotrauma
             {
                 foreach (var sp in kvp.Value)
                 {
-                    if (sp.FilePath == filePath)
+                    if (sp != null && sp.FilePath == filePath)
                     {
                         prefabsToRemove.Add(sp);
                     }
