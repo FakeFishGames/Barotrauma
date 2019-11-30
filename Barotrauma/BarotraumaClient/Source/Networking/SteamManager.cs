@@ -1012,7 +1012,7 @@ namespace Barotrauma.Steam
             {
                 foreach (ContentFile contentFile in contentPackage.Files)
                 {
-                    contentFile.Path = contentFile.Path.Replace('\\', '/');
+                    contentFile.Path = contentFile.Path.CleanUpPath();
                     string sourceFile = Path.Combine(item.Directory.FullName, contentFile.Path);
                     if (!File.Exists(sourceFile))
                     {
@@ -1361,7 +1361,7 @@ namespace Barotrauma.Steam
                     attr.Name.ToString() == "texture" ||
                     attr.Name.ToString() == "monsterfile" ||
                     attr.Name.ToString() == "characterfile") &&
-                    attr.Value.Replace('\\','/').Contains("/"))
+                    attr.Value.CleanUpPath().Contains("/"))
                 {
                     attr.Value = CorrectContentFilePath(attr.Value, package, true);
                 }
@@ -1398,7 +1398,7 @@ namespace Barotrauma.Steam
         {
             string packageName = Path.GetDirectoryName(GetWorkshopItemContentPackagePath(package));
 
-            contentFilePath = contentFilePath.Replace('\\', '/');
+            contentFilePath = contentFilePath.CleanUpPath();
 
             string[] splitPath = contentFilePath.Split('/');
             if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != packageName)
@@ -1419,7 +1419,7 @@ namespace Barotrauma.Steam
                 }
             }
 
-            return contentFilePath.Replace('\\','/');
+            return contentFilePath.CleanUpPath();
         }
 
         #endregion

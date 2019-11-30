@@ -23,7 +23,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrWhiteSpace(line)) { continue; }
                 string[] parts = line.Split('|');
-                string path = parts[0].Replace('\\','/');
+                string path = parts[0].CleanUpPath();
                 string hashStr = parts[1];
                 long timeLong = long.Parse(parts[2]);
 
@@ -53,7 +53,7 @@ namespace Barotrauma
         {
             if (!string.IsNullOrWhiteSpace(filename))
             {
-                filename = filename.Replace('\\', '/');
+                filename = filename.CleanUpPath();
                 lock (cache)
                 {
                     if (cache.ContainsKey(filename))

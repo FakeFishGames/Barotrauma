@@ -94,6 +94,8 @@ namespace Barotrauma
         {
             get { return corePackageRequiredFiles; }
         }
+        
+        private static FileSystemWatcher fileSystemWatcher;
 
         public string Name { get; set; }
 
@@ -476,15 +478,15 @@ namespace Barotrauma
                     string modPathBS = null;
                     string modPathWithoutWorkshopId = null;
 
-                    string[] splitPath = filePath.Replace('\\', '/').Split('/');
+                    string[] splitPath = filePath.CleanUpPath().Split('/');
                     if (splitPath.Length >= 2 && splitPath[0]=="Mods")
                     {
                         splitPath = splitPath.Take(2).ToArray();
-                        modPath = System.IO.Path.Combine(splitPath).Replace('\\','/');
+                        modPath = System.IO.Path.Combine(splitPath).CleanUpPath();
 
                         modPathBS = modPath.Replace('/', '\\');
 
-                        modPathWithoutWorkshopId = System.IO.Path.Combine("Mods", Name).Replace('\\', '/');
+                        modPathWithoutWorkshopId = System.IO.Path.Combine("Mods", Name).CleanUpPath();
 
                         if (modPathWithoutWorkshopId.ToLowerInvariant() == modPath.ToLowerInvariant())
                         {
@@ -530,13 +532,7 @@ namespace Barotrauma
         public static bool IsModFilePathAllowed(ContentFile contentFile)
         {
             string path = contentFile.Path;
-            while (true)
-            {
-                string temp = System.IO.Path.GetDirectoryName(path);
-                if (string.IsNullOrEmpty(temp)) { break; }
-                path = temp;
-            }
-            return path == "Mods";
+            return IsModFilePathAllowed(path);
         }
         /// <summary>
         /// Are mods allowed to install a file into the specified path. If a content package XML includes files
@@ -653,11 +649,7 @@ namespace Barotrauma
 
         public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
         {
-            Path = path;
-
-#if OSX || LINUX
-            Path = Path.Replace("\\", "/");
-#endif
+            Path = path.CleanUpPath();
 
             Type = type;
             WorkShopItem = workShopItem;

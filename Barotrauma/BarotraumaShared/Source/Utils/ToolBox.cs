@@ -529,5 +529,15 @@ namespace Barotrauma
             }
             return mergedArgs.ToArray();
         }
+
+        public static string CleanUpPath(this string path)
+        {
+            path = path.Replace('\\', '/');
+            while (path.IndexOf("//") >= 0)
+            {
+                path = path.Replace("//", "/");
+            }
+            return path;
+        }
     }
 }

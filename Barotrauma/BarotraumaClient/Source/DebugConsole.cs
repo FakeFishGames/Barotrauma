@@ -1214,7 +1214,7 @@ namespace Barotrauma
             },
             () =>
             {
-                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                var files = TextManager.GetTextFiles().Select(f => f.CleanUpPath());
                 return new string[][]
                 {
                     TextManager.GetTextFiles().Where(f => Path.GetExtension(f)==".xml").ToArray()
@@ -1253,7 +1253,7 @@ namespace Barotrauma
             },
             () =>
             {
-                var files = TextManager.GetTextFiles().Select(f => f.Replace("\\", "/"));
+                var files = TextManager.GetTextFiles().Select(f => f.CleanUpPath());
                 return new string[][]
                 {
                     files.Where(f => Path.GetExtension(f)==".txt").ToArray(),
@@ -1288,7 +1288,7 @@ namespace Barotrauma
             },
             () =>
             {
-                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.Replace("\\", "/")).ToArray();
+                var files = TextManager.GetTextFiles().Where(f => Path.GetExtension(f) == ".xml").Select(f => f.CleanUpPath()).ToArray();
                 return new string[][]
                 {
                     files,
