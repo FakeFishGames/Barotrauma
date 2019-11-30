@@ -16,13 +16,19 @@ namespace Barotrauma
         {
             get
             {
-                foreach (var s in list)
+                List<Sprite> retVal = null;
+                lock (list)
                 {
-                    if (s.TryGetTarget(out Sprite spr))
+                    retVal = list.Select(wRef =>
                     {
-                        yield return spr;
-                    }
+                        if (wRef.TryGetTarget(out Sprite spr))
+                        {
+                            return spr;
+                        }
+                        return null;
+                    }).Where(s => s!=null).ToList();
                 }
+                return retVal;
             }
         }
 

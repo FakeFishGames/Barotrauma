@@ -37,7 +37,7 @@ namespace Barotrauma
 
             rotation = newRotation;
 
-            list.Add(new WeakReference<Sprite>(this));
+            AddToList(this);
         }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn, bool preMultiplyAlpha)
