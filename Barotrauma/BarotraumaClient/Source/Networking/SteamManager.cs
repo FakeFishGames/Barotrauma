@@ -1354,7 +1354,9 @@ namespace Barotrauma.Steam
             {
                 if ((attr.Name.ToString()== "file" ||
                     attr.Name.ToString() == "folder" ||
-                    attr.Name.ToString() == "texture") &&
+                    attr.Name.ToString() == "texture" ||
+                    attr.Name.ToString() == "monsterfile" ||
+                    attr.Name.ToString() == "characterfile") &&
                     attr.Value.Replace('\\','/').Contains("/"))
                 {
                     attr.Value = CorrectContentFilePath(attr.Value, package, true);

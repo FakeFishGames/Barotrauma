@@ -57,6 +57,11 @@ namespace Barotrauma
                 throw new Exception("speciesname is null!");
             }
 
+            if (Character.TryGetConfigFile(speciesName, out XDocument doc))
+            {
+                speciesName = doc.Root.GetAttributeString("speciesname", doc.Root.GetAttributeString("name", speciesName));
+            }
+
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
             maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
