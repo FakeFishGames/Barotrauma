@@ -467,7 +467,7 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            Character.LoadAllConfigFiles();
+            CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();

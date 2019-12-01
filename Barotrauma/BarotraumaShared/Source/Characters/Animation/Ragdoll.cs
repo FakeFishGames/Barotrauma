@@ -367,9 +367,10 @@ namespace Barotrauma
 
             if (character.IsHusk)
             {
-                if (Character.TryGetConfigFile(character.ConfigPath, out XDocument configFile))
+                var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
+                if (characterPrefab?.XDocument != null)
                 {
-                    var mainElement = configFile.Root.IsOverride() ? configFile.Root.FirstElement() : configFile.Root;
+                    var mainElement = characterPrefab.XDocument.Root.IsOverride() ? characterPrefab.XDocument.Root.FirstElement() : characterPrefab.XDocument.Root;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
                         AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);

@@ -94,7 +94,7 @@ namespace Barotrauma.CharacterEditor
 
         public void CreateCharacter(XElement ragdollElement, XElement characterElement = null, IEnumerable<AnimationParams> animations = null)
         {
-            if (Character.ConfigFiles.Any(f => (f.Root.IsOverride() ? f.Root.FirstElement() : f.Root).GetAttributeString("speciesname", "").Equals(name, StringComparison.OrdinalIgnoreCase)))
+            if (CharacterPrefab.Find(p => p.Identifier.Equals(name, StringComparison.OrdinalIgnoreCase)) != null)
             {
                 bool isSamePackage = contentPackage.GetFilesOfType(ContentType.Character).Any(c => Path.GetFileNameWithoutExtension(c).Equals(name, StringComparison.OrdinalIgnoreCase));
                 string verificationText = isSamePackage ? GetCharacterEditorTranslation("existingcharacterfoundreplaceverification") : GetCharacterEditorTranslation("existingcharacterfoundoverrideverification");

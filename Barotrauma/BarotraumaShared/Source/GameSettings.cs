@@ -282,7 +282,7 @@ namespace Barotrauma
                 switch (file.Type)
                 {
                     case ContentType.Character:
-                        Character.RemoveConfigFile(file.Path);
+                        CharacterPrefab.RemoveByFile(file.Path);
                         break;
                     case ContentType.NPCConversations:
                         NPCConversation.RemoveByFile(file.Path);
@@ -381,7 +381,7 @@ namespace Barotrauma
                 switch (file.Type)
                 {
                     case ContentType.Character:
-                        Character.AddConfigFile(file.Path);
+                        CharacterPrefab.LoadFromFile(file.Path, contentPackage);
                         break;
                     case ContentType.NPCConversations:
                         NPCConversation.Load(file.Path);
@@ -513,7 +513,7 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
-                            Character.AddConfigFile(file.Path);
+                            CharacterPrefab.LoadFromFile(file.Path, contentPackage);
                             break;
                         case ContentType.NPCConversations:
                             NPCConversation.Load(file.Path);
@@ -646,7 +646,7 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
-                            Character.RemoveConfigFile(file.Path);
+                            CharacterPrefab.RemoveByFile(file.Path);
                             break;
                         case ContentType.NPCConversations:
                             NPCConversation.RemoveByFile(file.Path);

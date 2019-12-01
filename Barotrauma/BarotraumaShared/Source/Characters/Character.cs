@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
-        public bool IsHuman => SpeciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
+        public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
         private float attackCoolDown;
 
@@ -610,7 +610,7 @@ namespace Barotrauma
                 speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
             Character newCharacter = null;
-            if (!speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (!speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, seed);
@@ -669,11 +669,8 @@ namespace Barotrauma
         protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
-            string path = GetConfigFilePath(speciesName);
-            if (!TryGetConfigFile(path, out XDocument doc))
-            {
-                throw new Exception($"Failed to load the config file for {speciesName} from {path}!");
-            }
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
+
             this.seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
@@ -687,14 +684,14 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
-            Params = new CharacterParams(path);
+            Params = new CharacterParams(prefab.FilePath);
 
             Info = characterInfo;
-            if (speciesName.Equals(HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 if (characterInfo == null)
                 {
-                    Info = new CharacterInfo(HumanSpeciesName);
+                    Info = new CharacterInfo(CharacterPrefab.HumanSpeciesName);
                 }
             }
 
@@ -704,7 +701,7 @@ namespace Barotrauma
                 keys[i] = new Key((InputType)i);
             }
 
-            var rootElement = doc.Root;
+            var rootElement = prefab.XDocument.Root;
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
 
@@ -759,7 +756,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
                     // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
-                    nonHuskedSpeciesName = IsHumanoid ? HumanSpeciesName : "crawler";
+                    nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler";
                 }
                 else
                 {
@@ -843,177 +840,6 @@ namespace Barotrauma
             head.LoadHerpesSprite();
             head.UpdateWearableTypesToHide();
 #endif
-        }
-
-        public static string HumanSpeciesName = "human";
-        public static string HumanConfigFile => GetConfigFilePath(HumanSpeciesName);
-
-        /// <summary>
-        /// Searches for a character config file from all currently selected content packages, 
-        /// or from a specific package if the contentPackage parameter is given.
-        /// </summary>
-        public static string GetConfigFilePath(string speciesName, ContentPackage contentPackage = null)
-        {
-            if (configFiles.None())
-            {
-                LoadAllConfigFiles();
-            }
-            string configFile = null;
-            if (contentPackage != null)
-            {
-                configFile = contentPackage.GetFilesOfType(ContentType.Character)?
-                    .FirstOrDefault(c => Path.GetFileName(c).ToLowerInvariant() == $"{speciesName.ToLowerInvariant()}.xml");
-
-                if (configFile == null)
-                {
-                    DebugConsole.ThrowError($"Couldn't find a config file for {speciesName} from the specified content package {contentPackage.Name} defined in {contentPackage.Path}!");
-                    DebugConsole.ThrowError($"(The config file must end with \"{speciesName}.xml\")");
-                    return string.Empty;
-                }
-            }
-            else
-            {
-                if (!configFiles.TryGetValue(speciesName.ToLowerInvariant(), out List<ConfigFile> cf))
-                {
-                    DebugConsole.ThrowError($"Couldn't find a config file for species \"{speciesName}\" from the selected content packages!");
-                }
-                else
-                {
-                    configFile = cf.Last().FilePath;
-                }
-            }
-            return configFile;
-        }
-
-        private class ConfigFile
-        {
-            public string FilePath;
-            public XDocument Document;
-        }
-        private readonly static Dictionary<string, List<ConfigFile>> configFiles = new Dictionary<string, List<ConfigFile>>();
-
-        public static IEnumerable<string> ConfigFilePaths => configFiles.Values.Select(cf => cf.Last().FilePath);
-        public static IEnumerable<XDocument> ConfigFiles => configFiles.Values.Select(cf => cf.Last().Document);
-
-        public static bool TryAddConfigFile(string file, bool forceOverride)
-        {
-            if (configFiles.None())
-            {
-                LoadAllConfigFiles();
-            }
-            return AddConfigFile(file, forceOverride);
-        }
-
-        public static void RemoveConfigFile(string file)
-        {
-            List<string> keysToRemove = new List<string>();
-            foreach (var kpv in configFiles)
-            {
-                List<ConfigFile> configsToRemove = new List<ConfigFile>();
-                foreach (var cfg in kpv.Value)
-                {
-                    if (cfg.FilePath == file)
-                    {
-                        configsToRemove.Add(cfg);
-                    }
-                }
-                foreach (var cfg in configsToRemove)
-                {
-                    kpv.Value.Remove(cfg);
-                }
-                if (kpv.Value.Count == 0) { keysToRemove.Add(kpv.Key); }
-            }
-
-            foreach (var key in keysToRemove)
-            {
-                configFiles.Remove(key);
-            }
-        }
-
-        public static bool AddConfigFile(string file, bool forceOverride = false)
-        {
-            RemoveConfigFile(file);
-            DebugConsole.NewMessage(file);
-
-            XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null)
-            {
-                DebugConsole.ThrowError($"Loading character file failed: {file}");
-                return false;
-            }
-            if (configFiles.Any(kvp => kvp.Value.Any(cf => cf.FilePath == file)))
-            {
-                DebugConsole.ThrowError($"Duplicate path: {file}");
-                return false;
-            }
-            XElement mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-            var name = mainElement.GetAttributeString("name", null);
-            if (name != null)
-            {
-                DebugConsole.NewMessage($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
-            }
-            else
-            {
-                name = mainElement.GetAttributeString("speciesname", string.Empty);
-            }
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                DebugConsole.ThrowError($"No species name defined for: {file}");
-                return false;
-            }
-            name = name.ToLowerInvariant();
-            var duplicates = configFiles.Where(kvp => (kvp.Value.Last().Document.Root.IsOverride() ? kvp.Value.Last().Document.Root.FirstElement() : kvp.Value.Last().Document.Root)
-                .GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
-            if (duplicates.Any())
-            {
-                var duplicate = duplicates.First();
-                if (forceOverride || doc.Root.IsOverride())
-                {
-                    DebugConsole.NewMessage($"Overriding the existing character '{name}' defined in '{duplicate.Key}' with '{file}'", Color.Yellow);
-                }
-                else
-                {
-                    DebugConsole.ThrowError($"Duplicate species name '{name}' in '{file}'! Add <override></override> tags as the parent of the character definition to override an existing character.");
-                    return false;
-                }
-            }
-
-            if (!configFiles.ContainsKey(name))
-            {
-                configFiles.Add(name, new List<ConfigFile>());
-            }
-
-            configFiles[name].Add(new ConfigFile() { FilePath = file, Document = doc });
-            return true;
-        }
-
-        public static XDocument GetConfigFile(string speciesName)
-        {
-            string file = GetConfigFilePath(speciesName);
-            if (!TryGetConfigFile(file, out XDocument doc))
-            {
-                DebugConsole.ThrowError($"Failed to load the config file for {speciesName} from {file}!");
-            }
-            return doc;
-        }
-
-        public static bool TryGetConfigFile(string file, out XDocument doc)
-        {
-            doc = null;
-            if (configFiles.None()) { LoadAllConfigFiles(); }
-            if (string.IsNullOrWhiteSpace(file)) { return false; }
-            var cfgEnum = configFiles.Where(cf => cf.Value.Last().FilePath.CleanUpPath() == file.CleanUpPath());
-            if (cfgEnum.Any()) { doc = cfgEnum.Last().Value.Last().Document; }
-            return doc != null;
-        }
-
-        public static void LoadAllConfigFiles()
-        {
-            configFiles.Clear();
-            foreach (var file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
-            {
-                AddConfigFile(file);
-            }
         }
 
         public bool IsKeyHit(InputType inputType)

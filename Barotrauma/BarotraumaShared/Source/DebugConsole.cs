@@ -1365,7 +1365,7 @@ namespace Barotrauma
             {
                 job = jobs.Last();
             }
-            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
+            bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             
             if (args.Length > 1)
             {
@@ -1415,7 +1415,7 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1436,7 +1436,7 @@ namespace Barotrauma
             }
             else
             {
-                if (Character.GetConfigFilePath(args[0]) != null)
+                if (CharacterPrefab.FindBySpeciesName(args[0]) != null)
                 {
                     Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }

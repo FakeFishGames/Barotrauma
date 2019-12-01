@@ -171,7 +171,7 @@ namespace Barotrauma
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
             JobPrefab watchmanJob = JobPrefab.Get("watchman");
-            CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: watchmanJob);
+            CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: watchmanJob);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
             InitializeWatchman(spawnedCharacter);

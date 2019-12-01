@@ -94,16 +94,17 @@ namespace Barotrauma
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            string configFilePath = Character.GetConfigFilePath(speciesName, contentPackage);
-            if (!Character.TryGetConfigFile(configFilePath, out XDocument configFile))
+            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.ToLowerInvariant()==speciesName.ToLowerInvariant() &&
+                                                          (contentPackage==null || p.ContentPackage == contentPackage));
+            if (prefab?.XDocument == null)
             {
-                DebugConsole.ThrowError($"Failed to load config file: {configFilePath} for '{speciesName}'");
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
                 return string.Empty;
             }
-            var folder = configFile.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            var folder = prefab.XDocument.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                folder = Path.Combine(Path.GetDirectoryName(configFilePath), "Ragdolls") + Path.DirectorySeparatorChar;
+                folder = Path.Combine(Path.GetDirectoryName(prefab.FilePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
             return folder;
         }

@@ -108,7 +108,7 @@ namespace Barotrauma
             {
                 foreach (var prefab in kpv.Value)
                 {
-                    if (prefab.FilePath == filePath)
+                    if (prefab != null && prefab.FilePath == filePath)
                     {
                         prefabsToRemove.Add(prefab);
                     }

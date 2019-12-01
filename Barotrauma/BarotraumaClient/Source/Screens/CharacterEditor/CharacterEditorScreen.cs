@@ -135,7 +135,7 @@ namespace Barotrauma.CharacterEditor
             Submarine.MainSub.GodMode = true;
             if (Character.Controlled == null)
             {
-                var humanConfig = Character.HumanConfigFile;
+                var humanConfig = CharacterPrefab.HumanConfigFile;
                 if (string.IsNullOrEmpty(humanConfig))
                 {
                     SpawnCharacter(AllFiles.First());
@@ -1415,7 +1415,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (allFiles == null)
                 {
-                    allFiles = Character.ConfigFilePaths.OrderBy(p => p).ToList();
+                    allFiles = CharacterPrefab.ConfigFilePaths.OrderBy(p => p).ToList();
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
@@ -1453,7 +1453,7 @@ namespace Barotrauma.CharacterEditor
 
         private void GetCurrentCharacterIndex()
         {
-            characterIndex = AllFiles.IndexOf(Character.GetConfigFilePath(character.SpeciesName));
+            characterIndex = AllFiles.IndexOf(CharacterPrefab.FindBySpeciesName(character.SpeciesName).FilePath);
         }
 
         private void IncreaseIndex()
@@ -1490,7 +1490,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 character = null;
             }
-            if (configFile == Character.HumanConfigFile && selectedJob != null)
+            if (configFile == CharacterPrefab.HumanConfigFile && selectedJob != null)
             {
                 var characterInfo = new CharacterInfo(configFile, jobPrefab: JobPrefab.Get(selectedJob));
                 character = Character.Create(configFile, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
@@ -1657,7 +1657,7 @@ namespace Barotrauma.CharacterEditor
 
             // Config file
             string configFilePath = Path.Combine(mainFolder, $"{name}.xml").Replace(@"\", @"/");
-            var duplicate = Character.ConfigFiles.FirstOrDefault(f => (f.Root.IsOverride() ? f.Root.FirstElement() : f.Root).GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
+            var duplicate = CharacterPrefab.ConfigFiles.FirstOrDefault(f => (f.Root.IsOverride() ? f.Root.FirstElement() : f.Root).GetAttributeString("speciesname", string.Empty).Equals(name, StringComparison.OrdinalIgnoreCase));
             XElement overrideElement = null;
             if (duplicate != null)
             {
@@ -1730,7 +1730,7 @@ namespace Barotrauma.CharacterEditor
             contentPackage.AddFile(configFilePath, ContentType.Character);
             contentPackage.Save(contentPackage.Path);
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));         
-            Character.TryAddConfigFile(configFilePath, forceOverride: true);
+            CharacterPrefab.LoadFromFile(configFilePath, contentPackage, forceOverride: true);
 
             // Ragdoll
             RagdollParams.ClearCache();
@@ -2662,7 +2662,7 @@ namespace Barotrauma.CharacterEditor
                 SpawnCharacter((string)data);
                 return true;
             };
-            if (currentCharacterConfig == Character.HumanConfigFile)
+            if (currentCharacterConfig == CharacterPrefab.HumanConfigFile)
             {
                 var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.15f), padding.RectTransform)
                 {

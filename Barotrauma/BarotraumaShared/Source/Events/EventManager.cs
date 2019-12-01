@@ -121,10 +121,12 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
 #if CLIENT
-                        if (!Character.TryGetConfigFile(file.Path, out XDocument doc))
+                        CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(file.Path);
+                        if (characterPrefab?.XDocument == null)
                         {
                             throw new Exception($"Failed to load the character config file from {file.Path}!");
                         }
+                        var doc = characterPrefab.XDocument;
                         foreach (var soundElement in doc.Root.GetChildElements("sound"))
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);

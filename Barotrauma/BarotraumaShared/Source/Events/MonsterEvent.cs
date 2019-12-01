@@ -57,9 +57,10 @@ namespace Barotrauma
                 throw new Exception("speciesname is null!");
             }
 
-            if (Character.TryGetConfigFile(speciesName, out XDocument doc))
+            CharacterPrefab characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            if (characterPrefab?.XDocument != null)
             {
-                speciesName = doc.Root.GetAttributeString("speciesname", doc.Root.GetAttributeString("name", speciesName));
+                speciesName = characterPrefab.XDocument.Root.GetAttributeString("speciesname", characterPrefab.XDocument.Root.GetAttributeString("name", speciesName));
             }
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
@@ -91,7 +92,7 @@ namespace Barotrauma
 
         public override IEnumerable<ContentFile> GetFilesToPreload()
         {
-            string path = Character.GetConfigFilePath(speciesName);
+            string path = CharacterPrefab.FindBySpeciesName(speciesName)?.FilePath;
             if (string.IsNullOrWhiteSpace(path))
             {
                 DebugConsole.ThrowError($"Failed to find config file for species \"{speciesName}\"");

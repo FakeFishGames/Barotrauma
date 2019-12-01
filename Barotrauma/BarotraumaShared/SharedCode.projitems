@@ -50,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\AnimationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\FishAnimations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\HumanoidAnimations.cs" />

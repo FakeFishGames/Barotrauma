@@ -668,14 +668,14 @@ namespace Barotrauma
                     return;
                 }
                 var characterInfo = new CharacterInfo(
-                    Character.HumanSpeciesName,
+                    CharacterPrefab.HumanSpeciesName,
                     jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
                 }
 
-                var newCharacter = Character.Create(Character.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                var newCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                 newCharacter.GiveJobItems(spawnPoint);
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;

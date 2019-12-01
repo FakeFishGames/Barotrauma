@@ -168,7 +168,7 @@ namespace Barotrauma
             CharacterInfo myCharacterInfo = null;
             if (hasCharacterData)
             {
-                myCharacterInfo = CharacterInfo.ClientRead(Character.HumanSpeciesName, msg);
+                myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg);
             }
             
             MultiPlayerCampaign campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
