@@ -35,11 +35,18 @@ namespace Barotrauma
         /// </summary>
         public Character Source;
 
+        public Dictionary<AfflictionPrefab.Effect, List<StatusEffect>> StatusEffects;
+
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
             Strength = strength;
             Identifier = prefab?.Identifier;
+            StatusEffects = new Dictionary<AfflictionPrefab.Effect, List<StatusEffect>>();
+            foreach (var effect in Prefab.Effects)
+            {
+                StatusEffects.Add(effect, effect.StatusEffects.Select(e => StatusEffect.Load(e, effect.ParentDebugName)).ToList());
+            }
         }
 
         public void Serialize(XElement element)
@@ -169,7 +176,7 @@ namespace Barotrauma
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return;
+            if (currentEffect == null || !StatusEffects.ContainsKey(currentEffect)) { return; }
 
             if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
             {
@@ -180,7 +187,7 @@ namespace Barotrauma
                 Strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
             }
 
-            foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
+            foreach (StatusEffect statusEffect in StatusEffects[currentEffect])
             {
                 statusEffect.SetUser(Source);
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
