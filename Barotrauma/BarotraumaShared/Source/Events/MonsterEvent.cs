@@ -52,15 +52,15 @@ namespace Barotrauma
             : base (prefab)
         {
             speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesName);
+            if (characterPrefab != null)
+            {
+                speciesName = characterPrefab.Identifier;
+            }
+
             if (string.IsNullOrEmpty(speciesName))
             {
                 throw new Exception("speciesname is null!");
-            }
-
-            CharacterPrefab characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
-            if (characterPrefab?.XDocument != null)
-            {
-                speciesName = characterPrefab.XDocument.Root.GetAttributeString("speciesname", characterPrefab.XDocument.Root.GetAttributeString("name", speciesName));
             }
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
