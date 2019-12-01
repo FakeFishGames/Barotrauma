@@ -120,7 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                targetItem.ParentInventory?.RemoveItem(targetItem);
+
                 if (equip)
                 {
                     int targetSlot = -1;
@@ -137,7 +137,11 @@ namespace Barotrauma
                             var otherItem = character.Inventory.Items[i];
                             if (otherItem == null) { continue; }
                             //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                            if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && 
+                                character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any }))
+                            {
+                                continue;
+                            }
                             //if everything else fails, simply drop the existing item
                             otherItem.Drop(character);
                         }
@@ -167,7 +171,6 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
-                        targetItem.Drop(character);
                     }
                 }
             }

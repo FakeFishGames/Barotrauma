@@ -241,6 +241,7 @@ namespace Barotrauma
 
             if (!Character.LockHands)
             {
+                //TODO: is there a need to do this every frame?
                 UnequipUnnecessaryItems();
             }
 
