@@ -489,7 +489,7 @@ namespace Barotrauma.Networking
         }
 
         private PlayStyle playstyleSelection;
-        [Serialize(PlayStyle.Serious, true)]
+        [Serialize(PlayStyle.Casual, true)]
         public PlayStyle PlayStyle
         {
             get { return playstyleSelection; }
