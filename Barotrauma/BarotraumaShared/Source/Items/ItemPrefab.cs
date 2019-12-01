@@ -158,6 +158,8 @@ namespace Barotrauma
 
         private List<XElement> fabricationRecipeElements = new List<XElement>();
 
+        private readonly Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
+
         /// <summary>
         /// Is this prefab overriding a prefab in another content package
         /// </summary>
@@ -777,26 +779,9 @@ namespace Barotrauma
 
                         string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
 
-                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.Where(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier).ToList();
-                        if (matchingAfflictions.Count == 0)
-                        {
-                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - couldn't define as a treatment, no treatments with the identifier or type \"" + treatmentIdentifier + "\" were found.");
-                            continue;
-                        }
-
                         float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-                        foreach (AfflictionPrefab matchingAffliction in matchingAfflictions)
-                        {
-                            if (matchingAffliction.TreatmentSuitability.ContainsKey(identifier))
-                            {
-                                matchingAffliction.TreatmentSuitability[identifier] =
-                                    Math.Max(matchingAffliction.TreatmentSuitability[identifier], suitability);
-                            }
-                            else
-                            {
-                                matchingAffliction.TreatmentSuitability.Add(identifier, suitability);
-                            }
-                        }
+
+                        treatmentSuitability.Add(treatmentIdentifier, suitability);
                         break;
                 }
             }
@@ -826,6 +811,11 @@ namespace Barotrauma
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
             Prefabs.Add(this, allowOverriding);
+        }
+
+        public float GetTreatmentSuitability(string treatmentIdentifier)
+        {
+            return treatmentSuitability.TryGetValue(treatmentIdentifier, out float suitability) ? suitability : 0.0f;
         }
 
         public PriceInfo GetPrice(Location location)

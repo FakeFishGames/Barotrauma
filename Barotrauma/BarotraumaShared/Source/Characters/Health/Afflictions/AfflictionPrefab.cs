@@ -246,15 +246,23 @@ namespace Barotrauma
 
         private List<Effect> effects = new List<Effect>();
 
-        private Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
-
         private readonly string typeName;
 
         private readonly ConstructorInfo constructor;
 
-        public Dictionary<string, float> TreatmentSuitability
+        public IEnumerable<KeyValuePair<string, float>> TreatmentSuitability
         {
-            get { return treatmentSuitability; }
+            get
+            {
+                foreach (var itemPrefab in ItemPrefab.Prefabs)
+                {
+                    float suitability = Math.Max(itemPrefab.GetTreatmentSuitability(Identifier), itemPrefab.GetTreatmentSuitability(AfflictionType));
+                    if (suitability > 0.0f)
+                    {
+                        yield return new KeyValuePair<string, float>(itemPrefab.Identifier, suitability);
+                    }
+                }
+            }
         }
 
         public static void LoadAll(IEnumerable<string> filePaths)
