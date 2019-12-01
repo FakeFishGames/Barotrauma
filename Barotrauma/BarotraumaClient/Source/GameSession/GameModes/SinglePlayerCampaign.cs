@@ -32,7 +32,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { TryEndRound(GetLeavingSub()); return true; }
             };
 
-            foreach (JobPrefab jobPrefab in JobPrefab.List)
+            foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {

@@ -1360,7 +1360,7 @@ namespace Barotrauma
                             GameMain.Config.JobPreferences.RemoveAt(i);
                             continue;
                         }
-                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.Prefabs[jobIdent.First].Last(), jobIdent.Second);
+                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.Prefabs[jobIdent.First], jobIdent.Second);
                         break;
                     }
 
@@ -1706,7 +1706,7 @@ namespace Barotrauma
             Color color = Color.White;
             if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
             {
-                color = JobPrefab.Prefabs[client.PreferredJob].Last().UIColor;
+                color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
             }
             playerFrame.Color = color * 0.4f;
             playerFrame.HoverColor = color * 0.6f;
@@ -2524,11 +2524,11 @@ namespace Barotrauma
 
             GUIButton jobButton = null;
 
-            var availableJobs = JobPrefab.Prefabs.Values.Select(l => l.Last()).Where(jobPrefab =>
+            var availableJobs = JobPrefab.Prefabs.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
             ).Select(j => new Pair<JobPrefab, int>(j, 1));
             availableJobs = availableJobs.Concat(
-                JobPrefab.Prefabs.Values.Select(l => l.Last()).Where(jobPrefab =>
+                JobPrefab.Prefabs.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
             ).Select(j => JobList.Content.FindChild(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == j).UserData as Pair<JobPrefab, int>));
             availableJobs = availableJobs.ToList();

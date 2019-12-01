@@ -2931,9 +2931,9 @@ namespace Barotrauma.Networking
             {
                 string jobIdentifier = message.ReadString();
                 int variant = message.ReadByte();
-                if (JobPrefab.Prefabs.TryGetValue(jobIdentifier, out List<JobPrefab> jobPrefabs))
+                if (JobPrefab.Prefabs.ContainsKey(jobIdentifier))
                 {
-                    jobPreferences.Add(new Pair<JobPrefab, int>(jobPrefabs.Last(), variant));
+                    jobPreferences.Add(new Pair<JobPrefab, int>(JobPrefab.Prefabs[jobIdentifier], variant));
                 }
             }
 
@@ -2950,7 +2950,7 @@ namespace Barotrauma.Networking
 
         public void AssignJobs(List<Client> unassigned)
         {
-            var jobList = JobPrefab.List.ToList();
+            var jobList = JobPrefab.Prefabs.ToList();
             unassigned = new List<Client>(unassigned);
             unassigned = unassigned.OrderBy(sp => Rand.Int(int.MaxValue)).ToList();
 
@@ -3125,7 +3125,7 @@ namespace Barotrauma.Networking
         public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List)
+            foreach (JobPrefab jp in JobPrefab.Prefabs)
             {
                 assignedPlayerCount.Add(jp, 0);
             }
@@ -3161,7 +3161,7 @@ namespace Barotrauma.Networking
                 {
                     if (unassignedBots.Count == 0) { break; }
 
-                    JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.Prefabs.Values.GetRandom().Last();
+                    JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.Prefabs.GetRandom();
                     if (assignedPlayerCount[jobPrefab] >= jobPrefab.MaxNumber) { continue; }
 
                     unassignedBots[0].Job = new Job(jobPrefab);
@@ -3175,7 +3175,7 @@ namespace Barotrauma.Networking
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = JobPrefab.Prefabs.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
                 //all jobs taken, give a random job
                 if (remainingJobs.Count() == 0)
                 {

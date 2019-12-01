@@ -94,7 +94,7 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific()
         {
-            var jobs = JobPrefab.List.ToList();
+            var jobs = JobPrefab.Prefabs.ToList();
             // TODO: modding support?
             JobPreferences = new List<Pair<JobPrefab, int>>(jobs.GetRange(0, Math.Min(jobs.Count, 3)).Select(j => new Pair<JobPrefab, int>(j, 0)));
 

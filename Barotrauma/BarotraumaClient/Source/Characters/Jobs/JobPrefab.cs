@@ -1,9 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Linq;
+using System;
 
 namespace Barotrauma
 {
-    partial class JobPrefab
+    partial class JobPrefab : IPrefab, IDisposable
     {
         public GUIButton CreateInfoFrame()
         {

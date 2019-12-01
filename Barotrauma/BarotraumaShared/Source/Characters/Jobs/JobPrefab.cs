@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Barotrauma.Extensions;
 using System.Linq;
 using System.IO;
+using System;
 
 namespace Barotrauma
 {
@@ -29,18 +30,16 @@ namespace Barotrauma
         }
     }
 
-    partial class JobPrefab
+    partial class JobPrefab : IPrefab, IDisposable
     {
-        public static Dictionary<string, List<JobPrefab>> Prefabs { get; private set; }
-        public static IEnumerable<JobPrefab> List
+        public static readonly PrefabCollection<JobPrefab> Prefabs = new PrefabCollection<JobPrefab>();
+
+        private bool disposed = false;
+        public void Dispose()
         {
-            get
-            {
-                foreach (var kvp in Prefabs)
-                {
-                    yield return kvp.Value.Last();
-                }
-            }
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
         }
 
         public static XElement NoJobElement;
@@ -51,9 +50,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Issue in the code execution order: job prefabs not loaded.");
                 return null;
             }
-            if (Prefabs.TryGetValue(identifier, out List<JobPrefab> jobs))
+            if (Prefabs.ContainsKey(identifier))
             {
-                return jobs.Last();
+                return Prefabs[identifier];
             }
             else
             {
@@ -89,6 +88,10 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public string OriginalName { get { return Identifier; } }
+
+        public ContentPackage ContentPackage { get; private set; }
 
         [Serialize("", false)]
         public string Description
@@ -307,12 +310,10 @@ namespace Barotrauma
         }
 
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.Values.GetRandom(sync).Last();
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
 
         public static void LoadAll(IEnumerable<string> filePaths)
         {
-            Prefabs = new Dictionary<string, List<JobPrefab>>();
-
             foreach (string filePath in filePaths)
             {
                 LoadFromFile(filePath);
@@ -334,32 +335,12 @@ namespace Barotrauma
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), filePath);
-                    List<JobPrefab> list = null;
-                    if (Prefabs.TryGetValue(job.Identifier, out list))
-                    {
-                        DebugConsole.NewMessage($"Overriding the job '{job.Identifier}' with another defined in '{filePath}'", Color.Yellow);
-                    }
-                    else
-                    {
-                        list = new List<JobPrefab>();
-                        Prefabs.Add(job.Identifier, list);
-                    }
-                    list.Add(job);
+                    Prefabs.Add(job, true);
                 }
                 else
                 {
-                    string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
-                    if (Prefabs.ContainsKey(identifier))
-                    {
-                        DebugConsole.ThrowError($"Error in '{filePath}': Duplicate job definition found for: '{identifier}'. Use the <override> XML element as the parent of job element's definition to override the existing job.");
-                    }
-                    else
-                    {
-                        var job = new JobPrefab(element, filePath);
-                        List<JobPrefab> list = new List<JobPrefab>();
-                        Prefabs.Add(job.Identifier, list);
-                        list.Add(job);
-                    }
+                    var job = new JobPrefab(element, filePath);
+                    Prefabs.Add(job, false);
                 }
             }
             NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
@@ -368,35 +349,7 @@ namespace Barotrauma
 
         public static void RemoveByFile(string filePath)
         {
-            List<string> keysToRemove = new List<string>();
-
-            foreach (var kvp in Prefabs)
-            {
-                var key = kvp.Key;
-                var list = kvp.Value;
-
-                List<JobPrefab> prefabsToRemove = new List<JobPrefab>();
-
-                foreach (var prefab in list)
-                {
-                    if (prefab.FilePath == filePath)
-                    {
-                        prefabsToRemove.Add(prefab);
-                    }
-                }
-
-                foreach (var p in prefabsToRemove)
-                {
-                    list.Remove(p);
-                }
-
-                if (list.Count == 0) { keysToRemove.Add(key); }
-            }
-
-            foreach (var k in keysToRemove)
-            {
-                Prefabs.Remove(k);
-            }
+            Prefabs.RemoveByFile(filePath);
         }
     }
 }

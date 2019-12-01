@@ -207,7 +207,7 @@ namespace Barotrauma
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
                 }
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List)
+                foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
                 {
                     characterFiles.Add(jobPrefab.Name);
                 }
@@ -1357,13 +1357,13 @@ namespace Barotrauma
 
             string characterLowerCase = args[0].ToLowerInvariant();
             JobPrefab job = null;
-            if (!JobPrefab.Prefabs.TryGetValue(characterLowerCase, out List<JobPrefab> jobs))
+            if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
             {
-                job = JobPrefab.List.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+                job = JobPrefab.Prefabs.Find(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
             }
             else
             {
-                job = jobs.Last();
+                job = JobPrefab.Prefabs[characterLowerCase];
             }
             bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             
