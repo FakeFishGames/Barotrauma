@@ -4331,6 +4331,6 @@
   <dialogcannotreachplace>Can't get there!</dialogcannotreachplace>
   <dialogcannotreachfire>Can't get to the fire at [name]!</dialogcannotreachfire>
   <dialogcannotreachleak>Can't get to the leak near [name]!</dialogcannotreachleak>
-  <dialogcannotreachpatient>Can't get to the patient! ([name])</dialogcannotreachpatient>
+  <dialogcannotreachpatient>Can't get to [name]!</dialogcannotreachpatient>
 
 </infotexts>
