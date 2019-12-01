@@ -553,11 +553,11 @@ namespace Barotrauma
 
         public float GetTreatmentSuitability(Item item)
         {
-            if (item == null || !treatmentSuitability.ContainsKey(item.Prefab.Identifier.ToLowerInvariant()))
+            if (item == null)
             {
                 return 0.0f;
             }
-            return treatmentSuitability[item.Prefab.Identifier.ToLowerInvariant()];
+            return Math.Max(item.Prefab.GetTreatmentSuitability(Identifier), item.Prefab.GetTreatmentSuitability(AfflictionType));
         }
     }
 }
