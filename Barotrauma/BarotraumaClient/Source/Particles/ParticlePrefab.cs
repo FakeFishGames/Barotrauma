@@ -1,15 +1,25 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class ParticlePrefab : ISerializableEntity
+    class ParticlePrefab : IPrefab, IDisposable, ISerializableEntity
     {
         public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
 
         public readonly List<Sprite> Sprites;
+
+        public void Dispose()
+        {
+            foreach (Sprite spr in Sprites)
+            {
+                spr.Remove();
+            }
+            Sprites.Clear();
+        }
 
         public string Name
         {
@@ -22,6 +32,17 @@ namespace Barotrauma.Particles
             get;
             private set;
         }
+
+        public string OriginalName { get { return Name; } }
+
+        public string Identifier { get { return Name; } }
+
+        public ContentPackage ContentPackage
+        {
+            get;
+            private set;
+        }
+
         public string DisplayName
         {
             get;

@@ -262,7 +262,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Prefabs\Prefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Prefabs\IPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Prefabs\PrefabCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />

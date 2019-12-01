@@ -44,7 +44,7 @@ namespace Barotrauma.Particles
         }
         private Particle[] particles;
 
-        private readonly Dictionary<string, List<ParticlePrefab>> prefabs = new Dictionary<string, List<ParticlePrefab>>();
+        private readonly PrefabCollection<ParticlePrefab> prefabs = new PrefabCollection<ParticlePrefab>();
 
         private Camera cam;
 
@@ -106,34 +106,13 @@ namespace Barotrauma.Particles
 
             foreach (var kvp in particleElements)
             {
-                List<ParticlePrefab> prefabList = null;
-                if (!prefabs.ContainsKey(kvp.Key))
-                {
-                    prefabList = new List<ParticlePrefab>();
-                    prefabs.Add(kvp.Key, prefabList);
-                }
-                else
-                {
-                    prefabList = prefabs[kvp.Key];
-                }
-
-                prefabList.Add(new ParticlePrefab(kvp.Value, configFile));
+                prefabs.Add(new ParticlePrefab(kvp.Value, configFile), allowOverriding);
             }
         }
 
         public void RemovePrefabsByFile(string configFile)
         {
-            List<string> emptyKeys = new List<string>();
-            foreach (var kvp in prefabs)
-            {
-                kvp.Value.RemoveAll(pf => pf.FilePath == configFile);
-                if (kvp.Value.Count == 0) { emptyKeys.Add(kvp.Key); }
-            }
-
-            foreach (var key in emptyKeys)
-            {
-                prefabs.Remove(key);
-            }
+            prefabs.RemoveByFile(configFile);
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null)
@@ -179,21 +158,12 @@ namespace Barotrauma.Particles
 
         public List<ParticlePrefab> GetPrefabList()
         {
-            return prefabs.Values.Select(l => l.Last()).ToList();
+            return prefabs.ToList();
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
         {
-            List<ParticlePrefab> prefabList;
-            prefabs.TryGetValue(prefabName, out prefabList);
-
-            if (prefabList == null)
-            {
-                DebugConsole.ThrowError("Particle prefab " + prefabName + " not found!");
-                return null;
-            }
-
-            return prefabList.Last();
+            return prefabs.Find(p => p.Identifier == prefabName);
         }
 
         private void RemoveParticle(int index)
