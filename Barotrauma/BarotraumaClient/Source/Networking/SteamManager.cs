@@ -1408,12 +1408,31 @@ namespace Barotrauma.Steam
 
             contentFilePath = contentFilePath.CleanUpPath();
 
+            if (checkIfFileExists && File.Exists(contentFilePath))
+            {
+                return contentFilePath;
+            }
+
             string[] splitPath = contentFilePath.Split('/');
             if (splitPath.Length < 2 || splitPath[0] != "Mods" || splitPath[1] != packageName)
             {
                 string newPath;
                 if (splitPath.Length >= 2 && splitPath[0] == "Mods")
                 {
+                    if (checkIfFileExists)
+                    {
+                        ContentPackage otherContentPackage = ContentPackage.List.Find(cp => cp.Name.ToLowerInvariant() == splitPath[1].ToLowerInvariant());
+                        if (otherContentPackage != null)
+                        {
+                            splitPath[1] = otherContentPackage.Name;
+                        }
+                        newPath = Path.Combine(packageName, string.Join("/", splitPath));
+                        if (File.Exists(newPath))
+                        {
+                            contentFilePath = newPath;
+                            return contentFilePath;
+                        }
+                    }
                     splitPath = splitPath.Skip(2).ToArray();
                     newPath = Path.Combine(packageName, string.Join("/", splitPath));
                 }
@@ -1421,13 +1440,9 @@ namespace Barotrauma.Steam
                 {
                     newPath = Path.Combine(packageName, contentFilePath);
                 }
-                if (!checkIfFileExists || !File.Exists(contentFilePath))
-                {
-                    contentFilePath = newPath;
-                }
             }
 
-            return contentFilePath.CleanUpPath();
+            return contentFilePath;
         }
 
         #endregion
