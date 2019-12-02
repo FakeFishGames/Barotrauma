@@ -3724,4 +3724,7 @@
   <entityname.keyboard>Keyboard</entityname.keyboard>
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
 
+  <label.batterycharge>Battery charge%</label.batterycharge>
+
+
 </infotexts>
