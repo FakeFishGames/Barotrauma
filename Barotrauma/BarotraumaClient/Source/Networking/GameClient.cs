@@ -2684,5 +2684,12 @@ namespace Barotrauma.Networking
             }
             clientPeer.Send(outMsg, DeliveryMethod.Reliable);
         }
+
+#if DEBUG
+        public void ForceTimeOut()
+        {
+            clientPeer?.ForceTimeOut();
+        }
+#endif
     }
 }

@@ -357,5 +357,12 @@ namespace Barotrauma.Networking
 
             OnDisconnect?.Invoke();
         }
+
+#if DEBUG
+        public override void ForceTimeOut()
+        {
+            timeout = 0.0f;
+        }
+#endif
     }
 }

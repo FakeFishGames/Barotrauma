@@ -491,5 +491,10 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage("Failed to send own message to host: " + result);
             }
         }
+
+        public override void ForceTimeOut()
+        {
+            netClient?.ServerConnection?.ForceTimeOut();
+        }
     }
 }

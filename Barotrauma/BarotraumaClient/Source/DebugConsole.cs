@@ -1188,6 +1188,10 @@ namespace Barotrauma
             {
                 (Character.Controlled?.AnimController as FishAnimController)?.Mirror(lerp: false);
             }, isCheat: false));
+            commands.Add(new Command("forcetimeout", "Immediately cause the client to time out if one is running.", (string[] args) =>
+            {
+                GameMain.Client?.ForceTimeOut();
+            }, isCheat: false));
 
 #endif
 
