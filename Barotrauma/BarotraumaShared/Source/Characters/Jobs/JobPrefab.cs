@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using System.Linq;
-using System.IO;
 
 namespace Barotrauma
 {
@@ -150,6 +149,7 @@ namespace Barotrauma
 
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
+        private List<XElement> previewElements;
 
         public JobPrefab(XElement element)
         {
@@ -228,6 +228,8 @@ namespace Barotrauma
             {
                 ClothingElement = element.Element("portraitclothing");
             }
+
+            previewElements = element.Elements("PreviewSprites").Concat(element.Elements("previewsprites")).ToList();
         }
         
         public class OutfitPreview
@@ -260,15 +262,13 @@ namespace Barotrauma
 
             for (int i = 0; i < outfitPrefabs.Count; i++)
             {
-                var outfitPreview = new OutfitPreview();
-
-                // TODO: Perhaps store these
-                var previewElement = (outfitPrefabs[i] as ItemPrefab).ConfigElement.Element("PreviewSprites");
-                if (previewElement == null) { previewElement = (outfitPrefabs[i] as ItemPrefab).ConfigElement.Element("PreviewSprites"); }
+                if (i > previewElements.Count - 1) { break; }
+                var previewElement = previewElements[i];
                 if (previewElement == null) { continue; }
 
                 dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
 
+                var outfitPreview = new OutfitPreview();
                 var children = previewElement.Elements().ToList();
                 for (int n = 0; n < children.Count; n++)
                 {

@@ -58,10 +58,6 @@
       <sprite name="Captain's Uniform Left Shoe" texture="captain_legs_[GENDER]_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Captain's Uniform Right Shoe" texture="captain_legs_[GENDER]_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
-    <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
-    </PreviewSprites>
   </Item>
   <Item name="" identifier="captainsuniform2" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
@@ -85,10 +81,6 @@
       <sprite name="Captain's Uniform Left Shoe" texture="captain_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Captain's Uniform Right Shoe" texture="captain_legs_[GENDER]_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
-    <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_2.png" sourcerect="121,0,76,80" offset="-20,15" />
-    </PreviewSprites>
   </Item>
   <Item name="" identifier="captainsuniform3" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
@@ -112,10 +104,6 @@
       <sprite name="Captain's Uniform Left Shoe" texture="captain_legs_[GENDER]_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Captain's Uniform Right Shoe" texture="captain_legs_[GENDER]_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
-    <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_3.png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_3.png" sourcerect="121,0,76,80" offset="-20,15" />
-    </PreviewSprites>
   </Item>
   <!-- UNIFORMS END -->
 </Items>
