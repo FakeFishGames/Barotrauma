@@ -23,7 +23,20 @@ namespace Barotrauma.Items.Components
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
-        public bool IsStuck { get; private set; }
+
+        private bool isStuck;
+        public bool IsStuck
+        {
+            get { return isStuck; }
+            private set
+            {
+                if (isStuck == value) { return; }
+                isStuck = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
 
         private float resetPredictionTimer;
         private float toggleCooldownTimer;
@@ -67,12 +80,12 @@ namespace Barotrauma.Items.Components
         public float Stuck
         {
             get { return stuck; }
-            set 
+            set
             {
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck <= 0.0f) IsStuck = false;
-                if (stuck >= 100.0f) IsStuck = true;
+                if (stuck <= 0.0f) { IsStuck = false; }
+                if (stuck >= 100.0f) { IsStuck = true; }
             }
         }
 
@@ -562,6 +575,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+            if (IsStuck) return;
+
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
             if (connection.Name == "toggle")

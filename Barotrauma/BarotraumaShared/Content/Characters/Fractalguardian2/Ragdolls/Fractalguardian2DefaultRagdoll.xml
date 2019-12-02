@@ -17,7 +17,7 @@
   </limb>
   <limb id = "2" width="30" height="175">
     <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-    <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
+    <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash" severlimbsprobability="0.8">
       <Affliction identifier="internaldamage" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
       <!--<Affliction identifier="stun" strength="0.5"/>-->
@@ -30,7 +30,7 @@
 
   <limb id = "4" width="30" height="175">
     <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
-    <attack range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash">
+    <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash" severlimbsprobability="0.8">
       <Affliction identifier="internaldamage" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
       <!--<Affliction identifier="stun" strength="0.5"/>-->

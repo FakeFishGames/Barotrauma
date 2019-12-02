@@ -35,6 +35,11 @@ namespace Barotrauma.Items.Components
             set { /*do nothing*/ }
         }
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
         {

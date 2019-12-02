@@ -18,7 +18,17 @@ namespace Barotrauma.Networking
         public UInt64 OwnerID;
         public bool OwnerVerified;
 
-        public string ServerName;
+        private string serverName;
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                serverName = value;
+                if (serverName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
+            }
+        }
+
         public string ServerMessage;
         public bool GameStarted;
         public int PlayerCount;
