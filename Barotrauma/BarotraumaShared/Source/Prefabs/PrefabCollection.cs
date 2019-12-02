@@ -132,6 +132,14 @@ namespace Barotrauma
             prefabs.Insert(0, basePrefab);
         }
 
+        public void SortAll()
+        {
+            foreach (var kvp in prefabs)
+            {
+                Sort(kvp.Value);
+            }
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             foreach (var kpv in prefabs)
