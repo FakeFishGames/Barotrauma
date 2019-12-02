@@ -184,9 +184,9 @@ namespace Barotrauma
             }
             // Let's not actually load the parameters until we have solved which file is the last, because loading the parameters takes some resources that would also need to be released.
             XElement selectedElement = null;
-            foreach (string file in files)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
@@ -194,12 +194,12 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     if (selectedElement != null)
                     {
-                        DebugConsole.NewMessage($"Overriding the map generation parameters with '{file}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the map generation parameters with '{file.Path}'", Color.Yellow);
                     }
                 }
                 else if (selectedElement != null)
                 {
-                    DebugConsole.ThrowError($"Error in {file}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in {file.Path}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
                     break;
                 }
                 selectedElement = mainElement;

@@ -187,7 +187,7 @@ namespace Barotrauma
                     errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     type = ContentType.None;
                 }
-                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type, this));
             }
 
             bool compatible = IsCompatible();
@@ -532,9 +532,9 @@ namespace Barotrauma
             return contentPackages.SelectMany(f => f.Files).Select(f => f.Path).Where(p => p.EndsWith(".xml"));
         }
 
-        public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
+        public static IEnumerable<ContentFile> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
-            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type).Select(f => f.Path);
+            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type);
         }
 
         public IEnumerable<string> GetFilesOfType(ContentType type)
@@ -617,14 +617,17 @@ namespace Barotrauma
         public string Path;
         public ContentType Type;
 
-        public Workshop.Item WorkShopItem;
+        //public Workshop.Item WorkShopItem;
 
-        public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
+        public ContentPackage ContentPackage;
+
+        public ContentFile(string path, ContentType type, ContentPackage contentPackage = null)//, Workshop.Item workShopItem = null)
         {
             Path = path.CleanUpPath();
 
             Type = type;
-            WorkShopItem = workShopItem;
+            //WorkShopItem = workShopItem;
+            ContentPackage = contentPackage;
         }
 
         public override string ToString()

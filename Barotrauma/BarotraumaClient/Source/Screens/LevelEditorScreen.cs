@@ -498,9 +498,9 @@ namespace Barotrauma
                 Indent = true,
                 NewLineOnAttributes = true
             };
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
                 foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
@@ -512,7 +512,7 @@ namespace Barotrauma
                         break;
                     }
                 }
-                using (var writer = XmlWriter.Create(configFile, settings))
+                using (var writer = XmlWriter.Create(configFile.Path, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -520,9 +520,9 @@ namespace Barotrauma
             }
 
             settings.NewLineOnAttributes = false;
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
                 foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
@@ -534,7 +534,7 @@ namespace Barotrauma
                         break;
                     }
                 }
-                using (var writer = XmlWriter.Create(configFile, settings))
+                using (var writer = XmlWriter.Create(configFile.Path, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -546,9 +546,9 @@ namespace Barotrauma
 
         private void Serialize(LevelGenerationParams genParams)
         {
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
                 bool elementFound = false;
@@ -567,7 +567,7 @@ namespace Barotrauma
                         NewLineOnAttributes = true
                     };
 
-                    using (var writer = XmlWriter.Create(configFile, settings))
+                    using (var writer = XmlWriter.Create(configFile.Path, settings))
                     {
                         doc.WriteTo(writer);
                         writer.Flush();
@@ -661,9 +661,9 @@ namespace Barotrauma
                     newPrefab.Name = nameBox.Text;
                     
                     XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
-                    foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
+                    foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
                     {
-                        XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                        XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                         if (doc == null) { continue; }
                         var newElement = new XElement(newPrefab.Name);
                         newPrefab.Save(newElement);
@@ -673,7 +673,7 @@ namespace Barotrauma
                             new XAttribute("origin", "0.5,0.5")));
 
                         doc.Root.Add(newElement);
-                        using (var writer = XmlWriter.Create(configFile, settings))
+                        using (var writer = XmlWriter.Create(configFile.Path, settings))
                         {
                             doc.WriteTo(writer);
                             writer.Flush();

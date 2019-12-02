@@ -258,6 +258,8 @@ namespace Barotrauma
             SelectedContentPackages.Remove(otherCorePackage);
             SelectedContentPackages.Add(contentPackage);
 
+            ContentPackage.SortContentPackages();
+
             List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 =>
                 !contentPackage.Files.Any(f2 =>
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
@@ -381,23 +383,23 @@ namespace Barotrauma
                 switch (file.Type)
                 {
                     case ContentType.Character:
-                        CharacterPrefab.LoadFromFile(file.Path, contentPackage);
+                        CharacterPrefab.LoadFromFile(file);
                         break;
                     case ContentType.NPCConversations:
-                        NPCConversation.Load(file.Path);
+                        NPCConversation.LoadFromFile(file);
                         break;
                     case ContentType.Jobs:
-                        JobPrefab.LoadFromFile(file.Path);
+                        JobPrefab.LoadFromFile(file);
                         break;
                     case ContentType.Item:
-                        ItemPrefab.LoadFromFile(file.Path);
+                        ItemPrefab.LoadFromFile(file);
                         shouldRefreshFabricationRecipes = true;
                         break;
                     case ContentType.ItemAssembly:
                         new ItemAssemblyPrefab(file.Path);
                         break;
                     case ContentType.Structure:
-                        StructurePrefab.LoadFromFile(file.Path);
+                        StructurePrefab.LoadFromFile(file);
                         break;
                     case ContentType.Submarine:
                         shouldRefreshSubs = true;
@@ -406,7 +408,7 @@ namespace Barotrauma
                         TextManager.LoadTextPack(file.Path);
                         break;
                     case ContentType.Afflictions:
-                        AfflictionPrefab.LoadFromFile(file.Path);
+                        AfflictionPrefab.LoadFromFile(file);
                         break;
                     case ContentType.RuinConfig:
                         shouldRefreshRuinGenerationParams = true;
@@ -434,10 +436,10 @@ namespace Barotrauma
                         shouldRefreshSoundPlayer = true;
                         break;
                     case ContentType.Particles:
-                        GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
+                        GameMain.ParticleManager.LoadPrefabsFromFile(file);
                         break;
                     case ContentType.Decals:
-                        GameMain.DecalManager.LoadFromFile(file.Path);
+                        GameMain.DecalManager.LoadFromFile(file);
                         break;
 #endif
                 }
@@ -489,7 +491,6 @@ namespace Barotrauma
             if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
 
-            ContentPackage.SortContentPackages();
         }
 
         public void SelectContentPackage(ContentPackage contentPackage)
@@ -497,6 +498,7 @@ namespace Barotrauma
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
+                ContentPackage.SortContentPackages();
 
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
@@ -513,23 +515,23 @@ namespace Barotrauma
                     switch (file.Type)
                     {
                         case ContentType.Character:
-                            CharacterPrefab.LoadFromFile(file.Path, contentPackage);
+                            CharacterPrefab.LoadFromFile(file);
                             break;
                         case ContentType.NPCConversations:
-                            NPCConversation.Load(file.Path);
+                            NPCConversation.LoadFromFile(file);
                             break;
                         case ContentType.Jobs:
-                            JobPrefab.LoadFromFile(file.Path);
+                            JobPrefab.LoadFromFile(file);
                             break;
                         case ContentType.Item:
-                            ItemPrefab.LoadFromFile(file.Path);
+                            ItemPrefab.LoadFromFile(file);
                             shouldRefreshFabricationRecipes = true;
                             break;
                         case ContentType.ItemAssembly:
                             new ItemAssemblyPrefab(file.Path);
                             break;
                         case ContentType.Structure:
-                            StructurePrefab.LoadFromFile(file.Path);
+                            StructurePrefab.LoadFromFile(file);
                             break;
                         case ContentType.Submarine:
                             shouldRefreshSubs = true;
@@ -538,7 +540,7 @@ namespace Barotrauma
                             TextManager.LoadTextPack(file.Path);
                             break;
                         case ContentType.Afflictions:
-                            AfflictionPrefab.LoadFromFile(file.Path);
+                            AfflictionPrefab.LoadFromFile(file);
                             break;
                         case ContentType.RuinConfig:
                             shouldRefreshRuinGenerationParams = true;
@@ -566,10 +568,10 @@ namespace Barotrauma
                             shouldRefreshSoundPlayer = true;
                             break;
                         case ContentType.Particles:
-                            GameMain.ParticleManager.LoadPrefabsFromFile(file.Path);
+                            GameMain.ParticleManager.LoadPrefabsFromFile(file);
                             break;
                         case ContentType.Decals:
-                            GameMain.DecalManager.LoadFromFile(file.Path);
+                            GameMain.DecalManager.LoadFromFile(file);
                             break;
 #endif
                     }
@@ -620,8 +622,6 @@ namespace Barotrauma
 #if CLIENT
                 if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
-
-                ContentPackage.SortContentPackages();
             }
         }
 
@@ -630,6 +630,7 @@ namespace Barotrauma
             if (SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Remove(contentPackage);
+                ContentPackage.SortContentPackages();
 
                 bool shouldRefreshSubs = false;
                 bool shouldRefreshFabricationRecipes = false;
@@ -753,8 +754,6 @@ namespace Barotrauma
 #if CLIENT
                 if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
 #endif
-
-                ContentPackage.SortContentPackages();
             }
         }
 

@@ -170,17 +170,17 @@ namespace Barotrauma
             private set;
         }
         
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {            
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                LoadFromFile(filePath);
+                LoadFromFile(file);
             }
         }
         
-        public static void LoadFromFile(string filePath)
+        public static void LoadFromFile(ContentFile file)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
             var rootElement = doc.Root;
             if (rootElement.IsOverride())
@@ -189,7 +189,7 @@ namespace Barotrauma
                 {
                     foreach (var childElement in element.Elements())
                     {
-                        Load(childElement, true, filePath);
+                        Load(childElement, true, file);
                     }
                 }
             }
@@ -201,12 +201,12 @@ namespace Barotrauma
                     {
                         foreach (var childElement in element.Elements())
                         {
-                            Load(childElement, true, filePath);
+                            Load(childElement, true, file);
                         }
                     }
                     else
                     {
-                        Load(element, false, filePath);
+                        Load(element, false, file);
                     }
                 }
             }
@@ -217,12 +217,13 @@ namespace Barotrauma
             Prefabs.RemoveByFile(filePath);
         }
 
-        public static StructurePrefab Load(XElement element, bool allowOverride, string filePath)
+        private static StructurePrefab Load(XElement element, bool allowOverride, ContentFile file)
         {
             StructurePrefab sp = new StructurePrefab
             {
                 originalName = element.GetAttributeString("name", ""),
-                FilePath = filePath
+                FilePath = file.Path,
+                ContentPackage = file.ContentPackage
             };
             sp.name = sp.originalName;
             sp.ConfigElement = element;

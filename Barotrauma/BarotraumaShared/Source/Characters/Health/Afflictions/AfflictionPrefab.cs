@@ -269,11 +269,11 @@ namespace Barotrauma
             }
         }
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                LoadFromFile(filePath);
+                LoadFromFile(file);
             }
 
             if (InternalDamage == null) DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs.");
@@ -285,9 +285,9 @@ namespace Barotrauma
             if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
         }
 
-        public static void LoadFromFile(string filePath)
+        public static void LoadFromFile(ContentFile file)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
             var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             if (doc.Root.IsOverride())
@@ -305,18 +305,18 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrWhiteSpace(identifier))
                     {
-                        DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{filePath}'");
+                        DebugConsole.ThrowError($"No identifier defined for the affliction '{elementName}' in file '{file.Path}'");
                         continue;
                     }
                     if (Prefabs.ContainsKey(identifier))
                     {
                         if (isOverride)
                         {
-                            DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{filePath}'", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{file.Path}'", Color.Yellow);
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{filePath}'");
+                            DebugConsole.ThrowError($"Duplicate affliction: '{identifier}' defined in {elementName} of '{file.Path}'");
                             continue;
                         }
                     }
@@ -341,39 +341,39 @@ namespace Barotrauma
                         {
                             if (isOverride)
                             {
-                                DebugConsole.NewMessage($"Overriding damage overlay with '{filePath}'", Color.Yellow);
+                                DebugConsole.NewMessage($"Overriding damage overlay with '{file.Path}'", Color.Yellow);
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Error in '{filePath}': damage overlay already loaded. Add <override></override> tags as the parent of the custom damage overlay sprite to allow overriding the vanilla one.");
+                                DebugConsole.ThrowError($"Error in '{file.Path}': damage overlay already loaded. Add <override></override> tags as the parent of the custom damage overlay sprite to allow overriding the vanilla one.");
                                 break;
                             }
                         }
                         CharacterHealth.DamageOverlay?.Remove();
                         CharacterHealth.DamageOverlay = new Sprite(element);
-                        CharacterHealth.DamageOverlayFile = filePath;
+                        CharacterHealth.DamageOverlayFile = file.Path;
 #endif
                         break;
                     case "bleeding":
-                        prefab = new AfflictionPrefab(sourceElement, filePath, typeof(AfflictionBleeding));
+                        prefab = new AfflictionPrefab(sourceElement, file.Path, typeof(AfflictionBleeding));
                         break;
                     case "huskinfection":
-                        prefab = new AfflictionPrefabHusk(sourceElement, filePath, typeof(AfflictionHusk));
+                        prefab = new AfflictionPrefabHusk(sourceElement, file.Path, typeof(AfflictionHusk));
                         break;
                     case "cprsettings":
                         if (CPRSettings.IsLoaded)
                         {
                             if (isOverride)
                             {
-                                DebugConsole.NewMessage($"Overriding the CPR settings with '{filePath}'", Color.Yellow);
+                                DebugConsole.NewMessage($"Overriding the CPR settings with '{file.Path}'", Color.Yellow);
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Error in '{filePath}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
+                                DebugConsole.ThrowError($"Error in '{file.Path}': CPR settings already loaded. Add <override></override> tags as the parent of the custom CPRSettings to allow overriding the vanilla values.");
                                 break;
                             }
                         }
-                        CPRSettings.Load(sourceElement, filePath);
+                        CPRSettings.Load(sourceElement, file.Path);
                         break;
                     case "damage":
                     case "burn":
@@ -382,10 +382,16 @@ namespace Barotrauma
                     case "stun":
                     case "pressure":
                     case "internaldamage":
-                        prefab = new AfflictionPrefab(sourceElement, filePath, typeof(Affliction));
+                        prefab = new AfflictionPrefab(sourceElement, file.Path, typeof(Affliction))
+                        {
+                            ContentPackage = file.ContentPackage
+                        };
                         break;
                     default:
-                        prefab = new AfflictionPrefab(sourceElement, filePath);
+                        prefab = new AfflictionPrefab(sourceElement, file.Path)
+                        {
+                            ContentPackage = file.ContentPackage
+                        };
                         break;
                 }
                 switch (identifier)

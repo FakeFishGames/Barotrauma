@@ -201,7 +201,7 @@ namespace Barotrauma
             },
             () =>
             {
-                List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
+                List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
                 for (int i = 0; i < characterFiles.Count; i++)
                 {
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();

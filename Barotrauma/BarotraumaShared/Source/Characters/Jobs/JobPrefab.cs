@@ -312,34 +312,40 @@ namespace Barotrauma
 
         public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                LoadFromFile(filePath);
+                LoadFromFile(file);
             }
         }
 
-        public static void LoadFromFile(string filePath)
+        public static void LoadFromFile(ContentFile file)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
             var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             if (doc.Root.IsOverride())
             {
-                DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
+                DebugConsole.ThrowError($"Error in '{file.Path}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
             }
             foreach (XElement element in mainElement.Elements())
             {
                 if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
                 if (element.IsOverride())
                 {
-                    var job = new JobPrefab(element.FirstElement(), filePath);
+                    var job = new JobPrefab(element.FirstElement(), file.Path)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
                     Prefabs.Add(job, true);
                 }
                 else
                 {
-                    var job = new JobPrefab(element, filePath);
+                    var job = new JobPrefab(element, file.Path)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
                     Prefabs.Add(job, false);
                 }
             }

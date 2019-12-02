@@ -18,9 +18,9 @@ namespace Barotrauma
         public static void Init()
         {
             var files = GameMain.Instance.GetFilesOfType(ContentType.TraitorMissions);
-            foreach (string file in files)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc?.Root == null) { continue; }
 
                 foreach (XElement element in doc.Root.Elements())

@@ -325,11 +325,7 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetBotSpawnMode(BotSpawnMode);
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
-            List<string> monsterNames = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
-            for (int i = 0; i < monsterNames.Count; i++)
-            {
-                monsterNames[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames[i]));
-            }
+            List<string> monsterNames = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
             MonsterEnabled = new Dictionary<string, bool>();
             foreach (string s in monsterNames)
             {

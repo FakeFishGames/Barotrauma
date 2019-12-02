@@ -61,24 +61,29 @@ namespace Barotrauma
             Prefabs.RemoveByFile(file);
         }
 
-        public static bool LoadFromFile(string file, ContentPackage contentPackage, bool forceOverride=false)
+        public static bool LoadFromFile(ContentFile file, bool forceOverride=false)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(file);
+            return LoadFromFile(file.Path, file.ContentPackage, forceOverride);
+        }
+
+        public static bool LoadFromFile(string filePath, ContentPackage contentPackage, bool forceOverride=false)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null)
             {
-                DebugConsole.ThrowError($"Loading character file failed: {file}");
+                DebugConsole.ThrowError($"Loading character file failed: {filePath}");
                 return false;
             }
-            if (Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf?.FilePath == file)))
+            if (Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf?.FilePath == filePath)))
             {
-                DebugConsole.ThrowError($"Duplicate path: {file}");
+                DebugConsole.ThrowError($"Duplicate path: {filePath}");
                 return false;
             }
             XElement mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             var name = mainElement.GetAttributeString("name", null);
             if (name != null)
             {
-                DebugConsole.NewMessage($"Error in {file}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+                DebugConsole.NewMessage($"Error in {filePath}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
             }
             else
             {
@@ -86,7 +91,7 @@ namespace Barotrauma
             }
             if (string.IsNullOrWhiteSpace(name))
             {
-                DebugConsole.ThrowError($"No species name defined for: {file}");
+                DebugConsole.ThrowError($"No species name defined for: {filePath}");
                 return false;
             }
             var identifier = name.ToLowerInvariant();
@@ -95,7 +100,7 @@ namespace Barotrauma
                 Name = name,
                 OriginalName = name,
                 Identifier = identifier,
-                FilePath = file,
+                FilePath = filePath,
                 ContentPackage = contentPackage,
                 XDocument = doc
             }, forceOverride || doc.Root.IsOverride());
@@ -105,12 +110,9 @@ namespace Barotrauma
 
         public static void LoadAll()
         {
-            foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+            foreach (ContentFile file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
             {
-                foreach (ContentFile file in cp.Files.Where(f => f.Type == ContentType.Character))
-                {
-                    LoadFromFile(file.Path, cp);
-                }
+                LoadFromFile(file);
             }
         }
     }

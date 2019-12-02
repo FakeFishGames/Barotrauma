@@ -471,15 +471,15 @@ namespace Barotrauma
             var files = GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters);
             if (!files.Any())
             {
-                files = new List<string>() { "Content/Map/LevelGenerationParameters.xml" };
+                files = new List<ContentFile>() { new ContentFile("Content/Map/LevelGenerationParameters.xml", ContentType.LevelGenerationParameters) };
             }
 
             List<XElement> biomeElements = new List<XElement>();
             List<XElement> levelParamElements = new List<XElement>();
 
-            foreach (string file in files)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
@@ -487,11 +487,11 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     biomeElements.Clear();
                     levelParamElements.Clear();
-                    DebugConsole.NewMessage($"Overriding the level generation parameters with '{file}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
                 }
                 else if (biomeElements.Any() || levelParamElements.Any())
                 {
-                    DebugConsole.ThrowError($"Error in '{file}': Another level generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in '{file.Path}': Another level generation parameter file already loaded! Use <override></override> tags to override it.");
                     break;
                 }
 

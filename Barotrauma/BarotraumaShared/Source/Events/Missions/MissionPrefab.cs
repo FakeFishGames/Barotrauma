@@ -63,9 +63,9 @@ namespace Barotrauma
         {
             List.Clear();
             var files = GameMain.Instance.GetFilesOfType(ContentType.Missions);
-            foreach (string file in files)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 bool allowOverride = false;
                 var mainElement = doc.Root;
@@ -84,12 +84,12 @@ namespace Barotrauma
                     {
                         if (allowOverride || sourceElement.IsOverride())
                         {
-                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}' using the file '{file}'", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}' using the file '{file.Path}'", Color.Yellow);
                             List.Remove(duplicate);
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
+                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file.Path}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
                             // TODO: Don't allow adding duplicates when the issue with multiple missions is solved.
                             //continue;
                         }

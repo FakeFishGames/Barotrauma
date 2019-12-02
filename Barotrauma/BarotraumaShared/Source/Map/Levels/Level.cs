@@ -1541,7 +1541,7 @@ namespace Barotrauma
 
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
-                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server).Path;
                     outpost = new Submarine(outpostFile, tryLoad: false);
                 }
                 else

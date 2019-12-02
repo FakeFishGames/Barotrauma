@@ -34,11 +34,13 @@ namespace Barotrauma.Particles
         public readonly float FadeOutTime;
         public readonly float FadeInTime;
 
-        public DecalPrefab(XElement element, string filePath)
+        public DecalPrefab(XElement element, ContentFile file)
         {
             Name = element.Name.ToString();
 
-            FilePath = filePath;
+            FilePath = file.Path;
+
+            ContentPackage = file.ContentPackage;
 
             Sprites = new List<Sprite>();
 

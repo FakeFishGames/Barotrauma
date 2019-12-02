@@ -20,10 +20,10 @@ namespace Barotrauma
 
         public BackgroundCreatureManager(string configPath)
         {
-            LoadConfig(configPath);
+            LoadConfig(new ContentFile(configPath, ContentType.BackgroundCreaturePrefabs));
         }
 
-        public BackgroundCreatureManager(IEnumerable<string> files)
+        public BackgroundCreatureManager(IEnumerable<ContentFile> files)
         {
             foreach(var file in files)
             {
@@ -31,22 +31,22 @@ namespace Barotrauma
             }
         }
 
-        private void LoadConfig(string configPath)
+        private void LoadConfig(ContentFile config)
         {
             try
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configPath);
+                XDocument doc = XMLExtensions.TryLoadXml(config.Path);
                 if (doc == null) { return; }
                 var mainElement = doc.Root;
                 if (mainElement.IsOverride())
                 {
                     mainElement = doc.Root.FirstElement();
                     prefabs.Clear();
-                    DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all background creatures with '{config.Path}'", Color.Yellow);
                 }
                 else if (prefabs.Any())
                 {
-                    DebugConsole.NewMessage($"Loading additional background creatures from file '{configPath}'");
+                    DebugConsole.NewMessage($"Loading additional background creatures from file '{config.Path}'");
                 }
 
                 foreach (XElement element in mainElement.Elements())
@@ -56,7 +56,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
+                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", config.Path), e);
             }
         }
 

@@ -88,13 +88,13 @@ namespace Barotrauma
 
             var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
-            foreach (string file in textFiles)
+            foreach (ContentFile file in textFiles)
             {
 #if !DEBUG
                 try
                 {
 #endif
-                    var textPack = new TextPack(file);
+                    var textPack = new TextPack(file.Path);
                     newLanguages.Add(textPack.Language);
                     if (!newTextPacks.ContainsKey(textPack.Language))
                     {
@@ -105,7 +105,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
+                    DebugConsole.ThrowError("Failed to load text file \"" + file.Path + "\"!", e);
                 }
 #endif
             }

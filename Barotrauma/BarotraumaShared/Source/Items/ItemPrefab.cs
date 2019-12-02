@@ -447,19 +447,22 @@ namespace Barotrauma
             Prefabs.RemoveByFile(filePath);
         }
 
-        public static void LoadFromFile(string filePath)
+        public static void LoadFromFile(ContentFile file)
         {
-            DebugConsole.Log("*** " + filePath + " ***");
-            RemoveByFile(filePath);
+            DebugConsole.Log("*** " + file.Path + " ***");
+            RemoveByFile(file.Path);
 
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
 
             var rootElement = doc.Root;
             switch (rootElement.Name.ToString().ToLowerInvariant())
             {
                 case "item":
-                    new ItemPrefab(rootElement, filePath, false);
+                    new ItemPrefab(rootElement, file.Path, false)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
                     break;
                 case "items":
                     foreach (var element in rootElement.Elements())
@@ -469,19 +472,23 @@ namespace Barotrauma
                             var itemElement = element.GetChildElement("item");
                             if (itemElement != null)
                             {
-                                new ItemPrefab(itemElement, filePath, true)
+                                new ItemPrefab(itemElement, file.Path, true)
                                 {
+                                    ContentPackage = file.ContentPackage,
                                     IsOverride = true
                                 };
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {filePath}");
+                                DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {file.Path}");
                             }
                         }
                         else
                         {
-                            new ItemPrefab(element, filePath, false);
+                            new ItemPrefab(element, file.Path, false)
+                            {
+                                ContentPackage = file.ContentPackage
+                            };
                         }
                     }
                     break;
@@ -491,30 +498,34 @@ namespace Barotrauma
                     {
                         foreach (var element in items.Elements())
                         {
-                            new ItemPrefab(element, filePath, true)
+                            new ItemPrefab(element, file.Path, true)
                             {
+                                ContentPackage = file.ContentPackage,
                                 IsOverride = true
                             };
                         }
                     }
                     foreach (var element in rootElement.GetChildElements("item"))
                     {
-                        new ItemPrefab(element, filePath, true);
+                        new ItemPrefab(element, file.Path, true)
+                        {
+                            ContentPackage = file.ContentPackage
+                        };
                     }
                     break;
                 default:
-                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {filePath}");
+                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {file.Path}");
                     break;
             }
         }
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {
             DebugConsole.Log("Loading item prefabs: ");
 
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                LoadFromFile(filePath);
+                LoadFromFile(file);
             }
 
             //initialize item requirements for fabrication recipes
