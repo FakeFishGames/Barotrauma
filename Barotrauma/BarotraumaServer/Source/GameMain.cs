@@ -93,6 +93,7 @@ namespace Barotrauma
 
         public void Init()
         {
+            CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
