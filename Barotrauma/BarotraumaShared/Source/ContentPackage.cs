@@ -616,7 +616,7 @@ namespace Barotrauma
             if (GameMain.Config != null)
             {
                 var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
-                DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
+                DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
             }
         }
 

@@ -2239,8 +2239,8 @@ namespace Barotrauma
             if (IsHuman)
             {
                 var containerPrefab =
-                    (MapEntityPrefab.List.FirstOrDefault(me => me.Tags.Contains("despawncontainer")) ??
-                    MapEntityPrefab.Find(null, identifier: "metalcrate")) as ItemPrefab;
+                    ItemPrefab.Prefabs.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    (MapEntityPrefab.Find(null, identifier: "metalcrate") as ItemPrefab);
                 if (containerPrefab == null)
                 {
                     DebugConsole.NewMessage("Could not spawn a container for a despawned character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);

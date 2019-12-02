@@ -525,9 +525,8 @@ namespace Barotrauma
 
         public static void InitFabricationRecipes()
         {
-            foreach (MapEntityPrefab me in List)
+            foreach (ItemPrefab itemPrefab in Prefabs)
             {
-                if (!(me is ItemPrefab itemPrefab)) { continue; }
                 itemPrefab.FabricationRecipes.Clear();
                 foreach (XElement fabricationRecipe in itemPrefab.fabricationRecipeElements)
                 {
@@ -838,7 +837,7 @@ namespace Barotrauma
             if (prefab == null)
             {
                 string lowerCaseName = name.ToLowerInvariant();
-                prefab = List.FirstOrDefault(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                prefab = Prefabs.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName));
             }
 
             if (prefab == null)

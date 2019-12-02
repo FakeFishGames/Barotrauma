@@ -162,9 +162,9 @@ namespace Barotrauma
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
-                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) continue;
+                    if (string.IsNullOrEmpty(itemPrefab.Name)) continue;
                     string text = $"- {itemPrefab.Name}";
                     if (itemPrefab.Tags.Any())
                     {
@@ -240,9 +240,9 @@ namespace Barotrauma
             () =>
             {
                 List<string> itemNames = new List<string>();
-                foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    if (prefab is ItemPrefab itemPrefab) itemNames.Add(itemPrefab.Name);
+                    itemNames.Add(itemPrefab.Name);
                 }
 
                 List<string> spawnPosParams = new List<string>() { "cursor", "inventory" };
@@ -1455,7 +1455,7 @@ namespace Barotrauma
             if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
             {
                 errorMsg = "Item \"" + itemName + "\" not found!";
-                var matching = MapEntityPrefab.List.FirstOrDefault(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                var matching = ItemPrefab.Prefabs.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName));
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";

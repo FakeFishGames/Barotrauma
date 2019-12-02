@@ -5,11 +5,26 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class DecalPrefab
+    class DecalPrefab : IPrefab, IDisposable
     {
         public readonly string Name;
 
-        public readonly string FilePath;
+        public string OriginalName { get { return Name; } }
+
+        public string Identifier { get { return Name; } }
+
+        public string FilePath { get; private set; }
+
+        public ContentPackage ContentPackage { get; private set; }
+
+        public void Dispose()
+        {
+            foreach (Sprite spr in Sprites)
+            {
+                spr.Remove();
+            }
+            Sprites.Clear();
+        }
 
         public readonly List<Sprite> Sprites;
 

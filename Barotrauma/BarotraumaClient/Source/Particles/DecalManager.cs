@@ -7,11 +7,11 @@ namespace Barotrauma.Particles
 {
     class DecalManager
     {
-        private Dictionary<string, List<DecalPrefab>> prefabs;
+        private PrefabCollection<DecalPrefab> prefabs;
 
         public DecalManager()
         {
-            prefabs = new Dictionary<string, List<DecalPrefab>>();
+            prefabs = new PrefabCollection<DecalPrefab>();
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 LoadFromFile(configFile);
@@ -50,51 +50,25 @@ namespace Barotrauma.Particles
 
                 }
 
-                if (!prefabs.ContainsKey(name))
-                {
-                    prefabs.Add(name, new List<DecalPrefab>());
-                }
-
-                prefabs[name].Add(new DecalPrefab(element, configFile));
+                prefabs.Add(new DecalPrefab(element, configFile), allowOverriding && sourceElement.IsOverride());
             }
         }
 
         public void RemoveByFile(string filePath)
         {
-            List<string> keysToRemove = new List<string>();
-            foreach (var kpv in prefabs)
-            {
-                List<DecalPrefab> prefabsToRemove = new List<DecalPrefab>();
-                foreach (var prefab in kpv.Value)
-                {
-                    if (prefab.FilePath == filePath) { prefabsToRemove.Add(prefab); }
-                }
-
-                foreach (var prefab in prefabsToRemove)
-                {
-                    prefab.Sprites.ForEach(s => s.Remove());
-                    kpv.Value.Remove(prefab);
-                }
-                if (kpv.Value.Count <= 0) { keysToRemove.Add(kpv.Key); }
-            }
-
-            foreach (string key in keysToRemove)
-            {
-                prefabs.Remove(key);
-            }
+            prefabs.RemoveByFile(filePath);
         }
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
         {
-            prefabs.TryGetValue(decalName, out List<DecalPrefab> prefabList);
-            DecalPrefab prefab = prefabList.Last();
-
-            if (prefab == null)
+            if (prefabs.ContainsKey(decalName))
             {
                 DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
                 return null;
             }
-            
+
+            DecalPrefab prefab = prefabs[decalName];
+
             return new Decal(prefab, scale, worldPosition, hull);
         }
     }

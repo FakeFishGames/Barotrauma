@@ -131,8 +131,7 @@ namespace Barotrauma
         {
             List<Vector2> points = new List<Vector2>();
 
-            var wallPrefabs =
-                MapEntityPrefab.List.Where(mp => (mp is StructurePrefab) && ((StructurePrefab)mp).Body);
+            var wallPrefabs = StructurePrefab.Prefabs.Where(mp => mp.Body);
 
             foreach (XElement element in rootElement.Elements())
             {

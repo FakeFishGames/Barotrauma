@@ -1760,9 +1760,9 @@ namespace Barotrauma
                 OnSelected = SelectWire
             };
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) { continue; }
+                if (string.IsNullOrEmpty(itemPrefab.Name)) { continue; }
                 if (!itemPrefab.Tags.Contains("wire")) { continue; }
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width - 20, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
@@ -1772,7 +1772,7 @@ namespace Barotrauma
 
                 var img = new GUIImage(new RectTransform(Vector2.One, imgFrame.RectTransform), itemPrefab.sprite)
                 {
-                    Color = ep.SpriteColor
+                    Color = itemPrefab.SpriteColor
                 };
             }
 

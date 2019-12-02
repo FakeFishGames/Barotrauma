@@ -236,7 +236,7 @@ namespace Barotrauma
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
             //don't show categories with no buyable items
             itemCategories.RemoveAll(c =>
-                !MapEntityPrefab.List.Any(ep => ep.Category.HasFlag(c) && (ep is ItemPrefab) && ((ItemPrefab)ep).CanBeBought));
+                !ItemPrefab.Prefabs.Any(ep => ep.Category.HasFlag(c) && ep.CanBeBought));
             foreach (MapEntityCategory category in itemCategories)
             {
                 var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
@@ -604,10 +604,8 @@ namespace Barotrauma
             RefreshMyItems();
 
             bool purchaseableItemsFound = false;
-            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
-
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                 if (priceInfo != null) { purchaseableItemsFound = true; break; }
             }
@@ -1022,9 +1020,8 @@ namespace Barotrauma
             float prevMyItemScroll = myItemList.BarScroll;
 
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
-            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
                 PriceInfo priceInfo = itemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                 if (priceInfo == null) { continue; }
 

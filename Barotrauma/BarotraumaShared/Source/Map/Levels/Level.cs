@@ -1271,10 +1271,8 @@ namespace Barotrauma
         {
             string levelName = generationParams.Name.ToLowerInvariant();
             List<Pair<ItemPrefab, float>> levelItems = new List<Pair<ItemPrefab, float>>();
-            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
-
                 if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
                     itemPrefab.LevelCommonness.TryGetValue("", out commonness))
                 {
