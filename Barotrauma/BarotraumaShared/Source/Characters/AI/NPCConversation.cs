@@ -64,25 +64,25 @@ namespace Barotrauma
         public readonly List<NPCConversation> Responses;
         private readonly int speakerIndex;
         private readonly List<string> allowedSpeakerTags;
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {
-            foreach (var filePath in filePaths)
+            foreach (var file in files)
             {
-                if (Path.GetExtension(filePath) == ".csv") continue; // .csv files are not supported
-                Load(filePath);
+                if (Path.GetExtension(file.Path) == ".csv") continue; // .csv files are not supported
+                LoadFromFile(file);
             }
         }
 
-        public static void Load(string file)
+        public static void LoadFromFile(ContentFile file)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
 
             string language = doc.Root.GetAttributeString("Language", "English");
             string identifier = doc.Root.GetAttributeString("identifier", null);
             if (string.IsNullOrWhiteSpace(identifier))
             {
-                DebugConsole.ThrowError($"Conversations file '{file}' has no identifier!");
+                DebugConsole.ThrowError($"Conversations file '{file.Path}' has no identifier!");
                 return;
             }
 
@@ -95,10 +95,10 @@ namespace Barotrauma
                         {
                             allConversations.Add(identifier, new ConversationCollection(identifier));
                         }
-                        allConversations[identifier].Add(language, file, subElement);
+                        allConversations[identifier].Add(language, file.Path, subElement);
                         break;
                     case "personalitytrait":
-                        new NPCPersonalityTrait(subElement, file);
+                        new NPCPersonalityTrait(subElement, file.Path);
                         break;
                 }
             }

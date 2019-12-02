@@ -1268,7 +1268,7 @@ namespace Barotrauma
                 if (File.Exists(savedSubmarines[i].FilePath) &&
                     savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) &&
                     (Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath) ||
-                    contentPackageSubs.Any(fp => Path.GetFullPath(fp).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath())))
+                    contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath())))
                 {
                     continue;
                 }
@@ -1315,11 +1315,11 @@ namespace Barotrauma
                 }
             }
 
-            foreach (string subPath in contentPackageSubs)
+            foreach (ContentFile subFile in contentPackageSubs)
             {
-                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subPath)))
+                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subFile.Path)))
                 {
-                    filePaths.Add(subPath);
+                    filePaths.Add(subFile.Path);
                 }
             }
 

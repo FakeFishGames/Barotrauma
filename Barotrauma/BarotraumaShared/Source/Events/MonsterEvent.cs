@@ -81,7 +81,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null)
             {
                 List<string> monsterNames = GameMain.NetworkMember.ServerSettings.MonsterEnabled.Keys.ToList();
-                string tryKey = monsterNames.Find(s => characterFileName == s.ToLower());
+                string tryKey = monsterNames.Find(s => speciesName.ToLower() == s.ToLower());
 
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {

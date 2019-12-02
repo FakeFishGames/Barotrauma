@@ -883,11 +883,7 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (MonsterEnabled == null)
             {
-                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
-                for (int i = 0; i < monsterNames1.Count; i++)
-                {
-                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
-                }
+                List<string> monsterNames1 = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
 
                 MonsterEnabled = new Dictionary<string, bool>();
                 foreach (string s in monsterNames1)

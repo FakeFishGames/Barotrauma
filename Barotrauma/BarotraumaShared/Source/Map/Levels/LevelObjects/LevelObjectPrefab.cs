@@ -273,7 +273,7 @@ namespace Barotrauma
             {
                 foreach (var file in files)
                 {
-                    LoadConfig(file);
+                    LoadConfig(file.Path);
                 }
             }
             else

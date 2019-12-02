@@ -63,17 +63,17 @@ namespace Barotrauma.Particles
 
         public void LoadPrefabs()
         {
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 LoadPrefabsFromFile(configFile);
             }
         }
 
-        public void LoadPrefabsFromFile(string configFile)
+        public void LoadPrefabsFromFile(ContentFile configFile)
         {
             var particleElements = new Dictionary<string, XElement>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(configFile);
+            XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
             if (doc == null) { return; }
 
             bool allowOverriding = false;
@@ -92,11 +92,11 @@ namespace Barotrauma.Particles
                 {
                     if (allowOverriding || sourceElement.IsOverride())
                     {
-                        DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Error in '{configFile}': Duplicate particle prefab '{name}' found in '{configFile}'! Each particle prefab must have a unique name. " +
+                        DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate particle prefab '{name}' found in '{configFile.Path}'! Each particle prefab must have a unique name. " +
                             "Use <override></override> tags to override prefabs.");
                         continue;
                     }

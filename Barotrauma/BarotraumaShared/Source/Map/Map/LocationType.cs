@@ -191,20 +191,20 @@ namespace Barotrauma
         {
             List.Clear();
             var locationTypeFiles = GameMain.Instance.GetFilesOfType(ContentType.LocationTypes);
-            foreach (string file in locationTypeFiles)
+            foreach (ContentFile file in locationTypeFiles)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     mainElement = doc.Root.FirstElement();
-                    DebugConsole.NewMessage($"Overriding all location types with '{file}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all location types with '{file.Path}'", Color.Yellow);
                     List.Clear();
                 }
                 else if (List.Any())
                 {
-                    DebugConsole.NewMessage($"Loading additional location types from file '{file}'");
+                    DebugConsole.NewMessage($"Loading additional location types from file '{file.Path}'");
                 }
                 foreach (XElement sourceElement in mainElement.Elements())
                 {
@@ -218,7 +218,7 @@ namespace Barotrauma
                     string identifier = element.GetAttributeString("identifier", null);
                     if (string.IsNullOrWhiteSpace(identifier))
                     {
-                        DebugConsole.ThrowError($"Error in '{file}': No identifier defined for {element.Name.ToString()}");
+                        DebugConsole.ThrowError($"Error in '{file.Path}': No identifier defined for {element.Name.ToString()}");
                         continue;
                     }
                     var duplicate = List.FirstOrDefault(l => l.Identifier == identifier);
@@ -227,11 +227,11 @@ namespace Barotrauma
                         if (allowOverriding)
                         {
                             List.Remove(duplicate);
-                            DebugConsole.NewMessage($"Overriding the location type with the identifier '{identifier}' with '{file}'", Color.Yellow);
+                            DebugConsole.NewMessage($"Overriding the location type with the identifier '{identifier}' with '{file.Path}'", Color.Yellow);
                         }
                         else
                         {
-                            DebugConsole.ThrowError($"Error in '{file}': Duplicate identifier defined with the identifier '{identifier}'");
+                            DebugConsole.ThrowError($"Error in '{file.Path}': Duplicate identifier defined with the identifier '{identifier}'");
                             continue;
                         }
                     }

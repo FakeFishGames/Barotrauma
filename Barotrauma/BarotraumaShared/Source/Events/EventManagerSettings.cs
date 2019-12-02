@@ -29,15 +29,15 @@ namespace Barotrauma
 
         static EventManagerSettings()
         {
-            foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.EventManagerSettings))
+            foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.EventManagerSettings))
             {
                 Load(file);
             }
         }
 
-        private static void Load(string file)
+        private static void Load(ContentFile file)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(file);
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
             if (doc == null) { return; }
             var mainElement = doc.Root;
             bool allowOverriding = false;
@@ -55,12 +55,12 @@ namespace Barotrauma
                 {
                     if (allowOverriding || subElement.IsOverride())
                     {
-                        DebugConsole.NewMessage($"Overriding the existing preset '{identifier}' in the event manager settings using the file '{file}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the existing preset '{identifier}' in the event manager settings using the file '{file.Path}'", Color.Yellow);
                         List.Remove(duplicate);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Error in '{file}': Another element with the name '{identifier}' found! Each element must have a unique name. Use <override></override> tags if you want to override an existing preset.");
+                        DebugConsole.ThrowError($"Error in '{file.Path}': Another element with the name '{identifier}' found! Each element must have a unique name. Use <override></override> tags if you want to override an existing preset.");
                         continue;
                     }
                 }

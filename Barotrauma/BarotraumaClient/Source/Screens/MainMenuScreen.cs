@@ -818,7 +818,7 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault()?.Path;
                 if (string.IsNullOrEmpty(exeName))
                 {
                     DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");

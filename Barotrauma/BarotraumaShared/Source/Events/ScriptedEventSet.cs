@@ -101,15 +101,15 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (string configFile in configFiles)
+            foreach (ContentFile configFile in configFiles)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
                 var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
                 if (doc.Root.IsOverride())
                 {
-                    DebugConsole.NewMessage($"Overriding all random events using the file {configFile}", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all random events using the file {configFile.Path}", Color.Yellow);
                     List.Clear();
                 }
 

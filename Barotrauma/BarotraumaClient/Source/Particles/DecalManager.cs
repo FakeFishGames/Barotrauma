@@ -12,15 +12,15 @@ namespace Barotrauma.Particles
         public DecalManager()
         {
             prefabs = new PrefabCollection<DecalPrefab>();
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 LoadFromFile(configFile);
             }
         }
 
-        public void LoadFromFile(string configFile)
+        public void LoadFromFile(ContentFile configFile)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(configFile);
+            XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
             if (doc == null) { return; }
 
             bool allowOverriding = false;
@@ -39,11 +39,11 @@ namespace Barotrauma.Particles
                 {
                     if (allowOverriding || sourceElement.IsOverride())
                     {
-                        DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
                     }
                     else
                     {
-                        DebugConsole.ThrowError($"Error in '{configFile}': Duplicate decal prefab '{name}' found in '{configFile}'! Each decal prefab must have a unique name. " +
+                        DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate decal prefab '{name}' found in '{configFile.Path}'! Each decal prefab must have a unique name. " +
                             "Use <override></override> tags to override prefabs.");
                         continue;
                     }

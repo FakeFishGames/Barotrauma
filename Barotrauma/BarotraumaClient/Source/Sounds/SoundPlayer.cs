@@ -131,15 +131,15 @@ namespace Barotrauma
             var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);
 
             List<XElement> soundElements = new List<XElement>();
-            foreach (string soundFile in soundFiles)
+            foreach (ContentFile soundFile in soundFiles)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(soundFile);
+                XDocument doc = XMLExtensions.TryLoadXml(soundFile.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     mainElement = doc.Root.FirstElement();
-                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile}", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile.Path}", Color.Yellow);
                     soundElements.Clear();
                 }
                 soundElements.AddRange(mainElement.Elements());

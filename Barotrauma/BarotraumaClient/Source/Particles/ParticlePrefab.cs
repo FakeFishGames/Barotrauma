@@ -221,10 +221,11 @@ namespace Barotrauma.Particles
 
         //----------------------------------------------------
 
-        public ParticlePrefab(XElement element, string filePath)
+        public ParticlePrefab(XElement element, ContentFile file)
         {
             Name = element.Name.ToString();
-            FilePath = filePath;
+            FilePath = file.Path;
+            ContentPackage = file.ContentPackage;
             DisplayName = TextManager.Get("particle." + Name, true) ?? Name;
 
             Sprites = new List<Sprite>();

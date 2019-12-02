@@ -188,7 +188,7 @@ namespace Barotrauma
             XElement selectedStyle = null;
             foreach (var file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
@@ -196,7 +196,7 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     if (selectedStyle != null)
                     {
-                        DebugConsole.NewMessage($"Overriding the ui styles with '{file}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the ui styles with '{file.Path}'", Color.Yellow);
                     }
                 }
                 else if (selectedStyle != null)
