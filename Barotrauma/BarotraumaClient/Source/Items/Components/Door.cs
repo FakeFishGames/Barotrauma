@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color = color * (item.Condition / item.Prefab.Health);
+                color *= (item.Condition / item.Prefab.Health);
                 color.A = 255;
             }
             
@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
 
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (isStuck ||
+            if ((IsStuck && !isNetworkMessage) ||
                 (PredictedState == null && isOpen == open) ||
                 (PredictedState != null && isOpen == PredictedState.Value && isOpen == open))
             {
@@ -210,11 +210,7 @@ namespace Barotrauma.Items.Components
                     StopPicking(null);
                     PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse, item.WorldPosition);
                 }
-            }
-
-            //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
-            
+            }       
         }
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
@@ -225,7 +221,7 @@ namespace Barotrauma.Items.Components
             bool forcedOpen = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
-
+            if (isStuck) { OpenState = 0.0f; }
             PredictedState = null;
         }
     }
