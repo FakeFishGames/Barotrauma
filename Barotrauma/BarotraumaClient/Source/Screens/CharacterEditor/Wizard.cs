@@ -40,7 +40,7 @@ namespace Barotrauma.CharacterEditor
             canEnterSubmarine = ragdoll.CanEnterSubmarine;
             canWalk = ragdoll.CanWalk;
             texturePath = ragdoll.Texture;
-            if (string.IsNullOrEmpty(texturePath) && !name.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(texturePath) && !name.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
                 texturePath = ragdoll.Limbs.FirstOrDefault()?.GetSprite().Texture;
             }
