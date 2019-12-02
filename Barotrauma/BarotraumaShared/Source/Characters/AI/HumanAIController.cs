@@ -20,7 +20,7 @@ namespace Barotrauma
         private float unreachableClearTimer;
         private bool shouldCrouch;
 
-        const float reactionTime = 0.5f;
+        const float reactionTime = 0.3f;
         const float crouchRaycastInterval = 1;
         const float sortObjectiveInterval = 1;
         const float clearUnreachableInterval = 30;
@@ -125,6 +125,11 @@ namespace Barotrauma
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
+                if (findItemState != FindItemState.None)
+                {
+                    // Update every frame only when seeking items
+                    UnequipUnnecessaryItems();
+                }
             }
             else
             {
@@ -137,6 +142,7 @@ namespace Barotrauma
                     ReportProblems();
                     UpdateSpeaking();
                 }
+                UnequipUnnecessaryItems();
                 reactTimer = reactionTime * Rand.Range(0.75f, 1.25f);
             }
 
@@ -239,12 +245,6 @@ namespace Barotrauma
 
             Character.AnimController.TargetMovement = targetMovement;
 
-            if (!Character.LockHands)
-            {
-                //TODO: is there a need to do this every frame?
-                UnequipUnnecessaryItems();
-            }
-
             flipTimer -= deltaTime;
             if (flipTimer <= 0.0f)
             {
@@ -276,6 +276,8 @@ namespace Barotrauma
 
         private void UnequipUnnecessaryItems()
         {
+            if (Character.LockHands) { return; }
+            if (ObjectiveManager.CurrentObjective == null) { return; }
             if (ObjectiveManager.HasActiveObjective<AIObjectiveDecontainItem>()) { return; }
             if (findItemState == FindItemState.None || findItemState == FindItemState.Extinguisher)
             {
