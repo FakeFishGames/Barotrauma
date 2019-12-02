@@ -472,27 +472,6 @@ namespace Barotrauma
                 {
                     if (!File.Exists(filePath)) continue;
 
-                    string modPath = null;
-                    string modPathBS = null;
-                    string modPathWithoutWorkshopId = null;
-
-                    string[] splitPath = filePath.CleanUpPath().Split('/');
-                    if (splitPath.Length >= 2 && splitPath[0]=="Mods")
-                    {
-                        splitPath = splitPath.Take(2).ToArray();
-                        modPath = System.IO.Path.Combine(splitPath).CleanUpPath();
-
-                        modPathBS = modPath.Replace('/', '\\');
-
-                        modPathWithoutWorkshopId = System.IO.Path.Combine("Mods", Name).CleanUpPath();
-
-                        if (modPathWithoutWorkshopId.ToLowerInvariant() == modPath.ToLowerInvariant())
-                        {
-                            modPath = null;
-                        }
-
-                    }
-
                     using (var stream = File.OpenRead(filePath))
                     {
                         byte[] fileData = new byte[stream.Length];
@@ -501,11 +480,6 @@ namespace Barotrauma
                         {
                             string text = System.Text.Encoding.UTF8.GetString(fileData);
                             text = text.Replace("\n", "").Replace("\r", "");
-                            if (!string.IsNullOrWhiteSpace(modPath))
-                            {
-                                text = text.Replace(modPath, modPathWithoutWorkshopId);
-                                text = text.Replace(modPathBS, modPathWithoutWorkshopId);
-                            }
                             fileData = System.Text.Encoding.UTF8.GetBytes(text);
                         }
                         data.AddRange(fileData);
