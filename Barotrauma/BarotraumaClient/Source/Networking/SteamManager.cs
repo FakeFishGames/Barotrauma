@@ -1132,7 +1132,14 @@ namespace Barotrauma.Steam
                 var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
                 foreach (var cp in packagesToDeselect)
                 {
-                    GameMain.Config.DeselectContentPackage(cp);
+                    if (cp.CorePackage)
+                    {
+                        GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                    }
+                    else
+                    {
+                        GameMain.Config.DeselectContentPackage(cp);
+                    }
                 }
 
                 foreach (var cp in toRemove)
