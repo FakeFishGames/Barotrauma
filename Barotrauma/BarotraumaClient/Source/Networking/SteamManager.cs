@@ -1424,17 +1424,16 @@ namespace Barotrauma.Steam
                         ContentPackage otherContentPackage = ContentPackage.List.Find(cp => cp.Name.ToLowerInvariant() == splitPath[1].ToLowerInvariant());
                         if (otherContentPackage != null)
                         {
-                            splitPath[1] = otherContentPackage.Name;
-                        }
-                        newPath = Path.Combine(packageName, string.Join("/", splitPath));
-                        if (File.Exists(newPath))
-                        {
-                            contentFilePath = newPath;
-                            return contentFilePath;
+                            string otherPackageName = Path.GetDirectoryName(otherContentPackage.Path);
+                            newPath = Path.Combine(otherPackageName, string.Join("/", splitPath.Skip(2)));
+                            if (File.Exists(newPath))
+                            {
+                                contentFilePath = newPath;
+                                return contentFilePath;
+                            }
                         }
                     }
-                    splitPath = splitPath.Skip(2).ToArray();
-                    newPath = Path.Combine(packageName, string.Join("/", splitPath));
+                    newPath = Path.Combine(packageName, string.Join("/", splitPath.Skip(2)));
                 }
                 else
                 {
