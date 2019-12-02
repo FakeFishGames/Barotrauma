@@ -2872,9 +2872,9 @@ namespace Barotrauma
 
         private bool ViewJobInfo(GUIButton button, object obj)
         {
-            if (!(button.UserData is JobPrefab jobPrefab)) { return false; }
+            if (!(button.UserData is Pair<JobPrefab, int> jobPrefab)) { return false; }
 
-            jobInfoFrame = jobPrefab.CreateInfoFrame();
+            jobInfoFrame = jobPrefab.First.CreateInfoFrame(jobPrefab.Second - 1);
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))
             {
@@ -2946,7 +2946,7 @@ namespace Barotrauma
                     //info button
                     new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, Anchor.TopLeft, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f) }, style: "GUIButtonInfo")
                     {
-                        UserData = jobPrefab.First,
+                        UserData = jobPrefab,
                         OnClicked = ViewJobInfo                    
                     };
 

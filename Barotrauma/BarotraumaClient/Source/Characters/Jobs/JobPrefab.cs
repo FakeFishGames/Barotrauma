@@ -5,7 +5,7 @@ namespace Barotrauma
 {
     partial class JobPrefab
     {
-        public GUIButton CreateInfoFrame()
+        public GUIButton CreateInfoFrame(int variant)
         {
             int width = 500, height = 400;
 
@@ -34,16 +34,15 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            // TODO: Fix item list in multiplayer lobby
-            /*new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                 TextManager.Get("Items", fallBackTag: "mapentitycategory.equipment"), font: GUI.LargeFont);
-            foreach (string itemName in ItemNames.Distinct())
+            foreach (string itemName in ItemNames[variant].Distinct())
             {
-                int count = ItemNames.Count(i => i == itemName);
+                int count = ItemNames[variant].Count(i => i == itemName);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                     "   - " + (count == 1 ? itemName : itemName + " x" + count),
                     font: GUI.SmallFont);
-            }*/
+            }
 
             return backFrame;
         }
