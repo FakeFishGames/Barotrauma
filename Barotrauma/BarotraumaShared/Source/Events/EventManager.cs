@@ -127,14 +127,17 @@ namespace Barotrauma
                             throw new Exception($"Failed to load the character config file from {file.Path}!");
                         }
                         var doc = characterPrefab.XDocument;
-                        foreach (var soundElement in doc.Root.GetChildElements("sound"))
+                        var rootElement = doc.Root;
+                        var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+
+                        foreach (var soundElement in mainElement.GetChildElements("sound"))
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);
                         }
-                        string speciesName = doc.Root.GetAttributeString("speciesname", null);
+                        string speciesName = mainElement.GetAttributeString("speciesname", null);
                         if (string.IsNullOrWhiteSpace(speciesName))
                         {
-                            speciesName = doc.Root.GetAttributeString("name", null);
+                            speciesName = mainElement.GetAttributeString("name", null);
                             if (!string.IsNullOrWhiteSpace(speciesName))
                             {
                                 DebugConsole.NewMessage($"Error in {file.Path}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
@@ -145,7 +148,7 @@ namespace Barotrauma
                             }
                         }
 
-                        bool humanoid = doc.Root.GetAttributeBool("humanoid", false);
+                        bool humanoid = mainElement.GetAttributeBool("humanoid", false);
                         RagdollParams ragdollParams;
                         if (humanoid)
                         {
