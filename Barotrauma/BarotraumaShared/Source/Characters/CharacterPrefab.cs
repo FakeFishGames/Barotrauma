@@ -67,7 +67,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Loading character file failed: {file}");
                 return false;
             }
-            if (Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf.FilePath == file)))
+            if (Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf?.FilePath == file)))
             {
                 DebugConsole.ThrowError($"Duplicate path: {file}");
                 return false;

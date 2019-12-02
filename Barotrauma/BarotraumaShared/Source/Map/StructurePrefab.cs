@@ -214,22 +214,7 @@ namespace Barotrauma
 
         public static void RemoveByFile(string filePath)
         {
-            List<StructurePrefab> prefabsToRemove = new List<StructurePrefab>();
-            foreach (var kvp in Prefabs.AllPrefabs)
-            {
-                foreach (var sp in kvp.Value)
-                {
-                    if (sp != null && sp.FilePath == filePath)
-                    {
-                        prefabsToRemove.Add(sp);
-                    }
-                }
-            }
-
-            foreach (var sp in prefabsToRemove)
-            {
-                sp.Dispose();
-            }
+            Prefabs.RemoveByFile(filePath);
         }
 
         public static StructurePrefab Load(XElement element, bool allowOverride, string filePath)
