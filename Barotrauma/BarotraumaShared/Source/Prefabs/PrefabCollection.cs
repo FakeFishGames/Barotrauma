@@ -77,6 +77,8 @@ namespace Barotrauma
                 list[0] = prefab;
             }
 
+            Sort(list);
+
             if (newList != null) { prefabs.Add(prefab.Identifier, newList); }
         }
 
@@ -121,7 +123,14 @@ namespace Barotrauma
             }
         }
 
-        public Action<T> OnRemove = null;
+        private void Sort(List<T> prefabs)
+        {
+            var basePrefab = prefabs[0];
+            prefabs.RemoveAt(0);
+
+            prefabs = prefabs.OrderByDescending(p => GameMain.Config.SelectedContentPackages.IndexOf(p.ContentPackage)).ToList();
+            prefabs.Insert(0, basePrefab);
+        }
 
         public IEnumerator<T> GetEnumerator()
         {
