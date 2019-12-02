@@ -112,7 +112,6 @@ namespace Barotrauma
         public GUIProgressBar FileTransferProgressBar { get; private set; }
         public GUITextBlock FileTransferProgressText { get; private set; }
 
-
         private bool AllowSubSelection
         {
             get
@@ -203,7 +202,6 @@ namespace Barotrauma
             get;
             private set;
         }
-        
 
         public Submarine SelectedSub
         {
@@ -265,8 +263,8 @@ namespace Barotrauma
         {
             get
             {
-                //joblist if the server has already assigned the player a job 
-                //(e.g. the player has a pre-existing campaign character)
+                // JobList if the server has already assigned the player a job
+                // (e.g. the player has a pre-existing campaign character)
                 if (JobList?.Content == null)
                 {
                     return new List<Pair<JobPrefab, int>>();
@@ -1351,13 +1349,13 @@ namespace Barotrauma
                     Pair<JobPrefab, int> jobPrefab = null;
                     while (i < GameMain.Config.JobPreferences.Count)
                     {
-                        var jobIdent = GameMain.Config.JobPreferences[i];
-                        if (!JobPrefab.List.ContainsKey(jobIdent.First))
+                        var jobIdentifier = GameMain.Config.JobPreferences[i];
+                        if (!JobPrefab.List.ContainsKey(jobIdentifier.First))
                         {
                             GameMain.Config.JobPreferences.RemoveAt(i);
                             continue;
                         }
-                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.List[jobIdent.First], jobIdent.Second);
+                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.List[jobIdentifier.First], jobIdentifier.Second);
                         break;
                     }
 
@@ -1389,7 +1387,7 @@ namespace Barotrauma
                         textColor);
                 }
 
-                //spacing
+                // Spacing
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), style: null);
 
                 new GUIButton(new RectTransform(new Vector2(0.8f, 0.1f), infoContainer.RectTransform, Anchor.BottomCenter), TextManager.Get("CreateNew"))
@@ -2566,7 +2564,7 @@ namespace Barotrauma
                     {
                         foreach (GUIImage image in images[variantIndex])
                         {
-                            image.Visible = currVisible == (variantIndex + 1);
+                            image.Visible = currVisible == variantIndex;
                         }
 
                         var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.05f + 0.2f * variantIndex) }, (variantIndex + 1).ToString(), style: null)
@@ -2575,7 +2573,7 @@ namespace Barotrauma
                             HoverColor = Color.Gray * 0.75f,
                             PressedColor = Color.Black * 0.75f,
                             SelectedColor = new Color(45, 70, 100, 200),
-                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex+1),
+                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
                             OnClicked = (btn, obj) =>
                             {
                                 currSelected.Selected = false;
@@ -2585,7 +2583,7 @@ namespace Barotrauma
                                 {
                                     foreach (GUIImage image in images[j])
                                     {
-                                        image.Visible = k == (j + 1);
+                                        image.Visible = k == j;
                                     }
                                 }
                                 currSelected = btn;
@@ -2595,7 +2593,7 @@ namespace Barotrauma
                             }
                         };
 
-                        if (currVisible == (variantIndex + 1))
+                        if (currVisible == variantIndex)
                         {
                             currSelected = variantButton;
                         }
@@ -2866,7 +2864,7 @@ namespace Barotrauma
         {
             if (!(button.UserData is Pair<JobPrefab, int> jobPrefab)) { return false; }
 
-            jobInfoFrame = jobPrefab.First.CreateInfoFrame(jobPrefab.Second - 1);
+            jobInfoFrame = jobPrefab.First.CreateInfoFrame(jobPrefab.Second);
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), jobInfoFrame.GetChild(2).GetChild(0).RectTransform, Anchor.BottomRight),
                 TextManager.Get("Close"))
             {
@@ -2912,7 +2910,7 @@ namespace Barotrauma
                         {
                             jobPreferenceSprites.Add(image.Sprite);
                             int selectedVariantIndex = Math.Min(jobPrefab.Second, images.Length);
-                            image.Visible = images.Length == 1 || selectedVariantIndex == (variantIndex + 1);
+                            image.Visible = images.Length == 1 || selectedVariantIndex == variantIndex;
                         }
                         if (images.Length > 1)
                         {
@@ -2924,11 +2922,10 @@ namespace Barotrauma
                                 HoverColor = Color.Gray * 0.75f,
                                 PressedColor = Color.Black * 0.75f,
                                 SelectedColor = new Color(45, 70, 100, 200),
-                                Selected = jobPrefab.Second == (variantIndex + 1),
-                                UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex + 1),
+                                Selected = jobPrefab.Second == variantIndex,
+                                UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
                                 OnClicked = (btn, obj) =>
                                 {
-                                    int k = ((Pair<JobPrefab, int>)obj).Second;
                                     btn.Parent.UserData = obj;
                                     UpdateJobPreferences(listBox);
                                     return false;

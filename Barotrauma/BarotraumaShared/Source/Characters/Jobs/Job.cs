@@ -25,11 +25,6 @@ namespace Barotrauma
         {
             get { return prefab; }
         }
-
-        public XElement SpawnItems
-        {
-            get { return prefab.ItemSets[Variant]; }
-        }
         
         public List<Skill> Skills
         {
@@ -96,9 +91,9 @@ namespace Barotrauma
 
         public void GiveJobItems(Character character, WayPoint spawnPoint = null)
         {
-            if (SpawnItems == null) return;
+            if (!prefab.ItemSets.TryGetValue(Variant, out var spawnItems)) { return; }
 
-            foreach (XElement itemElement in SpawnItems.Elements())
+            foreach (XElement itemElement in spawnItems.Elements())
             {
                 InitializeJobItem(character, itemElement, spawnPoint);
             }            
