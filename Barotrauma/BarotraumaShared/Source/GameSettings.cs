@@ -231,7 +231,7 @@ namespace Barotrauma
             private set;
         }
 
-        public bool SuppressModFolderWatcher;
+        public volatile bool SuppressModFolderWatcher;
 
 
         private FileSystemWatcher modsFolderWatcher;
