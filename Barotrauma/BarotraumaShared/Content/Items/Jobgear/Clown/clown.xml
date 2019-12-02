@@ -20,7 +20,7 @@
       <Item identifier="bikehorn" />
       <Item identifier="bikehorn" />
     </Deconstruct>
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="3">
+    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
       <sprite texture="clown_torso_[GENDER].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="clown_torso_[GENDER].png" limb="RightHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite texture="clown_torso_[GENDER].png" limb="LeftHand" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

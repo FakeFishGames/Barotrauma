@@ -101,7 +101,21 @@
         <Item identifier="bluewire"/>
         <Item identifier="orangewire"/>
       </Item>
-      <Item identifier="orangejumpsuit" equip="true" outfit="true"/>
+      <Item identifier="orangejumpsuit1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+    </Items>
+    <Items>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="toolbox">
+        <Item identifier="wrench"/>
+        <Item identifier="screwdriver"/>
+        <Item identifier="redwire"/>
+        <Item identifier="bluewire"/>
+        <Item identifier="orangewire"/>
+      </Item>
+      <Item identifier="orangejumpsuit2" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
@@ -110,8 +124,12 @@
       <sprite name="Portrait Clothing Engineer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,0"/>
     </PortraitClothing>
     <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Engineer/engineer_torso_[GENDER]_2.png" sourcerect="121,0,76,80" offset="-20,15" />
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
@@ -151,7 +169,21 @@
         </Item>     
       </Item>
       <Item identifier="crowbar"/>
-      <Item identifier="bluejumpsuit" equip="true" outfit="true"/>
+      <Item identifier="bluejumpsuit1" equip="true" outfit="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+    </Items>
+    <Items>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="toolbox">
+        <Item identifier="wrench"/>
+        <Item identifier="weldingtool">
+          <Item identifier="weldingfueltank"/>
+        </Item>
+      </Item>
+      <Item identifier="crowbar"/>
+      <Item identifier="bluejumpsuit2" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
@@ -160,8 +192,12 @@
       <sprite name="Portrait Clothing Mechanic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,0"/>
     </PortraitClothing>
     <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Mechanic/mechanic_torso_[GENDER]_2.png" sourcerect="121,0,76,80" offset="-20,15" />
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
@@ -192,7 +228,7 @@
       <Skill identifier="initiative" level="50,100"/>
     </Skills>
     <Items>
-      <Item identifier="securityuniform" equip="true" outfit="true"/>
+      <Item identifier="securityuniform1" equip="true" outfit="true"/>
       <Item identifier="idcard" equip="true"/>
       <Item identifier="stunbaton">
         <Item identifier="batterycell"/>
@@ -204,12 +240,46 @@
         <Item identifier="batterycell"/>
       </Item>      
     </Items>
+    <Items>
+      <Item identifier="securityuniform2" equip="true" outfit="true"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="stunbaton">
+        <Item identifier="batterycell"/>
+      </Item>
+      <Item identifier="handcuffs"/>
+      <Item identifier="bodyarmor" equip="true"/>
+      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+    </Items>
+    <Items>
+      <Item identifier="securityuniform3" equip="true" outfit="true"/>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="stunbaton">
+        <Item identifier="batterycell"/>
+      </Item>
+      <Item identifier="handcuffs"/>
+      <Item identifier="bodyarmor" equip="true"/>
+      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+    </Items>
     <PortraitClothing>
       <sprite name="Portrait Clothing Security Officer" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="1,1"/>
     </PortraitClothing>
     <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_2.png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_3.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Security/securityofficer_torso_[GENDER]_3.png" sourcerect="121,0,76,80" offset="-20,15" />
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="fightintruders" prioritymodifier="1"/>
@@ -240,18 +310,30 @@
     </Skills>
     <Items>
       <Item identifier="idcard" equip="true"/>
-      <Item identifier="doctorsuniform" equip="true" outfit="true"/>
+      <Item identifier="doctorsuniform1" equip="true" outfit="true"/>
       <Item identifier="healthscanner"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>      
     </Items>
+    <Items>
+      <Item identifier="idcard" equip="true"/>
+      <Item identifier="doctorsuniform2" equip="true" outfit="true"/>
+      <Item identifier="healthscanner"/>
+      <Item identifier="headset" equip="true">
+        <Item identifier="batterycell"/>
+      </Item>
+    </Items>
     <PortraitClothing>
       <sprite name="Portrait Clothing Medic" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,1"/>
     </PortraitClothing>
     <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
+    </PreviewSprites>
+    <PreviewSprites dims="120,109">
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Medic/medic_torso_[GENDER]_2.png" sourcerect="121,0,76,80" offset="-20,15" />
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>
@@ -291,8 +373,8 @@
       <sprite name="Portrait Clothing Assistant" texture="Content/Items/Jobgear/PortraitClothing.png" sheetindex="0,2"/>
     </PortraitClothing>
     <PreviewSprites dims="120,109">
-      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_[VARIANT].png" sourcerect="2,38,120,109" offset="0,0" />
-      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_[VARIANT].png" sourcerect="121,0,76,80" offset="-20,15" />
+      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_1.png" sourcerect="2,38,120,109" offset="0,0" />
+      <sprite texture="Content/Items/Jobgear/Assistant/assistant_torso_[GENDER]_1.png" sourcerect="121,0,76,80" offset="-20,15" />
     </PreviewSprites>
     <AutonomousObjectives>
       <Order identifier="extinguishfires" prioritymodifier ="1"/>

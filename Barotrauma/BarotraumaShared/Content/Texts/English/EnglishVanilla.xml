@@ -2282,26 +2282,32 @@
   <entitydescription.idcard>Allows limited access to areas of the sub.</entitydescription.idcard>
   <entityname.alienpistol>Alien Pistol</entityname.alienpistol>
   <entitydescription.alienpistol>A handgun powered by alien power cells.</entitydescription.alienpistol>
-  <entityname.captainscap1>Captain's Cap 1</entityname.captainscap1>
+  <entityname.captainscap1>Captain's Cap</entityname.captainscap1>
   <entitydescription.captainscap1>A token of the captain's unquestionable authority.</entitydescription.captainscap1>
-  <entityname.captainsuniform1>Captain's Uniform 1</entityname.captainsuniform1>
+  <entityname.captainsuniform1>Captain's Uniform</entityname.captainsuniform1>
   <entitydescription.captainsuniform1>Makes you look like you might be in charge.</entitydescription.captainsuniform1>
-  <entityname.captainscap2>Captain's Cap 2</entityname.captainscap2>
+  <entityname.captainscap2>Captain's Cap</entityname.captainscap2>
   <entitydescription.captainscap2>A token of the captain's unquestionable authority.</entitydescription.captainscap2>
-  <entityname.captainsuniform2>Captain's Uniform 2</entityname.captainsuniform2>
+  <entityname.captainsuniform2>Captain's Uniform</entityname.captainsuniform2>
   <entitydescription.captainsuniform2>Makes you look like you might be in charge.</entitydescription.captainsuniform2>
-  <entityname.captainscap3>Captain's Cap 3</entityname.captainscap3>
+  <entityname.captainscap3>Captain's Cap</entityname.captainscap3>
   <entitydescription.captainscap3>A token of the captain's unquestionable authority.</entitydescription.captainscap3>
   <entityname.captainsuniform3>Captain's Uniform 3</entityname.captainsuniform3>
   <entitydescription.captainsuniform3>Makes you look like you might be in charge.</entitydescription.captainsuniform3>
   <entityname.healthscanner>Health Scanner HUD</entityname.healthscanner>
   <entitydescription.healthscanner>A heads-up display that shows information about the vital signs and status of nearby humans.</entitydescription.healthscanner>
-  <entityname.doctorsuniform>Doctor's Uniform</entityname.doctorsuniform>
-  <entitydescription.doctorsuniform>Makes you look like you might be useful in a medical emergency.</entitydescription.doctorsuniform>
-  <entityname.orangejumpsuit>Orange Jumpsuit</entityname.orangejumpsuit>
-  <entitydescription.orangejumpsuit>The fire-resistant fabric offers some protection against fires.</entitydescription.orangejumpsuit>
-  <entityname.bluejumpsuit>Blue Jumpsuit</entityname.bluejumpsuit>
-  <entitydescription.bluejumpsuit>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit>
+  <entityname.doctorsuniform1>Doctor's Uniform</entityname.doctorsuniform1>
+  <entitydescription.doctorsuniform1>Makes you look like you might be useful in a medical emergency.</entitydescription.doctorsuniform1>
+  <entityname.doctorsuniform2>Doctor's Uniform</entityname.doctorsuniform2>
+  <entitydescription.doctorsuniform2>Makes you look like you might be useful in a medical emergency.</entitydescription.doctorsuniform2>
+  <entityname.orangejumpsuit1>Orange Jumpsuit</entityname.orangejumpsuit1>
+  <entitydescription.orangejumpsuit1>The fire-resistant fabric offers some protection against fires.</entitydescription.orangejumpsuit1>
+  <entityname.orangejumpsuit2>Orange Jumpsuit</entityname.orangejumpsuit2>
+  <entitydescription.orangejumpsuit2>The fire-resistant fabric offers some protection against fires.</entitydescription.orangejumpsuit2>
+  <entityname.bluejumpsuit1>Blue Jumpsuit</entityname.bluejumpsuit1>
+  <entitydescription.bluejumpsuit1>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit1>
+  <entityname.bluejumpsuit2>Blue Jumpsuit</entityname.bluejumpsuit2>
+  <entitydescription.bluejumpsuit2>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit2>
   <entityname.toolbox>Toolbox</entityname.toolbox>
   <entityname.headset>Headset</entityname.headset>
   <entitydescription.headset>Allows remote communication among the crew.</entitydescription.headset>
@@ -2313,8 +2319,12 @@
   <entitydescription.assistantclothes>Even the assistant needs clothing.</entitydescription.assistantclothes>
   <entityname.watchmanclothes>Watchman Clothes</entityname.watchmanclothes>
   <entitydescription.watchmanclothes>Makes you look like you might offer a mission to a passerby at any moment.</entitydescription.watchmanclothes>
-  <entityname.securityuniform>Security Officer's Uniform</entityname.securityuniform>
-  <entitydescription.securityuniform>Obey my authority!</entitydescription.securityuniform>
+  <entityname.securityuniform1>Security Officer's Uniform</entityname.securityuniform1>
+  <entitydescription.securityuniform1>Obey my authority!</entitydescription.securityuniform1>
+  <entityname.securityuniform2>Security Officer's Uniform</entityname.securityuniform2>
+  <entitydescription.securityuniform2>Obey my authority!</entitydescription.securityuniform2>
+  <entityname.securityuniform3>Security Officer's Uniform</entityname.securityuniform3>
+  <entitydescription.securityuniform3>Obey my authority!</entitydescription.securityuniform3>
   <entityname.bodyarmor>Body Armor</entityname.bodyarmor>
   <entitydescription.bodyarmor>While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.bodyarmor>
   <entityname.ballistichelmet>Ballistic Helmet</entityname.ballistichelmet>
