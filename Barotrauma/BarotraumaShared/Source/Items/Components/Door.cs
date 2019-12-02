@@ -228,12 +228,9 @@ namespace Barotrauma.Items.Components
 
         private readonly string accessDeniedTxt = TextManager.Get("AccessDenied");
         private readonly string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
-        private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
-            Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            Msg = HasAccess(character) ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
             if (addMessage)
             {
@@ -242,18 +239,24 @@ namespace Barotrauma.Items.Components
             return isBroken || base.HasRequiredItems(character, addMessage, msg);
         }
 
+        public bool CanBeOpenedWithoutTools(Character character)
+        {
+            if (isBroken) { return true; }
+            return HasAccess(character);
+        }
+
         public override bool Pick(Character picker)
         {
             if (item.Condition < RepairThreshold) { return true; }
             if (requiredItems.None()) { return false; }
-            if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
+            if (HasAccess(picker) && HasRequiredItems(picker, false)) { return false; }
             return base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
             if (item.Condition < RepairThreshold) { return true; }
-            if (requiredItems.Any() && !hasValidIdCard)
+            if (!HasAccess(picker))
             {
                 ToggleState(ActionType.OnPicked, picker);
             }
@@ -274,7 +277,7 @@ namespace Barotrauma.Items.Components
             if (!isBroken)
             {
                 bool hasRequiredItems = HasRequiredItems(character, false);
-                if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
+                if (HasAccess(character))
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;

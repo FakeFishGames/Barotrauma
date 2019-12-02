@@ -332,11 +332,11 @@ namespace Barotrauma
             if (!canOpenDoors || character.LockHands) { return false; }
             if (door.HasIntegratedButtons)
             {
-                return door.HasRequiredItems(character, false);
+                return door.CanBeOpenedWithoutTools(character);
             }
             else
             {
-                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasRequiredItems(character, false) && (buttonFilter == null || buttonFilter(b)));
+                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
             }
         }
 
