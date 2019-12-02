@@ -147,17 +147,6 @@ namespace Barotrauma
                 }
             }
 
-            contentPackageList.Content.RectTransform.SortChildren((rt1,rt2) =>
-            {
-                if (!(rt1.GUIComponent.UserData is ContentPackage cp1) || !(rt2.GUIComponent.UserData is ContentPackage cp2))
-                {
-                    return 0;
-                }
-                if (cp1.CorePackage && !cp2.CorePackage) { return -1; }
-                if (cp2.CorePackage && !cp1.CorePackage) { return 1; }
-                return 0;
-            });
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
             foreach (string language in TextManager.AvailableLanguages)
@@ -1063,7 +1052,6 @@ namespace Barotrauma
                 else if (SelectedContentPackages.Contains(contentPackage))
                 {
                     //core packages cannot be deselected, only switched by selecting another core package
-                    new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
                     tickBox.Selected = true;
                     return true;
                 }
