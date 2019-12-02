@@ -126,6 +126,11 @@ namespace Barotrauma
             set { text.Text = value; }
         }
 
+        public Color? DefaultTextColor
+        {
+            get { return defaultTextColor; }
+        }
+
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
