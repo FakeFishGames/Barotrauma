@@ -252,7 +252,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
 
-            if (powerIn == null) { Voltage -= deltaTime; }
+            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
 
             if (item.AiTarget != null)
             {
