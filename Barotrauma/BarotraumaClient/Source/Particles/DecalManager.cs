@@ -50,7 +50,7 @@ namespace Barotrauma.Particles
 
                 }
 
-                prefabs.Add(new DecalPrefab(element, configFile), allowOverriding && sourceElement.IsOverride());
+                prefabs.Add(new DecalPrefab(element, configFile), allowOverriding || sourceElement.IsOverride());
             }
         }
 
@@ -61,7 +61,7 @@ namespace Barotrauma.Particles
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
         {
-            if (prefabs.ContainsKey(decalName))
+            if (!prefabs.ContainsKey(decalName.ToLowerInvariant()))
             {
                 DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
                 return null;

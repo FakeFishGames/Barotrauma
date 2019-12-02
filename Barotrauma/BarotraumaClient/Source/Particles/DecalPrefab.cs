@@ -11,7 +11,7 @@ namespace Barotrauma.Particles
 
         public string OriginalName { get { return Name; } }
 
-        public string Identifier { get { return Name; } }
+        public string Identifier { get { return Name.ToLowerInvariant(); } }
 
         public string FilePath { get; private set; }
 
