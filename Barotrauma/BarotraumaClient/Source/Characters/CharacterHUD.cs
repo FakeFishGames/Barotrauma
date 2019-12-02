@@ -85,8 +85,7 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    if (!character.LockHands && character.Stun < 0.1f && 
-                        (character.SelectedConstruction == null || character.SelectedConstruction?.GetComponent<Controller>()?.User != character))
+                    if (!LockInventory(character))
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -325,7 +324,7 @@ namespace Barotrauma
                 }
                 if (character.Inventory != null && !character.LockHands)
                 {
-                    character.Inventory.Locked = (character.SelectedConstruction?.GetComponent<Controller>()?.User == character);
+                    character.Inventory.Locked = LockInventory(character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
@@ -366,6 +365,17 @@ namespace Barotrauma
                     character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
+        }
+
+        private static bool LockInventory(Character character)
+        {
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands) { return true; }
+
+            //lock if using a controller, except if we're also using a connection panel in the same item
+            return
+                character.SelectedConstruction != null &&
+                character.SelectedConstruction?.GetComponent<Controller>()?.User == character &&
+                character.SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != character;
         }
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
