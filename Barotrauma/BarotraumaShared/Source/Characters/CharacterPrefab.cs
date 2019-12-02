@@ -41,7 +41,9 @@ namespace Barotrauma
         /// </summary>
         public static CharacterPrefab FindBySpeciesName(string speciesName)
         {
-            return Prefabs.Find(p => p.Identifier == speciesName.ToLowerInvariant());
+            speciesName = speciesName.ToLowerInvariant();
+            if (!Prefabs.ContainsKey(speciesName)) { return null; }
+            return Prefabs[speciesName];
         }
 
         public static CharacterPrefab FindByFilePath(string filePath)
