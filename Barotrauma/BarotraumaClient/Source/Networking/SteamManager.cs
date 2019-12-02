@@ -1134,7 +1134,7 @@ namespace Barotrauma.Steam
                 {
                     if (cp.CorePackage)
                     {
-                        GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                        GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
                     }
                     else
                     {

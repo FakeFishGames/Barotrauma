@@ -870,9 +870,21 @@ namespace Barotrauma
                     {
                         string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
                         var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
+                        foreach (var cp in packagesToDeselect)
+                        {
+                            if (cp.CorePackage)
+                            {
+                                GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                            }
+                            else
+                            {
+                                GameMain.Config.DeselectContentPackage(cp);
+                            }
+                        }
+
                         foreach (var cp in toRemove)
                         {
-                            DeselectContentPackage(cp);
                             ContentPackage.List.Remove(cp);
                         }
                     }
