@@ -223,7 +223,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -238,7 +238,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" origin="0.5,0.5" />
-    <Body radius="10" height="45" density="5" />
+    <Body width="17" height="48" density="5" />
     <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" msg="ItemMsgPickUpSelect" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25" repairthroughholes="true">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />

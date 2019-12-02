@@ -1448,6 +1448,8 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool initialUpdateReceived;
+
         private void ReadLobbyUpdate(IReadMessage inc)
         {
             ServerNetObject objHeader;
@@ -1468,13 +1470,15 @@ namespace Barotrauma.Networking
                             UInt16 settingsLen = inc.ReadUInt16();
                             byte[] settingsData = inc.ReadBytes(settingsLen);
 
-                            if (inc.ReadBoolean())
+                            bool isInitialUpdate = inc.ReadBoolean();
+                            if (isInitialUpdate)
                             {
                                 if (GameSettings.VerboseLogging)
                                 {
                                     DebugConsole.NewMessage("Received initial lobby update, ID: " + updateID + ", last ID: " + GameMain.NetLobbyScreen.LastUpdateID, Color.Gray);
                                 }
                                 ReadInitialUpdate(inc);
+                                initialUpdateReceived = true;
                             }
 
                             string selectSubName        = inc.ReadString();
@@ -1505,7 +1509,9 @@ namespace Barotrauma.Networking
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
                             //ignore the message if we already a more up-to-date one
-                            if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
+                            //or if we're still waiting for the initial update
+                            if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID) &&
+                                (isInitialUpdate || initialUpdateReceived))
                             {
                                 ReadWriteMessage settingsBuf = new ReadWriteMessage();
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;

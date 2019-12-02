@@ -23,7 +23,20 @@ namespace Barotrauma.Items.Components
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
-        public bool IsStuck { get; private set; }
+
+        private bool isStuck;
+        public bool IsStuck
+        {
+            get { return isStuck; }
+            private set
+            {
+                if (isStuck == value) { return; }
+                isStuck = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
 
         private float resetPredictionTimer;
         private float toggleCooldownTimer;
@@ -67,12 +80,12 @@ namespace Barotrauma.Items.Components
         public float Stuck
         {
             get { return stuck; }
-            set 
+            set
             {
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck <= 0.0f) IsStuck = false;
-                if (stuck >= 100.0f) IsStuck = true;
+                if (stuck <= 0.0f) { IsStuck = false; }
+                if (stuck >= 100.0f) { IsStuck = true; }
             }
         }
 
@@ -228,12 +241,9 @@ namespace Barotrauma.Items.Components
 
         private readonly string accessDeniedTxt = TextManager.Get("AccessDenied");
         private readonly string cannotOpenText = TextManager.Get("DoorMsgCannotOpen");
-        private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
-            Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
+            Msg = HasAccess(character) ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
             if (addMessage)
             {
@@ -242,18 +252,24 @@ namespace Barotrauma.Items.Components
             return isBroken || base.HasRequiredItems(character, addMessage, msg);
         }
 
+        public bool CanBeOpenedWithoutTools(Character character)
+        {
+            if (isBroken) { return true; }
+            return HasAccess(character);
+        }
+
         public override bool Pick(Character picker)
         {
             if (item.Condition < RepairThreshold) { return true; }
             if (requiredItems.None()) { return false; }
-            if (HasRequiredItems(picker, false) && hasValidIdCard) { return false; }
+            if (HasAccess(picker) && HasRequiredItems(picker, false)) { return false; }
             return base.Pick(picker);
         }
 
         public override bool OnPicked(Character picker)
         {
             if (item.Condition < RepairThreshold) { return true; }
-            if (requiredItems.Any() && !hasValidIdCard)
+            if (!HasAccess(picker))
             {
                 ToggleState(ActionType.OnPicked, picker);
             }
@@ -274,7 +290,7 @@ namespace Barotrauma.Items.Components
             if (!isBroken)
             {
                 bool hasRequiredItems = HasRequiredItems(character, false);
-                if (requiredItems.None() || hasRequiredItems && hasValidIdCard)
+                if (HasAccess(character))
                 {
                     float originalPickingTime = PickingTime;
                     PickingTime = 0;
@@ -559,6 +575,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+            if (IsStuck) return;
+
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
             if (connection.Name == "toggle")

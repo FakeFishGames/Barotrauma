@@ -105,7 +105,9 @@ namespace Barotrauma
                         constructor: () => new AIObjectiveGoTo(sourceContainer.Item, character, objectiveManager)
                         {
                             // If the container changes, the item is no longer where it was
-                            abortCondition = () => itemToDecontain.Container != sourceContainer.Item
+                            abortCondition = () => itemToDecontain.Container != sourceContainer.Item,
+                            DialogueIdentifier = "dialogcannotreachtarget",
+                            TargetName = sourceContainer.Item.Name
                         },
                         onAbandon: () => Abandon = true);
                     return;

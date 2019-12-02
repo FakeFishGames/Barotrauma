@@ -275,6 +275,7 @@ namespace Barotrauma.Networking
 #if DEBUG
             CoroutineManager.InvokeAfter(() =>
             {
+                if (GameMain.Client == null) { return; }
                 if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
                 int count = Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedDuplicatesChance ? 2 : 1;
                 for (int i = 0; i < count; i++)

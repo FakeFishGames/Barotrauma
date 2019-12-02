@@ -47,7 +47,7 @@
       <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
-  <Item name="" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="ballistichelmet" category="Equipment" tags="smallitem" scale="0.4" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -59,7 +59,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="320,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/headgears_1.png" sourcerect="13,99,75,68" depth="0.6" origin="0.5,0.5" />
-    <Body radius="15" density="50" />
+    <Body radius="30" density="50" />
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
