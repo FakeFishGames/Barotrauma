@@ -21,10 +21,13 @@ namespace Barotrauma
         {
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", null);
 
-            var characterPrefab = CharacterPrefab.FindByFilePath(monsterFile);
-            if (characterPrefab != null)
+            if (!string.IsNullOrEmpty(monsterFile))
             {
-                monsterFile = characterPrefab.Identifier;
+                var characterPrefab = CharacterPrefab.FindByFilePath(monsterFile);
+                if (characterPrefab != null)
+                {
+                    monsterFile = characterPrefab.Identifier;
+                }
             }
 
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);

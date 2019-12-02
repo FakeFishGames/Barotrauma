@@ -532,6 +532,7 @@ namespace Barotrauma
 
         public static string CleanUpPath(this string path)
         {
+            if (string.IsNullOrEmpty(path)) { return ""; }
             path = path.Replace('\\', '/');
             while (path.IndexOf("//") >= 0)
             {
