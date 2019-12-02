@@ -222,6 +222,14 @@ namespace Barotrauma
 
             musicClips.RemoveAll(mc => !soundElements.Any(e => SoundElementsEquivalent(mc.Element, e)));
 
+            for (int i=0;i<currentMusic.Length;i++)
+            {
+                if (currentMusic[i] != null && !musicClips.Any(mc => mc.File == currentMusic[i].Filename))
+                {
+                    DisposeMusicChannel(i);
+                }
+            }
+
             SplashSounds.ForEach(s =>
             {
                 if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
