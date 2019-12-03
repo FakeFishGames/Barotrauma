@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="spear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" Scale="0.35" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="harpoongun,locker"/>
+    <PreferredContainer identifiers="harpoongun" minamount="5" maxamount="5" spawnprobability="1"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="75" />
@@ -22,8 +23,9 @@
       </Attack>
     </Projectile>
   </Item>
+  
   <Item name="" identifier="alienspear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" Scale="0.35" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="harpoongun,locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="5" spawnprobability="0.125"/>
     <Deconstruct time="10">
       <Item identifier="physicorium" />
     </Deconstruct>
@@ -42,8 +44,9 @@
       </Attack>
     </Projectile>
   </Item>
+  
   <Item name="" identifier="explosivespear" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,harpoonammo" Scale="0.35" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="harpoongun,locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="5" spawnprobability="0.125"/>
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
     <Deconstruct time="5">
@@ -79,9 +82,10 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  
   <Item name="" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="70" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="10">
@@ -113,9 +117,10 @@
       <Containable items="harpoonammo" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="syringegun" category="Equipment" cargocontaineridentifier="metalcrate" tags="weapon,mediumitem,gun" scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="0.25"/>
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="120" />
     <Price locationtype="City" buyprice="120" />
@@ -146,8 +151,10 @@
       <Containable items="syringe" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="revolverround" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" Scale="0.32" tags="smallitem,revolverammo" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="revolver" minamount="6" maxamount="6" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="10" spawnprobability="0.25"/>
     <Price locationtype="Military" buyprice="15" />
     <Price locationtype="City" buyprice="30" />
     <Price locationtype="Outpost" buyprice="30" />
@@ -167,9 +174,10 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  
   <Item name="" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -200,7 +208,6 @@
   </Item>  
   
   <Item name="" identifier="smground" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light" hideinmenus="true" scale="0.2">
-    <PreferredContainer identifiers="locker"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="896,960,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="128,3,40,14" depth="0.55" origin="0.5,0.5" />
     <Body width="40" height="14" density="40" />
@@ -217,8 +224,10 @@
       </StatusEffect>
     </Projectile>
   </Item>
+  
   <Item name="" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem,smgammo" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker,smg"/>
+    <PreferredContainer identifiers="SMG" minamount="1" maxamount="1" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
     <Deconstruct time="10">
@@ -241,7 +250,7 @@
   
   <Item name="" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="300" />
     <Deconstruct time="10">
@@ -280,7 +289,7 @@
 
   <Item name="" identifier="flamer" category="Equipment" Tags="smallitem,weapon,gun" cargocontaineridentifier="metalcrate" description="An incendiary weapon that fires a stream of burning welding fuel." Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="2" spawnprobability="0.25"/>
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -347,8 +356,7 @@
   </Item>  
 
   <Item name="" identifier="stungrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" Scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="1"/>
     <Upgrade gameversion="0.9.2.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="175" />
     <Price locationtype="City" buyprice="200" />
@@ -384,9 +392,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="empgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="1"/>
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Deconstruct time="10">
       <Item identifier="iron" />
@@ -422,9 +430,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="1"/>
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="250" />
     <Deconstruct time="10">
@@ -463,9 +471,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="incendiumgrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" Scale="0.5" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="1"/>
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="300" />
     <Deconstruct time="10">
@@ -502,9 +510,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="stunbaton" category="Equipment" Tags="smallitem,weapon" Scale="0.5" cargocontaineridentifier="metalcrate" description="If verbal orders are insufficient, a high-voltage shock from a Stun Baton may be enough to beat an unruly crew member into submission." impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponholder" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Upgrade gameversion="0.9.2.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="200" />
@@ -560,9 +568,9 @@
       <Containable items="mobilebattery" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="divingknife" category="Equipment" Tags="smallitem,weapon" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="locker,weaponholder"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="3" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -587,8 +595,7 @@
   </Item>
   
   <Item name="" identifier="grenadelauncher" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponholder" spawnprobability="0.05"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="2" spawnprobability="0.5"/>
     <Price locationtype="Military" buyprice="500" />
     <Price locationtype="City" buyprice="1000" />
     <Deconstruct time="10">
@@ -620,7 +627,8 @@
   </Item>
   
   <Item name="" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,grenade" Scale="0.35" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="grenadelauncher" minamount="1" maxamount="1" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
     <PreferredContainer identifiers="locker"/>
     <Price locationtype="Military" buyprice="60" />
     <Price locationtype="City" buyprice="100" />
@@ -662,8 +670,7 @@
   </Item>
 
   <Item name="" identifier="40mmstungrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,grenade" Scale="0.35" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
     <!--TODO: adjust prices-->
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="120" />
@@ -707,8 +714,7 @@
   </Item>
 
   <Item name="" identifier="shotgun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponholder" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="500" />
     <Price locationtype="City" buyprice="1000" />
     <Deconstruct time="10">
@@ -744,8 +750,10 @@
       <Containable items="shotgunammo" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="shotgunshell" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,shotgunammo" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="shotgun,locker,weaponcontainer"/>
+    <PreferredContainer identifiers="shotgun" minamount="6" maxamount="6" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="10" spawnprobability="0.25"/>
     <Price locationtype="Military" buyprice="10" />
     <Price locationtype="City" buyprice="15" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,960,64,64" origin="0.5,0.5" />
@@ -767,8 +775,7 @@
   </Item>
 
   <Item name="" identifier="stungun" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponholder" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -802,8 +809,8 @@
   </Item>
   
   <Item name="" identifier="stungundart" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="smallitem,stungunammo" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="stungun,locker"/>
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="10" spawnprobability="0.25"/>
+    <PreferredContainer identifiers="stungun" minamount="1" maxamount="1" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="30" />
     <Deconstruct time="10">
