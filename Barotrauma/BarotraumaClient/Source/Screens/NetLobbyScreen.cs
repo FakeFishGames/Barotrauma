@@ -2611,7 +2611,7 @@ namespace Barotrauma
         private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
         {
             GUIFrame innerFrame = null;
-            List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(Gender.Male, out Vector2 dimensions);
+            List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(Gender.Male, out var maxDimensions);
 
             innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null)
             {
@@ -2624,13 +2624,13 @@ namespace Barotrauma
                 float buttonHeight = parent.Rect.Height;
 
                 Vector2 innerFrameSize;
-                if (buttonWidth / dimensions.X > buttonHeight / dimensions.Y)
+                if (buttonWidth / maxDimensions.X > buttonHeight / maxDimensions.Y)
                 {
-                    innerFrameSize = new Vector2((dimensions.X / dimensions.Y) * (buttonHeight / buttonWidth), 1.0f);
+                    innerFrameSize = new Vector2((maxDimensions.X / maxDimensions.Y) * (buttonHeight / buttonWidth), 1.0f);
                 }
                 else
                 {
-                    innerFrameSize = new Vector2(1.0f, (dimensions.Y / dimensions.X) * (buttonWidth / buttonHeight));
+                    innerFrameSize = new Vector2(1.0f, (maxDimensions.Y / maxDimensions.X) * (buttonWidth / buttonHeight));
                 }
 
                 innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.8f;
@@ -2649,7 +2649,7 @@ namespace Barotrauma
                     for (int j = 0; j < outfitPreview.Sprites.Count; j++)
                     {
                         Pair<Sprite, Vector2> sprite = outfitPreview.Sprites[j];
-                        retVal[i][j] = new GUIImage(new RectTransform(sprite.First.SourceRect.Size.ToVector2() / dimensions, innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second / dimensions }, sprite.First, scaleToFit: true)
+                        retVal[i][j] = new GUIImage(new RectTransform(sprite.First.SourceRect.Size.ToVector2() / outfitPreview.Dimensions, innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second / outfitPreview.Dimensions }, sprite.First, scaleToFit: true)
                         {
                             PressedColor = Color.White,
                             CanBeFocused = false
