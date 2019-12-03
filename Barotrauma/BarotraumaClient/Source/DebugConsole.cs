@@ -2046,6 +2046,11 @@ namespace Barotrauma
                     ThrowError("Cannot spawn additional submarines during a multiplayer session.");
                     return;
                 }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please enter the name of the submarine.");
+                    return;
+                }
                 try
                 {
                     Submarine spawnedSub = Submarine.Load(args[0], false);
