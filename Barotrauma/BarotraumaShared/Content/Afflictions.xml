@@ -56,6 +56,8 @@
 
   <DamageOverlay texture="Content/UI/damageOverlay.png"/>
   
+	<!--Split internal damage to internal damage and blunt trauma. Blunt trauma is received when hit with a makeshift weapon, baton, falling(?) etc. Old internal damage is repurposed for a default damage effect, e.g from meds or miscellaneous sources.-->
+	<!--TODO: write new damage types descriptions, separate damagemodifiers, affliction icons-->
   <InternalDamage
     name="Internal Damage"
     identifier="internaldamage"
@@ -72,7 +74,25 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
   </InternalDamage>
 
-  <Bleeding
+	<InternalDamage
+	  name="Blunt Trauma"
+	  identifier="blunttrauma"
+	  description=""
+	  type="damage"
+	  causeofdeathdescription=""
+	  selfcauseofdeathdescription=""
+	  limbspecific="true"
+	  maxstrength="100"
+	  damageoverlayalpha="1">
+		<Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
+			minvitalitydecrease="0"
+			maxvitalitydecrease="1"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
+	</InternalDamage>
+
+	<!--Created more bloodloss causing afflictions (bite wound & piercing wound) that work similarly to gunshot wounds.-->
+	<!--TODO: damage types descriptions, affliction icons, dialog flag?, change 'bleeding' to 'wound'?-->
+	<Bleeding
     name="Bleeding"
     identifier="bleeding"
     description="Blood pours freely from this ragged and particularly nasty open wound"
@@ -90,7 +110,45 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="896,640,128,128" color="139,60,42,255" origin="0,0"/>
    </Bleeding>
 
-  <Burn
+	<AfflictionBleeding
+	  name="Bite wound"
+	  identifier="bitewound"
+	  description=""
+	  type="bleeding"
+	  causeofdeathdescription=""
+	  selfcauseofdeathdescription=""
+	  limbspecific="true"
+	  maxstrength="100"
+	  karmachangeonapplied="-1"
+	  damageoverlayalpha="1"
+	  strengthchange="-0.1">
+		<Effect minstrength="0" maxstrength="100"
+		  minvitalitydecrease="0"
+		  maxvitalitydecrease="10"
+		  dialogflag="GunshotWound"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
+	</AfflictionBleeding>
+	
+	<AfflictionBleeding
+	  name="Piercing wound"
+	  identifier="piercing wound"
+	  description=""
+	  type="bleeding"
+	  causeofdeathdescription=""
+	  selfcauseofdeathdescription=""
+	  limbspecific="true"
+	  maxstrength="100"
+	  karmachangeonapplied="-1"
+	  damageoverlayalpha="1"
+	  strengthchange="-0.1">
+		<Effect minstrength="0" maxstrength="100"
+		  minvitalitydecrease="0"
+		  maxvitalitydecrease="10"
+		  dialogflag="GunshotWound"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
+	</AfflictionBleeding>
+
+	<Burn
     name="Burn"
     identifier="burn"
     description="The area is blistered and red, and skin is already beginning to peel away in sheets. The patient is in a great deal of pain."
