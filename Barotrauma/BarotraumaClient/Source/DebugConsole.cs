@@ -1041,21 +1041,53 @@ namespace Barotrauma
                 }
             }));
 
-#if DEBUG
-            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
-            {
-                GameMain.Client.PrintReceiverTransters();
-            }));
-
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
                 //key = text tag, value = list of languages the tag is missing from
-                Dictionary<string, List<string>> missingTags = new Dictionary<string, List<string>>();
+                Dictionary<string, HashSet<string>> missingTags = new Dictionary<string, HashSet<string>>();
                 Dictionary<string, HashSet<string>> tags = new Dictionary<string, HashSet<string>>();
                 foreach (string language in TextManager.AvailableLanguages)
                 {
                     TextManager.Language = language;
                     tags.Add(language, new HashSet<string>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
+                }
+
+                foreach (string language in TextManager.AvailableLanguages)
+                {
+                    //check missing mission texts
+                    foreach (var missionPrefab in MissionPrefab.List)
+                    {
+                        string nameIdentifier = "missionname." + missionPrefab.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
+                        }
+                        string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        if (!tags[language].Contains(descriptionIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
+                            missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    //check missing entity names
+                    foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                    {
+                        string nameIdentifier = "entityname." + me.Identifier;
+                        if (tags[language].Contains(nameIdentifier)) { continue; }
+                        if (me is ItemPrefab itemPrefab)
+                        {
+                            nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", null) ?? nameIdentifier;
+                            if (nameIdentifier != null)
+                            {
+                                if (tags[language].Contains("entityname." + nameIdentifier)) { continue; }
+                            }
+                        }
+
+                        if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                        missingTags[nameIdentifier].Add(language);
+                    }
                 }
 
                 foreach (string englishTag in tags["English"])
@@ -1065,19 +1097,26 @@ namespace Barotrauma
                         if (language == "English") { continue; }
                         if (!tags[language].Contains(englishTag))
                         {
-                            if (!missingTags.ContainsKey(englishTag))
-                            {
-                                missingTags[englishTag] = new List<string>();
-                            }
+                            if (!missingTags.ContainsKey(englishTag)) { missingTags[englishTag] = new HashSet<string>(); }
                             missingTags[englishTag].Add(language);
                         }
                     }
                 }
+
+                List<string> lines = missingTags.Select(t => "\"" + t.Key + "\"\n    missing from " + string.Join(", ", t.Value)).ToList();
+
                 string filePath = "missingloca.txt";
-                File.WriteAllLines(filePath, missingTags.Select(t => "\""+t.Key + "\"\n    missing from " + string.Join(", ", t.Value)));
+                File.WriteAllLines(filePath, lines);
                 System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
                 TextManager.Language = "English";
             }));
+
+#if DEBUG
+            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
+            {
+                GameMain.Client.PrintReceiverTransters();
+            }));
+
 
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {

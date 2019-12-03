@@ -206,8 +206,7 @@ namespace Barotrauma
 
         public string FilePath { get; private set; }
 
-        //Arbitrary string that is used to identify the type of the affliction.
-        //Afflictions with the same type stack up, and items may be configured to cure specific types of afflictions.
+        // Arbitrary string that is used to identify the type of the affliction.
         public readonly string AfflictionType;
 
         //Does the affliction affect a specific limb or the whole character
