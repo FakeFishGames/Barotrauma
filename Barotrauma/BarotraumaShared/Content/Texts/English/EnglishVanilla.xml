@@ -2327,8 +2327,12 @@
   <entitydescription.securityuniform3>Obey my authority!</entitydescription.securityuniform3>
   <entityname.bodyarmor>Body Armor</entityname.bodyarmor>
   <entitydescription.bodyarmor>While the body armor won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.bodyarmor>
-  <entityname.ballistichelmet>Ballistic Helmet</entityname.ballistichelmet>
-  <entitydescription.ballistichelmet>While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.ballistichelmet>
+  <entityname.ballistichelmet1>Ballistic Helmet</entityname.ballistichelmet1>
+  <entitydescription.ballistichelmet1>While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.ballistichelmet1>
+  <entityname.ballistichelmet2>Ballistic Helmet</entityname.ballistichelmet2>
+  <entitydescription.ballistichelmet2>While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.ballistichelmet2>
+  <entityname.ballistichelmet3>Ballistic Helmet</entityname.ballistichelmet3>
+  <entitydescription.ballistichelmet3>While the helmet won't offer adequate protection against most of the inhabitants of the subsurface ocean, it can be extremely useful if there are traitors on board.</entitydescription.ballistichelmet3>
   <entityname.handcuffs>Handcuffs</entityname.handcuffs>
   <entitydescription.handcuffs>Useful for restraining problem players.</entitydescription.handcuffs>
   <entityname.riotshield>Riot Shield</entityname.riotshield>

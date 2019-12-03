@@ -235,7 +235,7 @@
       </Item>
       <Item identifier="handcuffs"/>
       <Item identifier="bodyarmor" equip="true"/>
-      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="ballistichelmet1" equip="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>      
@@ -248,7 +248,7 @@
       </Item>
       <Item identifier="handcuffs"/>
       <Item identifier="bodyarmor" equip="true"/>
-      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="ballistichelmet2" equip="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
@@ -261,7 +261,7 @@
       </Item>
       <Item identifier="handcuffs"/>
       <Item identifier="bodyarmor" equip="true"/>
-      <Item identifier="ballistichelmet" equip="true"/>
+      <Item identifier="ballistichelmet3" equip="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
