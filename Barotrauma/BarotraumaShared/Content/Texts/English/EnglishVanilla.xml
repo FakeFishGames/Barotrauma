@@ -4333,4 +4333,19 @@
   <dialogcannotreachleak>Can't get to the leak near [name]!</dialogcannotreachleak>
   <dialogcannotreachpatient>Can't get to [name]!</dialogcannotreachpatient>
 
+  <!--Missing mission texts-->
+  <missionname.killhammerheadgold>Killing a Golden Hammerhead</missionname.killhammerheadgold>
+  <missiondescription.killhammerheadgold>There have been several reports of an aggressive Golden Hammerhead assaulting vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to whoever gets rid of the creature.</missiondescription.killhammerheadgold>
+  <missionsonarlabel.killhammerheadgold>Golden Hammerhead</missionsonarlabel.killhammerheadgold>
+  <missionsuccess.killhammerheadgold>The Golden Hammerhead is dead.</missionsuccess.killhammerheadgold>
+  <missionheader0.killhammerheadgold>Target terminated</missionheader0.killhammerheadgold>
+  <missionmessage0.killhammerheadgold>The Golden Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killhammerheadgold>
+
+  <missionname.killthresherswarm1>Terminate a thresher swarm</missionname.killthresherswarm1>
+  <missiondescription.killthresherswarm1>There have been several reports of a large swarm of threshers assaulting vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can get rid of them.</missiondescription.killthresherswarm1>
+  <missionsonarlabel.killthresherswarm1>Thresher Swarm</missionsonarlabel.killthresherswarm1>
+  <missionsuccess.killthresherswarm1>The swarm has been terminated.</missionsuccess.killthresherswarm1>
+  <missionheader0.killthresherswarm1>Target terminated</missionheader0.killthresherswarm1>
+  <missionmessage0.killthresherswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killthresherswarm1>
+
 </infotexts>
