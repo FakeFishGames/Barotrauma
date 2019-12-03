@@ -1,6 +1,6 @@
 ﻿<Ragdoll type="Moloch" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" canentersubmarine="False" canwalk="False" draggable="True" spritesheetorientation="0">
   <collider radius="309" width="635" name="Main Collider" height="0" />
-  <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="3" name="Torso" type="Torso" radius="309" width="635" notes="0_Torso" flip="True" healthindex="0" attackpriority="0" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="36,0,1588,669" origin="0.4949142,0.4817872" depth="0.1" subdivisions="15,15"></deformablesprite>
     <attack cooldown="15" range="700" damagerange="400" duration="0.25" force="15" targetforce="0" structuresoundtype="StructureBlunt" context="NotDefined" targettype="Any" hitdetectiontype="Distance" afterattack="FallBack" secondarycooldown="0" structuredamage="35" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="" torque="0" applyforcesonlyonce="False" targetimpulse="1000" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" cooldownrandomfactor="0.1">
       <Affliction identifier="internaldamage" strength="200" />
@@ -9,7 +9,7 @@
     <damagemodifier armorsector="-90,110" afflictiontypes="damage" damagemultiplier="0.1" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="-90,110" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
   </limb>
-  <limb id="16" name="Bladder" type="None" radius="457" width="311" notes="1bc_Bladder" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
+  <limb id="16" name="Bladder" type="None" radius="457" width="311" notes="1bc_Bladder" flip="True" healthindex="0" attackpriority="10" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05">
     <deformablesprite texture="Content/Characters/Moloch/Moloch.png" sourcerect="423,1025,1226,915" depth="0.29" origin="0.5,0.5" subdivisions="15,15">
       <Spritedeformation type="noise" resolution="5,5" frequency="0.5" amplitude="1" changespeed="0.1" blendmode="add" />
       <SpriteDeformation type="inflate" resolution="5,5" frequency="2" scale="0.5" blendmode="add" usemovementsine="true" sineoffset="0.75" />
