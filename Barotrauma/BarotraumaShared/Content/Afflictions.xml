@@ -90,8 +90,9 @@
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
 	</InternalDamage>
 
+	<!--Rending wounds are monster specific-->
 	<InternalDamage
-	  name="Lacerations"
+	  name="Rending Wounds"
 	  identifier="lacerations"
 	  description=""
 	  type="damage"
