@@ -150,7 +150,10 @@ namespace Barotrauma
             }
             corePackageDropdown.OnSelected = SelectCorePackage;
 
-            foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => !cp.CorePackage))
+            foreach (ContentPackage contentPackage in ContentPackage.List
+                .Where(cp => !cp.CorePackage)
+                .OrderBy(cp => !SelectedContentPackages.Contains(cp))
+                .ThenBy(cp => SelectedContentPackages.IndexOf(cp)))
             {
                 var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y), contentPackageList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -183,30 +186,7 @@ namespace Barotrauma
                 tickBox.TextBlock.CanBeFocused = true;
             }
             contentPackageList.CanDragElements = true;
-            contentPackageList.OnRearranged = (listBox, obj) =>
-            {
-                var reorderedList = SelectedContentPackages.OrderBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp))).ToList();
-                SelectedContentPackages.Clear(); SelectedContentPackages.AddRange(reorderedList);
-
-                ContentPackage.List = ContentPackage.List
-                                        .OrderByDescending(p => p.CorePackage)
-                                        .ThenBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)))
-                                        .ToList();
-
-                ContentPackage.SortContentPackages();
-
-                GameMain.DecalManager.Prefabs.SortAll();
-                GameMain.ParticleManager.Prefabs.SortAll();
-                CharacterPrefab.Prefabs.SortAll();
-                AfflictionPrefab.Prefabs.SortAll();
-                JobPrefab.Prefabs.SortAll();
-                ItemPrefab.Prefabs.SortAll();
-                CoreEntityPrefab.Prefabs.SortAll();
-                ItemAssemblyPrefab.Prefabs.SortAll();
-                StructurePrefab.Prefabs.SortAll();
-
-                UnsavedSettings = true;
-            };
+            contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
@@ -1102,6 +1082,43 @@ namespace Barotrauma
 
             UnsavedSettings = true;
             return true;
+        }
+
+        private void OnContentPackagesRearranged(GUIListBox listBox, object userData)
+        {
+            var reorderedList = SelectedContentPackages.OrderBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp))).ToList();
+            SelectedContentPackages.Clear(); SelectedContentPackages.AddRange(reorderedList);
+
+            ContentPackage.List = ContentPackage.List
+                                    .OrderByDescending(p => p.CorePackage)
+                                    .ThenBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)))
+                                    .ToList();
+
+            ContentPackage.SortContentPackages();
+
+            GameMain.DecalManager.Prefabs.SortAll();
+            GameMain.ParticleManager.Prefabs.SortAll();
+            CharacterPrefab.Prefabs.SortAll();
+            AfflictionPrefab.Prefabs.SortAll();
+            JobPrefab.Prefabs.SortAll();
+            ItemPrefab.Prefabs.SortAll();
+            CoreEntityPrefab.Prefabs.SortAll();
+            ItemAssemblyPrefab.Prefabs.SortAll();
+            StructurePrefab.Prefabs.SortAll();
+
+            Submarine.RefreshSavedSubs();
+            ItemPrefab.InitFabricationRecipes();
+            RuinGeneration.RuinGenerationParams.ClearAll();
+            ScriptedEventSet.LoadPrefabs();
+            MissionPrefab.Init();
+            LevelObjectPrefab.LoadAll();
+            LocationType.Init();
+            MapGenerationParams.Init();
+            LevelGenerationParams.LoadPresets();
+
+            SoundPlayer.Init().ForEach(_ => { return; });
+
+            UnsavedSettings = true;
         }
 
         private bool SelectContentPackage(GUITickBox tickBox)
