@@ -1022,8 +1022,7 @@ namespace Barotrauma.Networking
                             }
                         }
 
-                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.LastRecvChatMsgID) &&   //more recent than the last ID received by the client
-                            !NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.LastChatMsgQueueID)) //NOT more recent than the latest existing ID
+                        if (NetIdUtils.IsValidId(lastRecvChatMsgID, c.LastRecvChatMsgID, c.LastChatMsgQueueID))
                         {
                             c.LastRecvChatMsgID = lastRecvChatMsgID;
                         }
@@ -1034,8 +1033,7 @@ namespace Barotrauma.Networking
                                 " (previous: " + c.LastChatMsgQueueID + ", latest: " + c.LastChatMsgQueueID + ")");
                         }
 
-                        if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.LastRecvEntityEventID) &&
-                            !NetIdUtils.IdMoreRecent(lastRecvEntityEventID, lastEntityEventID))
+                        if (NetIdUtils.IsValidId(lastRecvEntityEventID, c.LastRecvEntityEventID, lastEntityEventID))
                         {
                             if (c.NeedsMidRoundSync)
                             {
