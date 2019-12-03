@@ -1191,6 +1191,10 @@ namespace Barotrauma
             }
             if (SelectedAiTarget.Entity is Character target)
             {
+                if (AttackingLimb == null)
+                {
+                    AttackingLimb = GetAttackLimb(target.WorldPosition);
+                }
                 Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
                 if (mouthLimb == null)
                 {
