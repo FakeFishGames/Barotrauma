@@ -1086,15 +1086,17 @@ namespace Barotrauma
 
         private void OnContentPackagesRearranged(GUIListBox listBox, object userData)
         {
-            var reorderedList = SelectedContentPackages.OrderBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp))).ToList();
-            SelectedContentPackages.Clear(); SelectedContentPackages.AddRange(reorderedList);
-
             ContentPackage.List = ContentPackage.List
                                     .OrderByDescending(p => p.CorePackage)
                                     .ThenBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)))
                                     .ToList();
 
             ContentPackage.SortContentPackages();
+
+            if (userData is ContentPackage contentPackage)
+            {
+                if (!SelectedContentPackages.Contains(contentPackage)) { return; }
+            }
 
             GameMain.DecalManager.Prefabs.SortAll();
             GameMain.ParticleManager.Prefabs.SortAll();

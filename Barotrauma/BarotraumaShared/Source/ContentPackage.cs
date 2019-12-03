@@ -594,6 +594,12 @@ namespace Barotrauma
 
             if (GameMain.Config != null)
             {
+                var sortedSelected = GameMain.Config.SelectedContentPackages
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
+                GameMain.Config.SelectedContentPackages.Clear(); GameMain.Config.SelectedContentPackages.AddRange(sortedSelected);
+
                 var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
                 DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
             }

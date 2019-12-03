@@ -311,19 +311,26 @@ namespace Barotrauma
                     draggedElement.RectTransform.AbsoluteOffset = draggedReferenceOffset + new Point(0, (int)PlayerInput.MousePosition.Y - draggedReferenceRectangle.Center.Y);
 
                     int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
+                    int currIndex = index;
 
-                    if (index > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
+                    while (currIndex > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
                     {
-                        draggedElement.RectTransform.RepositionChildInHierarchy(index - 1);
+                        currIndex--;
                         draggedReferenceRectangle.Y -= draggedReferenceRectangle.Height;
                         draggedReferenceOffset.Y -= draggedReferenceRectangle.Height;
                     }
-                    else if (index < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
+                    while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
                     {
-                        draggedElement.RectTransform.RepositionChildInHierarchy(index + 1);
+                        currIndex++;
                         draggedReferenceRectangle.Y += draggedReferenceRectangle.Height;
                         draggedReferenceOffset.Y += draggedReferenceRectangle.Height;
                     }
+
+                    if (currIndex != index)
+                    {
+                        draggedElement.RectTransform.RepositionChildInHierarchy(currIndex);
+                    }
+
                     return;
                 }
             }

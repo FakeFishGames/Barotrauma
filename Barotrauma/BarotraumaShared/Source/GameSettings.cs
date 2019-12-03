@@ -251,7 +251,7 @@ namespace Barotrauma
             }
         }
 
-        public void SelectCorePackage(ContentPackage contentPackage)
+        public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll=false)
         {
             ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
 
@@ -260,11 +260,11 @@ namespace Barotrauma
 
             ContentPackage.SortContentPackages();
 
-            List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 =>
+            List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 => forceReloadAll ||
                 !contentPackage.Files.Any(f2 =>
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
-            List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 =>
+            List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 => forceReloadAll ||
                 !otherCorePackage.Files.Any(f2 =>
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
