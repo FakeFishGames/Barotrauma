@@ -149,6 +149,7 @@ namespace Barotrauma
                 }
             }
             corePackageDropdown.OnSelected = SelectCorePackage;
+            corePackageDropdown.ListBox.CanBeFocused = GameMain.Client == null;
 
             foreach (ContentPackage contentPackage in ContentPackage.List
                 .Where(cp => !cp.CorePackage)
@@ -185,7 +186,8 @@ namespace Barotrauma
 
                 tickBox.TextBlock.CanBeFocused = true;
             }
-            contentPackageList.CanDragElements = true;
+            contentPackageList.CanDragElements = GameMain.Client == null;
+            contentPackageList.CanBeFocused = GameMain.Client == null;
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
@@ -1076,7 +1078,7 @@ namespace Barotrauma
 
         private bool SelectCorePackage(GUIComponent component, object userData)
         {
-            if (!(userData is ContentPackage contentPackage)) { return false; }
+            if (!(userData is ContentPackage contentPackage) || GameMain.Client != null) { return false; }
 
             SelectCorePackage(contentPackage);
 
@@ -1086,6 +1088,8 @@ namespace Barotrauma
 
         private void OnContentPackagesRearranged(GUIListBox listBox, object userData)
         {
+            if (GameMain.Client != null) { return; }
+
             if (userData is ContentPackage contentPackage)
             {
                 if (!SelectedContentPackages.Contains(contentPackage)) { return; }
@@ -1098,6 +1102,8 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUITickBox tickBox)
         {
+            if (GameMain.Client != null) { return false; }
+
             var contentPackage = tickBox.UserData as ContentPackage;
 
             if (tickBox.Selected)
