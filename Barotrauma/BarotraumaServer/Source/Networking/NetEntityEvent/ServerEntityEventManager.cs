@@ -125,16 +125,14 @@ namespace Barotrauma.Networking
 
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
-            
+
+            bool inGameClientsPresent = server.ConnectedClients.Count(c => c.InGame) > 0;
+
             //remove old events that have been sent to all clients, they are redundant now
-            //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
-            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) && e.CreateTime < Timing.TotalTime - 15.0f);
-
-            if (server.ConnectedClients.Count(c => c.InGame) == 0 && events.Count > 1)
-            {
-                events.RemoveRange(0, events.Count - 1);
-            }
-
+            //  keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
+            //  and events less than 15 seconds old to give disconnected clients a bit of time to reconnect without getting desynced
+            events.RemoveAll(e => (NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) || !inGameClientsPresent) && e.CreateTime < Timing.TotalTime - 15.0f);
+            
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
