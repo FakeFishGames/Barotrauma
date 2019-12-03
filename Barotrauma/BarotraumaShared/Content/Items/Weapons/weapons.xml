@@ -16,8 +16,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="10" itemdamage="10" stun="0.2" targetforce="20">
-        <Affliction identifier="bleeding" strength="30" />
-        <Affliction identifier="internaldamage" strength="30" />
+        <Affliction identifier="piercingwound" strength="30" />
+        <Affliction identifier="lacerations" strength="30" />
       </Attack>
     </Projectile>
   </Item>
@@ -35,8 +35,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="5" stun="0.2" itemdamage="10" targetforce="20">
-        <Affliction identifier="bleeding" strength="30" />
-        <Affliction identifier="internaldamage" strength="50" />
+        <Affliction identifier="piercingwound" strength="30" />
+        <Affliction identifier="lacerations" strength="50" />
       </Attack>
     </Projectile>
   </Item>
@@ -57,7 +57,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="10" stun="0.2" itemdamage="20">
-        <Affliction identifier="bleeding" strength="30" />
+        <Affliction identifier="piercingwound" strength="30" />
+		<Affliction identifier="lacerations" strength="30" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
@@ -413,7 +414,7 @@
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
-          <Affliction identifier="bleeding" strength="80" />
+          <Affliction identifier="lacerations" strength="80" />
           <Affliction identifier="internaldamage" strength="180" />
         </Explosion>
         <Remove />
@@ -424,7 +425,7 @@
         <sound file="Content/Items/Weapons/ExplosionMedium1.ogg" type="OnUse" range="10000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
-          <Affliction identifier="bleeding" strength="80" />
+          <Affliction identifier="lacerations" strength="80" />
           <Affliction identifier="internaldamage" strength="180" />
         </Explosion>
         <Remove />
@@ -488,7 +489,7 @@
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="45,10" handle1="-35,-5" holdangle="45" reload="0.75" range="100" combatPriority="50" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2" targetimpulse="20" itemdamage="1">
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
-        <Affliction identifier="internaldamage" strength="4" />
+        <Affliction identifier="blunttrauma" strength="4" />
       </Attack>
       <!-- 4 usages with normal battery -->
       <StatusEffect type="OnUse" target="Contained" Condition="-25.0" disabledeltatime="true">
@@ -541,8 +542,8 @@
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="25" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1" itemdamage="10">
-        <Affliction identifier="internaldamage" strength="10" />
-        <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="lacerations" strength="10" />
+        <Affliction identifier="piercingwound" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
       </Attack>
     </MeleeWeapon>
@@ -601,7 +602,7 @@
       <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
         <Explosion range="250.0" structuredamage="5" itemdamage="10" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
-          <Affliction identifier="bleeding" strength="40" />
+          <Affliction identifier="lacerations" strength="40" />
           <Affliction identifier="internaldamage" strength="60" />
         </Explosion>
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />

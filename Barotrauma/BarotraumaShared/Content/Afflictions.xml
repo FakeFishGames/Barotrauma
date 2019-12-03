@@ -90,6 +90,23 @@
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
 	</InternalDamage>
 
+	<InternalDamage
+	  name="Lacerations"
+	  identifier="lacerations"
+	  description=""
+	  type="damage"
+	  causeofdeathdescription=""
+	  selfcauseofdeathdescription=""
+	  limbspecific="true"
+	  maxstrength="100"
+	  damageoverlayalpha="1">
+		<Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
+			minvitalitydecrease="0"
+			maxvitalitydecrease="1"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
+	</InternalDamage>
+
+
 	<!--Created more bloodloss causing afflictions (bite wound & piercing wound) that work similarly to gunshot wounds.-->
 	<!--TODO: damage types descriptions, affliction icons, dialog flag?, change 'bleeding' to 'wound'?-->
 	<Bleeding
@@ -131,7 +148,7 @@
 	
 	<AfflictionBleeding
 	  name="Piercing wound"
-	  identifier="piercing wound"
+	  identifier="piercingwound"
 	  description=""
 	  type="bleeding"
 	  causeofdeathdescription=""
