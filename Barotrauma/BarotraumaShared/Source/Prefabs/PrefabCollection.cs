@@ -123,13 +123,12 @@ namespace Barotrauma
             }
         }
 
-        private void Sort(List<T> prefabs)
+        private void Sort(List<T> list)
         {
-            var basePrefab = prefabs[0];
-            prefabs.RemoveAt(0);
+            var newList = list.Skip(1).OrderByDescending(p => GameMain.Config.SelectedContentPackages.IndexOf(p.ContentPackage)).ToList();
 
-            prefabs = prefabs.OrderByDescending(p => GameMain.Config.SelectedContentPackages.IndexOf(p.ContentPackage)).ToList();
-            prefabs.Insert(0, basePrefab);
+            list.RemoveRange(1, list.Count - 1);
+            list.AddRange(newList);
         }
 
         public void SortAll()

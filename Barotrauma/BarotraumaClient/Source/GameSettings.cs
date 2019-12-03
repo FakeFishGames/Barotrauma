@@ -102,26 +102,64 @@ namespace Barotrauma
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), generalLayoutGroup.RectTransform))
+
+            var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
+
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
             {
                 CanBeFocused = false,
                 ScrollBarVisible = true
             };
 
-            foreach (ContentPackage contentPackage in ContentPackage.List)
+            foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => cp.CorePackage))
+            {
+                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), corePackageDropdown.ListBox.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = contentPackage
+                };
+                var text = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform), contentPackage.Name);
+
+                if (!contentPackage.IsCompatible())
+                {
+                    frame.UserData = null;
+                    text.TextColor = Color.Red * 0.6f;
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                        new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
+                }
+                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                {
+                    frame.UserData = null;
+                    text.TextColor = Color.Red * 0.6f;
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
+                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
+                }
+                else if (contentPackage.HasErrors)
+                {
+                    text.TextColor = new Color(255, 150, 150);
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", contentPackage.Name) +
+                        "\n" + string.Join("\n", contentPackage.ErrorMessages);
+                }
+
+                if (SelectedContentPackages.Contains(contentPackage))
+                {
+                    corePackageDropdown.Select(corePackageDropdown.ListBox.Content.GetChildIndex(frame));
+                }
+            }
+            corePackageDropdown.OnSelected = SelectCorePackage;
+
+            foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => !cp.CorePackage))
             {
                 var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name,
-                    style: contentPackage.CorePackage ? "GUIRadioButton" : "GUITickBox")
+                    style: "GUITickBox")
                 {
                     UserData = contentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage),
                     OnSelected = SelectContentPackage,
                     Enabled = GameMain.Client == null
                 };
-                if (contentPackage.CorePackage)
-                {
-                    tickBox.TextColor = Color.White;
-                }
                 if (!contentPackage.IsCompatible())
                 {
                     tickBox.Enabled = false;
@@ -130,14 +168,6 @@ namespace Barotrauma
                         TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
                         new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
-                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
-                {
-                    tickBox.Enabled = false;
-                    tickBox.TextColor = Color.Red * 0.6f;
-                    tickBox.ToolTip = tickBox.TextBlock.ToolTip =
-                        TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
-                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
-                }
                 else if (contentPackage.HasErrors)
                 {
                     tickBox.TextColor = new Color(255,150,150);
@@ -145,6 +175,8 @@ namespace Barotrauma
                         TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", contentPackage.Name) +
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
+
+                tickBox.TextBlock.CanBeFocused = true;
             }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
@@ -1033,39 +1065,27 @@ namespace Barotrauma
             return true;
         }
 
+        private bool SelectCorePackage(GUIComponent component, object userData)
+        {
+            if (!(userData is ContentPackage contentPackage)) { return false; }
+
+            SelectCorePackage(contentPackage);
+
+            UnsavedSettings = true;
+            return true;
+        }
+
         private bool SelectContentPackage(GUITickBox tickBox)
         {
             var contentPackage = tickBox.UserData as ContentPackage;
 
-            if (contentPackage.CorePackage)
+            if (tickBox.Selected)
             {
-                if (tickBox.Selected)
-                {
-                    SelectCorePackage(contentPackage);
-                    foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
-                    {
-                        ContentPackage otherContentPackage = otherTickBox.UserData as ContentPackage;
-                        if (otherContentPackage == contentPackage) continue;
-                        otherTickBox.Selected = SelectedContentPackages.Contains(otherContentPackage);
-                    }
-                }
-                else if (SelectedContentPackages.Contains(contentPackage))
-                {
-                    //core packages cannot be deselected, only switched by selecting another core package
-                    tickBox.Selected = true;
-                    return true;
-                }
+                SelectContentPackage(contentPackage);
             }
             else
             {
-                if (tickBox.Selected)
-                {
-                    SelectContentPackage(contentPackage);
-                }
-                else
-                {
-                    DeselectContentPackage(contentPackage);
-                }
+                DeselectContentPackage(contentPackage);
             }
             
             UnsavedSettings = true;
