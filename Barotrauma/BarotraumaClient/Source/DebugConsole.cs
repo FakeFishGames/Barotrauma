@@ -2041,6 +2041,11 @@ namespace Barotrauma
 
             commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
             {
+                if (GameMain.NetworkMember == null)
+                {
+                    ThrowError("Cannot spawn additional submarines during a multiplayer session.");
+                    return;
+                }
                 try
                 {
                     Submarine spawnedSub = Submarine.Load(args[0], false);

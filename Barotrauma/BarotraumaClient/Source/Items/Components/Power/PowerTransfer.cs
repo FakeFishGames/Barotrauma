@@ -23,18 +23,23 @@ namespace Barotrauma.Items.Components
             {
                 Enabled = false
             };
+            powerIndicator.TextColor = powerIndicator.DefaultTextColor.Value;
+
             highVoltageIndicator = new GUITickBox(new RectTransform(indicatorSize, paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, (int)(40 * GUI.yScale)) },
                 TextManager.Get("PowerTransferHighVoltage"), style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipOvervoltage"),
                 Enabled = false
             };
+            highVoltageIndicator.TextColor = highVoltageIndicator.DefaultTextColor.Value;
+
             lowVoltageIndicator = new GUITickBox(new RectTransform(indicatorSize, paddedFrame.RectTransform) { AbsoluteOffset = new Point(0, (int)(80 * GUI.yScale)) },
                 TextManager.Get("PowerTransferLowVoltage"), style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipLowvoltage"),
                 Enabled = false                
             };
+            lowVoltageIndicator.TextColor = lowVoltageIndicator.DefaultTextColor.Value;
 
             var textContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), paddedFrame.RectTransform, Anchor.TopRight));
 

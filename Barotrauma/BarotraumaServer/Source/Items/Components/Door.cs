@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     {
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (isStuck || isOpen == open)
+            if (IsStuck || isOpen == open)
             {
                 return;
             }

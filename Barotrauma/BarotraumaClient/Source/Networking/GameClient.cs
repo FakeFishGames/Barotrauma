@@ -2259,12 +2259,10 @@ namespace Barotrauma.Networking
         {
             if (gameStarted)
             {
-                tickBox.Visible = false;
+                tickBox.Parent.Visible = false;
                 return false;
             }
-
             Vote(VoteType.StartRound, tickBox.Selected);
-
             return true;
         }
 

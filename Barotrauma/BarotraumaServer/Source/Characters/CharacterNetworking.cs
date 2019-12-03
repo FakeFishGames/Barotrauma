@@ -268,8 +268,8 @@ namespace Barotrauma
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(1, 0, 3);
-                        Client owner = ((Client)extraData[1]);
-                        msg.Write(owner == null ? (byte)0 : owner.ID);
+                        Client owner = (Client)extraData[1];
+                        msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedInteger(2, 0, 3);

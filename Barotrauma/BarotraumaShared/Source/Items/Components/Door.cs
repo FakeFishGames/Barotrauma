@@ -25,7 +25,18 @@ namespace Barotrauma.Items.Components
         private readonly bool autoOrientGap;
 
         private bool isStuck;
-        public bool IsStuck => isStuck;
+        public bool IsStuck
+        {
+            get { return isStuck; }
+            private set
+            {
+                if (isStuck == value) { return; }
+                isStuck = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
 
         private float resetPredictionTimer;
 
@@ -65,12 +76,12 @@ namespace Barotrauma.Items.Components
         public float Stuck
         {
             get { return stuck; }
-            set 
+            set
             {
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
-                if (stuck <= 0.0f) isStuck = false;
-                if (stuck >= 100.0f) isStuck = true;
+                if (stuck <= 0.0f) { IsStuck = false; }
+                if (stuck >= 100.0f) { IsStuck = true; }
             }
         }
 
@@ -296,7 +307,7 @@ namespace Barotrauma.Items.Components
             }
 
             bool isClosing = false;
-            if (!isStuck)
+            if (!IsStuck)
             {
                 if (PredictedState == null)
                 {
@@ -541,7 +552,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (isStuck) return;
+            if (IsStuck) return;
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
 

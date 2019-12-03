@@ -104,6 +104,7 @@ namespace Barotrauma.Items.Components
                 //delay reading the state until midround syncing is done
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
+                msg.ReadUInt16(); //user ID
                 foreach (Connection connection in Connections)
                 {
                     for (int i = 0; i < Connection.MaxLinked; i++)

@@ -525,6 +525,7 @@ namespace Barotrauma
         protected void ReportProblems()
         {
             Order newOrder = null;
+            Hull targetHull = null;
             if (Character.CurrentHull != null)
             {
                 foreach (var hull in VisibleHulls)
@@ -534,21 +535,21 @@ namespace Barotrauma
                         if (c.CurrentHull != hull || !c.Enabled) { continue; }
                         if (AIObjectiveFightIntruders.IsValidTarget(c, Character))
                         {
-                            AddTargets<AIObjectiveFightIntruders, Character>(Character, c);
-                            if (newOrder == null)
+                            if (AddTargets<AIObjectiveFightIntruders, Character>(Character, c) && newOrder == null)
                             {
                                 var orderPrefab = Order.GetPrefab("reportintruders");
-                                newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
+                                newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                                targetHull = hull;
                             }
                         }
                     }
                     if (AIObjectiveExtinguishFires.IsValidTarget(hull, Character))
                     {
-                        AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull);
-                        if (newOrder == null)
+                        if (AddTargets<AIObjectiveExtinguishFires, Hull>(Character, hull) && newOrder == null)
                         {
                             var orderPrefab = Order.GetPrefab("reportfire");
                             newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                            targetHull = hull;
                         }
                     }
                     foreach (Character c in Character.CharacterList)
@@ -556,13 +557,11 @@ namespace Barotrauma
                         if (c.CurrentHull != hull) { continue; }
                         if (AIObjectiveRescueAll.IsValidTarget(c, Character))
                         {
-                            if (AddTargets<AIObjectiveRescueAll, Character>(c, Character))
+                            if (AddTargets<AIObjectiveRescueAll, Character>(c, Character) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                             {
-                                if (newOrder == null)
-                                {
-                                    var orderPrefab = Order.GetPrefab("requestfirstaid");
-                                    newOrder = new Order(orderPrefab, c.CurrentHull, null, orderGiver: Character);
-                                }
+                                var orderPrefab = Order.GetPrefab("requestfirstaid");
+                                newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                                targetHull = hull;
                             }
                         }
                     }
@@ -570,11 +569,11 @@ namespace Barotrauma
                     {
                         if (AIObjectiveFixLeaks.IsValidTarget(gap, Character))
                         {
-                            AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap);
-                            if (newOrder == null && !gap.IsRoomToRoom)
+                            if (AddTargets<AIObjectiveFixLeaks, Gap>(Character, gap) && newOrder == null && !gap.IsRoomToRoom)
                             {
                                 var orderPrefab = Order.GetPrefab("reportbreach");
                                 newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                                targetHull = hull;
                             }
                         }
                     }
@@ -584,11 +583,11 @@ namespace Barotrauma
                         if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                         {
                             if (item.Repairables.All(r => item.ConditionPercentage > r.ShowRepairUIThreshold)) { continue; }
-                            AddTargets<AIObjectiveRepairItems, Item>(Character, item);
-                            if (newOrder == null)
+                            if (AddTargets<AIObjectiveRepairItems, Item>(Character, item) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRepairItem>())
                             {
                                 var orderPrefab = Order.GetPrefab("reportbrokendevices");
-                                newOrder = new Order(orderPrefab, item.CurrentHull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
+                                newOrder = new Order(orderPrefab, hull, item.Repairables?.FirstOrDefault(), orderGiver: Character);
+                                targetHull = hull;
                             }
                         }
                     }
@@ -598,9 +597,9 @@ namespace Barotrauma
             {
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.AddOrder(newOrder, newOrder.FadeOutTime))
                 {
-                    Character.Speak(newOrder.GetChatMessage("", Character.CurrentHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
+                    Character.Speak(newOrder.GetChatMessage("", targetHull?.DisplayName, givingOrderToSelf: false), ChatMessageType.Order);
 #if SERVER
-                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", Character.CurrentHull, null, Character));
+                    GameMain.Server.SendOrderChatMessage(new OrderChatMessage(newOrder, "", targetHull, null, Character));
 #endif
                 }
             }
