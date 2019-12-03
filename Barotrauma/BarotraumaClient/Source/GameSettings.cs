@@ -107,7 +107,7 @@ namespace Barotrauma
 
             var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
             {
-                CanBeFocused = false,
+                OnSelected = (gc, obj) => false,
                 ScrollBarVisible = true
             };
 
@@ -152,7 +152,11 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => !cp.CorePackage))
             {
-                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name,
+                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y), contentPackageList.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = contentPackage
+                };
+                var tickBox = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name,
                     style: "GUITickBox")
                 {
                     UserData = contentPackage,
@@ -178,6 +182,31 @@ namespace Barotrauma
 
                 tickBox.TextBlock.CanBeFocused = true;
             }
+            contentPackageList.CanDragElements = true;
+            contentPackageList.OnRearranged = (listBox, obj) =>
+            {
+                var reorderedList = SelectedContentPackages.OrderBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp))).ToList();
+                SelectedContentPackages.Clear(); SelectedContentPackages.AddRange(reorderedList);
+
+                ContentPackage.List = ContentPackage.List
+                                        .OrderByDescending(p => p.CorePackage)
+                                        .ThenBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)))
+                                        .ToList();
+
+                ContentPackage.SortContentPackages();
+
+                GameMain.DecalManager.Prefabs.SortAll();
+                GameMain.ParticleManager.Prefabs.SortAll();
+                CharacterPrefab.Prefabs.SortAll();
+                AfflictionPrefab.Prefabs.SortAll();
+                JobPrefab.Prefabs.SortAll();
+                ItemPrefab.Prefabs.SortAll();
+                CoreEntityPrefab.Prefabs.SortAll();
+                ItemAssemblyPrefab.Prefabs.SortAll();
+                StructurePrefab.Prefabs.SortAll();
+
+                UnsavedSettings = true;
+            };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));

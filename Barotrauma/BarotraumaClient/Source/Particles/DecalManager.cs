@@ -7,11 +7,11 @@ namespace Barotrauma.Particles
 {
     class DecalManager
     {
-        private PrefabCollection<DecalPrefab> prefabs;
+        public PrefabCollection<DecalPrefab> Prefabs { get; private set; }
 
         public DecalManager()
         {
-            prefabs = new PrefabCollection<DecalPrefab>();
+            Prefabs = new PrefabCollection<DecalPrefab>();
             foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
                 LoadFromFile(configFile);
@@ -35,7 +35,7 @@ namespace Barotrauma.Particles
             {
                 var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
                 string name = element.Name.ToString().ToLowerInvariant();
-                if (prefabs.ContainsKey(name))
+                if (Prefabs.ContainsKey(name))
                 {
                     if (allowOverriding || sourceElement.IsOverride())
                     {
@@ -50,24 +50,24 @@ namespace Barotrauma.Particles
 
                 }
 
-                prefabs.Add(new DecalPrefab(element, configFile), allowOverriding || sourceElement.IsOverride());
+                Prefabs.Add(new DecalPrefab(element, configFile), allowOverriding || sourceElement.IsOverride());
             }
         }
 
         public void RemoveByFile(string filePath)
         {
-            prefabs.RemoveByFile(filePath);
+            Prefabs.RemoveByFile(filePath);
         }
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
         {
-            if (!prefabs.ContainsKey(decalName.ToLowerInvariant()))
+            if (!Prefabs.ContainsKey(decalName.ToLowerInvariant()))
             {
                 DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
                 return null;
             }
 
-            DecalPrefab prefab = prefabs[decalName];
+            DecalPrefab prefab = Prefabs[decalName];
 
             return new Decal(prefab, scale, worldPosition, hull);
         }

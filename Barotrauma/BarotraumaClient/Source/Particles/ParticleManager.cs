@@ -44,7 +44,7 @@ namespace Barotrauma.Particles
         }
         private Particle[] particles;
 
-        private readonly PrefabCollection<ParticlePrefab> prefabs = new PrefabCollection<ParticlePrefab>();
+        public readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
 
         private Camera cam;
 
@@ -88,7 +88,7 @@ namespace Barotrauma.Particles
             {
                 var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
                 string name = element.Name.ToString().ToLowerInvariant();
-                if (prefabs.ContainsKey(name) || particleElements.ContainsKey(name))
+                if (Prefabs.ContainsKey(name) || particleElements.ContainsKey(name))
                 {
                     if (allowOverriding || sourceElement.IsOverride())
                     {
@@ -106,13 +106,13 @@ namespace Barotrauma.Particles
 
             foreach (var kvp in particleElements)
             {
-                prefabs.Add(new ParticlePrefab(kvp.Value, configFile), allowOverriding);
+                Prefabs.Add(new ParticlePrefab(kvp.Value, configFile), allowOverriding);
             }
         }
 
         public void RemovePrefabsByFile(string configFile)
         {
-            prefabs.RemoveByFile(configFile);
+            Prefabs.RemoveByFile(configFile);
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null)
@@ -158,12 +158,12 @@ namespace Barotrauma.Particles
 
         public List<ParticlePrefab> GetPrefabList()
         {
-            return prefabs.ToList();
+            return Prefabs.ToList();
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
         {
-            return prefabs.Find(p => p.Identifier == prefabName);
+            return Prefabs.Find(p => p.Identifier == prefabName);
         }
 
         private void RemoveParticle(int index)

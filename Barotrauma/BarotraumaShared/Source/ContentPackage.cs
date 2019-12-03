@@ -577,14 +577,19 @@ namespace Barotrauma
                     List.Add(new ContentPackage(modFilePath));
                 }
             }
+
+            List = List
+                .OrderByDescending(p => p.CorePackage)
+                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
+                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ToList();
         }
 
         public static void SortContentPackages()
         {
             List = List
                 .OrderByDescending(p => p.CorePackage)
-                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
-                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ThenBy(p => List.IndexOf(p))
                 .ToList();
 
             if (GameMain.Config != null)

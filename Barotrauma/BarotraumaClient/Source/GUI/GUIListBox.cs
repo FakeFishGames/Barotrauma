@@ -19,6 +19,9 @@ namespace Barotrauma
         public delegate object CheckSelectedHandler();
         public CheckSelectedHandler CheckSelected;
 
+        public delegate void OnRearrangedHandler(GUIListBox listBox, object obj);
+        public OnRearrangedHandler OnRearranged;
+
         public GUIScrollBar ScrollBar { get; private set; }
         public GUIFrame Content { get; private set; }
 
@@ -139,6 +142,12 @@ namespace Barotrauma
         /// </summary>
         public bool AutoHideScrollBar { get; set; } = true;
 
+
+        public bool CanDragElements { get; set; } = false;
+        private GUIComponent draggedElement;
+        private Rectangle draggedReferenceRectangle;
+        private Point draggedReferenceOffset;
+
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             CanBeFocused = true;
@@ -229,7 +238,7 @@ namespace Barotrauma
                 if (!child.Visible) { continue; }
                 if (RectTransform != null)
                 {
-                    if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
+                    if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
                     {
                         child.RectTransform.AbsoluteOffset = new Point(x, y);
                     }
@@ -243,7 +252,7 @@ namespace Barotrauma
                         {
                             y = 0;
                             x += child.Rect.Width + Spacing;
-                            if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
+                            if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
                             {
                                 child.RectTransform.AbsoluteOffset = new Point(x, y);
                             }
@@ -260,7 +269,7 @@ namespace Barotrauma
                         {
                             x = 0;
                             y += child.Rect.Height + Spacing;
-                            if (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y)
+                            if (child != draggedElement && (child.RectTransform.AbsoluteOffset.X != x || child.RectTransform.AbsoluteOffset.Y != y))
                             {
                                 child.RectTransform.AbsoluteOffset = new Point(x, y);
                             }
@@ -288,6 +297,37 @@ namespace Barotrauma
         
         private void UpdateChildrenRect()
         {
+            //dragging
+            if (CanDragElements && draggedElement != null)
+            {
+                if (!PlayerInput.LeftButtonHeld())
+                {
+                    OnRearranged?.Invoke(this, draggedElement.UserData);
+                    draggedElement = null;
+                    RepositionChildren();
+                }
+                else
+                {
+                    draggedElement.RectTransform.AbsoluteOffset = draggedReferenceOffset + new Point(0, (int)PlayerInput.MousePosition.Y - draggedReferenceRectangle.Center.Y);
+
+                    int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
+
+                    if (index > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
+                    {
+                        draggedElement.RectTransform.RepositionChildInHierarchy(index - 1);
+                        draggedReferenceRectangle.Y -= draggedReferenceRectangle.Height;
+                        draggedReferenceOffset.Y -= draggedReferenceRectangle.Height;
+                    }
+                    else if (index < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
+                    {
+                        draggedElement.RectTransform.RepositionChildInHierarchy(index + 1);
+                        draggedReferenceRectangle.Y += draggedReferenceRectangle.Height;
+                        draggedReferenceOffset.Y += draggedReferenceRectangle.Height;
+                    }
+                    return;
+                }
+            }
+
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 var child = Content.RectTransform.GetChild(i)?.GUIComponent;
@@ -300,6 +340,13 @@ namespace Barotrauma
                     if (PlayerInput.LeftButtonClicked())
                     {
                         Select(i, autoScroll: false);
+                    }
+
+                    if (CanDragElements && PlayerInput.LeftButtonDown() && GUI.MouseOn == child)
+                    {
+                        draggedElement = child;
+                        draggedReferenceRectangle = child.Rect;
+                        draggedReferenceOffset = child.RectTransform.AbsoluteOffset;
                     }
                 }
                 else if (selected.Contains(child))
