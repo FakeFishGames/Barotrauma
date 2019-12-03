@@ -17,7 +17,7 @@
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="10" itemdamage="10" stun="0.2" targetforce="20">
         <Affliction identifier="piercingwound" strength="30" />
-        <Affliction identifier="internaldamage" strength="30" />
+        <Affliction identifier="lacerations" strength="30" />
       </Attack>
     </Projectile>
   </Item>
@@ -36,7 +36,7 @@
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="5" stun="0.2" itemdamage="10" targetforce="20">
         <Affliction identifier="piercingwound" strength="30" />
-        <Affliction identifier="internaldamage" strength="50" />
+        <Affliction identifier="lacerations" strength="50" />
       </Attack>
     </Projectile>
   </Item>
@@ -58,7 +58,7 @@
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="true">
       <Attack structuredamage="10" stun="0.2" itemdamage="20">
         <Affliction identifier="piercingwound" strength="30" />
-		<Affliction identifier="internaldamage" strength="30" />
+		<Affliction identifier="lacerations" strength="30" />
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionMedium2.ogg" type="OnUse" range="2000" selectionmode="All" />
       <sound file="Content/Items/Weapons/ExplosionDebris2.ogg" type="OnUse" range="2000" />
@@ -542,7 +542,7 @@
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="25" msg="ItemMsgPickUpSelect">
       <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1" itemdamage="10">
-        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="lacerations" strength="10" />
         <Affliction identifier="piercingwound" strength="10" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
       </Attack>

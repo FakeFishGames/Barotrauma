@@ -56,7 +56,7 @@
 
   <DamageOverlay texture="Content/UI/damageOverlay.png"/>
   
-	<!--Split internal damage to internal damage and blunt trauma. Blunt trauma is received when hit with a makeshift weapon, baton, falling(?) etc. Old internal damage is repurposed for a default damage effect, e.g from meds or miscellaneous sources.-->
+	<!--Split internal damage to internal damage, lacerations, blunt trauma and rending wounds. Old internal damage is repurposed for a default damage effect, e.g from meds or miscellaneous sources.-->
 	<!--TODO: write new damage types descriptions, separate damagemodifiers, affliction icons-->
   <InternalDamage
     name="Internal Damage"
@@ -74,6 +74,7 @@
     <icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
   </InternalDamage>
 
+	<!--Blunt trauma is received from crowbars, wrenches, etc.-->
 	<InternalDamage
 	  name="Blunt Trauma"
 	  identifier="blunttrauma"
@@ -90,14 +91,32 @@
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
 	</InternalDamage>
 
-	<!--Rending wounds are monster specific-->
+	<!--Lacerations are received from sharp damage sources-->
 	<InternalDamage
-	  name="Rending Wounds"
+	  name="Lacerations"
 	  identifier="lacerations"
 	  description=""
 	  type="damage"
 	  causeofdeathdescription=""
 	  selfcauseofdeathdescription=""
+	  limbspecific="true"
+	  maxstrength="100"
+	  damageoverlayalpha="1">
+		<Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
+			minvitalitydecrease="0"
+			maxvitalitydecrease="1"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
+	</InternalDamage>
+
+
+	<!--Rending wounds are monster specific-->
+	<InternalDamage
+	  name="Rending Wounds"
+	  identifier="rendingwounds"
+	  description=""
+	  type="damage"
+	  causeofdeathdescription="Mauled to death"
+	  selfcauseofdeathdescription="You have been mauled to death."
 	  limbspecific="true"
 	  maxstrength="100"
 	  damageoverlayalpha="1">
