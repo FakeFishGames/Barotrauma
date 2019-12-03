@@ -154,7 +154,7 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in ContentPackage.List
                 .Where(cp => !cp.CorePackage)
                 .OrderBy(cp => !SelectedContentPackages.Contains(cp))
-                .ThenBy(cp => SelectedContentPackages.IndexOf(cp)))
+                .ThenBy(cp => -SelectedContentPackages.IndexOf(cp)))
             {
                 var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y), contentPackageList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -1095,7 +1095,7 @@ namespace Barotrauma
                 if (!SelectedContentPackages.Contains(contentPackage)) { return; }
             }
 
-            ReorderSelectedContentPackages(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)));
+            ReorderSelectedContentPackages(cp => -listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)));
 
             UnsavedSettings = true;
         }
