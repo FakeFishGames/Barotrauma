@@ -149,7 +149,6 @@ namespace Barotrauma
 
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
-        private List<XElement> previewElements;
 
         public JobPrefab(XElement element)
         {
@@ -165,7 +164,7 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "items":
+                    case "itemset":
                         ItemSets.Add(variant, subElement);
                         var itemNames = new List<string>();
                         loadItemNames(subElement, itemNames);
@@ -189,7 +188,7 @@ namespace Barotrauma
 
             void loadItemNames(XElement parentElement, List<string> itemNames)
             {
-                foreach (XElement itemElement in parentElement.Elements())
+                foreach (XElement itemElement in parentElement.Elements("Item"))
                 {
                     if (itemElement.Element("name") != null)
                     {
@@ -228,8 +227,6 @@ namespace Barotrauma
             {
                 ClothingElement = element.Element("portraitclothing");
             }
-
-            previewElements = element.Elements("PreviewSprites").Concat(element.Elements("previewsprites")).ToList();
         }
         
         public class OutfitPreview
@@ -255,20 +252,29 @@ namespace Barotrauma
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
             dimensions = Vector2.One;
              
-            var equipIdentifiers = Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+            var equipIdentifiers = Element.Elements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
             var outfitPrefabs = MapEntityPrefab.List.FindAll(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier));
             if (!outfitPrefabs.Any()) { return null; }
 
             for (int i = 0; i < outfitPrefabs.Count; i++)
             {
-                if (i > previewElements.Count - 1) { break; }
-                var previewElement = previewElements[i];
-                if (previewElement == null) { continue; }
+                var outfitPreview = new OutfitPreview();
+
+                if (!ItemSets.TryGetValue(i, out var itemSetElement)) { continue; }
+                var previewElement = itemSetElement.Element("PreviewSprites");
+                if(previewElement == null)
+                {
+                    previewElement = itemSetElement.Element("previewsprites");
+                }
+                if (previewElement == null)
+                {
+                    outfitPreviews.Add(outfitPreview);
+                    continue;
+                }
 
                 dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
 
-                var outfitPreview = new OutfitPreview();
                 var children = previewElement.Elements().ToList();
                 for (int n = 0; n < children.Count; n++)
                 {
