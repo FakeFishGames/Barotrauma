@@ -6,21 +6,21 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <InventoryIcon name="Security Officer's Uniform 1 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="130,210,60,46" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Security Officer's Uniform 1" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
-      <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER]_1.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Lower Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Lower Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER]_1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER]_1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Leg" texture="securityofficer_legs_[GENDER]_1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Leg" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Torso" texture="securityofficer_torso_[GENDER]_1.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Left Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Right Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Right Lower Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Left Lower Arm" texture="securityofficer_torso_[GENDER]_1.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Waist" texture="securityofficer_legs_[GENDER]_1.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Right Thigh" texture="securityofficer_legs_[GENDER]_1.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Left Thigh" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Right Leg" texture="securityofficer_legs_[GENDER]_1.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Left Leg" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Right Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 1 Left Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
@@ -30,21 +30,21 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <InventoryIcon name="Security Officer's Uniform 2 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="192,209,63,47" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Security Officer's Uniform 2" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
-      <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER]_2.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Lower Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Lower Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER]_2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER]_2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Leg" texture="securityofficer_legs_[GENDER]_2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Leg" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Torso" texture="securityofficer_torso_[GENDER]_2.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Left Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Right Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Right Lower Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Left Lower Arm" texture="securityofficer_torso_[GENDER]_2.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Waist" texture="securityofficer_legs_[GENDER]_2.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Right Thigh" texture="securityofficer_legs_[GENDER]_2.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Left Thigh" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Right Leg" texture="securityofficer_legs_[GENDER]_2.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Left Leg" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Right Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 2 Left Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
@@ -54,21 +54,21 @@
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
     <InventoryIcon name="Security Officer's Uniform 3 Icon" texture="Content/Items/InventoryIconAtlas2.png" sourcerect="257,207,63,49" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Security Officer's Uniform 3" texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="2,77,195,78" depth="0.6" origin="0.5,0.5" />
     <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect">
-      <sprite name="Security Officer's Uniform Torso" texture="securityofficer_torso_[GENDER]_3.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Lower Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Lower Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Waist" texture="securityofficer_legs_[GENDER]_3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Thigh" texture="securityofficer_legs_[GENDER]_3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Thigh" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Leg" texture="securityofficer_legs_[GENDER]_3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Leg" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Right Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-      <sprite name="Security Officer's Uniform Left Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Torso" texture="securityofficer_torso_[GENDER]_3.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Left Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Right Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Right Lower Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="RightHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Left Lower Arm" texture="securityofficer_torso_[GENDER]_3.png" limb="LeftHand" hidelimb="false" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Waist" texture="securityofficer_legs_[GENDER]_3.png" limb="Waist" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Right Thigh" texture="securityofficer_legs_[GENDER]_3.png" limb="RightThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Left Thigh" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftThigh" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Right Leg" texture="securityofficer_legs_[GENDER]_3.png" limb="RightLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Left Leg" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Right Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <sprite name="Security Officer's Uniform 3 Left Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
