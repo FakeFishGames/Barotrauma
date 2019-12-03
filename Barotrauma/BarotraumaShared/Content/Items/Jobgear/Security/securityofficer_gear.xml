@@ -98,7 +98,7 @@
     </Wearable>
   </Item>
   <!-- HEADGEAR START -->
-  <Item name="" identifier="ballistichelmet1" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="ballistichelmet1" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -116,7 +116,7 @@
       <sprite name="Ballistic Helmet 1 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="15,220,73,66" origin="0.5,0.7" />
     </Wearable>
   </Item>
-  <Item name="" identifier="ballistichelmet2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="ballistichelmet2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -126,15 +126,15 @@
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredItem identifier="ballisticfiber" />
     </Fabricate>
-    <Sprite name="Ballistic Helmet 2" texture="Content/Items/Jobgear/headgears.png" sourcerect="15,220,73,66" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Ballistic Helmet 2" texture="Content/Items/Jobgear/headgears.png" sourcerect="115,215,77,88" depth="0.6" origin="0.5,0.5" />
     <Body radius="15" density="50" />
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Ballistic Helmet 2 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="15,220,73,66" origin="0.5,0.7" />
+      <sprite name="Ballistic Helmet 2 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="115,215,77,88" origin="0.625,0.5" />
     </Wearable>
   </Item>
-  <Item name="" identifier="ballistichelmet3" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="ballistichelmet3" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -144,12 +144,12 @@
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredItem identifier="ballisticfiber" />
     </Fabricate>
-    <Sprite name="Ballistic Helmet 3" texture="Content/Items/Jobgear/headgears.png" sourcerect="15,220,73,66" depth="0.6" origin="0.5,0.5" />
+    <Sprite name="Ballistic Helmet 3" texture="Content/Items/Jobgear/headgears.png" sourcerect="208,214,92,81" depth="0.6" origin="0.5,0.5" />
     <Body radius="15" density="50" />
     <Wearable slots="Any,Head" armorvalue="20.0" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="damage" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-      <sprite name="Ballistic Helmet 3 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="15,220,73,66" origin="0.5,0.7" />
+      <sprite name="Ballistic Helmet 3 Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="208,214,92,81" origin="0.575,0.55" />
     </Wearable>
   </Item>
   <!-- HEADGEAR END -->
