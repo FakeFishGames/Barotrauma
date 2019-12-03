@@ -13,11 +13,12 @@ namespace Barotrauma.Networking
     {
         //used by all peer implementations
         SteamTicketAndVersion = 0x1,
-        Password = 0x2,
+        ContentPackageOrder = 0x2,
+        Password = 0x3,
         Success = 0x0,
 
         //used only by SteamP2P implementations
-        ConnectionStarted = 0x3
+        ConnectionStarted = 0x4
     }
 
     [Flags]

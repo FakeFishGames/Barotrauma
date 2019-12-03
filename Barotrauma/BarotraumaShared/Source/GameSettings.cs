@@ -757,6 +757,41 @@ namespace Barotrauma
             }
         }
 
+        public void ReorderSelectedContentPackages<T>(Func<ContentPackage, T> orderFunction)
+        {
+            ContentPackage.List = ContentPackage.List
+                                    .OrderByDescending(p => p.CorePackage)
+                                    .ThenBy(orderFunction)
+                                    .ToList();
+
+            ContentPackage.SortContentPackages();
+
+            CharacterPrefab.Prefabs.SortAll();
+            AfflictionPrefab.Prefabs.SortAll();
+            JobPrefab.Prefabs.SortAll();
+            ItemPrefab.Prefabs.SortAll();
+            CoreEntityPrefab.Prefabs.SortAll();
+            ItemAssemblyPrefab.Prefabs.SortAll();
+            StructurePrefab.Prefabs.SortAll();
+
+            Submarine.RefreshSavedSubs();
+            ItemPrefab.InitFabricationRecipes();
+            RuinGeneration.RuinGenerationParams.ClearAll();
+            ScriptedEventSet.LoadPrefabs();
+            MissionPrefab.Init();
+            LevelObjectPrefab.LoadAll();
+            LocationType.Init();
+            MapGenerationParams.Init();
+            LevelGenerationParams.LoadPresets();
+
+#if CLIENT
+            GameMain.DecalManager.Prefabs.SortAll();
+            GameMain.ParticleManager.Prefabs.SortAll();
+            SoundPlayer.Init().ForEach(_ => { return; });
+#endif
+        }
+
+
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
         public string MasterServerUrl { get; set; }

@@ -1086,39 +1086,12 @@ namespace Barotrauma
 
         private void OnContentPackagesRearranged(GUIListBox listBox, object userData)
         {
-            ContentPackage.List = ContentPackage.List
-                                    .OrderByDescending(p => p.CorePackage)
-                                    .ThenBy(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)))
-                                    .ToList();
-
-            ContentPackage.SortContentPackages();
-
             if (userData is ContentPackage contentPackage)
             {
                 if (!SelectedContentPackages.Contains(contentPackage)) { return; }
             }
 
-            GameMain.DecalManager.Prefabs.SortAll();
-            GameMain.ParticleManager.Prefabs.SortAll();
-            CharacterPrefab.Prefabs.SortAll();
-            AfflictionPrefab.Prefabs.SortAll();
-            JobPrefab.Prefabs.SortAll();
-            ItemPrefab.Prefabs.SortAll();
-            CoreEntityPrefab.Prefabs.SortAll();
-            ItemAssemblyPrefab.Prefabs.SortAll();
-            StructurePrefab.Prefabs.SortAll();
-
-            Submarine.RefreshSavedSubs();
-            ItemPrefab.InitFabricationRecipes();
-            RuinGeneration.RuinGenerationParams.ClearAll();
-            ScriptedEventSet.LoadPrefabs();
-            MissionPrefab.Init();
-            LevelObjectPrefab.LoadAll();
-            LocationType.Init();
-            MapGenerationParams.Init();
-            LevelGenerationParams.LoadPresets();
-
-            SoundPlayer.Init().ForEach(_ => { return; });
+            ReorderSelectedContentPackages(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)));
 
             UnsavedSettings = true;
         }

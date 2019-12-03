@@ -147,11 +147,13 @@ namespace Barotrauma.Networking
 
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
             //DebugConsole.NewMessage(step + " " + initializationStep);
+            NetOutgoingMessage outMsg; NetSendResult result;
+
             switch (step)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
                     if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    NetOutgoingMessage outMsg = netClient.CreateMessage();
+                    outMsg = netClient.CreateMessage();
                     outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
                     outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
                     outMsg.Write(Name);
@@ -177,11 +179,37 @@ namespace Barotrauma.Networking
                         outMsg.Write(contentPackage.MD5hash.Hash);
                     }
 
-                    NetSendResult result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
                     if (result != NetSendResult.Queued && result != NetSendResult.Sent)
                     {
                         DebugConsole.NewMessage("Failed to send "+initializationStep.ToString()+" message to host: " + result);
                     }
+                    break;
+                case ConnectionInitialization.ContentPackageOrder:
+                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
+                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
+                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
+                    outMsg = netClient.CreateMessage();
+                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
+                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
+
+                    Int32 cpCount = inc.ReadVariableInt32();
+                    List<ContentPackage> serverContentPackages = new List<ContentPackage>();
+                    for (int i=0;i<cpCount;i++)
+                    {
+                        string hash = inc.ReadString();
+                        serverContentPackages.Add(GameMain.Config.SelectedContentPackages.Find(cp => cp.MD5hash.Hash == hash));
+                    }
+                    GameMain.Config.ReorderSelectedContentPackages(cp => serverContentPackages.Contains(cp) ?
+                                                                         serverContentPackages.IndexOf(cp) :
+                                                                         serverContentPackages.Count + GameMain.Config.SelectedContentPackages.IndexOf(cp));
+
+                    result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
+                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+                    {
+                        DebugConsole.NewMessage("Failed to send " + initializationStep.ToString() + " message to host: " + result);
+                    }
+
                     break;
                 case ConnectionInitialization.Password:
                     if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
