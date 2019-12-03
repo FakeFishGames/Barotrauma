@@ -169,6 +169,7 @@
         </Item>     
       </Item>
       <Item identifier="crowbar"/>
+      <Item identifier="baseballcap" equip="true" />
       <Item identifier="bluejumpsuit1" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
@@ -183,6 +184,7 @@
         </Item>
       </Item>
       <Item identifier="crowbar"/>
+      <Item identifier="baseballcap" equip="true" />
       <Item identifier="bluejumpsuit2" equip="true" outfit="true"/>
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>

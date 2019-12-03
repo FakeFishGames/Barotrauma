@@ -4348,4 +4348,7 @@
 
   <label.hatchoverride>Hatch Override</label.hatchoverride>
 
+  <entityname.baseballcap>Baseball Cap</entityname.baseballcap>
+  <entitydescription.baseballcap>Every self-respecting mechanic should have one.</entitydescription.baseballcap>
+  
 </infotexts>

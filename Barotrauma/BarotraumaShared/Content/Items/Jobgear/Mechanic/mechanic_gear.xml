@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
+  <!-- UNIFORMS START-->
   <Item name="" identifier="bluejumpsuit1" category="Equipment" tags="smallitem" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -48,6 +49,18 @@
       <sprite name="Mechanic Left Shoe" texture="mechanic_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
+    </Wearable>
+  </Item>
+  <!-- UNIFORMS END -->
+  <Item name="" identifier="baseballcap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <Price locationtype="Research" buyprice="50" />
+    <Price locationtype="Military" buyprice="50" />
+    <Price locationtype="City" buyprice="50" />
+    <Price locationtype="Outpost" buyprice="100" />
+    <Sprite name="Baseball Cap" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="321,332,86,45" origin="0.5,0.5" />
+    <Body width="75" height="50" density="30" />
+    <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
+      <sprite name="Baseball Cap Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidelimb="false" sourcerect="321,332,86,45" origin="0.4,0.9" />
     </Wearable>
   </Item>
 </Items>
