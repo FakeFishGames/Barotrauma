@@ -125,6 +125,8 @@ namespace Barotrauma
 
         private void Sort(List<T> list)
         {
+            if (list.Count <= 1) { return; }
+
             var newList = list.Skip(1).OrderByDescending(p => GameMain.Config.SelectedContentPackages.IndexOf(p.ContentPackage)).ToList();
 
             list.RemoveRange(1, list.Count - 1);
