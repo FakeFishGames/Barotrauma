@@ -120,7 +120,7 @@ namespace Barotrauma
         }
         
         public readonly Attack attack;
-        private List<DamageModifier> damageModifiers;
+        public List<DamageModifier> DamageModifiers { get; private set; } = new List<DamageModifier>();
 
         private Direction dir;
 
@@ -128,6 +128,7 @@ namespace Barotrauma
         public float Scale => Params.Ragdoll.LimbScale;
         public float AttackPriority => Params.AttackPriority;
         public bool DoesFlip => Params.Flip;
+
         public float SteerForce => Params.SteerForce;
         
         public Vector2 DebugTargetPos;
@@ -331,8 +332,6 @@ namespace Barotrauma
 
             body.BodyType = BodyType.Dynamic;
 
-            damageModifiers = new List<DamageModifier>();
-
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -357,7 +356,7 @@ namespace Barotrauma
                         }
                         break;
                     case "damagemodifier":
-                        damageModifiers.Add(new DamageModifier(subElement, character.Name));
+                        DamageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                 }
             }
@@ -403,7 +402,7 @@ namespace Barotrauma
             var afflictionsCopy = afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.Probability).ToList();
             for (int i = 0; i < afflictionsCopy.Count; i++)
             {
-                foreach (DamageModifier damageModifier in damageModifiers)
+                foreach (DamageModifier damageModifier in DamageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
                     if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))

@@ -727,7 +727,7 @@ namespace Barotrauma
 
         public void DrawDamageModifiers(SpriteBatch spriteBatch, Camera cam, Vector2 startPos, bool isScreenSpace)
         {
-            foreach (var modifier in damageModifiers)
+            foreach (var modifier in DamageModifiers)
             {
                 //Vector2 up = VectorExtensions.Backward(-body.TransformedRotation + Params.GetSpriteOrientation() * Dir);
                 //int width = 4;
