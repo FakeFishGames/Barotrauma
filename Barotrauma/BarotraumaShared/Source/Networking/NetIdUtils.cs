@@ -3,6 +3,9 @@ using System.Diagnostics;
 
 namespace Barotrauma.Networking
 {
+    /// <summary>
+    /// Helper class for dealing with 16-bit IDs that wrap around ushort.MaxValue
+    /// </summary>
     static class NetIdUtils
     {
         /// <summary>
@@ -38,16 +41,19 @@ namespace Barotrauma.Networking
             return id;
         }
 
-        public static bool IsValidId(ushort id, ushort previousId, ushort latestPossibleId)
+        /// <summary>
+        /// Is the current ID valid given the previous ID and latest possible ID (not smaller than the previous ID or larger than the latest ID)
+        /// </summary>
+        public static bool IsValidId(ushort currentId, ushort previousId, ushort latestPossibleId)
         {
             //cannot be valid if more recent than the latest Id
-            if (IdMoreRecent(id, latestPossibleId)) { return false; }
+            if (IdMoreRecent(currentId, latestPossibleId)) { return false; }
 
             //normally the id needs to be more recent than the previous id,
             //but there's a special case when the previous id was 0:
             //  if a client reconnects mid-round and tries to jump from the unitialized state (0) back to some previous high id (> ushort.MaxValue / 2),
             //  this would normally get interpreted as trying to jump backwards, but in this case we'll allow it
-            return IdMoreRecent(id, previousId) || (previousId == 0 && id > ushort.MaxValue / 2);
+            return IdMoreRecent(currentId, previousId) || (previousId == 0 && currentId > ushort.MaxValue / 2);
         }
 
 #if DEBUG
