@@ -962,10 +962,12 @@ namespace Barotrauma.Steam
             {
                 if (newPackage.CorePackage)
                 {
-                    //if enabling a core package, disable all other core packages
-                    GameMain.Config.SelectedContentPackages.RemoveAll(cp => cp.CorePackage);
+                    GameMain.Config.SelectCorePackage(newPackage);
                 }
-                GameMain.Config.SelectContentPackage(newPackage);
+                else
+                {
+                    GameMain.Config.SelectContentPackage(newPackage);
+                }
                 GameMain.Config.SaveNewPlayerConfig();
 
                 GameMain.Config.WarnIfContentPackageSelectionDirty();
@@ -980,6 +982,11 @@ namespace Barotrauma.Steam
         private static bool CopyWorkShopItem(Workshop.Item item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath, bool allowFileOverwrite, out string errorMsg)
         {
             errorMsg = "";
+            if (contentPackage.GameVersion > new Version(0, 9, 1, 0))
+            {
+                SaveUtil.CopyFolder(item.Directory.FullName, Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage)), copySubDirs: true, overwriteExisting: true);
+                return true;
+            }
 
             var allPackageFiles = Directory.GetFiles(item.Directory.FullName, "*", SearchOption.AllDirectories);
             List<string> nonContentFiles = new List<string>();
@@ -1362,7 +1369,7 @@ namespace Barotrauma.Steam
         {
             string packageName = contentPackage.Name;
             packageName = ToolBox.RemoveInvalidFileNameChars(packageName);
-            packageName = packageName + "_" + GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
+            //packageName = packageName + "_" + GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
 
             return Path.Combine("Mods", packageName, MetadataFileName);
         }
