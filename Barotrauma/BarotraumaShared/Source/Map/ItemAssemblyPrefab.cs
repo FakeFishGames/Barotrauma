@@ -47,7 +47,7 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? name;
+            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? originalName;
             Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
 
             int minX = int.MaxValue, minY = int.MaxValue;
