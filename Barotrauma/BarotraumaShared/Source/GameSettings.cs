@@ -333,7 +333,7 @@ namespace Barotrauma
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
             keyMapping[(int)InputType.Ragdoll] = new KeyOrMouse(Keys.Space);
-            keyMapping[(int)InputType.Aim] = new KeyOrMouse(MouseButton.Secondary);
+            keyMapping[(int)InputType.Aim] = new KeyOrMouse(MouseButton.SecondaryMouse);
 
             keyMapping[(int)InputType.InfoTab] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.T);
@@ -409,7 +409,7 @@ namespace Barotrauma
                         case InputType.Shoot:
                             if (useDefaults)
                             {
-                                binding = new KeyOrMouse(MouseButton.Primary);
+                                binding = new KeyOrMouse(MouseButton.PrimaryMouse);
                             }
                             else
                             {
@@ -1143,9 +1143,9 @@ namespace Barotrauma
             {
                 switch (bind.MouseButton)
                 {
-                    case MouseButton.Primary:
+                    case MouseButton.PrimaryMouse:
                         return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse");
-                    case MouseButton.Secondary:
+                    case MouseButton.SecondaryMouse:
                         return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse");
                     default:
                         return TextManager.Get("input." + bind.MouseButton.ToString().ToLowerInvariant());
