@@ -235,7 +235,7 @@ namespace Barotrauma.Networking
                     //  in which case we'll wait until the timeout runs out before kicking the client
                     List<Client> toKick = inGameClients.FindAll(c => 
                         NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) && 
-                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut));
+                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
