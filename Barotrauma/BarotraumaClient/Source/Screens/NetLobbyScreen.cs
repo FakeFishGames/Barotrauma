@@ -2408,6 +2408,13 @@ namespace Barotrauma
                     AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom)
                 });
 
+            characterInfoFrame.RectTransform.SizeChanged += () =>
+            {
+                if (characterInfoFrame == null || HeadSelectionList?.RectTransform == null || button == null) { return; }
+                HeadSelectionList.RectTransform.Resize(new Point(characterInfoFrame.Rect.Width, (characterInfoFrame.Rect.Bottom - button.Rect.Bottom) + characterInfoFrame.Rect.Height * 2));
+                HeadSelectionList.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom);
+            };
+
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black)
             {
                 UserData = "outerglow",
@@ -2534,6 +2541,14 @@ namespace Barotrauma
             Point frameSize = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
             JobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
                 { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, "GUIFrameListBox");
+
+            characterInfoFrame.RectTransform.SizeChanged += () =>
+            {
+                if (characterInfoFrame == null || JobSelectionFrame?.RectTransform == null) { return; }
+                Point size = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
+                JobSelectionFrame.RectTransform.Resize(size);
+                JobSelectionFrame.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - size.X, characterInfoFrame.Rect.Bottom);
+            };
 
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), JobSelectionFrame.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black)
             {
