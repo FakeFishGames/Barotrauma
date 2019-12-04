@@ -319,6 +319,14 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
 
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                if (innerFrame != null)
+                {
+                    innerFrame.RectTransform.MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 50);
+                }
+            };
+
             var panelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), innerFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 Stretch = true,
@@ -438,6 +446,14 @@ namespace Barotrauma
             GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
             {
                 Stretch = true
+            };
+
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                if (panelContainer != null && sideBar != null)
+                {
+                    sideBar.RectTransform.MaxSize = new Point(650, panelContainer.RectTransform.Rect.Height);
+                }
             };
 
             //player info panel ------------------------------------------------------------
