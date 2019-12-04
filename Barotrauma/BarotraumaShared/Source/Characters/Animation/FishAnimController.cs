@@ -328,7 +328,7 @@ namespace Barotrauma
 
             var attack = ((EnemyAIController)character.AIController)?.AttackingLimb?.attack;
             float dmg = attack != null ? attack.GetTotalDamage(false) : 1;
-            float eatSpeed = Math.Min(dmg / (target.MaxVitality / 3), 1);
+            float eatSpeed = Math.Min(dmg / (target.MaxVitality / 2), 1);
             eatTimer += deltaTime * eatSpeed;
 
             Vector2 mouthPos = GetMouthPosition().Value;
@@ -354,7 +354,7 @@ namespace Barotrauma
                 character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
 
                 float particleFrequency = MathHelper.Clamp(eatSpeed, 0.1f, 0.5f);
-                if (Rand.Value() < particleFrequency / 5)
+                if (Rand.Value() < particleFrequency / 6)
                 {
                     target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
                 }
