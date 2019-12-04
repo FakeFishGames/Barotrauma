@@ -43,6 +43,9 @@ namespace Barotrauma
         [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
 
+        [Serialize(10f, true), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
+        public float EatingSpeed { get; set; }
+
         public readonly string File;
 
         public readonly List<SubParam> SubParams = new List<SubParam>();

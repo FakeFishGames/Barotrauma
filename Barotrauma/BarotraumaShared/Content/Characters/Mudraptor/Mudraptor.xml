@@ -1,4 +1,4 @@
-﻿<Character speciesname="Mudraptor" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Mudraptor" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" eatingspeed="10">
   <ragdolls />
   <animations />
   <health vitality="120" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />

@@ -326,8 +326,7 @@ namespace Barotrauma
                 }
             }
 
-            var attack = ((EnemyAIController)character.AIController)?.AttackingLimb?.attack;
-            float dmg = attack != null ? attack.GetTotalDamage(false) : 1;
+            float dmg = character.Params.EatingSpeed;
             float eatSpeed = Math.Min(dmg / (target.MaxVitality / 2), 1);
             eatTimer += deltaTime * eatSpeed;
 

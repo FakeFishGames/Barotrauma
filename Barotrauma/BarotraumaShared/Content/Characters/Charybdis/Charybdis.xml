@@ -1,4 +1,4 @@
-﻿<Character speciesname="Charybdis" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Charybdis" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" eatingspeed="100">
   <ragdolls folder="default" />
   <animations folder="default" />
   <bloodemitter particle="blood" particleamount="10" scalemin="2" scalemax="3" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />

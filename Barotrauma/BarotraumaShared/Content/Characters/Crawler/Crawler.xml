@@ -1,4 +1,4 @@
-﻿<Character speciesname="Crawler" humanoid="False" blooddecal="blood" group="" husk="False" needsair="False" canspeak="False" noise="100">
+﻿<Character speciesname="Crawler" humanoid="False" blooddecal="blood" group="" husk="False" needsair="False" canspeak="False" noise="100" eatingspeed="5">
   <ragdolls folder="default" />
   <animations folder="default" />
   <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
