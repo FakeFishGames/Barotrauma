@@ -21,6 +21,7 @@
       <sprite name="Assistant Left Leg" texture="assistant_legs_[GENDER]_[VARIANT].png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Assistant Right Shoe" texture="assistant_legs_[GENDER]_[VARIANT].png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Assistant Left Shoe" texture="assistant_legs_[GENDER]_[VARIANT].png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
-    </Wearable>
+	  <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="gunshotwound" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
+	</Wearable>
   </Item>
 </Items>
