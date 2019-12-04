@@ -57,9 +57,9 @@ namespace Barotrauma
             {
                 case MouseButton.None:
                     return PlayerInput.KeyDown(Key);
-                case MouseButton.Primary:
+                case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonHeld();
-                case MouseButton.Secondary:
+                case MouseButton.SecondaryMouse:
                     return PlayerInput.SecondaryMouseButtonHeld();
                 case MouseButton.LeftMouse:
                     return PlayerInput.LeftButtonHeld();
@@ -86,10 +86,10 @@ namespace Barotrauma
             {
                 case MouseButton.None:
                     return PlayerInput.KeyHit(Key);
-                case MouseButton.Primary:
+                case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonClicked();
-                case MouseButton.Secondary:
-                    return PlayerInput.PrimaryMouseButtonClicked();
+                case MouseButton.SecondaryMouse:
+                    return PlayerInput.SecondaryMouseButtonClicked();
                 case MouseButton.LeftMouse:
                     return PlayerInput.LeftButtonClicked();
                 case MouseButton.RightMouse:
