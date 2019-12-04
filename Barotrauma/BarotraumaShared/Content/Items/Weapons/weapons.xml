@@ -146,8 +146,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
       <Attack structuredamage="5" stun="0.5" targetforce="10" itemdamage="20">
-        <Affliction identifier="gunshotwound" strength="40" />
-        <Affliction identifier="internaldamage" strength="30" />
+        <Affliction identifier="bleeding" strength="40" />
+        <Affliction identifier="gunshotwound" strength="30" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
@@ -190,8 +190,8 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
       <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="20">
-        <Affliction identifier="gunshotwound" strength="15" />
-        <Affliction identifier="internaldamage" strength="10" />
+        <Affliction identifier="bleeding" strength="15" />
+        <Affliction identifier="gunshotwound" strength="10" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
@@ -415,7 +415,7 @@
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="80" />
-          <Affliction identifier="internaldamage" strength="180" />
+          <Affliction identifier="lacerations" strength="180" />
         </Explosion>
         <Remove />
       </StatusEffect>
@@ -426,7 +426,7 @@
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" type="OnUse" range="10000" />
         <Explosion range="600.0" structuredamage="5" itemdamage="20" stun="5" force="20.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="80" />
-          <Affliction identifier="internaldamage" strength="180" />
+          <Affliction identifier="lacerations" strength="180" />
         </Explosion>
         <Remove />
       </StatusEffect>
@@ -603,7 +603,7 @@
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
         <Explosion range="250.0" structuredamage="5" itemdamage="10" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="40" />
-          <Affliction identifier="internaldamage" strength="60" />
+          <Affliction identifier="lacerations" strength="60" />
         </Explosion>
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
       </StatusEffect>
@@ -703,8 +703,8 @@
     <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
       <Attack structuredamage="0.5" stun="0.125" targetforce="5" itemdamage="20">
-        <Affliction identifier="gunshotwound" strength="6" />
-        <Affliction identifier="internaldamage" strength="5" />
+        <Affliction identifier="bleeding" strength="6" />
+        <Affliction identifier="gunshotwound" strength="5" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>

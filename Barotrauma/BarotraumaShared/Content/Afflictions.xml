@@ -57,6 +57,7 @@
   <DamageOverlay texture="Content/UI/damageOverlay.png"/>
   
 	<!--Split internal damage to internal damage, lacerations, blunt trauma and rending wounds. Old internal damage is repurposed for a default damage effect, e.g from meds or miscellaneous sources.-->
+	<!--Moved gunshot wounds here to unify the system.-->
 	<!--TODO: write new damage types descriptions, separate damagemodifiers, affliction icons-->
   <InternalDamage
     name="Internal Damage"
@@ -123,6 +124,24 @@
 			minvitalitydecrease="0"
 			maxvitalitydecrease="1"/>
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
+	</InternalDamage>
+
+	<InternalDamage
+	  name="Gunshot wound"
+	  identifier="gunshotwound"
+	  description="The entry site is a small, dark, bruised hole oozing a little blood. The exit wound however is a large ragged mess of exposed tissue and pouring blood."
+	  type="damage"
+	  causeofdeathdescription="Shot to death"
+	  selfcauseofdeathdescription="You have died of gunshot wounds."
+	  limbspecific="true"
+	  maxstrength="100"
+	  karmachangeonapplied="-1"
+	  damageoverlayalpha="1">
+		<Effect minstrength="0" maxstrength="100"
+		  minvitalitydecrease="0"
+		  maxvitalitydecrease="1"
+		  dialogflag="GunshotWound"/>
+		<icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
 	</InternalDamage>
 
 	<Bleeding
@@ -499,25 +518,6 @@
     
     <icon texture="Content/UI/IconAtlas.png" sourcerect="384,768,128,128" color="195,180,60,255" origin="0,0"/>
   </Affliction>
-
-  <AfflictionBleeding
-    name="Gunshot wound"
-    identifier="gunshotwound"
-    description="The entry site is a small, dark, bruised hole oozing a little blood. The exit wound however is a large ragged mess of exposed tissue and pouring blood."
-    type="bleeding"
-    causeofdeathdescription="Shot to death"
-    selfcauseofdeathdescription="You have died of gunshot wounds."
-    limbspecific="true"
-    maxstrength="100"
-    karmachangeonapplied="-1"
-    damageoverlayalpha="1"
-    strengthchange="-0.1">
-    <Effect minstrength="0" maxstrength="100"
-      minvitalitydecrease="0"
-      maxvitalitydecrease="10"
-      dialogflag="GunshotWound"/>
-    <icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
-  </AfflictionBleeding>
 
   <Affliction
     name="Radiation sickness"
