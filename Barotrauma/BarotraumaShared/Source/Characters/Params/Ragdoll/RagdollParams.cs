@@ -101,10 +101,15 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
                 return string.Empty;
             }
-            var folder = prefab.XDocument.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            return GetFolder(prefab.XDocument, prefab.FilePath);
+        }
+
+        public static string GetFolder(XDocument doc, string filePath)
+        {
+            var folder = doc.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
-                folder = Path.Combine(Path.GetDirectoryName(prefab.FilePath), "Ragdolls") + Path.DirectorySeparatorChar;
+                folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
             return folder;
         }
