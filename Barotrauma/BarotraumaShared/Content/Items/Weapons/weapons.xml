@@ -191,7 +191,7 @@
     <Projectile characterusable="false" hitscan="true" removeonhit="true" spread="8" unskilledspread="15">
       <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="20">
         <Affliction identifier="bleeding" strength="15" />
-        <Affliction identifier="gunshotwound" strength="10" />
+        <Affliction identifier="gunshotwound" strength="15" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
@@ -212,8 +212,8 @@
     <ItemContainer hideitems="true" capacity="1" drawinventory="false" canbeselected="false" ShowConditionInContainedStateIndicator="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="smground" />
-      <!--Spawn an SMG round on use. Condition -6.7 -> 15 shots per magazine.-->
-      <StatusEffect type="OnUse" target="This" condition="-6.7" disabledeltatime="true">
+      <!--Spawn an SMG round on use. Condition -5.0 -> 20 shots per magazine.-->
+      <StatusEffect type="OnUse" target="This" condition="-5.0" disabledeltatime="true">
         <SpawnItem identifiers="smground" spawnposition="ThisInventory" />
       </StatusEffect>
     </ItemContainer>
@@ -232,7 +232,7 @@
     <Sprite texture="weapons_new.png" sourcerect="288,94,224,124" depth="0.55" origin="0.5,0.5" />
     <Body width="220" height="120" density="50" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" holdpos="35,-10" aimpos="35,-10" handle1="-15,-6" handle2="26,7" holdangle="-40" msg="ItemMsgPickUpSelect"/>
-    <RangedWeapon reload="0.125" barrelpos="14,6" spread="3" unskilledspread="8" combatPriority="80">
+    <RangedWeapon reload="0.175" barrelpos="14,6" spread="2.5" unskilledspread="6" combatPriority="80">
       <Sound file="Content/Items/Weapons/SMGsingleShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/SMGsingleShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/SMGsingleShot3.ogg" type="OnUse" range="3000" />
