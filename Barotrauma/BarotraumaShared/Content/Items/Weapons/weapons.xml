@@ -226,7 +226,7 @@
   </Item>
   
   <Item name="" identifier="smgmagazine" scale="0.32" category="Equipment" cargocontaineridentifier="metalcrate" linkable="true" tags="smallitem,smgammo" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="SMG" minamount="1" maxamount="1" spawnprobability="1"/>
+    <PreferredContainer identifiers="smg" minamount="1" maxamount="1" spawnprobability="1"/>
     <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
     <Price locationtype="Military" buyprice="30" />
     <Price locationtype="City" buyprice="50" />
