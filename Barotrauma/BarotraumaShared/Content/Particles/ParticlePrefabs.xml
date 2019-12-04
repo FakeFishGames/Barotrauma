@@ -381,44 +381,6 @@
       rows="8"
       origin="0.5,0.5" />
   </waterblood>
-  <waterbloodtop
-    startsizemin="0.1,0.1"
-    startsizemax="0.3,0.3"
-    sizechangemin="0.1,0.1"
-    sizechangemax="0.2,0.2"
-    startrotationmin="0"
-    startrotationmax="360"
-    startcolor="76,0,0,255"
-    endcolor="50,0,0,255"
-    animduration="5"
-    colorchange="0.0, 0.0, 0.0, -0.2"
-    growtime="0.1"
-    lifetime="5"
-    drawtarget="Water"
-    velocitychange="0,0"
-    startdelaymin="0"
-    startdelaymax="0"
-    angularvelocitymin="0"
-    angularvelocitymax="0"
-    rotatetodirection="False"
-    drag="0"
-    waterdrag="0"
-    velocitychangewater="0,0"
-    collisionradius="1"
-    usecollision="False"
-    deleteoncollision="False"
-    friction="0.5"
-    restitution="0.5"
-    blendstate="AlphaBlend"
-    loopanim="True"
-    drawontop="True">
-      <animatedsprite
-        texture="Content/Particles/Smoke.png"
-        sourcerect="0,0,4096,4096"
-        columns="8"
-        rows="8"
-        origin="0.5,0.5" />
-  </waterbloodtop>
   <blackwaterblood
     startsizemin="0.1,0.1"
     startsizemax="0.3,0.3"
@@ -456,44 +418,6 @@
       rows="8"
       origin="0.5,0.5" />
   </blackwaterblood>
-  <blackwaterbloodtop
-    startsizemin="0.1,0.1"
-    startsizemax="0.3,0.3"
-    sizechangemin="0.1,0.1"
-    sizechangemax="0.2,0.2"
-    startrotationmin="0"
-    startrotationmax="360"
-    startcolor="20,0,0,255"
-    endcolor="0,0,0,255"
-    colorchange="0.0, 0.0, 0.0, -0.2"
-    animduration="5"
-    growtime="0.1"
-    lifetime="5"
-    drawtarget="Water"
-    velocitychange="0,0"
-    startdelaymin="0"
-    startdelaymax="0"
-    angularvelocitymin="0"
-    angularvelocitymax="0"
-    rotatetodirection="False"
-    drag="0"
-    waterdrag="0"
-    velocitychangewater="0,0"
-    collisionradius="1"
-    usecollision="False"
-    deleteoncollision="False"
-    friction="0.5"
-    restitution="0.5"
-    blendstate="AlphaBlend"
-    loopanim="True"
-    drawontop="True">
-      <animatedsprite
-        texture="Content/Particles/Smoke.png"
-        sourcerect="0,0,4096,4096"
-        columns="8"
-        rows="8"
-        origin="0.5,0.5" />
-  </blackwaterbloodtop>
   <blooddrop
     lifetime="3"
     angularvelocitymin="0"
@@ -638,59 +562,7 @@
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="208,64,48,32" />
   </gib>
-  <gibtop
-    lifetime="5"
-    angularvelocitymin="-500"
-    angularvelocitymax="500"
-    startrotationmin="0"
-    startrotationmax="360"
-    rotatetodirection="True"
-    drag="0"
-    waterdrag="0.3"
-    velocitychange="0,-8"
-    velocitychangewater="0,-1"
-    collisionradius="10"
-    usecollision="True"
-    deleteoncollision="False"
-    friction="0.5"
-    restitution="0.1"
-    startsizemin="0.3,0.3"
-    startsizemax="0.6,0.6"
-    sizechangemin="-0.1,-0.1"
-    sizechangemax="-0.1,-0.1"
-    growtime="0"
-    startcolor="75,0,0,255"
-    endcolor="70,0,0,0"
-    drawtarget="Both"
-    blendstate="AlphaBlend"
-    animduration="1"
-    loopanim="True"
-    startdelaymin="0"
-    startdelaymax="0"
-    drawontop="True">
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="0,64,32,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="32,64,32,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="64,64,32,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="96,64,32,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="128,64,32,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="160,64,48,32" />
-      <sprite
-        texture="Content/Particles/ParticleAtlas.png"
-        sourcerect="208,64,48,32" />
-  </gibtop>
-  <blackgibtop
+  <blackgib
     lifetime="5"
     angularvelocitymin="-500"
     angularvelocitymax="500"
@@ -718,8 +590,7 @@
     animduration="1"
     loopanim="True"
     startdelaymin="0"
-    startdelaymax="0"
-    drawontop="True">
+    startdelaymax="0">
       <sprite
         texture="Content/Particles/ParticleAtlas.png"
         sourcerect="0,64,32,32" />
@@ -741,7 +612,7 @@
       <sprite
         texture="Content/Particles/ParticleAtlas.png"
         sourcerect="208,64,48,32" />
-  </blackgibtop>
+  </blackgib>
   <heavygib
     lifetime="1"
     angularvelocitymin="-500"

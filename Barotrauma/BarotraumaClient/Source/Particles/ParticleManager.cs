@@ -125,7 +125,7 @@ namespace Barotrauma.Particles
             return CreateParticle(prefab, position, velocity, rotation, hullGuess);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false)
         {
             if (particleCount >= MaxParticles || prefab == null) return null;
 
@@ -141,7 +141,7 @@ namespace Barotrauma.Particles
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop);
 
             particleCount++;
 
@@ -229,7 +229,7 @@ namespace Barotrauma.Particles
                 if (inSub.HasValue)
                 {
                     bool isOutside = particle.CurrentHull == null;
-                    if (particle.Prefab.DrawOnTop)
+                    if (particle.DrawOnTop)
                     {
                         if (isOutside != inSub.Value)
                         {
