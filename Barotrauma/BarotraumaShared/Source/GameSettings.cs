@@ -365,15 +365,15 @@ namespace Barotrauma
 
             if (legacy)
             {
-                keyMapping[(int)InputType.Use] = new KeyOrMouse(MouseButton.Primary);
-                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(MouseButton.Primary);
+                keyMapping[(int)InputType.Use] = new KeyOrMouse(MouseButton.PrimaryMouse);
+                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(MouseButton.PrimaryMouse);
                 keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
                 keyMapping[(int)InputType.Deselect] = new KeyOrMouse(Keys.E);
             }
             else
             {
                 keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
-                keyMapping[(int)InputType.Select] = new KeyOrMouse(MouseButton.Primary);
+                keyMapping[(int)InputType.Select] = new KeyOrMouse(MouseButton.PrimaryMouse);
                 // shoot and deselect are handled in CheckBindings() so that we don't override the legacy settings.
             }
             if (doc != null)
@@ -394,7 +394,7 @@ namespace Barotrauma
                         case InputType.Deselect:
                             if (useDefaults)
                             {
-                                binding = new KeyOrMouse(MouseButton.Secondary);
+                                binding = new KeyOrMouse(MouseButton.SecondaryMouse);
                             }
                             else
                             {
