@@ -1,8 +1,9 @@
 ﻿<Character speciesname="Hammerhead" humanoid="False" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" group="hammerhead">
   <ragdolls />
   <animations />
+  <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" particleamount="10" scalemin="1" scalemax="2" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <bloodemitter particle="waterblood" particleamount="1" scalemin="1" scalemax="2" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="3" scalemin="1" scalemax="3" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="30" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="heavygib" particleamount="15" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <health vitality="250" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0.5" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />

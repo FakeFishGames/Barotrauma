@@ -2,10 +2,9 @@
   <ragdolls folder="default" />
   <animations folder="default" />
   <damageemitter particle="blackgib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <bloodemitter particle="blackwaterblood" particleamount="4" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <bloodemitter particle="blackwaterblood" drawontop="True" particleamount="1" velocitymin="0" velocitymax="0" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="blackwaterblood" particleamount="5" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="blackwaterblood" particleamount="40" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="5" scalemax="10" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <gibemitter particle="blackwaterblood" drawontop="True" particleamount="1" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="1" scalemax="2" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <gibemitter particle="blackwaterblood" drawontop="True" particleamount="1" velocitymin="0" velocitymax="100" anglemin="0" anglemax="360" scalemin="3" scalemax="5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="blackgib" drawontop="True" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <health vitality="850" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="1" burnreduction="0" constanthealthregeneration="0.1" healthregenerationwheneating="0" />
   <sound file="Content/Characters/Moloch/MOLOCH_attack1.ogg" state="Attack" range="5000" volume="1" gender="None" />

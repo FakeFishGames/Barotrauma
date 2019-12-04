@@ -21,6 +21,7 @@
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_attack2.ogg" state="Attack" range="4000" volume="1" gender="None" />
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_death1.ogg" state="Die" range="3000" volume="1" gender="None" />
   <sound file="Content/Characters/Tigerthresher/TIGERTRESHER_death2.ogg" state="Die" range="3000" volume="1" gender="None" />
+  <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.25" scalemax="0.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="10" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" anglemin="1" anglemax="2" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" particleamount="1" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" anglemin="0" anglemax="360" scalemin="1" scalemax="2" velocitymin="200" velocitymax="1500" emitinterval="0" particlespersecond="0" particleamount="30" highqualitycollisiondetection="False" copyentityangle="False" />
