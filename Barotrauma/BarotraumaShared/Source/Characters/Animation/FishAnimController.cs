@@ -327,23 +327,24 @@ namespace Barotrauma
             }
 
             float dmg = character.Params.EatingSpeed;
-            float eatSpeed = Math.Min(dmg / (target.MaxVitality / 2), 1);
+            float eatSpeed = dmg / ((float)Math.Sqrt(Math.Max(target.Mass, 1)) * 10);
             eatTimer += deltaTime * eatSpeed;
 
             Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
-            float limbDist = limbDiff.Length();
-            if (limbDist < 1.0f)
+            float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 1);
+            if (limbDiff.LengthSquared() < extent * extent)
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
-                if (CanDrag(target))
+                float dragForce = MathHelper.Clamp(eatSpeed * 10, 0, 40);
+                if (dragForce > 0.1f)
                 {
-                    target.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
-                    target.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, 20.0f);
-                    target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                    target.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    target.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, dragForce * 2);
+                    target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
                 }
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
@@ -352,7 +353,7 @@ namespace Barotrauma
 
                 character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
 
-                float particleFrequency = MathHelper.Clamp(eatSpeed, 0.1f, 0.5f);
+                float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
                 if (Rand.Value() < particleFrequency / 6)
                 {
                     target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
