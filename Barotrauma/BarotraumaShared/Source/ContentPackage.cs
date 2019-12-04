@@ -407,9 +407,9 @@ namespace Barotrauma
                 DebugConsole.NewMessage("****************************** Calculating cp hash " + Name);
             }
 
-            foreach (ContentFile file in Files.Concat(new ContentFile[] { new ContentFile(Path, ContentType.None) }))
+            foreach (ContentFile file in Files)
             {
-                if (!multiplayerIncompatibleContent.Contains(file.Type) && file.Path != Path) { continue; }
+                if (!multiplayerIncompatibleContent.Contains(file.Type)) { continue; }
 
                 try
                 {
