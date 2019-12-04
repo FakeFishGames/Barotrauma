@@ -302,7 +302,7 @@ namespace Barotrauma
                 }
                 if (!string.IsNullOrEmpty(name))
                 {
-                    if (prefab.originalName.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
+                    if (prefab.Name.ToLowerInvariant() == name || prefab.originalName.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
                 }
             }
 
