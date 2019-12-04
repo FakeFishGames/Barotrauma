@@ -3696,6 +3696,10 @@
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
   <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can select a submarine or a content package to publish from the 'Your items' menu at the left.</workshopitemcreatehelptext>
 
+  <afflictiondescription.internaldamage>There are signs of burst blood vessels and of organ damage.</afflictiondescription.internaldamage>
+  <afflictioncauseofdeath.internaldamage>Died of internal injuries.</afflictioncauseofdeath.internaldamage>
+  <afflictioncauseofdeathself.internaldamage>You have succumbed to your internal injuries.</afflictioncauseofdeathself.internaldamage>
+
   <!-- New values as of Oct 22 -->
   <timeformathours>[hours] h</timeformathours>
   <timeformatminutes>[minutes] m</timeformatminutes>
@@ -3723,5 +3727,20 @@
   <entitydescription.loosevent>A place to stash things of dubious nature.</entitydescription.loosevent>
   <entityname.keyboard>Keyboard</entityname.keyboard>
   <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
+
+  <afflictionname.blunttrauma>Blunt force trauma</afflictionname.blunttrauma>
+  <afflictiondescription.blunttrauma>The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken.</afflictiondescription.blunttrauma>
+  <afflictioncauseofdeath.blunttrauma>Died of blunt force trauma.</afflictioncauseofdeath.blunttrauma>
+  <afflictioncauseofdeathself.blunttrauma>You have succumbed to injuries from blunt force trauma.</afflictioncauseofdeathself.blunttrauma>
+
+  <afflictionname.lacerations>Lacerations</afflictionname.lacerations>
+  <afflictiondescription.lacerations>The skin is pierced and there are deep, bleeding wounds.</afflictiondescription.lacerations>
+  <afflictioncauseofdeath.lacerations>Died of lacerations.</afflictioncauseofdeath.lacerations>
+  <afflictioncauseofdeathself.lacerations>You have succumbed to your wounds.</afflictioncauseofdeathself.lacerations>
+
+  <afflictionname.rendingwounds>Rending wounds</afflictionname.rendingwounds>
+  <afflictiondescription.rendingwounds>There is extensive damage to soft tissue in the area and asymmetrical, bleeding wounds.</afflictiondescription.rendingwounds>
+  <afflictioncauseofdeath.rendingwounds>Mauled to death.</afflictioncauseofdeath.rendingwounds>
+  <afflictioncauseofdeathself.rendingwounds>You have been mauled to death.</afflictioncauseofdeathself.rendingwounds>
 
 </infotexts>
