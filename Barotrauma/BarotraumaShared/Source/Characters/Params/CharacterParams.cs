@@ -43,7 +43,7 @@ namespace Barotrauma
         [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
 
-        [Serialize(10f, true), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
+        [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
         public readonly string File;
