@@ -380,7 +380,7 @@ namespace Barotrauma
             }
             else
             {
-                if (pathSteering != null)
+                if (pathSteering != null && Character.AnimController.InWater)
                 {
                     pathSteering.Wander(deltaTime, ConvertUnits.ToDisplayUnits(colliderLength), stayStillInTightSpace: false);
                 }
