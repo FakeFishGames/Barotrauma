@@ -1201,8 +1201,8 @@ namespace Barotrauma
                 Vector2 mouthPos = Character.AnimController.GetMouthPosition().Value;
                 Vector2 attackSimPosition = Character.GetRelativeSimPosition(target);
                 Vector2 limbDiff = attackSimPosition - mouthPos;
-                float limbDist = limbDiff.LengthSquared();
-                if (limbDist < 2 * 2)
+                float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 2);
+                if (limbDiff.LengthSquared() < extent * extent)
                 {
                     Character.SelectCharacter(target);
                     steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff) * 3);
@@ -1210,8 +1210,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    //steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
-                    steeringManager.SteeringSeek(attackSimPosition + limbDiff, 2);
+                    steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
                 }
             }

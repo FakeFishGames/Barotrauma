@@ -10,7 +10,7 @@
       <Affliction identifier="stun" strength="0.2" probability="1" />
     </attack>
   </limb>
-  <limb id="1" name="Head" type="Head" radius="63" width="177" notes="" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0.5,-1">
+  <limb id="1" name="Head" type="Head" radius="63" width="177" notes="" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="0,-1">
     <deformablesprite texture="Content/Characters/Charybdis/Charybdis.png" sourcerect="285,54,303,126" origin="0.5,0.5" depth="0" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
