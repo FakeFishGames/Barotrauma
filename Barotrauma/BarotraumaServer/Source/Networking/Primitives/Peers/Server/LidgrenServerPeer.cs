@@ -426,9 +426,10 @@ namespace Barotrauma.Networking
 #if DEBUG
                         requireSteamAuth = false;
 #endif
+
                         //steam auth cannot be done (SteamManager not initialized or no ticket given),
                         //but it's not required either -> let the client join without auth
-                        if ((!Steam.SteamManager.IsInitialized || ticket.Length == 0) &&
+                        if ((!Steam.SteamManager.IsInitialized || (ticket?.Length??0) == 0) &&
                             !requireSteamAuth)
                         {
                             pendingClient.Name = name;

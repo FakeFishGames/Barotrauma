@@ -64,13 +64,14 @@ namespace Barotrauma.Steam
         {
             get
             {
-                return Instance.isInitialized;
+                return Instance != null && Instance.isInitialized;
             }
         }
         
         public static void Initialize()
         {
 #if !USE_STEAM
+            DebugConsole.NewMessage("USE_STEAM is not defined; Steam functionality disabled");
             return;
 #endif
             instance = new SteamManager();

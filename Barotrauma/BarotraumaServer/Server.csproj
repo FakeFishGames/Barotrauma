@@ -37,7 +37,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\ReleaseLinux\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -47,7 +47,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\DebugLinux\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;SERVER;DEBUG;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -56,7 +56,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMac|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\ReleaseMac\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -66,7 +66,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMac|x64'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\bin\DebugMac\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;SERVER;DEBUG;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -94,7 +94,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseLinux|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\ReleaseLinux\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -104,7 +104,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugLinux|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\DebugLinux\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;SERVER;DEBUG;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -113,7 +113,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseMac|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\ReleaseMac\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -123,7 +123,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugMac|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\DebugMac\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;SERVER;DEBUG;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -132,7 +132,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\ReleaseWindows\</OutputPath>
-    <DefineConstants>TRACE;SERVER</DefineConstants>
+    <DefineConstants>TRACE;SERVER;USE_STEAM</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x86</PlatformTarget>
@@ -142,7 +142,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;SERVER;DEBUG</DefineConstants>
+    <DefineConstants>TRACE;SERVER;DEBUG;USE_STEAM</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
