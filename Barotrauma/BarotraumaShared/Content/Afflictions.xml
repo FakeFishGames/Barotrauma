@@ -108,7 +108,6 @@
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
 	</InternalDamage>
 
-
 	<!--Rending wounds are monster specific-->
 	<InternalDamage
 	  name="Rending Wounds"
@@ -126,9 +125,6 @@
 		<icon texture="Content/UI/IconAtlas.png" sourcerect="128,768,128,128" color="195,136,60,255" origin="0,0"/>
 	</InternalDamage>
 
-
-	<!--Created more bloodloss causing afflictions (bite wound & piercing wound) that work similarly to gunshot wounds.-->
-	<!--TODO: damage types descriptions, affliction icons, dialog flag?, change 'bleeding' to 'wound'?-->
 	<Bleeding
     name="Bleeding"
     identifier="bleeding"
@@ -146,44 +142,6 @@
       strengthchange="-0.1"/>
     <icon texture="Content/UI/IconAtlas.png" sourcerect="896,640,128,128" color="139,60,42,255" origin="0,0"/>
    </Bleeding>
-
-	<AfflictionBleeding
-	  name="Bite wound"
-	  identifier="bitewound"
-	  description=""
-	  type="bleeding"
-	  causeofdeathdescription=""
-	  selfcauseofdeathdescription=""
-	  limbspecific="true"
-	  maxstrength="100"
-	  karmachangeonapplied="-1"
-	  damageoverlayalpha="1"
-	  strengthchange="-0.1">
-		<Effect minstrength="0" maxstrength="100"
-		  minvitalitydecrease="0"
-		  maxvitalitydecrease="10"
-		  dialogflag="GunshotWound"/>
-		<icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
-	</AfflictionBleeding>
-	
-	<AfflictionBleeding
-	  name="Piercing wound"
-	  identifier="piercingwound"
-	  description=""
-	  type="bleeding"
-	  causeofdeathdescription=""
-	  selfcauseofdeathdescription=""
-	  limbspecific="true"
-	  maxstrength="100"
-	  karmachangeonapplied="-1"
-	  damageoverlayalpha="1"
-	  strengthchange="-0.1">
-		<Effect minstrength="0" maxstrength="100"
-		  minvitalitydecrease="0"
-		  maxvitalitydecrease="10"
-		  dialogflag="GunshotWound"/>
-		<icon texture="Content/UI/IconAtlas.png" sourcerect="256,768,128,128" color="195,60,60,255" origin="0,0"/>
-	</AfflictionBleeding>
 
 	<Burn
     name="Burn"
