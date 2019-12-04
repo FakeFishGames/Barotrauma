@@ -2,8 +2,7 @@
 <Items>
   <!-- Elements ************************************************************************************************ -->
   <Item name="" identifier="carbon" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="City" buyprice="10" />
@@ -19,9 +18,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="iron" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="1" maxamount="3"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="4" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="5" />
     <Price locationtype="Military" buyprice="5" />
@@ -38,9 +37,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="tin" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="11" />
     <Price locationtype="Military" buyprice="11" />
@@ -57,9 +56,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="lead" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="18" />
     <Price locationtype="Military" buyprice="18" />
@@ -76,9 +75,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="phosphorus" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="3" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="15" />
     <Price locationtype="Military" buyprice="15" />
@@ -95,9 +94,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="copper" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="3" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="22" />
     <Price locationtype="Military" buyprice="22" />
@@ -115,8 +114,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="zinc" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="26" />
     <Price locationtype="Military" buyprice="26" />
@@ -133,9 +131,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="sodium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="medfabcab" minamount="1" maxamount="3" spawnprobability="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="33" />
     <Price locationtype="Military" buyprice="33" />
@@ -152,9 +151,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="silicon" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="31" />
     <Price locationtype="Military" buyprice="31" />
@@ -171,9 +170,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="calcium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="medfabcab" minamount="1" maxamount="3" spawnprobability="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="31" />
     <Price locationtype="Military" buyprice="31" />
@@ -190,9 +190,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="aluminium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="1" maxamount="3"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="42" />
     <Price locationtype="Military" buyprice="42" />
@@ -209,9 +209,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="uranium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="2" spawnprobability="0.75"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -228,9 +228,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="potassium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="medfabcab" minamount="1" maxamount="3" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -255,9 +256,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="titanium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="65" />
     <Price locationtype="Military" buyprice="65" />
@@ -274,9 +275,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="magnesium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="65" />
     <Price locationtype="Military" buyprice="65" />
@@ -300,9 +301,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="lithium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="88" />
     <Price locationtype="Military" buyprice="88" />
@@ -319,9 +320,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="chlorine" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="11" />
     <Price locationtype="Military" buyprice="11" />
@@ -337,9 +338,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="thorium" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="125" />
@@ -356,10 +357,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <!-- Compounds ************************************************************************************************ -->
   <Item name="" identifier="steel" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="2" maxamount="5"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="4" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="25" />
     <Price locationtype="Military" buyprice="25" />
@@ -384,9 +385,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="titaniumaluminiumalloy" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <Price locationtype="Military" buyprice="175" />
@@ -411,9 +412,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="plastic" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.4" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="2"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="4" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="40" />
@@ -433,9 +434,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="ballisticfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="125" />
     <Price locationtype="Military" buyprice="125" />
@@ -455,9 +456,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="organicfiber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.2" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="3" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="40" />
     <Price locationtype="Military" buyprice="40" />
@@ -468,9 +470,9 @@
     <Body width="100" height="100" density="20" />
     <Holdable canBeCombined="true" removeOnCombined="true" slots="Any,RightHand,LeftHand" handle1="0,0" />
   </Item>
+  
   <Item name="" identifier="rubber" category="Material" Tags="smallitem" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="2" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -486,9 +488,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="flashpowder" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,explosive" impacttolerance="8" useinhealthinterface="true" scale="0.4" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="materialcontainer" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="storagecab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
@@ -515,8 +517,9 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="incendium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker,materialcontainer"/>
+    <PreferredContainer identifiers="storagecab,secarmcab,armcab"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="260,835,53,61" origin="0.5,0.5" />
@@ -535,8 +538,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="fulgurium" category="Material" Tags="smallitem" cargocontaineridentifier="metalcrate" canbepicked="true" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker,materialcontainer"/>
+    <PreferredContainer identifiers="storagecab"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="328,833,51,63" origin="0.5,0.5" />
@@ -550,7 +554,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="physicorium" category="Material" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
-    <PreferredContainer identifiers="locker,materialcontainer"/>
+    <PreferredContainer identifiers="storagecab"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="70,835,52,59" origin="0.5,0.5" />
@@ -563,8 +567,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="dementonite" category="Material" Tags="smallitem" scale="0.5" cargocontaineridentifier="metalcrate" canbepicked="true">
-    <PreferredContainer identifiers="locker,materialcontainer"/>
+    <PreferredContainer identifiers="toxcab,medfabcab,storagecab"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,830,64,64" />

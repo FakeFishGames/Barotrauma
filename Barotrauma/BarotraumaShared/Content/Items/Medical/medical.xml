@@ -236,8 +236,8 @@
   
   <!-- meds **************************************************************************************** -->
   <Bandage name="" identifier="antibleeding1" aliases="Bandage" category="Equipment" Tags="smallitem,medical" useinhealthinterface="true" cargocontaineridentifier="chemicalcrate" description="" scale="0.3" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="medcab" minamount="3" maxamount="4"/>
-    <PreferredContainer identifiers="suppliescabinet" minamount="1" maxamount="2"/>
+    <PreferredContainer identifiers="medcab" minamount="3" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="20" />
@@ -376,7 +376,7 @@
   
   <Morphine name="" identifier="antidama1" aliases="Corrigodone" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="medcab" minamount="3" maxamount="4"/>
-    <PreferredContainer identifiers="suppliescabinet" minamount="0" maxamount="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="80" />
     <Price locationtype="City" buyprice="100" />
@@ -444,7 +444,7 @@
   
   <Fentanyl name="" identifier="antidama2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical,syringe" description="" useinhealthinterface="true" scale="0.3" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="medcab" minamount="2" maxamount="3"/>
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="130" />
@@ -514,7 +514,7 @@
   
   <Saline name="" identifier="antibloodloss1" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
     <PreferredContainer identifiers="medcab" minamount="2" maxamount="3"/>
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="30" />
@@ -553,7 +553,7 @@
   
   <BloodPack name="" identifier="antibloodloss2" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" useinhealthinterface="true" description="" scale="0.3" impactsoundtag="impact_soft">
     <PreferredContainer identifiers="medcab" minamount="2" maxamount="3"/>
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.5"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="150" />

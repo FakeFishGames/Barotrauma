@@ -85,7 +85,7 @@
   
   <Item name="" identifier="harpoongun" category="Equipment" cargocontaineridentifier="metalcrate" tags="mediumitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="armcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="70" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="10">
@@ -177,7 +177,7 @@
   
   <Item name="" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="1" maxamount="3" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="75" />
     <Price locationtype="City" buyprice="150" />
     <Deconstruct time="10">
@@ -250,7 +250,7 @@
   
   <Item name="" identifier="smg" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="weaponholder" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="300" />
     <Deconstruct time="10">
@@ -432,7 +432,7 @@
   </Item>
   
   <Item name="" identifier="fraggrenade" category="Equipment" cargocontaineridentifier="explosivecrate" tags="smallitem,weapon,explosive" scale="0.5" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="1"/>
+    <PreferredContainer identifiers="secarmcab" minamount="1" maxamount="5" spawnprobability="1"/>
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
     <Price locationtype="Military" buyprice="250" />
     <Deconstruct time="10">
@@ -629,7 +629,6 @@
   <Item name="" identifier="40mmgrenade" category="Equipment" interactthroughwalls="true" cargocontaineridentifier="metalcrate" tags="mediumitem,grenade" Scale="0.35" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="grenadelauncher" minamount="1" maxamount="1" spawnprobability="1"/>
     <PreferredContainer identifiers="secarmcab" minamount="0" maxamount="5" spawnprobability="0.25"/>
-    <PreferredContainer identifiers="locker"/>
     <Price locationtype="Military" buyprice="60" />
     <Price locationtype="City" buyprice="100" />
     <Deconstruct time="5">
@@ -844,7 +843,7 @@
   </Item>
 
   <Item name="" identifier="toyhammer" category="Equipment" Tags="smallitem" Scale="0.5" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="weaponcontainer,locker"/>
+    <PreferredContainer identifiers="secarmcab,crewcab,armcab"/>
     <Deconstruct time="10">
       <Item identifier="bikehorn" />
     </Deconstruct>
@@ -869,7 +868,7 @@
   </Item>
 
   <Item name="" identifier="bikehorn" category="Equipment" tags="weapon,smallitem" cargocontaineridentifier="metalcrate" description="HONK">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="crewcab"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="769,385,64,64" depth="0.55" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/Old/clownshirt.png" sourcerect="32,50,32,14" depth="0.55" />
     <Body width="30" height="10" density="15" />

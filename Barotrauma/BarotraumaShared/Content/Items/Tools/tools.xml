@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" showcontentsintooltip="true" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="engcab"/>
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
@@ -23,9 +23,10 @@
       <Containable items="smallitem" excludeditems="toolbox" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="1.0"/>
+    <PreferredContainer identifiers="engcab" minamount="2" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -107,9 +108,10 @@
       </RepairTool>
     </Upgrade>
   </Item>
+  
   <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.5"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="3" spawnprobability="1"/>
+    <PreferredContainer identifiers="engcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -179,8 +181,10 @@
       </RepairTool>
     </Upgrade>
   </Item>
+  
   <Item name="" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="weldingtool,flamer" spawnprobability="1"/>
+    <PreferredContainer identifiers="engcab" minamount="3" maxamount="6" spawnprobability="1"/>
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="60" />
     <Price locationtype="Military" buyprice="75" />
@@ -207,8 +211,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer identifiers="engcab"/>
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
@@ -230,9 +235,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="extinguisherholder" spawnprobability="1.0"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="engcab,reactorcab"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -258,8 +264,7 @@
   </Item>
   
   <Item name="" identifier="screwdriver" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="reactorcab" minamount="1" maxamount="4" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -276,9 +281,9 @@
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect" />
   </Item>
+  
   <Item name="" identifier="wrench" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
+    <PreferredContainer identifiers="engcab" minamount="1" maxamount="4" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -300,9 +305,9 @@
       </Attack>
     </MeleeWeapon>
   </Item>
+  
   <Item name="" identifier="crowbar" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.05"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.05"/>
+    <PreferredContainer identifiers="engcab" minamount="0" maxamount="1" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -325,9 +330,9 @@
       </Attack>
     </MeleeWeapon>
   </Item>
+  
   <Item name="" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="divinggearcontainer" spawnprobability="1.0" minamount="2" maxamount="4"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -362,9 +367,10 @@
       </Containable>
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="divinggearcontainer" spawnprobability="1.0" minamount="1" maxamount="2"/>
+    <PreferredContainer identifiers="crewcab,supplycab"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="150" />
@@ -402,9 +408,8 @@
     </ItemContainer>
   </Item>
   <Item name="" identifier="flashlight" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.2"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="divinggearcontainer" spawnprobability="1.0" minamount="1" maxamount="2"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.25"/>
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
@@ -436,10 +441,10 @@
     </ItemContainer>
     <AiTarget />
   </Item>
+  
   <Item name="" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft" isshootable="true">
-    <PreferredContainer identifiers="suppliescabinet" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="locker" spawnprobability="0.1"/>
-    <PreferredContainer identifiers="divinggearcontainer" spawnprobability="1.0" minamount="1" maxamount="3"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="5" spawnprobability="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -473,8 +478,9 @@
     </LightComponent>
     <AiTarget />
   </Item>
+  
   <Item name="" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker, suppliescabinet"/>
+    <PreferredContainer identifiers="divingcab, suppliescabinet"/>
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />

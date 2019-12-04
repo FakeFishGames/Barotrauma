@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="oxygentank" category="Equipment,Misc" Tags="oxygentank,smallitem,oxygensource" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="5" spawnprobability="1"/>
     <PreferredContainer identifiers="oxygengenerator"/>
-    <PreferredContainer identifiers="oxygentankcontainer" minamount="5" maxamount="10"/>
-    <PreferredContainer identifiers="divingsuit,divingmask" spawnprobability="1.0"/>
-    <PreferredContainer identifiers="divinggearcontainer" spawnprobability="1.0" minamount="1" maxamount="3"/>
+    <PreferredContainer identifiers="divingsuit,divingmask,plasmacutter" spawnprobability="1.0"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -31,6 +31,7 @@
       <StatusEffect type="OnFire" target="This" Condition="-100.0" disabledeltatime="true" />
     </Holdable>
   </Item>
+  
   <Item name="" identifier="oxygenitetank" category="Equipment,Misc" Tags="smallitem,oxygensource" description="" scale="0.3" impactsoundtag="impact_metal_light">
     <PreferredContainer identifiers="oxygengenerator"/>
     <PreferredContainer identifiers="oxygentankcontainer"/>
@@ -59,10 +60,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
+  
   <Item name="" identifier="divingmask" scale="0.5" category="Equipment" Tags="smallitem,diving,divingmask" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="oxygengenerator"/>
-    <PreferredContainer identifiers="suppliescontainer" minamount="2" maxamount="3"/>
-    <PreferredContainer identifiers="divinggearcontainer" minamount="3" maxamount="4"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer identifiers="supplycab" minamount="1" maxamount="1" spawnprobability="0.25"/>
     <Price locationtype="Research" buyprice="55" />
     <Price locationtype="City" buyprice="55" />
     <Price locationtype="Military" buyprice="55" />
@@ -109,6 +110,7 @@
       <Containable items="oxygensource,weldingfuel" />
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="divingsuit" category="Equipment" tags="diving,divingsuit" scale="0.5" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <PreferredContainer identifiers="divingsuitcontainer" spawnprobability="0.8"/>
     <Price locationtype="Research" buyprice="225" />
@@ -201,8 +203,9 @@
       </StatusEffect>
     </ItemContainer>
   </Item>
+  
   <Item name="" identifier="underwaterscooter" category="Equipment" Tags="smallitem,provocative" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light" isshootable="true">
-    <PreferredContainer identifiers="divinggearcontainer" minamount="2" maxamount="3"/>
+    <PreferredContainer identifiers="divingcab" minamount="1" maxamount="3" spawnprobability="1"/>
     <Price locationtype="Research" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Military" buyprice="150" />

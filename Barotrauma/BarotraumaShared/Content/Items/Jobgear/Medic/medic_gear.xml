@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="healthscanner" scale="0.5" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="medcab" minamount="0" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="150" />
@@ -22,6 +23,7 @@
     </Wearable>
     <StatusHUD drawhudwhenequipped="true" />
   </Item>
+  
   <Item name="" identifier="doctorsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />

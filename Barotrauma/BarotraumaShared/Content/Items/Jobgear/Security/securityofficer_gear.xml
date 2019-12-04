@@ -24,8 +24,10 @@
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
   </Item>
+  
   <Item name="" identifier="bodyarmor" category="Equipment" tags="smallitem" scale="0.35" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.35" />
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="225" />
     <Price locationtype="City" buyprice="300" />
     <Price locationtype="Outpost" buyprice="500" />
@@ -47,7 +49,9 @@
       <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
   </Item>
+  
   <Item name="" identifier="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -66,7 +70,9 @@
       <sprite name="Ballistic Helmet Wearable" texture="Content/Items/Jobgear/headgears_1.png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidewearablesoftype="hair" sourcerect="4,97,96,96" origin="0.5,0.5" />
     </Wearable>
   </Item>
+  
   <Item name="" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <PreferredContainer identifiers="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
