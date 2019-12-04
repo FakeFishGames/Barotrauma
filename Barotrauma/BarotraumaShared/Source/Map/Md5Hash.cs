@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -19,7 +20,8 @@ namespace Barotrauma
         {
             if (!File.Exists(cachePath)) { return; }
             string[] lines = File.ReadAllLines(cachePath);
-            foreach (string line in lines)
+            if (lines.Length <= 0 || lines[0] != GameMain.Version.ToString()) { return; }
+            foreach (string line in lines.Skip(1))
             {
                 if (string.IsNullOrWhiteSpace(line)) { continue; }
                 string[] parts = line.Split('|');
@@ -39,8 +41,9 @@ namespace Barotrauma
 
         public static void SaveCache()
         {
-            string[] lines = new string[cache.Count];
-            int i = 0;
+            string[] lines = new string[cache.Count+1];
+            lines[0] = GameMain.Version.ToString();
+            int i = 1;
             foreach (KeyValuePair<string, Tuple<Md5Hash, long>> kpv in cache)
             {
                 lines[i] = kpv.Key + "|" + kpv.Value.Item1 + "|" + kpv.Value.Item2;

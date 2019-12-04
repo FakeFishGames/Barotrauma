@@ -1446,6 +1446,7 @@ namespace Barotrauma.Steam
                 {
                     newPath = Path.Combine(packageName, contentFilePath);
                 }
+                contentFilePath = newPath;
             }
 
             return contentFilePath;

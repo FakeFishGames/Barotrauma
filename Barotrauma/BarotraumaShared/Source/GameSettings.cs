@@ -876,6 +876,8 @@ namespace Barotrauma
 
             LoadPlayerConfig();
 
+#if WINDOWS
+            //TODO: enable on *nix when we move to .NET Core, it's implemented there
             modsFolderWatcher = new FileSystemWatcher("Mods");
             modsFolderWatcher.Filter = "*";
             modsFolderWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
@@ -883,8 +885,10 @@ namespace Barotrauma
             modsFolderWatcher.Deleted += OnModFolderUpdate;
             modsFolderWatcher.Renamed += OnModFolderUpdate;
             modsFolderWatcher.EnableRaisingEvents = true;
+#endif
         }
 
+#if WINDOWS
         private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
         {
             if (SuppressModFolderWatcher) { return; }
@@ -945,6 +949,7 @@ namespace Barotrauma
                     break;
             }
         }
+#endif
 
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)
         {
