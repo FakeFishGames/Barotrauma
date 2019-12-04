@@ -98,7 +98,7 @@ namespace Barotrauma
                                                           (contentPackage==null || p.ContentPackage == contentPackage));
             if (prefab?.XDocument == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
+                DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
                 return string.Empty;
             }
             var folder = prefab.XDocument.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);

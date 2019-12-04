@@ -193,6 +193,8 @@ namespace Barotrauma
                 selectedFile = file.Path;
             }
 
+            if (selectedFile == loadedFile) { return; }
+
             instance?.ConnectionSprite?.Remove();
             instance?.BackgroundTileSprites.ForEach(s => s.Remove());
 #if CLIENT
@@ -208,8 +210,6 @@ namespace Barotrauma
             instance?.ReticleSmall?.Remove();
 #endif
             instance = null;
-
-            if (selectedFile == loadedFile) { return; }
 
             if (selectedElement == null)
             {
