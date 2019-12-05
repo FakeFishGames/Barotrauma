@@ -66,8 +66,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Should this container be automatically filled with items?")]
-        public bool AutoFill { get; set; } = true;
+        [Editable, Serialize(true, true, description: "Should this container be automatically filled with items?")]
+        public bool AutoFill { get; set; }
 
         private float itemRotation;
         [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
