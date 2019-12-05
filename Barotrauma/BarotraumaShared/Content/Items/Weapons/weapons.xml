@@ -176,6 +176,27 @@
   </Item>
   
   <Item name="" identifier="revolver" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,weapon,gun" Scale="0.32" impactsoundtag="impact_metal_light">
+    <!--
+      An example on using the PreferredContainer:
+      
+      <PreferredContainer primary="somespecialcontainer" secondary="locker" minamount="1" maxamount="1" spawnprobability="1"/>
+      
+          PreferredContainers are used for automatic item placement and to tell the bots where items belong to.
+          
+          Automatic item placement can be disabled by setting autofit="False" attribute in the ItemContainer definition or changing the property in the sub editor.
+          
+          Tags and identifiers are used indistinguishably: neither is given a priority over the other.
+      
+          The automatic item placement first looks for containers with an identifier or tag "somespecialcontainer".
+          If none found, will use the containers with the "locker" tag/identifier.      
+          In practice, this should fill all lockers (that have enough room) with one revolver, because there shouldn't be any containers with the primary tag/identifier.
+          
+          Note that each "PreferredContainer" element is evaluated separately and the probability is per container.
+          
+          The bots treat both the "primary" and the "secondary" as accepted containers. However, they prefer the "primary" containers. 
+          The evaluation is weight based: it's possible that the bots use a container marked as "secondary" or even a container that is not defined here, if it's close enough.
+          If you want to tell the bots that "only put certain items in this container", use the "Containable Restrictions" that can be defined in the sub editor.
+    -->
     <PreferredContainer primary="weaponholder" spawnprobability="0.2"/>
     <PreferredContainer primary="secarmcab" minamount="1" maxamount="3" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="75" />
