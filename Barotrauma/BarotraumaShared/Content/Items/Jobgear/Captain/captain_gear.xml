@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="captainscap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer identifiers="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -11,7 +12,9 @@
       <sprite name="Captain's Cap Wearable" texture="Content/Items/Jobgear/headgears_[VARIANT].png" limb="Head" inheritlimbdepth="true" inherittexturescale="true" hidelimb="false" sourcerect="4,1,96,96" origin="0.5,0.6485507" />
     </Wearable>
   </Item>
+  
   <Item name="" identifier="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer identifiers="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
