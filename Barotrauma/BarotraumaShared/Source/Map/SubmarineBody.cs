@@ -513,8 +513,8 @@ namespace Barotrauma
         private bool CheckCharacterCollision(Contact contact, Character character)
         {
             //characters that can't enter the sub always collide regardless of gaps
-            if (!character.AnimController.CanEnterSubmarine) return true;
-            if (character.Submarine != null) return false;
+            if (!character.AnimController.CanEnterSubmarine) { return true; }
+            if (character.Submarine != null) { return false; }
 
             contact.GetWorldManifold(out Vector2 contactNormal, out FixedArray2<Vector2> points);
 
@@ -533,11 +533,12 @@ namespace Barotrauma
             var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
             targetPos = character.WorldPosition;
             Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 500.0f);
-            if (adjacentGap == null) return true;
+            if (adjacentGap == null) { return true; }
 
             if (newHull != null)
             {
-                character.AnimController.FindHull(newHull.WorldPosition, true);
+                CoroutineManager.Invoke(() =>
+                    character.AnimController.FindHull(newHull.WorldPosition, true));
             }
 
             return false;
