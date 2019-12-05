@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <!-- HATS START -->
-  <Item name="" identifier="captainscap1" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+  <Item name="" identifier="captainscap1" aliases="captainscap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -36,7 +36,7 @@
   </Item>
   <!-- HATS END -->
   <!-- UNIFORMS START -->
-  <Item name="" identifier="captainsuniform1" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="captainsuniform1" aliases="captainsuniform" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
