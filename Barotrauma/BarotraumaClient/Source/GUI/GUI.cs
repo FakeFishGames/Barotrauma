@@ -1652,7 +1652,10 @@ namespace Barotrauma
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
                                 if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
                                 {
-                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                                    {
+                                        UserData = "verificationprompt"
+                                    };
                                     msgBox.Buttons[0].OnClicked = (_, __) =>
                                     {
                                         TogglePauseMenu(btn, userdata);
