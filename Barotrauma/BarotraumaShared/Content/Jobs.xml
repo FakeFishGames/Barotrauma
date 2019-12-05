@@ -40,13 +40,13 @@
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
-      <Item identifier="shotgun" equip="false">
-        <Item identifier="shotgunshell"/>
-        <Item identifier="shotgunshell"/>
-        <Item identifier="shotgunshell"/>
-        <Item identifier="shotgunshell"/>
-        <Item identifier="shotgunshell"/>
-        <Item identifier="shotgunshell"/>
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
       </Item>
       <PreviewSprites dims="120,109">
         <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_2.png" sourcerect="2,38,120,109" offset="0,0" />
@@ -60,8 +60,14 @@
       <Item identifier="headset" equip="true">
         <Item identifier="batterycell"/>
       </Item>
-      <Item identifier="fraggrenade" equip="false" />
-      <Item identifier="fraggrenade" equip="false" />
+      <Item identifier="revolver" equip="false">
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+        <Item identifier="revolverround"/>
+      </Item>
       <PreviewSprites dims="120,109">
         <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_3.png" sourcerect="2,38,120,109" offset="0,0" />
         <sprite texture="Content/Items/Jobgear/Captain/captain_torso_[GENDER]_3.png" sourcerect="121,0,76,80" offset="-20,15" />
