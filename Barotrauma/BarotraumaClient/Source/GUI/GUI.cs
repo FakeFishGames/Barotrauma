@@ -1,5 +1,6 @@
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
 using EventInput;
@@ -1640,6 +1641,34 @@ namespace Barotrauma
                                 return true;
                             };
                             return true;
+                        };
+                    }
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    {
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("EndRound"), style: "GUIButtonLarge")
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
+                                if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                                {
+                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                    msgBox.Buttons[0].OnClicked = (_, __) =>
+                                    {
+                                        TogglePauseMenu(btn, userdata);
+                                        GameMain.Client.RequestRoundEnd();
+                                        return true;
+                                    };
+                                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                                }
+                                else
+                                {
+                                    TogglePauseMenu(btn, userdata);
+                                    GameMain.Client.RequestRoundEnd();
+                                }
+                                return true;
+                            }
                         };
                     }
                 }
