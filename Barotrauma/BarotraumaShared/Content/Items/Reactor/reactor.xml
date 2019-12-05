@@ -75,7 +75,7 @@
   </Item>
 
   <Item name="" identifier="fuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" scale="0.5">
-    <PreferredContainer identifiers="reactorcab" minamount="2" maxamount="5" spawnprobability="1"/>
+    <PreferredContainer primary="reactorcab" minamount="2" maxamount="5" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="Research" buyprice="100"/>
     <Price locationtype="City" buyprice="150"/>
@@ -96,7 +96,7 @@
   </Item>
   
   <Item name="" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5">
-    <PreferredContainer identifiers="reactorcab,storagecab"/>
+    <PreferredContainer primary="reactorcab,storagecab"/>
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="fulgurium" copycondition="true"/>
@@ -112,7 +112,7 @@
   </Item>
   
   <Item name="" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5">
-    <PreferredContainer identifiers="reactorcab" minamount="1" maxamount="2" spawnprobability="0.05"/>
+    <PreferredContainer primary="reactorcab" minamount="1" maxamount="2" spawnprobability="0.05"/>
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="thorium" copycondition="true"/>

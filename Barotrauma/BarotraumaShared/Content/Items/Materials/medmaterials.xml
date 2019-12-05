@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="fiberplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="locker"/>
+    <PreferredContainer primary="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
     <Deconstruct time="5">
       <Item identifier="organicfiber" />
       <Item identifier="organicfiber" />
@@ -23,8 +23,8 @@
   </Item>
   
   <Item name="" identifier="elastinplant" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="locker"/>
+    <PreferredContainer primary="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
     <Deconstruct time="5">
       <Item identifier="elastin" />
       <Item identifier="elastin" />
@@ -45,8 +45,8 @@
   </Item>
   
   <Item name="" identifier="aquaticpoppy" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="locker"/>
+    <PreferredContainer primary="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
     <Deconstruct time="5">
       <Item identifier="opium" />
       <Item identifier="opium" />
@@ -67,8 +67,8 @@
   </Item>
   
   <Item name="" identifier="yeastshroom" category="Material" Tags="smallitem,plant" canbepicked="true" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="locker"/>
+    <PreferredContainer primary="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
     <Deconstruct time="5">
       <Item identifier="ethanol" />
       <Item identifier="ethanol" />
@@ -89,8 +89,8 @@
   </Item>
   
   <Item name="" identifier="slimebacteria" category="Material" Tags="smallitem,plant" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker"/>
-    <PreferredContainer identifiers="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="locker"/>
+    <PreferredContainer primary="medfabcab" minamount="0" maxamount="4" spawnprobability="1"/>
     <Deconstruct time="5">
       <Item identifier="antibiotics" />
       <Item identifier="antibiotics" />

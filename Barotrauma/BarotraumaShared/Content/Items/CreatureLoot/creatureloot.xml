@@ -2,7 +2,7 @@
 <Items>
   <Item name="" identifier="alienblood" category="Material" cargocontaineridentifier="chemicalcrate" description="" Tags="smallitem,chem,medical" useinhealthinterface="true" scale="0.2">
     <!-- TODO: adjust prices -->
-    <PreferredContainer identifiers="toxcontainer,medcontainer,locker"/>
+    <PreferredContainer primary="toxcontainer,medcontainer,locker"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="60" />
     <SuitableTreatment identifier="bloodloss" suitability="20" />
@@ -28,8 +28,8 @@
     </MeleeWeapon>
   </Item>
   <Item name="" identifier="huskeggs" category="Material" cargocontaineridentifier="chemicalcrate" Tags="smallitem,chem,medical" description="" useinhealthinterface="true" scale="0.3">
-    <PreferredContainer identifiers="toxcontainer" spawnprobability="0.5"/>
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer primary="toxcontainer" spawnprobability="0.5"/>
+    <PreferredContainer primary="locker"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="1200" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="832,448,64,64" origin="0.5,0.5" />
@@ -49,7 +49,7 @@
     </MeleeWeapon>
   </Item>
   <Item name="" identifier="swimbladder" description="" Tags="smallitem,chem,medical" category="Misc" scale="0.2" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker,toxcontainer"/>
+    <PreferredContainer primary="locker,toxcontainer"/>
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="349,285,110,130" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="stabilozine" />
@@ -62,7 +62,7 @@
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
   <Item name="" identifier="adrenalinegland" Tags="smallitem,chem,medical" description="" category="Misc" scale="0.2" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker,toxcontainer"/>
+    <PreferredContainer primary="locker,toxcontainer"/>
     <Sprite texture="Content/Items/Materials/CraftingElements2.png" depth="0.7" sourcerect="345,148,116,133" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="adrenaline" />
@@ -74,7 +74,7 @@
     <Holdable slots="RightHand,LeftHand,Any" holdpos="0,-70" handle1="0,10" handle2="0,-10" />
   </Item>
   <Item name="" identifier="crawlermask" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer primary="locker"/>
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.6" sourcerect="962,450,59,61" origin="0.5,0.5" />
     <Body width="50" height="45" density="30" />
     <Wearable limbtype="Head" slots="Any,Head" msg="ItemMsgPickUpSelect">
@@ -89,7 +89,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="huskstinger" category="Equipment" Tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light" scale="0.3">
-    <PreferredContainer identifiers="locker,weaponcontainer"/>
+    <PreferredContainer primary="locker,weaponcontainer"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,576,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="9,318,172,47" depth="0.55" origin="0.44,0.6" />
     <Body radius="15" width="100" density="50" />
@@ -102,7 +102,7 @@
     </MeleeWeapon>
   </Item>
   <Item name="" identifier="mudraptorshell" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" impactsoundtag="impact_soft" scale="0.4">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer primary="locker"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="962,322,61,61" origin="0.5,0.5" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="238,10,59,287" origin="0.5,0.5" depth="0.55" />
     <Body width="40" height="145" density="30" />
@@ -111,7 +111,7 @@
     </Holdable>
   </Item>
   <Item name="" identifier="shellshield" category="Equipment" tags="weapon" impactsoundtag="impact_metal_light" scale="0.4">
-    <PreferredContainer identifiers="locker"/>
+    <PreferredContainer primary="locker"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,384,64,64" />
     <Sprite texture="Content/Items/Jobgear/AlienGear.png" sourcerect="305,10,126,207" depth="0.6" />
     <Body radius="70" height="80" density="40" />
@@ -125,7 +125,7 @@
   </Item>
 
   <Item name="" identifier="smallmudraptoregg" nameidentifier="mudraptoregg" Tags="smallitem" health="20" damagedbyexplosions="true" damagedbyprojectiles="true" damagedbymeleeweapons="true" category="Misc" scale="0.2" impactsoundtag="impact_soft">
-    <PreferredContainer identifiers="locker,toxcontainer" spawnprobability="0.01"/>
+    <PreferredContainer primary="locker,toxcontainer" spawnprobability="0.01"/>
     <Sprite texture="Content/Items/CreatureLoot/MudraptorEgg.png" depth="0.7" sourcerect="0,0,128,128" origin="0.5,0.5" />
     <Deconstruct time="10">
       <Item identifier="alienblood" />

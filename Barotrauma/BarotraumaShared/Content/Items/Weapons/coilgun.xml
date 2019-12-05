@@ -58,7 +58,7 @@
   </Item>
   
   <Item name="" identifier="coilgunammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="coilgunammocontainer" minamount="1" maxamount="3"/>
+    <PreferredContainer primary="coilgunammocontainer" minamount="1" maxamount="3"/>
     <Price locationtype="Outpost" buyprice="200" />
     <Price locationtype="Military" buyprice="150" />
     <Price locationtype="City" buyprice="200" />
@@ -117,7 +117,7 @@
   </Item>
   
   <Item name="" identifier="physicoriumammobox" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="coilgunammocontainer" spawnprobability="0.05"/>
+    <PreferredContainer primary="coilgunammocontainer" spawnprobability="0.05"/>
     <Fabricate suitablefabricators="fabricator" requiredtime="20">
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem identifier="steel"/>
@@ -172,7 +172,7 @@
     </Projectile>
   </Item>
   <Item name="" identifier="coilgunammoboxexplosive" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="coilgunammocontainer" spawnprobability="0.05"/>
+    <PreferredContainer primary="coilgunammocontainer" spawnprobability="0.05"/>
     <Price locationtype="Outpost" buyprice="400" />
     <Price locationtype="Military" buyprice="300" />
     <Price locationtype="City" buyprice="400" />
@@ -232,7 +232,7 @@
     </Projectile>
   </Item>
   <Item name="" identifier="coilgunammoboxpiercing" scale="0.5" tags="coilgunequipment,coilgunammo" category="Equipment" linkable="true" impactsoundtag="impact_metal_heavy">
-    <PreferredContainer identifiers="coilgunammocontainer" spawnprobability="0.05"/>
+    <PreferredContainer primary="coilgunammocontainer" spawnprobability="0.05"/>
     <Price locationtype="Outpost" buyprice="300" />
     <Price locationtype="Military" buyprice="200" />
     <Price locationtype="City" buyprice="300" />

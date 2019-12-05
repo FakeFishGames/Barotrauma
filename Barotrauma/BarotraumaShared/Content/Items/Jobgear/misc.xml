@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
-    <PreferredContainer identifiers="divingcab,crewcab" minamount="0" maxamount="2" spawnprobability="0.75"/>
-    <PreferredContainer identifiers="storagecab"/>
+    <PreferredContainer primary="divingcab,crewcab" minamount="0" maxamount="2" spawnprobability="0.75"/>
+    <PreferredContainer primary="storagecab"/>
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />
