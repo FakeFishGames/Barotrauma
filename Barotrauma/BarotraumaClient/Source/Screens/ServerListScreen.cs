@@ -737,6 +737,7 @@ namespace Barotrauma
             info.PlayerCount = GameMain.Client.ConnectedClients.Count;
             info.PingChecked = false;
             info.HasPassword = serverSettings.HasPassword;
+            info.OwnerVerified = true;
 
             if (isInfoNew)
             {
@@ -905,6 +906,11 @@ namespace Barotrauma
             base.Select();
             SelectedTab = ServerListTab.All;
             RefreshServers();
+
+            if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
+            {
+                SteamManager.Instance.LobbyList.OnLobbyDataReceived = OnLobbyDataReceived;
+            }
         }
 
         public override void Deselect()
@@ -912,7 +918,7 @@ namespace Barotrauma
             base.Deselect();
             if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
             {
-                SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+                SteamManager.Instance.LobbyList.OnLobbyDataReceived = null;
             }
         }
 
@@ -954,6 +960,7 @@ namespace Barotrauma
                     (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
                 child.Visible =
+                    serverInfo.OwnerVerified &&
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
                     (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
@@ -1486,7 +1493,8 @@ namespace Barotrauma
                     PlayerCount = playerCount,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassWord,
-                    GameVersion = gameVersion
+                    GameVersion = gameVersion,
+                    OwnerVerified = true
                 };
                 foreach (string contentPackageName in contentPackageNames.Split(','))
                 {
@@ -1516,6 +1524,37 @@ namespace Barotrauma
             {
                 AddToServerList(serverInfo);
             }
+        }
+
+        private void OnLobbyDataReceived(Facepunch.Steamworks.LobbyList.Lobby lobby)
+        {
+            if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { return; }
+            bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
+            int.TryParse(lobby.GetData("playercount"), out int currPlayers);
+            int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
+            //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
+            string ip = lobby.GetData("hostipaddress");
+            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
+
+            ServerInfo newInfo = new ServerInfo();
+
+            if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
+
+            newInfo.ServerName = lobby.Name;
+            newInfo.Port = "";
+            newInfo.QueryPort = "";
+            newInfo.IP = ip;
+            newInfo.PlayerCount = currPlayers;
+            newInfo.MaxPlayers = maxPlayers;
+            newInfo.HasPassword = hasPassword;
+            newInfo.RespondedToSteamQuery = true;
+            newInfo.LobbyID = lobby.LobbyID;
+            newInfo.OwnerID = ownerId;
+            newInfo.PingChecked = false;
+            newInfo.OwnerVerified = true;
+            SteamManager.AssignLobbyDataToServerInfo(lobby, newInfo);
+
+            AddToServerList(newInfo);
         }
 
         private void AddToServerList(ServerInfo serverInfo)
@@ -1601,7 +1640,13 @@ namespace Barotrauma
                 UserData = "password"
             };
 
-			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
+			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform),
+#if !DEBUG
+                serverInfo.ServerName,
+#else
+                ((serverInfo.OwnerID != 0 || serverInfo.LobbyID != 0) ? "[STEAMP2P] " : "[LIDGREN] ") + serverInfo.ServerName,
+#endif
+                style: "GUIServerListTextBox");
 
             new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {
