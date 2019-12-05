@@ -272,9 +272,11 @@ namespace Barotrauma.Networking
             }
         }
 
+#if DEBUG
         public override void ForceTimeOut()
         {
             netClient?.ServerConnection?.ForceTimeOut();
         }
+#endif
     }
 }
