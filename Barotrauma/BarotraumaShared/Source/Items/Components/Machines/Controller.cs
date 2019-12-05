@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     diff.Y = 0.0f;
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && user != Character.Controlled)
                     {
                         if (Math.Abs(diff.X) > 20.0f)
                         {                       
