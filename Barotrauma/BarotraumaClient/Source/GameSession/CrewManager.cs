@@ -152,6 +152,8 @@ namespace Barotrauma
                         if (!string.IsNullOrWhiteSpace(text))
                         {
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            // add to local history
+                            ChatBox.AddHistory(text);
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
                                 msg,

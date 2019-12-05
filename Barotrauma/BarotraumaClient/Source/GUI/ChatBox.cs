@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -14,6 +15,26 @@ namespace Barotrauma
         private static Sprite radioIcon;
         private GUIListBox chatBox;
         private Point screenResolution;
+
+        // up/down arrow history selector index
+        private int histIndex;
+        // local message history
+        private readonly List<string> previousMessages = new List<string>(new string[] {""});
+
+        /// <summary>
+        /// Add a message to the local history for use with up/down arrow keys
+        /// </summary>
+        /// <param name="text">the message to add</param>
+        public void AddHistory(string text)
+        {
+            histIndex = 0;
+            previousMessages.Insert(1, text);
+            // we don't want to add too many messages... just in case
+            if (previousMessages.Count > 10)
+            {
+                previousMessages.RemoveAt(previousMessages.Count - 1);
+            }
+        }
 
         public bool IsSinglePlayer { get; private set; }
 
@@ -86,6 +107,22 @@ namespace Barotrauma
                 Font = GUI.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
             };
+
+            InputBox.OnKeyHit += (sender, key) =>
+            {
+                // Up arrow key? go up. Down arrow key? go down. Everything else gets binned
+                int direction = key == Keys.Up ? 1 : (key == Keys.Down ? -1 : 0);
+                if (direction == 0) return;
+
+                // save our changes to the history, slot 0 is reserved for the original message
+                previousMessages[histIndex] = InputBox.Text;
+
+                string newMessage = SelectMessage(direction);
+                // don't do anything if we didn't find anything
+                if (newMessage == null) return;
+                InputBox.Text = newMessage;
+            };
+            
             InputBox.OnDeselected += (gui, Keys) =>
             {
                 //gui.Text = "";
@@ -108,6 +145,24 @@ namespace Barotrauma
 
             showNewMessagesButton.Visible = false;
             ToggleOpen = GameMain.Config.ChatOpen;
+        }
+
+        /// <summary>
+        /// Return a message at certain part of the history
+        /// </summary>
+        /// <param name="direction">What direction to scroll the history, 1 being upwards and 2 being downwards</param>
+        /// <returns>previously typed message or null if the history ends or is empty</returns>
+        private string SelectMessage(int direction)
+        {
+            // sanitize input
+            int dir = MathHelper.Clamp(direction, -1, 1);
+            
+            int nextIndex = (histIndex + dir);
+            // if we are at the end, there is nothing more to scroll
+            if (nextIndex > (previousMessages.Count - 1)) { return null; }
+
+            // if we scrolled all the way back down then show the original message else give us something from the history
+            return nextIndex < 0 ? previousMessages[0] : previousMessages[(histIndex = nextIndex)];
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
