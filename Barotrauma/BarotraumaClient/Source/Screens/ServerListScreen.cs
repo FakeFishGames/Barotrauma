@@ -1419,7 +1419,8 @@ namespace Barotrauma
             {
                 yield return new WaitForSeconds((float)(refreshDisableTimer - DateTime.Now).TotalSeconds);
             }
-            
+
+            recentServers.Concat(favoriteServers).ForEach(si => si.OwnerVerified = false);
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 serverList.ClearChildren();
