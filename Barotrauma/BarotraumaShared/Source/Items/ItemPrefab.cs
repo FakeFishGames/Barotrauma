@@ -838,10 +838,14 @@ namespace Barotrauma
                 prefab = Find(null, identifier, showErrorMessages: false) as ItemPrefab;
 
                 //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
+                if (prefab == null && !string.IsNullOrEmpty(name))
                 {
                     string lowerCaseName = name.ToLowerInvariant();
                     prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                }
+                if (prefab == null)
+                {
+                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(identifier)) as ItemPrefab;
                 }
             }
 
