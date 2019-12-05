@@ -798,7 +798,7 @@ namespace Barotrauma.Steam
             {
                 if (!EnableWorkShopItem(existingItem, false, out string errorMsg))
                 {
-                    DebugConsole.ThrowError(errorMsg);
+                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
                     new GUIMessageBox(
                         TextManager.Get("Error"),
                         TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { existingItem.Title, errorMsg }));
@@ -921,6 +921,14 @@ namespace Barotrauma.Steam
                 SteamWorkshopUrl = item.Url
             };
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
+
+            if (ContentPackage.List.Any(cp => cp.Path.CleanUpPath() == newContentPackagePath.CleanUpPath()))
+            {
+                errorMsg = TextManager.GetWithVariables("WorkshopErrorSamePathInstalled",
+                    new string[] { "[itemname]", "[itempath]" },
+                    new string[] { item.Title, Path.GetDirectoryName(newContentPackagePath) });
+                return false;
+            }
 
             if (!contentPackage.IsCompatible())
             {
@@ -1239,7 +1247,7 @@ namespace Barotrauma.Steam
                 SteamWorkshopUrl = item.Url
             };
             //make sure the contentpackage file is present 
-            if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) &&
+            if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) ||
                 !ContentPackage.List.Any(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl))
             {
                 return false;
@@ -1266,9 +1274,12 @@ namespace Barotrauma.Steam
                 DebugConsole.ThrowError("Metadata file for the Workshop item \"" + item.Title + "\" not found. The file may be corrupted.");
                 return false;
             }
-                                    
-            ContentPackage steamPackage = new ContentPackage(metaDataPath);
-            ContentPackage myPackage = ContentPackage.List.Find(cp => cp.Name == steamPackage.Name);
+
+            ContentPackage steamPackage = new ContentPackage(metaDataPath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
+            ContentPackage myPackage = ContentPackage.List.Find(cp => cp.SteamWorkshopUrl == steamPackage.SteamWorkshopUrl);
 
             if (myPackage?.InstallTime == null)
             {
@@ -1289,8 +1300,11 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            ContentPackage steamPackage = new ContentPackage(metaDataPath);
-            return GameMain.Config.SelectedContentPackages.Any(cp => cp.Name == steamPackage.Name);
+            ContentPackage steamPackage = new ContentPackage(metaDataPath)
+            {
+                SteamWorkshopUrl = item.Url
+            };
+            return GameMain.Config.SelectedContentPackages.Any(cp => cp.SteamWorkshopUrl == steamPackage.SteamWorkshopUrl);
         }
 
         public static bool AutoUpdateWorkshopItems()
