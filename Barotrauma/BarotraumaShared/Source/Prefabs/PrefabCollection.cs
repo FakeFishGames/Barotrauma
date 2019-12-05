@@ -9,9 +9,10 @@ namespace Barotrauma
     public class PrefabCollection<T> : IEnumerable<T> where T : class, IPrefab, IDisposable
     {
         /// <summary>
-        /// Dictionary containing all prefabs of the same type that share the same identifier.
+        /// Dictionary containing all prefabs of the same type.
         /// Key is the identifier.
-        /// Value is a list where the first element is the "base" prefab,
+        /// Value is a list of prefabs that share the same identifier,
+        /// where the first element is the "base" prefab,
         /// i.e. the only prefab that's loaded when override tags are not defined.
         /// This first element can be null, if only overrides are defined.
         /// The last element of the list is the prefab that is effectively used
