@@ -128,14 +128,16 @@ namespace Barotrauma
 
     class PreferredContainer
     {
-        public readonly HashSet<string> Identifiers = new HashSet<string>();
+        public readonly HashSet<string> Primary = new HashSet<string>();
+        public readonly HashSet<string> Secondary = new HashSet<string>();
         public float SpawnProbability { get; private set; }
         public int MinAmount { get; private set; }
         public int MaxAmount { get; private set; }
 
         public PreferredContainer(XElement element)
         {
-            Identifiers = XMLExtensions.GetAttributeStringArray(element, "identifiers", new string[0]).ToHashSet();
+            Primary = XMLExtensions.GetAttributeStringArray(element, "primary", new string[0]).ToHashSet();
+            Secondary = XMLExtensions.GetAttributeStringArray(element, "secondary", new string[0]).ToHashSet();
             SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
             MinAmount = element.GetAttributeInt("minamount", 0);
             MaxAmount = Math.Max(MinAmount, element.GetAttributeInt("maxamount", 0));
@@ -143,7 +145,10 @@ namespace Barotrauma
             if (element.Attribute("spawnprobability") == null)
             {
                 //if spawn probability is not defined but amount is, assume the probability is 1
-                if (MaxAmount > 0) { SpawnProbability = 1.0f; } 
+                if (MaxAmount > 0)
+                {
+                    SpawnProbability = 1.0f;
+                } 
             }
             else if (element.Attribute("minamount") == null && element.Attribute("maxamount") == null)
             {
@@ -751,9 +756,9 @@ namespace Barotrauma
                         break;
                     case "preferredcontainer":
                         var preferredContainer = new PreferredContainer(subElement);
-                        if (preferredContainer.Identifiers.Count == 0)
+                        if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
                         {
-                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no identifiers or tags ({subElement.ToString()}).");
+                            //DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement.ToString()}).");
                         }
                         else
                         {
@@ -892,21 +897,33 @@ namespace Barotrauma
             return prices?.Values;
         }
 
-        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined, out bool isSecondary)
         {
             isPreferencesDefined = PreferredContainers.Any();
+            isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            return PreferredContainers.Any(preferredContainer =>
-                    preferredContainer.Identifiers.Any(id =>
-                        itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id)));
+            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, itemContainer)))
+            {
+                return true;
+            }
+            isSecondary = true;
+            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, itemContainer));
         }
 
-        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)
         {
             isPreferencesDefined = PreferredContainers.Any();
+            isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            return PreferredContainers.Any(preferredContainer =>
-                    identifiersOrTags.Any(id => preferredContainer.Identifiers.Contains(id)));
+            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, identifiersOrTags)))
+            {
+                return true;
+            }
+            isSecondary = true;
+            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
+
+        public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
+        public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));
     }
 }

@@ -55,7 +55,7 @@ namespace Barotrauma.Items.Components
         [Serialize(5, false, description: "How many inventory slots the inventory has per row.")]
         public int SlotsPerRow { get; set; }
 
-        private HashSet<string> containableRestrictions = new HashSet<string>();
+        private readonly HashSet<string> containableRestrictions = new HashSet<string>();
         [Editable, Serialize("", true, description: "Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.")]
         public string ContainableRestrictions
         {
@@ -65,6 +65,9 @@ namespace Barotrauma.Items.Components
                 StringFormatter.ParseCommaSeparatedStringToCollection(value, containableRestrictions);
             }
         }
+
+        [Editable, Serialize(false, true, description: "Should this container be automatically filled with items?")]
+        public bool AutoFill { get; set; }
 
         private float itemRotation;
         [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]

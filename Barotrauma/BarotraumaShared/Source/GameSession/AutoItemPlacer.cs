@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -42,14 +43,22 @@ namespace Barotrauma
             }
 
             spawnedItems.Clear();
-            Dictionary<ItemContainer, PreferredContainer> validContainers = new Dictionary<ItemContainer, PreferredContainer>();
+            var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
             //spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
             foreach (ItemPrefab itemPrefab in prefabsWithContainer.OrderBy(sp => Rand.Int(int.MaxValue)).Concat(prefabsWithoutContainer.OrderBy(sp => Rand.Int(int.MaxValue))))
             {
-                GetValidContainers(itemPrefab, containers, ref validContainers);
-                foreach (KeyValuePair<ItemContainer, PreferredContainer> validContainer in validContainers)
+                foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
-                    SpawnItem(itemPrefab, containers, validContainer);
+                    if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0) { continue; }
+                    validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: true);
+                    if (validContainers.None())
+                    {
+                        validContainers = GetValidContainers(preferredContainer, containers, validContainers, primary: false);
+                    }
+                    foreach (var validContainer in validContainers)
+                    {
+                        SpawnItem(itemPrefab, containers, validContainer);
+                    }
                 }
             }
 
@@ -60,43 +69,35 @@ namespace Barotrauma
             }
         }
 
-        private static void GetValidContainers(ItemPrefab itemPrefab, IEnumerable<ItemContainer> allContainers, ref Dictionary<ItemContainer, PreferredContainer> validContainers)
+        private static Dictionary<ItemContainer, PreferredContainer> GetValidContainers(PreferredContainer preferredContainer, IEnumerable<ItemContainer> allContainers, Dictionary<ItemContainer, PreferredContainer> validContainers, bool primary)
         {
-            //gather containers the item can spawn in
             validContainers.Clear();
-            foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
+            foreach (ItemContainer container in allContainers)
             {
-                if (preferredContainer.SpawnProbability <= 0.0f && preferredContainer.MaxAmount <= 0) { continue; }
-                foreach (ItemContainer container in allContainers)
+                if (!container.AutoFill) { continue; }
+                if (primary)
                 {
-                    if (!preferredContainer.Identifiers.Any(id => container.Item.Prefab.Identifier == id || container.Item.HasTag(id))) { continue; }
-
-                    if (validContainers.ContainsKey(container))
-                    {
-                        //the container has already been marked as valid due to some other PreferredContainer
-                        // -> override if this PreferredContainer has a higher chance of spawning more of the item
-                        // (for example, an item with a 5% chance to spawn in a cabinet and 50% chance to spawn in a supplycabinet
-                        //  has a 50% chance to spawn in an item with both tags cabinet and supplycabinet)
-                        if (GetSpawnPriority(preferredContainer) > GetSpawnPriority(validContainers[container]))
-                        {
-                            validContainers[container] = preferredContainer;
-                        }
-                    }
-                    else
-                    {
-                        validContainers.Add(container, preferredContainer);
-                    }
+                    if (!ItemPrefab.IsContainerPreferred(preferredContainer.Primary, container)) { continue; }
+                }
+                else
+                {
+                    if (!ItemPrefab.IsContainerPreferred(preferredContainer.Secondary, container)) { continue; }
+                }
+                if (!validContainers.ContainsKey(container))
+                {
+                    validContainers.Add(container, preferredContainer);
                 }
             }
+            return validContainers;
         }
 
         private static void SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
-            if (Rand.Range(0.0f, 1.0f) > validContainer.Value.SpawnProbability) { return; }
+            if (Rand.Value() > validContainer.Value.SpawnProbability) { return; }
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1);
             for (int i = 0; i < amount; i++)
             {
-                if (!validContainer.Key.Inventory.Items.Any(it => it == null))
+                if (validContainer.Key.Inventory.Items.None(it => it == null))
                 {
                     containers.Remove(validContainer.Key);
                     break;
@@ -111,12 +112,6 @@ namespace Barotrauma
                 containers.AddRange(item.GetComponents<ItemContainer>());
                 
             }
-        }
-
-
-        private static float GetSpawnPriority(PreferredContainer container)
-        {
-            return Math.Max(container.SpawnProbability, 0.1f) * (container.MinAmount + container.MaxAmount) / 2.0f;
         }
     }
 }
