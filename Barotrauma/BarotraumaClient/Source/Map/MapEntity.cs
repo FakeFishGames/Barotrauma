@@ -696,16 +696,10 @@ namespace Barotrauma
             if (selectedList.Count == 1)
             {
                 selectedList[0].DrawEditing(spriteBatch, cam);
-
                 if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
                 {
                     selectedList[0].DrawResizing(spriteBatch, cam);
                 }
-            }
-
-            if (highlightedListBox != null)
-            {
-                highlightedListBox.DrawManually(spriteBatch);
             }
         }
 

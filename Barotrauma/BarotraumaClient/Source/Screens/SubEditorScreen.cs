@@ -67,6 +67,8 @@ namespace Barotrauma
         private readonly string containerDeleteTag = "containerdelete";
 
         private GUIImage previewImage;
+        
+        private GUIListBox contextMenu;
 
         private Color primaryColor = new Color(12, 14, 15, 190);
         private Color secondaryColor = new Color(12, 14, 15, 215);
@@ -1763,6 +1765,43 @@ namespace Barotrauma
             
         }
 
+        private void CreateContextMenu()
+        {
+            List<MapEntity> targets = MapEntity.SelectedAny ? 
+                new List<MapEntity>(MapEntity.SelectedList) : 
+                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList();
+
+            if (targets.Count == 0) { return; }
+            
+            contextMenu = new GUIListBox(new RectTransform(new Vector2(0.1f, 0.1f), GUI.Canvas)
+            {
+                MinSize = new Point(180,0),
+                ScreenSpaceOffset = PlayerInput.MousePosition.ToPoint() + new Point(15)
+            }, style: "GUIToolTip");
+
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("delete"), font: GUI.SmallFont)
+            {
+                UserData = "delete"
+            };
+
+            contextMenu.RectTransform.NonScaledSize = new Point(
+                contextMenu.Rect.Width, 
+                (int)((contextMenu.Content.CountChildren * 18) * GUI.Scale));
+            
+            contextMenu.OnSelected = (GUIComponent component, object obj) =>
+            {
+                switch (obj as string)
+                {
+                    case "delete":
+                        targets.ForEach(me => me.Remove());
+                        contextMenu = null;
+                        break;
+                }
+                return true;
+            };
+        }
+
         private GUIFrame CreateWiringPanel()
         {
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(0.03f, 0.35f), GUI.Canvas, Anchor.TopLeft, Pivot.CenterLeft)
@@ -2218,18 +2257,22 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
-            if (MapEntity.HighlightedListBox != null)
-            {
-                MapEntity.HighlightedListBox.AddToGUIUpdateList();
-            }
-
-            EntityMenu.AddToGUIUpdateList();  
+            EntityMenu.AddToGUIUpdateList();
             LeftPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
 
             if (WiringMode)
             {
                 wiringToolPanel.AddToGUIUpdateList();
+            }
+
+            if (contextMenu != null)
+            {
+                contextMenu.AddToGUIUpdateList();
+            }
+            else if (MapEntity.HighlightedListBox != null)
+            {
+                MapEntity.HighlightedListBox.AddToGUIUpdateList();
             }
 
             if ((CharacterMode || WiringMode) && dummyCharacter != null)
@@ -2253,7 +2296,7 @@ namespace Barotrauma
                 else if (saveFrame != null)
                 {
                     saveFrame.AddToGUIUpdateList();
-                }              
+                }
             }
         }
 
@@ -2280,6 +2323,16 @@ namespace Barotrauma
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
                 moveSpeed.X = -moveSpeed.X;
                 cam.Position += moveSpeed;
+            }
+
+            if (contextMenu != null)
+            {
+                Rectangle expandedRect = contextMenu.Rect;
+                expandedRect.Inflate(20, 20);
+                if (!expandedRect.Contains(PlayerInput.MousePosition))
+                {
+                    contextMenu = null;
+                }                
             }
 
             if (CharacterMode || WiringMode)
@@ -2360,6 +2413,10 @@ namespace Barotrauma
                 }
                 
                 MapEntity.UpdateEditor(cam);
+                if (PlayerInput.RightButtonClicked())
+                {
+                    CreateContextMenu();                    
+                }
             }
 
             entityMenuOpenState = entityMenuOpen && !CharacterMode & !WiringMode ? 
