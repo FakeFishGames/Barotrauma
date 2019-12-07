@@ -4348,4 +4348,6 @@
   <missionheader0.killthresherswarm1>Target terminated</missionheader0.killthresherswarm1>
   <missionmessage0.killthresherswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killthresherswarm1>
 
+  <editor.cut>Cut</editor.cut>
+  <editor.paste>Paste</editor.paste>
 </infotexts>

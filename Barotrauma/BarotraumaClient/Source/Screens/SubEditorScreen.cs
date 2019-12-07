@@ -1493,9 +1493,7 @@ namespace Barotrauma
                 {
                     TryDeleteSub(subList.SelectedComponent.UserData as Submarine);
                 }
-
                 deleteButton.Enabled = false;
-
                 return true;
             };
 
@@ -1780,6 +1778,24 @@ namespace Barotrauma
             }, style: "GUIToolTip");
 
             new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.cut"), font: GUI.SmallFont)
+            {
+                UserData = "cut"
+            };
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.copytoclipboard"), font: GUI.SmallFont)
+            {
+                UserData = "copy"
+            };
+            if (MapEntity.CopiedList.Any())
+            {
+                new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                    TextManager.Get("editor.paste"), font: GUI.SmallFont)
+                {
+                    UserData = "paste"
+                };
+            }
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
                 TextManager.Get("delete"), font: GUI.SmallFont)
             {
                 UserData = "delete"
@@ -1793,11 +1809,20 @@ namespace Barotrauma
             {
                 switch (obj as string)
                 {
+                    case "copy":
+                        MapEntity.Copy(targets);
+                        break;
+                    case "cut":
+                        MapEntity.Cut(targets);
+                        break;
+                    case "paste":
+                        MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
+                        break;
                     case "delete":
                         targets.ForEach(me => me.Remove());
-                        contextMenu = null;
                         break;
                 }
+                contextMenu = null;
                 return true;
             };
         }
