@@ -285,6 +285,10 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
+#if CLIENT
+            TriggerRewiringSound();
+#endif
+
             foreach (Connection connection in Connections)
             {
                 foreach (Wire wire in connection.Wires)
