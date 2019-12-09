@@ -58,7 +58,7 @@
   
 	<!--Split internal damage to internal damage, lacerations, blunt trauma and rending wounds. Old internal damage is repurposed for a default damage effect, e.g from meds or miscellaneous sources.-->
 	<!--Moved gunshot wounds here to unify the system.-->
-	<!--TODO: write new damage types descriptions, affliction icons-->
+	<!--TODO: affliction icons-->
   <InternalDamage
     name="Internal Damage"
     identifier="internaldamage"

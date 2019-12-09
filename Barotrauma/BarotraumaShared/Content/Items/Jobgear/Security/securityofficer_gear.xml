@@ -45,7 +45,7 @@
     <Wearable slots="Any,OuterClothes" msg="ItemMsgPickUpSelect">
       <damagemodifier afflictiontypes="burn" armorsector="0.0,360.0" damagemultiplier="0.9" />
 	  <damagemodifier afflictionidentifiers="internaldamage,blunttrauma,lacerations,gunshotwound" armorsector="0.0,360.0" damagemultiplier="0.2" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
-	  <damagemodifier afflictionidentifiers="bitewound" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
+	  <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
 	  <damagemodifier afflictiontypes="bleeding" armorsector="0.0,360.0" damagemultiplier="0.1" bleedingmultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
       <sprite name="Security Vest" texture="SecurityVest.png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
     </Wearable>
