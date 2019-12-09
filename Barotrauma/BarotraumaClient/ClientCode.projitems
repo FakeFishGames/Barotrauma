@@ -91,6 +91,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\CharacterInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Door.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ElectricalDischarger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\RangedWeapon.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Holdable\Holdable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemLabel.cs" />
@@ -113,6 +115,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Wire.cs" />

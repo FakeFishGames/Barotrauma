@@ -28,6 +28,8 @@ namespace Barotrauma
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public float ConditionLevel { get; set; }
+        public bool Equip { get; set; }
+        public bool RemoveEmpty { get; set; } = true;
 
         public AIObjectiveContainItem(Character character, Item item, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
@@ -63,7 +65,7 @@ namespace Barotrauma
                 int containedItemCount = 0;
                 foreach (Item i in container.Inventory.Items)
                 {
-                    if (i != null && itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)))
+                    if (i != null && CheckItem(i))
                     {
                         containedItemCount++;
                     }
@@ -85,22 +87,49 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
+            if (container == null)
+            {
+                Abandon = true;
+                return;
+            }
             Item itemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
             if (itemToContain != null)
             {
-                // Contain the item
-                if (itemToContain.ParentInventory == character.Inventory)
+                if (character.CanInteractWith(container.Item, out _, checkLinked: false))
                 {
-                    character.Inventory.RemoveItem(itemToContain);
-                    if (!container.Inventory.TryPutItem(itemToContain, null))
+                    if (RemoveEmpty)
                     {
-                        itemToContain.Drop(character);
-                        Abandon = true;
+                        foreach (var emptyItem in container.Inventory.Items)
+                        {
+                            if (emptyItem == null) { continue; }
+                            if (emptyItem.Condition <= 0)
+                            {
+                                emptyItem.Drop(character);
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    if (character.CanInteractWith(container.Item, out _, checkLinked: false))
+                    // Contain the item
+                    if (itemToContain.ParentInventory == character.Inventory)
+                    {
+                        if (!container.Inventory.CanBePut(itemToContain))
+                        {
+                            Abandon = true;
+                        }
+                        else
+                        {
+                            character.Inventory.RemoveItem(itemToContain);
+                            if (container.Inventory.TryPutItem(itemToContain, null))
+                            {
+                                IsCompleted = true;
+                            }
+                            else
+                            {
+                                itemToContain.Drop(character);
+                                Abandon = true;
+                            }
+                        }
+                    }
+                    else
                     {
                         if (container.Combine(itemToContain, character))
                         {
@@ -111,19 +140,23 @@ namespace Barotrauma
                             Abandon = true;
                         }
                     }
-                    else
+                }
+                else
+                {
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
-                        TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear),
-                            onAbandon: () => Abandon = true,
-                            onCompleted: () => RemoveSubObjective(ref goToObjective));
-                    }
+                        DialogueIdentifier = "dialogcannotreachtarget",
+                        TargetName = container.Item.Name
+                    },
+                        onAbandon: () => Abandon = true,
+                        onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
             }
             else
             {
                 // No matching items in the inventory, try to get an item
                 TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: false, checkInventory: checkInventory)
+                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory)
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,

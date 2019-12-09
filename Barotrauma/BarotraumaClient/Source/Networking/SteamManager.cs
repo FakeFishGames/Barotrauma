@@ -32,7 +32,7 @@ namespace Barotrauma.Steam
         private bool InitializeClient()
         {
             if (client != null) { return true; }
-            bool clientInitialized = false;
+            bool clientInitialized;
             try
             {
                 client = new Facepunch.Steamworks.Client(AppID);
@@ -165,8 +165,10 @@ namespace Barotrauma.Steam
                 lobbyIPRetrievalThread?.Abort();
                 lobbyIPRetrievalThread?.Join();
                 lobbyIPRetrievalThread = null;
-                lobbyIPRetrievalThread = new Thread(new ThreadStart(RetrieveLobbyIP));
-                lobbyIPRetrievalThread.IsBackground = true;
+                lobbyIPRetrievalThread = new Thread(new ThreadStart(RetrieveLobbyIP))
+                {
+                    IsBackground = true
+                };
                 lobbyIPRetrievalThread.Start();
                 
                 lobbyState = LobbyState.Owner;
@@ -428,8 +430,7 @@ namespace Barotrauma.Steam
             serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
 
             serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
-            SelectionMode selectionMode;
-            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
+            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out SelectionMode selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
             if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
 
             serverInfo.AllowSpectating = getLobbyBool("allowspectating");

@@ -188,11 +188,18 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("public", isPublic);
             doc.Root.SetAttributeValue("port", Port);
-            if (Steam.SteamManager.USE_STEAM) doc.Root.SetAttributeValue("queryport", QueryPort);
+#if USE_STEAM
+            doc.Root.SetAttributeValue("queryport", QueryPort);
+#endif
             doc.Root.SetAttributeValue("maxplayers", maxPlayers);
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);
+
+            if (!string.IsNullOrEmpty(password))
+            {
+                doc.Root.SetAttributeValue("password", password);
+            }
             
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
             

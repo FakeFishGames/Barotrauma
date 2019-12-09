@@ -641,7 +641,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Apply an impulse to the body without increasing it's velocity above a specific limit.
+        /// Apply a force to the body without increasing it's velocity above a specific limit.
         /// </summary>
         public void ApplyForce(Vector2 force, float maxVelocity)
         {
@@ -653,8 +653,13 @@ namespace Barotrauma
             float newSpeedSqr = newVelocity.LengthSquared();
             if (newSpeedSqr > maxVelocity * maxVelocity)
             {
-                newVelocity = newVelocity.ClampLength(maxVelocity);
-                force = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
+                float velSqr = body.LinearVelocity.LengthSquared();
+                if (newSpeedSqr > velSqr) 
+                {
+                    if (velSqr > maxVelocity * maxVelocity) { return; }
+                    newVelocity = newVelocity.ClampLength(maxVelocity);
+                    force = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
+                }
             }
 
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
@@ -776,7 +781,7 @@ namespace Barotrauma
             ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
         }
 
-        public void Update(float deltaTime)
+        public void Update()
         {
             if (drawOffset.LengthSquared() < 0.01f)
             {

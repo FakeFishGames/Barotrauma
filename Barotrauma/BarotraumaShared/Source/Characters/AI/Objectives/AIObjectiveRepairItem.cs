@@ -135,7 +135,10 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            Item.TryInteract(character, true, true);
+                            if (!Item.TryInteract(character, true, true))
+                            {
+                                Abandon = true;
+                            }
                         }
                         if (previousCondition == -1)
                         {
@@ -151,7 +154,7 @@ namespace Barotrauma
                     {
                         if (IsRepairing)
                         {
-                            character?.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
                         repairable.StopRepairing(character);
                     }

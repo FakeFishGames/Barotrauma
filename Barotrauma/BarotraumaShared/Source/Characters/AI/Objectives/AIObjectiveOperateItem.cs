@@ -9,6 +9,7 @@ namespace Barotrauma
     class AIObjectiveOperateItem : AIObjective
     {
         public override string DebugTag => "operate item";
+        public override bool UnequipItems => true;
 
         private ItemComponent component, controller;
         private Entity operateTarget;
@@ -136,7 +137,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), 
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
+                    {
+                        DialogueIdentifier = "dialogcannotreachtarget",
+                        TargetName = target.Item.Name
+                    }, 
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }

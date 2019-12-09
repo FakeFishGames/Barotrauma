@@ -174,7 +174,7 @@ namespace Barotrauma
 
         public static void OnBiomeDiscovered(Biome biome)
         {
-            UnlockAchievement("discover" + biome.Name.ToLowerInvariant().Replace(" ", ""));
+            UnlockAchievement("discover" + biome.Identifier.ToLowerInvariant().Replace(" ", ""));
         }
 
         public static void OnItemRepaired(Item item, Character fixer)

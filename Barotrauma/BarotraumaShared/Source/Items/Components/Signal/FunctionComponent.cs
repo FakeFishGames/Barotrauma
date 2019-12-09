@@ -11,7 +11,9 @@ namespace Barotrauma.Items.Components
             Round,
             Ceil,
             Floor,
-            Factorial
+            Factorial,
+            AbsoluteValue,
+            SquareRoot
         }
 
         [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.")]
@@ -28,7 +30,8 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
-            float.TryParse(signal, out float value);
+            if (connection.Name != "signal_in") return;
+            if (!float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;
             switch (Function)
             {
                 case FunctionType.Round:
@@ -48,6 +51,13 @@ namespace Barotrauma.Items.Components
                         factorial *= (ulong)i;
                     }
                     item.SendSignal(0, factorial.ToString(), "signal_out", null);
+                    break;
+                case FunctionType.AbsoluteValue:
+                    item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    break;
+                case FunctionType.SquareRoot:
+                    double square = value > 0 ? Math.Sqrt(value) : 0;
+                    item.SendSignal(0, square.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");

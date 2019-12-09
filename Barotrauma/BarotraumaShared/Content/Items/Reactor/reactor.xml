@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Nuclear Reactor" identifier="reactor1" tags="reactor" type="Reactor" linkable="true" category="Machine">
+  <Item name="" identifier="reactor1" tags="reactor" type="Reactor" linkable="true" category="Machine">
     <trigger />
     <Sprite texture="reactor.png" sourcerect="0,0,321,192" depth="0.8" />
     <BrokenSprite texture="reactor.png" sourcerect="0,192,321,192" depth="0.8" maxcondition="40" />
@@ -16,7 +16,7 @@
       <TempMeterFrame texture="Content/Items/MachineInterface.png" sourcerect="188,212,27,95" origin="0.0,0.0"/>
       <TempMeterBar texture="Content/Items/MachineInterface.png" sourcerect="191,194,21,8" origin="0.5,0.0"/>
       <TempRangeIndicator texture="Content/Items/MachineInterface.png" sourcerect="176,308,51,10" origin="0.5,0.5"/>
-      <RequiredSkill identifier="electrical" level="30"/>
+      <RequiredSkill identifier="electrical" level="50"/>
       <sound file="Content/Items/Reactor/Reactor.ogg" type="OnActive" range="2000.0" volumeproperty="FissionRate" volume="0.02" loop="true"/>
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />
@@ -64,7 +64,7 @@
         <StatusEffect type="OnContaining" target="This" AvailableFuel="100.0" disabledeltatime="true" />
       </Containable>
     </ItemContainer>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="720" MinDeteriorationCondition="10" minsabotagecondition="10" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem items="wrench" type="equipped" />
@@ -74,8 +74,7 @@
     </Repairable>
 </Item>
 
-  <Item
-    name="Fuel Rod"
+  <Item name=""
     identifier="fuelrod"
     Tags="smallitem,reactorfuel"
     preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet"
@@ -100,7 +99,7 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Fulgurium Fuel Rod" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5" preferredcontainers="locker">
+  <Item name="" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5" preferredcontainers="locker">
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="fulgurium" copycondition="true"/>
@@ -114,7 +113,7 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Thorium Fuel Rod" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5" preferredcontainers="locker">
+  <Item name="" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5" preferredcontainers="locker">
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="thorium" copycondition="true"/>

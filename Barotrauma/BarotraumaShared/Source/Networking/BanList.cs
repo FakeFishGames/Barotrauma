@@ -16,10 +16,7 @@ namespace Barotrauma.Networking
 
     partial class BanList
     {
-        const string SavePath = "Data/bannedplayers.txt";
-
         private readonly List<BannedPlayer> bannedPlayers;
-
         public IEnumerable<string> BannedNames
         {
             get { return bannedPlayers.Select(bp => bp.Name); }
@@ -39,7 +36,7 @@ namespace Barotrauma.Networking
             InitProjectSpecific();
         }
 
-        public string ToRange(string ip)
+        public static string ToRange(string ip)
         {
             for (int i = ip.Length - 1; i > 0; i--)
             {

@@ -119,6 +119,23 @@ namespace Barotrauma
             }
         }
 
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                PlusButton.Enabled = true;
+                MinusButton.Enabled = true;
+                if (InputType == NumberType.Int) { ClampIntValue(); } else { ClampFloatValue(); }
+                TextBox.Enabled = value;
+                if (!value)
+                {
+                    PlusButton.Enabled = false;
+                    MinusButton.Enabled = false;
+                }
+            }
+        }
+
         public override ScalableFont Font
         {
             get
@@ -165,7 +182,7 @@ namespace Barotrauma
                 // Not sure what's the point of this
                 buttonArea.RectTransform.MinSize = new Point(Rect.Height, 0);
             }*/
-            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+");
+            PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), "+", font: GUI.GlobalFont);
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -186,7 +203,7 @@ namespace Barotrauma
             };
             PlusButton.Visible = inputType == NumberType.Int;
 
-            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), "-");
+            MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), "-", font: GUI.GlobalFont);
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;

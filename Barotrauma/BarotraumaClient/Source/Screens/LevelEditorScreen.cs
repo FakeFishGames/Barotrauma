@@ -44,7 +44,7 @@ namespace Barotrauma
                 MaxZoom = 1.0f
             };
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.07f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) },
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
@@ -72,7 +72,7 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
-                "Create Level Object")
+                TextManager.Get("leveleditor.createlevelobj"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -82,13 +82,13 @@ namespace Barotrauma
             };
 
             lightingEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
-                TextManager.Get("LevelEditorLightingEnabled"));
+                TextManager.Get("leveleditor.lightingenabled"));
 
             cursorLightEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
-                TextManager.Get("LevelEditorCursorLightEnabled"));
+                TextManager.Get("leveleditor.cursorlightenabled"));
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
-                TextManager.Get("LevelEditorReloadTextures"))
+                TextManager.Get("leveleditor.reloadtextures"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -98,7 +98,7 @@ namespace Barotrauma
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
-                TextManager.Get("LevelEditorSaveAll"))
+                TextManager.Get("editor.saveall"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -118,11 +118,11 @@ namespace Barotrauma
             editorContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform));
 
             var seedContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform), isHorizontal: true);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), TextManager.Get("LevelEditorLevelSeed"));
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), TextManager.Get("leveleditor.levelseed"));
             seedBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), seedContainer.RectTransform), ToolBox.RandomSeed(8));
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
-                TextManager.Get("LevelEditorGenerate"))
+                TextManager.Get("leveleditor.generate"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -155,7 +155,7 @@ namespace Barotrauma
             };
 
             spriteEditDoneButton = new GUIButton(new RectTransform(new Point(200, 30), anchor: Anchor.BottomRight) { AbsoluteOffset = new Point(20, 20) },
-                TextManager.Get("LevelEditorSpriteEditDone"))
+                TextManager.Get("leveleditor.spriteeditdone"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -277,7 +277,7 @@ namespace Barotrauma
                     Stretch = true
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
-                    TextManager.GetWithVariable("LevelEditorLevelObjCommonness", "[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
+                    TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
                 {
                     MinValueFloat = 0,
@@ -296,7 +296,7 @@ namespace Barotrauma
             if (sprite != null)
             {
                 editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), 
-                    TextManager.Get("LevelEditorEditSprite"))
+                    TextManager.Get("leveleditor.editsprite"))
                 {
                     OnClicked = (btn, userdata) =>
                     {
@@ -319,7 +319,7 @@ namespace Barotrauma
             }
             //child object editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
-                TextManager.Get("LevelEditorChildObjects"), textAlignment: Alignment.BottomCenter);
+                TextManager.Get("leveleditor.childobjects"), textAlignment: Alignment.BottomCenter);
             foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
             {
                 var childObjFrame = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30)));
@@ -375,7 +375,7 @@ namespace Barotrauma
             }
 
             new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform),
-                TextManager.Get("LevelEditorAddChildObject"))
+                TextManager.Get("leveleditor.addchildobject"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -387,13 +387,13 @@ namespace Barotrauma
 
             //light editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
-                TextManager.Get("LevelEditorLightSources"), textAlignment: Alignment.BottomCenter);
+                TextManager.Get("leveleditor.lightsources"), textAlignment: Alignment.BottomCenter);
             foreach (LightSourceParams lightSourceParams in selectedLevelObject.LightSourceParams)
             {
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, lightSourceParams, inGame: false, showName: true);
             }
             new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), 
-                TextManager.Get("LevelEditorAddLightSource"))
+                TextManager.Get("leveleditor.addlightsource"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -603,8 +603,8 @@ namespace Barotrauma
 
             public GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(TextManager.Get("LevelEditorCreateLevelObj"), string.Empty, 
-                    new string[] { TextManager.Get("Cancel"), TextManager.Get("Done") }, new Vector2(0.5f, 0.8f));
+                var box = new GUIMessageBox(TextManager.Get("leveleditor.createlevelobj"), string.Empty, 
+                    new string[] { TextManager.Get("cancel"), TextManager.Get("done") }, new Vector2(0.5f, 0.8f));
 
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
@@ -612,11 +612,11 @@ namespace Barotrauma
                 var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
 
                 new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), 
-                    TextManager.Get("LevelEditorLevelObjName")) { CanBeFocused = false };
+                    TextManager.Get("leveleditor.levelobjname")) { CanBeFocused = false };
                 var nameBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
 
                 new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), 
-                    TextManager.Get("LevelEditorLevelObjTexturePath")) { CanBeFocused = false };
+                    TextManager.Get("leveleditor.levelobjtexturepath")) { CanBeFocused = false };
                 var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
                 foreach (LevelObjectPrefab prefab in LevelObjectPrefab.List)
                 {
@@ -640,21 +640,21 @@ namespace Barotrauma
                     if (string.IsNullOrEmpty(nameBox.Text))
                     {
                         nameBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjNameEmpty"), Color.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnameempty"), Color.Red);
                         return false;
                     }
                     
                     if (LevelObjectPrefab.List.Any(obj => obj.Name.ToLower() == nameBox.Text.ToLower()))
                     {
                         nameBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjNameTaken"), Color.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnametaken"), Color.Red);
                         return false;
                     }
 
                     if (!File.Exists(texturePathBox.Text))
                     {
                         texturePathBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("LevelEditorLevelObjTextureNotFound"), Color.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjtexturenotfound"), Color.Red);
                         return false;
                     }
 

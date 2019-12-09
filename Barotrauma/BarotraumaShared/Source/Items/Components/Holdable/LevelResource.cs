@@ -8,8 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class LevelResource : ItemComponent, IServerSerializable
     {
-        private float lastSentDeattachTimer;
-
         private PhysicsBody trigger;
 
         private Holdable holdable;
@@ -38,7 +36,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (deattachTimer >= DeattachDuration)
                 {
-                    if (holdable.Attached){ item.CreateServerEvent(this); }
+                    if (holdable.Attached) { item.CreateServerEvent(this); }
                     holdable.DeattachFromWall();
                 }
                 else if (Math.Abs(lastSentDeattachTimer - deattachTimer) > 0.1f)
@@ -50,9 +48,15 @@ namespace Barotrauma.Items.Components
                 if (deattachTimer >= DeattachDuration)
                 {
                     holdable.DeattachFromWall();
+                    trigger.Enabled = false;
                 }
 #endif
             }
+        }
+
+        public bool Attached
+        {
+            get { return holdable == null ? false : holdable.Attached; }
         }
                 
         public LevelResource(Item item, XElement element) : base(item, element)
@@ -73,6 +77,7 @@ namespace Barotrauma.Items.Components
                 {
                     trigger.SetTransform(item.SimPosition, 0.0f);
                 }
+                IsActive = false;
             }
         }
 
@@ -113,11 +118,6 @@ namespace Barotrauma.Items.Components
                 trigger.Remove();
                 trigger = null;
             }
-        }
-
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            msg.Write(deattachTimer);
         }
     }
 }

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -44,25 +43,28 @@ namespace Barotrauma
             var newCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonContainer.RectTransform),
                 TextManager.Get("NewCampaign"), style: "GUITabButton")
             {
-                OnClicked = (btn, obj) =>
-                {
-                    newCampaignContainer.Visible = true;
-                    loadCampaignContainer.Visible = false;
-                    return true;
-                }
+                Selected = true
             };
 
             var loadCampaignButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.00f), buttonContainer.RectTransform),
-                TextManager.Get("LoadCampaign"), style: "GUITabButton")
-            {
-                OnClicked = (btn, obj) =>
-                {
-                    newCampaignContainer.Visible = false;
-                    loadCampaignContainer.Visible = true;
-                    return true;
-                }
-            };
+                TextManager.Get("LoadCampaign"), style: "GUITabButton");
 
+            newCampaignButton.OnClicked = (btn, obj) =>
+            {
+                newCampaignButton.Selected = true;
+                loadCampaignButton.Selected = false;
+                newCampaignContainer.Visible = true;
+                loadCampaignContainer.Visible = false;
+                return true;
+            };
+            loadCampaignButton.OnClicked = (btn, obj) =>
+            {
+                newCampaignButton.Selected = false;
+                loadCampaignButton.Selected = true;
+                newCampaignContainer.Visible = false;
+                loadCampaignContainer.Visible = true;
+                return true;
+            };
             loadCampaignContainer.Visible = false;
             
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;

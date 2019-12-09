@@ -194,13 +194,11 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Success;
             }
 
-
             if (serverPeer is LidgrenServerPeer)
             {
-                if (SteamManager.USE_STEAM)
-                {
-                    registeredToMaster = SteamManager.CreateServer(this, isPublic);
-                }
+#if USE_STEAM
+                registeredToMaster = SteamManager.CreateServer(this, isPublic);
+#endif
                 if (isPublic && !GameMain.Config.UseSteamMatchmaking)
                 {
                     CoroutineManager.StartCoroutine(RegisterToMasterServer());
@@ -1402,7 +1400,7 @@ namespace Barotrauma.Networking
                     if (item.PositionUpdateInterval == float.PositiveInfinity) { continue; }
                     float updateInterval = item.GetPositionUpdateInterval(c);
                     c.PositionUpdateLastSent.TryGetValue(item.ID, out float lastSent);
-                    if (lastSent > Lidgren.Network.NetTime.Now - item.PositionUpdateInterval) { continue; }
+                    if (lastSent > Lidgren.Network.NetTime.Now - updateInterval) { continue; }
                     if (!c.PendingPositionUpdates.Contains(item)) c.PendingPositionUpdates.Enqueue(item);
                 }
             }
@@ -2058,6 +2056,15 @@ namespace Barotrauma.Networking
 
             msg.Write(serverSettings.AllowRagdollButton);
 
+            //tell the client what content files they should preload
+            var contentToPreload = GameMain.GameSession.EventManager.GetFilesToPreload();
+            msg.Write((ushort)contentToPreload.Count());
+            foreach (ContentFile contentFile in contentToPreload)
+            {
+                msg.Write((byte)contentFile.Type);
+                msg.Write(contentFile.Path);
+            }
+
             serverSettings.WriteMonsterEnabled(msg);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
@@ -2284,7 +2291,7 @@ namespace Barotrauma.Networking
                     ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
                     lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                     lidgrenConn.IPEndPoint.Address.ToString();
-                    if (range) { ip = serverSettings.BanList.ToRange(ip); }
+                    if (range) { ip = BanList.ToRange(ip); }
                 }
 
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);

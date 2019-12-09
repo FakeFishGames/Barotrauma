@@ -527,9 +527,18 @@ namespace Barotrauma.Tutorials
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
-            textBlock.RectTransform.IsFixedSize = true;
+            List<ColorData> colorData = ColorData.GetColorData(text, out text);
+            GUITextBlock textBlock;
+            if (colorData == null)
+            {
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
+            }
+            else
+            {
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), colorData, " " + text, wrap: true);
+            }
 
+            textBlock.RectTransform.IsFixedSize = true;
             infoBoxClosedCallback = callback;
 
             if (hasButton)

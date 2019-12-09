@@ -32,12 +32,21 @@ namespace Barotrauma
         private float hudInfoHeight;
 
         private List<CharacterSound> sounds;
-
+        
         public bool ExternalHighlight;
+
+        /// <summary>
+        /// Is the character currently visible on the camera. Refresh the value by calling DoVisibilityCheck.
+        /// </summary>
+        public bool IsVisible
+        {
+            get;
+            private set;
+        } = true;
 
         //the Character that the player is currently controlling
         private static Character controlled;
-
+        
         public static Character Controlled
         {
             get { return controlled; }
@@ -51,7 +60,7 @@ namespace Barotrauma
         }
         
         private Dictionary<object, HUDProgressBar> hudProgressBars;
-        private List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
+        private readonly List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
 
         public Dictionary<object, HUDProgressBar> HUDProgressBars
         {
@@ -88,19 +97,19 @@ namespace Barotrauma
 
         public string BloodDecalName => Params.BloodDecal;
                 
-        private List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
             get { return bloodEmitters; }
         }
 
-        private List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> damageEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> DamageEmitters
         {
             get { return damageEmitters; }
         }
 
-        private List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> gibEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> GibEmitters
         {
             get { return gibEmitters; }
@@ -127,7 +136,7 @@ namespace Barotrauma
             }
         }
 
-        private List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
+        private readonly List<ObjectiveEntity> activeObjectiveEntities = new List<ObjectiveEntity>();
         public IEnumerable<ObjectiveEntity> ActiveObjectiveEntities
         {
             get { return activeObjectiveEntities; }
@@ -267,7 +276,7 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                 }
-                else if (Lights.LightManager.ViewTarget == this && Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
+                else if (Lights.LightManager.ViewTarget == this)
                 {
                     if (GUI.PauseMenuOpen || IsUnconscious)
                     {
@@ -276,7 +285,7 @@ namespace Barotrauma
                             cam.OffsetAmount = targetOffsetAmount = 0.0f;
                         }
                     }
-                    else
+                    else if (Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
                         Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
                         Structure structure = body?.UserData as Structure;
@@ -291,8 +300,14 @@ namespace Barotrauma
                 }
 
                 cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, targetOffsetAmount, 0.05f);
+                DoInteractionUpdate(deltaTime, mouseSimPos);
+            }
 
-                if (SelectedConstruction != null && SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)))
+            if (!GUI.PauseMenuOpen && !GUI.SettingsMenuOpen)
+            {
+                if (SelectedConstruction != null &&
+                    (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
+                    ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
                     {
@@ -302,12 +317,10 @@ namespace Barotrauma
                     }
                     //reset focus to prevent us from accidentally interacting with another entity
                     focusedItem = null;
-                    focusedCharacter = null;
+                    FocusedCharacter = null;
                     findFocusedTimer = 0.2f;
                     SelectedConstruction = null;
                 }
-
-                DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
             DisableControls = false;
@@ -594,6 +607,22 @@ namespace Barotrauma
                 CharacterHealth.AddToGUIUpdateList();
             }
         }
+
+        public void DoVisibilityCheck(Camera cam)
+        { 
+            IsVisible = false;
+            if (!Enabled || AnimController.SimplePhysicsEnabled) { return; }
+
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                float maxExtent = ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent());
+                if (limb.LightSource != null) { maxExtent = Math.Max(limb.LightSource.Range, maxExtent); }
+                if (limb.body.DrawPosition.X < cam.WorldView.X - maxExtent || limb.body.DrawPosition.X > cam.WorldView.Right + maxExtent) { continue; }
+                if (limb.body.DrawPosition.Y < cam.WorldView.Y - cam.WorldView.Height - maxExtent || limb.body.DrawPosition.Y > cam.WorldView.Y + maxExtent) { continue; }
+                IsVisible = true;
+                return;
+            }
+        }
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
@@ -610,7 +639,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) return;
+            if (!Enabled) { return; }
 
             if (GameMain.DebugDraw)
             {
@@ -677,7 +706,7 @@ namespace Barotrauma
             float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
             
             if (!GUI.DisableCharacterNames && hudInfoVisible && info != null &&
-                (controlled == null || this != controlled.focusedCharacter))
+                (controlled == null || this != controlled.FocusedCharacter))
             {
                 string name = Info.DisplayName;
                 if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");

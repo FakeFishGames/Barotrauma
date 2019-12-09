@@ -138,7 +138,12 @@ namespace Barotrauma
             get { return isSevered; }
             set
             {
+                if (isSevered == value) { return; }
                 isSevered = value;
+                if (isSevered)
+                {
+                    ragdoll.SubtractMass(this);
+                }
                 if (!isSevered) severedFadeOutTimer = 0.0f;
 #if CLIENT
                 if (isSevered) damageOverlayStrength = 100.0f;
@@ -609,7 +614,7 @@ namespace Barotrauma
             bool applyForces = (!attack.ApplyForcesOnlyOnce || !wasRunning) && diff.LengthSquared() > 0.00001f;
             if (applyForces)
             {
-                body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
                 {
                     foreach (int limbIndex in attack.ForceOnLimbIndices)
@@ -617,6 +622,7 @@ namespace Barotrauma
                         if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) continue;
 
                         Limb limb = character.AnimController.Limbs[limbIndex];
+                        limb.body.ApplyTorque(limb.Mass * character.AnimController.Dir * attack.Torque);
                         Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
                         limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos,
                             maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
@@ -624,6 +630,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
                     body.ApplyLinearImpulse(
                         Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), 

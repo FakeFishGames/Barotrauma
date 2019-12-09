@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -15,16 +14,20 @@ namespace Barotrauma
         public HashSet<Item> ignoredItems = new HashSet<Item>();
 
         public Func<Item, float> GetItemPriority;
+        public Func<Item, bool> ItemFilter;
+        public float TargetCondition { get; set; } = 1;
 
         //can be either tags or identifiers
         private string[] itemIdentifiers;
         public IEnumerable<string> Identifiers => itemIdentifiers;
-        private Item targetItem, moveToTarget;
+        private Item targetItem, moveToTarget, rootContainer;
+        private bool isDoneSeeking;
         public Item TargetItem => targetItem;
         private int currSearchIndex;
         public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
+        private bool checkInventory;
 
         public bool AllowToFindDivingGear { get; set; } = true;
 
@@ -58,21 +61,20 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-            if (checkInventory)
-            {
-                CheckInventory();
-            }
+            this.checkInventory = checkInventory;
         }
 
-        private void CheckInventory()
+        private bool CheckInventory()
         {
-            if (itemIdentifiers == null) { return; }
-            var item = character.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.Condition > 0, recursive: true);
+            if (itemIdentifiers == null) { return false; }
+            var item = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
             if (item != null)
             {
                 targetItem = item;
-                moveToTarget = item.GetRootContainer() ?? item;
+                rootContainer = item.GetRootContainer();
+                moveToTarget = rootContainer ?? item;
             }
+            return item != null;
         }
 
         protected override void Act(float deltaTime)
@@ -82,18 +84,18 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (targetItem == null)
+            if (itemIdentifiers != null && !isDoneSeeking)
             {
-                FindTargetItem();
-                if (targetItem == null || moveToTarget == null)
+                if (checkInventory)
                 {
-                    if (targetItem != null && moveToTarget == null)
+                    if (CheckInventory())
                     {
-#if DEBUG
-                        DebugConsole.ThrowError($"{character.Name}: Move to target is null!");
-#endif
-                        Abandon = true;
+                        isDoneSeeking = true;
                     }
+                }
+                if (!isDoneSeeking)
+                {
+                    FindTargetItem();
                     objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
                     return;
                 }
@@ -101,9 +103,11 @@ namespace Barotrauma
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else. Aborting.", Color.Yellow);
+                DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
-                Abandon = true;
+                // Try again
+                Reset();
+                return;
             }
             if (character.CanInteractWith(targetItem, out _, checkLinked: false))
             {
@@ -116,7 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                targetItem.TryInteract(character, forceSelectKey: true);
+
                 if (equip)
                 {
                     int targetSlot = -1;
@@ -133,13 +137,18 @@ namespace Barotrauma
                             var otherItem = character.Inventory.Items[i];
                             if (otherItem == null) { continue; }
                             //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                            if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && 
+                                character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any }))
+                            {
+                                continue;
+                            }
                             //if everything else fails, simply drop the existing item
                             otherItem.Drop(character);
                         }
                     }
                     if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
                     {
+                        targetItem.Equip(character);
                         IsCompleted = true;
                     }
                     else
@@ -152,7 +161,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    targetItem.ParentInventory.RemoveItem(targetItem);
                     if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
                     {
                         IsCompleted = true;
@@ -163,7 +171,6 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
-                        targetItem.Drop(character);
                     }
                 }
             }
@@ -172,22 +179,23 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective,
                     constructor: () =>
                     {
-                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear);
+                        return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear)
+                        {
+                            // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
+                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer,
+                            DialogueIdentifier = "dialogcannotreachtarget",
+                            TargetName = moveToTarget.Name
+                        };
                     },
                     onAbandon: () =>
                     {
-                        targetItem = null;
-                        moveToTarget = null;
                         ignoredItems.Add(targetItem);
-                        RemoveSubObjective(ref goToObjective);
+                        Reset();
                     },
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
         }
 
-        /// <summary>
-        /// searches for an item that matches the desired item and adds a goto subobjective if one is found
-        /// </summary>
         private void FindTargetItem()
         {
             if (itemIdentifiers == null)
@@ -205,16 +213,15 @@ namespace Barotrauma
             {
                 currSearchIndex++;
                 var item = Item.ItemList[currSearchIndex];
-                if (ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
+                if (item.CurrentHull == null) { continue; }
                 if (item.Submarine.TeamID != character.TeamID) { continue; }
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
-                if (item.CurrentHull == null || item.Condition <= 0.0f) { continue; }
-                if (itemIdentifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (!CheckItem(item)) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
@@ -228,19 +235,24 @@ namespace Barotrauma
                 float dist = Math.Abs(character.WorldPosition.X - itemPos.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 10000, dist));
                 itemPriority *= distanceFactor;
+                itemPriority *= item.Condition / item.MaxCondition;
                 //ignore if the item has a lower priority than the currently selected one
                 if (itemPriority < currItemPriority) { continue; }
                 currItemPriority = itemPriority;
                 targetItem = item;
                 moveToTarget = rootContainer ?? item;
+                this.rootContainer = rootContainer;
             }
-            //if searched through all the items and a target wasn't found, can't be completed
-            if (currSearchIndex >= Item.ItemList.Count - 1 && targetItem == null)
+            if (currSearchIndex >= Item.ItemList.Count - 1)
             {
+                isDoneSeeking = true;
+                if (targetItem == null)
+                {
 #if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
+                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
 #endif
-                Abandon = true;
+                    Abandon = true;
+                }
             }
         }
 
@@ -253,7 +265,7 @@ namespace Barotrauma
             }
             else if (itemIdentifiers != null)
             {
-                var matchingItem = character.Inventory.FindItem(i => !ignoredItems.Contains(i) && itemIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)), recursive: true);
+                var matchingItem = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
                 if (matchingItem != null)
                 {
                     return !equip || character.HasEquippedItem(matchingItem);
@@ -261,6 +273,25 @@ namespace Barotrauma
                 return false;
             }
             return false;
+        }
+
+        private bool CheckItem(Item item)
+        {
+            if (ignoredItems.Contains(item)) { return false; };
+            if (item.Condition < TargetCondition) { return false; }
+            if (ItemFilter != null && !ItemFilter(item)) { return false; }
+            return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            RemoveSubObjective(ref goToObjective);
+            targetItem = null;
+            moveToTarget = null;
+            rootContainer = null;
+            isDoneSeeking = false;
+            currSearchIndex = 0;
         }
     }
 }

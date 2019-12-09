@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Watchman Clothes" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+  <Item name="" identifier="watchmanclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />
     <Price locationtype="Outpost" buyprice="50" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,320,64,64" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="264,36,185,69" depth="0.6" origin="0.5,0.5" />
-    <Body width="100" height="50" density="30" />
-    <Wearable slots="Any,InnerClothes" msg="ItemMsgPickUpSelect" variants="1">
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="202,2,185,69" depth="0.6" origin="0.5,0.5" />
+    <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
+    <Wearable slots="Any,InnerClothes" variants="1" msg="ItemMsgPickUpSelect">
       <sprite name="Watchman Torso" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="Torso" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Watchman Left Upper Arm" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="LeftArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Watchman Right Upper Arm" texture="watchman_torso_[GENDER]_[VARIANT].png" limb="RightArm" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />

@@ -19,8 +19,8 @@ namespace Barotrauma
         bool caretVisible;
         float caretTimer;
 
-        private GUIFrame frame;
-        private GUITextBlock textBlock;
+        private readonly GUIFrame frame;
+        private readonly GUITextBlock textBlock;
 
         public Func<string, string> textFilterFunction;
 
@@ -48,7 +48,6 @@ namespace Barotrauma
             get { return _caretIndex; }
             set
             {
-                previousCaretIndex = _caretIndex;
                 _caretIndex = value;
                 caretPosDirty = true;
             }
@@ -63,7 +62,6 @@ namespace Barotrauma
         private int selectionStartIndex;
         private int selectionEndIndex;
         private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
-        private int previousCaretIndex;
         private Vector2 selectionStartPos;
         private Vector2 selectionEndPos;
         private Vector2 selectionRectSize;

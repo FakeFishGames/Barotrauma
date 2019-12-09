@@ -333,6 +333,9 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool ShowContentsInTooltip { get; private set; }
+
         private HashSet<string> preferredContainers = new HashSet<string>();
         [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
         public string PreferredContainers
@@ -525,21 +528,46 @@ namespace Barotrauma
             ConfigElement = element;
 
             OriginalName = element.GetAttributeString("name", "");
+            name = OriginalName;
             identifier = element.GetAttributeString("identifier", "");
+
+            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
+            {
+                category = MapEntityCategory.Misc;
+            }
+            Category = category;
 
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
-            if (string.IsNullOrEmpty(nameIdentifier))
+            if (string.IsNullOrEmpty(OriginalName))
             {
-                name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    name = TextManager.Get("EntityName." + identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                }
             }
-            else
+            else if (Category == MapEntityCategory.Legacy)
             {
-                name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefrore
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                }
+                else
+                {
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                }
             }
 
-            if (name == "") { DebugConsole.ThrowError("Unnamed item in " + filePath + "!"); }
+            if (string.IsNullOrEmpty(name))
+            {
+                DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
+            }
 
             DebugConsole.Log("    " + name);
 
@@ -547,12 +575,6 @@ namespace Barotrauma
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
             Aliases.Add(OriginalName.ToLowerInvariant());
-
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
-            {
-                category = MapEntityCategory.Misc;
-            }
-            Category = category;
             
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();
@@ -572,16 +594,17 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            string translatedDescription = "";
-            if (string.IsNullOrEmpty(nameIdentifier))
+            if (string.IsNullOrEmpty(Description))
             {
-                translatedDescription = TextManager.Get("EntityDescription." + identifier, true);
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    Description = TextManager.Get("EntityDescription." + identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
             }
-            else
-            {
-                translatedDescription = TextManager.Get("EntityDescription." + nameIdentifier, true);
-            }
-            if (!string.IsNullOrEmpty(translatedDescription)) Description = translatedDescription;
 
             foreach (XElement subElement in element.Elements())
             {

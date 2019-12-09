@@ -1,10 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -19,7 +15,6 @@ namespace Barotrauma.Items.Components
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), i });
             }
-
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
@@ -35,6 +30,35 @@ namespace Barotrauma.Items.Components
                 msg.Write(nodes[i].X);
                 msg.Write(nodes[i].Y);
             }
+        }
+
+        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        {
+            int nodeCount = msg.ReadByte();
+            Vector2 lastNodePos = Vector2.Zero;
+            if (nodeCount > 0)
+            {
+                lastNodePos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+            }
+
+            if (!item.CanClientAccess(c)) { return; }
+
+            if (nodes.Count > nodeCount)
+            {
+                nodes.RemoveRange(nodeCount, nodes.Count - nodeCount);
+            }
+            if (nodeCount > 0)
+            {
+                if (nodeCount > nodes.Count)
+                {
+                    nodes.Add(lastNodePos);
+                }
+                else
+                {
+                    nodes[nodes.Count - 1] = lastNodePos;
+                }
+            }
+            CreateNetworkEvent();
         }
     }
 }

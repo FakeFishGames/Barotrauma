@@ -20,7 +20,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, SteamWorkshop = 10, Credits = 11, Empty = 12 }
+        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, ProfilingTestBench = 10, SteamWorkshop = 11, Credits = 12, Empty = 13 }
 
         private readonly GUIComponent buttonsParent;
 
@@ -29,7 +29,7 @@ namespace Barotrauma
         private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox/*, useUpnpBox*/;
+        private GUITickBox isPublicBox, wrongPasswordBanBox;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -215,17 +215,15 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            if (Steam.SteamManager.USE_STEAM)
+#if USE_STEAM            
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
-                {
-                    ForceUpperCase = true,
-                    Enabled = false,
-                    UserData = Tab.SteamWorkshop,
-                    OnClicked = SelectTab
-                };
-            }
-
+                ForceUpperCase = true,
+                Enabled = false,
+                UserData = Tab.SteamWorkshop,
+                OnClicked = SelectTab
+            };
+#endif
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
@@ -288,11 +286,23 @@ namespace Barotrauma
 
             //debug button for quickly starting a new round
 #if DEBUG
-            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 40) },
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 80) },
                 "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 130) },
+                "Profiling", style: "GUIButtonLarge", color: Color.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.ProfilingTestBench,
+                ToolTip = "Enables performance indicators and starts the game with a fixed sub, crew and level to make it easier to compare the performance between sessions.",
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -398,7 +408,7 @@ namespace Barotrauma
 
             Submarine.Unload();
             
-            ResetButtonStates(null);
+            ResetButtonStates();
 
             GameAnalyticsManager.SetCustomDimension01("");
 
@@ -431,111 +441,152 @@ namespace Barotrauma
         private bool SelectTab(GUIButton button, object obj)
         {
             titleText.Visible = true;
-            if (obj is Tab)
+            if (obj is Tab tab)
             {
-                if (GameMain.Config.UnsavedSettings)
-                {
-                    var applyBox = new GUIMessageBox(
-                        TextManager.Get("ApplySettingsLabel"),
-                        TextManager.Get("ApplySettingsQuestion"),
-                        new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
-                    applyBox.Buttons[0].UserData = (Tab)obj;
-                    applyBox.Buttons[0].OnClicked = (tb, userdata) =>
-                    {
-                        applyBox.Close(button, userdata);
-                        ApplySettings(button, userdata);
-                        return true;
-                    };
-
-                    applyBox.Buttons[1].UserData = (Tab)obj;
-                    applyBox.Buttons[1].OnClicked = (tb, userdata) =>
-                    {
-                        applyBox.Close(button, userdata);
-                        DiscardSettings(button, userdata);
-                        return true;
-                    };
-                    return false;
-                }
-
-                GameMain.Config.ResetSettingsFrame();
-                selectedTab = (Tab)obj;
-
-                switch (selectedTab)
-                {
-                    case Tab.NewGame:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
-                            return true;
-                        }
-                        campaignSetupUI.CreateDefaultSaveName();
-                        campaignSetupUI.RandomizeSeed();
-                        campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
-                        break;
-                    case Tab.LoadGame:
-                        campaignSetupUI.UpdateLoadMenu();
-                        break;
-                    case Tab.Settings:
-                        menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
-                        GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
-                        GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
-                        break;
-                    case Tab.JoinServer:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
-                            return true;
-                        }
-                        GameMain.ServerListScreen.Select();
-                        break;
-                    case Tab.HostServer:
-                        SetServerPlayStyle(PlayStyle.Serious);
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
-                            return true;
-                        }
-                        break;
-                    case Tab.Tutorials:
-                        if (!GameMain.Config.CampaignDisclaimerShown)
-                        {
-                            selectedTab = 0;
-                            GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
-                            return true;
-                        }
-                        UpdateTutorialList();
-                        break;
-                    case Tab.CharacterEditor:
-                        Submarine.MainSub = null;
-                        GameMain.CharacterEditorScreen.Select();
-                        break;
-                    case Tab.SubmarineEditor:
-                        GameMain.SubEditorScreen.Select();
-                        break;
-                    case Tab.QuickStartDev:
-                        QuickStart();
-                        break;
-                    case Tab.SteamWorkshop:
-                        if (!Steam.SteamManager.IsInitialized) return false;
-                        GameMain.SteamWorkshopScreen.Select();
-                        break;
-                    case Tab.Credits:
-                        titleText.Visible = false;
-                        creditsPlayer.Restart();
-                        break;
-                }
+                SelectTab(tab);
             }
             else
             {
-                titleText.Visible = true;
-                selectedTab = 0;
+                SelectTab(Tab.Empty);
+            }
+            return true;
+        }
+
+        private bool SelectTab(Tab tab)
+        {
+            titleText.Visible = true;
+
+            if (GameMain.Config.UnsavedSettings)
+            {
+                var applyBox = new GUIMessageBox(
+                    TextManager.Get("ApplySettingsLabel"),
+                    TextManager.Get("ApplySettingsQuestion"),
+                    new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
+                applyBox.Buttons[0].UserData = tab;
+                applyBox.Buttons[0].OnClicked = (tb, userdata) =>
+                {
+                    applyBox.Close();
+                    ApplySettings();
+                    SelectTab(tab);
+                    return true;
+                };
+
+                applyBox.Buttons[1].UserData = tab;
+                applyBox.Buttons[1].OnClicked = (tb, userdata) =>
+                {
+                    applyBox.Close();
+                    DiscardSettings();
+                    SelectTab(tab);
+                    return true;
+                };
+                return false;
             }
 
-            if (button != null) button.Selected = true;
-            ResetButtonStates(button);
+            GameMain.Config.ResetSettingsFrame();
+            selectedTab = tab;
+
+            switch (selectedTab)
+            {
+                case Tab.NewGame:
+                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    {
+                        selectedTab = 0;
+                        ShowTutorialSkipWarning(tab);
+                        return true;
+                    }
+                    if (!GameMain.Config.CampaignDisclaimerShown)
+                    {
+                        selectedTab = 0;
+                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
+                        return true;
+                    }
+                    campaignSetupUI.CreateDefaultSaveName();
+                    campaignSetupUI.RandomizeSeed();
+                    campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
+                    break;
+                case Tab.LoadGame:
+                    campaignSetupUI.UpdateLoadMenu();
+                    break;
+                case Tab.Settings:
+                    menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
+                    GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
+                    GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
+                    break;
+                case Tab.JoinServer:
+                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    {
+                        selectedTab = 0;
+                        ShowTutorialSkipWarning(tab);
+                        return true;
+                    }
+                    if (!GameMain.Config.CampaignDisclaimerShown)
+                    {
+                        selectedTab = 0;
+                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
+                        return true;
+                    }
+                    GameMain.ServerListScreen.Select();
+                    break;
+                case Tab.HostServer:
+                    if (GameMain.Config.ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+                    {
+                        new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
+                        selectedTab = 0;
+                        return false;
+                    }
+                    SetServerPlayStyle(PlayStyle.Serious);
+                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    {
+                        selectedTab = 0;
+                        ShowTutorialSkipWarning(tab);
+                        return true;
+                    }
+                    if (!GameMain.Config.CampaignDisclaimerShown)
+                    {
+                        selectedTab = 0;
+                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
+                        return true;
+                    }
+                    break;
+                case Tab.Tutorials:
+                    if (!GameMain.Config.CampaignDisclaimerShown)
+                    {
+                        selectedTab = 0;
+                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
+                        return true;
+                    }
+                    UpdateTutorialList();
+                    break;
+                case Tab.CharacterEditor:
+                    Submarine.MainSub = null;
+                    GameMain.CharacterEditorScreen.Select();
+                    break;
+                case Tab.SubmarineEditor:
+                    GameMain.SubEditorScreen.Select();
+                    break;
+                case Tab.QuickStartDev:
+                    QuickStart();
+                    break;
+                case Tab.ProfilingTestBench:
+                    QuickStart(fixedSeed: true);
+                    GameMain.ShowPerf = true;
+                    GameMain.ShowFPS = true;
+                    break;
+                case Tab.SteamWorkshop:
+                    if (!Steam.SteamManager.IsInitialized) return false;
+                    GameMain.SteamWorkshopScreen.Select();
+                    break;
+                case Tab.Credits:
+                    titleText.Visible = false;
+                    creditsPlayer.Restart();
+                    break;
+                case Tab.Empty:
+                    titleText.Visible = true;
+                    selectedTab = 0;
+                    break;
+            }
+            
+            ResetButtonStates();
 
             return true;
         }
@@ -550,7 +601,7 @@ namespace Barotrauma
             }
             else
             {
-                ResetButtonStates(button);
+                ResetButtonStates();
             }
 
             SelectTab(null, 0);
@@ -558,20 +609,27 @@ namespace Barotrauma
             return true;
         }
 
-        private void ResetButtonStates(GUIButton button)
+        private void ResetButtonStates()
         {
             foreach (GUIComponent child in buttonsParent.Children)
             {
-                GUIButton otherButton = child as GUIButton;
-                if (otherButton == null || otherButton == button) continue;
+                GUIButton btn = child as GUIButton;
+                if (btn == null || !(btn.UserData is Tab)) { continue; }
 
-                otherButton.Selected = false;
+                btn.Selected = (Tab)btn.UserData == selectedTab;
             }
         }
-#endregion
 
-        private void QuickStart()
+        #endregion
+
+        private void QuickStart(bool fixedSeed = false)
         {
+            if (fixedSeed)
+            {
+                Rand.SetSyncedSeed(1);
+                Rand.SetLocalRandom(1);
+            }
+
             Submarine selectedSub = null;
             string subName = GameMain.Config.QuickStartSubmarineName;
             if (!string.IsNullOrEmpty(subName))
@@ -597,13 +655,13 @@ namespace Barotrauma
                 GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                 missionPrefab: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(ToolBox.RandomSeed(8));
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8));
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic" };
             for (int i = 0; i < 3; i++)
             {
-                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                var spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub, useSyncedRand: true);
                 if (spawnPoint == null)
                 {
                     DebugConsole.ThrowError("No spawnpoints found in the selected submarine. Quickstart failed.");
@@ -623,6 +681,27 @@ namespace Barotrauma
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;
             }         
+        }
+
+        private void ShowTutorialSkipWarning(Tab tabToContinueTo)
+        {
+            var tutorialSkipWarning = new GUIMessageBox("", TextManager.Get("tutorialskipwarning"), new string[] { TextManager.Get("tutorialwarningskiptutorials"), TextManager.Get("tutorialwarningplaytutorials") });
+            tutorialSkipWarning.Buttons[0].OnClicked += (btn, userdata) =>
+            {
+                GameMain.Config.ShowTutorialSkipWarning = false;
+                GameMain.Config.SaveNewPlayerConfig();
+                tutorialSkipWarning.Close();
+                SelectTab(tabToContinueTo);
+                return true;
+            };
+            tutorialSkipWarning.Buttons[1].OnClicked += (btn, userdata) =>
+            {
+                GameMain.Config.ShowTutorialSkipWarning = false;
+                GameMain.Config.SaveNewPlayerConfig();
+                tutorialSkipWarning.Close();
+                SelectTab(Tab.Tutorials);
+                return true;
+            };
         }
 
         private void UpdateTutorialList()
@@ -667,12 +746,10 @@ namespace Barotrauma
             GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
         }
 
-        private bool ApplySettings(GUIButton button, object userData)
+        private void ApplySettings()
         {
             GameMain.Config.SaveNewPlayerConfig();
-
-            if (userData is Tab) { SelectTab(button, (Tab)userData); }
-
+            
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
                 GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
                 ContentPackage.List.Any(cp => cp.NeedsRestart))
@@ -681,16 +758,11 @@ namespace Barotrauma
                     TextManager.Get("RestartRequiredLabel"),
                     TextManager.Get("RestartRequiredGeneric"));
             }
-
-            return true;
         }
 
-        private bool DiscardSettings(GUIButton button, object userData)
+        private void DiscardSettings()
         {
             GameMain.Config.LoadPlayerConfig();
-            if (userData is Tab) SelectTab(button, (Tab)userData);
-
-            return true;
         }
         
         private bool JoinServerClicked(GUIButton button, object obj)
@@ -757,6 +829,7 @@ namespace Barotrauma
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
+                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -769,8 +842,7 @@ namespace Barotrauma
                 }
 
                 int ownerKey = 0;
-
-                if (Steam.SteamManager.GetSteamID()!=0)
+                if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
@@ -826,22 +898,20 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 #if !DEBUG
-            if (Steam.SteamManager.USE_STEAM)
+#if USE_STEAM
+            if (GameMain.Config.UseSteamMatchmaking)
             {
-                if (GameMain.Config.UseSteamMatchmaking)
-                {
-                    joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                    hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                }
-                steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
+                joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
             }
+            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;            
+#endif
 #else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                steamWorkshopButton.Enabled = true;
-            }
+#if USE_STEAM
+            steamWorkshopButton.Enabled = true;
+#endif
 #endif
         }
 
@@ -856,8 +926,7 @@ namespace Barotrauma
 
             if (backgroundSprite != null)
             {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, 
-                    blurAmount: 0.0f, 
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite,
                     aberrationStrength: 0.0f);
             }
 
@@ -1122,17 +1191,15 @@ namespace Barotrauma
             {
                 Censor = true
             };
-            
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
+
+            var tickboxArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-            
-            /* TODO: remove UPnP altogether?
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
-            {
-                ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };*/
+
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {

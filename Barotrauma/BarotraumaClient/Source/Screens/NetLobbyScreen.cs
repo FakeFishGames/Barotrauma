@@ -91,9 +91,7 @@ namespace Barotrauma
         public GUIFrame JobSelectionFrame;
 
         public GUIListBox JobList;
-
-        private Rectangle[] voipSheetRects;
-
+        
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -579,11 +577,11 @@ namespace Barotrauma
 
             //server log ----------------------------------------------------------------------
 
-            serverLogBox = new GUIListBox(new RectTransform(new Vector2(0.7f, 1.0f), serverLogHolderHorizontal.RectTransform));
+            serverLogBox = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), serverLogHolderHorizontal.RectTransform));
 
             //filter tickbox list ------------------------------------------------------------------
 
-            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.3f, 1.0f), serverLogHolderHorizontal.RectTransform) { MinSize = new Point(150, 0) })
+            serverLogFilterTicks = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), serverLogHolderHorizontal.RectTransform) { MinSize = new Point(150, 0) })
             {
                 OnSelected = (component, userdata) => { return false; }
             };
@@ -1214,8 +1212,6 @@ namespace Barotrauma
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
 
-            GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
-
             if (campaignUI?.StartButton != null)
             {
                 campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&
@@ -1545,7 +1541,7 @@ namespace Barotrauma
             if (!sub.RequiredContentPackagesInstalled)
             {
                 subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
-                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.ToolTip;
+                frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.RawToolTip;
             }
 
             if (sub.HasTag(SubmarineTag.Shuttle))
@@ -1554,7 +1550,7 @@ namespace Barotrauma
                     TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
-                    ToolTip = subTextBlock.ToolTip,
+                    ToolTip = subTextBlock.RawToolTip,
                     CanBeFocused = false
                 };
                 //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
@@ -1672,7 +1668,7 @@ namespace Barotrauma
                 UserData = client
             };
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                "GUISoundIcon")
+                sprite: GUI.Style.GetComponentStyle("GUISoundIcon").Sprites[GUIComponent.ComponentState.None].FirstOrDefault().Sprite, scaleToFit: true)
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
@@ -1680,19 +1676,7 @@ namespace Barotrauma
                 OverrideState = GUIComponent.ComponentState.None,
                 HoverColor = Color.White
             };
-
-            if (voipSheetRects == null)
-            {
-                Point sourceRectSize = soundIcon.Style.Sprites.First().Value.First().Sprite.SourceRect.Size;
-                var indexPieces = soundIcon.Style.Element.Attribute("sheetindices").Value.Split(';');
-                voipSheetRects = new Rectangle[indexPieces.Length];
-                for (int i = 0; i < indexPieces.Length; i++)
-                {
-                    Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
-                    voipSheetRects[i] = new Rectangle(location, sourceRectSize);
-                }
-            }
-
+            
             new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) }, 
                 "GUISoundIconDisabled")
             {
@@ -1753,7 +1737,7 @@ namespace Barotrauma
             if (playerFrame == null) { return; }
             var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
             Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
-            userdata.Second = 0.18f;
+            userdata.Second = Math.Max(userdata.Second,   0.18f);
             soundIcon.Visible = true;
         }
 
@@ -2130,34 +2114,26 @@ namespace Barotrauma
             {
                 if (child.UserData is Client client)
                 {
-                    var soundIcon = child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
-                    if (soundIcon != null)
+                    if (child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") is GUIImage soundIcon)
                     {
-                        Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
-                        if (userdata.Second >= 0.0f)
+                        double voipAmplitude = 0.0f;
+                        if (client.ID != GameMain.Client.ID)
                         {
-                            userdata.Second = userdata.Second - (float)deltaTime;
-
-                            if (userdata.Second < 0.0f)
+                            voipAmplitude = client.VoipSound?.CurrentAmplitude ?? 0.0f;
+                        }
+                        else
+                        {
+                            var voip = VoipCapture.Instance;
+                            if (voip == null)
                             {
-                                soundIcon.Visible = false;
+                                voipAmplitude = 0;
                             }
-                            else
+                            else if (voip.LastEnqueueAudio > DateTime.Now - new TimeSpan(0, 0, 0, 0, milliseconds: 100))
                             {
-                                int sheetIndex = 0;
-                                if (client.ID != GameMain.Client.ID)
-                                {
-                                    sheetIndex = (int)Math.Floor((client.VoipSound?.CurrentAmplitude ?? 0.0f) * (voipSheetRects.Length - 0.99f));
-                                }
-                                else
-                                {
-                                    sheetIndex = (int)Math.Floor((VoipCapture.Instance?.LastAmplitude ?? 0.0) * (voipSheetRects.Length - 0.99f));
-                                }
-                                if (sheetIndex < 0) { sheetIndex = 0; }
-                                if (sheetIndex > voipSheetRects.Length-1) { sheetIndex = voipSheetRects.Length-1; }
-                                soundIcon.sprites.First().Value.First().Sprite.SourceRect = voipSheetRects[sheetIndex];
+                                voipAmplitude = voip.LastAmplitude;
                             }
                         }
+                        VoipClient.UpdateVoiceIndicator(soundIcon, (float)voipAmplitude, (float)deltaTime);
                     }
                 }
             }
@@ -2684,7 +2660,11 @@ namespace Barotrauma
                 recalculateInnerFrame();
             }
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter), jobPrefab.Name, textAlignment: Alignment.Center)
+            var textBlock = new GUITextBlock(
+              innerFrame.CountChildren == 0 ?
+                  new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center) :
+                  new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter),
+              jobPrefab.Name, textAlignment: Alignment.Center)
             {
                 TextColor = jobPrefab.UIColor,
                 CanBeFocused = false,

@@ -10,6 +10,7 @@ namespace Barotrauma
     class AIObjectiveIdle : AIObjective
     {
         public override string DebugTag => "idle";
+        public override bool UnequipItems => true;
 
         private readonly float newTargetIntervalMin = 10;
         private readonly float newTargetIntervalMax = 20;
@@ -103,9 +104,9 @@ namespace Barotrauma
                 {
                     newTargetTimer = 0;
                 }
-                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0)
+                else if (Math.Abs(character.AnimController.TargetMovement.Y) > 0.9f)
                 {
-                    // Don't allow new targets when climbing.
+                    // Don't allow new targets when climbing straight up or down
                     newTargetTimer = Math.Max(newTargetIntervalMin, newTargetTimer);
                 }
             }

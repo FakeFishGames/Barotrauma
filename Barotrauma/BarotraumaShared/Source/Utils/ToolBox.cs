@@ -269,20 +269,27 @@ namespace Barotrauma
 
         public static string SecondsToReadableTime(float seconds)
         {
-            //TODO: localize time format
             int s = (int)(seconds % 60.0f);
             if (seconds < 60.0f)
             {
-                return s + " s";
+                return TextManager.GetWithVariable("timeformatseconds", "[seconds]", s.ToString());
             }
 
             int h = (int)(seconds / (60.0f * 60.0f));
             int m = (int)((seconds / 60.0f) % 60);
 
             string text = "";
-            if (h != 0) { text = h + " h"; }
-            if (m != 0) { text = string.IsNullOrEmpty(text) ? m + " m" : string.Join(" ", text, m, "m"); }
-            if (s != 0) { text = string.IsNullOrEmpty(text) ? s + " s" : string.Join(" ", text, s, "s"); }
+            if (h != 0) { text = TextManager.GetWithVariable("timeformathours", "[hours]", h.ToString()); }
+            if (m != 0)
+            {
+                string minutesText = TextManager.GetWithVariable("timeformatminutes", "[minutes]", m.ToString());
+                text = string.IsNullOrEmpty(text) ? minutesText : string.Join(" ", text, minutesText);
+            }
+            if (s != 0)
+            {
+                string secondsText = TextManager.GetWithVariable("timeformatseconds", "[seconds]", s.ToString());
+                text = string.IsNullOrEmpty(text) ? secondsText : string.Join(" ", text, secondsText);
+            }
             return text;
         }
 

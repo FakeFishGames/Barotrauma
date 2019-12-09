@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
 
             foreach (var property in properties)
             {
-                SerializableProperty objProperty = new SerializableProperty(property, this);
+                SerializableProperty objProperty = new SerializableProperty(property);
                 SerializableProperties.Add(property.Name.ToLowerInvariant(), objProperty);
             }
         }
@@ -510,7 +510,7 @@ namespace Barotrauma.Networking
 
             string minRespawnLabel = TextManager.Get("ServerSettingsMinRespawn") + " ";
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            slider.ToolTip = minRespawnText.ToolTip;
+            slider.ToolTip = minRespawnText.RawToolTip;
             slider.UserData = minRespawnText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(0.0f, 1.0f);
@@ -529,7 +529,7 @@ namespace Barotrauma.Networking
 
             string respawnDurationLabel = TextManager.Get("ServerSettingsRespawnDuration") + " ";
             CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            slider.ToolTip = respawnDurationText.ToolTip;
+            slider.ToolTip = respawnDurationText.RawToolTip;
             slider.UserData = respawnDurationText;
             slider.Step = 0.1f;
             slider.Range = new Vector2(60.0f, 660.0f);
@@ -766,7 +766,7 @@ namespace Barotrauma.Networking
             };
             GetPropertyData("KickVoteRequiredRatio").AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
-
+            
             CreateLabeledSlider(antigriefingTab, "ServerSettingsAutobanTime", out slider, out sliderLabel);
             string autobanLabel = sliderLabel.Text + " ";
             slider.Step = 0.01f;
@@ -778,6 +778,16 @@ namespace Barotrauma.Networking
             };
             GetPropertyData("AutoBanTime").AssignGUIComponent(slider);
             slider.OnMoved(slider, slider.BarScroll);
+
+            var wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
+            GetPropertyData("BanAfterWrongPassword").AssignGUIComponent(wrongPasswordBanBox);
+            var allowedPasswordRetries = CreateLabeledNumberInput(antigriefingTab, "ServerSettingsPasswordRetriesBeforeBan", 0, 10);
+            GetPropertyData("MaxPasswordRetriesBeforeBan").AssignGUIComponent(allowedPasswordRetries);
+            wrongPasswordBanBox.OnSelected += (tb) =>
+            {
+                allowedPasswordRetries.Enabled = tb.Selected;
+                return true;
+            };
 
             // karma --------------------------------------------------------------------------
 
@@ -860,6 +870,24 @@ namespace Barotrauma.Networking
 
             //slider has a reference to the label to change the text when it's used
             slider.UserData = label;
+        }
+
+        private GUINumberInput CreateLabeledNumberInput(GUIComponent parent, string labelTag, int min, int max)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f,
+                ToolTip = TextManager.Get(labelTag)
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform),
+                TextManager.Get(labelTag), font: GUI.SmallFont);
+            return new GUINumberInput(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform), GUINumberInput.NumberType.Int)
+            {
+                MinValueInt = min,
+                MaxValueInt = max
+            };
         }
 
         private bool SelectSettingsTab(GUIButton button, object obj)

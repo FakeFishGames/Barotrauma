@@ -1,5 +1,6 @@
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
 using EventInput;
@@ -84,21 +85,16 @@ namespace Barotrauma
         private static Sprite Cursor => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents;
-        
-        private static GraphicsDevice graphicsDevice;
-        public static GraphicsDevice GraphicsDevice
-        {
-            get
-            {
-                return graphicsDevice;
-            }
-        }
+
+        public static GraphicsDevice GraphicsDevice { get; private set; }
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         public static GUIFrame PauseMenu { get; private set; }
         private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
+
+        public static bool HideCursor;
 
         public static KeyboardDispatcher KeyboardDispatcher { get; set; }
 
@@ -108,6 +104,9 @@ namespace Barotrauma
         public static bool ScreenChanged;
 
         public static ScalableFont Font => Style?.Font;
+
+        // Usable in CJK as a regular font
+        public static ScalableFont GlobalFont => Style?.GlobalFont;
         public static ScalableFont UnscaledSmallFont => Style?.UnscaledSmallFont;
         public static ScalableFont SmallFont => Style?.SmallFont;
         public static ScalableFont LargeFont => Style?.LargeFont;
@@ -184,7 +183,7 @@ namespace Barotrauma
 
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
-            GUI.graphicsDevice = graphicsDevice;
+            GUI.GraphicsDevice = graphicsDevice;
 
             var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
             XElement selectedStyle = null;
@@ -482,7 +481,7 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
 
-            if (GameMain.WindowActive)
+            if (GameMain.WindowActive && !HideCursor)
             {
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
@@ -490,9 +489,10 @@ namespace Barotrauma
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
+            HideCursor = false;
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float blurAmount = 1.0f, float aberrationStrength = 1.0f)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float aberrationStrength = 1.0f)
         {
             double aberrationT = (Timing.TotalTime * 0.5f);
             GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
@@ -522,15 +522,15 @@ namespace Barotrauma
         }
 
         #region Update list
-        private static List<GUIComponent> updateList = new List<GUIComponent>();
+        private static readonly List<GUIComponent> updateList = new List<GUIComponent>();
         //essentially a copy of the update list, used as an optimization to quickly check if the component is present in the update list
-        private static HashSet<GUIComponent> updateListSet = new HashSet<GUIComponent>();
-        private static Queue<GUIComponent> removals = new Queue<GUIComponent>();
-        private static Queue<GUIComponent> additions = new Queue<GUIComponent>();
+        private static readonly HashSet<GUIComponent> updateListSet = new HashSet<GUIComponent>();
+        private static readonly Queue<GUIComponent> removals = new Queue<GUIComponent>();
+        private static readonly Queue<GUIComponent> additions = new Queue<GUIComponent>();
         // A helpers list for all elements that have a draw order less than 0.
-        private static List<GUIComponent> first = new List<GUIComponent>();
+        private static readonly List<GUIComponent> first = new List<GUIComponent>();
         // A helper list for all elements that have a draw order greater than 0.
-        private static List<GUIComponent> last = new List<GUIComponent>();
+        private static readonly List<GUIComponent> last = new List<GUIComponent>();
 
         /// <summary>
         /// Adds the component on the addition queue.
@@ -814,6 +814,26 @@ namespace Barotrauma
             DrawLine(sb, t, start, end, clr, depth, width);
         }
 
+        public static void DrawLine(SpriteBatch sb, Sprite sprite, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        {
+            Vector2 edge = end - start;
+            // calculate angle to rotate line
+            float angle = (float)Math.Atan2(edge.Y, edge.X);
+
+            sb.Draw(sprite.Texture,
+                new Rectangle(// rectangle defines shape of line and position of start of line
+                    (int)start.X,
+                    (int)start.Y,
+                    (int)edge.Length(), //sb will strech the texture to fill this rectangle
+                    width), //width of line, change this to make thicker line
+                sprite.SourceRect,
+                clr, //colour of line
+                angle,     //angle of line (calulated above)
+                new Vector2(0, sprite.SourceRect.Height / 2), // point in line about which to rotate
+                SpriteEffects.None,
+                depth);
+        }
+
         public static void DrawLine(SpriteBatch sb, Texture2D texture, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
         {
             Vector2 edge = end - start;
@@ -844,6 +864,18 @@ namespace Barotrauma
             }
 
             font.DrawString(sb, text, pos, color);
+        }
+
+        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
+        {
+            if (font == null) font = Font;
+            if (backgroundColor != null)
+            {
+                Vector2 textSize = font.MeasureString(text);
+                DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true, depth, 5);
+            }
+
+            font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, colorData);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
@@ -1221,7 +1253,7 @@ namespace Barotrauma
         {
             font = font ?? SmallFont;
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, elementHeight), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };
@@ -1242,7 +1274,7 @@ namespace Barotrauma
         {
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
             font = font ?? SmallFont;
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };
@@ -1286,7 +1318,7 @@ namespace Barotrauma
         public static GUIComponent CreatePointField(Point value, int elementHeight, string displayName, RectTransform parent, string toolTip = null)
         {
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: SmallFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), displayName, font: SmallFont)
             {
                 ToolTip = toolTip
             };
@@ -1317,7 +1349,7 @@ namespace Barotrauma
         {
             font = font ?? SmallFont;
             var frame = new GUIFrame(new RectTransform(new Point(parent.Rect.Width, Math.Max(elementHeight, 26)), parent), color: Color.Transparent);
-            var label = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), name, font: font)
+            new GUITextBlock(new RectTransform(new Vector2(0.4f, 1), frame.RectTransform), name, font: font)
             {
                 ToolTip = toolTip
             };
@@ -1609,6 +1641,37 @@ namespace Barotrauma
                                 return true;
                             };
                             return true;
+                        };
+                    }
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    {
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("EndRound"), style: "GUIButtonLarge")
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
+                                if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                                {
+                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                                    {
+                                        UserData = "verificationprompt"
+                                    };
+                                    msgBox.Buttons[0].OnClicked = (_, __) =>
+                                    {
+                                        TogglePauseMenu(btn, userdata);
+                                        GameMain.Client.RequestRoundEnd();
+                                        return true;
+                                    };
+                                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                                }
+                                else
+                                {
+                                    TogglePauseMenu(btn, userdata);
+                                    GameMain.Client.RequestRoundEnd();
+                                }
+                                return true;
+                            }
                         };
                     }
                 }

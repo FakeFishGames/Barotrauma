@@ -144,14 +144,14 @@ namespace Barotrauma
             }
             set
             {
-                textBlock.ToolTip = value;
                 base.ToolTip = value;
+                textBlock.ToolTip = value;                
             }
         }
         
         public bool Selected { get; set; }
         
-        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
+        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null, ScalableFont font = null) : base(style, rectT)
         {
             CanBeFocused = true;
 
@@ -161,7 +161,7 @@ namespace Barotrauma
             }
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style) { CanBeFocused = false };
             if (style != null) GUI.Style.Apply(frame, style == "" ? "GUIButton" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, style: null)
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT), text, textAlignment: textAlignment, style: null, font: font)
             {
                 TextColor = this.style == null ? Color.Black : this.style.textColor,
                 CanBeFocused = false

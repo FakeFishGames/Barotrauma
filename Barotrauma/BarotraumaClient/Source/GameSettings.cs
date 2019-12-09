@@ -22,8 +22,6 @@ namespace Barotrauma
 
         private readonly Point MinSupportedResolution = new Point(1024, 540);
 
-        private bool contentPackageSelectionDirty;
-
         private GUIFrame settingsFrame;
         private GUIButton applyButton;
 
@@ -31,6 +29,12 @@ namespace Barotrauma
         private GUIButton[] tabButtons;
 
         public Action OnHUDScaleChanged;
+
+        public bool ContentPackageSelectionDirty
+        {
+            get;
+            private set;
+        }
 
         public GUIFrame SettingsFrame
         {
@@ -629,7 +633,7 @@ namespace Barotrauma
             var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
-                text: keyMapping[(int)InputType.Voice].ToString())
+                text: KeyBindText(InputType.Voice))
             {
                 UserData = InputType.Voice
             };
@@ -763,15 +767,16 @@ namespace Barotrauma
             for (int i = 0; i < inputNames.Length; i++)
             {
                 var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f),(i <= (inputNames.Length / 2.2f) ? inputColumnLeft : inputColumnRight).RectTransform))
-                    { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.05f, Color = new Color(12, 14, 15, 215) };
-                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
+                    { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215) };
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(150, 0) },
                     TextManager.Get("InputType." + ((InputType)i)), font: GUI.SmallFont) { ForceUpperCase = true };
                 inputNameBlocks.Add(inputName);
-                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), inputContainer.RectTransform),
-                    text: keyMapping[i].ToString(), font: GUI.SmallFont)
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform),
+                    text: KeyBindText((InputType)i), font: GUI.SmallFont)
                 {
                     UserData = i
                 };
+                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
@@ -811,18 +816,39 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), generalLayoutGroup.RectTransform), style: null);
 
+            
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
-                TextManager.Get("Cancel"), style: "GUIButtonLarge")
+                TextManager.Get("back"), style: "GUIButtonLarge")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (x, y) =>
                 {
+                    void ExitSettings()
+                    {
+                        if (Screen.Selected == GameMain.MainMenuScreen) { GameMain.MainMenuScreen.ReturnToMainMenu(null, null); }
+                        GUI.SettingsMenuOpen = false;
+                    }
+
                     if (UnsavedSettings)
                     {
-                        LoadPlayerConfig();
+                        var msgBox = new GUIMessageBox(TextManager.Get("UnsavedChangesLabel"),
+                                TextManager.Get("UnsavedChangesVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        {
+                            UserData = "verificationprompt"
+                        };
+                        msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
+                        {
+                            LoadPlayerConfig();
+                            ExitSettings();
+                            return true;
+                        };
+                        msgBox.Buttons[0].OnClicked += msgBox.Close;
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
                     }
-                    if (Screen.Selected == GameMain.MainMenuScreen) GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
-                    GUI.SettingsMenuOpen = false;
+
+                    ExitSettings();
                     return true;
                 }
             };
@@ -833,21 +859,32 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 OnClicked = (button, data) =>
                 {
-                    // TODO: add a prompt
-                    LoadDefaultConfig(setLanguage: false);
-                    CheckBindings(true);
-                    RefreshItemMessages();
-                    ApplySettings();
-                    if (Screen.Selected == GameMain.MainMenuScreen)
+                    var msgBox = new GUIMessageBox(TextManager.Get("SettingResetLabel"),
+                                TextManager.Get("SettingResetVerification"),
+                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                     {
-                        GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
-                    }
-                    else
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                        ResetSettingsFrame();
-                        CreateSettingsFrame(currentTab);
-                    }
-                    return true;
+                        LoadDefaultConfig(setLanguage: false);
+                        CheckBindings(true);
+                        RefreshItemMessages();
+                        ApplySettings();
+                        if (Screen.Selected == GameMain.MainMenuScreen)
+                        {
+                            GameMain.MainMenuScreen.ResetSettingsFrame(currentTab);
+                        }
+                        else
+                        {
+                            ResetSettingsFrame();
+                            CreateSettingsFrame(currentTab);
+                        }
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
                 }
             };
 
@@ -1003,7 +1040,7 @@ namespace Barotrauma
 
         private bool SelectContentPackage(GUITickBox tickBox)
         {
-            contentPackageSelectionDirty = true;
+            ContentPackageSelectionDirty = true;
             var contentPackage = tickBox.UserData as ContentPackage;
             if (contentPackage.CorePackage)
             {
@@ -1068,48 +1105,42 @@ namespace Barotrauma
             if (PlayerInput.LeftButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(0);
-                keyBox.Text = "Mouse1";
             }
             else if (PlayerInput.RightButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(1);
-                keyBox.Text = "Mouse2";
             }
             else if (PlayerInput.MidButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(2);
-                keyBox.Text = "Mouse3";
             }
             else if (PlayerInput.Mouse4ButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(3);
-                keyBox.Text = "Mouse4";
             }
             else if (PlayerInput.Mouse5ButtonClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(4);
-                keyBox.Text = "Mouse5";
             }
             else if (PlayerInput.MouseWheelUpClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(5);
-                keyBox.Text = "MouseWheelUp";
             }
             else if (PlayerInput.MouseWheelDownClicked())
             {
                 keyMapping[keyIndex] = new KeyOrMouse(6);
-                keyBox.Text = "MouseWheelDown";
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
                 keyMapping[keyIndex] = new KeyOrMouse(key);
-                keyBox.Text = key.ToString("G");
             }
             else
             {
                 yield return CoroutineStatus.Success;
             }
+            keyBox.Text = KeyBindText((InputType)keyIndex);
+            keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
 
             keyBox.Deselect();
             RefreshItemMessages();
@@ -1155,10 +1186,10 @@ namespace Barotrauma
         private bool ApplyClicked(GUIButton button, object userData)
         {
             ApplySettings();
-            if (Screen.Selected != GameMain.MainMenuScreen) GUI.SettingsMenuOpen = false;
-            if (contentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+            if (Screen.Selected != GameMain.MainMenuScreen) { GUI.SettingsMenuOpen = false; }
+            if (ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
             {
-                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredGeneric"));
+                new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
             }
             return true;
         }

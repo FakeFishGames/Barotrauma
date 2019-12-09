@@ -87,7 +87,7 @@ namespace Barotrauma
                         memInput[memInput.Count - 1].states.HasFlag(InputNetFlags.Grab))
                     {
                         focusedItem = null;
-                        focusedCharacter = null;
+                        FocusedCharacter = null;
                     }
                     var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
                     if (closestEntity is Item)
@@ -95,14 +95,14 @@ namespace Barotrauma
                         if (CanInteractWith((Item)closestEntity))
                         {
                             focusedItem = (Item)closestEntity;
-                            focusedCharacter = null;
+                            FocusedCharacter = null;
                         }
                     }
                     else if (closestEntity is Character)
                     {
                         if (CanInteractWith((Character)closestEntity))
                         {
-                            focusedCharacter = (Character)closestEntity;
+                            FocusedCharacter = (Character)closestEntity;
                             focusedItem = null;
                         }
                     }

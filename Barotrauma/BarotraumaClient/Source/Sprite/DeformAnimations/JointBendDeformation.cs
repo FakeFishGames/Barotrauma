@@ -76,39 +76,51 @@ namespace Barotrauma.SpriteDeformations
                     if (Math.Abs(BendLeft) > 0.001f)
                     {
                         float strength = 1.0f - normalizedPos.X;//(1.0f - Math.Max(normalizedPos.X - BendLeftRefPos.X, 0.0f) / (1.0f - BendLeftRefPos.X));
-                        strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendLeftRefPos, BendLeft * strength * Params.Strength);
-                        Vector2 offset = rotatedP - normalizedPos;
-                        offset.X *= Scale.Y / Scale.X;
-                        Deformation[x, y] += offset;
+                        strength = (strength - 0.5f) * 2.0f;
+                        if (strength > 0.0f)
+                        {
+                            Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendLeftRefPos, BendLeft * strength * Params.Strength);
+                            Vector2 offset = rotatedP - normalizedPos;
+                            offset.X *= Scale.Y / Scale.X;
+                            Deformation[x, y] += offset;
+                        }
                     }
                     if (Math.Abs(BendRight) > 0.001f)
                     {
                         float strength = normalizedPos.X;//(1.0f - Math.Max(BendRightRefPos.X - normalizedPos.X, 0.0f) / (BendRightRefPos.X));
-                        strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendRightRefPos, BendRight * strength * Params.Strength);
-                        Vector2 offset = rotatedP - normalizedPos;
-                        offset.X *= Scale.Y / Scale.X;
-                        Deformation[x, y] += offset;
+                        strength = (strength - 0.5f) * 2.0f;
+                        if (strength > 0.0f)
+                        {
+                            Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendRightRefPos, BendRight * strength * Params.Strength);
+                            Vector2 offset = rotatedP - normalizedPos;
+                            offset.X *= Scale.Y / Scale.X;
+                            Deformation[x, y] += offset;
+                        }
                     }
 
                     if (Math.Abs(BendUp) > 0.001f)
                     {
                         float strength = 1.0f - normalizedPos.Y;//(1.0f - Math.Max(normalizedPos.Y - BendUpRefPos.Y, 0.0f) / (1.0f - BendUpRefPos.Y));
-                        strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendUpRefPos, BendUp * strength * Params.Strength);
-                        Vector2 offset = rotatedP - normalizedPos;
-                        offset.Y *= Scale.X / Scale.Y;
-                        Deformation[x, y] += offset;
+                        strength = (strength - 0.5f) * 2.0f;
+                        if (strength > 0.0f)
+                        {
+                            Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendUpRefPos, BendUp * strength * Params.Strength);
+                            Vector2 offset = rotatedP - normalizedPos;
+                            offset.Y *= Scale.X / Scale.Y;
+                            Deformation[x, y] += offset;
+                        }
                     }
                     if (Math.Abs(BendDown) > 0.001f)
                     {
                         float strength = normalizedPos.Y;//(1.0f - Math.Max(BendDownRefPos.Y - normalizedPos.Y, 0.0f) / (BendDownRefPos.Y));
-                        strength = Math.Max((strength - 0.5f) * 2.0f, 0.0f);
-                        Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendDownRefPos, BendDown * strength * Params.Strength);
-                        Vector2 offset = rotatedP - normalizedPos;
-                        offset.Y *= Scale.X / Scale.Y;
-                        Deformation[x, y] += offset;
+                        strength = (strength - 0.5f) * 2.0f;
+                        if (strength > 0.0f)
+                        {
+                            Vector2 rotatedP = RotatePointAroundTarget(normalizedPos, BendDownRefPos, BendDown * strength * Params.Strength);
+                            Vector2 offset = rotatedP - normalizedPos;
+                            offset.Y *= Scale.X / Scale.Y;
+                            Deformation[x, y] += offset;
+                        }
                     }
                 }
             }

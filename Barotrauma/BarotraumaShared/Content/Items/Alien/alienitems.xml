@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Alien Artifact" identifier="skyholderartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="skyholderartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
@@ -36,7 +36,7 @@
       <StatusEffect type="Always" target="Hull" oxygen="-50000.0" />
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="thermalartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="thermalartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
@@ -74,7 +74,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="faradayartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="faradayartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
@@ -115,7 +115,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Alien Artifact" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov,alienartifact" pickdistance="150" indestructible="true" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="nasonovartifact" category="Alien" Tags="alien,nasonov,alienartifact" pickdistance="150" indestructible="true" sonarsize="30" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
@@ -150,7 +150,7 @@
     <Body radius="45" density="50" friction="0.95" />
     <Holdable slots="RightHand+LeftHand" holdpos="30,-15" handle1="0,10" handle2="0,-10" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="Alien Artifact" identifier="psychosisartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="psychosisartifact" category="Alien" Tags="alien,alienartifact" sonarsize="30" spritecolor="200,200,200,255" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="Content/Items/Alien/AlienArtifact1.png" depth="0.6" sourcerect="0,0,68,69" origin="0.5,0.5" />
     <!-- central piece -->
@@ -188,7 +188,7 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="Alien Trinket" identifier="alientrinket1" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="alientrinket1" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="172,203,73,76" origin="0.5,0.5" />
     <Deconstruct time="30">
@@ -197,7 +197,7 @@
     <Body width="70" height="70" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-  <Item name="Alien Curio" identifier="alientrinket2" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="alientrinket2" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="86,203,82,74" origin="0.5,0.5" />
     <Deconstruct time="30">
@@ -206,7 +206,7 @@
     <Body width="80" height="72" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-  <Item name="Alien Ornament" identifier="alientrinket3" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="alientrinket3" category="Alien" Tags="alien, smallitem" scale="0.5" impactsoundtag="impact_metal_heavy">
     <Upgrade gameversion="0.9.3.1" scale="0.5"/>
     <Sprite texture="AlienArtifact1.png" depth="0.7" sourcerect="0,203,82,79" origin="0.5,0.5" />
     <Deconstruct time="30">
@@ -215,7 +215,7 @@
     <Body width="80" height="75" density="20" />
     <Holdable slots="Any,RightHand,LeftHand" holdpos="30,-15" handle1="0,5" handle2="0,-5" msg="ItemMsgPickUpSelect"></Holdable>
   </Item>
-  <Item name="Oxygenite Shard" identifier="oxygeniteshard" category="Alien" scale="0.5" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="oxygeniteshard" category="Alien" scale="0.5" tags="alien,smallitem,oxygensource" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="liquidoxygenite" mincondition="0.1" />
@@ -241,7 +241,7 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Sulphurite Shard" identifier="sulphuriteshard" category="Alien" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="sulphuriteshard" category="Alien" scale="0.5" tags="alien,smallitem" impacttolerance="8" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="sulphuricacid" mincondition="0.1" />
@@ -256,14 +256,14 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="Alien Pistol" identifier="alienpistol" category="Equipment" tags="smallitem,weapon,alien" Scale="0.6" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="alienpistol" category="Equipment" tags="smallitem,weapon,alien" Scale="0.8" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="alientools.png" sourcerect="0,50,54,32" />
     <Sprite texture="alientools.png" sourcerect="0,50,54,32" depth="0.55" />
     <Body radius="15" width="15" density="50" />
-    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect">
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="2,-7" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnBroken" target="This" Condition="100" delay="1" />
     </Holdable>
-    <ItemContainer capacity="1" hideitems="false" itempos="20,-20">
+    <ItemContainer capacity="1" hideitems="true" itempos="20,-20">
       <Containable items="alienpowercell" />
     </ItemContainer>
     <!--<RangedWeapon reload="0.5" barrelpos="14,6" spread="0" unskilledspread="2">
@@ -298,7 +298,7 @@
       <StatusEffect type="OnFailure" target="Contained" Condition="-0.1" disabledeltatime="true" />
     </RepairTool>
   </Item>
-  <Item name="Ancient Weapon" identifier="ancientweapon" category="Alien" Tags="alien,smallitem,weapon" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="ancientweapon" category="Alien" Tags="alien,smallitem,weapon" impactsoundtag="impact_metal_light">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -348,7 +348,7 @@
       <Containable items="alienpowercell" />
     </ItemContainer>
   </Item>
-  <Item name="Alien Hatch" identifier="alienhatch" category="Alien" Tags="alien,aliendoor">
+  <Item name="" identifier="alienhatch" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienHatch.png" sourcerect="0,0,208,48" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" horizontal="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem items="crowbar" type="Equipped" />
@@ -363,7 +363,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Door" identifier="aliendoor" category="Alien" Tags="alien,aliendoor">
+  <Item name="" identifier="aliendoor" category="Alien" Tags="alien,aliendoor">
     <Sprite texture="Content/Items/Alien/AlienDoor.png" sourcerect="0,0,48,208" depth="0.8" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="30.0">
       <RequiredItem items="crowbar" type="Equipped" />
@@ -378,7 +378,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Motion Sensor" identifier="alienmotionsensor" category="Alien" Tags="alien,alienmotionsensor" scale="0.5">
+  <Item name="" identifier="alienmotionsensor" category="Alien" Tags="alien,alienmotionsensor" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="3,4,110,112" depth="0.8" origin="0.5,0.5" />
     <DecorativeSprite texture="Content/Items/Alien/AlienMotionSensor.png" sourcerect="115,7,89,92" depth="0.75" origin="0.5,0.5" rotationspeed="180">
       <AnimationConditional MotionDetected="true" targetitemcomponent="MotionSensor" />
@@ -390,7 +390,7 @@
       <output name="state_out" displayname="connection.stateout" fallbackdisplayname="connection.signalout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Artifact Holder" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
+  <Item name="" identifier="artifactholder" category="Alien" Tags="alien,artifactholder">
     <Sprite texture="Content/Items/Alien/artifactholder.png" depth="0.8" sourcerect="0,0,256,256" />
     <ItemContainer capacity="1" canbeselected="true" hideitems="false" itempos="128,-128" autointeractwithcontained="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.15,0.2" anchor="Center" style="ItemUI" />
@@ -412,7 +412,7 @@
       <output name="power_out" displayname="connection.powerout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Generator" identifier="aliengenerator" category="Alien" Tags="alien,aliengenerator" scale="0.3">
+  <Item name="" identifier="aliengenerator" category="Alien" Tags="alien,aliengenerator" scale="0.3">
     <Sprite texture="Content/Items/Alien/AlienGenerator.png" depth="0.8" sourcerect="0,0,512,573" />
     <DecorativeSprite texture="Content/Items/Alien/AlienGenerator.png" sourcerect="167,583,178,178" depth="0.78" offset="6,-36" origin="0.5,0.5">
       <Conditional Charge="gt 1" targetitemcomponent="PowerContainer" />
@@ -435,7 +435,7 @@
       <output name="power_out" displayname="connection.powerout" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Power Cell" identifier="alienpowercell" category="Alien" Tags="alien,smallitem,alienpowercell" scale="0.3" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="alienpowercell" category="Alien" Tags="alien,smallitem,alienpowercell" scale="0.3" impactsoundtag="impact_metal_light">
     <Sprite texture="Content/Items/Alien/AlienPowerCell.png" sourcerect="47,25,34,77" depth="0.7" origin="0.5,0.5" />
     <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,30" canbeselected="false" range="100.0" IsOn="true" castshadows="false" />
     <Body radius="15" height="40" density="20" />
@@ -445,7 +445,7 @@
       </StatusEffect>-->
     </Holdable>
   </Item>
-  <Item name="Alien Pump" identifier="alienpump" category="Alien" tags="alien,alienpump">
+  <Item name="" identifier="alienpump" category="Alien" tags="alien,alienpump">
     <Sprite texture="Content/Items/Alien/AlienPump.png" depth="0.8" sourcerect="0,0,256,256" />
     <Pump canbeselected="false" maxflow="6000" PowerConsumption="300.0" MinVoltage="0.3">
       <sound file="Content/Items/Alien/AlienPump.ogg" type="OnUse" range="1500.0" volumeproperty="CurrFlow" volume="0.01" loop="true" />
@@ -469,7 +469,7 @@
       <RequiredItem items="wrench" type="Equipped" />
     </Repairable>
   </Item>
-  <Item name="Alien Button" identifier="alienbutton" category="Alien" tags="smallitem,alien,alienbutton">
+  <Item name="" identifier="alienbutton" category="Alien" tags="smallitem,alien,alienbutton">
     <Sprite texture="Content/Items/Alien/AlienButton.png" sourcerect="0,0,64,64" depth="0.8" origin="0.5,0.5" />
     <Controller direction="None" canbepicked="true" msg="ItemMsgPressSelect">
       <sound file="Content/Items/Alien/AlienButton.ogg" type="OnUse" range="500.0" />
@@ -483,7 +483,7 @@
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />
     </LightComponent>
   </Item>
-  <Item name="Alien Turret" identifier="alienturret" Tags="turret,alien" category="alien,alienturret" scale="0.5">
+  <Item name="" identifier="alienturret" Tags="turret,alien" category="alien,alienturret" scale="0.5">
     <Sprite texture="Content/Items/Alien/AlienTurret.png" depth="0.5" sourcerect="293,28,141,456" canflipy="false" />
     <ItemContainer hideitems="true" drawinventory="true" capacity="1" canbeselected="false" characterusable="true">
       <Containable items="alienturretammo" />
@@ -508,7 +508,7 @@
       <input name="toggle_light" displayname="connection.togglelight" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Projectile" identifier="alienturretammo" category="alien,alienturretammo">
+  <Item name="" identifier="alienturretammo" category="alien,alienturretammo">
     <!-- TODO: alien projectile sprite -->
     <Sprite texture="artifact.png" depth="0.7" sourcerect="1,0,57,56" origin="0.5,0.5" />
     <Body radius="25" density="10" />
@@ -530,7 +530,7 @@
       </StatusEffect>
     </Projectile>
   </Item>
-  <Item name="Alien Coil" identifier="aliencoil" Tags="alien,aliencoil" category="Alien">
+  <Item name="" identifier="aliencoil" Tags="alien,aliencoil" category="Alien">
     <!-- TODO: alien coil sprite -->
     <Sprite texture="Content/Items/Alien/AlienElectricCoil.png" depth="0.55" sourcerect="0,31,256,190" origin="0.5,0.4" />
     <LightComponent AllowInGameEditing="false" lightcolor="112,146,190,100" flicker="0.2" canbeselected="false" range="800.0" IsOn="true" />
@@ -556,7 +556,7 @@
       <input name="power_in" displayname="connection.powerin" />
     </ConnectionPanel>
   </Item>
-  <Item name="Alien Vent" identifier="alienvent" category="alien,alienvent" interactdistance="0" linkable="true">
+  <Item name="" identifier="alienvent" category="alien,alienvent" interactdistance="0" linkable="true">
     <Sprite texture="Content/Items/OxygenGenerator/oxygengenerator.png" depth="0.91" sourcerect="277,200,64,64"/>
     <Vent>
       <sound file="Content/Items/OxygenGenerator/Ventilation.ogg" type="OnActive" range="400.0" loop="true" />
@@ -566,21 +566,21 @@
       </StatusEffect>
     </Vent>
   </Item>
-  <Item name="Small Alien Chest" identifier="alienitemcontainersmall" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
+  <Item name="" identifier="alienitemcontainersmall" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="100,5,153,65" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Large Alien Chest" identifier="alienitemcontainerlarge" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
+  <Item name="" identifier="alienitemcontainerlarge" category="alien,aliencontainer" tags="aliencontainer" linkable="true" pickdistance="150" scale="0.5">
     <Sprite texture="AlienContainer.png" depth="0.84" sourcerect="5,127,246,125" origin="0.5,0.5" />
     <ItemContainer capacity="5" canbeselected="true" hideitems="true" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.2" anchor="Center" style="ItemUI" />
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="Alien Light Component" identifier="alienlightcomponent" category="Alien" Tags="smallitem,alienlight" cargocontaineridentifier="metalcrate">
+  <Item name="" identifier="alienlightcomponent" category="Alien" Tags="smallitem,alienlight" cargocontaineridentifier="metalcrate">
     <Sprite texture="AlienLightComponent.png" depth="0.8" sourcerect="0,0,16,16" origin="0.5,0.5" />
     <LightComponent AllowInGameEditing="false" color="1.0,0.0,0.0,0.5" castshadows="false">
       <LightTexture texture="Content/Lights/pointlight_bounce.png" origin="0.5,0.5" />

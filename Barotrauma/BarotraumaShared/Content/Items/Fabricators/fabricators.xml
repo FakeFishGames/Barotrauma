@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Items>
   <Item
-		name="Fabricator"
+		name=""
     identifier="fabricator"
     tags="fabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor,locker"
-    description="A machine capable of manufacturing a wide range of items out of basic raw materials."
+    description=""
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="0,513,285,391" depth="0.8"/>
@@ -27,7 +27,7 @@
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" AIRepairThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.1,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem items="wrench" type="Equipped" />
@@ -40,13 +40,13 @@
   </Item>
 
   <Item
-    name="Medical Fabricator"
+    name=""
     identifier="medicalfabricator"
     tags="medicalfabricator"
     category="Machine"
 		linkable="true"
     allowedlinks="deconstructor"
-    description="A machine that can be used to manufacture various medicines.">
+    description="">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,0,140,168"/>
     <BrokenSprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" sourcerect="140,0,140,168" depth="0.8" maxcondition="80" fadein="true" />
@@ -64,7 +64,7 @@
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" AIRepairThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem items="wrench" type="equipped" />
@@ -78,13 +78,13 @@
   </Item>
 
   <Item
-    name="Deconstructor"
+    name=""
     identifier="deconstructor"
     tags="deconstructor"
     category="Machine"
 		linkable="true"
     allowedlinks="fabricator,medicalfabricator,locker"
-    description="Disassembles and breaks down items to reusable components and material bars."
+    description=""
     scale="0.5">
 
     <Sprite texture="Content/Items/Fabricators/FabricatorsAndDeconstructors.png" depth="0.8" sourcerect="0,171,243,335"/>
@@ -103,7 +103,7 @@
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" ShowRepairUIThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.50" mindeteriorationdelay="60" maxdeteriorationdelay="120" AIRepairThreshold="50" fixDurationHighSkill="10" fixDurationLowSkill="25" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem items="wrench" type="equipped" />

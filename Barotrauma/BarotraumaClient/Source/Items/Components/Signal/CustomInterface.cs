@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
     partial class CustomInterface
     {
         private List<GUIComponent> uiElements = new List<GUIComponent>();
+        private GUILayoutGroup uiElementContainer;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -18,7 +19,7 @@ namespace Barotrauma.Items.Components
 
             var visibleElements = customInterfaceElementList.Where(ciElement => !string.IsNullOrEmpty(ciElement.Label));
 
-            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center),
+            uiElementContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center),
                 childAnchor: customInterfaceElementList.Count > 1 ? Anchor.TopCenter : Anchor.Center)
             {
                 RelativeSpacing = 0.05f,
@@ -30,7 +31,7 @@ namespace Barotrauma.Items.Components
             {
                 if (ciElement.ContinuousSignal)
                 {
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform),
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
                         TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
                     {
                         UserData = ciElement
@@ -52,7 +53,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), paddedFrame.RectTransform), 
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), 
                         TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "GUIButtonLarge")
                     {
                         UserData = ciElement
@@ -82,13 +83,13 @@ namespace Barotrauma.Items.Components
             PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(customInterfaceElementList[0]);
             PropertyDescriptor labelProperty = properties.Find("Label", false);
             PropertyDescriptor signalProperty = properties.Find("Signal", false);
-            for (int i = 0; i< customInterfaceElementList.Count; i++)
+            for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
                 editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(labelProperty, customInterfaceElementList[i]),
+                    new SerializableProperty(labelProperty),
                     customInterfaceElementList[i].Label, "Label #" + (i + 1), "");
                 editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(signalProperty, customInterfaceElementList[i]),
+                    new SerializableProperty(signalProperty),
                     customInterfaceElementList[i].Signal, "Signal #" + (i + 1), "");
             }
         }
@@ -108,6 +109,38 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     uiElements[index].Pulsate(Vector2.One, Vector2.One * (1.0f + pulsateAmount), duration);
+                }
+            }
+        }
+
+        partial void UpdateProjSpecific()
+        {
+            bool elementVisibilityChanged = false;
+            int visibleElementCount = 0;
+            foreach (var uiElement in uiElements)
+            {
+                CustomInterfaceElement element = uiElement.UserData as CustomInterfaceElement;
+                if (element == null) { continue; }
+                bool visible =
+                    Screen.Selected == GameMain.SubEditorScreen ||
+                    element.StatusEffects.Any() ||
+                    (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                if (visible) { visibleElementCount++; }
+                if (uiElement.Visible != visible)
+                {
+                    uiElement.Visible = visible;
+                    elementVisibilityChanged = true;
+                }
+            }
+
+            if (elementVisibilityChanged)
+            {
+                uiElementContainer.Stretch = visibleElementCount > 2;
+                uiElementContainer.ChildAnchor = visibleElementCount > 1 ? Anchor.TopCenter : Anchor.Center;
+                float elementSize = Math.Min(1.0f / visibleElementCount, 0.5f);
+                foreach (var uiElement in uiElements)
+                {
+                    uiElement.RectTransform.RelativeSize = new Vector2(1.0f, elementSize);
                 }
             }
         }

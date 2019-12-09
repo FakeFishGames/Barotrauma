@@ -7,6 +7,76 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    public class ColorData
+    {
+        public int StartIndex, EndIndex;
+        public Color Color;
+
+        private const char colorDefinitionIndicator = '‖';
+        private const char lineChangeIndicator = '\n';
+        private const string colorDefinitionStartString = "‖color:";
+        private const string coloringEndDefinition = "‖color:end‖";
+
+        public static List<ColorData> GetColorData(string text, out string sanitizedText)
+        {
+            List<ColorData> textColors = null;
+            if (text != null && text.IndexOf(colorDefinitionIndicator) != -1 && text.Contains(colorDefinitionStartString))
+            {
+                textColors = new List<ColorData>();
+                List<int> lineChangeIndexes = null;
+
+                int currentIndex = text.IndexOf(lineChangeIndicator);
+                if (currentIndex != -1)
+                {
+                    lineChangeIndexes = new List<int>();
+                    lineChangeIndexes.Add(currentIndex);
+                    int startIndex = currentIndex + 1;
+
+                    while (true)
+                    {
+                        if (startIndex >= text.Length) break;
+                        currentIndex = text.IndexOf(lineChangeIndicator, startIndex);
+                        if (currentIndex == -1) break;
+                        lineChangeIndexes.Add(currentIndex);
+                        startIndex = currentIndex + 1;
+                    }
+                }
+
+                while (text.IndexOf(colorDefinitionStartString) != -1)
+                {
+                    ColorData colorData = new ColorData();
+
+                    int colorDefinitionStartIndex = text.IndexOf(colorDefinitionStartString);
+                    int colorDefinitionEndIndex = text.IndexOf(colorDefinitionIndicator, colorDefinitionStartIndex + 1);
+
+                    string[] colorDefinition = text.Substring(colorDefinitionStartIndex + colorDefinitionStartString.Length, colorDefinitionEndIndex - colorDefinitionStartIndex - colorDefinitionStartString.Length).Split(',');
+
+                    colorData.StartIndex = colorDefinitionStartIndex;
+                    colorData.Color = new Color(int.Parse(colorDefinition[0]), int.Parse(colorDefinition[1]), int.Parse(colorDefinition[2]));
+                    text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
+                    colorData.EndIndex = text.IndexOf(coloringEndDefinition);
+                    text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
+
+                    if (lineChangeIndexes != null)
+                    {
+                        for (int i = 0; i < lineChangeIndexes.Count; i++)
+                        {
+                            if (colorData.StartIndex > lineChangeIndexes[i])
+                            {
+                                colorData.StartIndex--;
+                                colorData.EndIndex--;
+                            }
+                        }
+                    }
+
+                    textColors.Add(colorData);
+                }
+            }
+
+            sanitizedText = text;
+            return textColors;
+        }
+    }
     public class ScalableFont : IDisposable
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
@@ -61,7 +131,7 @@ namespace Barotrauma
             public Vector2 drawOffset;
             public float advance;
             public Rectangle texCoords;
-        }
+        }       
 
         public ScalableFont(XElement element, GraphicsDevice gd = null)
             : this(
@@ -416,7 +486,73 @@ namespace Barotrauma
                 }
             }
         }
-    
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        {
+            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, colorData);
+        }
+
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        {
+            if (textures.Count == 0 && !DynamicLoading) { return; }
+
+            int lineNum = 0;
+            Vector2 currentPos = position;
+            Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+
+            int colorDataIndex = 0;
+            ColorData currentColorData = colorData[colorDataIndex];
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    lineNum++;
+                    currentPos = position;
+                    currentPos.X -= baseHeight * 1.8f * lineNum * advanceUnit.Y * scale.Y;
+                    currentPos.Y += baseHeight * 1.8f * lineNum * advanceUnit.X * scale.Y;
+                    continue;
+                }
+
+                uint charIndex = text[i];
+                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                {
+                    DynamicRenderAtlas(graphicsDevice, charIndex);
+                }
+
+                Color currentTextColor;
+
+                if (currentColorData != null && i > currentColorData.EndIndex + lineNum)
+                {
+                    colorDataIndex++;
+                    currentColorData = colorDataIndex < colorData.Count ? colorData[colorDataIndex] : null;
+                }
+
+                if (currentColorData != null && currentColorData.StartIndex + lineNum <= i && i <= currentColorData.EndIndex + lineNum)
+                {
+                    currentTextColor = currentColorData.Color;
+                }
+                else
+                {
+                    currentTextColor = color;
+                }
+
+                if (texCoords.TryGetValue(charIndex, out GlyphData gd) || texCoords.TryGetValue(9633, out gd)) //9633 = white square
+                {
+                    if (gd.texIndex >= 0)
+                    {
+                        Texture2D tex = textures[gd.texIndex];
+                        Vector2 drawOffset;
+                        drawOffset.X = gd.drawOffset.X * advanceUnit.X * scale.X - gd.drawOffset.Y * advanceUnit.Y * scale.Y;
+                        drawOffset.Y = gd.drawOffset.X * advanceUnit.Y * scale.Y + gd.drawOffset.Y * advanceUnit.X * scale.X;
+
+                        sb.Draw(tex, currentPos + drawOffset, gd.texCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
+                    }
+                    currentPos += gd.advance * advanceUnit * scale.X;
+                }
+            }
+        }
+
         public Vector2 MeasureString(string text)
         {
             if (text == null)

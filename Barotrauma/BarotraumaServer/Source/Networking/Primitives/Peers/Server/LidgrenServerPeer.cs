@@ -9,7 +9,7 @@ namespace Barotrauma.Networking
 {
     class LidgrenServerPeer : ServerPeer
     {
-        private ServerSettings serverSettings;
+        private readonly ServerSettings serverSettings;
 
         private NetPeerConfiguration netPeerConfiguration;
         private NetServer netServer;
@@ -43,10 +43,10 @@ namespace Barotrauma.Networking
             }
         }
 
-        private List<LidgrenConnection> connectedClients;
-        private List<PendingClient> pendingClients;
+        private readonly List<LidgrenConnection> connectedClients;
+        private readonly List<PendingClient> pendingClients;
 
-        private List<NetIncomingMessage> incomingLidgrenMessages;
+        private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
         public LidgrenServerPeer(int? ownKey, ServerSettings settings)
         {
@@ -189,10 +189,9 @@ namespace Barotrauma.Networking
             if (netServer == null) { return; }
 
             netServer.UPnP.ForwardPort(netPeerConfiguration.Port, "barotrauma");
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
-            }
+#if USE_STEAM
+            netServer.UPnP.ForwardPort(serverSettings.QueryPort, "barotrauma");
+#endif
         }
 
         private bool DiscoveringUPnP()
@@ -475,8 +474,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         pendingClient.Retries++;
-
-                        if (pendingClient.Retries >= 3)
+                        if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
                             string banMsg = "Failed to enter correct password too many times";
                             if (pendingClient.SteamID != null)

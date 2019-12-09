@@ -1,220 +1,221 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <prefabs>
+  <!-- Everything is categorized as 'Structure' unless explicitly categorized otherwise -->
   <!-- OUTPOST BACK WALLS START -->
-  <Opbg name="Outpost Shop A1" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Shop A1" identifier="opbgshopa1" description="Outpost Shop back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,0,2007,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="Outpost Social Center A1" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Social Center A1" identifier="opbgsocialcentera1" description="Outpost Social Center back wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgShop.png" sourcerect="0,608,2036,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="Outpost Maintenace Bay A1" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A1" identifier="opbgmaintenancebaya1" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,0,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="Outpost Maintenace Bay A2" identifier="opbgmaintenancebaya2" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A2" identifier="opbgmaintenancebaya2" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,768,2048,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
-  <Opbg name="Outpost Maintenace Bay A3" identifier="opbgmaintenancebaya3" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5">
+  <Opbg name="Outpost Maintenace Bay A3" identifier="opbgmaintenancebaya3" description="Outpost Maintenance Bay wall" allowattachitems="true" width="16" height="304" resizehorizontal="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/OpbgMaintenanceBay.png" sourcerect="0,1440,1926,608" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Opbg>
   <!-- OUTPOST BACK WALLS END -->
   <!--LABELS SMALL START-->
-  <label name="Label Icon Medical" Aliases="Label M Icon Medical " identifier="labelsiconmedical" scale="0.25">
+  <label name="Label Icon Medical" Aliases="Label M Icon Medical " identifier="labelsiconmedical" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Steering" Aliases="Label M Icon Steering " identifier="labelsiconsteering" scale="0.25">
+  <label name="Label Icon Steering" Aliases="Label M Icon Steering " identifier="labelsiconsteering" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Diving" Aliases="Label M Icon Diving " identifier="labelsicondiving" scale="0.25">
+  <label name="Label Icon Diving" Aliases="Label M Icon Diving " identifier="labelsicondiving" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Reactor" Aliases="Label M Icon Reactor" identifier="labelsiconreactor" scale="0.25">
+  <label name="Label Icon Reactor" Aliases="Label M Icon Reactor" identifier="labelsiconreactor" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,0,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Exit" Aliases="Label M Icon Exit" identifier="labelsiconexit" scale="0.25">
+  <label name="Label Icon Exit" Aliases="Label M Icon Exit" identifier="labelsiconexit" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,256,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Engine" Aliases="Label M Icon Engine" identifier="labelsiconengine" scale="0.25">
+  <label name="Label Icon Engine" Aliases="Label M Icon Engine" identifier="labelsiconengine" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,256,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Weapons" Aliases="Label M Icon Weapons" identifier="labelsiconweapons" scale="0.25">
+  <label name="Label Icon Weapons" Aliases="Label M Icon Weapons" identifier="labelsiconweapons" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="513,261,253,248" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Ballast" Aliases="Label M Icon Ballast" identifier="labelsiconballast" scale="0.25">
+  <label name="Label Icon Ballast" Aliases="Label M Icon Ballast" identifier="labelsiconballast" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="770,255,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Docking" Aliases="Label M Icon Docking" identifier="labelsicondocking" scale="0.25">
+  <label name="Label Icon Docking" Aliases="Label M Icon Docking" identifier="labelsicondocking" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Cargo" Aliases="Label M Icon Cargo" identifier="labelsiconcargo" scale="0.25">
+  <label name="Label Icon Cargo" Aliases="Label M Icon Cargo" identifier="labelsiconcargo" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Electricity" Aliases="Label M Icon Electricity" identifier="labelsiconelectricity" scale="0.25">
+  <label name="Label Icon Electricity" Aliases="Label M Icon Electricity" identifier="labelsiconelectricity" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="512,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Engineering" Aliases="Label M Icon Engineering" identifier="labelsiconengineering" scale="0.25">
+  <label name="Label Icon Engineering" Aliases="Label M Icon Engineering" identifier="labelsiconengineering" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="768,512,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Security" Aliases="Label M Icon Security" identifier="labelsiconsecurity" scale="0.25">
+  <label name="Label Icon Security" Aliases="Label M Icon Security" identifier="labelsiconsecurity" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="0,768,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Icon Airlock" Aliases="Label M Icon Airlock" identifier="labelsiconairlock" scale="0.25">
+  <label name="Label Icon Airlock" Aliases="Label M Icon Airlock" identifier="labelsiconairlock" scale="0.25" category="Decorative">
     <sprite texture="Content/Map/LabelIcons.png" sourcerect="256,768,256,256" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter A" Aliases="Label M Letter A" identifier="labelslettera" scale="0.35">
+  <label name="Label Letter A" Aliases="Label M Letter A" identifier="labelslettera" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter B" Aliases="Label M Letter B" identifier="labelsletterb" scale="0.35">
+  <label name="Label Letter B" Aliases="Label M Letter B" identifier="labelsletterb" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter C" Aliases="Label M Letter C" identifier="labelsletterc" scale="0.35">
+  <label name="Label Letter C" Aliases="Label M Letter C" identifier="labelsletterc" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter D" Aliases="Label M Letter D" identifier="labelsletterd" scale="0.35">
+  <label name="Label Letter D" Aliases="Label M Letter D" identifier="labelsletterd" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter E" Aliases="Label M Letter E" identifier="labelslettere" scale="0.35">
+  <label name="Label Letter E" Aliases="Label M Letter E" identifier="labelslettere" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter F" Aliases="Label M Letter F" identifier="labelsletterf" scale="0.35">
+  <label name="Label Letter F" Aliases="Label M Letter F" identifier="labelsletterf" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter G" Aliases="Label M Letter G" identifier="labelsletterg" scale="0.35">
+  <label name="Label Letter G" Aliases="Label M Letter G" identifier="labelsletterg" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,0,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter H" Aliases="Label M Letter H" identifier="labelsletterh" scale="0.35">
+  <label name="Label Letter H" Aliases="Label M Letter H" identifier="labelsletterh" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="897,-1,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter I" Aliases="Label M Letter I" identifier="labelsletteri" scale="0.35">
+  <label name="Label Letter I" Aliases="Label M Letter I" identifier="labelsletteri" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter J" Aliases="Label M Letter J" identifier="labelsletterj" scale="0.35">
+  <label name="Label Letter J" Aliases="Label M Letter J" identifier="labelsletterj" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter K" Aliases="Label M Letter K" identifier="labelsletterk" scale="0.35">
+  <label name="Label Letter K" Aliases="Label M Letter K" identifier="labelsletterk" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter L" Aliases="Label M Letter L" identifier="labelsletterl" scale="0.35">
+  <label name="Label Letter L" Aliases="Label M Letter L" identifier="labelsletterl" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter M" Aliases="Label M Letter M" identifier="labelsletterm" scale="0.35">
+  <label name="Label Letter M" Aliases="Label M Letter M" identifier="labelsletterm" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter N" Aliases="Label M Letter N" identifier="labelslettern" scale="0.35">
+  <label name="Label Letter N" Aliases="Label M Letter N" identifier="labelslettern" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter O" Aliases="Label M Letter O" identifier="labelslettero" scale="0.35">
+  <label name="Label Letter O" Aliases="Label M Letter O" identifier="labelslettero" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,128,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter P" Aliases="Label M Letter P" identifier="labelsletterp" scale="0.35">
+  <label name="Label Letter P" Aliases="Label M Letter P" identifier="labelsletterp" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="905,126,109,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter Q" Aliases="Label M Letter Q" identifier="labelsletterq" scale="0.35">
+  <label name="Label Letter Q" Aliases="Label M Letter Q" identifier="labelsletterq" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter R" Aliases="Label M Letter R" identifier="labelsletterr" scale="0.35">
+  <label name="Label Letter R" Aliases="Label M Letter R" identifier="labelsletterr" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter S" Aliases="Label M Letter S" identifier="labelletters" scale="0.35">
+  <label name="Label Letter S" Aliases="Label M Letter S" identifier="labelletters" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter T" Aliases="Label M Letter T" identifier="labelslettert" scale="0.35">
+  <label name="Label Letter T" Aliases="Label M Letter T" identifier="labelslettert" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter U" Aliases="Label M Letter U" identifier="labelsletteru" scale="0.35">
+  <label name="Label Letter U" Aliases="Label M Letter U" identifier="labelsletteru" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,256,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter V" Aliases="Label M Letter V" identifier="labelsletterv" scale="0.35">
+  <label name="Label Letter V" Aliases="Label M Letter V" identifier="labelsletterv" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,256,122,126" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter W" Aliases="Label M Letter W" identifier="labelsletterw" scale="0.35">
+  <label name="Label Letter W" Aliases="Label M Letter W" identifier="labelsletterw" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="765,256,133,125" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter X" Aliases="Label M Letter X" identifier="labelsletterx" scale="0.35">
+  <label name="Label Letter X" Aliases="Label M Letter X" identifier="labelsletterx" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="900,262,122,123" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter Y" Aliases="Label M Letter Y" identifier="labelslettery" scale="0.35">
+  <label name="Label Letter Y" Aliases="Label M Letter Y" identifier="labelslettery" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Letter Z" Aliases="Label M Letter Z" identifier="labelsletterz" scale="0.35">
+  <label name="Label Letter Z" Aliases="Label M Letter Z" identifier="labelsletterz" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 1" Aliases="Label M Number 1" identifier="labelsnumber1" scale="0.35">
+  <label name="Label Number 1" Aliases="Label M Number 1" identifier="labelsnumber1" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 2" Aliases="Label M Number 2" identifier="labelsnumber2" scale="0.35">
+  <label name="Label Number 2" Aliases="Label M Number 2" identifier="labelsnumber2" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="384,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 3" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.35">
+  <label name="Label Number 3" Aliases="Label M Number 3" identifier="labelsnumber3" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 4" Aliases="Label M Number 4" identifier="labelsnumber4" scale="0.35">
+  <label name="Label Number 4" Aliases="Label M Number 4" identifier="labelsnumber4" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 5" Aliases="Label M Number 5" identifier="labelsnumber5" scale="0.35">
+  <label name="Label Number 5" Aliases="Label M Number 5" identifier="labelsnumber5" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 6" Aliases="Label M Number 6" identifier="labelsnumber6" scale="0.35">
+  <label name="Label Number 6" Aliases="Label M Number 6" identifier="labelsnumber6" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="869,384,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 7" Aliases="Label M Number 7" identifier="labelsnumber7" scale="0.35">
+  <label name="Label Number 7" Aliases="Label M Number 7" identifier="labelsnumber7" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 8" Aliases="Label M Number 8" identifier="labelsnumber8" scale="0.35">
+  <label name="Label Number 8" Aliases="Label M Number 8" identifier="labelsnumber8" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 9" Aliases="Label M Number 9" identifier="labelsnumber9" scale="0.35">
+  <label name="Label Number 9" Aliases="Label M Number 9" identifier="labelsnumber9" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="256,511,121,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Number 0" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.35">
+  <label name="Label Number 0" Aliases="Label M Number 0" identifier="labelsnumber0" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="383,511,122,133" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Vertical A" Aliases="Label M Arrow Vertical A" identifier="labelsarroverticala" scale="0.35">
+  <label name="Label Arrow Vertical A" Aliases="Label M Arrow Vertical A" identifier="labelsarroverticala" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="512,510,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Horizontal A" Aliases="Label M Arrow Horizontal A" identifier="labelsarrowhorizontala" scale="0.35">
+  <label name="Label Arrow Horizontal A" Aliases="Label M Arrow Horizontal A" identifier="labelsarrowhorizontala" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="640,511,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Diagonal A" Aliases="Label M Arrow Diagonal A" identifier="labelsarrowdiagonala" scale="0.35">
+  <label name="Label Arrow Diagonal A" Aliases="Label M Arrow Diagonal A" identifier="labelsarrowdiagonala" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="768,512,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Vertical B" Aliases="Label M Arrow Vertical B" identifier="labelsarroverticalb" scale="0.35">
+  <label name="Label Arrow Vertical B" Aliases="Label M Arrow Vertical B" identifier="labelsarroverticalb" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="894,511,131,130" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Horizontal B" Aliases="Label M Arrow Horizontal B" identifier="labelsarrowhorizontalb" scale="0.35">
+  <label name="Label Arrow Horizontal B" Aliases="Label M Arrow Horizontal B" identifier="labelsarrowhorizontalb" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="0,638,126,134" depth="0.85" origin="0.5,0.5" />
   </label>
-  <label name="Label Arrow Diagonal B" Aliases="Label M Arrow Diagonal B" identifier="labelsarrowdiagonalb" scale="0.35">
+  <label name="Label Arrow Diagonal B" Aliases="Label M Arrow Diagonal B" identifier="labelsarrowdiagonalb" scale="0.35" category="Decorative">
     <sprite texture="Content/Map/LabelLetters.png" sourcerect="128,640,128,128" depth="0.85" origin="0.5,0.5" />
   </label>
   <!--OLD LABELS-->
-  <doorlabel identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5">
+  <doorlabel name="Door Label" identifier="doorlabel" width="38" height="66" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="2,263,76,132" depth="0.85" canflipx="false" />
   </doorlabel>
-  <engineeringLabel identifier="engineeringLabel" width="153">
+  <engineeringLabel name="Engineering Label" identifier="engineeringLabel" width="153" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,426,153,16" depth="0.97" canflipx="false" />
   </engineeringLabel>
-  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16">
+  <commandLabel name="Command Label" identifier="commandLabel" width="128" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,443,128,16" depth="0.97" canflipx="false" />
   </commandLabel>
-  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16">
+  <airlockLabel name="Airlock Label" identifier="airlockLabel" width="99" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,460,199,16" depth="0.97" canflipx="false" />
   </airlockLabel>
-  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16">
+  <cabinsLabel name="Cabins Label" identifier="cabinsLabel" width="83" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,477,83,16" depth="0.97" canflipx="false" />
   </cabinsLabel>
-  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16">
+  <medicalLabel name="Medical Label" identifier="medicalLabel" width="110" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,494,110,16" depth="0.97" canflipx="false" />
   </medicalLabel>
-  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16">
+  <arrowUp name="Arrow Up" identifier="arrowUp" width="16" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,460,16,16" depth="0.97" />
   </arrowUp>
-  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16">
+  <arrowDown name="Arrow Down" identifier="arrowDown" width="16" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,460,16,16" depth="0.97" />
   </arrowDown>
-  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16">
+  <arrowLeft name="Arrow Left" identifier="arrowLeft" width="16" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="129,477,16,16" depth="0.97" />
   </arrowLeft>
-  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16">
+  <arrowRight name="Arrow Right" identifier="arrowRight" width="16" height="16" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="146,477,16,16" depth="0.97" />
   </arrowRight>
   <!--LABELS END-->
@@ -357,43 +358,43 @@
   <!--<fin name="Fin A Corner 16" identifier="finacorner16" description="Fin construction piece" body="false">
     <sprite texture="Content/Map/FinsA.png" sourcerect="688,288,64,128" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>-->
-  <fin name="Fin A Deco 01" identifier="finadeco01" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 01" identifier="finadeco01" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1862,934,48,48" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 02" identifier="finadeco02" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 02" identifier="finadeco02" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1920,928,61,58" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 03" identifier="finadeco03" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 03" identifier="finadeco03" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1985,928,60,61" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 04" identifier="finadeco04" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 04" identifier="finadeco04" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1861,996,56,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 05" identifier="finadeco05" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 05" identifier="finadeco05" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1922,995,57,55" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 06" identifier="finadeco06" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 06" identifier="finadeco06" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1993,999,50,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 07" identifier="finadeco07" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 07" identifier="finadeco07" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1858,1061,53,53" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 08" identifier="finadeco08" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 08" identifier="finadeco08" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1219,1102,90,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 09" identifier="finadeco09" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 09" identifier="finadeco09" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1536,1226,109,113" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 10" identifier="finadeco10" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 10" identifier="finadeco10" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,908,76,74" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Deco 11" identifier="finawingpart72" description="Fin construction piece" body="false">
+  <fin name="Fin A Deco 11" identifier="finawingpart72" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1228,1003,77,80" depth="0.985" origin="0.5,0.5" />
   </fin>
-  <fin name="Fin A Decal 02" identifier="finawingpart19" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 02" identifier="finawingpart19" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1622,805,91,119" depth="0.985" origin="0.4595993,0.6038165" />
   </fin>
-  <fin name="Fin A Decal 01" identifier="finawingpart20" description="Fin construction piece" body="false">
+  <fin name="Fin A Decal 01" identifier="finawingpart20" description="Fin construction piece" body="false" category="Decorative">
     <sprite texture="Content/Map/FinsA.png" sourcerect="1580,619,143,170" depth="0.985" origin="0.5339039,0.4379086" />
   </fin>
   <fin name="Fin A Patch 1" identifier="finapatch01" description="Fin construction piece" body="false">
@@ -635,156 +636,156 @@
   <!-- FINS A ENDS -->
   <!-- VENTILATION - Cosmetic -->
   <!-- Pipes-->
-  <ventilation name="Vent Pipe A1" identifier="ventpipea1" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A1" identifier="ventpipea1" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,0,512,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A1 90deg" identifier="ventpipea190deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A1 90deg" identifier="ventpipea190deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="544,0,32,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A2" identifier="ventpipea2" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A2" identifier="ventpipea2" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,32,448,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A2 90deg" identifier="ventpipea290deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A2 90deg" identifier="ventpipea290deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,0,32,448" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A3" identifier="ventpipea3" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A3" identifier="ventpipea3" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,96,512,24" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A3 90deg" identifier="ventpipea390deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A3 90deg" identifier="ventpipea390deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,0,24,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A4" identifier="ventpipea4" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A4" identifier="ventpipea4" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,128,480,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A4 90deg" identifier="ventpipea490deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A4 90deg" identifier="ventpipea490deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="672,0,17,480" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A5" identifier="ventpipea5" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A5" identifier="ventpipea5" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,160,512,48" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A5 90deg" identifier="ventpipea590deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A5 90deg" identifier="ventpipea590deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="704,0,48,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A6" identifier="ventpipea6" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A6" identifier="ventpipea6" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,208,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A6 90deg" identifier="ventpipea690deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A6 90deg" identifier="ventpipea690deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A7" identifier="ventpipea7" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A7" identifier="ventpipea7" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,288,512,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A7 90deg" identifier="ventpipea790deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A7 90deg" identifier="ventpipea790deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="864,0,64,512" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A8" identifier="ventpipea8" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A8" identifier="ventpipea8" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,384,256,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A8 90deg" identifier="ventpipea890deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A8 90deg" identifier="ventpipea890deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,0,32,256" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A9" identifier="ventpipea9" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A9" identifier="ventpipea9" description="Decorative ventilation piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,448,161,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe A9 90deg" identifier="ventpipea990deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe A9 90deg" identifier="ventpipea990deg" description="Decorative ventilation piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="992,0,32,160" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe Cap A1" identifier="ventpipecapa1" description="Decorative ventilation piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe Cap A1" identifier="ventpipecapa1" description="Decorative ventilation piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,383,16,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Pipe  Cap A1 90deg" identifier="ventpipecapa190deg" description="Decorative ventilation piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Pipe  Cap A1 90deg" identifier="ventpipecapa190deg" description="Decorative ventilation piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,365,32,16" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Medium Pipe Bend A1" identifier="ventmediumpipebenda1" description="Visual Ventilation Medium Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Pipe Bend A1" identifier="ventmediumpipebenda1" description="Visual Ventilation Medium Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="448,400,32,32" depth="0.96" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Large Pipe Bend A1" identifier="ventlargepipebenda1" description="Visual Ventilation Large Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Large Pipe Bend A1" identifier="ventlargepipebenda1" description="Visual Ventilation Large Pipe Bend piece" resizevertical="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="352,384,64,64" depth="0.96" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Connectors Cosmetic-->
-  <ventilation name="Vent Connector A1" identifier="ventconnectora1" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A1" identifier="ventconnectora1" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,512,127,113" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A2" identifier="ventconnectora2" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A2" identifier="ventconnectora2" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,512,208,105" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A3" identifier="ventconnectora3" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A3" identifier="ventconnectora3" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,640,149,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A4" identifier="ventconnectora4" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A4" identifier="ventconnectora4" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="192,640,192,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A5" identifier="ventconnectora5" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A5" identifier="ventconnectora5" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="1,768,215,91" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A6" identifier="ventconnectora6" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A6" identifier="ventconnectora6" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,864,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector A7" identifier="ventconnectora7" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector A7" identifier="ventconnectora7" description="Visual Vent Connector piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="0,960,176,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector Cap A1" identifier="ventconnectorcapa1" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector Cap A1" identifier="ventconnectorcapa1" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,768,59,49" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Connector Cap A2" identifier="ventconnectorcapa2" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Connector Cap A2" identifier="ventconnectorcapa2" description="Visual Vent Connector Cap piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="288,768,26,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <!--Ventilation Duct Cosmetic-->
-  <ventilation name="Vent Duct A1" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A1" identifier="ventducta1" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct A1 90 deg" identifier="ventducta190deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A1 90 deg" identifier="ventducta190deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="608,512,96,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct A2" identifier="ventducta2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A2" identifier="ventducta2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="736,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct A2 90 deg" identifier="ventducta290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct A2 90 deg" identifier="ventducta290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,544,62,63" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Bend Duct A1" identifier="ventbendducta1" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Bend Duct A1" identifier="ventbendducta1" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="896,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Bend Duct A2" identifier="ventbendducta2" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Bend Duct A2" identifier="ventbendducta2" description="Visual Vent Bend Duct piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="960,544,64,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Small Duct Reducer A" identifier="ventsmallductreducera" description="Visual Vent Small Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Small Duct Reducer A" identifier="ventsmallductreducera" description="Visual Vent Small Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="512,640,32,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Large Duct Reducer A" identifier="ventlargeductreducera" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Large Duct Reducer A" identifier="ventlargeductreducera" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="576,640,160,96" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Medium Duct Reducer A1" identifier="ventlargeductreducera1" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Duct Reducer A1" identifier="ventlargeductreducera1" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Medium Duct Reducer A2" identifier="ventlargeductreducera2" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Medium Duct Reducer A2" identifier="ventlargeductreducera2" description="Visual Vent Large Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="848,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct Fan A" identifier="ventductfana" description="Visual Vent Duct Fan piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Fan A" identifier="ventductfana" description="Visual Vent Duct Fan piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="928,640,64,128" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct B1" identifier="ventductb1" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B1" identifier="ventductb1" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="472,768,113,64" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct B1 90 deg" identifier="ventductb190deg" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B1 90 deg" identifier="ventductb190deg" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="800,864,64,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct B2" identifier="ventductlongb2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B2" identifier="ventductlongb2" description="Visual Vent Duct piece" resizehorizontal="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="224,841,224,48" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct B2 90 deg" identifier="ventductb290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct B2 90 deg" identifier="ventductb290deg" description="Visual Vent Duct piece" resizevertical="true" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="953,800,48,224" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct Bend B1" identifier="ventductbendb1" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Bend B1" identifier="ventductbendb1" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="505,864,112,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct Bend B2" identifier="ventductbendb2" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Bend B2" identifier="ventductbendb2" description="Visual Vent Duct Bend piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="640,832,128,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct Reducer B" identifier="ventductreducerb" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Reducer B" identifier="ventductreducerb" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="473,832,112,32" depth="0.92" origin="0.5,0.5" />
   </ventilation>
-  <ventilation name="Vent Duct Reducer B 90 deg" identifier="ventductreducerb90deg" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235">
+  <ventilation name="Vent Duct Reducer B 90 deg" identifier="ventductreducerb90deg" description="Visual Vent Duct Reducer piece" resizehorizontal="false" scale="0.5" spritecolor="235, 235, 235" category="Decorative">
     <sprite texture="Content/Map/DecorativeVentilation.png" sourcerect="768,864,32,112" depth="0.92" origin="0.5,0.5" />
   </ventilation>
   <!-- VENTILATION - Cosmetic ENDS -->
@@ -827,23 +828,23 @@
   <TailFinD3p3 name="Tail Fin D3 p3" identifier="tailfind3p3" description="Submarine tail temp" scale="0.5" body="false" castshadow="false">
     <sprite texture="Content/Map/SubFins.png" sourcerect="1523,535,484,492" depth="0.9" origin="0.5,0.5" />
   </TailFinD3p3>
-  <Front Name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400">
+  <Front name="Front A" identifier="extA_Front" description="Submarine front A temp" scale="1.1" resizehorizontal="false" body="true" bodywidth="80" bodyheight="370" bodyoffset="-60,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="586,5,306,500" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="586,513,306,500" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400">
+  <Front name="Front B" identifier="subfrontb" description="Submarine front B temp" scale="0.7" resizehorizontal="false" body="true" bodywidth="60" bodyheight="850" bodyoffset="-30,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,0,271,975" depth="0.01" origin="0.238248,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow.png" sourcerect="292,0,271,975" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p1" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="true" health="400">
+  <Front name="Front E p1" identifier="subfrontep1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="32" bodyoffset="-10,-10" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,0,260,163" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p2" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="true" health="400">
+  <Front name="Front E p2" identifier="subfrontep2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="-1,160,261,400" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.85" origin="0.5,0.5" />
   </Front>
-  <Front Name="Front E p3" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="true" health="400">
+  <Front name="Front E p3" identifier="subfrontep3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="-20" bodyoffset="0,25" castshadow="true" health="400">
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="0,556,262,128" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </Front>
@@ -859,23 +860,23 @@
     <sprite texture="Content/Map/SubRearBow2.png" sourcerect="422,869,288,156" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow2Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <FrontF1P1 Name="Front F1 p1" identifier="subfrontf1p1" description="Submarine front" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="26" bodyoffset="15,-10" castshadow="false" health="400">
+  <FrontF1P1 name="Front F1 p1" identifier="subfrontf1p1" description="Submarine front" scale="1.5" body="true" bodywidth="200" bodyheight="60" bodyrotation="26" bodyoffset="15,-10" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="-1,0,363,156" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.85" origin="0.5,0.5" />
   </FrontF1P1>
-  <FrontF1p2 Name="Front F1 p2" identifier="subfrontf1p2" description="Submarine front " scale="1.5" body="true" bodywidth="390" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
+  <FrontF1p2 name="Front F1 p2" identifier="subfrontf1p2" description="Submarine front " scale="1.5" body="true" bodywidth="390" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="74,154,285,279" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.85" origin="0.5,0.5" />
   </FrontF1p2>
-  <FrontF1p3 Name="Front F1 p3" identifier="subfrontf1p3" description="Submarine front " scale="1.5" body="true" bodywidth="230" bodyheight="60" bodyrotation="-20" bodyoffset="0,0" castshadow="false" health="400">
+  <FrontF1p3 name="Front F1 p3" identifier="subfrontf1p3" description="Submarine front " scale="1.5" body="true" bodywidth="230" bodyheight="60" bodyrotation="-20" bodyoffset="0,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,432,359,159" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF1p3>
-  <FrontF2p1 Name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
+  <FrontF2p1 name="Front F2 p1" identifier="subfrontf2p1" description="Submarine front" scale="1" body="true" bodywidth="250" bodyheight="30" bodyoffset="0,0" bodyrotation="-20" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="0,752,270,121" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p1>
-  <FrontF2p2 Name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
+  <FrontF2p2 name="Front F2 p2" identifier="subfrontf2p2" description="Submarine front" scale="1" body="true" bodywidth="138" bodyheight="158" bodyoffset="60,-3" castshadow="false" ishorizontal="false" health="400">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="1,593,269,160" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </FrontF2p2>
@@ -895,282 +896,282 @@
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="692,419,269,169" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFinF4>
-  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A1" identifier="frontfchaina1" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false" category="Decorative">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,815,744,46" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false">
+  <TailFin name="Front F Chain A2" identifier="frontfchaina2" description="Decorative chain" scale="1" resizehorizontal="true" body="false" castshadow="false" category="Decorative">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="280,869,745,24" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </TailFin>
-  <frontpulley name="Front F Pulley" identifier="frontpulley" description="Decorative pulley" scale="1" body="false" castshadow="false">
+  <frontpulley name="Front F Pulley" identifier="frontpulley" description="Decorative pulley" scale="1" body="false" castshadow="false" category="Decorative">
     <sprite texture="Content/Map/SubRearBow3.png" sourcerect="281,893,95,80" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBow3Back.png" depth="0.9" origin="0.5,0.5" />
   </frontpulley>
-  <FrontG1p1 Name="Front G1 p1" identifier="subfrontg1p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="50" bodyoffset="-10,-10" castshadow="false" health="400">
+  <FrontG1p1 name="Front G1 p1" identifier="subfrontg1p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="50" bodyoffset="-10,-10" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="-1,0,271,299" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG1p1>
-  <FrontG1p2 Name="Front G1 p2" identifier="subfrontg1p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
+  <FrontG1p2 name="Front G1 p2" identifier="subfrontg1p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="420" bodyheight="120" bodyrotation="90" bodyoffset="40,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,299,271,438" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG1p2>
-  <FrontG1p3 Name="Front G1 p3" identifier="subfrontg1p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="-50" bodyoffset="0,25" castshadow="false" health="400">
+  <FrontG1p3 name="Front G1 p3" identifier="subfrontg1p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="240" bodyheight="60" bodyrotation="-50" bodyoffset="0,25" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="0,737,269,254" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.9" origin="0.5,0.5" />
   </FrontG1p3>
-  <FrontG2p1 Name="Front G2 p1" identifier="subfrontg2p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="40" bodyoffset="-10,-16" castshadow="false" health="400">
+  <FrontG2p1 name="Front G2 p1" identifier="subfrontg2p1" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="40" bodyoffset="-10,-16" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="590,17,260,134" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG2p1>
-  <FrontG2p2 Name="Front G2 p2" identifier="subfrontg2p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="300" bodyheight="120" bodyrotation="90" bodyoffset="0,0" castshadow="false" health="400">
+  <FrontG2p2 name="Front G2 p2" identifier="subfrontg2p2" description="Submarine front C temp" scale="1.5" body="true" bodywidth="300" bodyheight="120" bodyrotation="90" bodyoffset="0,0" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="635,149,219,223" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.85" origin="0.5,0.5" />
   </FrontG2p2>
-  <FrontG2p3 Name="Front G2 p3" identifier="subfrontg2p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="-40" bodyoffset="0,25" castshadow="false" health="400">
+  <FrontG2p3 name="Front G2 p3" identifier="subfrontg2p3" description="Submarine front C temp" scale="1.5" body="true" bodywidth="150" bodyheight="60" bodyrotation="-40" bodyoffset="0,25" castshadow="false" health="400">
     <sprite texture="Content/Map/SubRearBow.png" sourcerect="593,371,237,130" depth="0.01" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/SubRearBowBack.png" depth="0.9" origin="0.5,0.5" />
   </FrontG2p3>
   <!-- TAIL ENDS-->
   <!-- INTERIOR WALLS FF -->
-  <structure name="InWall L 0" identifier="ff_x_wall" description="A large horizontal wall with collision detection" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75">
+  <structure name="" identifier="ff_x_wall" description="" width="512" height="48" resizehorizontal="true" body="true" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,0,512,48" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="512,0,512,48" depth="0.85" />
   </structure>
-  <structure name="InWall L 0 Cables" identifier="ff_x_wall_cables" description="A large vertical wall with collision detection" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="75">
+  <structure name="" identifier="ff_x_wall_cables" description="" width="512" height="73" resizehorizontal="true" body="true" bodyheight="52" bodyoffset="0,12" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="0,55,512,74" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="512,55,512,74" depth="0.85" />
   </structure>
-  <structure name="InWall L 90" identifier="ff_y_wall" description="A large vertical wall with collision detection" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="75">
+  <structure name="" identifier="ff_y_wall" description="" width="48" height="512" resizevertical="true" body="true" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="464,135,48,512" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="976,135,48,512" depth="0.85" />
   </structure>
-  <structure name="InWall L 90 cables" identifier="inwalll90cables" description="A large vertical wall with collision detection" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="75">
+  <structure name="" identifier="inwalll90cables" description="" resizevertical="true" body="true" bodywidth="52" bodyoffset="12,0" castshadow="true" health="75">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.06" sourcerect="383,135,73,512" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/LargeInsideWalls.png" sourcerect="895,135,73,512" depth="0.85" />
   </structure>
-  <structure name="InWall L Cap H1" identifier="inwalllcaph1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcaph1" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,177,27,50" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap H2" identifier="inwalllcaph2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcaph2" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="57,178,52,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap H3" identifier="inwalllcaph3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcaph3" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="186,178,51,58" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V1" identifier="inwalllcapy1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcapy1" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="309,182,49,52" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V2" identifier="inwalllcapy2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcapy2" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="310,248,48,27" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L Cap V4" identifier="inwalllcapy4" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwalllcapy4" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="299,329,59,50" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H1" identifier="inwallltieh1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltieh1" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="0,235,74,48" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H2" identifier="inwallltieh2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltieh2" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="75,251,73,17" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie H3" identifier="inwallltieh3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltieh3" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="5,298,111,54" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V1" identifier="inwallltiev1" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltiev1" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="301,397,48,72" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V2" identifier="inwallltiev2" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltiev2" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="316,471,16,72" origin="0.5,0.5" />
   </structure>
-  <structure name="InWall L tie V3" identifier="inwallltiev3" description="A large wall cap" body="false" castshadow="false" noaitarget="true">
+  <structure name="" identifier="inwallltiev3" description="" body="false" castshadow="false" noaitarget="true">
     <sprite texture="Content/Map/LargeInsideWalls.png" depth="0.03" sourcerect="223,267,53,110" origin="0.5,0.5" />
   </structure>
   <!-- BACK WALLS START -->
-  <Wall_B name="BackWall Ballast A1" identifier="FF_Wall_B" description="Ballast back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_B name="" identifier="FF_Wall_B" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="513,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_B>
-  <Wall_BP name="BackWall Ballast A2" identifier="FF_Wall_BP" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_BP name="" identifier="FF_Wall_BP" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,673,510,253" depth="0.98" premultiplyalpha="false" />
   </Wall_BP>
-  <Wall_BC name="BackWall Ballast C" identifier="bwbc" description="Ballast back wall with pipe" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_BC name="" identifier="bwbc" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,688,510,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_BC>
-  <Wall_C1 name="BackWall C1" identifier="FF_Wall_C1" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_C1 name="" identifier="FF_Wall_C1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,0,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C1>
-  <Wall_C2 name="BackWall C2" identifier="FF_Wall_C2" description="Mushy grey wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_C2 name="" identifier="FF_Wall_C2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,224,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C2>
-  <Wall_C3 name="BackWall C3" identifier="FF_Wall_C3" description="Mushy grey Greeble wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_C3 name="" identifier="FF_Wall_C3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="1,448,670,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_C3>
-  <Wall_D1 name="BackWall D1" identifier="FF_Wall_D1" description="Metal wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_D1 name="" identifier="FF_Wall_D1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,0,687,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D1>
-  <Wall_D2 name="BackWall D2" identifier="FF_Wall_D2" description="Metal wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_D2 name="" identifier="FF_Wall_D2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,224,687,240" depth="0.98" premultiplyalpha="false" />
   </Wall_D2>
-  <Wall_D3 name="BackWall D3" identifier="FF_Wall_D3" description="Metal wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_D3 name="" identifier="FF_Wall_D3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="335,464,687,224" depth="0.98" premultiplyalpha="false" />
   </Wall_D3>
-  <Wall_E name="BackWall E" identifier="FF_Wall_E" description="Block wall lit" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_E name="" identifier="FF_Wall_E" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_C.png" sourcerect="513,673,510,254" depth="0.98" premultiplyalpha="false" />
   </Wall_E>
-  <!--<Wall_F name="BackWall G1" identifier="FF_Wall_F" description="Machinery back wall" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <!--<Wall_F name="" identifier="FF_Wall_F" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/FF_Wall_F.png" sourcerect="0,0,658,322" depth="0.98" />
   </Wall_F>-->
-  <Wall_G1 name="BackWall G1" identifier="FF_Wall_G1" description="General grey back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_G1 name="" identifier="FF_Wall_G1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,0,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G1>
-  <Wall_G2 name="BackWall G2" identifier="FF_Wall_G2" description="General grey back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_G2 name="" identifier="FF_Wall_G2" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,222,332,240" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G2>
-  <Wall_G3 name="BackWall G3" identifier="FF_Wall_G3" description="General grey back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_G3 name="" identifier="FF_Wall_G3" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/BackgroundWalls.png" sourcerect="1,444,332,224" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_G3>
-  <Wall_H1 name="BackWall H1" identifier="FF_Wall_H1" description="Airlock Background" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5">
+  <Wall_H1 name="" identifier="FF_Wall_H1" description="" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" texturescale="0.5,0.5" category="Decorative">
     <sprite texture="Content/Map/bWall_Airlock_A1.png" sourcerect="0,0,512,512" depth="0.98" premultiplyalpha="false" />
   </Wall_H1>
-  <Wall_I1 name="BackWall Outpost A" identifier="FF_Wall_I1" description="Outpost back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I1 name="BackWall Outpost A" identifier="FF_Wall_I1" description="Outpost back wall 1" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,0,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I1>
-  <Wall_I2 name="BackWall Outpost B" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I2 name="BackWall Outpost B" identifier="FF_Wall_I2" description="Outpost back wall 2" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/OutpostWall_A.png" sourcerect="0,256,512,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I2>
-  <Wall_I3 name="BackWall Outpost C" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true">
+  <Wall_I3 name="BackWall Outpost C" identifier="FF_Wall_I3" description="Outpost back wall 3" allowattachitems="true" width="16" height="16" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/OutpostWall_C.png" sourcerect="0,0,256,256" depth="0.98" premultiplyalpha="false" origin="0.5,0.5" />
   </Wall_I3>
   <!-- BACK WALLS ENDS -->
   <!-- SUBMARINE WALLS aka *SHELLS" START -->
-  <shellA name="Shell A 90 deg" identifier="shella90deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="72" bodyoffset="12,0" resizevertical="true">
+  <shellA name="" identifier="shella90deg" description="" body="true" castshadow="true" health="200" bodywidth="72" bodyoffset="12,0" resizevertical="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,0,96,512" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 16 deg" identifier="shella16deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">
+  <shellA name="" identifier="shella16deg" description="" body="true" castshadow="true" health="200" bodywidth="266" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="129,0,256,160" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 34 deg" identifier="shella34deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="116" bodyheight="60" bodyrotation="-34">
+  <shellA name="" identifier="shella34deg" description="" body="true" castshadow="true" health="200" bodywidth="116" bodyheight="60" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="864,117,98,156" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 0 deg" identifier="shella0deg" description="Submarine wall" body="true" castshadow="true" health="200" width="512" height="96" bodyheight="72" bodyoffset="0,-12" resizehorizontal="true">
+  <shellA name="" identifier="shella0deg" description="" body="true" castshadow="true" health="200" width="512" height="96" bodyheight="72" bodyoffset="0,-12" resizehorizontal="true">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="416,0,512,96" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 04 deg" identifier="shella04deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="514" bodyheight="60" bodyoffset="0,-5" bodyrotation="-4">
+  <shellA name="" identifier="shella04deg" description="" body="true" castshadow="true" health="200" bodywidth="514" bodyheight="60" bodyoffset="0,-5" bodyrotation="-4">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,0,512,128" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 14 deg" identifier="shella14adeg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="522" bodyheight="60" bodyrotation="-14.5">
+  <shellA name="" identifier="shella14adeg" description="" body="true" castshadow="true" health="200" bodywidth="522" bodyheight="60" bodyrotation="-14.5">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1536,450,512,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 52 deg" identifier="shella52deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="385" bodyheight="60" bodyrotation="-52">
+  <shellA name="" identifier="shella52deg" description="" body="true" castshadow="true" health="200" bodywidth="385" bodyheight="60" bodyrotation="-52">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="101,174,285,338" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 16 deg B" identifier="shella16degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16.5">
+  <shellA name="" identifier="shella16degb" description="" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyoffset="0,-10" bodyrotation="-16.5">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="416,160,96,128" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 25 deg" identifier="shella25deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="141" bodyheight="60" bodyoffset="0,-10" bodyrotation="-25">
+  <shellA name="" identifier="shella25deg" description="" body="true" castshadow="true" health="200" bodywidth="141" bodyheight="60" bodyoffset="0,-10" bodyrotation="-25">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="544,128,128,160" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 45 deg" identifier="shella45deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="180" bodyheight="45" bodyrotation="-45" bodyoffset="-5,-10">
+  <shellA name="" identifier="shella45deg" description="" body="true" castshadow="true" health="200" bodywidth="180" bodyheight="45" bodyrotation="-45" bodyoffset="-5,-10">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="703,101,129,216" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 45 deg C" identifier="shella45degc" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyrotation="-45" bodyoffset="-10,10">
+  <shellA name="" identifier="shella45degc" description="" body="true" castshadow="true" health="200" bodywidth="100" bodyheight="60" bodyrotation="-45" bodyoffset="-10,10">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1023,1537,98,98" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 45 deg D" identifier="shella45degd" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="140" bodyheight="60" bodyrotation="-45">
+  <shellA name="" identifier="shella45degd" description="" body="true" castshadow="true" health="200" bodywidth="140" bodyheight="60" bodyrotation="-45">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,1662,131,134" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 32 deg" identifier="shella32deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="150" bodyheight="60" bodyoffset="13,-20" bodyrotation="-32">
+  <shellA name="" identifier="shella32deg" description="" body="true" castshadow="true" health="200" bodywidth="150" bodyheight="60" bodyoffset="13,-20" bodyrotation="-32">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="802,900,159,125" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 14 deg B" identifier="shella14degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="524" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14">
+  <shellA name="" identifier="shella14degb" description="" body="true" castshadow="true" health="200" bodywidth="524" bodyheight="60" bodyoffset="0,-12" bodyrotation="-14">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1025,154,512,208" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 43 deg" identifier="shella43deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="595" bodyheight="60" bodyrotation="-43">
+  <shellA name="" identifier="shella43deg" description="" body="true" castshadow="true" health="200" bodywidth="595" bodyheight="60" bodyrotation="-43">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1592,1,457,449" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 51 deg" identifier="Shella51deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="215" bodyheight="60" bodyoffset="12,-16" bodyrotation="-51">
+  <shellA name="" identifier="Shella51deg" description="" body="true" castshadow="true" health="200" bodywidth="215" bodyheight="60" bodyoffset="12,-16" bodyrotation="-51">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="388,294,188,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 47 deg" identifier="Shella47deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyrotation="-47">
+  <shellA name="" identifier="Shella47deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyrotation="-47">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="607,351,165,159" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 60 deg" identifier="Shella60deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60">
+  <shellA name="" identifier="Shella60deg" description="" body="true" castshadow="true" health="200" bodywidth="185" bodyheight="60" bodyoffset="16,-16" bodyrotation="-60">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="803,288,160,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 18 deg" identifier="Shella18deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyoffset="0,-12" bodyrotation="20">
+  <shellA name="" identifier="Shella18deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyoffset="0,-12" bodyrotation="20">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1024,380,384,224" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 70 deg" identifier="Shella70deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0">
+  <shellA name="" identifier="Shella70deg" description="" body="true" castshadow="true" health="200" bodywidth="414" bodyheight="60" bodyrotation="-70" bodyoffset="10,0">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,544,224,384" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.1" />
   </shellA>
-  <shellA name="Shell A 90 deg Curve" identifier="shella90degcurve" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="480" bodyrotation="0">
+  <shellA name="" identifier="shella90degcurve" description="" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="480" bodyrotation="0">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="255,543,128,482" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 45 deg B" identifier="shella45degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="360" bodyrotation="55">
+  <shellA name="" identifier="shella45degb" description="" body="true" castshadow="true" health="200" bodywidth="60" bodyheight="360" bodyrotation="55">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="415,544,320,256" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 57 deg" identifier="shella57deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="360" bodyheight="60" bodyrotation="-57">
+  <shellA name="" identifier="shella57deg" description="" body="true" castshadow="true" health="200" bodywidth="360" bodyheight="60" bodyrotation="-57">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="766,517,227,317" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 40 deg" identifier="shella40deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="540" bodyheight="60" bodyrotation="-40">
+  <shellA name="" identifier="shella40deg" description="" body="true" castshadow="true" health="200" bodywidth="540" bodyheight="60" bodyrotation="-40">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1026,637,454,388" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 61 deg" identifier="Shell A 61 deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyrotation="-61">
+  <shellA name="" identifier="Shell A 61 deg" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyrotation="-61">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1156,1071,285,466" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 17 deg" identifier="Shell A 17 deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="332" bodyheight="60" bodyrotation="-17">
+  <shellA name="" identifier="Shell A 17 deg" description="" body="true" castshadow="true" health="200" bodywidth="332" bodyheight="60" bodyrotation="-17">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="415,802,321,190" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 34 deg B" identifier="shella34degb" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyoffset="0,-18" bodyrotation="-34">
+  <shellA name="" identifier="shella34degb" description="" body="true" castshadow="true" health="200" bodywidth="480" bodyheight="60" bodyoffset="0,-18" bodyrotation="-34">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,1042,384,336" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 26 deg" identifier="shella26deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="550" bodyheight="60" bodyrotation="-26">
+  <shellA name="" identifier="shella26deg" description="" body="true" castshadow="true" health="200" bodywidth="550" bodyheight="60" bodyrotation="-26">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="416,1056,513,350" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 54 deg" identifier="shella54deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="601" bodyheight="60" bodyrotation="-54">
+  <shellA name="" identifier="shella54deg" description="" body="true" castshadow="true" health="200" bodywidth="601" bodyheight="60" bodyrotation="-54">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,1520,416,528" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 38 deg" identifier="shella38deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="682" bodyheight="60" bodyrotation="-42">
+  <shellA name="" identifier="shella38deg" description="" body="true" castshadow="true" health="200" bodywidth="682" bodyheight="60" bodyrotation="-42">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1506,709,544,512" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A 42 deg" identifier="shella42deg" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="400" bodyheight="60" bodyrotation="-42">
+  <shellA name="" identifier="shella42deg" description="" body="true" castshadow="true" health="200" bodywidth="400" bodyheight="60" bodyrotation="-42">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="449,1721,292,329" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A combo 1 1" identifier="shellacombo11" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="520" bodyheight="60" bodyrotation="-62" bodyoffset="7,-17">
+  <shellA name="" identifier="shellacombo11" description="" body="true" castshadow="true" health="200" bodywidth="520" bodyheight="60" bodyrotation="-62" bodyoffset="7,-17">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1201,1551,288,496" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A combo 1 2" identifier="shellacombo12" description="Submarine wall" body="true" castshadow="true" health="200" bodywidth="600" bodyheight="60" bodyrotation="-21.5" bodyoffset="-5,15">
+  <shellA name="" identifier="shellacombo12" description="" body="true" castshadow="true" health="200" bodywidth="600" bodyheight="60" bodyrotation="-21.5" bodyoffset="-5,15">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1488,1312,560,338" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
@@ -1190,191 +1191,191 @@
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="978,1185,93,107" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Board 0 deg A" identifier="shellaboard0dega" description="Submarine deco" castshadow="true" resizehorizontal="true">
+  <shellA name="Shell A Board 0 deg A" identifier="shellaboard0dega" description="Submarine deco" castshadow="true" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="1,1436,512,20" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Board 0 deg b" identifier="shellaboard0degb" description="Submarine deco" castshadow="true" resizehorizontal="true">
+  <shellA name="Shell A Board 0 deg b" identifier="shellaboard0degb" description="Submarine deco" castshadow="true" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="0,1470,513,34" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Board 90 deg A" identifier="shellaboard90dega" description="Submarine deco" castshadow="true" resizevertical="true">
+  <shellA name="Shell A Board 90 deg A" identifier="shellaboard90dega" description="Submarine deco" castshadow="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="897,1535,21,513" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
-  <shellA name="Shell A Board 90 deg b" identifier="shellaboard90degb" description="Submarine deco" castshadow="true" resizevertical="true">
+  <shellA name="Shell A Board 90 deg b" identifier="shellaboard90degb" description="Submarine deco" castshadow="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/ExteriorWallsA.png" sourcerect="957,1536,35,512" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ExteriorWallsABack.png" depth="0.85" />
   </shellA>
   <!-- SUBMARINE WALLS aka *SHELLS" END -->
   <!-- SHUTTLE SHELLS / SHUTTLE EXTERIOR WALLS -->
-  <sshellA name="Shuttle Shell A01" identifier="sshella01" description="Shuttle wall" body="true" bodywidth="40" resizevertical="true" castshadow="true">
+  <sshellA name="" identifier="sshella01" description="" body="true" bodywidth="40" resizevertical="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,0,45,208" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,0,45,208" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A02" identifier="sshella02" description="Shuttle wall" body="true" bodyheight="40" resizehorizontal="true" castshadow="true">
+  <sshellA name="" identifier="sshella02" description="" body="true" bodyheight="40" resizehorizontal="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="65,0,207,45" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="65,0,207,45" depth="0.85" />
   </sshellA>
-  <!-- <sshellA name="Shuttle Shell A03" identifier="sshella03" description="Shuttle wall" body="true" castshadow="true">
+  <!-- <sshellA name="" identifier="sshella03" description="" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="292,-2,159,52" depth="0.1" origin="0.5068434,0.5813913" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="292,-2,159,52" depth="0.85" />
   </sshellA> -->
-  <sshellA name="Shuttle Shell A04" identifier="sshella04" description="Shuttle wall" body="true" bodywidth="177" bodyheight="44" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella04" description="" body="true" bodywidth="177" bodyheight="44" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="458,0,185,45" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="458,0,185,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A05" identifier="sshella05" description="Shuttle wall" body="true" bodywidth="150" bodyheight="44" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella05" description="" body="true" bodywidth="150" bodyheight="44" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="649,0,155,45" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="649,0,155,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A06" identifier="sshellaA06" description="Shuttle wall" body="true" bodywidth="104" bodyheight="44" castshadow="true" health="100">
+  <sshellA name="" identifier="sshellaA06" description="" body="true" bodywidth="104" bodyheight="44" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="807,0,106,45" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="807,0,106,45" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A07" identifier="sshella07" description="Shuttle wall" body="true" bodywidth="77" bodyheight="43" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella07" description="" body="true" bodywidth="77" bodyheight="43" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="916,1,80,44" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="916,1,80,44" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A08" identifier="sshella08" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella08" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="63,79,211,47" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="63,79,211,47" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A09" identifier="sshella09" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella09" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="286,72,148,52" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="286,72,148,52" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A10" identifier="sshella10" description="Shuttle wall" body="true" bodywidth="160" bodyheight="45" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella10" description="" body="true" bodywidth="160" bodyheight="45" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="449,80,157,43" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="449,80,157,43" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A11" identifier="sshella11" description="Shuttle wall" body="true" bodywidth="180" bodyheight="45" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella11" description="" body="true" bodywidth="180" bodyheight="45" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="660,77,183,46" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="660,77,183,46" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A14" identifier="sshella14" description="Shuttle wall" body="true" bodywidth="186" bodyheight="62" bodyoffset="0,-8" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella14" description="" body="true" bodywidth="186" bodyheight="62" bodyoffset="0,-8" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="63,146,186,77" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="63,146,186,77" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A15a" identifier="sshella15a" description="Shuttle Fin" body="true" castshadow="true">
+  <sshellA name="" identifier="sshella15a" description="" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="298,148,222,28" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="298,148,222,28" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A15b" identifier="sshella15b" description="Shuttle Fin" body="true" castshadow="true">
+  <sshellA name="" identifier="sshella15b" description="" body="true" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="299,185,220,29" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="299,185,220,29" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A15c" identifier="sshella15c" description="Shuttle Fin" body="true" bodywidth="200" bodyheight="25" bodyoffset="-5,-5" bodyrotation="10" castshadow="true">
+  <sshellA name="" identifier="sshella15c" description="" body="true" bodywidth="200" bodyheight="25" bodyoffset="-5,-5" bodyrotation="10" castshadow="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="454,544,207,53" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="454,544,207,53" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17a" identifier="sshella17a" description="Shuttle wall" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
+  <sshellA name="" identifier="sshella17a" description="" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="636,156,23,51" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="636,156,23,51" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17b" identifier="sshella17b" description="Shuttle wall" castshadow="true" health="100" noaitarget="true">
+  <sshellA name="" identifier="sshella17b" description="" castshadow="true" health="100" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="675,156,47,48" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="675,156,47,48" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A17c" identifier="sshella17c" description="Shuttle wall" castshadow="true" health="100" ishorizontal="false" noaitarget="true">
+  <sshellA name="" identifier="sshella17c" description="" castshadow="true" health="100" ishorizontal="false" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="574,169,39,25" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="574,169,39,25" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A18" identifier="sshella18" description="Shuttle wall" body="true" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
+  <sshellA name="" identifier="sshella18" description="" body="true" castshadow="true" health="100" ishorizontal="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="731,152,44,51" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="731,152,44,51" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A19" identifier="sshella19" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella19" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="787,155,116,51" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="787,155,116,51" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A20" identifier="sshella20" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella20" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="2,270,46,101" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="2,270,46,101" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A21" identifier="sshella21" description="Shuttle wall" body="true" bodywidth="115" bodyheight="40" bodyrotation="14" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella21" description="" body="true" bodywidth="115" bodyheight="40" bodyrotation="14" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="79,286,117,73" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="79,286,117,73" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A22" identifier="sshella22" description="Shuttle wall" body="true" bodywidth="190" bodyheight="40" bodyrotation="14.7" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella22" description="" body="true" bodywidth="190" bodyheight="40" bodyrotation="14.7" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="204,278,188,87" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="204,278,188,87" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A23" identifier="sshella23" description="Shuttle wall" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella23" description="" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="400,258,116,121" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="400,258,116,121" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A24" identifier="sshella24" description="Shuttle wall" body="true" bodywidth="143" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella24" description="" body="true" bodywidth="143" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="524,246,108,127" depth="0.1" origin="0.4936646,0.4560038" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="524,246,108,127" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A25" identifier="sshella25" description="Shuttle wall" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella25" description="" body="true" bodywidth="146" bodyheight="45" bodyrotation="40" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="635,257,155,113" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="635,257,155,113" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A26" identifier="sshella26" description="Shuttle wall" body="true" bodywidth="118" bodyheight="46" bodyrotation="48" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella26" description="" body="true" bodywidth="118" bodyheight="46" bodyrotation="48" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="812,265,100,112" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="812,265,100,112" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A27" identifier="sshella27" description="Shuttle wall" body="true" bodywidth="118" bodyheight="45" bodyrotation="64.3" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella27" description="" body="true" bodywidth="118" bodyheight="45" bodyrotation="64.3" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="913,256,86,118" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="913,256,86,118" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A28" identifier="sshella28" description="Shuttle wall" body="true" bodywidth="48" bodyheight="111" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella28" description="" body="true" bodywidth="48" bodyheight="111" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,404,49,115" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,404,49,115" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A30" identifier="sshella30" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella30" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="302,381,50,200" depth="0.1" origin="0.391928,0.4112628" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="302,381,50,200" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A32b" identifier="sshella32b" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella32b" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="634,398,196,43" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="634,398,196,43" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A32c" identifier="sshella32c" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella32c" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="838,400,144,43" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="838,400,144,43" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A32d" identifier="sshella32d" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella32d" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="983,425,41,146" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="983,425,41,146" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A36" identifier="sshella36" description="Shuttle wall" body="true" bodywidth="115" bodyheight="80" bodyrotation="67" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella36" description="" body="true" bodywidth="115" bodyheight="80" bodyrotation="67" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,172,123" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="702,885,172,123" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A37" identifier="sshella37" description="Shuttle wall" body="true" bodywidth="115" bodyheight="115" bodyrotation="80" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella37" description="" body="true" bodywidth="115" bodyheight="115" bodyrotation="80" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="500,884,177,126" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A38" identifier="sshella38" description="Shuttle wall" body="true" bodywidth="50" bodyheight="50" bodyrotation="0" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella38" description="" body="true" bodywidth="50" bodyheight="50" bodyrotation="0" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="379,909,110,89" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="379,909,110,89" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A39" identifier="sshella39" description="Shuttle wall" body="true" bodywidth="154" bodyheight="40" bodyrotation="11" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella39" description="" body="true" bodywidth="154" bodyheight="40" bodyrotation="11" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="211,914,160,74" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="211,914,160,74" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A40" identifier="sshella40" description="Shuttle wall" body="true" bodywidth="210" bodyheight="40" bodyrotation="20" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella40" description="" body="true" bodywidth="210" bodyheight="40" bodyrotation="20" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="0,899,204,102" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="0,899,204,102" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A41" identifier="sshella41" description="Shuttle wall" body="true" castshadow="true" health="100">
+  <sshellA name="" identifier="sshella41" description="" body="true" castshadow="true" health="100">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="803,784,148,69" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="803,784,148,69" depth="0.85" />
   </sshellA>
   <!-- SHUTTLE SHELLS / SPECIAL PIECES -->
   <!-- Front / Shuttle Shells -->
-  <sshellA name="Shuttle Lights A" identifier="sshellalightsa" description="Shuttle wall" body="false">
+  <sshellA name="" identifier="sshellalightsa" description="" body="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="106,411,128,159" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="106,411,128,159" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Plate A" identifier="sshellaplatea" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellaplatea" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="405,413,113,113" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="405,413,113,113" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Plate B" identifier="sshellaplateb" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellaplateb" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="534,414,98,105" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="534,414,98,105" depth="0.85" />
   </sshellA>
@@ -1383,90 +1384,90 @@
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="405,413,113,113" depth="0.85" />
   </sshellA>
   <!-- Bumper / Shuttle Shells -->
-  <sshellA name="Shuttle Bumper A" identifier="sshellabumpera" description="Shuttle wall" body="true" bodywidth="240" bodyheight="30" health="200" castshadow="false">
+  <sshellA name="" identifier="sshellabumpera" description="" body="true" bodywidth="240" bodyheight="30" health="200" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="714,501,255,53" depth="0.12" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="714,501,255,53" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Bumper B" identifier="sshellabumperb" description="Shuttle wall" body="true" bodywidth="105" bodyheight="30" health="200" castshadow="false">
+  <sshellA name="" identifier="sshellabumperb" description="" body="true" bodywidth="105" bodyheight="30" health="200" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="764,464,111,31" depth="0.12" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="764,464,111,31" depth="0.85" />
   </sshellA>
   <!-- Glass / Shuttle Shells -->
-  <sshellA name="Shuttle Shell A Glass A" identifier="sshellaglassa" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglassa" description="" body="true" bodywidth="286" bodyheight="40" bodyrotation="55" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="1,573,181,249" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="1,573,181,249" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass B" identifier="sshellaglassb" description="Shuttle wall" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglassb" description="" body="true" bodywidth="286" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="222,598,268,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="222,598,268,218" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass C" identifier="sshellaglassc" description="Shuttle wall" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglassc" description="" body="true" bodywidth="272" bodyheight="40" bodyrotation="43" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="494,600,221,218" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="494,600,221,218" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass D" identifier="sshellaglassd" description="Shuttle wall" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglassd" description="" body="true" bodywidth="206" bodyheight="40" bodyrotation="38" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="735,576,181,143" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="735,576,181,143" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass E" identifier="sshellaglasse" description="Shuttle wall" body="true" resizevertical="true" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglasse" description="" body="true" resizevertical="true" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="979,577,45,190" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="979,577,45,190" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Shell A Glass F" identifier="sshellaglassf" description="Shuttle wall" body="true" resizehorizontal="true" castshadow="false" health="50" tags="glass">
+  <sshellA name="" identifier="sshellaglassf" description="" body="true" resizehorizontal="true" castshadow="false" health="50" tags="glass">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="721,736,190,47" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="721,736,190,47" depth="0.85" />
   </sshellA>
   <!-- Fins / Shuttle Shells -->
-  <sshellA name="Shuttle Fin A" identifier="sshellafina" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellafina" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="702,885,165,121" depth="0.9" origin="0.5,0.5" />
     <!--  <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="702,885,172,123" depth="0.85" /> -->
   </sshellA>
-  <sshellA name="Shuttle Fin B" identifier="sshellafinb" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellafinb" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="500,884,172,120" depth="0.9" origin="0.5,0.5" />
     <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="500,884,177,126" depth="0.85" /> -->
   </sshellA>
-  <sshellA name="Shuttle Fin C" identifier="sshellafinc" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellafinc" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="858,46,130,101" depth="0.9" origin="0.5,0.5" />
     <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="858,44,145,108" depth="0.85" /> -->
   </sshellA>
-  <sshellA name="Shuttle Fin D" identifier="sshellafind" description="Shuttle wall" body="false" castshadow="false">
+  <sshellA name="" identifier="sshellafind" description="" body="false" castshadow="false">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="892,887,102,131" depth="0.9" origin="0.5,0.5" />
     <!-- <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="892,890,107,129" depth="0.85" /> -->
   </sshellA>
   <!-- Gromits / Shuttle Shells  -->
-  <sshellA name="Shuttle Gromit A" identifier="sshellagromita" description="Shuttle wall" castshadow="true" noaitarget="true">
+  <sshellA name="" identifier="sshellagromita" description="" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="539,172,18,18" depth="0.1" origin="0.414694,0.4719137" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="539,172,18,18" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit B" identifier="sshellagromitb" description="Shuttle gromit" castshadow="true" noaitarget="true">
+  <sshellA name="" identifier="sshellagromitb" description="" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="915,181,45,16" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="915,181,45,16" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit C" identifier="sshellagromitc" description="Shuttle gromit" castshadow="true" noaitarget="true">
+  <sshellA name="" identifier="sshellagromitc" description="" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="914,158,39,14" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="914,158,39,14" depth="0.85" />
   </sshellA>
-  <sshellA name="Shuttle Gromit D" identifier="sshellagromitd" description="Shuttle gromit" castshadow="true" noaitarget="true">
+  <sshellA name="" identifier="sshellagromitd" description="" castshadow="true" noaitarget="true">
     <sprite texture="Content/Map/ShuttleWalls.png" sourcerect="966,159,12,11" depth="0.1" origin="0.5,0.5" />
     <backgroundsprite texture="Content/Map/ShuttleWallsBack.png" sourcerect="966,159,12,11" depth="0.85" />
   </sshellA>
   <!-- OLD PIECES -->
-  <largehorizontalback identifier="largehorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="64" resizehorizontal="true">
+  <largehorizontalback identifier="largehorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="64" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,0,896,64" depth="0.9" />
   </largehorizontalback>
-  <smallhorizontalback identifier="smallhorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="32" resizehorizontal="true">
+  <smallhorizontalback identifier="smallhorizontalback" allowattachitems="true" description="A decorative structure with no collision detection" width="128" height="32" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,64,896,32" depth="0.9" />
   </smallhorizontalback>
-  <largeverticalback identifier="largeverticalback" allowattachitems="true" description="A decorative structure with no collision detection" width="64" height="128" resizevertical="true">
+  <largeverticalback identifier="largeverticalback" allowattachitems="true" description="A decorative structure with no collision detection" width="64" height="128" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="0,96,64,448" depth="0.9" />
   </largeverticalback>
-  <largeverticalback2 identifier="largeverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="64" height="128" resizevertical="true">
+  <largeverticalback2 identifier="largeverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="64" height="128" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="64,96,64,448" depth="0.9" />
   </largeverticalback2>
-  <smallverticalback identifier="smallverticalback" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true">
+  <smallverticalback identifier="smallverticalback" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="128,96,32,352" depth="0.9" />
   </smallverticalback>
-  <smallverticalback2 identifier="smallverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true">
+  <smallverticalback2 identifier="smallverticalback2" allowattachitems="true" description="A decorative structure with no collision detection" width="32" height="128" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="160,96,32,352" depth="0.9" />
   </smallverticalback2>
   <leftwall name="Basic Wall Left" identifier="leftwall" category="Legacy" description="A vertical wall with collision detection" width="32" height="64" resizevertical="true" body="true" castshadow="true" health="55">
@@ -1493,22 +1494,22 @@
     <sprite texture="Content/Map/testroom.png" sourcerect="0,546,96,384" depth="0.06" />
     <backgroundsprite texture="Content/Map/testroom.png" sourcerect="98,546,96,384" depth="0.85" />
   </RightWallHeavy>
-  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true">
+  <CableHolderHorizontal name="Cable Holder Horizontal" identifier="CableHolderHorizontal" allowattachitems="true" width="32" height="16" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="533,907,32,16" depth="0.85" />
   </CableHolderHorizontal>
-  <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true">
+  <CableHolderHorizontal2 name="Cable Holder Horizontal 2" identifier="CableHolderHorizontal2" allowattachitems="true" width="32" height="28" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="491,907,32,28" depth="0.85" />
   </CableHolderHorizontal2>
-  <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true">
+  <CableHolderHorizontal3 name="Cable Holder Horizontal 3" identifier="CableHolderHorizontal3" allowattachitems="true" width="32" height="38" resizehorizontal="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="449,907,32,38" depth="0.85" />
   </CableHolderHorizontal3>
-  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true">
+  <CableHolderVertical name="Cable Holder Vertical" identifier="CableHolderVertical" allowattachitems="true" width="16" height="32" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="423,907,16,32" depth="0.85" />
   </CableHolderVertical>
-  <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true">
+  <CableHolderVertical2 name="Cable Holder Vertical 2" identifier="CableHolderVertical 2" allowattachitems="true" width="27" height="32" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="386,907,27,32" depth="0.85" />
   </CableHolderVertical2>
-  <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true">
+  <CableHolderVertical3 name="Cable Holder Vertical 3" identifier="CableHolderVertical 3" allowattachitems="true" width="38" height="32" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="338,907,38,32" depth="0.85" />
   </CableHolderVertical3>
   <topwindow name="Window Top" identifier="topwindow" width="128" height="49" body="true" health="100" tags="glass">
@@ -1536,25 +1537,25 @@
     <Upgrade gameversion="0.9.3.0" rectheight="27" />
     <sprite texture="Content/Map/testroom.png" sourcerect="897,52,126,27" depth="0.9" />
   </platform>
-  <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <roughbgwall name="BackWall Rough" identifier="roughbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="200,104,240,240" depth="0.98" />
   </roughbgwall>
-  <cleanbgwall name="BackWall Clean" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <cleanbgwall name="BackWall Clean" identifier="cleanbgwall" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="448,96,448,224" depth="0.98" />
   </cleanbgwall>
-  <bgpanels name="BackWall Panels" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanels name="BackWall Panels" identifier="bgpanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="720,336,224,224" depth="0.98" />
   </bgpanels>
-  <bgpanelswindow name="BackWall Window" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgpanelswindow name="BackWall Window" identifier="bgpanelswindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="724,560,224,224" depth="0.98" />
   </bgpanelswindow>
-  <bgorangepanels name="BackWall Orange Panels" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanels name="BackWall Orange Panels" identifier="bgorangepanels" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="576,798,446,224" depth="0.98" />
   </bgorangepanels>
-  <bgorangepanelwindow name="BackWall Orange Panels Window" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <bgorangepanelwindow name="BackWall Orange Panels Window" identifier="bgorangepanelwindow" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/testroom.png" sourcerect="501,560,224,224" depth="0.98" />
   </bgorangepanelwindow>
-  <PipesBackground name="BackWall Pipes" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true">
+  <PipesBackground name="BackWall Pipes" identifier="PipesBackground" allowattachitems="true" width="64" height="64" resizehorizontal="true" resizevertical="true" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="320,0,192,192" depth="0.98" />
   </PipesBackground>
   <SlopeForward name="Slope Forwards" identifier="SlopeForward" width="16" height="16" resizehorizontal="true" resizevertical="true">
@@ -1572,7 +1573,7 @@
   <stairsleft name="Stairs Left" identifier="stairsleft" width="256" height="320" stairangle="45" stairdirection="Left">
     <sprite texture="Content/Map/structures2.png" sourcerect="256,193,256,319" fliphorizontal="true" depth="0.1" />
   </stairsleft>
-  <bunk name="Bunk" identifier="bunk" width="173" height="129">
+  <bunk name="Bunk" identifier="bunk" width="173" height="129" category="Decorative">
     <sprite texture="Content/Map/structures2.png" sourcerect="0,129,173,129" depth="0.9" />
   </bunk>
   <RuinWallHorizontal name="Ruin Wall Horizontal" identifier="RuinWallHorizontal" category="Alien" castshadow="true" width="256" height="80" resizehorizontal="true" body="true" health="200" noaitarget="true">
@@ -1633,16 +1634,16 @@
     <sprite texture="Content/Map/AlienDecals1.png" sourcerect="256,256,256,256" depth="0.97" />
   </RuinDecal4>
   <!-- BACKGROUND ROCKS -->
-  <BGRock1 name="Background Rock 1" identifier="BGRock1" category="Misc" allowattachitems="true" width="668" height="523">
+  <BGRock1 name="" identifier="BGRock1" category="Misc" allowattachitems="true" width="668" height="523">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,0,668,523" depth="1" />
   </BGRock1>
-  <BGRock2 name="Background Rock 2" identifier="BGRock2" category="Misc" allowattachitems="true" width="355" height="513">
+  <BGRock2 name="" identifier="BGRock2" category="Misc" allowattachitems="true" width="355" height="513">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="669,0,355,513" depth="1" />
   </BGRock2>
-  <BGRock3 name="Background Rock 3" identifier="BGRock3" category="Misc" allowattachitems="true" width="331" height="501">
+  <BGRock3 name="" identifier="BGRock3" category="Misc" allowattachitems="true" width="331" height="501">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="0,523,331,501" depth="1" />
   </BGRock3>
-  <BGRock4 name="Background Rock 4" identifier="BGRock4" category="Misc" allowattachitems="true" width="322" height="511">
+  <BGRock4 name="" identifier="BGRock4" category="Misc" allowattachitems="true" width="322" height="511">
     <sprite texture="Content/LevelObjects/Rock.png" sourcerect="702,513,322,511" depth="1" />
   </BGRock4>
 </prefabs>

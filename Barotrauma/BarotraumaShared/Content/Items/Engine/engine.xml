@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Engine" identifier="engine" tags="engine" category="Machine" Scale="0.5">
+  <Item name="" identifier="engine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,0,707,334" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -9,7 +9,7 @@
     <trigger x="200" y="-50" width="400" height="240" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="2000.0" maxforce="2000" canbeselected="true" propellerpos="-160,-15" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true" />
       <poweronsound file="Content/Items/PowerOnHeavy1.ogg" range="1000" loop="false" />
@@ -24,7 +24,7 @@
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_force" displayname="connection.setforce" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem items="wrench" type="equipped" />
@@ -32,7 +32,7 @@
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
   </Item>
-  <Item name="Large Engine" identifier="largeengine" tags="engine" category="Machine" Scale="0.8">
+  <Item name="" identifier="largeengine" tags="engine" category="Machine" Scale="0.8">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,335,1024,377" canflipx="true" origin="0.5,0.5" />
     <!--
     <BrokenSprite texture="BTart_EngineDiesel.png" sourcerect="0,436,590,218" depth="0.8" maxcondition="50" fadein="true" />
@@ -41,7 +41,7 @@
     <trigger x="375" y="-43" width="563" height="312" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="4000.0" maxforce="4000" canbeselected="true" propellerpos="-380,20" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <StatusEffect type="InWater" target="This" condition="-1.0" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="5000.0" volumeproperty="CurrentVolume" loop="true" />
       <poweronsound file="Content/Items/PowerOnHeavy1.ogg" range="3000" loop="false" />
@@ -56,7 +56,7 @@
       <input name="power_in" displayname="connection.powerin" />
       <input name="set_force" displayname="connection.setforce" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="300" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="30" />
       <RequiredItem items="wrench" type="equipped" />
@@ -64,12 +64,12 @@
       <ParticleEmitter particle="smoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="0.0" />
     </Repairable>
   </Item>
-  <Item name="Shuttle Engine" identifier="shuttleengine" tags="engine" category="Machine" Scale="0.5">
+  <Item name="" identifier="shuttleengine" tags="engine" category="Machine" Scale="0.5">
     <Sprite texture="Engines.png" depth="0.8" sourcerect="0,714,422,192" canflipx="true" origin="0.5,0.5" />
     <trigger x="180" y="-30" width="200" height="146" />
     <aitarget sightrange="500" soundrange="10000"/>
     <Engine minvoltage="0.5" powerconsumption="500.0" maxforce="300" canbeselected="true" propellerpos="-80,0" msg="ItemMsgInteractSelect">
-      <GuiFrame relativesize="0.2,0.15" minsize="400,160" maxsize="480,190" anchor="Center" style="ItemUI" />
+      <GuiFrame relativesize="0.2,0.18" minsize="400,180" anchor="Center" style="ItemUI" />
       <sound file="Content/Items/Engine/Engine.ogg" type="OnActive" range="3000.0" volumeproperty="CurrentVolume" loop="true" />
       <propellerdamage damagerange="150" targetforce="500" severlimbsprobability="1.0">
         <Affliction identifier="internaldamage" strength="25" />

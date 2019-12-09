@@ -263,6 +263,10 @@ namespace Barotrauma
                         Server.ServerSettings.PlayStyle = playStyle;
                         i++;
                         break;
+                    case "-banafterwrongpassword":
+                        bool.TryParse(CommandLineArgs[i + 1], out bool banAfterWrongPassword);
+                        Server.ServerSettings.BanAfterWrongPassword = banAfterWrongPassword;
+                        break;
                 }
             }
         }

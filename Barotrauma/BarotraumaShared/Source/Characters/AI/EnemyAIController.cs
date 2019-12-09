@@ -562,7 +562,7 @@ namespace Barotrauma
                     var door = i.GetComponent<Door>();
                     // Steer through the door manually if it's open or broken
                     // Don't try to enter dry hulls if cannot walk or if the gap is too narrow
-                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && (door.IsOpen || door.Item.Condition <= 0.0f))
+                    if (door?.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom && door.IsOpen)
                     {
                         if (Character.AnimController.CanWalk || door.LinkedGap.FlowTargetHull.WaterPercentage > 25)
                         {
@@ -862,7 +862,7 @@ namespace Barotrauma
                         if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
                         {
                             var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                            if (door != null && !door.IsOpen && door.Item.Condition > 0)
+                            if (door != null && !door.IsOpen)
                             {
                                 if (SelectedAiTarget != door.Item.AiTarget)
                                 {
@@ -971,9 +971,9 @@ namespace Barotrauma
                 if (!attack.IsValidTarget(target)) { continue; }
                 if (target is ISerializableEntity se && target is Character)
                 {
-                    // TODO: allow conditionals of which matching any is enough instead of having to fulfill all
                     if (attack.Conditionals.Any(c => !c.Matches(se))) { continue; }
                 }
+                if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(Character))) { continue; }
                 float priority = CalculatePriority(limb, attackWorldPos);
                 if (priority > currentPriority)
                 {
@@ -1100,9 +1100,10 @@ namespace Barotrauma
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
 
-            // Only allow to react once. Otherwise would attack the target with only a fraction of cooldown
-            bool retaliate = attacker.Submarine == Character.Submarine && SelectedAiTarget != attacker.AiTarget;
-            bool avoidGunFire = attacker.Submarine != Character.Submarine && Character.Params.AI.AvoidGunfire;
+            // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
+            bool retaliate = SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
+            bool avoidGunFire = Character.Params.AI.AvoidGunfire && attacker.Submarine != Character.Submarine;
+
             if (State == AIState.Attack && !IsCoolDownRunning)
             {
                 // Don't retaliate or escape while performing an attack
@@ -1445,7 +1446,7 @@ namespace Barotrauma
                         }
                         if (door.Item.Submarine == null) { continue;}
                         bool isOutdoor = door.LinkedGap?.FlowTargetHull != null && !door.LinkedGap.IsRoomToRoom;
-                        bool isOpen = door.IsOpen || door.Item.Condition <= 0.0f;
+                        bool isOpen = door.IsOpen;
                         if (!isOpen && (!canAttackSub))
                         {
                             // Ignore doors that are not open if cannot attack items/structures. Open doors should be targeted, so that we can get in if we are aggressive boarders

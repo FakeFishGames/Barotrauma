@@ -46,7 +46,6 @@ namespace Barotrauma.Networking
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
         //TODO: move these to NetLobbyScreen
-        public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
         private GUIComponent buttonContainer;
 
@@ -176,33 +175,6 @@ namespace Barotrauma.Networking
             {
                 AbsoluteSpacing = 5,
                 CanBeFocused = false
-            };
-
-            EndRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
-                TextManager.Get("EndRound"))
-            {
-                OnClicked = (btn, userdata) =>
-                {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
-                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
-                    {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
-                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                        msgBox.Buttons[0].OnClicked = (_, __) =>
-                        {
-                            GameMain.Client.RequestRoundEnd();
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked += msgBox.Close;
-                    }
-                    else
-                    {
-                        RequestRoundEnd();
-                    }
-                    return true;
-                },
-                Visible = false
             };
 
             EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
@@ -1127,6 +1099,15 @@ namespace Barotrauma.Networking
 
             bool allowRagdollButton = inc.ReadBoolean();
 
+            ushort contentToPreloadCount = inc.ReadUInt16();
+            List<ContentFile> contentToPreload = new List<ContentFile>();
+            for (int i = 0; i < contentToPreloadCount; i++)
+            {
+                ContentType contentType = (ContentType)inc.ReadByte();
+                string filePath = inc.ReadString();
+                contentToPreload.Add(new ContentFile(filePath, contentType));
+            }
+
             serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
@@ -1243,14 +1224,16 @@ namespace Barotrauma.Networking
                 yield return CoroutineStatus.Failure;
             }
 
-            if (respawnAllowed) respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null);
+            if (respawnAllowed) { respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null); }
+
+            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
 
             ServerSettings.ServerDetailsChanged = true;
             gameStarted = true;
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameMain.Config.KeyBind(InputType.Chat).ToString()}~[radiobutton]={GameMain.Config.KeyBind(InputType.RadioChat).ToString()}", ChatMessageType.Server);
+            AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameMain.Config.KeyBindText(InputType.Chat)}~[radiobutton]={GameMain.Config.KeyBindText(InputType.RadioChat)}", ChatMessageType.Server);
 
             yield return CoroutineStatus.Success;
         }
@@ -1662,14 +1645,11 @@ namespace Barotrauma.Networking
 
                         DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
-                        FileStream fl = File.Open("crashreport_object.bin", FileMode.Create);
-                        BinaryWriter sw = new BinaryWriter(fl);
-
-                        sw.Write(inc.Buffer, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
-
-                        sw.Close();
-                        fl.Close();
-
+                        using (FileStream fl = File.Open("crashreport_object.bin", FileMode.Create))
+                        using (BinaryWriter sw = new BinaryWriter(fl))
+                        {
+                            sw.Write(inc.Buffer, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
+                        }
                         throw new Exception("Error while reading update from server: please send us \"crashreport_object.bin\"!");
                 }
                 prevBitLength = inc.BitPosition - prevBitPos;

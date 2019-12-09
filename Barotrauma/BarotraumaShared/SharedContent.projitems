@@ -683,6 +683,9 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Clown\clown.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\MiscJobGear.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Mechanic\mechanic_torso_male_3.png" />
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Medic\medic_legs_female_2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -748,6 +751,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Watchman\watchman_torso_male_2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\Crosshairs.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\BackgroundWalls.png">
@@ -865,41 +871,41 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Map\Zones\Volcanic\Zone1SurfaceDetail.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_BrazilianPortuguese.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\BrazilianPortuguese\NpcConversations_BrazilianPortuguese.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_CastilianSpanish.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\CastilianSpanish\NpcConversations_CastilianSpanish.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_English.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\English\NpcConversations_English.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\French\NpcConversations_French.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\German\NpcConversations_German.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Japanese\NpcConversations_Japanese.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\LatinamericanSpanish\NpcConversations_LatinamericanSpanish.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_Finnish.xml" />
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_French.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Polish\NpcConversations_Polish.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_German.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Russian\NpcConversations_Russian.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_Japanese.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\SimplifiedChinese\NpcConversations_SimplifiedChinese.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_LatinamericanSpanish.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\TraditionalChinese\NpcConversations_TraditionalChinese.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_Polish.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_Russian.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_SimplifiedChinese.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_TraditionalChinese.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\NpcConversations_Turkish.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\NPCConversations\Turkish\NpcConversations_Turkish.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Splash_Daedalic.mp4">
@@ -911,40 +917,43 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Splash_UTG.mp4">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\BrazilianPortugueseVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\BrazilianPortuguese\BrazilianPortugueseVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\CastilianSpanishVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\CastilianSpanish\CastilianSpanishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Texts\Credits.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\FrenchVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\English\EnglishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\GermanVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\French\FrenchVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\JapaneseVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\German\GermanVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\LatinamericanSpanishVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\Japanese\JapaneseVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\PolishVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\LatinamericanSpanish\LatinamericanSpanishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\RussianVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\Polish\PolishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\SimplifiedChineseVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\Russian\RussianVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\TraditionalChineseVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\SimplifiedChinese\SimplifiedChineseVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\TurkishVanilla.xml">
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\TraditionalChinese\TraditionalChineseVanilla.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\Turkish\TurkishVanilla.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Tutorials\TutorialVideos\tutorial_command.mp4">
@@ -2150,9 +2159,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Particles\UnderwaterExplosionSheet.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Texts\EnglishVanilla.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Alien\alientools.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2267,9 +2273,6 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\Medic\medic_gear.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\clothes.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Jobgear\misc.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -2318,13 +2321,7 @@
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Tools\tools.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\crosshairPointer.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\depthcharge.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\crosshair.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Items\Weapons\explosives.xml">
@@ -2364,9 +2361,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Lights\divinghelmetlight.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="$(MSBuildThisFileDirectory)Content\Lights\divinghelmetvisorlight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="$(MSBuildThisFileDirectory)Content\Lights\penumbra.png">

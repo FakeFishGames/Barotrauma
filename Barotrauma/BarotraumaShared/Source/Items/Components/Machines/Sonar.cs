@@ -242,14 +242,16 @@ namespace Barotrauma.Items.Components
             screenBackground?.Remove();
             lineSprite?.Remove();
         }
-
+        
+        private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (currentMode == Mode.Passive || !aiPingCheckPending) return false;
+            if (currentMode == Mode.Passive || !aiPingCheckPending) { return false; }
 
-            // TODO: Don't create new collections here
-            Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
-
+            foreach (List<Character> targetGroup in targetGroups.Values)
+            {
+                targetGroup.Clear();
+            }
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
@@ -257,7 +259,6 @@ namespace Barotrauma.Items.Components
                 if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) continue;
 
                 string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition);
-
                 if (!targetGroups.ContainsKey(directionName))
                 {
                     targetGroups.Add(directionName, new List<Character>());
@@ -267,6 +268,7 @@ namespace Barotrauma.Items.Components
 
             foreach (KeyValuePair<string, List<Character>> targetGroup in targetGroups)
             {
+                if (!targetGroup.Value.Any()) { continue; }
                 string dialogTag = "DialogSonarTarget";
                 if (targetGroup.Value.Count > 1)
                 {

@@ -5,6 +5,7 @@ using System;
 using FarseerPhysics;
 using System.Diagnostics;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -20,6 +21,11 @@ namespace Barotrauma
 
         private Texture2D damageStencil;       
         private Texture2D distortTexture;
+
+
+        private float BlurStrength = 0.0f;
+        private float DistortStrength = 0.0f;
+        private Vector3 ChromaticAberrationStrength;
 
         public Effect PostProcessEffect
         {
@@ -85,6 +91,17 @@ namespace Barotrauma
             cam.UpdateTransform(true);
             Submarine.CullEntities(cam);
 
+            foreach (Character c in Character.CharacterList)
+            {
+                c.AnimController.Limbs.ForEach(l => l.body.UpdateDrawPosition());
+                bool wasVisible = c.IsVisible;
+                c.DoVisibilityCheck(cam);
+                if (c.IsVisible != wasVisible)
+                {
+                    c.AnimController.Limbs.ForEach(l => { if (l.LightSource != null) l.LightSource.Enabled = c.IsVisible; });
+                }
+            }
+
             Stopwatch sw = new Stopwatch();
             sw.Start();
 
@@ -139,7 +156,6 @@ namespace Barotrauma
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
-
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -201,7 +217,7 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, false, s => !(s is Structure) || !(s.ResizeVertical && s.ResizeHorizontal));
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) continue;
+                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
@@ -211,7 +227,7 @@ namespace Barotrauma
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) continue;
+                if (c.AnimController.Limbs.All(l => l.DeformSprite == null) || !c.IsVisible) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();
@@ -324,23 +340,21 @@ namespace Barotrauma
                 spriteBatch.End();
             }
             graphics.SetRenderTarget(null);
-
-            float BlurStrength = 0.0f;
-            float DistortStrength = 0.0f;
-            Vector3 chromaticAberrationStrength = GameMain.Config.ChromaticAberrationEnabled ?
-                new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
-
+            
             if (Character.Controlled != null)
             {
-                BlurStrength = Character.Controlled.BlurStrength * 0.005f;
-                DistortStrength = Character.Controlled.DistortStrength;
-                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
-                chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
+                BlurStrength = MathHelper.Lerp(BlurStrength, Character.Controlled.BlurStrength * 0.005f, (float)deltaTime * 10.0f);
+                DistortStrength = MathHelper.Lerp(DistortStrength, Character.Controlled.DistortStrength, (float)deltaTime * 10.0f);
+                Vector3 chromaticAberration = GameMain.Config.ChromaticAberrationEnabled ? new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+                chromaticAberration -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                ChromaticAberrationStrength = Vector3.Lerp(ChromaticAberrationStrength, chromaticAberration, (float)deltaTime * 10.0f);
             }
             else
             {
-                BlurStrength = 0.0f;
-                DistortStrength = 0.0f;
+                BlurStrength = Math.Max(BlurStrength - (float)deltaTime * 0.01f, 0.0f);
+                DistortStrength = Math.Max(DistortStrength - (float)deltaTime * 0.01f, 0.0f);
+                Vector3 chromaticAberration = GameMain.Config.ChromaticAberrationEnabled ? new Vector3(-0.02f, -0.01f, 0.0f) : Vector3.Zero;
+                ChromaticAberrationStrength = Vector3.Lerp(ChromaticAberrationStrength, chromaticAberration, (float)deltaTime * 10.0f);
             }
 
             string postProcessTechnique = "";
@@ -349,10 +363,10 @@ namespace Barotrauma
                 postProcessTechnique += "Blur";
                 postProcessEffect.Parameters["blurDistance"].SetValue(BlurStrength);
             }
-            if (chromaticAberrationStrength != Vector3.Zero)
+            if (ChromaticAberrationStrength != Vector3.Zero)
             {
                 postProcessTechnique += "ChromaticAberration";
-                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(chromaticAberrationStrength);
+                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(ChromaticAberrationStrength);
             }
             if (DistortStrength > 0.0f)
             {

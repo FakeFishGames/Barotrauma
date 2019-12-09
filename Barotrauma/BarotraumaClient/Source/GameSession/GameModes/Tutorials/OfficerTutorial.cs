@@ -238,7 +238,7 @@ namespace Barotrauma.Tutorials
             //RemoveCompletedObjective(segments[0]);
             SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
-            TriggerTutorialSegment(1, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Equip melee weapon & armor
+            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Equip melee weapon & armor
             do
             {
                 if (!officer.HasEquippedItem("stunbaton"))
@@ -291,7 +291,7 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_ammoShelf_2.Item, false);
             RemoveCompletedObjective(segments[3]);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(4, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Shoot), GameMain.Config.KeyBind(InputType.Deselect)); // Kill hammerhead
+            TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
@@ -325,7 +325,7 @@ namespace Barotrauma.Tutorials
             //do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
             do { yield return null; } while (!officer_thirdDoor.IsOpen);
             yield return new WaitForSeconds(3f, false);
-            TriggerTutorialSegment(5, GameMain.Config.KeyBind(InputType.Aim), GameMain.Config.KeyBind(InputType.Shoot)); // Ranged weapons
+            TriggerTutorialSegment(5, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Ranged weapons
             SetHighlight(officer_rangedWeaponHolder.Item, true);
             do { yield return null; } while (!officer_rangedWeaponHolder.Inventory.IsEmpty()); // Wait until looted
             SetHighlight(officer_rangedWeaponHolder.Item, false);

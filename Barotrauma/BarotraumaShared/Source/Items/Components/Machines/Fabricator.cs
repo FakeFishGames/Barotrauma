@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public const float SkillIncreaseMultiplier = 0.5f;
 
-        private List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
+        private readonly List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
 
         private FabricationRecipe fabricatedItem;
         private float timeUntilReady;
@@ -144,11 +144,10 @@ namespace Barotrauma.Items.Components
             activateButton.Text = TextManager.Get("FabricatorCancel");
 #endif
 
-            MoveIngredientsToInputContainer(selectedItem);
-
-            fabricatedItem = selectedItem;
             IsActive = true;
             this.user = user;
+            fabricatedItem = selectedItem;
+            MoveIngredientsToInputContainer(selectedItem);
             
             requiredTime = GetRequiredTime(fabricatedItem, user);
             timeUntilReady = requiredTime;
@@ -163,9 +162,13 @@ namespace Barotrauma.Items.Components
         private void CancelFabricating(Character user = null)
         {
 #if SERVER
-            if (fabricatedItem != null && user != null)
+            if (fabricatedItem != null)
             {
-                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (user != null) 
+                {
+                    GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                }
+                item.CreateServerEvent(this);
             }
 #endif
 
@@ -188,6 +191,7 @@ namespace Barotrauma.Items.Components
 
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
+
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -318,6 +322,18 @@ namespace Barotrauma.Items.Components
                     availableIngredients.AddRange(itemContainer.Inventory.Items.Where(it => it != null));
                 }
             }
+#if CLIENT
+            if (Character.Controlled?.Inventory != null)
+            {
+                availableIngredients.AddRange(Character.Controlled.Inventory.Items.Distinct().Where(it => it != null));
+            }
+#else
+            if (user?.Inventory != null)
+            {
+                availableIngredients.AddRange(user.Inventory.Items.Distinct().Where(it => it != null));
+            }
+#endif
+
             return availableIngredients;
         }
 
@@ -329,6 +345,8 @@ namespace Barotrauma.Items.Components
         {
             //required ingredients that are already present in the input container
             List<Item> usedItems = new List<Item>();
+
+            bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
             var availableIngredients = GetAvailableIngredients();
             foreach (var requiredItem in targetItem.RequiredItems)
@@ -350,9 +368,9 @@ namespace Barotrauma.Items.Components
                         if (inputContainer.Inventory.Items.All(it => it != null))
                         {
                             var unneededItem = inputContainer.Inventory.Items.FirstOrDefault(it => !usedItems.Contains(it));
-                            unneededItem?.Drop(null);
+                            unneededItem?.Drop(null, createNetworkEvent: !isClient);
                         }
-                        inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: true);
+                        inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: !isClient);
                     }                    
                 }
             }

@@ -96,25 +96,13 @@ namespace Barotrauma
                                 character.SetInput(InputType.Aim, false, true);
                             }
                         }
-                        Limb sightLimb = null;
-                        if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.RightHand))
+                        character.SetInput(extinguisher.Item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
+                        extinguisher.Use(deltaTime, character);
+                        if (!targetHull.FireSources.Contains(fs))
                         {
-                            sightLimb = character.AnimController.GetLimb(LimbType.RightHand);
+                            character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, true), null, 0, "putoutfire", 10.0f);
                         }
-                        else if (character.Inventory.IsInLimbSlot(extinguisherItem, InvSlotType.LeftHand))
-                        {
-                            sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
-                        }
-                        if (character.CanSeeTarget(fs, sightLimb))
-                        {
-                            character.SetInput(extinguisher.Item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
-                            extinguisher.Use(deltaTime, character);
-                            if (!targetHull.FireSources.Contains(fs))
-                            {
-                                character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.RoomName, true), null, 0, "putoutfire", 10.0f);
-                            }
-                        }
-                        else
+                        if (!character.CanSeeTarget(fs))
                         {
                             move = true;
                         }
@@ -122,7 +110,11 @@ namespace Barotrauma
                     if (move)
                     {
                         //go to the first firesource
-                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager), 
+                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager)
+                        {
+                            DialogueIdentifier = "dialogcannotreachfire",
+                            TargetName = fs.Hull.DisplayName
+                        }, 
                             onAbandon: () =>  Abandon = true, 
                             onCompleted: () => RemoveSubObjective(ref gotoObjective));
                     }

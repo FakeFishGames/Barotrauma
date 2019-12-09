@@ -119,26 +119,6 @@ namespace Barotrauma.Items.Components
             barSize: 0.0f);
         }
 
-        private void InitializeRotationLimitWidget(Widget widget)
-        {
-            widget.Hovered += () =>
-            {
-                widget.secondaryColor = Color.Green;
-            };
-            widget.Selected += () =>
-            {
-                widget.color = Color.Green;
-            };
-            widget.MouseHeld += (deltaTime) =>
-            {
-                widget.DrawPos = PlayerInput.MousePosition;
-            };
-            widget.Deselected += () =>
-            {
-                widget.color = Color.Red;
-            };
-        }
-
         public override void Move(Vector2 amount)
         {
             widgets.Clear();
@@ -147,7 +127,7 @@ namespace Barotrauma.Items.Components
         partial void LaunchProjSpecific()
         {
             recoilTimer = Math.Max(Reload, 0.1f);
-            PlaySound(ActionType.OnUse, item.WorldPosition);
+            PlaySound(ActionType.OnUse);
             Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
@@ -482,7 +462,7 @@ namespace Barotrauma.Items.Components
                     // TODO: Optimize? Creates multiple new classes per frame?
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
-                        availableAmmo[i], true);
+                        availableAmmo[i], -1, true);
                 }
                 if (flashNoAmmo)
                 {
@@ -496,8 +476,12 @@ namespace Barotrauma.Items.Components
 
             float zoom = cam == null ? 1.0f : (float)Math.Sqrt(cam.Zoom);
 
-            crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
-            crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
+            GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) && GUI.MouseOn == null && !GameMain.Instance.Paused;
+            if (GUI.HideCursor)
+            {
+                crosshairSprite?.Draw(spriteBatch, crosshairPos, readyToFire ? Color.White : Color.White * 0.2f, 0, zoom);
+                crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, zoom);
+            }
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)

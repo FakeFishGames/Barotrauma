@@ -11,6 +11,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
         public override bool KeepDivingGearOn => true;
+        public override bool UnequipItems => true;
         public override bool IgnoreUnsafeHulls => true;
 
         private IEnumerable<Pump> pumpList;

@@ -12,6 +12,9 @@ namespace Barotrauma
     {
         private int elementHeight;
         private GUILayoutGroup layoutGroup;
+#if DEBUG
+        public static List<string> MissingLocalizations = new List<string>();
+#endif
 
         public int ContentHeight
         {
@@ -265,14 +268,16 @@ namespace Barotrauma
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform)) { AbsoluteSpacing = 2 };
             if (showName)
             {
-                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: titleFont ?? GUI.Font);
+                new GUITextBlock(new RectTransform(new Point(layoutGroup.Rect.Width, this.elementHeight), layoutGroup.RectTransform), entity.Name, font: titleFont ?? GUI.Font)
+                {
+                    TextColor = Color.White,
+                    Color = Color.Black
+                };
             }
             properties.ForEach(ep => CreateNewField(ep, entity));
 
             //scale the size of this component and the layout group to fit the children
-            int contentHeight = ContentHeight;
-            RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
-            layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
+            Recalculate();
         }
 
         public void AddCustomContent(GUIComponent component, int childIndex)
@@ -282,12 +287,7 @@ namespace Barotrauma
             Recalculate();
         }
 
-        public void Recalculate()
-        {
-            int contentHeight = ContentHeight;
-            RectTransform.NonScaledSize = new Point(RectTransform.NonScaledSize.X, contentHeight);
-            layoutGroup.RectTransform.NonScaledSize = new Point(layoutGroup.RectTransform.NonScaledSize.X, contentHeight);
-        }
+        public void Recalculate() => RectTransform.Resize(new Point(RectTransform.NonScaledSize.X, ContentHeight));
 
         public GUIComponent CreateNewField(SerializableProperty property, ISerializableEntity entity)
         {
@@ -296,13 +296,35 @@ namespace Barotrauma
             {
                 value = "";
             }
-            string propertyName = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
-            string displayName = TextManager.Get(propertyName, returnNull: true) ?? property.GetAttribute<Editable>().DisplayName;
+
+            string propertyTag = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+            string fallbackTag = property.PropertyInfo.Name.ToLowerInvariant();
+            string displayName = TextManager.Get($"sp.{propertyTag}.name", true, $"sp.{fallbackTag}.name");
+            
             if (displayName == null)
-            {
+            {   
                 displayName = property.Name.FormatCamelCaseWithSpaces();
+#if DEBUG
+                Editable editable = property.GetAttribute<Editable>();
+                if (editable != null)
+                {
+                    if (!MissingLocalizations.Contains($"sp.{propertyTag}.name|{displayName}"))
+                    {
+                        DebugConsole.NewMessage("Missing Localization for property: " + propertyTag);
+                        MissingLocalizations.Add($"sp.{propertyTag}.name|{displayName}");
+                        MissingLocalizations.Add($"sp.{propertyTag}.description|{property.GetAttribute<Serialize>().Description}");
+                    }
+                }
+#endif
             }
-            string toolTip = property.GetAttribute<Serialize>().Description;
+
+            string toolTip = TextManager.Get($"sp.{propertyTag}.description", true, !string.IsNullOrEmpty(fallbackTag) ? $"sp.{fallbackTag}.description" : null);
+
+            if (toolTip == null)
+            {
+                toolTip = property.GetAttribute<Serialize>().Description;
+            }
+
             GUIComponent propertyField = null;
             if (value is bool)
             {

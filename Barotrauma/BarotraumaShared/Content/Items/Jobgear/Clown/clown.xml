@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Clown Mask" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." scale="0.5">
+  <Item name="" identifier="clownmask" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="" scale="0.5">
     <Sprite name="Clown Mask" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="100,181,90,73" origin="0.5,0.5" scale="0.5" />
     <Body width="40" radius="30" density="15" />
     <Deconstruct time="10">
@@ -11,10 +11,10 @@
       <StatusEffect tags="clown" type="OnWearing" target="Character" HideFace="true" duration="0.1" stackable="false" />
     </Wearable>
   </Item>
-  <Item name="Clown Costume" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="Praise the honkmother." impactsoundtag="impact_soft" scale="0.5">
+  <Item name="" identifier="clowncostume" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" description="" impactsoundtag="impact_soft" scale="0.5">
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="384,448,64,64" origin="0.5,0.5" />
-    <Sprite texture="Content/Items/Jobgear/clothes.png" sourcerect="54,242,195,68" depth="0.6" origin="0.5,0.5" />
-    <Body width="100" height="50" density="30" />
+    <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="6,163,195,68" depth="0.6" origin="0.5,0.5" />
+    <Body width="100" height="50" density="30" friction="0.8" restitution="0.01" />
     <Deconstruct time="40">
       <Item identifier="bikehorn" />
       <Item identifier="bikehorn" />

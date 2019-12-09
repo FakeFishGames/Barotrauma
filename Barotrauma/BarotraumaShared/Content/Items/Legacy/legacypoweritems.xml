@@ -7,7 +7,7 @@
     category="Legacy"
     linkable="true"
     
-    description="Serves as a hub for power distribution and relaying signals between devices.">
+    description="">
     
     <Sprite texture="junctionbox.png" sourcerect="0,0,70,84" depth="0.8" canflipx="false"/>
     <BrokenSprite texture="junctionbox.png" sourcerect="70,0,70,84" depth="0.8" maxcondition="50" fadein="true"/>

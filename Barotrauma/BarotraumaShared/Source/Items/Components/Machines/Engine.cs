@@ -21,6 +21,8 @@ namespace Barotrauma.Items.Components
         private bool hasPower;
 
         private float prevVoltage;
+
+        private float controlLockTimer;
         
         [Editable(0.0f, 10000000.0f), 
         Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
@@ -78,6 +80,8 @@ namespace Barotrauma.Items.Components
             UpdateOnActiveEffects(deltaTime);
 
             UpdateAnimation(deltaTime);
+
+            controlLockTimer -= deltaTime;
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
             //pumps consume more power when in a bad condition
@@ -145,6 +149,7 @@ namespace Barotrauma.Items.Components
         
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
+            base.UpdateBroken(deltaTime, cam);
             force = MathHelper.Lerp(force, 0.0f, 0.1f);
         }
 
@@ -166,6 +171,7 @@ namespace Barotrauma.Items.Components
             {
                 if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
+                    controlLockTimer = 0.1f;
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
                 }
             }  

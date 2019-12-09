@@ -86,6 +86,7 @@ namespace Barotrauma.Items.Components
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
             item.body.FarseerBody.OnCollision += OnCollision;
             item.body.FarseerBody.IsBullet = true;
+            item.body.PhysEnabled = true;
 
             if (!character.AnimController.InWater)
             {
@@ -230,6 +231,7 @@ namespace Barotrauma.Items.Components
             item.body.CollisionCategories = Physics.CollisionItem;
             item.body.CollidesWith = Physics.CollisionWall;
             item.body.FarseerBody.IsBullet = false;
+            item.body.PhysEnabled = false;
         }
 
 
@@ -240,6 +242,7 @@ namespace Barotrauma.Items.Components
                 RestoreCollision();
                 hitting = false;
                 User = null;
+                return true;
             }
 
             //ignore collision if there's a wall between the user and the weapon to prevent hitting through walls

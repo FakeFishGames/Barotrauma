@@ -89,9 +89,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
-
-            if (source == null || source.CurrentHull == null) return;
+            if (source == null || source.CurrentHull == null) { return; }
 
             Hull sourceHull = source.CurrentHull;
             if (!hullDatas.TryGetValue(sourceHull, out HullData hullData))

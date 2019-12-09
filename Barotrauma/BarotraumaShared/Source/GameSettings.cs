@@ -73,32 +73,21 @@ namespace Barotrauma
 
         public List<Pair<string, int>> jobPreferences;
 
-        private bool useSteamMatchmaking;
-        private bool requireSteamAuthentication;
         public string QuickStartSubmarineName;
 
-#if DEBUG
-        //steam functionality can be enabled/disabled in debug builds
-        public bool RequireSteamAuthentication
-        {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
-            set { requireSteamAuthentication = value; }
-        }
-        public bool UseSteamMatchmaking
-        {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
-            set { useSteamMatchmaking = value; }
-        }
+#if USE_STEAM
+        public bool RequireSteamAuthentication { get; set; }
+        public bool UseSteamMatchmaking { get; set; }
 #else
         public bool RequireSteamAuthentication
         {
-            get { return requireSteamAuthentication && Steam.SteamManager.USE_STEAM; }
-            set { requireSteamAuthentication = value; }
+            get { return false; }
+            set { /*do nothing*/ }
         }
         public bool UseSteamMatchmaking
         {
-            get { return useSteamMatchmaking && Steam.SteamManager.USE_STEAM; }
-            set { useSteamMatchmaking = value; }
+            get { return false; }
+            set { /*do nothing*/ }
         }
 #endif
 
@@ -284,7 +273,7 @@ namespace Barotrauma
         private const float MinInventoryScale = 0.75f, MaxInventoryScale = 1.25f;
         public static float InventoryScale { get; set; }
 
-        public List<string> CompletedTutorialNames { get; private set; }
+        public List<string> CompletedTutorialNames { get; private set; } = new List<string>();
 
         public static bool VerboseLogging { get; set; }
         public static bool SaveDebugConsoleLogs { get; set; }
@@ -298,8 +287,9 @@ namespace Barotrauma
             {
 #if DEBUG
                 return false;
-#endif
+#else
                 return sendUserStatistics;
+#endif
             }
             set
             {
@@ -311,10 +301,16 @@ namespace Barotrauma
 
         public bool ShowLanguageSelectionPrompt { get; set; }
 
+        private bool showTutorialSkipWarning = true;
+        public bool ShowTutorialSkipWarning
+        {
+            get { return showTutorialSkipWarning && CompletedTutorialNames.Count == 0; }
+            set { showTutorialSkipWarning = value; }
+        }
+
         public GameSettings()
         {
             ContentPackage.LoadAll();
-            CompletedTutorialNames = new List<string>();
 
             LoadDefaultConfig();
 
@@ -496,10 +492,11 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
-                new XAttribute("aimassistamount", aimAssistAmount));
+                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
+                new XAttribute("aimassistamount", aimAssistAmount),
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
 
             if (!ShowUserStatisticsPrompt)
             {
@@ -623,6 +620,7 @@ namespace Barotrauma
             if (!fileFound)
             {
                 ShowLanguageSelectionPrompt = true;
+                ShowTutorialSkipWarning = true;
                 ShowUserStatisticsPrompt = true;
                 SaveNewPlayerConfig();
             }
@@ -638,6 +636,7 @@ namespace Barotrauma
             if (doc == null || doc.Root == null)
             {
                 ShowUserStatisticsPrompt = true;
+                ShowTutorialSkipWarning = true;
                 return false;
             }
             LoadGeneralSettings(doc);
@@ -789,9 +788,9 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
-                new XAttribute("usesteammatchmaking", useSteamMatchmaking),
+                new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
-                new XAttribute("requiresteamauthentication", requireSteamAuthentication),
+                new XAttribute("requiresteamauthentication", RequireSteamAuthentication),
                 new XAttribute("autoupdateworkshopitems", AutoUpdateWorkshopItems),
                 new XAttribute("pauseonfocuslost", PauseOnFocusLost),
                 new XAttribute("aimassistamount", aimAssistAmount),
@@ -799,7 +798,8 @@ namespace Barotrauma
                 new XAttribute("chatopen", ChatOpen),
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
-                new XAttribute("editordisclaimershown", EditorDisclaimerShown));
+                new XAttribute("editordisclaimershown", EditorDisclaimerShown),
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
 
             if (!string.IsNullOrEmpty(overrideSaveFolder))
             {
@@ -968,8 +968,8 @@ namespace Barotrauma
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
-            useSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", useSteamMatchmaking);
-            requireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", requireSteamAuthentication);
+            UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", UseSteamMatchmaking);
+            RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", RequireSteamAuthentication);
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
             PauseOnFocusLost = doc.Root.GetAttributeBool("pauseonfocuslost", PauseOnFocusLost);
             AimAssistAmount = doc.Root.GetAttributeFloat("aimassistamount", AimAssistAmount);
@@ -978,6 +978,7 @@ namespace Barotrauma
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
+            ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
             if (gameplayElement != null)
@@ -1068,9 +1069,8 @@ namespace Barotrauma
                 VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
-                var voiceSetting = VoiceMode.Disabled;
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
-                if (Enum.TryParse(voiceSettingStr, out voiceSetting))
+                if (Enum.TryParse(voiceSettingStr, out VoiceMode voiceSetting))
                 {
                     VoiceSetting = voiceSetting;
                 }
@@ -1134,6 +1134,34 @@ namespace Barotrauma
         {
             return keyMapping[(int)inputType];
         }
+        public string KeyBindText(InputType inputType)
+        {
+            KeyOrMouse bind = keyMapping[(int)inputType];
+
+            if (bind.MouseButton != null)
+            {
+                switch (bind.MouseButton)
+                {
+                    case 0:
+                        return TextManager.Get("input.leftmouse");
+                    case 1:
+                        return TextManager.Get("input.rightmouse");
+                    case 2:
+                        return TextManager.Get("input.middlemouse");
+                    case 3:
+                        return TextManager.Get("input.mousebutton4");
+                    case 4:
+                        return TextManager.Get("input.mousebutton5");
+                    case 5:
+                        return TextManager.Get("input.mousewheelup");
+                    case 6:
+                        return TextManager.Get("input.mousewheeldown");
+
+                }
+            }
+
+            return bind.ToString();
+        }
 
         private void SetDefaultValues(bool resetLanguage = true)
         {
@@ -1157,8 +1185,8 @@ namespace Barotrauma
             NoiseGateThreshold = -45;
             windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
-            useSteamMatchmaking = true;
-            requireSteamAuthentication = true;
+            UseSteamMatchmaking = true;
+            RequireSteamAuthentication = true;
             QuickStartSubmarineName = string.Empty;
             CharacterHeadIndex = 1;
             CharacterHairIndex = -1;

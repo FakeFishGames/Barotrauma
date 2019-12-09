@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -17,7 +18,11 @@ namespace Barotrauma
         private const string infoTextPath = "Content/Texts";
         private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-        public static void Convert(string language)
+        private static string[,] translatedLanguageNames = new string[12, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
+            { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" },
+            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" }, { "Japanese", "日本語" } };
+
+        public static void Convert()
         {
             if (TextManager.Language != "English")
             {
@@ -27,48 +32,80 @@ namespace Barotrauma
 
             List<string> conversationFiles = new List<string>();
             List<string> infoTextFiles = new List<string>();
-
-            language = language.CapitaliseFirstInvariant();
-
-            foreach (string filePath in Directory.GetFiles(conversationsPath, "*.csv", SearchOption.AllDirectories))
-            {
-                conversationFiles.Add(filePath);
-            }
-
-            foreach (string filePath in Directory.GetFiles(infoTextPath, "*.csv", SearchOption.AllDirectories))
-            {
-                infoTextFiles.Add(filePath);
-            }
-
-            for (int i = 0; i < conversationFiles.Count; i++)
-            {
-                List<string> xmlContent = ConvertConversationsToXML(File.ReadAllLines(conversationFiles[i], Encoding.UTF8), language);
-                if (xmlContent == null)
-                {
-                    DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[i]);
-                    continue;
-                }
-                string xmlFileFullPath = $"{conversationsPath}/NpcConversations_{language}_NEW.xml";
-                File.WriteAllLines(xmlFileFullPath, xmlContent);
-                DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
-            }
-
-            for (int i = 0; i < infoTextFiles.Count; i++)
-            {
-                List<string> xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[i], Encoding.UTF8), language);
-                if (xmlContent == null)
-                {
-                    DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[i]);
-                    continue;
-                }
-                string xmlFileFullPath = $"{infoTextPath}/{language}Vanilla_NEW.xml";
-                File.WriteAllLines(xmlFileFullPath, xmlContent);
-                DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
-            }
             
-            if (conversationFiles.Count == 0 && infoTextFiles.Count == 0)
+            for (int i = 0; i < translatedLanguageNames.GetUpperBound(0) + 1; i++)
             {
-                DebugConsole.ThrowError("No .csv files found to convert.");
+                string language = translatedLanguageNames[i, 0];
+                string languageNoWhitespace = language.RemoveWhitespace();
+
+                if (Directory.Exists(conversationsPath + $"/{languageNoWhitespace}"))
+                {
+                    string[] conversationFileArray = Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+
+                    if (conversationFileArray != null)
+                    {
+                        foreach (string filePath in conversationFileArray)
+                        {
+                            conversationFiles.Add(filePath);
+                        }
+                    }
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Directory at: " + conversationsPath + $"/{languageNoWhitespace} does not exist!");
+                }
+
+                if (Directory.Exists(infoTextPath + $"/{languageNoWhitespace}"))
+                {
+                    string[] infoTextFileArray = Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+
+                    if (infoTextFileArray != null)
+                    {
+                        foreach (string filePath in infoTextFileArray)
+                        {
+                            infoTextFiles.Add(filePath);
+                        }
+                    }
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Directory at: " + infoTextPath + $"/{languageNoWhitespace} does not exist!");
+                }
+
+                for (int j = 0; j < conversationFiles.Count; j++)
+                {
+                    List<string> xmlContent = ConvertConversationsToXML(File.ReadAllLines(conversationFiles[j], Encoding.UTF8), language);
+                    if (xmlContent == null)
+                    {
+                        DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[j]);
+                        continue;
+                    }
+                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/NpcConversations_{languageNoWhitespace}_NEW.xml";
+                    File.WriteAllLines(xmlFileFullPath, xmlContent);
+                    DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
+                }
+
+                for (int j = 0; j < infoTextFiles.Count; j++)
+                {
+                    List<string> xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+                    if (xmlContent == null)
+                    {
+                        DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);
+                        continue;
+                    }
+                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/{languageNoWhitespace}Vanilla_NEW.xml";
+                    File.WriteAllLines(xmlFileFullPath, xmlContent);
+                    DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
+                }
+
+                if (conversationFiles.Count == 0 && infoTextFiles.Count == 0)
+                {
+                    DebugConsole.ThrowError("No .csv files found to convert for: " + language);
+                    continue;
+                }
+
+                conversationFiles.Clear();
+                infoTextFiles.Clear();
             }
         }
 
@@ -77,7 +114,10 @@ namespace Barotrauma
             List<string> xmlContent = new List<string>();
             xmlContent.Add(xmlHeader);
 
-            xmlContent.Add($"<infotexts language=\"{language}\">");
+            string translatedName = GetTranslatedName(language);
+            bool nowhitespace = TextManager.IsCJK(translatedName);
+
+            xmlContent.Add($"<infotexts language=\"{language}\" nowhitespace=\"{nowhitespace.ToString().ToLower()}\" translatedname=\"{translatedName}\">");
 
             for (int i = 1; i < csvContent.Length; i++) // Start at one to ignore header
             {
@@ -89,14 +129,20 @@ namespace Barotrauma
                 }
                 else
                 {
-                    string[] split = csvContent[i].Split(separator, 2);
+                    string[] split = csvContent[i].Split(separator, 3);
 
-                    if (split.Length == 2)
+                    if (split.Length >= 2) // Localization data
                     {
+                        if (split.Length > 2 && !split[0].All(char.IsLower)) // Invalid header in line with localization data
+                        {
+                            split[0] = split[1];
+                            split[1] = split[2];
+                            split[2] = string.Empty;
+                        }
                         split[1] = split[1].Replace("\"", ""); // Replaces quotation marks around data that are added when exporting via excel
                         xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
                     }
-                    else if (split[0].Contains(".")) // An empty field
+                    else if (split[0].Contains(".") && !split[0].Any(char.IsUpper)) // An empty field
                     {
                         xmlContent.Add($"<{split[0]}><!-- No data --></{split[0]}>");
                     }
@@ -113,14 +159,27 @@ namespace Barotrauma
             return xmlContent;
         }
 
+        private static string GetTranslatedName(string language)
+        {
+            for (int i = 0; i < translatedLanguageNames.Length; i++)
+            {
+                if (translatedLanguageNames[i, 0] == language) return translatedLanguageNames[i, 1];
+            }
+
+            DebugConsole.ThrowError("No translated language name found for " + language);
+            return string.Empty;
+        }
+
         private static List<string> ConvertConversationsToXML(string[] csvContent, string language)
         {
             List<string> xmlContent = new List<string>();
             xmlContent.Add(xmlHeader);
 
-            xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\">");
-            xmlContent.Add(string.Empty);
+            string translatedName = GetTranslatedName(language);
+            bool nowhitespace = TextManager.IsCJK(translatedName);
 
+            xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\" nowhitespace=\"{nowhitespace}\">");
+            xmlContent.Add(string.Empty);
             xmlContent.Add("<!-- Personality traits -->");
 
             int traitStart = -1;
@@ -138,19 +197,19 @@ namespace Barotrauma
             {
                 if (csvContent[i].StartsWith("Generic"))
                 {
-                    conversationStart = i + 1;
+                    conversationStart = i;
                     break;
                 }
             }
 
-            /*if (traitStart == -1)
+            if (traitStart == -1)
             {
                 DebugConsole.ThrowError("Invalid formatting of NPCConversations, no traits found!");
                 return null;
-            }*/
+            }
 
             //DebugConsole.NewMessage("Count: " + NPCPersonalityTrait.List.Count);
-            /*for (int i = 0; i < conversationStart; i++) // Traits
+            for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
             {
                 //string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
                 string[] split = csvContent[traitStart + i].Split(separator);
@@ -159,13 +218,12 @@ namespace Barotrauma
                     $"{GetVariable("name", split[1])}" +
                     $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
                     $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString())}/>");
-            }*/
+            }
+
+            xmlContent.Add(string.Empty);
 
             for (int i = conversationStart; i < csvContent.Length; i++) // Conversations
             {
-                //string[] presplit = csvContent[i].Split(separator); // Handling speaker index fetching, somehow doesn't work with the regex
-                //string[] split = SplitCSV(csvContent[i]);
-
                 string[] split = csvContent[i].Split(separator);
 
                 int emptyFields = 0;

@@ -1,6 +1,6 @@
 ﻿<Items>
   <Item
-    name="Oxygen Generator"
+    name=""
     identifier="oxygenerator"
     tags="oxygengenerator"
     category="Machine"
@@ -66,7 +66,7 @@
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem items="wrench" type="equipped"/>
@@ -76,7 +76,7 @@
   </Item>
 
   <Item
-    name="Shuttle Oxygen Generator"
+    name=""
     identifier="shuttleoxygenerator"
     tags="oxygengenerator"
     category="Machine"
@@ -111,7 +111,7 @@
       <input name="power_in" displayname="connection.powerin"/>
     </ConnectionPanel>
 
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="120" maxdeteriorationdelay="750" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI"/>
       <RequiredSkill identifier="mechanical" level="30"/>
       <RequiredItem items="wrench" type="equipped"/>
@@ -121,7 +121,7 @@
   </Item>
 
   <Item
-    name="Vent"
+    name=""
     identifier="vent"
     tags="vent"
     category="Machine"
@@ -140,7 +140,7 @@
   </Item>
 
   <Item
-    name="Loose Vent"
+    name=""
     identifier="loosevent"
     tags="vent,hidden"
     category="Machine"

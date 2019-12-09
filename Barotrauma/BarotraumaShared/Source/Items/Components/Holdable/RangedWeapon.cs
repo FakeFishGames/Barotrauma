@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class RangedWeapon : ItemComponent
+    partial class RangedWeapon : ItemComponent
     {
         private float reload, reloadTimer;
 
@@ -50,7 +50,7 @@ namespace Barotrauma.Items.Components
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
-                return (Vector2.Transform(flippedPos, bodyTransform) + item.body.SimPosition);
+                return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
                 
@@ -60,7 +60,10 @@ namespace Barotrauma.Items.Components
             item.IsShootable = true;
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
+            InitProjSpecific(element);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -71,6 +74,13 @@ namespace Barotrauma.Items.Components
                 reloadTimer = 0.0f;
                 IsActive = false;
             }
+        }
+
+        private float GetSpread(Character user)
+        {
+            float degreeOfFailure = 1.0f - DegreeOfSuccess(user);
+            degreeOfFailure *= degreeOfFailure;
+            return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
         }
         
         public override bool Use(float deltaTime, Character character = null)
@@ -87,47 +97,16 @@ namespace Barotrauma.Items.Components
             }
 
             float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
-
             degreeOfFailure *= degreeOfFailure;
-
             if (degreeOfFailure > Rand.Range(0.0f, 1.0f))
             {
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             }
 
-            Projectile projectile = null;
-            var containedItems = item.ContainedItems;
-            if (containedItems == null) return true;
-
-            foreach (Item item in containedItems)
-            {
-                projectile = item.GetComponent<Projectile>();
-                if (projectile != null) break;
-            }
-            //projectile not found, see if one of the contained items contains projectiles
-            if (projectile == null)
-            {
-                foreach (Item item in containedItems)
-                {
-                    var containedSubItems = item.ContainedItems;
-                    if (containedSubItems == null) { continue; }
-                    foreach (Item subItem in containedSubItems)
-                    {
-                        projectile = subItem.GetComponent<Projectile>();
-                        //apply OnUse statuseffects to the container in case it has to react to it somehow
-                        //(play a sound, spawn more projectiles, reduce condition...)
-                        if (subItem.Condition > 0.0f)
-                        {
-                            subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, deltaTime);
-                        }
-                        if (projectile != null) break;
-                    }
-                }
-            }            
+            Projectile projectile = FindProjectile(triggerOnUseOnContainers: true);
+            if (projectile == null) { return true; }
             
-            if (projectile == null) return true;
-            
-            float spread = MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+            float spread = GetSpread(character);
             float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
             rotation += spread * Rand.Range(-0.5f, 0.5f);
 
@@ -138,7 +117,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 projectilePos = item.SimPosition;
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
-            Vector2 barrelPos = TransformedBarrelPos;
+            Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
             //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
             if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
@@ -167,14 +146,47 @@ namespace Barotrauma.Items.Components
             //recoil
             item.body.ApplyLinearImpulse(
                 new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f, 
-                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);                
+                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+
+            LaunchProjSpecific();
 
             item.RemoveContained(projectile.Item);
-                
-            Rope rope = item.GetComponent<Rope>();
-            if (rope != null) rope.Attach(projectile.Item);
 
             return true;
-        }            
+        }
+
+        private Projectile FindProjectile(bool triggerOnUseOnContainers = false)
+        {
+            var containedItems = item.ContainedItems;
+            if (containedItems == null) { return null; }
+
+            foreach (Item item in containedItems)
+            {
+                Projectile projectile = item.GetComponent<Projectile>();
+                if (projectile != null) { return projectile; }
+            }
+
+            //projectile not found, see if one of the contained items contains projectiles
+            foreach (Item item in containedItems)
+            {
+                var containedSubItems = item.ContainedItems;
+                if (containedSubItems == null) { continue; }
+                foreach (Item subItem in containedSubItems)
+                {
+                    Projectile projectile = subItem.GetComponent<Projectile>();
+                    //apply OnUse statuseffects to the container in case it has to react to it somehow
+                    //(play a sound, spawn more projectiles, reduce condition...)
+                    if (triggerOnUseOnContainers && subItem.Condition > 0.0f)
+                    {
+                        subItem.GetComponent<ItemContainer>()?.Item.ApplyStatusEffects(ActionType.OnUse, 1.0f);
+                    }
+                    if (projectile != null) { return projectile; }
+                }
+            }
+            
+            return null;
+        }
+
+        partial void LaunchProjSpecific();
     }
 }

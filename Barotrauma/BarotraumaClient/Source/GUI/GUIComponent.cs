@@ -172,11 +172,24 @@ namespace Barotrauma
             set;
         }
 
+        // Use the rawtooltip when copying displayed tooltips so that any possible color-data related values are translated over as well
+        public string RawToolTip;
+        private string toolTip;
         public virtual string ToolTip
         {
-            get;
-            set;
+            get
+            {
+                return toolTip;
+            }
+            set
+            {
+                RawToolTip = value;
+                TooltipColorData = ColorData.GetColorData(value, out value);
+                toolTip = value;
+            }
         }
+
+        public List<ColorData> TooltipColorData = null;
 
         public GUIComponentStyle Style
         {
@@ -494,11 +507,10 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect);
+            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipColorData);
         }
 
-        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement)
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<ColorData> colorData = null)
         {
             if (Tutorials.Tutorial.ContentRunning) return;
 
@@ -508,7 +520,7 @@ namespace Barotrauma
 
             if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), colorData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X),
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y));

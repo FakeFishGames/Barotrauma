@@ -68,10 +68,9 @@ namespace Barotrauma
                 if (!CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
-                    if (Steam.SteamManager.USE_STEAM)
-                    {
-                        NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
-                    }
+#if USE_STEAM
+                    NewMessage("Enabling cheats will disable Steam achievements during this play session.", Color.Red);
+#endif
                     return;
                 }
 
@@ -701,6 +700,22 @@ namespace Barotrauma
                 {
                     Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
+            }, isCheat: true));
+
+            commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>
+            {
+                if (args.Length == 0) { return; }
+                Character character = FindMatchingCharacter(args, false);
+                if (character == null) { return; }
+
+                Entity.Spawner?.AddToRemoveQueue(character);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
             }, isCheat: true));
 
             commands.Add(new Command("waterphysicsparams", "waterphysicsparams [stiffness] [spread] [damping]: defaults 0.02, 0.05, 0.05", (string[] args) =>

@@ -232,6 +232,31 @@ namespace Barotrauma.Items.Components
         {
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
 
+            //if the item can cut off limbs, activate nearby bodies to allow the raycast to hit them
+            if (statusEffectLists != null && statusEffectLists.ContainsKey(ActionType.OnUse))
+            {
+                if (statusEffectLists[ActionType.OnUse].Any(s => s.SeverLimbsProbability > 0.0f))
+                {
+                    float rangeSqr = ConvertUnits.ToSimUnits(Range);
+                    rangeSqr *= rangeSqr;
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (!c.Enabled || !c.AnimController.BodyInRest) { continue; }
+                        //do a broad check first
+                        if (Math.Abs(c.WorldPosition.X - item.WorldPosition.X) > 1000.0f) { continue; }
+                        if (Math.Abs(c.WorldPosition.Y - item.WorldPosition.Y) > 1000.0f) { continue; }
+                        foreach (Limb limb in c.AnimController.Limbs)
+                        {
+                            if (Vector2.DistanceSquared(limb.SimPosition, item.SimPosition) < rangeSqr && Vector2.Dot(rayEnd - rayStart, limb.SimPosition - rayStart) > 0)
+                            {
+                                c.AnimController.BodyInRest = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             float lastPickedFraction = 0.0f;
             if (RepairMultiple)
             {
@@ -413,7 +438,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
-                if (levelResource != null && levelResource.IsActive &&
+                if (levelResource != null && levelResource.Attached &&
                     levelResource.requiredItems.Any() &&
                     levelResource.HasRequiredItems(user, addMessage: false))
                 {

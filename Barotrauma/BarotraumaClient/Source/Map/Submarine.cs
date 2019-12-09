@@ -104,12 +104,13 @@ namespace Barotrauma
                 RemoveRoundSound(roundSounds[i]);
             }
         }
-        
-        //drawing ----------------------------------------------------
 
+        //drawing ----------------------------------------------------
+        private static readonly HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+        private static readonly HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
         public static void CullEntities(Camera cam)
         {
-            HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+            visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
                 if (sub.WorldPosition.Y < Level.MaxEntityDepth) continue;
@@ -126,7 +127,7 @@ namespace Barotrauma
                 }
             }
 
-            HashSet<Ruin> visibleRuins = new HashSet<Ruin>();
+            visibleRuins.Clear();
             if (Level.Loaded != null)
             {
                 foreach (Ruin ruin in Level.Loaded.Ruins)
@@ -168,7 +169,6 @@ namespace Barotrauma
                 if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
             }
         }
-
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
@@ -281,6 +281,38 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
+        {
+            var horizontalLine = GUI.Style.GetComponentStyle("HorizontalLine").Sprites[GUIComponent.ComponentState.None].First();
+            var verticalLine = GUI.Style.GetComponentStyle("VerticalLine").Sprites[GUIComponent.ComponentState.None].First();
+            
+            Vector2 topLeft = roundedGridCenter - Vector2.One * GridSize * gridCells / 2;
+            Vector2 bottomRight = roundedGridCenter + Vector2.One * GridSize * gridCells / 2;
+
+            for (int i = 0; i < gridCells; i++)
+            {
+                float distFromGridX = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.X) - gridCenter.X) / GridSize.X;
+                float distFromGridY = (MathUtils.RoundTowardsClosest(gridCenter.X, GridSize.Y) - gridCenter.X) / GridSize.Y;
+
+                float normalizedDistX = Math.Abs(i + distFromGridX - gridCells / 2) / (gridCells / 2);
+                float normalizedDistY = Math.Abs(i - distFromGridY - gridCells / 2) / (gridCells / 2);
+
+                float expandX = MathHelper.Lerp(30.0f, 0.0f, normalizedDistX);
+                float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
+
+                GUI.DrawLine(spriteBatch,
+                    horizontalLine.Sprite,
+                    new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
+                    new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
+                    Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
+                GUI.DrawLine(spriteBatch,
+                    verticalLine.Sprite,
+                    new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
+                    new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
+                    Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
+            }
+        }
+
         public static bool SaveCurrent(string filePath, MemoryStream previewImage = null)
         {
             if (MainSub == null)
@@ -314,7 +346,7 @@ namespace Barotrauma
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), descriptionBox.Content.RectTransform), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("submarine.name." + Name, true) ?? Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
 
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f / leftPanelWidth;

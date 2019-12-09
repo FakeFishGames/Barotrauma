@@ -139,7 +139,7 @@ namespace Barotrauma
             }
             if (seekAmmunition == null)
             {
-                if (TryArm())
+                if (TryArm() && Enemy != null && !Enemy.Removed)
                 {
                     OperateWeapon(deltaTime);
                 }
@@ -419,10 +419,24 @@ namespace Barotrauma
             {
                 retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
             }
-            if (character.CurrentHull != retreatTarget)
+            if (retreatTarget != null && character.CurrentHull != retreatTarget)
             {
-                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true), 
-                    onAbandon: () => Abandon = true, 
+                TryAddSubObjective(ref retreatObjective, () => new AIObjectiveGoTo(retreatTarget, character, objectiveManager, false, true),
+                    onAbandon: () =>
+                    {
+                        if (Enemy != null && HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
+                        {
+                            // If in the same room with an enemy -> don't try to escape because we'd want to fight it
+                            SteeringManager.Reset();
+                            RemoveSubObjective(ref retreatObjective);
+                        }
+                        else
+                        {
+
+                            // else abandon and fall back to find safety mode
+                            Abandon = true;
+                        }
+                    }, 
                     onCompleted: () => RemoveSubObjective(ref retreatObjective));
             }
         }
@@ -446,7 +460,9 @@ namespace Barotrauma
             TryAddSubObjective(ref followTargetObjective,
                 constructor: () => new AIObjectiveGoTo(Enemy, character, objectiveManager, repeat: true, getDivingGearIfNeeded: true)
                 {
-                    IgnoreIfTargetDead = true
+                    IgnoreIfTargetDead = true,
+                    DialogueIdentifier = "dialogcannotreachtarget",
+                    TargetName = Enemy.DisplayName
                 },
                 onAbandon: () =>
                 {
@@ -531,6 +547,10 @@ namespace Barotrauma
                         var container = Weapon.GetComponent<ItemContainer>();
                         if (container.Item.ParentInventory == character.Inventory)
                         {
+                            if (!container.Inventory.CanBePut(ammunition))
+                            {
+                                return false;
+                            }
                             character.Inventory.RemoveItem(ammunition);
                             if (!container.Inventory.TryPutItem(ammunition, null))
                             {

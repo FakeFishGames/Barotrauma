@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="Pump" identifier="pump" tags="pump" linkable="true" allowedlinks="hull" category="Machine">
+  <Item name="" identifier="pump" tags="pump" linkable="true" allowedlinks="hull" category="Machine">
     <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,0,200,126" />
     <BrokenSprite texture="Pumps.png" sourcerect="200,0,200,126" depth="0.8" maxcondition="40" fadein="true" />
     <BrokenSprite texture="Pumps.png" sourcerect="0,129,200,126" depth="0.8" maxcondition="0" />
@@ -21,14 +21,14 @@
       <input name="set_speed" displayname="connection.setpumpingspeed" />
       <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="60" maxdeteriorationdelay="270" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.125" mindeteriorationdelay="60" maxdeteriorationdelay="270" MinDeteriorationCondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem items="wrench" type="Equipped" />
     </Repairable>
   </Item>
   
-  <Item name="Small Pump" identifier="smallpump" tags="pump" linkable="true" category="Machine" scale="0.5">
+  <Item name="" identifier="smallpump" tags="pump" linkable="true" category="Machine" scale="0.5">
     <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,260,220,128" origin="0.5,0.5" />
     <Pump canbeselected="true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI" />
@@ -49,7 +49,7 @@
       <input name="set_speed" displayname="connection.setpumpingspeed" />
       <input name="set_targetlevel" displayname="connection.settargetwaterlevel" />
     </ConnectionPanel>
-    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="240" MinDeteriorationCondition="0" ShowRepairUIThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
+    <Repairable selectkey="Action" header="mechanicalrepairsheader" deteriorationspeed="0.2" mindeteriorationdelay="60" maxdeteriorationdelay="240" MinDeteriorationCondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="20" msg="ItemMsgRepairWrench" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="-0.1,0.27" style="ItemUI" />
       <RequiredSkill identifier="mechanical" level="40" />
       <RequiredItem items="wrench" type="Equipped" />

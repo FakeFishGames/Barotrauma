@@ -11,9 +11,9 @@ namespace Barotrauma
     {        
         private MapGenerationParams generationParams;
         
-        private List<Level> levels;
+        private readonly int size;
+
         private List<LocationConnection> connections;
-        private int size;
         public Action<Location, LocationConnection> OnLocationSelected;
         //from -> to
         public Action<Location, Location> OnLocationChanged;
@@ -49,8 +49,6 @@ namespace Barotrauma
             generationParams = MapGenerationParams.Instance;
             this.Seed = seed;
             this.size = generationParams.Size;
-
-            levels = new List<Level>();
 
             Locations = new List<Location>();
 
@@ -342,24 +340,6 @@ namespace Barotrauma
             }
         }
 
-        private List<LocationConnection> GetMapEdges()
-        {
-            List<Vector2> verts = Locations.Select(l => l.MapPosition).ToList();
-
-            List<Vector2> giftWrappedVerts = MathUtils.GiftWrap(verts);
-
-            List<LocationConnection> edges = new List<LocationConnection>();
-            foreach (LocationConnection connection in connections)
-            {
-                if (giftWrappedVerts.Contains(connection.Locations[0].MapPosition) || 
-                    giftWrappedVerts.Contains(connection.Locations[1].MapPosition))
-                {
-                    edges.Add(connection);
-                }
-            }
-            
-            return edges;
-        }
         
         public void MoveToNextLocation()
         {

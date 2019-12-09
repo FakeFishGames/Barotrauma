@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
 
         private float? targetLevel;
 
-        private float controlLockTimer;
+        private float pumpSpeedLockTimer, isActiveLockTimer;
         
         private bool hasPower;
 
@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
+        [Editable, Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
         public float MaxFlow
         {
             get { return maxFlow; }
@@ -59,14 +59,14 @@ namespace Barotrauma.Items.Components
             currFlow = 0.0f;
             hasPower = false;
 
-            controlLockTimer -= deltaTime;
             if (targetLevel != null)
             {
+                pumpSpeedLockTimer -= deltaTime;
                 float hullPercentage = 0.0f;
                 if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
                 FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
 
-                if (controlLockTimer <= 0.0f)
+                if (pumpSpeedLockTimer <= 0.0f)
                 {
                     targetLevel = null;
                 }
@@ -100,22 +100,22 @@ namespace Barotrauma.Items.Components
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
-
             if (connection.Name == "toggle")
             {
+                isActiveLockTimer = 0.1f;
                 IsActive = !IsActive;
             }
             else if (connection.Name == "set_active")
             {
-                IsActive = (signal != "0");                
+                IsActive = signal != "0";
+                isActiveLockTimer = 0.1f;
             }
             else if (connection.Name == "set_speed")
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
-                    controlLockTimer = 0.1f;
+                    pumpSpeedLockTimer = 0.1f;
                 }
             }
             else if (connection.Name == "set_targetlevel")
@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
                     targetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
-                    controlLockTimer = 0.1f;
+                    pumpSpeedLockTimer = 0.1f;
                 }
             }
 

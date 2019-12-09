@@ -15,7 +15,14 @@ namespace Barotrauma
         private float waitUntilPathUnreachable;
         private bool getDivingGearIfNeeded;
 
+        /// <summary>
+        /// Doesn't allow the objective to complete if this condition is false
+        /// </summary>
         public Func<bool> requiredCondition;
+        /// <summary>
+        /// Aborts the objective when this condition is true
+        /// </summary>
+        public Func<bool> abortCondition;
         public Func<PathNode, bool> startNodeFilter;
         public Func<PathNode, bool> endNodeFilter;
 
@@ -38,6 +45,8 @@ namespace Barotrauma
         public bool AllowGoingOutside { get; set; }
 
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+        public string DialogueIdentifier { get; set; }
+        public string TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
 
@@ -67,6 +76,21 @@ namespace Barotrauma
             }
         }
 
+        private void SpeakCannotReach()
+        {
+#if DEBUG
+            DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
+#endif
+            if (objectiveManager.CurrentOrder != null && DialogueIdentifier != null)
+            {
+                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, true);
+                if (msg != null)
+                {
+                    character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
+                }
+            }
+        }
+
         protected override void Act(float deltaTime)
         {
             if (followControlledCharacter)
@@ -74,6 +98,7 @@ namespace Barotrauma
                 if (Character.Controlled == null)
                 {
                     Abandon = true;
+                    SteeringManager.Reset();
                     return;
                 }
                 Target = Character.Controlled;
@@ -94,13 +119,15 @@ namespace Barotrauma
                 if (e.Removed)
                 {
                     Abandon = true;
+                    SteeringManager.Reset();
+                    return;
                 }
                 else
                 {
                     character.AIController.SelectTarget(e.AiTarget);
                 }
             }
-            var targetHull = Target is Hull h ? h : Target is Item i ? i.CurrentHull : Target is Character c ? c.CurrentHull : character.CurrentHull;
+            Hull targetHull = GetTargetHull();
             if (!followControlledCharacter)
             {
                 // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
@@ -110,8 +137,6 @@ namespace Barotrauma
                 if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
-                    return;
                 }
             }
             bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
@@ -127,6 +152,7 @@ namespace Barotrauma
                 {
                     if (repeat)
                     {
+                        SpeakCannotReach();
                         SteeringManager.Reset();
                     }
                     else
@@ -137,13 +163,7 @@ namespace Barotrauma
             }
             if (Abandon)
             {
-#if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
-#endif
-                if (objectiveManager.CurrentOrder != null && objectiveManager.CurrentOrder.ReportFailures)
-                {
-                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
-                }
+                SpeakCannotReach();
                 SteeringManager.Reset();
             }
             else
@@ -207,6 +227,35 @@ namespace Barotrauma
             }
         }
 
+        private Hull GetTargetHull()
+        {
+            if (Target is Hull h)
+            {
+                return h;
+            }
+            else if (Target is Item i)
+            {
+                return i.CurrentHull;
+            }
+            else if (Target is Character c)
+            {
+                return c.CurrentHull;
+            }
+            else if (Target is Gap g)
+            {
+                return g.FlowTargetHull;
+            }
+            else if (Target is WayPoint wp)
+            {
+                return wp.CurrentHull;
+            }
+            else if (Target is FireSource fs)
+            {
+                return fs.Hull;
+            }
+            return null;
+        }
+
         private bool IsCloseEnough
         {
             get
@@ -227,6 +276,11 @@ namespace Barotrauma
             // Then the custom condition
             // And finally check if can interact (heaviest)
             if (Target == null)
+            {
+                Abandon = true;
+                return false;
+            }
+            if (abortCondition != null && abortCondition())
             {
                 Abandon = true;
                 return false;

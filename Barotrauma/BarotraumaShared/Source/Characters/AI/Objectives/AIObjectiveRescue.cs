@@ -60,7 +60,12 @@ namespace Barotrauma
                         if (!character.CanInteractWith(targetCharacter))
                         {
                             RemoveSubObjective(ref goToObjective);
-                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
+                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
+                            {
+                                CloseEnough = CloseEnoughToTreat,
+                                DialogueIdentifier = "dialogcannotreachpatient",
+                                TargetName = targetCharacter.DisplayName
+                            },
                                 onCompleted: () => RemoveSubObjective(ref goToObjective),
                                 onAbandon: () => RemoveSubObjective(ref goToObjective));
                         }
@@ -93,7 +98,12 @@ namespace Barotrauma
             {
                 RemoveSubObjective(ref goToObjective);
                 // Go to the target and select it
-                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager) { CloseEnough = CloseEnoughToTreat },
+                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
+                {
+                    CloseEnough = CloseEnoughToTreat,
+                    DialogueIdentifier = "dialogcannotreachpatient",
+                    TargetName = targetCharacter.DisplayName
+                },
                     onCompleted: () => RemoveSubObjective(ref goToObjective),
                     onAbandon: () => RemoveSubObjective(ref goToObjective));
             }
@@ -202,7 +212,7 @@ namespace Barotrauma
             {
                 if (!ic.HasRequiredContainedItems(user: character, addMessage: false)) { continue; }
 #if CLIENT
-                ic.PlaySound(ActionType.OnUse, character.WorldPosition, character);
+                ic.PlaySound(ActionType.OnUse, character);
 #endif
                 ic.WasUsed = true;
                 ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);

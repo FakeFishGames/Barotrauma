@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Xml;
 using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -39,7 +40,7 @@ namespace Barotrauma
             {
                 get
                 {
-                    return "Emitter";
+                    return TextManager.Get("particleeditor.emitter");
                 }
             }
 
@@ -60,17 +61,18 @@ namespace Barotrauma
             }
         }
 
-        private GUIComponent rightPanel, leftPanel;
-
-        private GUIListBox prefabList;
+        private readonly GUIComponent rightPanel,  leftPanel;
+        private readonly GUIListBox prefabList;
+        private readonly GUITextBox filterBox;
+        private readonly GUITextBlock filterLabel;
 
         private ParticlePrefab selectedPrefab;
 
         private SerializableEntityEditor particlePrefabEditor;
 
-        private Emitter emitter;
+        private readonly Emitter emitter;
 
-        private Camera cam;
+        private readonly Camera cam;
 
         public override Camera Cam
         {
@@ -84,10 +86,11 @@ namespace Barotrauma
         {
             cam = new Camera();
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.07f, 1.0f), Frame.RectTransform) { MinSize = new Point(150,0) }, 
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 1.0f), Frame.RectTransform) { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
+                RelativeSpacing = 0.01f,
                 Stretch = true
             };
 
@@ -95,12 +98,12 @@ namespace Barotrauma
                 style: "GUIFrameRight");
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) {RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
-                Stretch = true,
-                RelativeSpacing = 0.01f
+                RelativeSpacing = 0.01f,
+                Stretch = true
             };
             
             var saveAllButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
-                TextManager.Get("ParticleEditorSaveAll"))
+                TextManager.Get("editor.saveall"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -110,7 +113,7 @@ namespace Barotrauma
             };
 
             var serializeToClipBoardButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.03f), paddedRightPanel.RectTransform),
-                TextManager.Get("ParticleEditorCopyToClipboard"))
+                TextManager.Get("editor.copytoclipboard"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -127,14 +130,26 @@ namespace Barotrauma
 
             var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), paddedRightPanel.RectTransform));
 
+            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), paddedLeftPanel.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
+            {
+                Stretch = true,
+                UserData = "filterarea"
+            };
+
+            filterLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true };
+            filterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
+            filterBox.OnTextChanged += (textBox, text) => { FilterEmitters(text); return true; };
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform) { MinSize = new Point(20, 0) }, "x")
+            {
+                OnClicked = (btn, userdata) => { FilterEmitters(""); filterBox.Text = ""; filterBox.Flash(Color.White); return true; }
+            };
+
             prefabList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), paddedLeftPanel.RectTransform));
             prefabList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedPrefab = obj as ParticlePrefab;
                 listBox.ClearChildren();
                 particlePrefabEditor = new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20);
-                //listBox.Content.RectTransform.NonScaledSize = particlePrefabEditor.RectTransform.NonScaledSize;
-                //listBox.UpdateScrollBarSize();
                 return true;
             };
         }
@@ -150,6 +165,7 @@ namespace Barotrauma
         {
             base.Deselect();
             GameMain.ParticleManager.Camera = GameMain.GameScreen.Cam;
+            filterBox.Text = "";
         }
 
         private void RefreshPrefabList()
@@ -160,7 +176,7 @@ namespace Barotrauma
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
                 var prefabText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    particlePrefab.Name)
+                    particlePrefab.DisplayName)
                 {
                     Padding = Vector4.Zero,
                     UserData = particlePrefab
@@ -181,6 +197,24 @@ namespace Barotrauma
             }
         }
 
+        private void FilterEmitters(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                filterLabel.Visible = true;
+                prefabList.Content.Children.ForEach(c => c.Visible = true);
+                return;
+            }
+
+            text = text.ToLower();
+            filterLabel.Visible = false;
+            foreach (GUIComponent child in prefabList.Content.Children)
+            {
+                if (!(child is GUITextBlock textBlock)) { continue; }
+                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+            }
+        }
+        
         private void SerializeAll()
         {
             foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
@@ -198,10 +232,12 @@ namespace Barotrauma
                     }
                 }
 
-                XmlWriterSettings settings = new XmlWriterSettings();
-                settings.Indent = true;
-                settings.OmitXmlDeclaration = true;
-                settings.NewLineOnAttributes = true;
+                XmlWriterSettings settings = new XmlWriterSettings
+                {
+                    Indent = true,
+                    OmitXmlDeclaration = true,
+                    NewLineOnAttributes = true
+                };
 
                 using (var writer = XmlWriter.Create(configFile, settings))
                 {
@@ -216,10 +252,12 @@ namespace Barotrauma
 #if WINDOWS
             if (prefab == null) return;
 
-            XmlWriterSettings settings = new XmlWriterSettings();
-            settings.Indent = true;
-            settings.OmitXmlDeclaration = true;
-            settings.NewLineOnAttributes = true;
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                OmitXmlDeclaration = true,
+                NewLineOnAttributes = true
+            };
 
             XElement element = new XElement(prefab.Name);
             SerializableProperty.SerializeProperties(prefab, element, true);

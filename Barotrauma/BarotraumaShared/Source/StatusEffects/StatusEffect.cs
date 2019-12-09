@@ -109,22 +109,22 @@ namespace Barotrauma
             }
         }
 
-        private TargetType targetTypes;
+        private readonly TargetType targetTypes;
         protected HashSet<string> targetIdentifiers;
 
-        private List<RelatedItem> requiredItems;
+        private readonly List<RelatedItem> requiredItems;
         
-        public string[] propertyNames;
-        private object[] propertyEffects;
+        public readonly string[] propertyNames;
+        private readonly object[] propertyEffects;
 
-        private PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
-        private List<PropertyConditional> propertyConditionals;
+        private readonly PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
+        private readonly List<PropertyConditional> propertyConditionals;
 
-        private bool setValue;
+        private readonly bool setValue;
         
-        private bool disableDeltaTime;
+        private readonly bool disableDeltaTime;
         
-        private HashSet<string> tags;
+        private readonly HashSet<string> tags;
         
         private readonly float duration;
         private readonly float lifeTime;
@@ -132,9 +132,9 @@ namespace Barotrauma
 
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
-        public bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
+        public readonly bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
 
-        public bool Stackable = true; //Can the same status effect be applied several times to the same targets?
+        public readonly bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
         private readonly int useItemCount;
         
@@ -144,8 +144,8 @@ namespace Barotrauma
 
         private readonly Explosion explosion;
 
-        private List<ItemSpawnInfo> spawnItems;
-        private List<CharacterSpawnInfo> spawnCharacters;
+        private readonly List<ItemSpawnInfo> spawnItems;
+        private readonly List<CharacterSpawnInfo> spawnCharacters;
 
         private Character user;
 
@@ -166,7 +166,7 @@ namespace Barotrauma
             private set;
         }
 
-        private List<Pair<string, float>> ReduceAffliction;
+        private readonly List<Pair<string, float>> reduceAffliction;
 
         //only applicable if targeting NearbyCharacters or NearbyItems
         public float Range
@@ -209,7 +209,7 @@ namespace Barotrauma
             spawnItems = new List<ItemSpawnInfo>();
             spawnCharacters = new List<CharacterSpawnInfo>();
             Afflictions = new List<Affliction>();
-            ReduceAffliction = new List<Pair<string, float>>();
+            reduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
 
             Range = element.GetAttributeFloat("range", 0.0f);
@@ -343,11 +343,12 @@ namespace Barotrauma
                         requiredItems.Add(newRequiredItem);
                         break;
                     case "conditional":
-                        IEnumerable<XAttribute> conditionalAttributes = subElement.Attributes();
-                        foreach (XAttribute attribute in conditionalAttributes)
+                        foreach (XAttribute attribute in subElement.Attributes())
                         {
-                            if (attribute.Name.ToString().ToLowerInvariant() == "targetitemcomponent") { continue; }
-                            propertyConditionals.Add(new PropertyConditional(attribute));
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                propertyConditionals.Add(new PropertyConditional(attribute));
+                            }
                         }
                         break;
                     case "affliction":
@@ -382,7 +383,7 @@ namespace Barotrauma
                         if (subElement.Attribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
-                            ReduceAffliction.Add(new Pair<string, float>(
+                            reduceAffliction.Add(new Pair<string, float>(
                                 subElement.GetAttributeString("name", "").ToLowerInvariant(),
                                 subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
                         }
@@ -393,7 +394,7 @@ namespace Barotrauma
 
                             if (AfflictionPrefab.List.Any(ap => ap.Identifier == name || ap.AfflictionType == name))
                             {
-                                ReduceAffliction.Add(new Pair<string, float>(
+                                reduceAffliction.Add(new Pair<string, float>(
                                     name,
                                     subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
                             }
@@ -745,7 +746,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
+                foreach (Pair<string, float> reduceAffliction in reduceAffliction)
                 {
                     float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
                     Limb targetLimb = null;
@@ -942,7 +943,7 @@ namespace Barotrauma
                         }
                     }
 
-                    foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
+                    foreach (Pair<string, float> reduceAffliction in element.Parent.reduceAffliction)
                     {
                         Limb targetLimb = null;
                         Character targetCharacter = null;

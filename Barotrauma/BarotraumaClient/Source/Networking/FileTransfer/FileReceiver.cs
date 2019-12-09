@@ -159,10 +159,10 @@ namespace Barotrauma.Networking
         public TransferInDelegate OnFinished;
         public TransferInDelegate OnTransferFailed;
 
-        private List<FileTransferIn> activeTransfers;
-        private List<Pair<int, double>> finishedTransfers;
+        private readonly List<FileTransferIn> activeTransfers;
+        private readonly List<Pair<int, double>> finishedTransfers;
 
-        private Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
+        private readonly Dictionary<FileTransferType, string> downloadFolders = new Dictionary<FileTransferType, string>()
         {
             { FileTransferType.Submarine, SaveUtil.SubmarineDownloadFolder },
             { FileTransferType.CampaignSave, SaveUtil.CampaignDownloadFolder }
@@ -452,8 +452,7 @@ namespace Barotrauma.Networking
             switch (fileTransfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    Stream stream = null;
-
+                    Stream stream;
                     try
                     {
                         stream = SaveUtil.DecompressFiletoStream(fileTransfer.FilePath);
@@ -487,15 +486,12 @@ namespace Barotrauma.Networking
                     }
                     catch
                     {
-                        stream.Close();
-                        stream.Dispose();
-
+                        stream?.Close();
                         ErrorMessage = "Parsing file \"" + fileTransfer.FilePath + "\" failed! The file may not be a valid submarine file.";
                         return false;
                     }
 
-                    stream.Close();
-                    stream.Dispose();
+                    stream?.Close();
                     break;
                 case FileTransferType.CampaignSave:
                     //TODO: verify that the received file is a valid save file

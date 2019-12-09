@@ -128,7 +128,7 @@ namespace Barotrauma
             int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
             CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
 
-            int portraitSize = (int)(120 * GUI.Scale);
+            int portraitSize = (int)(100 * GUI.Scale);
             PortraitArea = new Rectangle(GameMain.GraphicsWidth - portraitSize - Padding, GameMain.GraphicsHeight - portraitSize - Padding, portraitSize, portraitSize);
             
             //horizontal slices at the corners of the screen for health bar and affliction icons
@@ -204,10 +204,10 @@ namespace Barotrauma
             if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)) { return true; }
 
             //don't close when the cursor is on a UI element
-            if (GUI.MouseOn != null) return false;
+            if (GUI.MouseOn != null) { return false; }
 
             //don't close when hovering over an inventory element
-            if (Inventory.IsMouseOnInventory()) return false;
+            if (Inventory.IsMouseOnInventory()) { return false; }
             
             bool input = PlayerInput.LeftButtonDown() || PlayerInput.RightButtonClicked();
             return input && !rect.Contains(PlayerInput.MousePosition);

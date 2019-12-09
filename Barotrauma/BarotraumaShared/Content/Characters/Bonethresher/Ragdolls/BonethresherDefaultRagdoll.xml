@@ -2,7 +2,7 @@
   <collider radius="60" width="0" name="Main Collider" height="100" />
   <limb id="0" name="Head" type="Head" height="0" width="70" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="10" stepoffset="0,0" radius="30" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0.5,-0.5">
     <deformablesprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="762,236,146,95" origin="0.5451591,0.4649931" depth="0" />
-    <attack context="Water" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBack" reverse="False" range="125" damagerange="150" duration="0.25" cooldown="7" secondarycooldown="3" cooldownrandomfactor="0.1" structuredamage="30" itemdamage="30" stun="0" onlyhumans="False" applyforceonlimbs="" force="100" torque="0" applyforcesonlyonce="False" targetimpulse="200" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="1" structuresoundtype="StructureBlunt" targetlimbtype="None"></attack>
+    <attack context="Water" targettype="Structure" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" reverse="False" range="125" damagerange="150" duration="0.25" cooldown="7" secondarycooldown="0.5" cooldownrandomfactor="0.1" structuredamage="50" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="" force="100" torque="0" applyforcesonlyonce="False" targetimpulse="200" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="1" structuresoundtype="StructureBlunt" targetlimbtype="None"/>
     <damagemodifier damagemultiplier="0.2" armorsector="0,360" deflectprojectiles="True" afflictionidentifiers="" afflictiontypes="damage,bleeding" damagesound="LimbArmor" />
   </limb>
   <limb id="1" name="Neck" type="None" height="70" width="90" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
@@ -17,6 +17,15 @@
       <affliction identifier="bitewounds" strength="25" probability="1" />
       <affliction identifier="bleeding" strength="25" probability="1" />
       <affliction identifier="stun" strength="0.1" probability="1" />
+    </attack>
+  </limb>
+  <limb id="11" width="19" height="40" name="BerserkAttack" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" radius="0" density="1" ignorecollisions="True" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+    <sprite texture="Content/Characters/Tigerthresher/Tigerthresher.png" sourcerect="898,278,19,40" origin="0.5,0.5" depth="0" />
+    <attack structuresoundtype="StructureBlunt" context="Water" targettype="Structure" targetlimbtype="None" hitdetectiontype="Distance" afterattack="FallBackUntilCanAttack" reverse="False" range="75" damagerange="125" duration="0.5" cooldown="0.75" secondarycooldown="0.75" cooldownrandomfactor="0.5" structuredamage="30" itemdamage="30" stun="0" onlyhumans="False" applyforceonlimbs="0, 1, 2" force="50" torque="-100" applyforcesonlyonce="False" targetimpulse="150" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" priority="0">
+      <StatusEffect type="OnUse" target="This" disabledeltatime="true">
+        <Affliction identifier="internaldamage" amount="2" />
+      </StatusEffect>
+      <Conditional healthpercentage="lte 50" targetself="true"/>
     </attack>
   </limb>
   <limb id="3" width="110" height="110" name="Torso" type="Torso" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
@@ -77,4 +86,5 @@
   <joint limb1="1" limb2="2" limb1anchor="36.25072,3.294761" limb2anchor="-20.00271,2.013826" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="-18.25742" lowerlimit="-33.39247" stiffness="0.25" />
   <joint limb1="1" limb2="10" limb1anchor="-10.92559,-35.25846" limb2anchor="3.86585,18.03033" name="Joint 1 - 10" canbesevered="True" limitenabled="True" upperlimit="10.66339" lowerlimit="-15.96447" stiffness="0.25" />
   <joint limb1="1" limb2="9" limb1anchor="-38.40155,-40.57999" limb2anchor="3.307009,18.05545" name="Joint 1 - 9" canbesevered="True" limitenabled="True" upperlimit="7.110166" lowerlimit="-19.75739" stiffness="0.25" />
+  <joint limb1="0" limb2="11" limb1anchor="57.03,-18.6" limb2anchor="-1.24,-2.48" name="Joint 0 - 11" canbesevered="False" limitenabled="True" upperlimit="0" lowerlimit="0" stiffness="0.25" />
 </Ragdoll>

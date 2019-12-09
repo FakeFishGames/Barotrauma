@@ -79,6 +79,7 @@ namespace FarseerPhysics.Dynamics
         public int ChildIndex;
         public Fixture Fixture;
         public int ProxyId;
+        public Body Body;
     }
 
     /// <summary>
@@ -504,9 +505,14 @@ namespace FarseerPhysics.Dynamics
                 Shape.ComputeAABB(out proxy.AABB, ref xf, i);
                 proxy.Fixture = this;
                 proxy.ChildIndex = i;
+                proxy.Body = this.Body;
 
                 //FPE note: This line needs to be after the previous two because FixtureProxy is a struct
                 proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+
+                /*Shape.ComputeAABB(out proxy.AABB, ref xf, i);
+                proxy.ProxyId = broadPhase.AddProxy(ref proxy.AABB);
+                broadPhase.SetProxy(proxy.ProxyId, ref proxy);*/
 
                 Proxies[i] = proxy;
             }

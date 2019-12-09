@@ -582,7 +582,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            //TODO: error message here?
+                            new GUIMessageBox("", TextManager.Get("ServerOffline"));
                             return false;
                         }
                     }
@@ -1278,7 +1278,7 @@ namespace Barotrauma
             {
                 friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: "GUIButtonFriendsDropdown")
                 {
-                    Font = GUI.ObjectiveNameFont,
+                    Font = GUI.GlobalFont,
                     OnClicked = (button, udt) =>
                     {
                         friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);
@@ -1639,7 +1639,14 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
+            if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))
+            {
+                string toolTip = TextManager.Get("ServerOffline");
+                serverContent.Children.ForEach(c => c.ToolTip = toolTip);
+                serverName.TextColor *= 0.8f;
+                serverPlayers.TextColor *= 0.8f;
+            }
+            else if (GameMain.Config.UseSteamMatchmaking && serverInfo.RespondedToSteamQuery.HasValue && serverInfo.RespondedToSteamQuery.Value == false)
             {
                 string toolTip = TextManager.Get("ServerListNoSteamQueryResponse");
                 compatibleBox.Selected = false;

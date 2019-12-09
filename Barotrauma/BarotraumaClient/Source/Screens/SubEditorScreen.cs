@@ -604,7 +604,7 @@ namespace Barotrauma
                         paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon, onUpdate: null)
                     {
                         HideElementsOutsideFrame = true,
-                        ToolTip = frame.ToolTip
+                        ToolTip = frame.RawToolTip
                     };
                 }
 
@@ -719,10 +719,9 @@ namespace Barotrauma
             base.Deselect();
 
             TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
-            if (Steam.SteamManager.USE_STEAM)
-            {
-                Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
-            }
+#if USE_STEAM
+            Steam.SteamManager.IncrementStat("hoursineditor", (float)timeInEditor.TotalHours);
+#endif
 
             GUI.ForceMouseOn(null);
 
@@ -758,6 +757,7 @@ namespace Barotrauma
                     i--; // Take into account the message boxes removing themselves from the list when closed
                 }
             }
+            ClearFilter();
         }
 
         public void HandleContainerContentsDeletion(Item itemToDelete, Inventory itemInventory)
@@ -1474,7 +1474,7 @@ namespace Barotrauma
                         TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                         {
                             TextColor = textBlock.TextColor * 0.8f,
-                            ToolTip = textBlock.ToolTip
+                            ToolTip = textBlock.RawToolTip
                         };
                 }
             }

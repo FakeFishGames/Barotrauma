@@ -161,6 +161,12 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
+            // Inside of a container
+            if (container != null)
+            {
+                return false;
+            }
+
             //no drawable components and the body has been disabled = nothing to draw
             if (drawableComponents.Count == 0 && body != null && !body.Enabled)
             {
@@ -176,6 +182,7 @@ namespace Barotrauma
             }
             size *= 0.5f;
 
+            //cache world position so we don't need to calculate it 4 times
             Vector2 worldPosition = WorldPosition;
             if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
             if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
@@ -482,10 +489,11 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
             {
-                Spacing = 5
+                Spacing = (int)(25 * GUI.Scale)
             };
 
-            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
+            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
+            itemEditor.Children.First().Color = Color.Black * 0.7f;
             if (!inGame)
             {
                 if (Linkable)
@@ -571,6 +579,7 @@ namespace Barotrauma
                 }
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
+                componentEditor.Children.First().Color = Color.Black * 0.7f;
 
                 if (inGame)
                 {
@@ -801,10 +810,7 @@ namespace Barotrauma
                 {
                     if (ic is Repairable repairable)
                     {
-                        if (ConditionPercentage < repairable.ShowRepairUIThreshold)
-                        {
-                            color = Color.Cyan;
-                        }
+                        if (!IsFullCondition) { color = Color.Cyan; }
                     }
                     else
                     {
@@ -908,7 +914,7 @@ namespace Barotrauma
                         ApplyStatusEffects(ActionType.OnBroken, 1.0f);
                         foreach (ItemComponent ic in components)
                         {
-                            ic.PlaySound(ActionType.OnBroken, WorldPosition);
+                            ic.PlaySound(ActionType.OnBroken);
                         }
                     }
                     SetActiveSprite();
@@ -1004,6 +1010,8 @@ namespace Barotrauma
                 return;
             }
 
+            isActive = true;
+
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;
             float newAngularVelocity = body.AngularVelocity;
@@ -1092,7 +1100,18 @@ namespace Barotrauma
 
             GameMain.Client.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
         }
-        
+
+        public void CreateClientEvent<T>(T ic, object[] extraData) where T : ItemComponent, IClientSerializable
+        {
+            if (GameMain.Client == null) return;
+
+            int index = components.IndexOf(ic);
+            if (index == -1) return;
+
+            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
+            GameMain.Client.CreateEntityEvent(this, data);
+        }
+
         public static Item ReadSpawnData(IReadMessage msg, bool spawn = true)
         {
             string itemName = msg.ReadString();

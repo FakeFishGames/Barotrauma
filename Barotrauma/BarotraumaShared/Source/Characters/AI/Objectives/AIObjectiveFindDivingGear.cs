@@ -80,6 +80,10 @@ namespace Barotrauma
                         var container = item.GetComponent<ItemContainer>();
                         if (container.Item.ParentInventory == character.Inventory)
                         {
+                            if (!container.Inventory.CanBePut(oxygenTank))
+                            {
+                                Abandon = true;
+                            }
                             character.Inventory.RemoveItem(oxygenTank);
                             if (!container.Inventory.TryPutItem(oxygenTank, null))
                             {

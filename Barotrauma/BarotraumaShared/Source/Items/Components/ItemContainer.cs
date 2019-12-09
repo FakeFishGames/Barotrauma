@@ -66,9 +66,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private float itemRotation;
+        [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
+        public float ItemRotation
+        {
+            get { return MathHelper.ToDegrees(itemRotation); }
+            set { itemRotation = MathHelper.ToRadians(value); }
+        }
+
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
             isRestrictionsDefined = containableRestrictions.Any();
+            if (ContainableItems.None(ri => ri.MatchesItem(item))) { return false; }
             if (!isRestrictionsDefined) { return true; }
             return identifiersOrTags.Any(id => containableRestrictions.Any(r => r == id));
         }
@@ -76,11 +85,14 @@ namespace Barotrauma.Items.Components
         public bool ShouldBeContained(Item item, out bool isRestrictionsDefined)
         {
             isRestrictionsDefined = containableRestrictions.Any();
+            if (ContainableItems.None(ri => ri.MatchesItem(item))) { return false; }
             if (!isRestrictionsDefined) { return true; }
             return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
         }
 
         public List<RelatedItem> ContainableItems { get; private set; } = new List<RelatedItem>();
+
+        public IEnumerable<string> GetContainableItemIdentifiers => ContainableItems.SelectMany(ri => ri.Identifiers);
 
         public ItemContainer(Item item, XElement element)
             : base (item, element)
@@ -138,7 +150,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeContained(Item item)
         {
-            if (ContainableItems.Count == 0) return true;
+            if (ContainableItems.Count == 0) { return true; }
             return (ContainableItems.Find(x => x.MatchesItem(item)) != null);
         }
 
@@ -149,6 +161,11 @@ namespace Barotrauma.Items.Components
                 item.body.FarseerBody.Awake)
             {
                 item.SetContainedItemPositions();
+            }
+            else if (itemsWithStatusEffects.Count == 0)
+            {
+                IsActive = false;
+                return;
             }
 
             foreach (Pair<Item, StatusEffect> itemAndEffect in itemsWithStatusEffects)
@@ -206,6 +223,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            IsActive = true;
+
             return (picker != null);
         }
 
@@ -225,10 +244,25 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
+        public override void Drop(Character dropper)
+        {
+            IsActive = true;
+        }
+
+        public override void Equip(Character character)
+        {
+            IsActive = true;
+        }
+
         public void SetContainedItemPositions()
         {
             Vector2 simPos = item.SimPosition;
             Vector2 displayPos = item.Position;
+            float currentRotation = itemRotation;
+            if (item.body != null)
+            {
+                currentRotation += item.body.Rotation;
+            }
 
             foreach (Item contained in Inventory.Items)
             {
@@ -237,12 +271,14 @@ namespace Barotrauma.Items.Components
                 {
                     try
                     {
-                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, 0.0f);
+                        contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, currentRotation);
+                        contained.body.SetPrevTransform(contained.body.SimPosition, contained.body.Rotation);
+                        contained.body.UpdateDrawPosition();
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions ("+e.Message+")\n"+e.StackTrace);
-                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:"+contained.Name,
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                        GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
                     }

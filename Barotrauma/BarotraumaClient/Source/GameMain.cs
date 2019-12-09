@@ -166,6 +166,11 @@ namespace Barotrauma
             get { return loadingScreenOpen; }
         }
 
+        public bool Paused
+        {
+            get; private set;
+        }
+
         private const GraphicsProfile GfxProfile = GraphicsProfile.Reach;
 
         public GameMain(string[] args)
@@ -507,15 +512,14 @@ namespace Barotrauma
             TitleScreen.LoadState = 70.0f;
         yield return CoroutineStatus.Running;
 
-            if (SteamManager.USE_STEAM)
+#if USE_STEAM
+            SteamWorkshopScreen = new SteamWorkshopScreen();
+            if (SteamManager.IsInitialized)
             {
-                SteamWorkshopScreen = new SteamWorkshopScreen();
-                if (SteamManager.IsInitialized)
-                {
-                    SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
-                    SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
-                }
+                SteamManager.Instance.Friends.OnInvitedToGame += OnInvitedToGame;
+                SteamManager.Instance.Lobby.OnLobbyJoinRequested += OnLobbyJoinRequested;
             }
+#endif
             SubEditorScreen         = new SubEditorScreen();
 
             TitleScreen.LoadState = 75.0f;
@@ -648,8 +652,6 @@ namespace Barotrauma
 
             PlayerInput.UpdateVariable();
 
-            bool paused = true;
-
             if (SoundManager != null)
             {
                 if (WindowActive || !Config.MuteOnFocusLost)
@@ -768,13 +770,20 @@ namespace Barotrauma
                             GUI.TogglePauseMenu();
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
-                        else if (Character.Controlled == null ||
-                            ((Character.Controlled.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
+                        else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null))
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
+                        }
+
+                        bool itemHudActive()
+                        {
+                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            return 
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                                ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
 
@@ -788,15 +797,15 @@ namespace Barotrauma
                     }
 #endif
 
-                        GUI.ClearUpdateList();
-                    paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
+                    GUI.ClearUpdateList();
+                    Paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
                     {
                         GUI.TogglePauseMenu();
-                        paused = true;
+                        Paused = true;
                     }
 #endif
 
@@ -810,9 +819,9 @@ namespace Barotrauma
                     DebugConsole.AddToGUIUpdateList();
 
                     DebugConsole.Update((float)Timing.Step);
-                    paused = paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
+                    Paused = Paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
 
-                    if (!paused)
+                    if (!Paused)
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
@@ -840,7 +849,7 @@ namespace Barotrauma
                     GUI.Update((float)Timing.Step);
                 }
 
-                CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
+                CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
 
@@ -856,7 +865,7 @@ namespace Barotrauma
                 PerformanceCounter.UpdateIterationsGraph.Update(updateIterations);
             }
 
-            if (!paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
+            if (!Paused) Timing.Alpha = Timing.Accumulator / Timing.Step;
         }
 
         public static void ResetFrameTime()

@@ -28,10 +28,10 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //connection panels can't be deactivated
+        //connection panels can't be deactivated externally (by signals or status effects)
         public override bool IsActive
         {
-            get { return true; }
+            get { return base.IsActive; }
             set { /*do nothing*/ }
         }
 
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            IsActive = true;
+            base.IsActive = true;
             InitProjSpecific(element);
         }
 
@@ -80,6 +80,7 @@ namespace Barotrauma.Items.Components
                     if (wire != null)
                     {
                         DisconnectedWires.Add(wire);
+                        base.IsActive = true;
                     }
                 }
             }
@@ -135,10 +136,16 @@ namespace Barotrauma.Items.Components
                 if (user != null) { item.CreateServerEvent(this); }
 #endif
                 user = null;
+                if (DisconnectedWires.Count == 0) { base.IsActive = false; }
                 return;
             }
 
-            if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) { return; }
+            if (!user.Enabled || !HasRequiredItems(user, addMessage: false)) 
+            { 
+                user = null; 
+                base.IsActive = false; 
+                return; 
+            }
 
             user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
@@ -163,7 +170,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (user != null) { item.CreateServerEvent(this); }
 #endif
-            IsActive = true;
+            base.IsActive = true;
             return true;
         }
         
@@ -268,6 +275,11 @@ namespace Barotrauma.Items.Components
             rewireSoundChannel?.FadeOutAndDispose();
             rewireSoundChannel = null;
 #endif
+        }
+
+        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        {
+            //do nothing
         }
 
 

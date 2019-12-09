@@ -663,7 +663,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (PhysicsBody body in PhysicsBody.List)
                 {
                     body.SetPrevTransform(body.SimPosition, body.Rotation);
-                    body.Update((float)deltaTime);
+                    body.Update();
                 }
                 // Handle ragdolling here, because we are not calling the Character.Update() method.
                 if (!Character.DisableControls)
@@ -2712,7 +2712,7 @@ namespace Barotrauma.CharacterEditor
 
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
-            var saveAllButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("SaveButton"));
+            var saveAllButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), TextManager.Get("editor.saveall"));
             saveAllButton.Color = Color.LightGreen;
             saveAllButton.OnClicked += (button, userData) =>
             {
