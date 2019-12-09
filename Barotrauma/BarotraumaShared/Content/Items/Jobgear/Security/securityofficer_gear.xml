@@ -51,6 +51,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="ballistichelmet" category="Equipment" tags="smallitem" scale="0.4" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy">
+    <Upgrade gameversion="0.9.6.0" scale="0.4" />
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />

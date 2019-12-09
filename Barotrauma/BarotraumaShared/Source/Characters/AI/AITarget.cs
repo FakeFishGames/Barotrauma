@@ -21,7 +21,7 @@ namespace Barotrauma
         /// <summary>
         /// How long does it take for the ai target to fade out if not kept alive.
         /// </summary>
-        public float FadeOutTime { get; private set; }
+        public float FadeOutTime { get; private set; } = 1;
 
         public bool Static { get; private set; }
         
