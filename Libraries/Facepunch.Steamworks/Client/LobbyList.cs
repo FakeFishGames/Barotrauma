@@ -20,6 +20,19 @@ namespace Facepunch.Steamworks
             this.client = client;
         }
 
+        List<ulong> pendingCallbacks = new List<ulong>();
+        public void Update()
+        {
+            lock (pendingCallbacks)
+            {
+                foreach (ulong lobbyId in pendingCallbacks)
+                {
+                    OnLobbyDataReceived?.Invoke(Lobby.FromSteam(client, lobbyId));
+                }
+                pendingCallbacks.Clear();
+            }
+        }
+
         /// <summary>
         /// Refresh the List of Lobbies. If no filter is passed in, a default one is created that filters based on AppId ("appid").
         /// </summary>
@@ -82,7 +95,10 @@ namespace Facepunch.Steamworks
         {
             if (callback.Success == 1) //1 if success, 0 if failure
             {
-                OnLobbyDataReceived?.Invoke(Lobby.FromSteam(client, callback.SteamIDLobby));
+                lock (pendingCallbacks)
+                {
+                    pendingCallbacks.Add(callback.SteamIDLobby);
+                }
             }
         }
 

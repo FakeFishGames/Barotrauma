@@ -404,14 +404,18 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            if (Config.AutoUpdateWorkshopItems)
+            CrossThread.RequestExecutionOnMainThread(() =>
             {
-                if (SteamManager.AutoUpdateWorkshopItems())
+                if (Config.AutoUpdateWorkshopItems)
                 {
-                    ContentPackage.LoadAll();
-                    Config.ReloadContentPackages();
+                    if (SteamManager.AutoUpdateWorkshopItems())
+                    {
+                        ContentPackage.LoadAll();
+                        Config.ReloadContentPackages();
+                    }
                 }
-            }
+            });
+            
 
             if (SelectedPackages.None())
             {
