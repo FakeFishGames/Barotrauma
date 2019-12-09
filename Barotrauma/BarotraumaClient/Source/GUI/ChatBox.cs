@@ -20,12 +20,6 @@ namespace Barotrauma
         private int histIndex;
         // local message history
         private readonly List<string> previousMessages = new List<string>() { string.Empty };
-        private enum InputDir
-        {
-            Up = 1,
-            Down = -1,
-            Other = 0
-        };
 
         /// <summary>
         /// Add a message to the local history for use with up/down arrow keys
@@ -117,13 +111,19 @@ namespace Barotrauma
             InputBox.OnKeyHit += (sender, key) =>
             {
                 // Up arrow key? go up. Down arrow key? go down. Everything else gets binned
-                InputDir direction = key == Keys.Up ? InputDir.Up : (key == Keys.Down ? InputDir.Down : InputDir.Other);
-                if (direction == InputDir.Other) { return; }
+                int direction = key == Keys.Up ? 1 : (key == Keys.Down ? -1 : 0);
+                if (direction == 0) { return; }
 
                 // save our changes to the history, slot 0 is reserved for the original message
                 previousMessages[histIndex] = InputBox.Text;
 
-                string newMessage = SelectMessage(direction);
+                int nextIndex = (histIndex + direction);
+                // if we are at the end, there is nothing more to scroll
+                if (nextIndex > (previousMessages.Count - 1)) { return; }
+
+                // if we scrolled all the way back down then show the original message else give us something from the history
+                string newMessage = nextIndex < 0 ? previousMessages.FirstOrDefault() : previousMessages[(histIndex = nextIndex)];
+
                 // don't do anything if we didn't find anything
                 if (newMessage == null) { return; }
                 InputBox.Text = newMessage;
@@ -151,22 +151,6 @@ namespace Barotrauma
 
             showNewMessagesButton.Visible = false;
             ToggleOpen = GameMain.Config.ChatOpen;
-        }
-
-        /// <summary>
-        /// Return a message at certain part of the history
-        /// </summary>
-        /// <param name="direction">What direction to scroll the history, 1 being upwards and 2 being downwards</param>
-        /// <returns>previously typed message or null if the history ends or is empty</returns>
-        private string SelectMessage(InputDir direction)
-        {
-            int dir = (int)direction;
-            int nextIndex = (histIndex + dir);
-            // if we are at the end, there is nothing more to scroll
-            if (nextIndex > (previousMessages.Count - 1)) { return null; }
-
-            // if we scrolled all the way back down then show the original message else give us something from the history
-            return nextIndex < 0 ? previousMessages[0] : previousMessages[(histIndex = nextIndex)];
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
