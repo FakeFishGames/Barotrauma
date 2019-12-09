@@ -53,7 +53,7 @@
     <sprite texture="Content/Characters/Husk/HuskStinger.png" sourcerect="58,0,47,149" depth="0.5" origin="0.3,0.6" />
     <attack range="70" damagerange="50" duration="0.1" targetforce="0" structuresoundtype="StructureBlunt" force="6" applyforceonlimbs="1" torque="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" structuredamage="0" itemdamage="0" stun="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="10" targetimpulseworld="0,0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" priority="0" afterattack="Pursue" cooldown="5" secondarycooldown="0">
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
-        <ReduceAffliction identifier="internaldamage" strength="5" />
+        <ReduceAffliction identifier="bitewounds" strength="5" />
       </StatusEffect>
       <Affliction identifier="bleeding" strength="10" />
       <Affliction identifier="huskinfection" strength="5" probability="0.5"/>

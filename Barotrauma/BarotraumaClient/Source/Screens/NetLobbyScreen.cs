@@ -1228,8 +1228,6 @@ namespace Barotrauma
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
 
-            GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
-
             if (campaignUI?.StartButton != null)
             {
                 campaignUI.StartButton.Visible = !GameMain.Client.GameStarted &&

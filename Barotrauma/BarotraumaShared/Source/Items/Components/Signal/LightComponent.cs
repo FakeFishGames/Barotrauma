@@ -20,12 +20,12 @@ namespace Barotrauma.Items.Components
         private bool drawBehindSubs;
 
         private float blinkTimer;
-        
+
         private bool itemLoaded;
 
         public PhysicsBody ParentBody;
 
-        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive."), 
+        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive."),
             Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
@@ -76,14 +76,14 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (IsActive == value) { return; }
-                
+
                 IsActive = value;
 #if SERVER
                 if (GameMain.Server != null && itemLoaded) { item.CreateServerEvent(this); }
 #endif
             }
         }
-        
+
         [Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
                 light.Rotation = -Rotation;
 #endif
             }
-            
+
             currPowerConsumption = powerConsumption;
             if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
             {
@@ -224,7 +224,7 @@ namespace Barotrauma.Items.Components
 
             if (blinkFrequency > 0.0f)
             {
-                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;                
+                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;
             }
 
             if (blinkTimer > 0.5f)
@@ -256,8 +256,8 @@ namespace Barotrauma.Items.Components
                 case "toggle":
                     IsActive = !IsActive;
                     break;
-                case "set_state":           
-                    IsActive = (signal != "0");                   
+                case "set_state":
+                    IsActive = (signal != "0");
                     break;
                 case "set_color":
                     LightColor = XMLExtensions.ParseColor(signal, false);
@@ -272,6 +272,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateAITarget(AITarget target)
         {
+            target.Enabled = IsActive;
             if (!IsActive) { return; }
             if (target.MaxSightRange <= 0)
             {

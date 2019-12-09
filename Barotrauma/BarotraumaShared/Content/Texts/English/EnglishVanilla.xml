@@ -4264,6 +4264,11 @@
   <serverendpoint>Server IP / SteamID</serverendpoint>
   <workshoppublisherror.limitexceeded>Publishing the Workshop item failed (limit exceeded). Make sure you have enabled Steam Cloud and haven't exceeded your Steam Cloud quota. If you are using Steam Cloud sync, a large number of save files can cause you to run out of space on the cloud. You may want to check [savepath] to make sure you're not storing an excessive number of save files.</workshoppublisherror.limitexceeded>
   <workshopitemcreatehelptext>You can use this tab to publish new items in the Steam Workshop. You can select a submarine or a content package to publish from the 'Your items' menu at the left.</workshopitemcreatehelptext>
+  
+  <afflictiondescription.internaldamage>There are signs of burst blood vessels and of organ damage.</afflictiondescription.internaldamage>
+  <afflictioncauseofdeath.internaldamage>Died of internal injuries.</afflictioncauseofdeath.internaldamage>
+  <afflictioncauseofdeathself.internaldamage>You have succumbed to your internal injuries.</afflictioncauseofdeathself.internaldamage>
+
   <entitydescription.toolbox>A portable container for storing tools.</entitydescription.toolbox>
   
   <!-- New values as of Oct 22 -->
@@ -4347,5 +4352,20 @@
   <missionsuccess.killthresherswarm1>The swarm has been terminated.</missionsuccess.killthresherswarm1>
   <missionheader0.killthresherswarm1>Target terminated</missionheader0.killthresherswarm1>
   <missionmessage0.killthresherswarm1>The swarm is terminated. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killthresherswarm1>
+
+  <afflictionname.blunttrauma>Blunt force trauma</afflictionname.blunttrauma>
+  <afflictiondescription.blunttrauma>The area is an ugly shade of purple, and apparently very painful to touch. You suspect a bone might be broken.</afflictiondescription.blunttrauma>
+  <afflictioncauseofdeath.blunttrauma>Died of blunt force trauma.</afflictioncauseofdeath.blunttrauma>
+  <afflictioncauseofdeathself.blunttrauma>You have succumbed to injuries from blunt force trauma.</afflictioncauseofdeathself.blunttrauma>
+
+  <afflictionname.lacerations>Lacerations</afflictionname.lacerations>
+  <afflictiondescription.lacerations>The skin is pierced and there are deep, bleeding wounds.</afflictiondescription.lacerations>
+  <afflictioncauseofdeath.lacerations>Died of lacerations.</afflictioncauseofdeath.lacerations>
+  <afflictioncauseofdeathself.lacerations>You have succumbed to your wounds.</afflictioncauseofdeathself.lacerations>
+
+  <afflictionname.bitewounds>Bite wounds</afflictionname.bitewounds>
+  <afflictiondescription.bitewounds>There is extensive damage to soft tissue in the area and there are asymmetrical, bleeding wounds.</afflictiondescription.bitewounds>
+  <afflictioncauseofdeath.bitewounds>Mauled to death.</afflictioncauseofdeath.bitewounds>
+  <afflictioncauseofdeathself.bitewounds>You have been mauled to death.</afflictioncauseofdeathself.bitewounds>
 
 </infotexts>
