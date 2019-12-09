@@ -745,7 +745,7 @@ namespace Barotrauma
                 }
                 canAttack = AttackingLimb != null && AttackingLimb.attack.CoolDownTimer <= 0;
             }
-            if (!canAttack && wallTarget != null && SelectedAiTarget.Entity.Submarine != null && !canAttackSub)
+            if (!canAttack && SelectedAiTarget.Entity.Submarine != null && !canAttackSub)
             {
                 // Steer towards the target, but turn away if a wall is blocking the way
                 float d = ConvertUnits.ToDisplayUnits(colliderLength) * 3;
