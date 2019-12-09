@@ -2300,9 +2300,13 @@
   <entitydescription.doctorsuniform1>Makes you look like you might be useful in a medical emergency.</entitydescription.doctorsuniform1>
   <entityname.doctorsuniform2>Doctor's Uniform</entityname.doctorsuniform2>
   <entitydescription.doctorsuniform2>Makes you look like you might be useful in a medical emergency.</entitydescription.doctorsuniform2>
+  <!--<entityname.orangejumpsuit1>Orange Jumpsuit</entityname.orangejumpsuit1>-->
   <entitydescription.orangejumpsuit1>The fire-resistant fabric offers some protection against fires.</entitydescription.orangejumpsuit1>
+  <!--<entityname.orangejumpsuit2>Orange Jumpsuit</entityname.orangejumpsuit2>-->
   <entitydescription.orangejumpsuit2>The fire-resistant fabric offers some protection against fires.</entitydescription.orangejumpsuit2>
+  <!--<entityname.bluejumpsuit1>Blue Jumpsuit</entityname.bluejumpsuit1>-->
   <entitydescription.bluejumpsuit1>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit1>
+  <!--<entityname.bluejumpsuit2>Blue Jumpsuit</entityname.bluejumpsuit2>-->
   <entitydescription.bluejumpsuit2>The fire-resistant fabric offers some protection against fires.</entitydescription.bluejumpsuit2>
   <entityname.toolbox>Toolbox</entityname.toolbox>
   <entityname.headset>Headset</entityname.headset>
