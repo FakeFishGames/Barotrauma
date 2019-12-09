@@ -388,7 +388,7 @@ namespace Barotrauma
                 { CanBeFocused = false };
                 crewExperienceText.RectTransform.MinSize = new Point(0, crewExperienceText.Children.First().Rect.Height);
             }
-            
+
             if (RequiredContentPackages.Any())
             {
                 var contentPackagesText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
@@ -398,6 +398,19 @@ namespace Barotrauma
                     string.Join(", ", RequiredContentPackages), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 contentPackagesText.RectTransform.MinSize = new Point(0, contentPackagesText.Children.First().Rect.Height);
+            }
+            
+            // show what game version the submarine was created on
+            if (!IsVanillaSubmarine())
+            {
+                var versionText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
+                        TextManager.Get("serverlistversion"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                    { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), versionText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                        GameVersion.ToString(), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                    {CanBeFocused = false };
+                
+                versionText.RectTransform.MinSize = new Point(0, versionText.Children.First().Rect.Height);
             }
 
             GUITextBlock.AutoScaleAndNormalize(descriptionBox.Content.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>());
