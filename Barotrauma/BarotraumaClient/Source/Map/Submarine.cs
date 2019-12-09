@@ -408,7 +408,7 @@ namespace Barotrauma
                     { CanBeFocused = false };
                 new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), versionText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
                         GameVersion.ToString(), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                    {CanBeFocused = false };
+                    { CanBeFocused = false };
                 
                 versionText.RectTransform.MinSize = new Point(0, versionText.Children.First().Rect.Height);
             }
