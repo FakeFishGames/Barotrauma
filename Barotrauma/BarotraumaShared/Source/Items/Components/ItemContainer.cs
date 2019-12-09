@@ -154,7 +154,12 @@ namespace Barotrauma.Items.Components
         public bool CanBeContained(Item item)
         {
             if (ContainableItems.Count == 0) { return true; }
-            return (ContainableItems.Find(x => x.MatchesItem(item)) != null);
+            return (ContainableItems.Find(c => c.MatchesItem(item)) != null);
+        }
+        public bool CanBeContained(ItemPrefab itemPrefab)
+        {
+            if (ContainableItems.Count == 0) { return true; }
+            return (ContainableItems.Find(c => c.MatchesItem(itemPrefab)) != null);
         }
 
         public override void Update(float deltaTime, Camera cam)
