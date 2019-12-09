@@ -389,23 +389,33 @@ namespace Barotrauma
                     var target = SelectedAiTarget ?? _lastAiTarget;
                     if (target?.Entity != null && PreviousState == AIState.Attack)
                     {
-                        var memory = GetTargetMemory(target);
-                        if (memory != null)
+                        if (wallTarget != null)
                         {
-                            var location = memory.Location;
-                            var dist = Vector2.DistanceSquared(WorldPosition, location);
-                            float minDist = 50;
-                            if (dist < minDist * minDist)
+                            // There's a wall between us and the target -> don't keep chasing
+                            SelectedAiTarget = null;
+                            _lastAiTarget = null;
+                            wallTarget = null;
+                        }
+                        else
+                        {
+                            var memory = GetTargetMemory(target);
+                            if (memory != null)
                             {
-                                // Target is gone
-                                SelectedAiTarget = null;
-                                _lastAiTarget = null;
-                            }
-                            else
-                            {
-                                steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
-                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
-                                return;
+                                var location = memory.Location;
+                                var dist = Vector2.DistanceSquared(WorldPosition, location);
+                                float minDist = 50;
+                                if (dist < minDist * minDist)
+                                {
+                                    // Target is gone
+                                    SelectedAiTarget = null;
+                                    _lastAiTarget = null;
+                                }
+                                else
+                                {
+                                    steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
+                                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                                    return;
+                                }
                             }
                         }
                     }
@@ -753,6 +763,9 @@ namespace Barotrauma
                 {
                     State = AIState.Idle;
                     IgnoreTarget(SelectedAiTarget);
+                    // Don't keep chasing the target
+                    SelectedAiTarget = null;
+                    _lastAiTarget = null;
                     return;
                 }
             }
@@ -1598,7 +1611,6 @@ namespace Barotrauma
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
             escapePoint = Vector2.Zero;
-            wallTarget = null;
             AttackingLimb = null;
         }
 
