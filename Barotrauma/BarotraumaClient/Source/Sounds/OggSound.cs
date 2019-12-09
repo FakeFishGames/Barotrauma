@@ -18,6 +18,7 @@ namespace Barotrauma.Sounds
 
         public OggSound(SoundManager owner, string filename, bool stream, XElement xElement) : base(owner, filename, stream, true, xElement)
         {
+            filename = filename.CleanUpPath();
             if (!ToolBox.IsProperFilenameCase(filename))
             {
                 DebugConsole.ThrowError("Sound file \"" + filename + "\" has incorrect case!");

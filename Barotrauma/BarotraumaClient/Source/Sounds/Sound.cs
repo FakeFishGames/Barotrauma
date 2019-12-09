@@ -88,7 +88,7 @@ namespace Barotrauma.Sounds
         public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement=null)
         {
             Owner = owner;
-            Filename = Path.GetFullPath(filename);
+            Filename = Path.GetFullPath(filename).CleanUpPath();
             Stream = stream;
             StreamsReliably = streamsReliably;
             XElement = xElement;

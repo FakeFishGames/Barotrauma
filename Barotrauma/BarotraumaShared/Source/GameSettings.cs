@@ -1162,7 +1162,7 @@ namespace Barotrauma
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
-                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
+                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path).CleanUpPath() == path.CleanUpPath());
 
                 if (matchingContentPackage == null)
                 {

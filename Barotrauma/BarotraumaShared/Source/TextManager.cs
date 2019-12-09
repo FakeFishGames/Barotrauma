@@ -131,6 +131,13 @@ namespace Barotrauma
             {
                 textPacks = newTextPacks;
                 availableLanguages = newLanguages;
+
+                string loadedLangsMsg = "Loaded languages: ";
+                foreach (string language in newLanguages)
+                {
+                    loadedLangsMsg += language + ", ";
+                }
+                DebugConsole.NewMessage(loadedLangsMsg.Substring(0,loadedLangsMsg.Length-2));
             }
 
             Initialized = true;

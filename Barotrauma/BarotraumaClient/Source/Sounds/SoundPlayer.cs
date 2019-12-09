@@ -43,7 +43,7 @@ namespace Barotrauma
                 
         public BackgroundMusic(XElement element)
         {
-            this.File = Path.GetFullPath(element.GetAttributeString("file", ""));
+            this.File = Path.GetFullPath(element.GetAttributeString("file", "")).CleanUpPath();
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
@@ -113,10 +113,10 @@ namespace Barotrauma
 
         private static bool SoundElementsEquivalent(XElement a, XElement b)
         {
-            string filePathA = a.GetAttributeString("file", "");
+            string filePathA = a.GetAttributeString("file", "").CleanUpPath();
             float baseGainA = a.GetAttributeFloat("volume", 1.0f);
             float rangeA = a.GetAttributeFloat("range", 1000.0f);
-            string filePathB = b.GetAttributeString("file", "");
+            string filePathB = b.GetAttributeString("file", "").CleanUpPath();
             float baseGainB = b.GetAttributeFloat("volume", 1.0f);
             float rangeB = b.GetAttributeFloat("range", 1000.0f);
             return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&

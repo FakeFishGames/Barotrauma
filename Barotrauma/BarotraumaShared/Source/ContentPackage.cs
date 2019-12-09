@@ -159,6 +159,8 @@ namespace Barotrauma
         public ContentPackage(string filePath, string setPath = "")
             : this()
         {
+            filePath = filePath.CleanUpPath();
+            if (!string.IsNullOrEmpty(setPath)) { setPath = setPath.CleanUpPath(); }
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
 
             Path = setPath == string.Empty ? filePath : setPath;
@@ -374,7 +376,7 @@ namespace Barotrauma
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
-                new XAttribute("path", Path),
+                new XAttribute("path", Path.CleanUpPathCrossPlatform()),
                 new XAttribute("corepackage", CorePackage)));
 
 
@@ -392,7 +394,7 @@ namespace Barotrauma
 
             foreach (ContentFile file in Files)
             {
-                doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path)));
+                doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path.CleanUpPathCrossPlatform())));
             }
 
             doc.Save(filePath);
