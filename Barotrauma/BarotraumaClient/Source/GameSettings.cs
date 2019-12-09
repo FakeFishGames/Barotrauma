@@ -39,6 +39,8 @@ namespace Barotrauma
             }
         }
 
+        private GUIListBox contentPackageList;
+
         private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
         {
             UnsavedSettings = true;
@@ -105,7 +107,7 @@ namespace Barotrauma
 
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
 
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
+            contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
             {
                 OnSelected = (gc, obj) => false,
                 ScrollBarVisible = true
@@ -1105,6 +1107,11 @@ namespace Barotrauma
             if (GameMain.Client != null) { return false; }
 
             var contentPackage = tickBox.UserData as ContentPackage;
+
+            ContentPackage.List = ContentPackage.List
+                                    .OrderByDescending(p => p.CorePackage)
+                                    .ThenBy(cp => -contentPackageList.Content.GetChildIndex(contentPackageList.Content.GetChildByUserData(cp)))
+                                    .ToList();
 
             if (tickBox.Selected)
             {
