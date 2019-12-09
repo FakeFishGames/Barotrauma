@@ -3738,9 +3738,9 @@
   <afflictioncauseofdeath.lacerations>Died of lacerations.</afflictioncauseofdeath.lacerations>
   <afflictioncauseofdeathself.lacerations>You have succumbed to your wounds.</afflictioncauseofdeathself.lacerations>
 
-  <afflictionname.rendingwounds>Rending wounds</afflictionname.rendingwounds>
-  <afflictiondescription.rendingwounds>There is extensive damage to soft tissue in the area and asymmetrical, bleeding wounds.</afflictiondescription.rendingwounds>
-  <afflictioncauseofdeath.rendingwounds>Mauled to death.</afflictioncauseofdeath.rendingwounds>
-  <afflictioncauseofdeathself.rendingwounds>You have been mauled to death.</afflictioncauseofdeathself.rendingwounds>
+  <afflictionname.bitewounds>Bite wounds</afflictionname.bitewounds>
+  <afflictiondescription.bitewounds>There is extensive damage to soft tissue in the area and there are asymmetrical, bleeding wounds.</afflictiondescription.bitewounds>
+  <afflictioncauseofdeath.bitewounds>Mauled to death.</afflictioncauseofdeath.bitewounds>
+  <afflictioncauseofdeathself.bitewounds>You have been mauled to death.</afflictioncauseofdeathself.bitewounds>
 
 </infotexts>
