@@ -230,7 +230,7 @@
   </Item>
   
   <Item name="" identifier="potassium" category="Material" Tags="smallitem" canbepicked="true" description="" cargocontaineridentifier="metalcrate" scale="0.5" impactsoundtag="impact_metal_light">
-    <PreferredContainer primary="storagecab" minamount="0" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer primary="storagecab" minamount="0" maxamount="2" spawnprobability="0.5"/>
     <PreferredContainer primary="medfabcab" minamount="1" maxamount="3" spawnprobability="1"/>
     <!-- TODO: adjust prices -->
     <Price locationtype="Research" buyprice="10" />
