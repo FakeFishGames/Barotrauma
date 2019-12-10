@@ -26,13 +26,13 @@ namespace Barotrauma
                 containers.AddRange(item.GetComponents<ItemContainer>());
             }
 
-            List<ItemPrefab> prefabsWithContainer = new List<ItemPrefab>();
-            List<ItemPrefab> prefabsWithoutContainer = new List<ItemPrefab>();
+            var prefabsWithContainer = new List<ItemPrefab>();
+            var prefabsWithoutContainer = new List<ItemPrefab>();
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
                 if (!(prefab is ItemPrefab ip)) { continue; }
 
-                if (ip.ConfigElement.Elements().Any(e => e.Name.ToString().ToLower() == typeof(ItemContainer).Name.ToString().ToLower()))
+                if (ip.ConfigElement.Elements().Any(e => string.Equals(e.Name.ToString(), typeof(ItemContainer).Name.ToString(), StringComparison.OrdinalIgnoreCase)))
                 {
                     prefabsWithContainer.Add(ip);
                 }
@@ -45,7 +45,7 @@ namespace Barotrauma
             spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
             //spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
-            foreach (ItemPrefab itemPrefab in prefabsWithContainer.OrderBy(sp => Rand.Int(int.MaxValue)).Concat(prefabsWithoutContainer.OrderBy(sp => Rand.Int(int.MaxValue))))
+            foreach (ItemPrefab itemPrefab in prefabsWithContainer.Randomize().Concat(prefabsWithoutContainer.Randomize()))
             {
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
@@ -97,7 +97,7 @@ namespace Barotrauma
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1);
             for (int i = 0; i < amount; i++)
             {
-                if (validContainer.Key.Inventory.Items.None(it => it == null))
+                if (validContainer.Key.Inventory.IsFull())
                 {
                     containers.Remove(validContainer.Key);
                     break;

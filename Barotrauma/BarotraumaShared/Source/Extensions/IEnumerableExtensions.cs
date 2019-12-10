@@ -12,11 +12,19 @@ namespace Barotrauma.Extensions
         }
 
         /// <summary>
-        /// Randomizes the collection.
+        /// Randomizes the collection and returns it.
         /// </summary>
         public static IOrderedEnumerable<T> Randomize<T>(this IEnumerable<T> source)
         {
-            return source.OrderBy(i => Rand.Range(0f, 1f));
+            return source.OrderBy(i => Rand.Value());
+        }
+
+        /// <summary>
+        /// Randomizes the list in place.
+        /// </summary>
+        public static void RandomizeList<T>(this List<T> source)
+        {
+            source.Sort((x, y) => Rand.Value().CompareTo(Rand.Value()));
         }
 
         public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync = Rand.RandSync.Unsynced)
