@@ -425,7 +425,7 @@ namespace Barotrauma
                     string[] splitTags = value.Split(',');
                     foreach (string tag in splitTags)
                     {
-                        string[] splitTag = tag.Split(':');
+                        string[] splitTag = tag.Trim().Split(':');
                         splitTag[0] = splitTag[0].ToLowerInvariant();
                         tags.Add(string.Join(":", splitTag));
                     }

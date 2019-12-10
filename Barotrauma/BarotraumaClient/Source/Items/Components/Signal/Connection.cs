@@ -119,6 +119,7 @@ namespace Barotrauma.Items.Components
                 {
                     DrawWire(spriteBatch, draggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), null, panel, "");
                 }
+                panel.TriggerRewiringSound();
 
                 if (!PlayerInput.LeftButtonHeld())
                 {
@@ -129,7 +130,11 @@ namespace Barotrauma.Items.Components
                         panel.DisconnectedWires.Add(draggingConnected);
                     }
 
-                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
+                    if (GameMain.Client != null)
+                    {
+                        panel.Item.CreateClientEvent(panel);
+                    }
+
                     draggingConnected = null;
                 }
             }
@@ -205,7 +210,10 @@ namespace Barotrauma.Items.Components
                             SetWire(index, draggingConnected);
                         }
                     }
-                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
+                    if (GameMain.Client != null)
+                    {
+                        panel.Item.CreateClientEvent(panel);
+                    }
                     draggingConnected = null;
                 }
             }

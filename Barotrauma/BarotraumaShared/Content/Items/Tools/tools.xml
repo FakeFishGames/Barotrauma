@@ -224,6 +224,7 @@
     </Holdable>
   </Item>
   <Item name="Fire Extinguisher" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="A handheld carbon dioxide extinguisher." impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.600.0" Tags="mediumitem,extinguisher" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />

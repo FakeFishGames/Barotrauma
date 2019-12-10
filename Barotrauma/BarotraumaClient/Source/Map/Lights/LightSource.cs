@@ -36,8 +36,8 @@ namespace Barotrauma.Lights
                 if (OverrideLightTexture != null)
                 {
                     TextureRange += Math.Max(
-                        Math.Abs(OverrideLightTexture.Origin.X - 0.5f) * OverrideLightTexture.size.X,
-                        Math.Abs(OverrideLightTexture.Origin.Y - 0.5f) * OverrideLightTexture.size.Y);
+                        Math.Abs(OverrideLightTexture.RelativeOrigin.X - 0.5f) * OverrideLightTexture.size.X,
+                        Math.Abs(OverrideLightTexture.RelativeOrigin.Y - 0.5f) * OverrideLightTexture.size.Y);
                 }
             }
         }
@@ -101,9 +101,8 @@ namespace Barotrauma.Lights
                         break;
                     case "lighttexture":
                         OverrideLightTexture = new Sprite(subElement, preMultiplyAlpha: false);
-                        range += Math.Max(
-                            Math.Abs(OverrideLightTexture.Origin.X - 0.5f) * OverrideLightTexture.size.X,
-                            Math.Abs(OverrideLightTexture.Origin.Y - 0.5f) * OverrideLightTexture.size.Y);
+                        //refresh TextureRange
+                        Range = range;
                         break;
                 }
             }
