@@ -95,7 +95,7 @@ namespace Barotrauma
                 if (character.Info != null)
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.LeftButtonClicked())
+                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }

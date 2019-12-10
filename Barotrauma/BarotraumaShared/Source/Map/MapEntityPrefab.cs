@@ -180,7 +180,7 @@ namespace Barotrauma
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
                 
-                if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
             }
             else
             {
@@ -198,7 +198,7 @@ namespace Barotrauma
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
                 }
 
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     CreateInstance(newRect);
                     placePosition = Vector2.Zero;
@@ -208,7 +208,7 @@ namespace Barotrauma
                 newRect.Y = -newRect.Y;
             }
 
-            if (PlayerInput.RightButtonHeld())
+            if (PlayerInput.SecondaryMouseButtonHeld())
             {
                 placePosition = Vector2.Zero;
                 selected = null;

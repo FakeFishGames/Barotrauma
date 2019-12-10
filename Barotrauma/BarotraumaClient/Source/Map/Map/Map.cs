@@ -370,7 +370,7 @@ namespace Barotrauma
                     if (highlightedLocation != CurrentLocation &&
                         connection.Locations.Contains(highlightedLocation) && connection.Locations.Contains(CurrentLocation))
                     {
-                        if (PlayerInput.LeftButtonClicked() &&
+                        if (PlayerInput.PrimaryMouseButtonClicked() &&
                             SelectedLocation != highlightedLocation && highlightedLocation != null)
                         {
                             //clients aren't allowed to select the location without a permission
@@ -390,7 +390,7 @@ namespace Barotrauma
                 zoom += PlayerInput.ScrollWheelSpeed / 1000.0f;
                 zoom = MathHelper.Clamp(zoom, 1.0f, 4.0f);
 
-                if (PlayerInput.MidButtonHeld() || (highlightedLocation == null && PlayerInput.LeftButtonHeld()))
+                if (PlayerInput.MidButtonHeld() || (highlightedLocation == null && PlayerInput.PrimaryMouseButtonHeld()))
                 {
                     drawOffset += PlayerInput.MouseSpeed / zoom;
                 }
@@ -632,7 +632,7 @@ namespace Barotrauma
                 MapGenerationParams.Instance.LocationIndicator.Draw(spriteBatch, centerPos, centerColor,
                     scale: centerIconSize / MapGenerationParams.Instance.LocationIndicator.size.X * zoom * 1.2f);
 
-                if (mouseOn && PlayerInput.LeftButtonClicked() && !messageBoxOpen)
+                if (mouseOn && PlayerInput.PrimaryMouseButtonClicked() && !messageBoxOpen)
                 {
                     if (TextManager.ContainsTag("centerarealockedheader") && TextManager.ContainsTag("centerarealockedtext") )
                     {

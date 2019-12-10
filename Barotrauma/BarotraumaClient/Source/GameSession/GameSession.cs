@@ -178,14 +178,14 @@ namespace Barotrauma
             {
                 if (GameMain.NetLobbyScreen?.HeadSelectionList != null)
                 {
-                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
+                    if (PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.HeadSelectionList))
                     {
                         if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
                     }
                 }
                 if (GameMain.NetLobbyScreen?.JobSelectionFrame != null)
                 {
-                    if (PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
+                    if (PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(GameMain.NetLobbyScreen.JobSelectionFrame))
                     {
                         GameMain.NetLobbyScreen.JobList.Deselect();
                         if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }

@@ -2164,11 +2164,11 @@ namespace Barotrauma
                 }
             }
 
-            if (HeadSelectionList != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
+            if (HeadSelectionList != null && PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
             {
                 HeadSelectionList.Visible = false;                
             }
-            if (JobSelectionFrame != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
+            if (JobSelectionFrame != null && PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
             {
                 JobList.Deselect();
                 JobSelectionFrame.Visible = false;                

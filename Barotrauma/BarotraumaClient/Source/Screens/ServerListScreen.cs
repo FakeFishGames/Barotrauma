@@ -922,7 +922,7 @@ namespace Barotrauma
 
             UpdateFriendsList();
 
-            if (PlayerInput.LeftButtonClicked())
+            if (PlayerInput.PrimaryMouseButtonClicked())
             {
                 friendPopup = null;
                 if (friendsDropdown != null && friendsDropdownButton != null &&
