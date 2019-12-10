@@ -11,7 +11,25 @@ namespace Barotrauma
     {
         private static readonly List<Item> spawnedItems = new List<Item>();
 
-        public static void Place(IEnumerable<Submarine> subs)
+        public static void PlaceIfNeeded(GameMode gameMode)
+        {
+            if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
+            
+            CampaignMode campaign = gameMode as CampaignMode;
+            if (campaign == null || !campaign.InitialSuppliesSpawned)
+            {
+                for (int i = 0; i < Submarine.MainSubs.Length; i++)
+                {
+                    if (Submarine.MainSubs[i] == null) { continue; }
+                    List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
+                    subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.IsOutpost));
+                    Place(subs);
+                }
+                if (campaign != null) { campaign.InitialSuppliesSpawned = true; }
+            }            
+        }
+
+        private static void Place(IEnumerable<Submarine> subs)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
