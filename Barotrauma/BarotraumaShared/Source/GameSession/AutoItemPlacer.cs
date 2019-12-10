@@ -38,15 +38,18 @@ namespace Barotrauma
                 return;
             }
 
-            List<ItemContainer> containers = new List<ItemContainer>();
+            int sizeApprox = MapEntityPrefab.List.Count / 3;
+            var containers = new List<ItemContainer>(100);
+            var prefabsWithContainer = new List<ItemPrefab>(sizeApprox / 3);
+            var prefabsWithoutContainer = new List<ItemPrefab>(sizeApprox);
+            var removals = new List<ItemPrefab>();
+
             foreach (Item item in Item.ItemList)
             {
                 if (!subs.Contains(item.Submarine)) { continue; }
                 containers.AddRange(item.GetComponents<ItemContainer>());
             }
 
-            var prefabsWithContainer = new List<ItemPrefab>();
-            var prefabsWithoutContainer = new List<ItemPrefab>();
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
                 if (!(prefab is ItemPrefab ip)) { continue; }
@@ -70,10 +73,11 @@ namespace Barotrauma
                 var itemPrefab = prefabsWithContainer[i];
                 if (SpawnItems(itemPrefab))
                 {
-                    // Remove containers that we successfully spawned items into so that they are not counted in in the second pass.
-                    prefabsWithContainer.Remove(itemPrefab);
+                    removals.Add(itemPrefab);
                 }
             }
+            // Remove containers that we successfully spawned items into so that they are not counted in in the second pass.
+            removals.ForEach(i => prefabsWithContainer.Remove(i));
             // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
             prefabsWithContainer.ForEach(i => SpawnItems(i));
             // Spawn items that don't have containers last
