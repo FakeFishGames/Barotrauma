@@ -967,18 +967,32 @@
 <entitydescription.idcard>Umożliwia dostęp do określonych obszarów okrętu.</entitydescription.idcard>
 <entityname.alienpistol>Pistolet obcych</entityname.alienpistol>
 <entitydescription.alienpistol>Pistolet zasilany ogniwami obcych.</entitydescription.alienpistol>
-<entityname.captainscap>Czapka kapitańska</entityname.captainscap>
-<entitydescription.captainscap>Symbol niekwestionowanego autorytetu kapitana.</entitydescription.captainscap>
-<entityname.captainsuniform>Mundur kapitana</entityname.captainsuniform>
-<entitydescription.captainsuniform>Nadaje wygląd osoby u władzy.</entitydescription.captainsuniform>
+<entityname.captainscap1>Czapka kapitańska</entityname.captainscap1>
+<entitydescription.captainscap1>Symbol niekwestionowanego autorytetu kapitana.</entitydescription.captainscap1>
+<entityname.captainscap2>Czapka kapitańska</entityname.captainscap2>
+<entitydescription.captainscap2>Symbol niekwestionowanego autorytetu kapitana.</entitydescription.captainscap2>
+<entityname.captainscap3>Czapka kapitańska</entityname.captainscap3>
+<entitydescription.captainscap3>Symbol niekwestionowanego autorytetu kapitana.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Mundur kapitana</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Nadaje wygląd osoby u władzy.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Mundur kapitana</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Nadaje wygląd osoby u władzy.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Mundur kapitana</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Nadaje wygląd osoby u władzy.</entitydescription.captainsuniform3>
 <entityname.healthscanner>Skaner kondycji</entityname.healthscanner>
 <entitydescription.healthscanner>Wyświetlacz pokazujący parametry życiowe i stan zdrowia pobliskich ludzi.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Kitel lekarski</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Nadaje wygląd osoby przydatnej w nagłych przypadkach.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Pomarańczowy kombinezon</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Niebieski kombinezon</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Kitel lekarski</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Nadaje wygląd osoby przydatnej w nagłych przypadkach.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Kitel lekarski</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Nadaje wygląd osoby przydatnej w nagłych przypadkach.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Pomarańczowy kombinezon</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Pomarańczowy kombinezon</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Niebieski kombinezon</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Niebieski kombinezon</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>Ognioodporny materiał chroni nieco przed pożarem.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Skrzynka z narzędziami</entityname.toolbox>
 <entitydescription.toolbox>Przenośne pudełko do przechowywania narzędzi.</entitydescription.toolbox>
 <entityname.headset>Słuchawki z mikrofonem</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Nawet asystent musi się w coś ubrać.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Ubranie strażnika</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Nadaje wygląd osoby, która w każdej chwili może zlecić jakąś misję przechodniowi.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Mundur oficera ochrony</entityname.securityuniform>
-<entitydescription.securityuniform>Słuchaj się mnie!</entitydescription.securityuniform>
+<entityname.securityuniform1>Mundur oficera ochrony</entityname.securityuniform1>
+<entitydescription.securityuniform1>Słuchaj się mnie!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Mundur oficera ochrony</entityname.securityuniform2>
+<entitydescription.securityuniform2>Słuchaj się mnie!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Mundur oficera ochrony</entityname.securityuniform3>
+<entitydescription.securityuniform3>Słuchaj się mnie!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Pancerz</entityname.bodyarmor>
 <entitydescription.bodyarmor>Chociaż pancerz nie zapewni odpowiedniej ochrony przed większością mieszkańców oceanu, może się bardzo przydać, gdy na pokładzie znajdują się zdrajcy.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Hełm balistyczny</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Chociaż hełm nie zapewni odpowiedniej ochrony przed większością mieszkańców oceanu, może się bardzo przydać, gdy na pokładzie znajdują się zdrajcy.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Hełm balistyczny</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Chociaż hełm nie zapewni odpowiedniej ochrony przed większością mieszkańców oceanu, może się bardzo przydać, gdy na pokładzie znajdują się zdrajcy.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Hełm balistyczny</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Chociaż hełm nie zapewni odpowiedniej ochrony przed większością mieszkańców oceanu, może się bardzo przydać, gdy na pokładzie znajdują się zdrajcy.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Hełm balistyczny</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Chociaż hełm nie zapewni odpowiedniej ochrony przed większością mieszkańców oceanu, może się bardzo przydać, gdy na pokładzie znajdują się zdrajcy.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Kajdanki</entityname.handcuffs>
 <entitydescription.handcuffs>Przydatne do ujarzmiania problematycznych graczy.</entitydescription.handcuffs>
 <entityname.riotshield>Tarcza policyjna</entityname.riotshield>

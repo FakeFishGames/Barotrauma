@@ -967,18 +967,32 @@
 <entitydescription.idcard>Concede acceso limitado a ciertas zonas del submarino.</entitydescription.idcard>
 <entityname.alienpistol>Pistola alienígena</entityname.alienpistol>
 <entitydescription.alienpistol>Una pistola alimentada con pilas alienígenas.</entitydescription.alienpistol>
-<entityname.captainscap>Gorra de capitán</entityname.captainscap>
-<entitydescription.captainscap>Un símbolo de la incuestionable autoridad del capitán.</entitydescription.captainscap>
-<entityname.captainsuniform>Uniforme de capitán</entityname.captainsuniform>
-<entitydescription.captainsuniform>Hace que parezca que estás al mando.</entitydescription.captainsuniform>
+<entityname.captainscap1>Gorra de capitán</entityname.captainscap1>
+<entitydescription.captainscap1>Un símbolo de la incuestionable autoridad del capitán.</entitydescription.captainscap1>
+<entityname.captainscap2>Gorra de capitán</entityname.captainscap2>
+<entitydescription.captainscap2>Un símbolo de la incuestionable autoridad del capitán.</entitydescription.captainscap2>
+<entityname.captainscap3>Gorra de capitán</entityname.captainscap3>
+<entitydescription.captainscap3>Un símbolo de la incuestionable autoridad del capitán.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Uniforme de capitán</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Hace que parezca que estás al mando.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Uniforme de capitán</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Hace que parezca que estás al mando.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Uniforme de capitán</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Hace que parezca que estás al mando.</entitydescription.captainsuniform3>
 <entityname.healthscanner>HUD de escáner de salud</entityname.healthscanner>
 <entitydescription.healthscanner>Una pantalla de visualización frontal que muestra información sobre los signos vitales y el estado de los humanos cercanos.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Uniforme de médico</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Hace que parezcas útil en una emergencia médica.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Mono naranja</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Mono azul</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Uniforme de médico</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Hace que parezcas útil en una emergencia médica.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Uniforme de médico</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Hace que parezcas útil en una emergencia médica.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Mono naranja</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Mono naranja</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Mono azul</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Mono azul</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>El tejido ignífugo ofrece cierto grado de protección contra el fuego.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Caja de herramientas</entityname.toolbox>
 <entitydescription.toolbox>Un contenedor portátil para guardar herramientas.</entitydescription.toolbox>
 <entityname.headset>Auriculares</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Incluso un ayudante necesita ropa.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Ropa de vigilante</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Hace que parezca que vas a ofrecerle una misión a un transeúnte en cualquier momento.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Uniforme de agente de seguridad</entityname.securityuniform>
-<entitydescription.securityuniform>¡Obedece mi autoridad!</entitydescription.securityuniform>
+<entityname.securityuniform1>Uniforme de agente de seguridad</entityname.securityuniform1>
+<entitydescription.securityuniform1>¡Obedece mi autoridad!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Uniforme de agente de seguridad</entityname.securityuniform2>
+<entitydescription.securityuniform2>¡Obedece mi autoridad!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Uniforme de agente de seguridad</entityname.securityuniform3>
+<entitydescription.securityuniform3>¡Obedece mi autoridad!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Blindaje corporal</entityname.bodyarmor>
 <entitydescription.bodyarmor>Aunque el blindaje corporal no ofrece protección suficiente contra gran parte de los moradores de la subsuperficie oceánica, puede resultar de gran utilidad si hay traidores a bordo.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Casco balístico</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Aunque el casco balístico no ofrece protección suficiente contra gran parte de los moradores de la subsuperficie oceánica, puede resultar de gran utilidad si hay traidores a bordo.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Casco balístico</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Aunque el casco balístico no ofrece protección suficiente contra gran parte de los moradores de la subsuperficie oceánica, puede resultar de gran utilidad si hay traidores a bordo.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Casco balístico</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Aunque el casco balístico no ofrece protección suficiente contra gran parte de los moradores de la subsuperficie oceánica, puede resultar de gran utilidad si hay traidores a bordo.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Casco balístico</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Aunque el casco balístico no ofrece protección suficiente contra gran parte de los moradores de la subsuperficie oceánica, puede resultar de gran utilidad si hay traidores a bordo.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Esposas</entityname.handcuffs>
 <entitydescription.handcuffs>Útil para reducir a jugadores problemáticos.</entitydescription.handcuffs>
 <entityname.riotshield>Escudo antidisturbios</entityname.riotshield>
