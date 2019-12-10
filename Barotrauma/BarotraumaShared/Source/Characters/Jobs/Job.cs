@@ -65,8 +65,13 @@ namespace Barotrauma
                     new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
-        
-        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced) => new Job(JobPrefab.Random(randSync));
+
+        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        {
+            var prefab = JobPrefab.Random(randSync);
+            var variant = Rand.Range(0, prefab.Variants, randSync);
+            return new Job(prefab, variant);
+        } 
 
         public float GetSkillLevel(string skillIdentifier)
         {

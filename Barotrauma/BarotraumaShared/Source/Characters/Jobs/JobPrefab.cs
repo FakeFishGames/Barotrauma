@@ -149,6 +149,7 @@ namespace Barotrauma
 
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
+        public int Variants { get; private set; }
 
         public JobPrefab(XElement element)
         {
@@ -219,6 +220,8 @@ namespace Barotrauma
                     loadItemNames(itemElement, itemNames);
                 }
             }
+
+            Variants = variant;
 
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
 
