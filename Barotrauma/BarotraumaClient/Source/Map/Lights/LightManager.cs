@@ -230,7 +230,7 @@ namespace Barotrauma.Lights
             {
                 if (!light.Enabled) { continue; }
                 if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) { continue; }
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.LightSourceParams.TextureRange, viewRect)) { continue; }
                 activeLights.Add(light);
             }
 
@@ -381,12 +381,13 @@ namespace Barotrauma.Lights
 
                 //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough)
                 float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
-                Color haloColor = Color.White * (0.4f - ambientBrightness); 
+                Color haloColor = Color.White * (0.3f - ambientBrightness); 
                 if (haloColor.A > 0)
                 {
+                    float scale = 512.0f / LightSource.LightTexture.Width;
                     spriteBatch.Draw(
                         LightSource.LightTexture, haloDrawPos, null, haloColor, 0.0f,
-                        new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+                        new Vector2(LightSource.LightTexture.Width, LightSource.LightTexture.Height) / 2, scale, SpriteEffects.None, 0.0f);
                 }                
             }
             spriteBatch.End();

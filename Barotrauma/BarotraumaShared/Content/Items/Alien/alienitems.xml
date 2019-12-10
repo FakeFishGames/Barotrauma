@@ -256,14 +256,14 @@
       </StatusEffect>
     </Throwable>
   </Item>
-  <Item name="" identifier="alienpistol" category="Equipment" tags="smallitem,weapon,alien" Scale="0.6" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="alienpistol" category="Equipment" tags="smallitem,weapon,alien" Scale="0.8" impactsoundtag="impact_metal_light">
     <InventoryIcon texture="alientools.png" sourcerect="0,50,54,32" />
     <Sprite texture="alientools.png" sourcerect="0,50,54,32" depth="0.55" />
     <Body radius="15" width="15" density="50" />
-    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="-11,-7" msg="ItemMsgPickUpSelect">
+    <Holdable slots="Any,RightHand,LeftHand" controlpose="true" aimpos="90,10" handle1="2,-7" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnBroken" target="This" Condition="100" delay="1" />
     </Holdable>
-    <ItemContainer capacity="1" hideitems="false" itempos="20,-20">
+    <ItemContainer capacity="1" hideitems="true" itempos="20,-20">
       <Containable items="alienpowercell" />
     </ItemContainer>
     <!--<RangedWeapon reload="0.5" barrelpos="14,6" spread="0" unskilledspread="2">

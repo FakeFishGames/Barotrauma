@@ -165,7 +165,7 @@ namespace Barotrauma.Items.Components
             IsActiveSlider.Enabled = isActiveLockTimer <= 0.0f;
             pumpSpeedSlider.Enabled = pumpSpeedLockTimer <= 0.0f && IsActive;
 
-            if (!PlayerInput.LeftButtonHeld())
+            if (!PlayerInput.PrimaryMouseButtonHeld())
             {
                 IsActiveSlider.BarScroll += (IsActive ? -10.0f : 10.0f) * deltaTime;
 

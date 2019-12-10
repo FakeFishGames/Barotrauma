@@ -119,8 +119,9 @@ namespace Barotrauma.Items.Components
                 {
                     DrawWire(spriteBatch, draggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), null, panel, "");
                 }
+                panel.TriggerRewiringSound();
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if (draggingConnected.Connections[0]?.ConnectionPanel == panel ||
                         draggingConnected.Connections[1]?.ConnectionPanel == panel)
@@ -129,7 +130,11 @@ namespace Barotrauma.Items.Components
                         panel.DisconnectedWires.Add(draggingConnected);
                     }
 
-                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
+                    if (GameMain.Client != null)
+                    {
+                        panel.Item.CreateClientEvent(panel);
+                    }
+
                     draggingConnected = null;
                 }
             }
@@ -191,7 +196,7 @@ namespace Barotrauma.Items.Components
             {
                 connectionSpriteHighlight.Draw(spriteBatch, position);
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     //find an empty cell for the new connection
                     int index = FindEmptyIndex();
@@ -205,7 +210,10 @@ namespace Barotrauma.Items.Components
                             SetWire(index, draggingConnected);
                         }
                     }
-                    if (GameMain.Client != null) { panel.Item.CreateClientEvent(panel); }
+                    if (GameMain.Client != null)
+                    {
+                        panel.Item.CreateClientEvent(panel);
+                    }
                     draggingConnected = null;
                 }
             }
@@ -310,7 +318,7 @@ namespace Barotrauma.Items.Components
                     if (allowRewiring && !wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
-                        if (PlayerInput.LeftButtonHeld()) { draggingConnected = wire; }
+                        if (PlayerInput.PrimaryMouseButtonHeld()) { draggingConnected = wire; }
                     }
                 }
             }

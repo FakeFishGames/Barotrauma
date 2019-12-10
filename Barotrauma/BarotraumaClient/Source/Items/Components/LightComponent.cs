@@ -17,7 +17,20 @@ namespace Barotrauma.Items.Components
         {
             get { return light; }
         }
-        
+
+        public override void OnScaleChanged()
+        {
+            light.SpriteScale = Vector2.One * item.Scale;
+            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+        }
+
+        partial void SetLightSourceState(bool enabled, float brightness)
+        {
+            if (light == null) { return; }
+            light.Enabled = enabled;
+            light.Color = LightColor * brightness;
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f)
@@ -38,6 +51,12 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             IsOn = msg.ReadBoolean();
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            light.Remove();
         }
     }
 }

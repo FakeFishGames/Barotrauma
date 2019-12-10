@@ -95,7 +95,7 @@ namespace Barotrauma
                 if (character.Info != null)
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.LeftButtonClicked())
+                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }
@@ -103,7 +103,7 @@ namespace Barotrauma
 
                 if (character.Inventory != null)
                 {
-                    if (ShouldDrawInventory(character))
+                    if (!LockInventory(character))
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -345,6 +345,7 @@ namespace Barotrauma
                 }
                 if (ShouldDrawInventory(character))
                 {
+                    character.Inventory.Locked = LockInventory(character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
@@ -385,6 +386,17 @@ namespace Barotrauma
                     character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
+        }
+
+        private static bool LockInventory(Character character)
+        {
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands) { return true; }
+
+            //lock if using a controller, except if we're also using a connection panel in the same item
+            return
+                character.SelectedConstruction != null &&
+                character.SelectedConstruction?.GetComponent<Controller>()?.User == character &&
+                character.SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != character;
         }
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)

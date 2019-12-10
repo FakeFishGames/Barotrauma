@@ -65,7 +65,7 @@ namespace Barotrauma
         public object data;
 
         public bool IsSelected => enabled && selectedWidgets.Contains(this);
-        public bool IsControlled => IsSelected && PlayerInput.LeftButtonHeld();
+        public bool IsControlled => IsSelected && PlayerInput.PrimaryMouseButtonHeld();
         public bool IsMouseOver => GUI.MouseOn == null && InputRect.Contains(PlayerInput.MousePosition);
         private bool enabled = true;
         public bool Enabled
@@ -111,10 +111,10 @@ namespace Barotrauma
         {
             PreUpdate?.Invoke(deltaTime);
             if (!enabled) { return; }
-            if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.LeftButtonHeld()))
+            if (IsMouseOver || (!RequireMouseOn && selectedWidgets.Contains(this) && PlayerInput.PrimaryMouseButtonHeld()))
             {
                 Hovered?.Invoke();
-                if (RequireMouseOn || PlayerInput.LeftButtonDown())
+                if (RequireMouseOn || PlayerInput.PrimaryMouseButtonDown())
                 {
                     if ((multiselect && !selectedWidgets.Contains(this)) || selectedWidgets.None())
                     {
@@ -130,15 +130,15 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.PrimaryMouseButtonDown())
                 {
                     MouseDown?.Invoke();
                 }
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     MouseHeld?.Invoke(deltaTime);
                 }
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     MouseUp?.Invoke();
                 }

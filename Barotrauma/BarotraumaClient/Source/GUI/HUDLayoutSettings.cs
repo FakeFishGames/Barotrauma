@@ -209,7 +209,7 @@ namespace Barotrauma
             //don't close when hovering over an inventory element
             if (Inventory.IsMouseOnInventory()) { return false; }
             
-            bool input = PlayerInput.LeftButtonDown() || PlayerInput.RightButtonClicked();
+            bool input = PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked();
             return input && !rect.Contains(PlayerInput.MousePosition);
         }
     }

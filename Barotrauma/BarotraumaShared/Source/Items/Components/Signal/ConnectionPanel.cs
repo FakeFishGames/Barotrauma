@@ -35,6 +35,11 @@ namespace Barotrauma.Items.Components
             set { /*do nothing*/ }
         }
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
         {
@@ -280,6 +285,10 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
+#if CLIENT
+            TriggerRewiringSound();
+#endif
+
             foreach (Connection connection in Connections)
             {
                 foreach (Wire wire in connection.Wires)

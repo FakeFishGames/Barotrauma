@@ -15,7 +15,7 @@
     <Body width="45" height="31" density="20" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50" combatpriority="5" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="10" itemdamage="5" stun="0.6" targetimpulse="30">
-        <Affliction identifier="internaldamage" strength="2" />
+        <Affliction identifier="blunttrauma" strength="2" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
@@ -235,8 +235,8 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  
-  <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.600.0" Tags="mediumitem,extinguisher" />
     <PreferredContainer primary="extinguisherholder" spawnprobability="1.0"/>
     <PreferredContainer primary="engcab,reactorcab"/>
     <Price locationtype="City" buyprice="100" />
@@ -253,7 +253,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" origin="0.5,0.5" />
-    <Body radius="10" height="45" density="5" />
+    <Body width="17" height="48" density="5" />
     <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" msg="ItemMsgPickUpSelect" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25" repairthroughholes="true">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
@@ -300,7 +300,7 @@
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" itemdamage="2" stun="0.2" targetimpulse="20">
-        <Affliction identifier="internaldamage" strength="4" />
+        <Affliction identifier="blunttrauma" strength="4" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
@@ -325,7 +325,7 @@
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="20" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="5" itemdamage="5" stun="0.3" targetimpulse="20">
-        <Affliction identifier="internaldamage" strength="8" />
+        <Affliction identifier="blunttrauma" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>

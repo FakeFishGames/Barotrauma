@@ -609,8 +609,8 @@ namespace Barotrauma.Items.Components
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
-            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
-            if (item.OwnInventory == null) return false;
+            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return true; }
+            if (item.OwnInventory == null) { return false; }
 
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
@@ -630,9 +630,19 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        /// <summary>
+        /// Only checks the id card. Much simpler and a bit different than HasRequiredItems.
+        /// </summary>
+        public virtual bool HasAccess(Character character)
+        {
+            if (requiredItems.None()) { return true; }
+            var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            return requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+        }
+
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            if (!requiredItems.Any()) { return true; }
+            if (requiredItems.None()) { return true; }
             if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;

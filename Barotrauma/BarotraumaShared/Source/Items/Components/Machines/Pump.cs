@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
+        [Editable, Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
         public float MaxFlow
         {
             get { return maxFlow; }
