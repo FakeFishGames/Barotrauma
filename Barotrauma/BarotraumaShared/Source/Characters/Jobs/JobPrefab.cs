@@ -188,7 +188,7 @@ namespace Barotrauma
 
             void loadItemNames(XElement parentElement, List<string> itemNames)
             {
-                foreach (XElement itemElement in parentElement.Elements("Item"))
+                foreach (XElement itemElement in parentElement.GetChildElements("Item"))
                 {
                     if (itemElement.Element("name") != null)
                     {
@@ -222,11 +222,7 @@ namespace Barotrauma
 
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
 
-            ClothingElement = element.Element("PortraitClothing");
-            if (ClothingElement == null)
-            {
-                ClothingElement = element.Element("portraitclothing");
-            }
+            ClothingElement = element.GetChildElement("PortraitClothing");
         }
         
         public class OutfitPreview
@@ -254,7 +250,7 @@ namespace Barotrauma
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
             maxDimensions = Vector2.One;
              
-            var equipIdentifiers = Element.Elements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
             var outfitPrefabs = MapEntityPrefab.List.FindAll(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier));
             if (!outfitPrefabs.Any()) { return null; }
@@ -264,11 +260,7 @@ namespace Barotrauma
                 var outfitPreview = new OutfitPreview();
 
                 if (!ItemSets.TryGetValue(i, out var itemSetElement)) { continue; }
-                var previewElement = itemSetElement.Element("PreviewSprites");
-                if (previewElement == null)
-                {
-                    previewElement = itemSetElement.Element("previewsprites");
-                }
+                var previewElement = itemSetElement.GetChildElement("PreviewSprites");
                 if (previewElement == null)
                 {
 #if CLIENT

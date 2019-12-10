@@ -93,7 +93,7 @@ namespace Barotrauma
         {
             if (!prefab.ItemSets.TryGetValue(Variant, out var spawnItems)) { return; }
 
-            foreach (XElement itemElement in spawnItems.Elements("Item"))
+            foreach (XElement itemElement in spawnItems.GetChildElements("Item"))
             {
                 InitializeJobItem(character, itemElement, spawnPoint);
             }            
