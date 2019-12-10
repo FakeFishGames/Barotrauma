@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -44,9 +45,31 @@ namespace Barotrauma
 
             spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
-            //spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
-            foreach (ItemPrefab itemPrefab in prefabsWithContainer.Randomize().Concat(prefabsWithoutContainer.Randomize()))
+            prefabsWithContainer.RandomizeList();
+            // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
+            for (int i = 0; i < prefabsWithContainer.Count; i++)
             {
+                var itemPrefab = prefabsWithContainer[i];
+                if (SpawnItems(itemPrefab))
+                {
+                    // Remove containers that we successfully spawned items into so that they are not counted in in the second pass.
+                    prefabsWithContainer.Remove(itemPrefab);
+                }
+            }
+            // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
+            prefabsWithContainer.ForEach(i => SpawnItems(i));
+            // Spawn items that don't have containers last
+            prefabsWithoutContainer.Randomize().ForEach(i => SpawnItems(i));
+
+            DebugConsole.NewMessage("Automatically placed items: ");
+            foreach (string itemName in spawnedItems.Select(it => it.Name).Distinct())
+            {
+                DebugConsole.NewMessage(" - " + itemName + " x" + spawnedItems.Count(it => it.Name == itemName));
+            }
+
+            bool SpawnItems(ItemPrefab itemPrefab)
+            {
+                bool success = false;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {
                     if (preferredContainer.SpawnProbability <= 0.0f || preferredContainer.MaxAmount <= 0) { continue; }
@@ -57,15 +80,13 @@ namespace Barotrauma
                     }
                     foreach (var validContainer in validContainers)
                     {
-                        SpawnItem(itemPrefab, containers, validContainer);
+                        if (SpawnItem(itemPrefab, containers, validContainer))
+                        {
+                            success = true;
+                        }
                     }
                 }
-            }
-
-            DebugConsole.NewMessage("Automatically placed items: ");
-            foreach (string itemName in spawnedItems.Select(it => it.Name).Distinct())
-            {
-                DebugConsole.NewMessage(" - " + itemName + " x" + spawnedItems.Count(it => it.Name == itemName));
+                return success;
             }
         }
 
@@ -91,9 +112,10 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static void SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
+        private static bool SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
-            if (Rand.Value() > validContainer.Value.SpawnProbability) { return; }
+            bool success = false;
+            if (Rand.Value() > validContainer.Value.SpawnProbability) { return success; }
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1);
             for (int i = 0; i < amount; i++)
             {
@@ -110,8 +132,9 @@ namespace Barotrauma
 #endif
                 validContainer.Key.Inventory.TryPutItem(item, null);
                 containers.AddRange(item.GetComponents<ItemContainer>());
-                
+                success = true;
             }
+            return success;
         }
     }
 }
