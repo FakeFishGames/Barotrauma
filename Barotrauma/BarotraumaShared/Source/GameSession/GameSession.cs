@@ -192,22 +192,6 @@ namespace Barotrauma
                 return;
             }
 
-            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
-            {
-                CampaignMode campaign = GameMode as CampaignMode;
-                if (campaign == null || !campaign.InitialSuppliesSpawned)
-                {
-                    for (int i = 0; i < Submarine.MainSubs.Length; i++)
-                    {
-                        if (Submarine.MainSubs[i] == null) { continue; }
-                        List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
-                        subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.IsOutpost));
-                        AutoItemPlacer.Place(subs);
-                    }
-                    if (campaign != null) { campaign.InitialSuppliesSpawned = true; }
-                }
-            }
-
             if (level != null)
             {
                 level.Generate(mirrorLevel);
@@ -285,6 +269,12 @@ namespace Barotrauma
             {
                 GameMode.ShowStartMessage();
 
+                if (GameMain.NetworkMember == null) 
+                {
+                    //only autoplace items here in single player
+                    //the server does this after loading the respawn shuttle
+                    AutoItemPlacer.PlaceIfNeeded(GameMode);
+                }
                 if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     mpCampaign.CargoManager.CreateItems();

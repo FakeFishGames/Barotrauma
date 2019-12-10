@@ -1870,6 +1870,8 @@ namespace Barotrauma.Networking
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) { respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null); }
 
+            AutoItemPlacer.PlaceIfNeeded(GameMain.GameSession.GameMode);
+
             entityEventManager.RefreshEntityIDs();
 
             //assign jobs and spawnpoints separately for each team
