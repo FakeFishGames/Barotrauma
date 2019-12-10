@@ -894,7 +894,9 @@ namespace Barotrauma
                 //in -> out
                 if (newHull == null && currentHull.Submarine != null)
                 {
-                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
+                    //don't teleport out yet if the character is going through a gap
+                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) { return; }
+                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f) != null) { return; }
                     character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }
@@ -1518,7 +1520,7 @@ namespace Barotrauma
             }
             if (MainLimb == null) { return; }
 
-            Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
+            Vector2 limbMoveAmount = simPosition - Collider.SimPosition;
 
             if (lerp)
             {

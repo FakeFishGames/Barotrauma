@@ -464,7 +464,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
                 }
 
-                limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
+                limb.body.DebugDraw(spriteBatch, inWater ? (currentHull == null ? Color.Blue : Color.Cyan) : Color.White);
             }
 
             Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
