@@ -1355,7 +1355,11 @@ namespace Barotrauma
                             GameMain.Config.JobPreferences.RemoveAt(i);
                             continue;
                         }
-                        jobPrefab = new Pair<JobPrefab, int>(JobPrefab.List[jobIdentifier.First], jobIdentifier.Second);
+                        // The old job variant system used one-based indexing
+                        // so let's make sure no one get to pick a variant which doesn't exist
+                        var prefab = JobPrefab.List[jobIdentifier.First];
+                        var variant = Math.Min(jobIdentifier.Second, prefab.Variants - 1);
+                        jobPrefab = new Pair<JobPrefab, int>(prefab, variant);
                         break;
                     }
 
@@ -2514,7 +2518,7 @@ namespace Barotrauma
 
             var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
-            ).Select(j => new Pair<JobPrefab, int>(j, 1));
+            ).Select(j => new Pair<JobPrefab, int>(j, 0));
 
             availableJobs = availableJobs.Concat(
                 JobPrefab.List.Values.Where(jobPrefab =>
