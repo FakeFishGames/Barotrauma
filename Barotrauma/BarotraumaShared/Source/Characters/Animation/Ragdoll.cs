@@ -950,11 +950,15 @@ namespace Barotrauma
                     }
                 }
 
-                if (!gap.GetOutsideCollider(out Vector2? outsideColliderPos, out Vector2? outsideColliderNormal)) continue;
+                if (!gap.GetOutsideCollider(out Vector2? outsideColliderPos, out Vector2? outsideColliderNormal)) { continue; }
 
-                outsideCollisionBlocker.SetTransform(
-                    outsideColliderPos.Value - currentHull.Submarine.SimPosition, 
-                    MathUtils.VectorToAngle(outsideColliderNormal.Value) - MathHelper.PiOver2);
+                Vector2 colliderPos = outsideColliderPos.Value - currentHull.Submarine.SimPosition;
+                float colliderRotation = MathUtils.VectorToAngle(outsideColliderNormal.Value) - MathHelper.PiOver2;
+                if (Vector2.DistanceSquared(outsideCollisionBlocker.Position, colliderPos) > 0.01f ||
+                    Math.Abs(outsideCollisionBlocker.Rotation - colliderRotation) > 0.01f)
+                {
+                    outsideCollisionBlocker.SetTransform(colliderPos, colliderRotation);
+                }
                 outsideCollisionBlocker.Enabled = true;
                 return;
             }
