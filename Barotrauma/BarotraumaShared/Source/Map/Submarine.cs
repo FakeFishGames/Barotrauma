@@ -949,7 +949,7 @@ namespace Barotrauma
             float closestFraction = 1.0f;
             Vector2 closestNormal = Vector2.Zero;
 
-            if (Vector2.Distance(rayStart, rayEnd) < 0.01f)
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.01f)
             {
                 lastPickedPosition = rayEnd;
                 return null;
