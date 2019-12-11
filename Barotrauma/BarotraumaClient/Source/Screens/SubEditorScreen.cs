@@ -2433,20 +2433,20 @@ namespace Barotrauma
                 MapEntity.UpdateSelecting(cam);
             }
 
-            //GUIComponent.ForceMouseOn(null);
-
             if (!CharacterMode && !WiringMode)
             {
                 if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
                 {
                     MapEntityPrefab.Selected.UpdatePlacing(cam);
                 }
-                
-                MapEntity.UpdateEditor(cam);
-                if (PlayerInput.RightButtonClicked())
+                else
                 {
-                    CreateContextMenu();                    
-                }
+                    if (PlayerInput.RightButtonClicked())
+                    {
+                        CreateContextMenu();                    
+                    }
+                }                
+                MapEntity.UpdateEditor(cam);
             }
 
             entityMenuOpenState = entityMenuOpen && !CharacterMode & !WiringMode ? 
