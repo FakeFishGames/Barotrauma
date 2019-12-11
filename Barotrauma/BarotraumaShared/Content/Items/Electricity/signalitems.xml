@@ -1256,7 +1256,7 @@
       <RequiredItem identifier="tin" />
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="128,127,64,64" origin="0.5,0.5" />
-    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,137,42,47" origin="0.5,0.5" />
+    <Sprite texture="signalcomp.png" depth="0.8" sourcerect="75,132,42,58" origin="0.5,0.5" />
     <DecorativeSprite texture="Content/Items/Electricity/signalcomp.png" sourcerect="75,137,42,47" depth="0.79" origin="0.5,0.5" rotation="90" rotationanim="Noise" rotationspeed="500">
       <AnimationConditional IsActive="true" targetitemcomponent="ItemComponent" />
     </DecorativeSprite>
