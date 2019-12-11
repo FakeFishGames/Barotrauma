@@ -90,6 +90,8 @@ namespace Barotrauma.Networking
         private UInt16 ID;
 
         private GameServer server;
+
+        private double lastEventCountHighWarning;
         
         public ServerEntityEventManager(GameServer server) 
         {
@@ -325,9 +327,10 @@ namespace Barotrauma.Networking
             }
 
             //too many events for one packet
-            if (eventsToSync.Count > 200)
+            //(normal right after a round has just started, don't show a warning if it's been less than 10 seconds)
+            if (eventsToSync.Count > 200 && GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 10.0)
             {
-                if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync)
+                if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync && Timing.TotalTime > lastEventCountHighWarning + 2.0)
                 {
                     Color color = eventsToSync.Count > 500 ? Color.Red : Color.Orange;
                     if (eventsToSync.Count < 300) { color = Color.Yellow; }
@@ -349,6 +352,7 @@ namespace Barotrauma.Networking
                         GameServer.Log(warningMsg, ServerLog.MessageType.Error);
                     }
                     DebugConsole.NewMessage(warningMsg, color);
+                    lastEventCountHighWarning = Timing.TotalTime;
                 }
             }
 
