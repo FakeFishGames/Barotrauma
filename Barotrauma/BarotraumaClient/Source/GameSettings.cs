@@ -597,16 +597,19 @@ namespace Barotrauma
             currentDeviceTextBlock.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
 
-            GUIRadioButtonGroup voiceMode = new GUIRadioButtonGroup();
+            GUIFrame voiceModeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y / 0.4f), voipSettings.RectTransform), style: null);
+            GUIRadioButtonGroup voiceModeRadioButtons = new GUIRadioButtonGroup();
             for (int i = 0; i < 3; i++)
             {
                 string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr), style: "GUIRadioButton")
+                var tick = new GUITickBox(
+                    new RectTransform(new Vector2(0.3f, 1.0f), voiceModeFrame.RectTransform) { RelativeOffset = new Vector2(i * 0.35f, 0.0f) },
+                    TextManager.Get(langStr),
+                    style: "GUIRadioButton")
                 {
                     ToolTip = TextManager.Get(langStr + "ToolTip")
                 };
-
-                voiceMode.AddRadioButton(i, tick);
+                voiceModeRadioButtons.AddRadioButton(i, tick);
             }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
@@ -630,30 +633,28 @@ namespace Barotrauma
 
             var extraVoiceSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), voipSettings.RectTransform, Anchor.BottomCenter), style: null);
 
-            var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
-                text: KeyBindText(InputType.Voice))
-            {
-                UserData = InputType.Voice
-            };
-            voiceKeyBox.OnSelected += KeyBoxSelected;
-            voiceKeyBox.SelectedColor = Color.Gold * 0.3f;
-
-            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform));
-            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
+            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), extraVoiceSettingsContainer.RectTransform));
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
                 TextGetter = () =>
                 {
                     return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
                 }
             };
-            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
+            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
                 if (VoipCapture.Instance == null) { return 0.0f; }
-                dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
 
+                if (VoiceSetting == VoiceMode.Activity)
+                {
+                    dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
+                }
+                else
+                {
+                    dbMeter.Color = Color.Lime;
+                }
+                
                 float scrollVal = double.IsNegativeInfinity(VoipCapture.Instance.LastdB) ? 0.0f : ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
                 return scrollVal * scrollVal;
             };
@@ -670,37 +671,52 @@ namespace Barotrauma
                 return true;
             };
 
-            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
+            var voiceInputContainer = new GUILayoutGroup(
+                new RectTransform(new Vector2(1.0f, 0.25f), extraVoiceSettingsContainer.RectTransform)
+                {
+                    RelativeOffset = new Vector2(0.0f, voiceActivityGroup.RectTransform.RelativeSize.Y + 0.1f)
+                },
+                isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice")) { };
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
+            {
+                SelectedColor = Color.Gold * 0.3f,
+                UserData = InputType.Voice
+            };
+            voiceKeyBox.OnSelected += KeyBoxSelected;
+
+            voiceModeRadioButtons.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
             {
                 if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
                 try
                 {
                     VoiceMode vMode = (VoiceMode)value;
                     VoiceSetting = vMode;
-                    if (vMode == VoiceMode.Activity)
+                    if (vMode != VoiceMode.Disabled)
                     {
-                        voiceActivityGroup.Visible = true;
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
                             if (VoipCapture.Instance == null)
                             {
                                 VoiceSetting = vMode = VoiceMode.Disabled;
-                                voiceInputContainer.Visible = false;
                                 voiceActivityGroup.Visible = false;
+                                voiceInputContainer.Visible = false;
                                 return;
                             }
                         }
                     }
                     else
                     {
-                        voiceActivityGroup.Visible = false;
                         if (GameMain.Client == null)
                         {
                             VoipCapture.Instance?.Dispose();
                         }
                     }
 
+                    noiseGateText.Visible = (vMode == VoiceMode.Activity);
+                    noiseGateSlider.Visible = (vMode == VoiceMode.Activity);
+                    dbMeter.Visible = (vMode != VoiceMode.Disabled);
                     voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
                     UnsavedSettings = true;
                 }
@@ -711,10 +727,10 @@ namespace Barotrauma
                     VoiceSetting = VoiceMode.Disabled;
                 }
             };
-            voiceMode.Selected = (int)VoiceSetting;
+            voiceModeRadioButtons.Selected = (int)VoiceSetting;
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
-                voiceMode.Enabled = false;
+                voiceModeRadioButtons.Enabled = false;
             }
 
             /// Controls tab -------------------------------------------------------------
@@ -976,7 +992,7 @@ namespace Barotrauma
             switch (tab)
             {
                 case Tab.Audio:
-                    if (VoiceSetting == VoiceMode.Activity)
+                    if (VoiceSetting != VoiceMode.Disabled)
                     {
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
