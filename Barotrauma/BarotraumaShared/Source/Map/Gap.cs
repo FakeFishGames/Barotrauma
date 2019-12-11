@@ -599,7 +599,7 @@ namespace Barotrauma
             outsideColliderNormal = null;
             outsideColliderPos = null;
 
-            if (Submarine == null) return;
+            if (Submarine == null) { return; }
 
             Vector2 rayDir;
             if (IsHorizontal)
@@ -614,8 +614,11 @@ namespace Barotrauma
             Vector2 rayStart = ConvertUnits.ToSimUnits(WorldPosition);
             Vector2 rayEnd = rayStart + rayDir * 500.0f;
 
-            if (Submarine.CheckVisibility(rayStart, rayEnd) != null)
+            var blockingBody = Submarine.CheckVisibility(rayStart, rayEnd);
+            if (blockingBody != null)
             {
+                //if the ray hit the body of the submarine itself (for example, if there's 2 layers of walls) we can ignore it
+                if (blockingBody.UserData == Submarine) { return; }
                 outsideColliderNormal = -rayDir;
                 outsideColliderPos = Submarine.LastPickedPosition;
             }
@@ -623,7 +626,7 @@ namespace Barotrauma
 
         private void UpdateOxygen()
         {
-            if (linkedTo.Count < 2) return;
+            if (linkedTo.Count < 2) { return; }
             Hull hull1 = (Hull)linkedTo[0];
             Hull hull2 = (Hull)linkedTo[1];
 
