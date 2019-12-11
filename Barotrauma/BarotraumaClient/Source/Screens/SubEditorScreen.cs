@@ -1768,45 +1768,50 @@ namespace Barotrauma
             List<MapEntity> targets = MapEntity.SelectedAny ? 
                 new List<MapEntity>(MapEntity.SelectedList) : 
                 MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList();
-
-            if (targets.Count == 0) { return; }
-            
+                        
             contextMenu = new GUIListBox(new RectTransform(new Vector2(0.1f, 0.1f), GUI.Canvas)
             {
                 MinSize = new Point(180,0),
-                ScreenSpaceOffset = PlayerInput.MousePosition.ToPoint() + new Point(15)
+                ScreenSpaceOffset = PlayerInput.MousePosition.ToPoint()
             }, style: "GUIToolTip");
 
             new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
                 TextManager.Get("editor.cut"), font: GUI.SmallFont)
             {
-                UserData = "cut"
+                UserData = "cut",
+                Enabled = targets.Count > 0
             };
             new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
                 TextManager.Get("editor.copytoclipboard"), font: GUI.SmallFont)
             {
-                UserData = "copy"
+                UserData = "copy",
+                Enabled = targets.Count > 0
             };
-            if (MapEntity.CopiedList.Any())
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.paste"), font: GUI.SmallFont)
             {
-                new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
-                    TextManager.Get("editor.paste"), font: GUI.SmallFont)
-                {
-                    UserData = "paste"
-                };
-            }
+                UserData = "paste",
+                Enabled = MapEntity.CopiedList.Any()
+            };            
             new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
                 TextManager.Get("delete"), font: GUI.SmallFont)
             {
-                UserData = "delete"
+                UserData = "delete",
+                Enabled = targets.Count > 0
             };
 
+            foreach (GUITextBlock child in contextMenu.Content.Children)
+            {
+                if (!child.Enabled) { child.TextColor *= 0.5f; }
+            }
+            
             contextMenu.RectTransform.NonScaledSize = new Point(
                 contextMenu.Rect.Width, 
                 (int)((contextMenu.Content.CountChildren * 18) * GUI.Scale));
             
             contextMenu.OnSelected = (GUIComponent component, object obj) =>
             {
+                if (!component.Enabled) { return false; }
                 switch (obj as string)
                 {
                     case "copy":
@@ -2428,20 +2433,20 @@ namespace Barotrauma
                 MapEntity.UpdateSelecting(cam);
             }
 
-            //GUIComponent.ForceMouseOn(null);
-
             if (!CharacterMode && !WiringMode)
             {
                 if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
                 {
                     MapEntityPrefab.Selected.UpdatePlacing(cam);
                 }
-                
-                MapEntity.UpdateEditor(cam);
-                if (PlayerInput.RightButtonClicked())
+                else
                 {
-                    CreateContextMenu();                    
-                }
+                    if (PlayerInput.RightButtonClicked())
+                    {
+                        CreateContextMenu();                    
+                    }
+                }                
+                MapEntity.UpdateEditor(cam);
             }
 
             entityMenuOpenState = entityMenuOpen && !CharacterMode & !WiringMode ? 
