@@ -237,8 +237,17 @@ namespace Barotrauma.Items.Components
         private bool hasValidIdCard;
         public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            hasValidIdCard = requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+            //var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            hasValidIdCard = false;
+            foreach (Item item in character.Inventory.Items)
+            {
+                if (item?.Prefab.Identifier == "idcard" && requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(item))))
+                {
+                    hasValidIdCard = true;
+                    break;
+                }
+            }
+
             Msg = requiredItems.None() || hasValidIdCard ? "ItemMsgOpen" : "ItemMsgForceOpenCrowbar";
             ParseMsg();
             if (addMessage)
