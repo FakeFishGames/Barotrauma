@@ -631,13 +631,21 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
-        /// Only checks the id card. Much simpler and a bit different than HasRequiredItems.
+        /// Only checks the id card(s). Much simpler and a bit different than HasRequiredItems.
         /// </summary>
-        public virtual bool HasAccess(Character character)
+        public bool HasAccess(Character character)
         {
+            if (character.Inventory == null) { return false; }
             if (requiredItems.None()) { return true; }
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            return requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+
+            foreach (Item item in character.Inventory.Items)
+            {
+                if (item?.Prefab.Identifier == "idcard" && requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(item))))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
