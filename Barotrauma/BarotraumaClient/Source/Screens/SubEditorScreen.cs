@@ -694,8 +694,6 @@ namespace Barotrauma
                 cam.Position = Submarine.MainSub.Position;
             }
 
-            SoundPlayer.OverrideMusicType = "none";
-            SoundPlayer.OverrideMusicDuration = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f, 0);
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 

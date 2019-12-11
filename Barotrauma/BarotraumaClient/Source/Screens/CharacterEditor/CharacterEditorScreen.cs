@@ -112,8 +112,6 @@ namespace Barotrauma.CharacterEditor
         {
             base.Select();
 
-            SoundPlayer.OverrideMusicType = "none";
-            SoundPlayer.OverrideMusicDuration = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
             GUI.ForceMouseOn(null);

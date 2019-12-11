@@ -9,6 +9,8 @@
 
   <music file="Content/Sounds/Music/Main Menu Music.ogg" type="menu"/>
 
+  <music file="Content/Sounds/Music/Subaquatic Symphony for Hammer And Metal.ogg" type="editor"/>
+  
   <music file="Content/Sounds/Music/Layer 3 - Leaving Start Location.ogg" type="start"/>
 
   <music file="Content/Sounds/Music/Layer 4 - Arriving at Destination.ogg" type="endround"/>
