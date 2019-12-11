@@ -749,8 +749,7 @@ namespace Barotrauma
                 if (wallTarget != null)
                 {
                     // Steer towards the target, but turn away if a wall is blocking the way
-                    float d = ConvertUnits.ToDisplayUnits(colliderLength) * 3;
-                    if (dist < d)
+                    if (dist < ConvertUnits.ToDisplayUnits(colliderLength) * 3)
                     {
                         State = AIState.Idle;
                         IgnoreTarget(SelectedAiTarget);
@@ -762,14 +761,13 @@ namespace Barotrauma
                 else if (dist < 1000)
                 {
                     // Check that we are not bumping into a door
-                    var c = Character.AnimController.Collider;
                     Vector2 rayStart = SimPosition;
                     if (Character.Submarine == null)
                     {
                         rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
                     }
                     Vector2 toTarget = SelectedAiTarget.WorldPosition - WorldPosition;
-                    Vector2 rayEnd = rayStart + toTarget.ClampLength(c.GetLocalFront().Length() * 2);
+                    Vector2 rayEnd = rayStart + toTarget.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 2);
                     Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
                     if (Submarine.LastPickedFraction != 1.0f && closestBody != null && closestBody.UserData is Item i && i.Submarine != null && i.GetComponent<Door>() != null)
                     {
