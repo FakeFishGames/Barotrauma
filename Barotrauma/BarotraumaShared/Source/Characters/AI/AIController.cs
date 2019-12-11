@@ -14,6 +14,12 @@ namespace Barotrauma
         private AIState state;
         private AIState previousState;
 
+        protected void ResetAITarget()
+        {
+            _lastAiTarget = null;
+            _selectedAiTarget = null;
+        }
+
         // Update only when the value changes, not when it keeps the same.
         protected AITarget _lastAiTarget;
         // Updated each time the value is updated (also when the value is the same).

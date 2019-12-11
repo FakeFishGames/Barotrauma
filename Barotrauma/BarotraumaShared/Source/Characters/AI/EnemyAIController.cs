@@ -389,33 +389,21 @@ namespace Barotrauma
                     var target = SelectedAiTarget ?? _lastAiTarget;
                     if (target?.Entity != null && PreviousState == AIState.Attack)
                     {
-                        if (wallTarget != null)
+                        var memory = GetTargetMemory(target);
+                        if (memory != null)
                         {
-                            // There's a wall between us and the target -> don't keep chasing
-                            SelectedAiTarget = null;
-                            _lastAiTarget = null;
-                            wallTarget = null;
-                        }
-                        else
-                        {
-                            var memory = GetTargetMemory(target);
-                            if (memory != null)
+                            var location = memory.Location;
+                            float dist = Vector2.DistanceSquared(WorldPosition, location);
+                            if (dist < 50 * 50)
                             {
-                                var location = memory.Location;
-                                var dist = Vector2.DistanceSquared(WorldPosition, location);
-                                float minDist = 50;
-                                if (dist < minDist * minDist)
-                                {
-                                    // Target is gone
-                                    SelectedAiTarget = null;
-                                    _lastAiTarget = null;
-                                }
-                                else
-                                {
-                                    steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
-                                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
-                                    return;
-                                }
+                                // Target is gone
+                                ResetAITarget();
+                            }
+                            else
+                            {
+                                steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
+                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                                return;
                             }
                         }
                     }
@@ -757,16 +745,40 @@ namespace Barotrauma
             }
             if (!canAttack && SelectedAiTarget.Entity.Submarine != null && !canAttackSub)
             {
-                // Steer towards the target, but turn away if a wall is blocking the way
-                float d = ConvertUnits.ToDisplayUnits(colliderLength) * 3;
-                if (Vector2.DistanceSquared(Character.AnimController.MainLimb.WorldPosition, attackWorldPos) < d * d)
+                float dist = Vector2.Distance(Character.AnimController.MainLimb.WorldPosition, attackWorldPos);
+                if (wallTarget != null)
                 {
-                    State = AIState.Idle;
-                    IgnoreTarget(SelectedAiTarget);
-                    // Don't keep chasing the target
-                    SelectedAiTarget = null;
-                    _lastAiTarget = null;
-                    return;
+                    // Steer towards the target, but turn away if a wall is blocking the way
+                    float d = ConvertUnits.ToDisplayUnits(colliderLength) * 3;
+                    if (dist < d)
+                    {
+                        State = AIState.Idle;
+                        IgnoreTarget(SelectedAiTarget);
+                        // Resetting the ai target prevents the character from chasing it
+                        ResetAITarget();
+                        return;
+                    }
+                }
+                else if (dist < 1000)
+                {
+                    // Check that we are not bumping into a door
+                    var c = Character.AnimController.Collider;
+                    Vector2 rayStart = SimPosition;
+                    if (Character.Submarine == null)
+                    {
+                        rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                    }
+                    Vector2 toTarget = SelectedAiTarget.WorldPosition - WorldPosition;
+                    Vector2 rayEnd = rayStart + toTarget.ClampLength(c.GetLocalFront().Length() * 2);
+                    Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true);
+                    if (Submarine.LastPickedFraction != 1.0f && closestBody != null && closestBody.UserData is Item i && i.Submarine != null && i.GetComponent<Door>() != null)
+                    {
+                        // Target is unreachable, there's a door ahead
+                        State = AIState.Idle;
+                        IgnoreTarget(SelectedAiTarget);
+                        ResetAITarget();
+                        return;
+                    }
                 }
             }
             float distance = 0;
@@ -1594,14 +1606,14 @@ namespace Barotrauma
             removals.ForEach(r => targetMemories.Remove(r));
         }
 
-        private const float targetIgnoreTime = 10;
+        private const float targetIgnoreTime = 5;
         private float targetIgnoreTimer;
         private readonly HashSet<AITarget> ignoredTargets = new HashSet<AITarget>();
         public void IgnoreTarget(AITarget target)
         {
             if (target == null) { return; }
             ignoredTargets.Add(target);
-            targetIgnoreTimer = targetIgnoreTime;
+            targetIgnoreTimer = targetIgnoreTime * Rand.Range(0.75f, 1.25f);
         }
 
         #endregion
