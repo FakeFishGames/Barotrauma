@@ -139,6 +139,7 @@ namespace Barotrauma
             if (disposed) { return; }
             disposed = true;
             Prefabs.Remove(this);
+            Item.RemoveByPrefab(this);
         }
 
         //default size

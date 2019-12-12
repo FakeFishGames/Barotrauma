@@ -2444,5 +2444,18 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
+        public static void RemoveByPrefab(ItemPrefab prefab)
+        {
+            if (ItemList == null) { return; }
+            List<Item> list = new List<Item>(ItemList);
+            foreach (Item item in list)
+            {
+                if (item.prefab == prefab)
+                {
+                    item.Remove();
+                }
+            }
+        }
     }
 }

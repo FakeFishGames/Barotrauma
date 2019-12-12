@@ -188,8 +188,8 @@ namespace Barotrauma
 
                 tickBox.TextBlock.CanBeFocused = true;
             }
-            contentPackageList.CanDragElements = GameMain.Client == null;
-            contentPackageList.CanBeFocused = GameMain.Client == null;
+            contentPackageList.CanDragElements = (GameMain.Client == null) && (Screen.Selected != GameMain.SubEditorScreen);
+            contentPackageList.CanBeFocused = (GameMain.Client == null) && (Screen.Selected != GameMain.GameScreen) && (Screen.Selected != GameMain.SubEditorScreen);
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));

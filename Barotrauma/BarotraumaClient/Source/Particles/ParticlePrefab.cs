@@ -14,6 +14,7 @@ namespace Barotrauma.Particles
 
         public void Dispose()
         {
+            GameMain.ParticleManager?.RemoveByPrefab(this);
             foreach (Sprite spr in Sprites)
             {
                 spr.Remove();

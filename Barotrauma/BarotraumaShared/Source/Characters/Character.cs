@@ -103,6 +103,8 @@ namespace Barotrauma
         public Character LastAttacker;
         public Entity LastDamageSource;
 
+        private CharacterPrefab prefab;
+
         public readonly CharacterParams Params;
         public string SpeciesName => Params.SpeciesName;
         public bool IsHumanoid => Params.Humanoid;
@@ -669,7 +671,7 @@ namespace Barotrauma
         protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null)
         {
-            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            prefab = CharacterPrefab.FindBySpeciesName(speciesName);
 
             this.seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
@@ -2272,6 +2274,19 @@ namespace Barotrauma
         public void DespawnNow()
         {
             despawnTimer = DespawnDelay;
+        }
+
+        public static void RemoveByPrefab(CharacterPrefab prefab)
+        {
+            if (CharacterList == null) { return; }
+            List<Character> list = new List<Character>(CharacterList);
+            foreach (Character character in list)
+            {
+                if (character.prefab == prefab)
+                {
+                    character.Remove();
+                }
+            }
         }
 
         private void UpdateSightRange()

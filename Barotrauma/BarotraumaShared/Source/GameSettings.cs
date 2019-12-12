@@ -744,7 +744,7 @@ namespace Barotrauma
 #if WINDOWS
         private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
         {
-            if (SuppressModFolderWatcher) { return; }
+            if (SuppressModFolderWatcher || GameMain.Client != null) { return; }
             switch (e.ChangeType)
             {
                 case WatcherChangeTypes.Created:

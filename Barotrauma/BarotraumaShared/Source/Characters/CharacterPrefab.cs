@@ -18,6 +18,7 @@ namespace Barotrauma
             if (disposed) { return; }
             disposed = true;
             Prefabs.Remove(this);
+            Character.RemoveByPrefab(this);
         }
 
         public string OriginalName { get; private set; }

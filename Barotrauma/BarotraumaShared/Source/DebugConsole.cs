@@ -193,6 +193,27 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadcorepackage", "", (string[] args) =>
             {
+                if (args.Length < 2)
+                {
+                    if (Screen.Selected == GameMain.GameScreen)
+                    {
+                        ThrowError("Reloading the core package while in GameScreen WILL break everything; to do it anyway, type 'reloadcorepackage force'");
+                        return;
+                    }
+
+                    if (Screen.Selected == GameMain.SubEditorScreen)
+                    {
+                        ThrowError("Reloading the core package while in sub editor WILL break everything; to do it anyway, type 'reloadcorepackage force'");
+                        return;
+                    }
+                }
+
+                if (GameMain.Client != null)
+                {
+                    ThrowError("Cannot change content packages while connected to server");
+                    return;
+                }
+
                 GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
             }));
 

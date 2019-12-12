@@ -230,5 +230,17 @@ namespace Barotrauma.Particles
             }
         }
 
+        public void RemoveByPrefab(ParticlePrefab prefab)
+        {
+            if (particles == null) { return; }
+            for (int i=particles.Length-1;i>=0;i--)
+            {
+                if (particles[i]?.Prefab == prefab)
+                {
+                    RemoveParticle(i);
+                }
+            }
+        }
+
     }
 }
