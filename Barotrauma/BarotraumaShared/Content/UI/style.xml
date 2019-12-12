@@ -489,10 +489,10 @@
 
   <GUIButtonJoinFriend
     color="43, 71, 93, 255"
-    hovercolor="90, 190, 249, 255"
+    hovercolor="53, 88, 115, 255"
     selectedcolor="53, 88, 115, 255"
     pressedcolor="255, 255, 255, 255"
-    textcolor="43, 71, 93, 255" />
+    textcolor="90, 190, 249, 255" />
 
   <GUIButtonFriendsDropdown
     color="73, 98, 103, 255"
