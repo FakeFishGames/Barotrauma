@@ -228,9 +228,14 @@ namespace Barotrauma.Lights
             activeLights.Clear();
             foreach (LightSource light in lights)
             {
-                if (!light.Enabled) { continue; }
+                if (!light.Enabled) { continue; }    
                 if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.Range, viewRect)) { continue; }
+                if (light.ParentBody != null)
+                {
+                    light.Position = light.ParentBody.DrawPosition;
+                    if (light.ParentSub != null) { light.Position -= light.ParentSub.DrawPosition; }
+                }
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.LightSourceParams.TextureRange, viewRect)) { continue; }
                 activeLights.Add(light);
             }
 
@@ -288,7 +293,8 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                //don't draw limb lights at this point, they need to be drawn after lights have been obstructed by characters
+                if (light.IsBackground || light.ParentBody?.UserData is Limb) { continue; }
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
@@ -351,9 +357,11 @@ namespace Barotrauma.Lights
             {
                 if (light.IsBackground) { continue; }
                 if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
+                //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
+                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
             }
-            Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
-            lightEffect.World = Matrix.CreateTranslation(Vector3.Zero) * transform;
+
+            lightEffect.World = transform;
             
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 
@@ -381,12 +389,13 @@ namespace Barotrauma.Lights
 
                 //ambient light decreases the brightness of the halo (no need for a bright halo if the ambient light is bright enough)
                 float ambientBrightness = (AmbientLight.R + AmbientLight.B + AmbientLight.G) / 255.0f / 3.0f;
-                Color haloColor = Color.White * (0.4f - ambientBrightness); 
+                Color haloColor = Color.White * (0.3f - ambientBrightness); 
                 if (haloColor.A > 0)
                 {
+                    float scale = 512.0f / LightSource.LightTexture.Width;
                     spriteBatch.Draw(
                         LightSource.LightTexture, haloDrawPos, null, haloColor, 0.0f,
-                        new Vector2(LightSource.LightTexture.Width / 2, LightSource.LightTexture.Height / 2), 1.0f, SpriteEffects.None, 0.0f);
+                        new Vector2(LightSource.LightTexture.Width, LightSource.LightTexture.Height) / 2, scale, SpriteEffects.None, 0.0f);
                 }                
             }
             spriteBatch.End();

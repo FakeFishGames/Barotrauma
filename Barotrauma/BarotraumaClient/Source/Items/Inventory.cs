@@ -455,13 +455,13 @@ namespace Barotrauma
 
                 if (draggingItem == null)
                 {
-                    if (PlayerInput.LeftButtonDown())
+                    if (PlayerInput.PrimaryMouseButtonDown())
                     {
                         draggingItem = Items[slotIndex];
                         draggingSlot = slot;
                     }
                 }
-                else if (PlayerInput.LeftButtonReleased())
+                else if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     if (PlayerInput.DoubleClicked())
                     {
@@ -506,7 +506,7 @@ namespace Barotrauma
             {
                 subInventory.HideTimer = 1.0f;
                 subInventory.OpenState = 1.0f;
-                if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.RightButtonClicked())
+                if (subInventory.movableFrameRect.Contains(PlayerInput.MousePosition) && PlayerInput.SecondaryMouseButtonClicked())
                 {
                     container.Inventory.savedPosition = container.Inventory.originalPos;
                 }
@@ -514,12 +514,12 @@ namespace Barotrauma
                 {
                     if (DraggingInventory == null)
                     {
-                        if (PlayerInput.LeftButtonDown())
+                        if (PlayerInput.PrimaryMouseButtonDown())
                         {
                             DraggingInventory = subInventory;
                         }
                     }
-                    else if (PlayerInput.LeftButtonReleased())
+                    else if (PlayerInput.PrimaryMouseButtonReleased())
                     {
                         DraggingInventory = null;
                         subInventory.savedPosition = PlayerInput.MousePosition.ToPoint();
@@ -787,7 +787,7 @@ namespace Barotrauma
 
         public static void UpdateDragging()
         {
-            if (draggingItem != null && PlayerInput.LeftButtonReleased())
+            if (draggingItem != null && PlayerInput.PrimaryMouseButtonReleased())
             {
                 Character.Controlled.ClearInputs();
 

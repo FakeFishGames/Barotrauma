@@ -12,7 +12,7 @@
   <limb id = "1" radius="20" height="240">
     <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
     <attack range="300" damagerange="200" duration="0.5" structuredamage="40" structuresoundtype="StructureSlash" torque="100" targetforce="-50" severlimbsprobability="0.8">
-      <Affliction identifier="internaldamage" strength="20"/>
+      <Affliction identifier="bitewounds" strength="20"/>
       <Affliction identifier="bleeding" strength="50"/>
     </attack>
   </limb>

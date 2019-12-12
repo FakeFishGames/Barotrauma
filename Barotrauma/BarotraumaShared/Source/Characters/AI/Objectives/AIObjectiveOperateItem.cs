@@ -137,7 +137,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50), 
+                    TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(target.Item, character, objectiveManager, closeEnough: 50)
+                    {
+                        DialogueIdentifier = "dialogcannotreachtarget",
+                        TargetName = target.Item.Name
+                    }, 
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }

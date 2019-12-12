@@ -12,8 +12,10 @@ namespace Barotrauma
         //only used if none of the selected content packages contain any text files
         const string VanillaTextFilePath = "Content/Texts/English/EnglishVanilla.xml";
 
+        private static readonly object mutex = new object();
+
         //key = language
-        private static Dictionary<string, List<TextPack>> textPacks = new Dictionary<string, List<TextPack>>();
+        private static Dictionary<string, List<TextPack>> textPacks;
 
         private static readonly string[] serverMessageCharacters = new string[] { "~", "[", "]", "=" };
 
@@ -25,10 +27,16 @@ namespace Barotrauma
             private set;
         }
 
-        private static readonly HashSet<string> availableLanguages = new HashSet<string>();
+        private static HashSet<string> availableLanguages;
         public static IEnumerable<string> AvailableLanguages
         {
-            get { return availableLanguages; }
+            get
+            {
+                lock (mutex)
+                {
+                    return new HashSet<string>(availableLanguages);
+                }
+            }
         }
 
         public static List<string> GetTextFiles()
@@ -55,25 +63,29 @@ namespace Barotrauma
         /// </summary>
         public static string GetTranslatedLanguageName(string language)
         {
-            if (!textPacks.ContainsKey(language))
+            lock (mutex)
             {
+                if (!textPacks.ContainsKey(language))
+                {
+                    return language;
+                }
+
+                foreach (var textPack in textPacks[language])
+                {
+                    if (textPack.Language == language)
+                    {
+                        return textPack.TranslatedName;
+                    }
+                }
                 return language;
             }
-
-            foreach (var textPack in textPacks[language])
-            {
-                if (textPack.Language == language)
-                {
-                    return textPack.TranslatedName;
-                }
-            }
-            return language;
         }
 
         public static void LoadTextPacks(IEnumerable<ContentPackage> selectedContentPackages)
         {
-            availableLanguages.Clear();
-            textPacks.Clear();
+            HashSet<string> newLanguages = new HashSet<string>();
+            Dictionary<string, List<TextPack>> newTextPacks = new Dictionary<string, List<TextPack>>();
+
             var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
             foreach (string file in textFiles)
@@ -81,12 +93,12 @@ namespace Barotrauma
                 try
                 {
                     var textPack = new TextPack(file);
-                    availableLanguages.Add(textPack.Language);
-                    if (!textPacks.ContainsKey(textPack.Language))
+                    newLanguages.Add(textPack.Language);
+                    if (!newTextPacks.ContainsKey(textPack.Language))
                     {
-                        textPacks.Add(textPack.Language, new List<TextPack>());
+                        newTextPacks.Add(textPack.Language, new List<TextPack>());
                     }
-                    textPacks[textPack.Language].Add(textPack);
+                    newTextPacks[textPack.Language].Add(textPack);
                 }
                 catch (Exception e)
                 {
@@ -94,7 +106,7 @@ namespace Barotrauma
                 }
             }
 
-            if (textPacks.Count == 0)
+            if (newTextPacks.Count == 0)
             {
                 DebugConsole.ThrowError("No text files available in any of the selected content packages. Attempting to find a vanilla English text file...");
                 if (!File.Exists(VanillaTextFilePath))
@@ -102,9 +114,21 @@ namespace Barotrauma
                     throw new Exception("No text files found in any of the selected content packages or in the default text path!");
                 }
                 var textPack = new TextPack(VanillaTextFilePath);
-                availableLanguages.Add(textPack.Language);
-                textPacks.Add(textPack.Language, new List<TextPack>() { textPack });
+                newLanguages.Add(textPack.Language);
+                newTextPacks.Add(textPack.Language, new List<TextPack>() { textPack });
             }
+
+            if (newTextPacks.Count == 0)
+            {
+                throw new Exception("Failed to load text packs!");
+            }
+
+            lock (mutex)
+            {
+                textPacks = newTextPacks;
+                availableLanguages = newLanguages;
+            }
+
             Initialized = true;
         }
 
@@ -112,74 +136,81 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(textTag)) { return false; }
 
-            if (!textPacks.ContainsKey(Language))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
-                Language = "English";
                 if (!textPacks.ContainsKey(Language))
                 {
-                    throw new Exception("No text packs available in English!");
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                    Language = "English";
+                    if (!textPacks.ContainsKey(Language))
+                    {
+                        throw new Exception("No text packs available in English!");
+                    }
+                }
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    if (textPack.Get(textTag) != null) { return true; }
                 }
             }
-            foreach (TextPack textPack in textPacks[Language])
-            {
-                if (textPack.Get(textTag) != null) { return true; }
-            }
+            
             return false;
         }
 
         public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
         {
-            if (!textPacks.ContainsKey(Language))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
-                Language = "English";
                 if (!textPacks.ContainsKey(Language))
                 {
-                    throw new Exception("No text packs available in English!");
-                }
-            }
-
-            foreach (TextPack textPack in textPacks[Language])
-            {
-                string text = textPack.Get(textTag);
-                if (text != null) { return text; }
-            }
-
-            if (!string.IsNullOrEmpty(fallBackTag))
-            {
-                foreach (TextPack textPack in textPacks[Language])
-                {
-                    string text = textPack.Get(fallBackTag);
-                    if (text != null) { return text; }
-                }
-            }
-
-            //if text was not found and we're using a language other than English, see if we can find an English version
-            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
-            if (Language != "English" && textPacks.ContainsKey("English"))
-            {
-                foreach (TextPack textPack in textPacks["English"])
-                {
-                    string text = textPack.Get(textTag);
-                    if (text != null)
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                    Language = "English";
+                    if (!textPacks.ContainsKey(Language))
                     {
-#if DEBUG
-                        DebugConsole.NewMessage("Text \"" + textTag + "\" not found for the language \"" + Language + "\". Using the English text \"" + text + "\" instead.");
-#endif
-                        return text;
+                        throw new Exception("No text packs available in English!");
                     }
                 }
-            }
 
-            if (returnNull)
-            {
-                return null;
-            }
-            else
-            {
-                DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
-                return textTag;
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    string text = textPack.Get(textTag);
+                    if (text != null) { return text; }
+                }
+
+                if (!string.IsNullOrEmpty(fallBackTag))
+                {
+                    foreach (TextPack textPack in textPacks[Language])
+                    {
+                        string text = textPack.Get(fallBackTag);
+                        if (text != null) { return text; }
+                    }
+                }
+
+                //if text was not found and we're using a language other than English, see if we can find an English version
+                //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
+                if (Language != "English" && textPacks.ContainsKey("English"))
+                {
+                    foreach (TextPack textPack in textPacks["English"])
+                    {
+                        string text = textPack.Get(textTag);
+                        if (text != null)
+                        {
+#if DEBUG
+                            DebugConsole.NewMessage("Text \"" + textTag + "\" not found for the language \"" + Language + "\". Using the English text \"" + text + "\" instead.");
+#endif
+                            return text;
+                        }
+                    }
+                }
+
+                if (returnNull)
+                {
+                    return null;
+                }
+                else
+                {
+                    DebugConsole.ThrowError("Text \"" + textTag + "\" not found.");
+                    return textTag;
+                }
             }
         }
 
@@ -418,13 +449,16 @@ namespace Barotrauma
         // And: replacement=formatter(value)
         public static string GetServerMessage(string serverMessage)
         {
-            if (!textPacks.ContainsKey(Language))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
-                Language = "English";
                 if (!textPacks.ContainsKey(Language))
                 {
-                    throw new Exception("No text packs available in English!");
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                    Language = "English";
+                    if (!textPacks.ContainsKey(Language))
+                    {
+                        throw new Exception("No text packs available in English!");
+                    }
                 }
             }
 
@@ -588,58 +622,64 @@ namespace Barotrauma
 
         public static List<string> GetAll(string textTag)
         {
-            if (!textPacks.ContainsKey(Language))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
-                Language = "English";
                 if (!textPacks.ContainsKey(Language))
                 {
-                    throw new Exception("No text packs available in English!");
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                    Language = "English";
+                    if (!textPacks.ContainsKey(Language))
+                    {
+                        throw new Exception("No text packs available in English!");
+                    }
                 }
-            }
 
-            List<string> allText;
+                List<string> allText;
 
-            foreach (TextPack textPack in textPacks[Language])
-            {
-                allText = textPack.GetAll(textTag);
-                if (allText != null) return allText;
-            }
-
-            //if text was not found and we're using a language other than English, see if we can find an English version
-            //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
-            if (Language != "English" && textPacks.ContainsKey("English"))
-            {
-                foreach (TextPack textPack in textPacks["English"])
+                foreach (TextPack textPack in textPacks[Language])
                 {
                     allText = textPack.GetAll(textTag);
                     if (allText != null) return allText;
                 }
-            }
 
-            return null;
+                //if text was not found and we're using a language other than English, see if we can find an English version
+                //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
+                if (Language != "English" && textPacks.ContainsKey("English"))
+                {
+                    foreach (TextPack textPack in textPacks["English"])
+                    {
+                        allText = textPack.GetAll(textTag);
+                        if (allText != null) return allText;
+                    }
+                }
+
+                return null;
+            }
         }
 
         public static List<KeyValuePair<string, string>> GetAllTagTextPairs()
         {
-            if (!textPacks.ContainsKey(Language))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
-                Language = "English";
                 if (!textPacks.ContainsKey(Language))
                 {
-                    throw new Exception("No text packs available in English!");
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
+                    Language = "English";
+                    if (!textPacks.ContainsKey(Language))
+                    {
+                        throw new Exception("No text packs available in English!");
+                    }
                 }
+
+                List<KeyValuePair<string, string>> allText = new List<KeyValuePair<string, string>>();
+
+                foreach (TextPack textPack in textPacks[Language])
+                {
+                    allText.AddRange(textPack.GetAllTagTextPairs());
+                }
+
+                return allText;
             }
-
-            List<KeyValuePair<string, string>> allText = new List<KeyValuePair<string, string>>();
-
-            foreach (TextPack textPack in textPacks[Language])
-            {
-                allText.AddRange(textPack.GetAllTagTextPairs());
-            }
-
-            return allText;
         }
 
         public static string ReplaceGenderPronouns(string text, Gender gender)
@@ -689,35 +729,41 @@ namespace Barotrauma
 #if DEBUG
         public static void CheckForDuplicates(string lang)
         {
-            if (!textPacks.ContainsKey(lang))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
-                return;
-            }
+                if (!textPacks.ContainsKey(lang))
+                {
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                    return;
+                }
 
-            int packIndex = 0;
-            foreach (TextPack textPack in textPacks[lang])
-            {
-                textPack.CheckForDuplicates(packIndex);
-                packIndex++;
+                int packIndex = 0;
+                foreach (TextPack textPack in textPacks[lang])
+                {
+                    textPack.CheckForDuplicates(packIndex);
+                    packIndex++;
+                }
             }
         }
 
         public static void WriteToCSV()
         {
-            string lang = "English";
-
-            if (!textPacks.ContainsKey(lang))
+            lock (mutex)
             {
-                DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
-                return;
-            }
+                string lang = "English";
 
-            int packIndex = 0;
-            foreach (TextPack textPack in textPacks[lang])
-            {
-                textPack.WriteToCSV(packIndex);
-                packIndex++;
+                if (!textPacks.ContainsKey(lang))
+                {
+                    DebugConsole.ThrowError("No text packs available for the selected language (" + lang + ")!");
+                    return;
+                }
+
+                int packIndex = 0;
+                foreach (TextPack textPack in textPacks[lang])
+                {
+                    textPack.WriteToCSV(packIndex);
+                    packIndex++;
+                }
             }
         }
 #endif

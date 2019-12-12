@@ -151,6 +151,7 @@ namespace Facepunch.Steamworks
                 return;
 
             RunCallbacks();
+            LobbyList.Update();
             Voice.Update();
             Friends.Cycle();
 

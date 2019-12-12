@@ -212,7 +212,7 @@ namespace Barotrauma.Items.Components
 
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (IsStuck ||
+            if ((IsStuck && !isNetworkMessage) ||
                 (PredictedState == null && isOpen == open) ||
                 (PredictedState != null && isOpen == PredictedState.Value && isOpen == open))
             {
@@ -238,11 +238,7 @@ namespace Barotrauma.Items.Components
                     StopPicking(null);
                     PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
                 }
-            }
-
-            //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
-            
+            }       
         }
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
@@ -261,6 +257,7 @@ namespace Barotrauma.Items.Components
                 toggleCooldownTimer = ToggleCoolDown;
             }
 
+            if (isStuck) { OpenState = 0.0f; }
             PredictedState = null;
         }
     }

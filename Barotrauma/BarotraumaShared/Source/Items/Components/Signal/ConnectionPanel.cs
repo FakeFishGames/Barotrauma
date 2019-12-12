@@ -35,6 +35,11 @@ namespace Barotrauma.Items.Components
             set { /*do nothing*/ }
         }
 
+        public Character User
+        {
+            get { return user; }
+        }
+
         public ConnectionPanel(Item item, XElement element)
             : base(item, element)
         {
@@ -172,21 +177,28 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character != user) { return false; }
+            return true;
+        }
+
+        /// <summary>
+        /// Check if the character manages to succesfully rewire the panel, and if not, apply OnFailure effects
+        /// </summary>
+        public bool CheckCharacterSuccess(Character character)
+        {
+            if (character == null) { return false; }
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
             {
-                if (powered.Voltage < 0.1f) return false;
+                //unpowered panels can be rewired without a risk of electrical shock
+                if (powered.Voltage < 0.1f) { return true; }
             }
 
             float degreeOfSuccess = DegreeOfSuccess(character);
-            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) return false;
-
-            character.SetStun(5.0f);
+            if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) { return true; }
 
             item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-
-            return true;
+            return false;
         }
 
         public override void Load(XElement element, bool usePrefabValues)
@@ -280,6 +292,10 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
+#if CLIENT
+            TriggerRewiringSound();
+#endif
+
             foreach (Connection connection in Connections)
             {
                 foreach (Wire wire in connection.Wires)

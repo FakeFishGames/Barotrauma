@@ -9,7 +9,7 @@
     <attack context="Water" cooldown="5" range="80" damagerange="70" duration="0.25" stun="0.3" structuredamage="5" itemdamage="5" structuresoundtype="StructureSlash" targetimpulse="20" targetimpulseworld="0,-20" severlimbsprobability="0.5" force="5" applyforceonlimbs="0, 9" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="0" targetforceworld="0,0" priority="0" targettype="Any" secondarycooldown="0" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="FallBack" reverse="False" targetlimbtype="None">
       <Affliction identifier="bleeding" strength="30" probability="1" />
       <Affliction identifier="stun" strength="0.25" probability="1" />
-      <Affliction identifier="internaldamage" strength="10" probability="1" />
+      <Affliction identifier="bitewounds" strength="10" probability="1" />
     </attack>
   </limb>
   <!-- BodyUpper (main torso) -->
@@ -63,7 +63,7 @@
     <deformablesprite texture="Content/Characters/Crawler/crawler.png" sourcerect="161,83,44,47" depth="0.06" origin="0.3677241,0.5077608" />
     <attack context="Ground" cooldown="3" range="200" damagerange="100" duration="1" stun="0.3" structuredamage="5" itemdamage="5" structuresoundtype="StructureSlash" targetimpulse="0" targetimpulseworld="0,0" severlimbsprobability="0.5" force="25" applyforceonlimbs="0, 1, 9, 10, 15" torque="50" hitdetectiontype="Distance" onlyhumans="False" targetforce="20" targetforceworld="0,-15" priority="0" targettype="Any" secondarycooldown="0.01" applyforcesonlyonce="False" stickchance="0" cooldownrandomfactor="0.25" afterattack="PursueIfCanAttack" reverse="False" targetlimbtype="Torso">
       <Affliction identifier="stun" strength="1" probability="1" />
-      <Affliction identifier="internaldamage" strength="10" probability="1" />
+      <Affliction identifier="bitewounds" strength="10" probability="1" />
     </attack>
   </limb>
   <!--Secondary Attack-->

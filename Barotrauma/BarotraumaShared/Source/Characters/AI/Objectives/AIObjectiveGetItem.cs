@@ -27,6 +27,7 @@ namespace Barotrauma
         public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
+        private bool checkInventory;
 
         public bool AllowToFindDivingGear { get; set; } = true;
 
@@ -60,15 +61,12 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-            if (checkInventory)
-            {
-                CheckInventory();
-            }
+            this.checkInventory = checkInventory;
         }
 
-        private void CheckInventory()
+        private bool CheckInventory()
         {
-            if (itemIdentifiers == null) { return; }
+            if (itemIdentifiers == null) { return false; }
             var item = character.Inventory.FindItem(i => CheckItem(i), recursive: true);
             if (item != null)
             {
@@ -76,6 +74,7 @@ namespace Barotrauma
                 rootContainer = item.GetRootContainer();
                 moveToTarget = rootContainer ?? item;
             }
+            return item != null;
         }
 
         protected override void Act(float deltaTime)
@@ -85,11 +84,21 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (!isDoneSeeking)
+            if (itemIdentifiers != null && !isDoneSeeking)
             {
-                FindTargetItem();
-                objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
-                return;
+                if (checkInventory)
+                {
+                    if (CheckInventory())
+                    {
+                        isDoneSeeking = true;
+                    }
+                }
+                if (!isDoneSeeking)
+                {
+                    FindTargetItem();
+                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                    return;
+                }
             }
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
@@ -111,6 +120,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
+
                 if (equip)
                 {
                     int targetSlot = -1;
@@ -127,13 +137,18 @@ namespace Barotrauma
                             var otherItem = character.Inventory.Items[i];
                             if (otherItem == null) { continue; }
                             //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any })) { continue; }
+                            if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && 
+                                character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any }))
+                            {
+                                continue;
+                            }
                             //if everything else fails, simply drop the existing item
                             otherItem.Drop(character);
                         }
                     }
                     if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
                     {
+                        targetItem.Equip(character);
                         IsCompleted = true;
                     }
                     else
@@ -146,7 +161,6 @@ namespace Barotrauma
                 }
                 else
                 {
-                    targetItem.ParentInventory.RemoveItem(targetItem);
                     if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
                     {
                         IsCompleted = true;
@@ -157,7 +171,6 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Failed to equip/move the item '{targetItem.Name}' into the character inventory. Aborting.", Color.Red);
 #endif
-                        targetItem.Drop(character);
                     }
                 }
             }
@@ -169,7 +182,9 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer
+                            abortCondition = () => targetItem == null || targetItem.GetRootContainer() != rootContainer,
+                            DialogueIdentifier = "dialogcannotreachtarget",
+                            TargetName = moveToTarget.Name
                         };
                     },
                     onAbandon: () =>

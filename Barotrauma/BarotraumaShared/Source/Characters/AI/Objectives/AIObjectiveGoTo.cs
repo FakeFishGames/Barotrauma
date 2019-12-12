@@ -45,6 +45,8 @@ namespace Barotrauma
         public bool AllowGoingOutside { get; set; }
 
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+        public string DialogueIdentifier { get; set; }
+        public string TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
 
@@ -74,6 +76,21 @@ namespace Barotrauma
             }
         }
 
+        private void SpeakCannotReach()
+        {
+#if DEBUG
+            DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
+#endif
+            if (objectiveManager.CurrentOrder != null && DialogueIdentifier != null)
+            {
+                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, true);
+                if (msg != null)
+                {
+                    character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
+                }
+            }
+        }
+
         protected override void Act(float deltaTime)
         {
             if (followControlledCharacter)
@@ -81,6 +98,7 @@ namespace Barotrauma
                 if (Character.Controlled == null)
                 {
                     Abandon = true;
+                    SteeringManager.Reset();
                     return;
                 }
                 Target = Character.Controlled;
@@ -101,6 +119,8 @@ namespace Barotrauma
                 if (e.Removed)
                 {
                     Abandon = true;
+                    SteeringManager.Reset();
+                    return;
                 }
                 else
                 {
@@ -117,8 +137,6 @@ namespace Barotrauma
                 if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
-                    return;
                 }
             }
             bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
@@ -134,6 +152,7 @@ namespace Barotrauma
                 {
                     if (repeat)
                     {
+                        SpeakCannotReach();
                         SteeringManager.Reset();
                     }
                     else
@@ -144,13 +163,7 @@ namespace Barotrauma
             }
             if (Abandon)
             {
-#if DEBUG
-                DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
-#endif
-                if (objectiveManager.CurrentOrder != null && objectiveManager.CurrentOrder.ReportFailures)
-                {
-                    character.Speak(TextManager.Get("DialogCannotReach"), identifier: "cannotreach", minDurationBetweenSimilar: 10.0f);
-                }
+                SpeakCannotReach();
                 SteeringManager.Reset();
             }
             else
@@ -235,6 +248,10 @@ namespace Barotrauma
             else if (Target is WayPoint wp)
             {
                 return wp.CurrentHull;
+            }
+            else if (Target is FireSource fs)
+            {
+                return fs.Hull;
             }
             return null;
         }

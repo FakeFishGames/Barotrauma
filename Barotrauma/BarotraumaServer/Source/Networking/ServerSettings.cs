@@ -313,6 +313,7 @@ namespace Barotrauma.Networking
             }
 
             ServerName = doc.Root.GetAttributeString("name", "");
+            if (ServerName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
             
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;

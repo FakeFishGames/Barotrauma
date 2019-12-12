@@ -15,7 +15,6 @@ namespace Barotrauma
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
         public virtual bool AllowSubObjectiveSorting => false;
-        public virtual bool ReportFailures => true;
 
         /// <summary>
         /// Can there be multiple objective instaces of the same type? Currently multiple instances allowed only for main objectives and the subobjectives of objetive loops.

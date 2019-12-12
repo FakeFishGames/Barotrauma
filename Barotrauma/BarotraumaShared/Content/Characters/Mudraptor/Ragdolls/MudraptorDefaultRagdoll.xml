@@ -3,7 +3,7 @@
   <limb id="0" name="Head" type="Head" width="134" height="100" notes="111cr_Head" flip="True" healthindex="0" attackpriority="1" steerforce="20" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" friction="0.3" restitution="0.05" spriteorientation="NaN" mirrorvertically="False" mirrorhorizontally="False" hide="False" angulardamping="7" mouthpos="2,-1">
     <sprite texture="Content/Characters/Mudraptor/Mudraptor.png" sourcerect="0,0,166,122" origin="0.4839342,0.4924676" depth="0.1" />
     <attack context="Ground" cooldown="2" afterattack="Pursue" range="120" damagerange="100" duration="0.25" structuredamage="5" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="-250" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="20" probability="1" />
+      <Affliction identifier="bitewounds" strength="20" probability="1" />
       <Affliction identifier="bleeding" strength="10" probability="1" />
       <Affliction identifier="stun" strength="0.1" probability="1" />
     </attack>
@@ -17,7 +17,7 @@
     <damagemodifier armorsector="-90,120" afflictiontypes="damage" damagemultiplier="0.5" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
     <damagemodifier armorsector="-90,120" afflictiontypes="bleeding" damagemultiplier="0" damagesound="LimbArmor" deflectprojectiles="True" afflictionidentifiers="" />
     <attack context="Water" cooldown="1" afterattack="Pursue" range="100" damagerange="100" duration="0.25" structuredamage="5" itemdamage="12" structuresoundtype="StructureSlash" targetforce="0" severlimbsprobability="0.8" torque="0" force="20" applyforceonlimbs="0, 1, 2, 13" targettype="Any" hitdetectiontype="Distance" stun="0" onlyhumans="False" applyforcesonlyonce="True" targetimpulse="50" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0" secondarycooldown="0" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="20" probability="1" />
+      <Affliction identifier="bitewounds" strength="20" probability="1" />
       <Affliction identifier="bleeding" strength="10" probability="1" />
       <Affliction identifier="stun" strength="0.1" probability="1" />
     </attack>

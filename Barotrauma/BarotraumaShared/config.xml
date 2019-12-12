@@ -24,14 +24,14 @@
   <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
   <keymapping
-    Select="0"
+    Select="PrimaryMouse"
     Use="E"
-    Aim="1"
+    Aim="SecondaryMouse"
     Up="W"
     Down="S"
     Left="A"
     Right="D"
-    Attack="2"
+    Attack="MiddleMouse"
     Run="LeftShift"
     Crouch="LeftControl"
     InfoTab="Tab"
@@ -41,8 +41,8 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
-    Shoot="0"
-    Deselect="1"
+    Shoot="PrimaryMouse"
+    Deselect="SecondaryMouse"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
 

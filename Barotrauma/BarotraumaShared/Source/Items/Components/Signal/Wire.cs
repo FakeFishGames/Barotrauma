@@ -370,7 +370,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null || character != Character.Controlled) { return false; }
             if (character.SelectedConstruction != null) { return false; }
-            if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.LeftButtonClicked())
+            if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.PrimaryMouseButtonClicked())
             {
                 return false;
             }

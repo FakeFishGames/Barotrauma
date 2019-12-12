@@ -314,6 +314,14 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
 
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                if (innerFrame != null)
+                {
+                    innerFrame.RectTransform.MaxSize = new Point(int.MaxValue, GameMain.GraphicsHeight - 50);
+                }
+            };
+
             var panelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), innerFrame.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 Stretch = true,
@@ -433,6 +441,14 @@ namespace Barotrauma
             GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
             {
                 Stretch = true
+            };
+
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                if (panelContainer != null && sideBar != null)
+                {
+                    sideBar.RectTransform.MaxSize = new Point(650, panelContainer.RectTransform.Rect.Height);
+                }
             };
 
             //player info panel ------------------------------------------------------------
@@ -1207,8 +1223,6 @@ namespace Barotrauma
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
-
-            GameMain.Client.EndRoundButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound);
 
             if (campaignUI?.StartButton != null)
             {
@@ -2143,11 +2157,11 @@ namespace Barotrauma
                 }
             }
 
-            if (HeadSelectionList != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
+            if (HeadSelectionList != null && PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(HeadSelectionList))
             {
                 HeadSelectionList.Visible = false;                
             }
-            if (JobSelectionFrame != null && PlayerInput.LeftButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
+            if (JobSelectionFrame != null && PlayerInput.PrimaryMouseButtonDown() && !GUI.IsMouseOn(JobSelectionFrame))
             {
                 JobList.Deselect();
                 JobSelectionFrame.Visible = false;                
@@ -2378,6 +2392,13 @@ namespace Barotrauma
                     AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom)
                 });
 
+            characterInfoFrame.RectTransform.SizeChanged += () =>
+            {
+                if (characterInfoFrame == null || HeadSelectionList?.RectTransform == null || button == null) { return; }
+                HeadSelectionList.RectTransform.Resize(new Point(characterInfoFrame.Rect.Width, (characterInfoFrame.Rect.Bottom - button.Rect.Bottom) + characterInfoFrame.Rect.Height * 2));
+                HeadSelectionList.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom);
+            };
+
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black)
             {
                 UserData = "outerglow",
@@ -2415,7 +2436,7 @@ namespace Barotrauma
                     headSprite.SourceRect = new Rectangle(CharacterInfo.CalculateOffset(headSprite, head.Value.ToPoint()), headSprite.SourceRect.Size);
                     characterSprites.Add(headSprite);
 
-                    if (row == null || itemsInRow >= 4)
+                    if (itemsInRow >= 4 || row == null || gender != (Gender)row.UserData)
                     {
                         row = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.333f), HeadSelectionList.Content.RectTransform), true)
                         {
@@ -2505,6 +2526,14 @@ namespace Barotrauma
             JobSelectionFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas, Anchor.TopLeft)
                 { AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - frameSize.X, characterInfoFrame.Rect.Bottom) }, style:"GUIFrameListBox");
 
+            characterInfoFrame.RectTransform.SizeChanged += () =>
+            {
+                if (characterInfoFrame == null || JobSelectionFrame?.RectTransform == null) { return; }
+                Point size = new Point(characterInfoFrame.Rect.Width, characterInfoFrame.Rect.Height * 2);
+                JobSelectionFrame.RectTransform.Resize(size);
+                JobSelectionFrame.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - size.X, characterInfoFrame.Rect.Bottom);
+            };
+
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), JobSelectionFrame.RectTransform, anchor: Anchor.Center), style: "OuterGlow", color: Color.Black)
             {
                 UserData = "outerglow",
@@ -2571,30 +2600,22 @@ namespace Barotrauma
                             image.Visible = currVisible == variantIndex;
                         }
 
-                        var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), jobButton.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.05f + 0.2f * variantIndex) }, (variantIndex + 1).ToString(), style: null)
+                        var variantButton = CreateJobVariantButton(jobPrefab, variantIndex, images.Length, jobButton);
+                        variantButton.OnClicked = (btn, obj) =>
                         {
-                            Color = new Color(50, 50, 50, 200),
-                            HoverColor = Color.Gray * 0.75f,
-                            PressedColor = Color.Black * 0.75f,
-                            SelectedColor = new Color(45, 70, 100, 200),
-                            UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
-                            OnClicked = (btn, obj) =>
+                            currSelected.Selected = false;
+                            int k = ((Pair<JobPrefab, int>)obj).Second;
+                            btn.Parent.UserData = obj;
+                            for (int j = 0; j < images.Length; j++)
                             {
-                                currSelected.Selected = false;
-                                int k = ((Pair<JobPrefab, int>)obj).Second;
-                                btn.Parent.UserData = obj;
-                                for (int j = 0; j < images.Length; j++)
+                                foreach (GUIImage image in images[j])
                                 {
-                                    foreach (GUIImage image in images[j])
-                                    {
-                                        image.Visible = k == j;
-                                    }
+                                    image.Visible = k == j;
                                 }
-                                currSelected = btn;
-                                currSelected.Selected = true;
-
-                                return false;
                             }
+                            currSelected = btn;
+                            currSelected.Selected = true;
+                            return false;
                         };
 
                         if (currVisible == variantIndex)
@@ -2602,6 +2623,7 @@ namespace Barotrauma
                             currSelected = variantButton;
                         }
                     }
+
                     if (currSelected != null)
                     {
                         currSelected.Selected = true;
@@ -2918,22 +2940,12 @@ namespace Barotrauma
                         }
                         if (images.Length > 1)
                         {
-                            var variantButton = new GUIButton(new RectTransform(new Vector2(0.15f), slot.RectTransform, scaleBasis: ScaleBasis.BothWidth) { RelativeOffset = new Vector2(0.05f, 0.25f + 0.2f * variantIndex) },
-                                text: (variantIndex + 1).ToString(),
-                                style: null)
+                            var variantButton = CreateJobVariantButton(jobPrefab, variantIndex, images.Length, slot);
+                            variantButton.OnClicked = (btn, obj) =>
                             {
-                                Color = new Color(50, 50, 50, 200),
-                                HoverColor = Color.Gray * 0.75f,
-                                PressedColor = Color.Black * 0.75f,
-                                SelectedColor = new Color(45, 70, 100, 200),
-                                Selected = jobPrefab.Second == variantIndex,
-                                UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
-                                OnClicked = (btn, obj) =>
-                                {
-                                    btn.Parent.UserData = obj;
-                                    UpdateJobPreferences(listBox);
-                                    return false;
-                                }
+                                btn.Parent.UserData = obj;
+                                UpdateJobPreferences(listBox);
+                                return false;
                             };
                         }
                     }
@@ -2995,6 +3007,24 @@ namespace Barotrauma
                 GameMain.Config.JobPreferences = jobNamePreferences;
                 GameMain.Config.SaveNewPlayerConfig();
             }
+        }
+
+        private GUIButton CreateJobVariantButton(Pair<JobPrefab, int> jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
+        {
+            float relativeHeight = Math.Min(0.7f / variantCount, 0.2f);
+
+            var btn = new GUIButton(new RectTransform(new Vector2(relativeHeight), slot.RectTransform, scaleBasis: ScaleBasis.BothHeight)
+            { RelativeOffset = new Vector2(0.05f, 0.25f + relativeHeight * 1.05f * variantIndex) },
+            (variantIndex + 1).ToString(), style: null)
+            {
+                Color = new Color(50, 50, 50, 200),
+                HoverColor = Color.Gray * 0.75f,
+                PressedColor = Color.Black * 0.75f,
+                SelectedColor = new Color(45, 70, 100, 200),
+                Selected = jobPrefab.Second == variantIndex,
+                UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
+            };
+            return btn;
         }
 
         public Pair<string, string> FailedSelectedSub;

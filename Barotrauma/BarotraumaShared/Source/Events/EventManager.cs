@@ -124,12 +124,16 @@ namespace Barotrauma
                         {
                             throw new Exception($"Failed to load the character config file from {file.Path}!");
                         }
-                        foreach (var soundElement in doc.Root.GetChildElements("sound"))
+                        var rootElement = doc.Root;
+                        var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
+
+                        foreach (var soundElement in mainElement.GetChildElements("sound"))
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);
                         }
-                        string speciesName = doc.Root.GetAttributeString("speciesname", "");
-                        bool humanoid = doc.Root.GetAttributeBool("humanoid", false);
+
+                        string speciesName = mainElement.GetAttributeString("speciesname", null) ?? mainElement.GetAttributeString("name", string.Empty);
+                        bool humanoid = mainElement.GetAttributeBool("humanoid", false);
                         RagdollParams ragdollParams;
                         if (humanoid)
                         {

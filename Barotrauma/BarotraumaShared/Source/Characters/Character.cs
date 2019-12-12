@@ -1910,7 +1910,7 @@ namespace Barotrauma
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        FocusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                        FocusedCharacter = CanInteract ? FindCharacterAtPosition(mouseSimPos) : null;
                         float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
                         if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
                         {
@@ -1975,11 +1975,11 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged && CanInteract)
             {
                 SelectCharacter(FocusedCharacter);
             }
-            else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(FocusedCharacter, 160f, false))
+            else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteract && CanInteractWith(FocusedCharacter, 160f, false))
             {
                 if (FocusedCharacter == SelectedCharacter)
                 {

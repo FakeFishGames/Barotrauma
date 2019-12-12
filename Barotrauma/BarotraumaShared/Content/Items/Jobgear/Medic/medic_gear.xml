@@ -43,6 +43,7 @@
       <sprite name="Medic Uniform 1 Left Leg" texture="medic_legs_[GENDER]_1.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Uniform 1 Right Shoe" texture="medic_legs_[GENDER]_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Uniform 1 Left Shoe" texture="medic_legs_[GENDER]_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="gunshotwound" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
     <ItemContainer capacity="3">
       <Containable items="chem,medical" excludeditems="toolbox" />
@@ -69,6 +70,7 @@
       <sprite name="Medic Uniform 2 Left Leg" texture="medic_legs_[GENDER]_2.png" limb="LeftLeg" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Uniform 2 Right Shoe" texture="medic_legs_[GENDER]_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Medic Uniform 2 Left Shoe" texture="medic_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
+      <damagemodifier armorsector="0.0,360.0" afflictionidentifiers="gunshotwound" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
     <ItemContainer capacity="3">
       <Containable items="chem,medical" excludeditems="toolbox" />
