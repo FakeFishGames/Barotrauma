@@ -597,19 +597,12 @@ namespace Barotrauma
             currentDeviceTextBlock.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
 
-            GUIFrame voiceModeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y / 0.4f), voipSettings.RectTransform), style: null);
-            GUIRadioButtonGroup voiceModeRadioButtons = new GUIRadioButtonGroup();
-            for (int i = 0; i < 3; i++)
+            var voiceModeCount = Enum.GetNames(typeof(VoiceMode)).Length;
+            var voiceModeDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), elementCount: voiceModeCount);
+            for (int i = 0; i < voiceModeCount; i++)
             {
-                string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(
-                    new RectTransform(new Vector2(0.3f, 1.0f), voiceModeFrame.RectTransform) { RelativeOffset = new Vector2(i * 0.35f, 0.0f) },
-                    TextManager.Get(langStr),
-                    style: "GUIRadioButton")
-                {
-                    ToolTip = TextManager.Get(langStr + "ToolTip")
-                };
-                voiceModeRadioButtons.AddRadioButton(i, tick);
+                var voiceMode = "VoiceMode." + ((VoiceMode)i).ToString();
+                voiceModeDropDown.AddItem(TextManager.Get(voiceMode), userData: i, toolTip: TextManager.Get(voiceMode + "ToolTip"));
             }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
@@ -685,12 +678,12 @@ namespace Barotrauma
             };
             voiceKeyBox.OnSelected += KeyBoxSelected;
 
-            voiceModeRadioButtons.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
+            voiceModeDropDown.OnSelected = (GUIComponent selected, object userData) =>
             {
-                if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
                 try
                 {
-                    VoiceMode vMode = (VoiceMode)value;
+                    VoiceMode vMode = (VoiceMode)userData;
+                    if (vMode == VoiceSetting) { return true; }
                     VoiceSetting = vMode;
                     if (vMode != VoiceMode.Disabled)
                     {
@@ -702,7 +695,7 @@ namespace Barotrauma
                                 VoiceSetting = vMode = VoiceMode.Disabled;
                                 voiceActivityGroup.Visible = false;
                                 voiceInputContainer.Visible = false;
-                                return;
+                                return true;
                             }
                         }
                     }
@@ -726,11 +719,14 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace);
                     VoiceSetting = VoiceMode.Disabled;
                 }
+
+                return true;
             };
-            voiceModeRadioButtons.Selected = (int)VoiceSetting;
+
+            voiceModeDropDown.Select((int)VoiceSetting);
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
-                voiceModeRadioButtons.Enabled = false;
+                voiceModeDropDown.Enabled = false;
             }
 
             /// Controls tab -------------------------------------------------------------
