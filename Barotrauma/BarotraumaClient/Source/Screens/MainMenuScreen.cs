@@ -668,9 +668,9 @@ namespace Barotrauma
                     GameMain.MainMenuScreen.Select();
                     return;
                 }
-                var characterInfo = new CharacterInfo(
-                    Character.HumanSpeciesName,
-                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
+                var jobPrefab = JobPrefab.Get(jobIdentifiers[i]);
+                var variant = Rand.Range(0, jobPrefab.Variants);
+                var characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");

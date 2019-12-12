@@ -967,18 +967,32 @@
 <entitydescription.idcard>Обеспечивает ограниченный доступ в различные части подлодки.</entitydescription.idcard>
 <entityname.alienpistol>Инопланетный пистолет</entityname.alienpistol>
 <entitydescription.alienpistol>Пистолет, работающий на энергоблоках инопланетян.</entitydescription.alienpistol>
-<entityname.captainscap>Капитанская фуражка</entityname.captainscap>
-<entitydescription.captainscap>Символ безоговорочной власти капитана.</entitydescription.captainscap>
-<entityname.captainsuniform>Форма капитана</entityname.captainsuniform>
-<entitydescription.captainsuniform>В ней вы будете выглядеть, как настоящий командир.</entitydescription.captainsuniform>
+<entityname.captainscap1>Капитанская фуражка</entityname.captainscap1>
+<entitydescription.captainscap1>Символ безоговорочной власти капитана.</entitydescription.captainscap1>
+<entityname.captainscap2>Капитанская фуражка</entityname.captainscap2>
+<entitydescription.captainscap2>Символ безоговорочной власти капитана.</entitydescription.captainscap2>
+<entityname.captainscap3>Капитанская фуражка</entityname.captainscap3>
+<entitydescription.captainscap3>Символ безоговорочной власти капитана.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Форма капитана</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>В ней вы будете выглядеть, как настоящий командир.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Форма капитана</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>В ней вы будете выглядеть, как настоящий командир.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Форма капитана</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>В ней вы будете выглядеть, как настоящий командир.</entitydescription.captainsuniform3>
 <entityname.healthscanner>Информационный экран сканера здоровья</entityname.healthscanner>
 <entitydescription.healthscanner>Информационный экран, на котором отображается информация о жизненных показателях и состоянии находящихся поблизости людей.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Форма врача</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>В ней вы будете выглядеть как человек, способный оказать первую медицинскую помощь.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Оранжевый комбинезон</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Синий комбинезон</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Форма врача</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>В ней вы будете выглядеть как человек, способный оказать первую медицинскую помощь.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Форма врача</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>В ней вы будете выглядеть как человек, способный оказать первую медицинскую помощь.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Оранжевый комбинезон</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Оранжевый комбинезон</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Синий комбинезон</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Синий комбинезон</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>Жаропрочная ткань обеспечивает определенную защиту от огня.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Ящик с инструментами</entityname.toolbox>
 <entitydescription.toolbox>Переносной контейнер для хранения инструментов.</entitydescription.toolbox>
 <entityname.headset>Наушники</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Даже помощникам нужна одежда.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Одежда сторожа</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>В ней вы будете выглядеть как человек, способный предложить работу любому прохожему.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Форма сотрудника службы безопасности</entityname.securityuniform>
-<entitydescription.securityuniform>Уважай мою власть!</entitydescription.securityuniform>
+<entityname.securityuniform1>Форма сотрудника службы безопасности</entityname.securityuniform1>
+<entitydescription.securityuniform1>Уважай мою власть!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Форма сотрудника службы безопасности</entityname.securityuniform2>
+<entitydescription.securityuniform2>Уважай мою власть!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Форма сотрудника службы безопасности</entityname.securityuniform3>
+<entitydescription.securityuniform3>Уважай мою власть!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Бронежилет</entityname.bodyarmor>
 <entitydescription.bodyarmor>Хотя бронежилет и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Пуленепробиваемый шлем</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Хотя шлем и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Пуленепробиваемый шлем</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Хотя шлем и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Пуленепробиваемый шлем</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Хотя шлем и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Пуленепробиваемый шлем</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Хотя шлем и не способен защитить от большинства обитателей океана, он будет более чем полезен, если на борту подлодки окажется предатель.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Наручники</entityname.handcuffs>
 <entitydescription.handcuffs>Позволяют обездвиживать проблемных игроков.</entitydescription.handcuffs>
 <entityname.riotshield>Полицейский щит</entityname.riotshield>

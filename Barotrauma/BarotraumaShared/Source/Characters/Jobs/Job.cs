@@ -25,11 +25,6 @@ namespace Barotrauma
         {
             get { return prefab; }
         }
-
-        public XElement SpawnItems
-        {
-            get { return prefab.Items; }
-        }
         
         public List<Skill> Skills
         {
@@ -70,8 +65,13 @@ namespace Barotrauma
                     new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
             }
         }
-        
-        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced) => new Job(JobPrefab.Random(randSync));
+
+        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        {
+            var prefab = JobPrefab.Random(randSync);
+            var variant = Rand.Range(0, prefab.Variants, randSync);
+            return new Job(prefab, variant);
+        } 
 
         public float GetSkillLevel(string skillIdentifier)
         {
@@ -96,9 +96,9 @@ namespace Barotrauma
 
         public void GiveJobItems(Character character, WayPoint spawnPoint = null)
         {
-            if (SpawnItems == null) return;
+            if (!prefab.ItemSets.TryGetValue(Variant, out var spawnItems)) { return; }
 
-            foreach (XElement itemElement in SpawnItems.Elements())
+            foreach (XElement itemElement in spawnItems.GetChildElements("Item"))
             {
                 InitializeJobItem(character, itemElement, spawnPoint);
             }            

@@ -967,18 +967,32 @@
 <entitydescription.idcard>Denizaltı alanlarına sınırlı erişim sağlar.</entitydescription.idcard>
 <entityname.alienpistol>Yabancı Tabanca</entityname.alienpistol>
 <entitydescription.alienpistol>Yabancı güç hücrelerinin güç verdiği bir tabanca.</entitydescription.alienpistol>
-<entityname.captainscap>Kaptan Başlığı</entityname.captainscap>
-<entitydescription.captainscap>Kaptanın tartışılmaz otoritesinin bir göstergesi.</entitydescription.captainscap>
-<entityname.captainsuniform>Kaptan Üniforması</entityname.captainsuniform>
-<entitydescription.captainsuniform>Sorumluymuşsunuz gibi görünmenizi sağlar.</entitydescription.captainsuniform>
+<entityname.captainscap1>Kaptan Başlığı</entityname.captainscap1>
+<entitydescription.captainscap1>Kaptanın tartışılmaz otoritesinin bir göstergesi.</entitydescription.captainscap1>
+<entityname.captainscap2>Kaptan Başlığı</entityname.captainscap2>
+<entitydescription.captainscap2>Kaptanın tartışılmaz otoritesinin bir göstergesi.</entitydescription.captainscap2>
+<entityname.captainscap3>Kaptan Başlığı</entityname.captainscap3>
+<entitydescription.captainscap3>Kaptanın tartışılmaz otoritesinin bir göstergesi.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Kaptan Üniforması</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Sorumluymuşsunuz gibi görünmenizi sağlar.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Kaptan Üniforması</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Sorumluymuşsunuz gibi görünmenizi sağlar.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Kaptan Üniforması</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Sorumluymuşsunuz gibi görünmenizi sağlar.</entitydescription.captainsuniform3>
 <entityname.healthscanner>Sağlık Tarayıcı Göstergesi</entityname.healthscanner>
 <entitydescription.healthscanner>Yakındaki insanların yaşamsal belirtileri ve durumları hakkında bilgiler gösteren bir uyarı ekranı.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Doktor Üniforması</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Tıbbi acil durumlarda elverişliymişsiniz gibi gösterir.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Turuncu Tulum</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Mavi Tulum</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Doktor Üniforması</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Tıbbi acil durumlarda elverişliymişsiniz gibi gösterir.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Doktor Üniforması</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Tıbbi acil durumlarda elverişliymişsiniz gibi gösterir.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Turuncu Tulum</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Turuncu Tulum</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Mavi Tulum</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Mavi Tulum</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>Ateşe dayanıklı kumaş, yangına karşı bir miktar koruma sağlar.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Alet Çantası</entityname.toolbox>
 <entitydescription.toolbox>Aletleri depolamak için portatif bir konteyner</entitydescription.toolbox>
 <entityname.headset>Kulaklık</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Asistanın bile elbiseye ihtiyacı vardır.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Bekçi Kıyafetleri</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Her an yoldan geçenlere bir görev teklif edecekmişsiniz gibi görünmenizi sağlar.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Güvenlik Görevlisi Üniforması</entityname.securityuniform>
-<entitydescription.securityuniform>Otoriteme itaat et!</entitydescription.securityuniform>
+<entityname.securityuniform1>Güvenlik Görevlisi Üniforması</entityname.securityuniform1>
+<entitydescription.securityuniform1>Otoriteme itaat et!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Güvenlik Görevlisi Üniforması</entityname.securityuniform2>
+<entitydescription.securityuniform2>Otoriteme itaat et!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Güvenlik Görevlisi Üniforması</entityname.securityuniform3>
+<entitydescription.securityuniform3>Otoriteme itaat et!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Savaş Zırhı</entityname.bodyarmor>
 <entitydescription.bodyarmor>Savaş zırhı, okyanus altındaki canlıların çoğuna karşı yeterli koruma sağlamazken, gemide hainler olması durumunda son derece yararlı olabilir.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Balistik Kask</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Savaş zırhı, okyanus altındaki canlıların çoğuna karşı yeterli koruma sağlamazken, gemide hainler olması durumunda son derece yararlı olabilir.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Balistik Kask</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Savaş zırhı, okyanus altındaki canlıların çoğuna karşı yeterli koruma sağlamazken, gemide hainler olması durumunda son derece yararlı olabilir.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Balistik Kask</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Savaş zırhı, okyanus altındaki canlıların çoğuna karşı yeterli koruma sağlamazken, gemide hainler olması durumunda son derece yararlı olabilir.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Balistik Kask</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Savaş zırhı, okyanus altındaki canlıların çoğuna karşı yeterli koruma sağlamazken, gemide hainler olması durumunda son derece yararlı olabilir.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Kelepçe</entityname.handcuffs>
 <entitydescription.handcuffs>Sorunlu oyuncuları sınırlamak için kullanışlıdır.</entitydescription.handcuffs>
 <entityname.riotshield>Polis Kalkanı</entityname.riotshield>
