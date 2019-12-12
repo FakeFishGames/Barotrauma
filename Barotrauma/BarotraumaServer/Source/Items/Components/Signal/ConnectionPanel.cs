@@ -64,6 +64,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (!CheckCharacterSuccess(c.Character))
+            {
+                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
+                return;
+            }
+
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
