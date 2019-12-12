@@ -303,6 +303,12 @@ namespace Barotrauma.Lights
             set;
         }
 
+        public PhysicsBody ParentBody
+        {
+            get;
+            set;
+        }
+
         public DeformableSprite DeformableLightSprite
         {
             get;

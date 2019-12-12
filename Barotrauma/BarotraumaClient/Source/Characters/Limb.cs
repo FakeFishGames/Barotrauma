@@ -243,7 +243,11 @@ namespace Barotrauma
                         CreateDeformations(subElement);
                         break;
                     case "lightsource":
-                        LightSource = new LightSource(subElement);
+                        LightSource = new LightSource(subElement)
+                        {
+                            ParentBody = body,
+                            SpriteScale = Vector2.One * Scale * TextureScale
+                        };
                         InitialLightSourceColor = LightSource.Color;
                         break;
                 }
@@ -529,8 +533,6 @@ namespace Barotrauma
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (LightSource != null)
             {
-                LightSource.Position = body.DrawPosition;
-                if (LightSource.ParentSub != null) { LightSource.Position -= LightSource.ParentSub.DrawPosition; }
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
