@@ -208,11 +208,13 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
                 if (GameMain.Client != null)
                 {
                     ThrowError("Cannot change content packages while connected to server");
                     return;
                 }
+#endif
 
                 GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
             }));

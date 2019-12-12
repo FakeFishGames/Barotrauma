@@ -51,7 +51,7 @@ namespace Barotrauma
                 return null;
             }
 
-            filename = Path.GetFullPath(filename);            
+            filename = Path.GetFullPath(filename).CleanUpPath();
             Sound existingSound = null;
             if (roundSounds == null)
             {
