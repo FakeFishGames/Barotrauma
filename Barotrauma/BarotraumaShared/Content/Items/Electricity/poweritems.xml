@@ -22,9 +22,11 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
-      <RequiredSkill identifier="electrical" level="30" />
+      <RequiredSkill identifier="electrical" level="50" />
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power" displayname="connection.power" />
@@ -36,9 +38,6 @@
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="720" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
-      </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
@@ -57,18 +56,12 @@
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
       <RequiredSkill identifier="electrical" level="30" />
-      <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
-      </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power" displayname="connection.power" />
     </ConnectionPanel>
     <Repairable selectkey="Action" header="electricalrepairsheader" deteriorationspeed="0.1" mindeteriorationdelay="120" maxdeteriorationdelay="720" mindeteriorationcondition="0" AIRepairThreshold="50" fixDurationHighSkill="5" fixDurationLowSkill="10" msg="ItemMsgRepairScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.16" minsize="400,180" maxsize="480,216" anchor="Center" relativeoffset="0.0,0.27" style="ItemUI" />
       <RequiredSkill identifier="electrical" level="40" />
-      <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="50.0" stun="0" force="2.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
-      </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="1" scalemin="0.5" scalemax="1" mincondition="15.0" maxcondition="35.0" />
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="2" mincondition="0.0" maxcondition="15.0" />
@@ -84,11 +77,11 @@
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredSkill identifier="electrical" level="50" />
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false">
-          <Affliction identifier="burn" strength="15" />
-          <Affliction identifier="stun" strength="10" />
-        </Explosion>
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
       </StatusEffect>
       <requireditem items="Screwdriver" type="Equipped" />
       <output name="power_out" displayname="connection.powerout" />
@@ -121,11 +114,11 @@
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredSkill identifier="electrical" level="50" />
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false">
-          <Affliction identifier="burn" strength="15" />
-          <Affliction identifier="stun" strength="10" />
-        </Explosion>
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power_out" displayname="connection.powerout" />
@@ -149,11 +142,11 @@
     </PowerContainer>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredSkill identifier="electrical" level="50" />
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" force="5.0" shockwave="false" sparks="true" underwaterbubble="false">
-          <Affliction identifier="burn" strength="30" />
-          <Affliction identifier="stun" strength="10" />
-        </Explosion>
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <output name="power_out" displayname="connection.powerout" />
@@ -214,11 +207,11 @@
     </Powered>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredSkill identifier="electrical" level="50" />
       <StatusEffect type="OnFailure" target="Character">
-        <Explosion range="100.0" force="3.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false">
-          <Affliction identifier="burn" strength="15" />
-          <Affliction identifier="stun" strength="10" />
-        </Explosion>
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
       </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped" />
       <input name="power_in" displayname="connection.powerin" />
