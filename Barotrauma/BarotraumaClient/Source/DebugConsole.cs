@@ -1078,6 +1078,23 @@ namespace Barotrauma
                         }
                     }
 
+                    foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
+                    {
+                        string nameIdentifier = "afflictionname." + affliction.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
+                        }
+
+                        string descriptionIdentifier = "afflictiondescription." + affliction.Identifier;
+                        if (!tags[language].Contains(descriptionIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
+                            missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
                     //check missing entity names
                     foreach (MapEntityPrefab me in MapEntityPrefab.List)
                     {
