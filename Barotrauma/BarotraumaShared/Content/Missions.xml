@@ -245,7 +245,6 @@
     successmessage="The swarm has been terminated.">
     <monster character="tigerthresher" min="5" max="10"/>
     <monster character="bonethresher" count="2"/>
-    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
 
@@ -302,7 +301,6 @@
     sonarlabel="Hammerhead"
     successmessage="The Hammerhead has been killed."
     monsterfile="Hammerhead">
-    <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,768,256,256" color="214,50,48"/>
     
@@ -361,7 +359,6 @@
     sonarlabel="Hammerhead"
     successmessage="The Hammerhead has been killed."
     monsterfile="Hammerheadgold">
-    <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="512,768,256,256" color="214,50,48"/>
 
@@ -420,7 +417,6 @@
     successmessage="The swarm has been terminated."
     monsterfile="Crawler"
     monstercount="10" >   
-    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
     
@@ -479,7 +475,6 @@
     successmessage="The swarm has been terminated."
     monsterfile="Crawler"
     monstercount="18" >
-    <message header="Target terminated" text="The swarm is terminated. Navigate the submarine out of the cavern to claim the reward."/>
 
     <Icon texture="Content/UI/MissionIcons2.png" sourcerect="768,768,256,256" color="214,50,48"/>
 
