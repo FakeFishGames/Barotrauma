@@ -338,6 +338,7 @@ namespace Barotrauma
                     UpdateEscape(deltaTime);
                     break;
                 case AIState.Avoid:
+                case AIState.PassiveAggressive:
                     if (SelectedAiTarget == null || SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed)
                     {
                         State = AIState.Idle;
@@ -385,7 +386,14 @@ namespace Barotrauma
                         if (distance <= reactDistance)
                         {
                             run = distance < reactDistance / 2;
-                            UpdateEscape(deltaTime);
+                            if (State == AIState.PassiveAggressive)
+                            {
+                                UpdateAttack(deltaTime);
+                            }
+                            else
+                            {
+                                UpdateEscape(deltaTime);
+                            }
                         }
                         else
                         {
