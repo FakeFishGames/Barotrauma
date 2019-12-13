@@ -386,7 +386,7 @@ namespace Barotrauma
                         if (distance <= reactDistance)
                         {
                             run = distance < reactDistance / 2;
-                            if (State == AIState.PassiveAggressive)
+                            if (State == AIState.PassiveAggressive && run)
                             {
                                 UpdateAttack(deltaTime);
                             }
