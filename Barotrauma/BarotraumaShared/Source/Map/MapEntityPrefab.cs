@@ -180,7 +180,7 @@ namespace Barotrauma
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
                 
-                if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
             }
             else
             {
@@ -198,7 +198,7 @@ namespace Barotrauma
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
                 }
 
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     CreateInstance(newRect);
                     placePosition = Vector2.Zero;
@@ -208,7 +208,7 @@ namespace Barotrauma
                 newRect.Y = -newRect.Y;
             }
 
-            if (PlayerInput.RightButtonHeld())
+            if (PlayerInput.SecondaryMouseButtonHeld())
             {
                 placePosition = Vector2.Zero;
                 selected = null;
@@ -250,23 +250,22 @@ namespace Barotrauma
         /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
         public static MapEntityPrefab Find(string name, string identifier = null, bool showErrorMessages = true)
         {
-            if (name != null) name = name.ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                name = name.ToLowerInvariant();
+            }
             foreach (MapEntityPrefab prefab in List)
             {
-                if (identifier != null)
+                if (!string.IsNullOrWhiteSpace(identifier) && identifier == prefab.identifier)
                 {
-                    if (prefab.identifier != identifier)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(name)) return prefab;
-                    }
+                    return prefab;
                 }
-                if (!string.IsNullOrEmpty(name))
+                if (!string.IsNullOrWhiteSpace(name))
                 {
-                    if (prefab.name.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
+                    if (name == prefab.name.ToLowerInvariant() || (prefab.Aliases != null && prefab.Aliases.Any(a => name == a.ToLowerInvariant())))
+                    {
+                        return prefab;
+                    }
                 }
             }
 

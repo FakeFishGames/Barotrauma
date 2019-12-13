@@ -219,7 +219,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 try
@@ -1410,7 +1410,8 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job);
+                var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
+                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1446,11 +1447,11 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
 
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            string itemNameOrId = args[0].ToLowerInvariant();
+            if (!(MapEntityPrefab.Find(itemNameOrId, identifier: itemNameOrId, showErrorMessages: false) is ItemPrefab itemPrefab))
             {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName) && me is ItemPrefab);
+                errorMsg = "Item \"" + itemNameOrId + "\" not found!";
+                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";

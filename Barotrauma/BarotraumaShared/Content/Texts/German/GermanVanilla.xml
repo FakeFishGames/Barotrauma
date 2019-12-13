@@ -966,18 +966,32 @@
 <entitydescription.idcard>Ermöglicht beschränkten Zugang zu Bereichen des U-Bootes.</entitydescription.idcard>
 <entityname.alienpistol>Außerirdische Pistole</entityname.alienpistol>
 <entitydescription.alienpistol>Eine Pistole, die mit außerirdischen Energiezellen betrieben wird.</entitydescription.alienpistol>
-<entityname.captainscap>Kapitänsmütze</entityname.captainscap>
-<entitydescription.captainscap>Ein Zeichen der uneingeschränkten Autorität des Kapitäns.</entitydescription.captainscap>
-<entityname.captainsuniform>Kapitäns-Uniform</entityname.captainsuniform>
-<entitydescription.captainsuniform>Lässt dich aussehen, als hättest du hier was zu sagen.</entitydescription.captainsuniform>
+<entityname.captainscap1>Kapitänsmütze</entityname.captainscap1>
+<entitydescription.captainscap1>Ein Zeichen der uneingeschränkten Autorität des Kapitäns.</entitydescription.captainscap1>
+<entityname.captainscap2>Kapitänsmütze</entityname.captainscap2>
+<entitydescription.captainscap2>Ein Zeichen der uneingeschränkten Autorität des Kapitäns.</entitydescription.captainscap2>
+<entityname.captainscap3>Kapitänsmütze</entityname.captainscap3>
+<entitydescription.captainscap3>Ein Zeichen der uneingeschränkten Autorität des Kapitäns.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Kapitäns-Uniform</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Lässt dich aussehen, als hättest du hier was zu sagen.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Kapitäns-Uniform</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Lässt dich aussehen, als hättest du hier was zu sagen.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Kapitäns-Uniform</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Lässt dich aussehen, als hättest du hier was zu sagen.</entitydescription.captainsuniform3>
 <entityname.healthscanner>Medi-Scanner-HUD</entityname.healthscanner>
 <entitydescription.healthscanner>Ein Head-up-Display, das Informationen über die Vitalparameter und den Status von Menschen in der Nähe anzeigt.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Arzt-Uniform</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Lässt dich aussehen, als wärst du bei einem medizinischen Notfall nicht ganz nutzlos.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Oranger Einteiler</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Blauer Einteiler</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Arzt-Uniform</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Lässt dich aussehen, als wärst du bei einem medizinischen Notfall nicht ganz nutzlos.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Arzt-Uniform</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Lässt dich aussehen, als wärst du bei einem medizinischen Notfall nicht ganz nutzlos.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Oranger Einteiler</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Oranger Einteiler</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Blauer Einteiler</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Blauer Einteiler</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>Der feuerfeste Stoff bietet etwas Schutz bei Bränden.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Werkzeugkasten</entityname.toolbox>
 <entitydescription.toolbox>Ein tragbarer Behälter für Werkzeuge.</entitydescription.toolbox>
 <entityname.headset>Headset</entityname.headset>
@@ -990,12 +1004,20 @@
 <entitydescription.assistantclothes>Selbst ein Assistent braucht Bekleidung.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Wachen-Bekleidung</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Lässt dich aussehen, als hättest du für jeden, der vorbeikommt eine Mission parat.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Sicherheitsoffizier-Bekleidung</entityname.securityuniform>
-<entitydescription.securityuniform>Gehorche meiner Autorität!</entitydescription.securityuniform>
+<entityname.securityuniform1>Sicherheitsoffizier-Bekleidung</entityname.securityuniform1>
+<entitydescription.securityuniform1>Gehorche meiner Autorität!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Sicherheitsoffizier-Bekleidung</entityname.securityuniform2>
+<entitydescription.securityuniform2>Gehorche meiner Autorität!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Sicherheitsoffizier-Bekleidung</entityname.securityuniform3>
+<entitydescription.securityuniform3>Gehorche meiner Autorität!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Schutzweste</entityname.bodyarmor>
 <entitydescription.bodyarmor>Zwar bietet die Schutzweste keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, sie kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Ballistischer Helm</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Zwar bietet der Helm keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, er kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Ballistischer Helm</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Zwar bietet der Helm keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, er kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Ballistischer Helm</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Zwar bietet der Helm keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, er kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Ballistischer Helm</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Zwar bietet der Helm keinen ausreichenden Schutz vor den meisten Bewohnern unter der Wasseroberfläche, er kann aber sehr nützlich sein, wenn sich Verräter an Bord befinden.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Handschellen</entityname.handcuffs>
 <entitydescription.handcuffs>Nützlich zur Fixierung von Problemspielern.</entitydescription.handcuffs>
 <entityname.riotshield>Schutzschild</entityname.riotshield>

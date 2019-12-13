@@ -454,13 +454,13 @@ namespace Barotrauma
             if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || GUI.IsMouseOn(this)))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.PrimaryMouseButtonDown())
                 {
                     Select();
                 }
                 else
                 {
-                    isSelecting = PlayerInput.LeftButtonHeld();
+                    isSelecting = PlayerInput.PrimaryMouseButtonHeld();
                 }
                 if (PlayerInput.DoubleClicked())
                 {

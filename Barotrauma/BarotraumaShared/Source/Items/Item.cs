@@ -1749,7 +1749,7 @@ namespace Barotrauma
                 //LMB is used to manipulate wires, so using E to select connection panels is much easier
                 if (Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode)
                 {
-                    pickHit = selectHit = GameMain.Config.KeyBind(InputType.Use).MouseButton == null ?
+                    pickHit = selectHit = GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None ?
                         picker.IsKeyHit(InputType.Use) :
                         picker.IsKeyHit(InputType.Select);
                 }

@@ -398,14 +398,14 @@ namespace Barotrauma.Items.Components
             {
                 steering.SteerRadius = useDirectionalPing && pingDragDirection != null ?
                     -1.0f :
-                    PlayerInput.LeftButtonDown() || !PlayerInput.LeftButtonHeld() ?
+                    PlayerInput.PrimaryMouseButtonDown() || !PlayerInput.PrimaryMouseButtonHeld() ?
                         (float?)((sonarView.Rect.Width / 2) - (directionalPingButton[0].size.X * sonarView.Rect.Width / screenBackground.size.X)) :
                         null;                
             }
 
-            if (useDirectionalPing && PlayerInput.LeftButtonHeld())
+            if (useDirectionalPing && PlayerInput.PrimaryMouseButtonHeld())
             {
-                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.LeftButtonDown()) || pingDragDirection != null)
+                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.PrimaryMouseButtonDown()) || pingDragDirection != null)
                 {
                     Vector2 newDragDir = Vector2.Normalize(PlayerInput.MousePosition - sonarView.Rect.Center.ToVector2());
                     if (pingDragDirection == null && !MouseInDirectionalPingRing(sonarView.Rect, true))

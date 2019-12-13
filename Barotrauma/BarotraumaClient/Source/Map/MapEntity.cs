@@ -300,7 +300,7 @@ namespace Barotrauma
             //started moving selected entities
             if (startMovingPos != Vector2.Zero)
             {
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     //mouse released -> move the entities to the new position of the mouse
 
@@ -361,7 +361,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     if (PlayerInput.KeyDown(Keys.LeftControl) ||
                         PlayerInput.KeyDown(Keys.RightControl))
@@ -430,7 +430,7 @@ namespace Barotrauma
             //default, not doing anything specific yet
             else
             {
-                if (PlayerInput.LeftButtonHeld() &&
+                if (PlayerInput.PrimaryMouseButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space) &&
                     (highlightedListBox == null || (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn))))
                 {
@@ -799,7 +799,7 @@ namespace Barotrauma
 
                     bool highlighted = Vector2.Distance(PlayerInput.MousePosition, handlePos) < 5.0f;
 
-                    if (highlighted && PlayerInput.LeftButtonDown())
+                    if (highlighted && PlayerInput.PrimaryMouseButtonDown())
                     {
                         selectionPos = Vector2.Zero;
                         resizeDirX = x;
@@ -852,7 +852,7 @@ namespace Barotrauma
                     Rect = new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y);
                 }
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     rectMemento.Store(Rect);
                     resizing = false;

@@ -460,8 +460,8 @@ namespace Barotrauma
             if (!Linkable) { return; }
 
             if (!PlayerInput.KeyDown(Keys.Space)) { return; }
-            bool lClick = PlayerInput.LeftButtonClicked();
-            bool rClick = PlayerInput.RightButtonClicked();
+            bool lClick = PlayerInput.PrimaryMouseButtonClicked();
+            bool rClick = PlayerInput.SecondaryMouseButtonClicked();
             if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);

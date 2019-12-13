@@ -21,17 +21,32 @@ namespace Barotrauma
         Shoot
     }
 
+    public enum MouseButton
+    {
+        None = -1,
+        LeftMouse = 0,
+        RightMouse = 1,
+        MiddleMouse = 2,
+        MouseButton4 = 3,
+        MouseButton5 = 4,
+        MouseWheelUp = 5,
+        MouseWheelDown = 6,
+        PrimaryMouse,
+        SecondaryMouse
+    }
+
     public class KeyOrMouse
     {
         public Keys Key { get; private set; }
-        public int? MouseButton { get; private set; }
+        public MouseButton MouseButton { get; private set; }
 
         public KeyOrMouse(Keys keyBinding)
         {
             this.Key = keyBinding;
+            this.MouseButton = MouseButton.None;
         }
 
-        public KeyOrMouse(int mouseButton)
+        public KeyOrMouse(MouseButton mouseButton)
         {
             this.MouseButton = mouseButton;
         }
@@ -40,21 +55,25 @@ namespace Barotrauma
         {
             switch (MouseButton)
             {
-                case null:
+                case MouseButton.None:
                     return PlayerInput.KeyDown(Key);
-                case 0:
+                case MouseButton.PrimaryMouse:
+                    return PlayerInput.PrimaryMouseButtonHeld();
+                case MouseButton.SecondaryMouse:
+                    return PlayerInput.SecondaryMouseButtonHeld();
+                case MouseButton.LeftMouse:
                     return PlayerInput.LeftButtonHeld();
-                case 1:
+                case MouseButton.RightMouse:
                     return PlayerInput.RightButtonHeld();
-                case 2:
+                case MouseButton.MiddleMouse:
                     return PlayerInput.MidButtonHeld();
-                case 3:
+                case MouseButton.MouseButton4:
                     return PlayerInput.Mouse4ButtonHeld();
-                case 4:
+                case MouseButton.MouseButton5:
                     return PlayerInput.Mouse5ButtonHeld();
-                case 5: // No real way of "holding" a mouse wheel key, but then again it makes no sense to bind the key to this kind of task.
+                case MouseButton.MouseWheelUp: // No real way of "holding" a mouse wheel key, but then again it makes no sense to bind the key to this kind of task.
                     return PlayerInput.MouseWheelUpClicked();
-                case 6:
+                case MouseButton.MouseWheelDown:
                     return PlayerInput.MouseWheelDownClicked();
             }
 
@@ -65,21 +84,25 @@ namespace Barotrauma
         {
             switch (MouseButton)
             {
-                case null:
+                case MouseButton.None:
                     return PlayerInput.KeyHit(Key);
-                case 0:
+                case MouseButton.PrimaryMouse:
+                    return PlayerInput.PrimaryMouseButtonClicked();
+                case MouseButton.SecondaryMouse:
+                    return PlayerInput.SecondaryMouseButtonClicked();
+                case MouseButton.LeftMouse:
                     return PlayerInput.LeftButtonClicked();
-                case 1:
+                case MouseButton.RightMouse:
                     return PlayerInput.RightButtonClicked();
-                case 2:
+                case MouseButton.MiddleMouse:
                     return PlayerInput.MidButtonClicked();
-                case 3:
+                case MouseButton.MouseButton4:
                     return PlayerInput.Mouse4ButtonClicked();
-                case 4:
+                case MouseButton.MouseButton5:
                     return PlayerInput.Mouse5ButtonClicked();
-                case 5:
+                case MouseButton.MouseWheelUp:
                     return PlayerInput.MouseWheelUpClicked();
-                case 6:
+                case MouseButton.MouseWheelDown:
                     return PlayerInput.MouseWheelDownClicked();
             }
 
@@ -90,9 +113,9 @@ namespace Barotrauma
         {
             if (obj is KeyOrMouse keyOrMouse)
             {
-                if (MouseButton.HasValue)
+                if (MouseButton != MouseButton.None)
                 {
-                    return keyOrMouse.MouseButton.HasValue && keyOrMouse.MouseButton.Value == MouseButton.Value;
+                    return keyOrMouse.MouseButton == MouseButton;
                 }
                 else
                 {
@@ -109,32 +132,18 @@ namespace Barotrauma
         {
             switch (MouseButton)
             {
-                case null:
+                case MouseButton.None:
                     return Key.ToString();
-                case 0:
-                    return "Mouse1";
-                case 1:
-                    return "Mouse2";
-                case 2:
-                    return "Mouse3";
-                case 3:
-                    return "Mouse4";
-                case 4:
-                    return "Mouse5";
-                case 5:
-                    return "MouseWheelUp";
-                case 6:
-                    return "MouseWheelDown";
+                default:
+                    return MouseButton.ToString();
             }
-
-            return "None";
         }
 
         public override int GetHashCode()
         {
             var hashCode = int.MinValue;
             hashCode = hashCode * -1521134295 + Key.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(MouseButton);
+            hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode((int)MouseButton);
             return hashCode;
         }
     }

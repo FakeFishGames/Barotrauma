@@ -290,6 +290,8 @@ namespace Barotrauma.Items.Components
         {
             //we've already received this signal
             if (lastPowerProbeRecipients.Contains(this)) { return; }
+            if (item.Condition <= 0.0f) { return; }
+
             lastPowerProbeRecipients.Add(this);
 
             if (power < 0.0f)

@@ -121,13 +121,16 @@ namespace Barotrauma.Items.Components
                 }
                 panel.TriggerRewiringSound();
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    if (draggingConnected.Connections[0]?.ConnectionPanel == panel ||
-                        draggingConnected.Connections[1]?.ConnectionPanel == panel)
+                    if (GameMain.NetworkMember != null || panel.CheckCharacterSuccess(character))
                     {
-                        draggingConnected.RemoveConnection(panel.Item);
-                        panel.DisconnectedWires.Add(draggingConnected);
+                        if (draggingConnected.Connections[0]?.ConnectionPanel == panel ||
+                            draggingConnected.Connections[1]?.ConnectionPanel == panel)
+                        {
+                            draggingConnected.RemoveConnection(panel.Item);
+                            panel.DisconnectedWires.Add(draggingConnected);
+                        }
                     }
 
                     if (GameMain.Client != null)
@@ -196,20 +199,24 @@ namespace Barotrauma.Items.Components
             {
                 connectionSpriteHighlight.Draw(spriteBatch, position);
 
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    //find an empty cell for the new connection
-                    int index = FindEmptyIndex();
-                    if (index > -1 && !Wires.Contains(draggingConnected))
+                    if (GameMain.NetworkMember != null || panel.CheckCharacterSuccess(Character.Controlled))
                     {
-                        bool alreadyConnected = draggingConnected.IsConnectedTo(panel.Item);
-                        draggingConnected.RemoveConnection(panel.Item);
-                        if (draggingConnected.Connect(this, !alreadyConnected, true))
+                        //find an empty cell for the new connection
+                        int index = FindEmptyIndex();
+                        if (index > -1 && !Wires.Contains(draggingConnected))
                         {
-                            var otherConnection = draggingConnected.OtherConnection(this);
-                            SetWire(index, draggingConnected);
+                            bool alreadyConnected = draggingConnected.IsConnectedTo(panel.Item);
+                            draggingConnected.RemoveConnection(panel.Item);
+                            if (draggingConnected.Connect(this, !alreadyConnected, true))
+                            {
+                                var otherConnection = draggingConnected.OtherConnection(this);
+                                SetWire(index, draggingConnected);
+                            }
                         }
                     }
+
                     if (GameMain.Client != null)
                     {
                         panel.Item.CreateClientEvent(panel);
@@ -318,7 +325,7 @@ namespace Barotrauma.Items.Components
                     if (allowRewiring && !wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
-                        if (PlayerInput.LeftButtonHeld()) { draggingConnected = wire; }
+                        if (PlayerInput.PrimaryMouseButtonHeld()) { draggingConnected = wire; }
                     }
                 }
             }

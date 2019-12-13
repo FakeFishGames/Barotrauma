@@ -631,7 +631,7 @@ namespace Barotrauma
                     TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
                     (GameMain.Config.Language == "English" ? "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
 
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     slot.QuickUseTimer = Math.Max(0.1f, slot.QuickUseTimer + deltaTime);
                     if (slot.QuickUseTimer >= 1.0f)
@@ -647,8 +647,8 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     QuickUseItem(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
                 }

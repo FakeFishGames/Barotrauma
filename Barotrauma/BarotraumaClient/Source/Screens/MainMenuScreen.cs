@@ -668,9 +668,9 @@ namespace Barotrauma
                     GameMain.MainMenuScreen.Select();
                     return;
                 }
-                var characterInfo = new CharacterInfo(
-                    Character.HumanSpeciesName,
-                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
+                var jobPrefab = JobPrefab.Get(jobIdentifiers[i]);
+                var variant = Rand.Range(0, jobPrefab.Variants);
+                var characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
@@ -975,7 +975,7 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
                             GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
