@@ -405,6 +405,121 @@
     <message header="Target terminated" text="The Hammerhead is dead. Navigate the submarine out of the cavern to claim the reward."/>
 
   </MonsterMission>
+
+  <MonsterMission
+    name="Killing a Matriarch"
+    identifier="killmatriarch1"
+    type="Monster"
+    description="Eliminate the Hammerhead Matriarch and her minions."
+    commonness="20"
+    reward="6000"
+    sonarlabel="Matriarch"
+    successmessage="The Matriarch has been eliminated.">
+    <monster character="hammerheadmatriarch" count="1"/>
+    <monster character="hammerhead" count="2"/>
+    <message header="Target terminated" text="The Matriarch is eliminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    <LocationType from="City" to="Lair"/>
+
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    <LocationType from="Military" to="Lair"/>
+
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/>
+
+  </MonsterMission>
+
+  <MonsterMission
+    name="Killing a Matriarch"
+    identifier="killmatriarch2"
+    type="Monster"
+    description="Eliminate the Hammerhead Matriarch and her minions."
+    commonness="10"
+    reward="10000"
+    sonarlabel="Matriarch"
+    successmessage="The Matriarch has been eliminated.">
+    <monster character="hammerheadmatriarch" count="1"/>
+    <monster character="hammerhead" min="3" max="5"/>
+    <monster character="hammerheadgold" min="0" max="1"/>
+    <message header="Target terminated" text="The Matriarch is eliminated. Navigate the submarine out of the cavern to claim the reward."/>
+
+    <Icon texture="Content/UI/MissionIcons2.png" sourcerect="256,768,256,256" color="214,50,48"/>
+
+    <LocationType from="City" to="None"/>
+    <LocationType from="City" to="City"/>
+    <LocationType from="City" to="Outpost"/>
+    <LocationType from="City" to="Military"/>
+    <LocationType from="City" to="Research"/>
+    <LocationType from="City" to="Mine"/>
+    <LocationType from="City" to="Lair"/>
+
+    <LocationType from="Outpost" to="None"/>
+    <LocationType from="Outpost" to="City"/>
+    <LocationType from="Outpost" to="Outpost"/>
+    <LocationType from="Outpost" to="Military"/>
+    <LocationType from="Outpost" to="Research"/>
+    <LocationType from="Outpost" to="Mine"/>
+    <LocationType from="Outpost" to="Lair"/>
+
+    <LocationType from="Military" to="None"/>
+    <LocationType from="Military" to="City"/>
+    <LocationType from="Military" to="Outpost"/>
+    <LocationType from="Military" to="Military"/>
+    <LocationType from="Military" to="Research"/>
+    <LocationType from="Military" to="Mine"/>
+    <LocationType from="Military" to="Lair"/>
+
+    <LocationType from="Research" to="None"/>
+    <LocationType from="Research" to="City"/>
+    <LocationType from="Research" to="Outpost"/>
+    <LocationType from="Research" to="Military"/>
+    <LocationType from="Research" to="Research"/>
+    <LocationType from="Research" to="Mine"/>
+    <LocationType from="Research" to="Lair"/>
+
+    <LocationType from="Mine" to="None"/>
+    <LocationType from="Mine" to="City"/>
+    <LocationType from="Mine" to="Outpost"/>
+    <LocationType from="Mine" to="Military"/>
+    <LocationType from="Mine" to="Research"/>
+    <LocationType from="Mine" to="Mine"/>
+    <LocationType from="Mine" to="Lair"/>
+
+  </MonsterMission>
   
   <MonsterMission
     name="Terminate a Swarm"
