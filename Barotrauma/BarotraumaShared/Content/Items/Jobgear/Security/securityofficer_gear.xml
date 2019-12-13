@@ -22,7 +22,7 @@
       <sprite name="Security Officer's Uniform 1 Right Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform 1 Left Shoe" texture="securityofficer_legs_[GENDER]_1.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier afflictionidentifiers="internaldamage,blunttrauma,lacerations,gunshotwound" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
-      <damagemodifier afflictionidentifiers="rendingwound" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
@@ -48,7 +48,7 @@
       <sprite name="Security Officer's Uniform 2 Right Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform 2 Left Shoe" texture="securityofficer_legs_[GENDER]_2.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier afflictionidentifiers="internaldamage,blunttrauma,lacerations,gunshotwound" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
-      <damagemodifier afflictionidentifiers="rendingwound" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
@@ -74,7 +74,7 @@
       <sprite name="Security Officer's Uniform 3 Right Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="RightFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <sprite name="Security Officer's Uniform 3 Left Shoe" texture="securityofficer_legs_[GENDER]_3.png" limb="LeftFoot" hidelimb="true" inherittexturescale="true" inheritorigin="true" inheritsourcerect="true" />
       <damagemodifier afflictionidentifiers="internaldamage,blunttrauma,lacerations,gunshotwound" armorsector="0.0,360.0" damagemultiplier="0.8" bleedingmultiplier="0.3" damagesound="LimbArmor" deflectprojectiles="true" />
-      <damagemodifier afflictionidentifiers="rendingwound" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
+      <damagemodifier afflictionidentifiers="bitewounds" armorsector="0.0,360.0" damagemultiplier="0.3" bleedingmultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="bleeding" damagemultiplier="0.9" damagesound="LimbArmor" deflectprojectiles="true" />
       <damagemodifier armorsector="0.0,360.0" afflictiontypes="burn" damagemultiplier="0.7" damagesound="LimbArmor" deflectprojectiles="true" />
     </Wearable>
