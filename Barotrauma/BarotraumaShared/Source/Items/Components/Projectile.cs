@@ -338,22 +338,19 @@ namespace Barotrauma.Items.Components
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 //ignore sensors and items
-                if (fixture?.Body == null || fixture.IsSensor) return -1;
-                if (fixture.UserData is Item) return -1;
+                if (fixture?.Body == null || fixture.IsSensor) { return -1; }
+                if (fixture.UserData is Item) { return -1; }
 
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionItemBlocking))
-                { 
-                    return -1; 
-                }
+                System.Diagnostics.Debug.Assert(
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) ||
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionWall) ||
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionLevel),
+                    "Projectile raycast shouldn't have hit a fixture with the collision category " + fixture.CollisionCategories);
 
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return hits.Count < 25 ? 1 : 0;
-            }, rayStart, rayEnd);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
 
             return hits;
         }

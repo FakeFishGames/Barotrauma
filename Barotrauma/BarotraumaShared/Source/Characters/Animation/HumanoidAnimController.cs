@@ -151,7 +151,7 @@ namespace Barotrauma
 
         private bool aiming;
 
-        private float movementLerp;
+        private readonly float movementLerp;
 
         private float cprAnimTimer;
         private float cprPump;
@@ -620,8 +620,7 @@ namespace Barotrauma
                 waist.PullJointEnabled = true;
             }
             
-            float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f), ignoreStairs: Stairs == null);
-            bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
+            bool onSlope = Math.Abs(movement.X) > 0.01f && Math.Abs(floorNormal.X) > 0.1f && Math.Sign(floorNormal.X) != Math.Sign(movement.X);
 
             if (Stairs != null || onSlope)
             {
@@ -785,7 +784,7 @@ namespace Barotrauma
 
                     if (Stairs == null)
                     {
-                        footPos.Y = Math.Max(Math.Min(floorPos, footPos.Y + 0.5f), footPos.Y);
+                        footPos.Y = Math.Max(Math.Min(FloorY, footPos.Y + 0.5f), footPos.Y);
                     }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
