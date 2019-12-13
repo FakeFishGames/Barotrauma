@@ -555,7 +555,7 @@ namespace Barotrauma
             else
             {
                 deviceList.AddItem(TextManager.Get("VoipNoDevices") ?? "N/A", null);
-                (deviceList.Children.First(component => component is GUIButton) as GUIButton).TextColor = Color.Red;
+                deviceList.ButtonTextColor = Color.Red;
                 deviceList.ButtonEnabled = false;
                 deviceList.Select(0);
             }
@@ -735,7 +735,9 @@ namespace Barotrauma
             voiceModeDropDown.Select((int)VoiceSetting);
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
-                voiceModeDropDown.Enabled = false;
+                voiceModeDropDown.ButtonEnabled = false;
+                voiceModeDropDown.Color *= 0.5f;
+                voiceModeDropDown.ButtonTextColor *= 0.5f;
             }
 
             /// Controls tab -------------------------------------------------------------
