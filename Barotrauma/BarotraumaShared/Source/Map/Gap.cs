@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,8 @@ namespace Barotrauma
 
         public static bool ShowGaps = true;
 
-        const float OutsideColliderRaycastInterval = 0.1f;
+        const float OutsideColliderRaycastIntervalLowPrio = 1.5f;
+        const float OutsideColliderRaycastIntervalHighPrio = 0.1f;
 
         public bool IsHorizontal
         {
@@ -43,10 +45,10 @@ namespace Barotrauma
         //can ambient light get through the gap even if it's not open
         public bool PassAmbientLight;
         
-        //position of a collider outside the gap (for example an ice wall next to the sub)
+
+        //a collider outside the gap (for example an ice wall next to the sub)
         //used by ragdolls to prevent them from ending up inside colliders when teleporting out of the sub
-        private Vector2? outsideColliderPos;
-        private Vector2? outsideColliderNormal;
+        private Body outsideCollisionBlocker;
         private float outsideColliderRaycastTimer;
 
         public float Open
@@ -110,7 +112,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
-            : base (MapEntityPrefab.Find(null, "gap"), submarine)
+            : base(MapEntityPrefab.Find(null, "gap"), submarine)
         {
             rect = newRect;
 
@@ -121,9 +123,14 @@ namespace Barotrauma
             open = 1.0f;
 
             FindHulls();
-
             GapList.Add(this);
             InsertToList();
+
+            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f);
+            outsideCollisionBlocker.BodyType = BodyType.Static;
+            outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
+            outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
+            outsideCollisionBlocker.Enabled = false;
 
             DebugConsole.Log("Created gap (" + ID + ")");
         }
@@ -576,30 +583,24 @@ namespace Barotrauma
             }
         }
 
-        public bool GetOutsideCollider(out Vector2? simPosition, out Vector2? normal)
+        public bool RefreshOutsideCollider()
         {
-            simPosition = null;
-            normal = null;
-
             if (IsRoomToRoom || Submarine == null || open <= 0.0f || linkedTo.Count == 0 || !(linkedTo[0] is Hull)) return false;
 
             if (outsideColliderRaycastTimer <= 0.0f)
             {
                 UpdateOutsideColliderPos((Hull)linkedTo[0]);
-                outsideColliderRaycastTimer = OutsideColliderRaycastInterval;
+                outsideColliderRaycastTimer = outsideCollisionBlocker.Enabled ?
+                    OutsideColliderRaycastIntervalHighPrio :
+                    OutsideColliderRaycastIntervalLowPrio;
             }
 
-            simPosition = outsideColliderPos;
-            normal = outsideColliderNormal;
-            return simPosition != null;
+            return outsideCollisionBlocker.Enabled;
         }
 
         private void UpdateOutsideColliderPos(Hull hull)
         {
-            outsideColliderNormal = null;
-            outsideColliderPos = null;
-
-            if (Submarine == null) { return; }
+            if (Submarine == null || IsRoomToRoom) { return; }
 
             Vector2 rayDir;
             if (IsHorizontal)
@@ -619,8 +620,14 @@ namespace Barotrauma
             {
                 //if the ray hit the body of the submarine itself (for example, if there's 2 layers of walls) we can ignore it
                 if (blockingBody.UserData == Submarine) { return; }
-                outsideColliderNormal = -rayDir;
-                outsideColliderPos = Submarine.LastPickedPosition;
+                outsideCollisionBlocker.Enabled = true;
+                Vector2 colliderPos = Submarine.LastPickedPosition - Submarine.SimPosition;
+                float colliderRotation = MathUtils.VectorToAngle(rayDir) - MathHelper.PiOver2;
+                outsideCollisionBlocker.SetTransformIgnoreContacts(ref colliderPos, colliderRotation);
+            }
+            else
+            {
+                outsideCollisionBlocker.Enabled = false;
             }
         }
 
@@ -698,6 +705,12 @@ namespace Barotrauma
             foreach (Hull hull in Hull.hullList)
             {
                 hull.ConnectedGaps.Remove(this);
+            }
+
+            if (outsideCollisionBlocker != null)
+            {
+                GameMain.World.Remove(outsideCollisionBlocker);
+                outsideCollisionBlocker = null;
             }
         }
 

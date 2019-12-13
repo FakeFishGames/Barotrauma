@@ -500,16 +500,6 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
             }
 
-            if (outsideCollisionBlocker.Enabled && currentHull?.Submarine != null)
-            {
-                var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;
-                Vector2 startPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex1)) + currentHull.Submarine.Position;
-                Vector2 endPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex2)) + currentHull.Submarine.Position;                
-                startPos.Y = -startPos.Y;
-                endPos.Y = -endPos.Y;
-                GUI.DrawLine(spriteBatch, startPos, endPos, Color.Gray, 0, 5);
-            }
-
             if (character.MemState.Count > 1)
             {
                 Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
