@@ -45,7 +45,6 @@ namespace Barotrauma
         public override bool CanBeCompleted => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowSubObjectiveSorting => true;
-        public override bool ReportFailures => false;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 

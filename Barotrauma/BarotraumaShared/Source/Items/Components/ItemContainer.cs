@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
 
         public bool CanBeContained(Item item)
         {
-            if (ContainableItems.Count == 0) return true;
+            if (ContainableItems.Count == 0) { return true; }
             return (ContainableItems.Find(x => x.MatchesItem(item)) != null);
         }
 
@@ -161,6 +161,11 @@ namespace Barotrauma.Items.Components
                 item.body.FarseerBody.Awake)
             {
                 item.SetContainedItemPositions();
+            }
+            else if (itemsWithStatusEffects.Count == 0)
+            {
+                IsActive = false;
+                return;
             }
 
             foreach (Pair<Item, StatusEffect> itemAndEffect in itemsWithStatusEffects)
@@ -218,6 +223,8 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            IsActive = true;
+
             return (picker != null);
         }
 
@@ -235,6 +242,16 @@ namespace Barotrauma.Items.Components
             }
 
             return false;
+        }
+
+        public override void Drop(Character dropper)
+        {
+            IsActive = true;
+        }
+
+        public override void Equip(Character character)
+        {
+            IsActive = true;
         }
 
         public void SetContainedItemPositions()

@@ -170,7 +170,7 @@ namespace Barotrauma
             if (inSuitableSlot && !inWrongSlot) return true;
 
             //try to place the item in a LimbSlot.Any slot if that's allowed
-            if (allowedSlots.Contains(InvSlotType.Any))
+            if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
             {
                 int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot);
                 if (freeIndex > -1)
@@ -188,7 +188,7 @@ namespace Barotrauma
                 bool free = true;
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] != null && Items[i] != item)
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && Items[i] != null && Items[i] != item)
                     {
 #if CLIENT
                         if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
@@ -210,7 +210,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && Items[i] == null)
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && Items[i] == null)
                     {
 #if CLIENT
                         if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }

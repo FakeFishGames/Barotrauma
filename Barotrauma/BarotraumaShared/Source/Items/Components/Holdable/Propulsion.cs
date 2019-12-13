@@ -96,11 +96,14 @@ namespace Barotrauma.Items.Components
         {
             useState -= deltaTime;
 
-            if (useState <= 0.0f) IsActive = false;
-
-            if (item.AiTarget != null)
+            if (useState <= 0.0f)
             {
-                item.AiTarget.SoundRange = IsActive ? item.AiTarget.MaxSoundRange : item.AiTarget.MinSoundRange;
+                IsActive = false;
+            }
+
+            if (item.AiTarget != null && IsActive)
+            {
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
             }
         }
 

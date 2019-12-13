@@ -275,6 +275,7 @@ namespace Barotrauma.Networking
 #if DEBUG
             CoroutineManager.InvokeAfter(() =>
             {
+                if (GameMain.Client == null) { return; }
                 if (Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedLoss && sendType != Facepunch.Steamworks.Networking.SendType.Reliable) { return; }
                 int count = Rand.Range(0.0f, 1.0f) < GameMain.Client.SimulatedDuplicatesChance ? 2 : 1;
                 for (int i = 0; i < count; i++)
@@ -316,7 +317,7 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)DeliveryMethod.Reliable);
             outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
             outMsg.Write((byte)ConnectionInitialization.Password);
-            byte[] saltedPw = ServerSettings.SaltPassword(Lidgren.Network.NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(password)), passwordSalt);
+            byte[] saltedPw = ServerSettings.SaltPassword(Encoding.UTF8.GetBytes(password), passwordSalt);
             outMsg.Write((byte)saltedPw.Length);
             outMsg.Write(saltedPw, 0, saltedPw.Length);
 

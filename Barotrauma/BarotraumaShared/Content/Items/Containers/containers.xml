@@ -101,7 +101,7 @@
       <Containable items="oxygensource,weldingfuel" />
     </ItemContainer>
   </Item>
-  <Item name="" identifier="metalcrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="metalcrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -130,7 +130,7 @@
       <Containable items="smallitem,mediumitem" />
     </ItemContainer>
   </Item>
-  <Item name="" identifier="explosivecrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="explosivecrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />
@@ -143,7 +143,7 @@
       <Containable items="smallitem" />
     </ItemContainer>
   </Item>
-  <Item name="" identifier="chemicalcrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="chemicalcrate" tags="crate" scale="0.5" linkable="true" pickdistance="150" showcontentsintooltip="true" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="20">
       <Item identifier="steel" />
       <Item identifier="steel" />

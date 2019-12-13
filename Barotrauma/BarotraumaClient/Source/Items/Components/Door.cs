@@ -12,6 +12,10 @@ namespace Barotrauma.Items.Components
         private ConvexHull convexHull;
         private ConvexHull convexHull2;
 
+        private float shake;
+        private float shakeTimer;
+        private Vector2 shakePos;
+
         //openState when the vertices of the convex hull were last calculated
         private float lastConvexHullState;
 
@@ -71,7 +75,7 @@ namespace Barotrauma.Items.Components
                 if (convexHull2 != null)
                 {
                     Rectangle rect2 = doorRect;
-                    rect2.Y = rect2.Y + (int)((Window.Y * item.Scale - Window.Height * item.Scale));
+                    rect2.Y += (int)(Window.Y * item.Scale - Window.Height * item.Scale);
 
                     rect2.Y += (int)(doorRect.Height * openState);
                     rect2.Y = Math.Min(doorRect.Y, rect2.Y);
@@ -101,20 +105,36 @@ namespace Barotrauma.Items.Components
                 convexHull.SetVertices(GetConvexHullCorners(rect));
             }
         }
-        
+
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            if (shakeTimer > 0.0f)
+            {				
+                shakeTimer -= deltaTime;
+                Vector2 noisePos = new Vector2((float)PerlinNoise.CalculatePerlin(shakeTimer * 10.0f, shakeTimer * 10.0f, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(shakeTimer * 10.0f, shakeTimer * 10.0f, 0.5f) - 0.5f);
+                shakePos = noisePos * shake * 2.0f;
+                shake = Math.Min(shake, shakeTimer);
+            }
+            else
+            {
+                shakePos = Vector2.Zero;
+            }
+        }
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             Color color = item.SpriteColor;
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color = color * (item.Condition / item.Prefab.Health);
+                color *= (item.Condition / item.Prefab.Health);
                 color.A = 255;
             }
             
             if (stuck > 0.0f && weldedSprite != null)
             {
-                Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f);
+                Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f) + shakePos;
                 if (item.Submarine != null) weldSpritePos += item.Submarine.DrawPosition;
                 weldSpritePos.Y = -weldSpritePos.Y;
 
@@ -129,7 +149,7 @@ namespace Barotrauma.Items.Components
 
             if (IsHorizontal)
             {
-                Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height / 2);
+                Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height / 2) + shakePos;
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
@@ -155,7 +175,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
+                Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y) + shakePos;
                 if (item.Submarine != null) pos += item.Submarine.DrawPosition;
                 pos.Y = -pos.Y;
 
@@ -180,10 +200,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        partial void OnFailedToOpen()
+        {
+            if (shakeTimer <= 0.0f)
+            {
+                PlaySound(ActionType.OnFailure);
+                shake = 5.0f;
+                shakeTimer = 1.0f;
+            }
+        }
 
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (isStuck ||
+            if ((IsStuck && !isNetworkMessage) ||
                 (PredictedState == null && isOpen == open) ||
                 (PredictedState != null && isOpen == PredictedState.Value && isOpen == open))
             {
@@ -209,11 +238,7 @@ namespace Barotrauma.Items.Components
                     StopPicking(null);
                     PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
                 }
-            }
-
-            //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
-            
+            }       
         }
 
         public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
@@ -224,7 +249,15 @@ namespace Barotrauma.Items.Components
             bool forcedOpen = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            UInt16 lastUserID = msg.ReadUInt16();
+            Character user = lastUserID == 0 ? null : Entity.FindEntityByID(lastUserID) as Character;
+            if (user != lastUser)
+            {
+                lastUser = user;
+                toggleCooldownTimer = ToggleCoolDown;
+            }
 
+            if (isStuck) { OpenState = 0.0f; }
             PredictedState = null;
         }
     }

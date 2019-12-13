@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace Barotrauma
         private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox/*, useUpnpBox*/;
+        private GUITickBox isPublicBox, wrongPasswordBanBox;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -84,7 +85,7 @@ namespace Barotrauma
                 }
             }   
 #else
-            FetchRemoteContent(Frame.RectTransform);
+            FetchRemoteContent();
 #endif
 
 
@@ -301,6 +302,7 @@ namespace Barotrauma
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.ProfilingTestBench,
+                ToolTip = "Enables performance indicators and starts the game with a fixed sub, crew and level to make it easier to compare the performance between sessions.",
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
@@ -568,6 +570,7 @@ namespace Barotrauma
                 case Tab.ProfilingTestBench:
                     QuickStart(fixedSeed: true);
                     GameMain.ShowPerf = true;
+                    GameMain.ShowFPS = true;
                     break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
@@ -665,9 +668,9 @@ namespace Barotrauma
                     GameMain.MainMenuScreen.Select();
                     return;
                 }
-                var characterInfo = new CharacterInfo(
-                    Character.HumanSpeciesName,
-                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
+                var jobPrefab = JobPrefab.Get(jobIdentifiers[i]);
+                var variant = Rand.Range(0, jobPrefab.Variants);
+                var characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
@@ -826,6 +829,7 @@ namespace Barotrauma
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
+                                   " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -838,8 +842,7 @@ namespace Barotrauma
                 }
 
                 int ownerKey = 0;
-
-                if (Steam.SteamManager.GetSteamID()!=0)
+                if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
@@ -972,7 +975,7 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
                             GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
@@ -1188,17 +1191,15 @@ namespace Barotrauma
             {
                 Censor = true
             };
-            
-            isPublicBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("PublicServer"))
+
+            var tickboxArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
-            
-            /* TODO: remove UPnP altogether?
-            useUpnpBox = new GUITickBox(new RectTransform(tickBoxSize, parent.RectTransform), TextManager.Get("AttemptUPnP"))
-            {
-                ToolTip = TextManager.Get("AttemptUPnPToolTip")
-            };*/
+
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {
@@ -1225,34 +1226,15 @@ namespace Barotrauma
         }
 #endregion
 
-        private void FetchRemoteContent(RectTransform parent)
+        private void FetchRemoteContent()
         {
             if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
             try
             {
                 var client = new RestClient(GameMain.Config.RemoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
-
-                IRestResponse response = client.Execute(request);
-                if (response.ResponseStatus != ResponseStatus.Completed)
-                {
-                    return;
-                }
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    return;
-                }
-
-                string xml = response.Content;
-                int index = xml.IndexOf('<');
-                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
-                if (string.IsNullOrWhiteSpace(xml)) { return; }
-
-                XElement element = XDocument.Parse(xml)?.Root;
-                foreach (XElement subElement in element.Elements())
-                {
-                    GUIComponent.FromXML(subElement, parent);
-                }
+                client.ExecuteAsync(request, RemoteContentReceived);
+                CoroutineManager.StartCoroutine(WairForRemoteContentReceived());
             }
 
             catch (Exception e)
@@ -1263,6 +1245,61 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     "Fetching remote content to the main menu failed. " + e.Message);
                 return;
+            }
+        }
+
+        private IEnumerable<object> WairForRemoteContentReceived()
+        {
+            while (true)
+            {
+                lock (remoteContentLock)
+                {
+                    if (remoteContentResponse != null) { break; }
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+            lock (remoteContentLock)
+            {
+                if (remoteContentResponse.ResponseStatus != ResponseStatus.Completed || remoteContentResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    yield return CoroutineStatus.Success;
+                }
+
+                try
+                {
+                    string xml = remoteContentResponse.Content;
+                    int index = xml.IndexOf('<');
+                    if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                    if (!string.IsNullOrWhiteSpace(xml))
+                    {
+                        XElement element = XDocument.Parse(xml)?.Root;
+                        foreach (XElement subElement in element.Elements())
+                        {
+                            GUIComponent.FromXML(subElement, Frame.RectTransform);
+                        }
+                    }
+                }
+
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Reading received remote main menu content failed. " + e.Message);
+                }
+            }
+            yield return CoroutineStatus.Success;            
+        }
+
+        private readonly object remoteContentLock = new object();
+        private IRestResponse remoteContentResponse;
+
+        private void RemoteContentReceived(IRestResponse response, RestRequestAsyncHandle handle)
+        {
+            lock (remoteContentLock)
+            {
+                remoteContentResponse = response;
             }
         }
     }

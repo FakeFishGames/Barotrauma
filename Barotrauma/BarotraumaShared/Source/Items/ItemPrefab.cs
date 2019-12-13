@@ -333,6 +333,9 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, false)]
+        public bool ShowContentsInTooltip { get; private set; }
+
         private HashSet<string> preferredContainers = new HashSet<string>();
         [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
         public string PreferredContainers
@@ -379,7 +382,7 @@ namespace Barotrauma
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
-            if (PlayerInput.RightButtonClicked())
+            if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
@@ -387,7 +390,7 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(sprite.size.X * Scale), (int)(sprite.size.Y * Scale)), this, Submarine.MainSub)
                     {
@@ -406,7 +409,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
                 }
                 else
                 {
@@ -415,7 +418,7 @@ namespace Barotrauma
                     if (ResizeVertical)
                         placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
 
-                    if (PlayerInput.LeftButtonReleased())
+                    if (PlayerInput.PrimaryMouseButtonReleased())
                     {
                         var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.MainSub);
                         placePosition = Vector2.Zero;
@@ -835,10 +838,14 @@ namespace Barotrauma
                 prefab = Find(null, identifier, showErrorMessages: false) as ItemPrefab;
 
                 //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
+                if (prefab == null && !string.IsNullOrEmpty(name))
                 {
                     string lowerCaseName = name.ToLowerInvariant();
                     prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
+                }
+                if (prefab == null)
+                {
+                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(identifier)) as ItemPrefab;
                 }
             }
 

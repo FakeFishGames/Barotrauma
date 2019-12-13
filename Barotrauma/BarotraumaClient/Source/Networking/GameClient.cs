@@ -46,7 +46,6 @@ namespace Barotrauma.Networking
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
         //TODO: move these to NetLobbyScreen
-        public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
         private GUIComponent buttonContainer;
 
@@ -176,33 +175,6 @@ namespace Barotrauma.Networking
             {
                 AbsoluteSpacing = 5,
                 CanBeFocused = false
-            };
-
-            EndRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
-                TextManager.Get("EndRound"))
-            {
-                OnClicked = (btn, userdata) =>
-                {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
-                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
-                    {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
-                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                        msgBox.Buttons[0].OnClicked = (_, __) =>
-                        {
-                            GameMain.Client.RequestRoundEnd();
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked += msgBox.Close;
-                    }
-                    else
-                    {
-                        RequestRoundEnd();
-                    }
-                    return true;
-                },
-                Visible = false
             };
 
             EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
@@ -1289,6 +1261,7 @@ namespace Barotrauma.Networking
 
             gameStarted = false;
             Character.Controlled = null;
+            SpawnAsTraitor = false;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
             respawnManager = null;
@@ -1447,6 +1420,8 @@ namespace Barotrauma.Networking
             }
         }
 
+        private bool initialUpdateReceived;
+
         private void ReadLobbyUpdate(IReadMessage inc)
         {
             ServerNetObject objHeader;
@@ -1467,13 +1442,15 @@ namespace Barotrauma.Networking
                             UInt16 settingsLen = inc.ReadUInt16();
                             byte[] settingsData = inc.ReadBytes(settingsLen);
 
-                            if (inc.ReadBoolean())
+                            bool isInitialUpdate = inc.ReadBoolean();
+                            if (isInitialUpdate)
                             {
                                 if (GameSettings.VerboseLogging)
                                 {
                                     DebugConsole.NewMessage("Received initial lobby update, ID: " + updateID + ", last ID: " + GameMain.NetLobbyScreen.LastUpdateID, Color.Gray);
                                 }
                                 ReadInitialUpdate(inc);
+                                initialUpdateReceived = true;
                             }
 
                             string selectSubName        = inc.ReadString();
@@ -1504,7 +1481,9 @@ namespace Barotrauma.Networking
                             float autoRestartTimer      = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
                             //ignore the message if we already a more up-to-date one
-                            if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID))
+                            //or if we're still waiting for the initial update
+                            if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID) &&
+                                (isInitialUpdate || initialUpdateReceived))
                             {
                                 ReadWriteMessage settingsBuf = new ReadWriteMessage();
                                 settingsBuf.Write(settingsData, 0, settingsLen); settingsBuf.BitPosition = 0;
@@ -2260,12 +2239,10 @@ namespace Barotrauma.Networking
         {
             if (gameStarted)
             {
-                tickBox.Visible = false;
+                tickBox.Parent.Visible = false;
                 return false;
             }
-
             Vote(VoteType.StartRound, tickBox.Selected);
-
             return true;
         }
 

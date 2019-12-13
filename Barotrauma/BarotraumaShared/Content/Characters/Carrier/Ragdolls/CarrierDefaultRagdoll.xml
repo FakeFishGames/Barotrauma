@@ -14,7 +14,7 @@
     <damagemodifier armorsector="0.0,360.0" damagesound="StructureBlunt" deflectprojectiles="true"/>
 
     <attack cooldown="15" range="400" damagerange="250" duration="0.08" force="20" structuresoundtype="StructureBlunt" targetforce="100">
-      <Affliction identifier="internaldamage" strength="100"/>
+      <Affliction identifier="bitewounds" strength="100"/>
       <Affliction identifier="stun" strength="5"/>
     </attack>
   </limb>

@@ -125,11 +125,14 @@ namespace Barotrauma
         {
             public readonly Entity Entity;
 
+            public readonly UInt16 OriginalID;
+
             public readonly bool Remove = false;
 
             public SpawnOrRemove(Entity entity, bool remove)
             {
                 Entity = entity;
+                OriginalID = entity.ID;
                 Remove = remove;
             }
         }

@@ -1,5 +1,6 @@
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
 using EventInput;
@@ -710,7 +711,7 @@ namespace Barotrauma
                 if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
-                    if ((!PlayerInput.LeftButtonHeld() && !PlayerInput.LeftButtonClicked()) || c == prevMouseOn)
+                    if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
                     {
                         MouseOn = c;
                     }
@@ -958,13 +959,13 @@ namespace Barotrauma
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
-                clicked = PlayerInput.LeftButtonHeld();
+                clicked = PlayerInput.PrimaryMouseButtonHeld();
 
                 color = clicked ?
                     new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) :
                     new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
 
-                if (!isHoldable) clicked = PlayerInput.LeftButtonClicked();
+                if (!isHoldable) clicked = PlayerInput.PrimaryMouseButtonClicked();
             }
 
             DrawRectangle(sb, rect, color, true);
@@ -1641,6 +1642,37 @@ namespace Barotrauma
                                 return true;
                             };
                             return true;
+                        };
+                    }
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    {
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("EndRound"), style: "GUIButtonLarge")
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
+                                if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                                {
+                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                                    {
+                                        UserData = "verificationprompt"
+                                    };
+                                    msgBox.Buttons[0].OnClicked = (_, __) =>
+                                    {
+                                        TogglePauseMenu(btn, userdata);
+                                        GameMain.Client.RequestRoundEnd();
+                                        return true;
+                                    };
+                                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                                }
+                                else
+                                {
+                                    TogglePauseMenu(btn, userdata);
+                                    GameMain.Client.RequestRoundEnd();
+                                }
+                                return true;
+                            }
                         };
                     }
                 }

@@ -217,7 +217,7 @@ namespace Barotrauma.Items.Components
                 Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
             if (equippedWire != null)
             {
-                if (PlayerInput.LeftButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedConstruction == null)
                 {
                     equippedWire.Use(1.0f, Character.Controlled);
                 }
@@ -234,7 +234,7 @@ namespace Barotrauma.Items.Components
                     Character.Controlled.ClearInputs();
                 }
                 //cancel dragging
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     draggingWire = null;
                     selectedNodeIndex = null;
@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
                     //and add a new node if it is
                     if (PlayerInput.KeyDown(Keys.RightControl) || PlayerInput.KeyDown(Keys.LeftControl))
                     {
-                        if (PlayerInput.LeftButtonClicked())
+                        if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             if (Character.Controlled != null)
                             {
@@ -312,7 +312,7 @@ namespace Barotrauma.Items.Components
                         {
                             highlightedNodeIndex = closestIndex;
                             //start dragging the node
-                            if (PlayerInput.LeftButtonHeld())
+                            if (PlayerInput.PrimaryMouseButtonHeld())
                             {
                                 if (Character.Controlled != null)
                                 {
@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
                                 return;
                             }
                             //remove the node
-                            else if (PlayerInput.RightButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count - 1)
+                            else if (PlayerInput.SecondaryMouseButtonClicked() && closestIndex > 0 && closestIndex < selectedWire.nodes.Count - 1)
                             {
                                 selectedWire.nodes.RemoveAt(closestIndex);
                                 selectedWire.UpdateSections();
@@ -372,7 +372,7 @@ namespace Barotrauma.Items.Components
             if (highlighted != null)
             {
                 highlighted.item.IsHighlighted = true;
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     MapEntity.DisableSelect = true;
                     MapEntity.SelectEntity(highlighted.item);

@@ -1301,7 +1301,7 @@ namespace Barotrauma
                 Vector2 edgeNormal = selectedEdge.GetNormal(selectedCell);
 
                 var item = new Item(selectedPrefab, selectedPos, submarine: null);
-                item.Move(edgeNormal * item.Rect.Height / 2);
+                item.Move(edgeNormal * item.Rect.Height / 2, ignoreContacts: true);
                 
                 var holdable = item.GetComponent<Holdable>();
                 if (holdable == null)

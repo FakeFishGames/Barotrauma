@@ -10,7 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
-        Structure = 1, Machine = 2, Equipment = 4, Electrical = 8, Material = 16, Misc = 32, Alien = 64, ItemAssembly = 128, Legacy = 256
+        Structure = 1, Decorative = 2, Machine = 4, Equipment = 8, Electrical = 16, Material = 32, Misc = 64, Alien = 128, ItemAssembly = 256, Legacy = 512
     }
 
     partial class MapEntityPrefab
@@ -180,7 +180,7 @@ namespace Barotrauma
             {
                 Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
                 
-                if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
             }
             else
             {
@@ -198,7 +198,7 @@ namespace Barotrauma
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
                 }
 
-                if (PlayerInput.LeftButtonReleased())
+                if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     CreateInstance(newRect);
                     placePosition = Vector2.Zero;
@@ -208,7 +208,7 @@ namespace Barotrauma
                 newRect.Y = -newRect.Y;
             }
 
-            if (PlayerInput.RightButtonHeld())
+            if (PlayerInput.SecondaryMouseButtonHeld())
             {
                 placePosition = Vector2.Zero;
                 selected = null;
@@ -217,9 +217,18 @@ namespace Barotrauma
 
         protected virtual void CreateInstance(Rectangle rect)
         {
+            if (constructor == null) return;
             object[] lobject = new object[] { this, rect };
             constructor.Invoke(lobject);
-        }    
+        }
+
+#if DEBUG
+        public void DebugCreateInstance()
+        {
+            Rectangle rect = new Rectangle(new Point((int)Screen.Selected.Cam.WorldViewCenter.X, (int)Screen.Selected.Cam.WorldViewCenter.Y), new Point((int)Submarine.GridSize.X, (int)Submarine.GridSize.Y));
+            CreateInstance(rect);
+        }
+#endif
 
         public static bool SelectPrefab(object selection)
         {

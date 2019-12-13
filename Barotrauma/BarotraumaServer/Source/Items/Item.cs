@@ -207,7 +207,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID)
         {
             if (GameMain.Server == null) return;
 
@@ -219,7 +219,7 @@ namespace Barotrauma
                 msg.Write(Description);
             }
 
-            msg.Write(ID);
+            msg.Write(entityID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
             {
@@ -306,7 +306,7 @@ namespace Barotrauma
 
         public float GetPositionUpdateInterval(Client recipient)
         {
-            if (PositionUpdateInterval == float.PositiveInfinity || body == null)
+            if (PositionUpdateInterval == float.PositiveInfinity || body == null || parentInventory != null)
             {
                 return float.PositiveInfinity;
             }

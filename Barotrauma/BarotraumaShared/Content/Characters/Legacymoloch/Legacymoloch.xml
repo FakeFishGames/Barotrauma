@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character speciesname="Legacymoloch" humanoid="false">
+<Character speciesname="Legacymoloch" humanoid="false" group="moloch">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>

@@ -967,18 +967,32 @@
 <entitydescription.idcard>Permite acesso limitado a áreas do submarino.</entitydescription.idcard>
 <entityname.alienpistol>Pistola Alienígena</entityname.alienpistol>
 <entitydescription.alienpistol>Uma pistola alimentada por células de energia alienígenas.</entitydescription.alienpistol>
-<entityname.captainscap>Quepe de Capitão</entityname.captainscap>
-<entitydescription.captainscap>Um símbolo da autoridade inquestionável do capitão.</entitydescription.captainscap>
-<entityname.captainsuniform>Uniforme de Capitão</entityname.captainsuniform>
-<entitydescription.captainsuniform>Faz parecer que você pode estar no comando.</entitydescription.captainsuniform>
+<entityname.captainscap1>Quepe de Capitão</entityname.captainscap1>
+<entitydescription.captainscap1>Um símbolo da autoridade inquestionável do capitão.</entitydescription.captainscap1>
+<entityname.captainscap2>Quepe de Capitão</entityname.captainscap2>
+<entitydescription.captainscap2>Um símbolo da autoridade inquestionável do capitão.</entitydescription.captainscap2>
+<entityname.captainscap3>Quepe de Capitão</entityname.captainscap3>
+<entitydescription.captainscap3>Um símbolo da autoridade inquestionável do capitão.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Uniforme de Capitão</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Faz parecer que você pode estar no comando.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Uniforme de Capitão</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Faz parecer que você pode estar no comando.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Uniforme de Capitão</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Faz parecer que você pode estar no comando.</entitydescription.captainsuniform3>
 <entityname.healthscanner>Visor de Saúde</entityname.healthscanner>
 <entitydescription.healthscanner>Uma tela de alerta que exibe as informações sobre os sinais vitais e o status dos humanos próximos.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Uniforme Médico</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Faz parecer que você pode ser útil em uma emergência médica.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Macacão Laranja</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Macacão Azul</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Uniforme Médico</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Faz parecer que você pode ser útil em uma emergência médica.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Uniforme Médico</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Faz parecer que você pode ser útil em uma emergência médica.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Macacão Laranja</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Macacão Laranja</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Macacão Azul</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Macacão Azul</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>O tecido resistente a fogo oferece alguma proteção contra incêndios.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Caixa de Ferramentas</entityname.toolbox>
 <entitydescription.toolbox>Um contêiner portátil para guardar ferramentas.</entitydescription.toolbox>
 <entityname.headset>Headset</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Até o assistente precisa de trajes.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Trajes de Vigia</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Faz parecer que você pode oferecer uma missão a um transeunte a qualquer momento.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Uniforme de Oficial de Segurança</entityname.securityuniform>
-<entitydescription.securityuniform>Respeite minha autoridade!</entitydescription.securityuniform>
+<entityname.securityuniform1>Uniforme de Oficial de Segurança</entityname.securityuniform1>
+<entitydescription.securityuniform1>Respeite minha autoridade!</entitydescription.securityuniform1>
+<entityname.securityuniform2>Uniforme de Oficial de Segurança</entityname.securityuniform2>
+<entitydescription.securityuniform2>Respeite minha autoridade!</entitydescription.securityuniform2>
+<entityname.securityuniform3>Uniforme de Oficial de Segurança</entityname.securityuniform3>
+<entitydescription.securityuniform3>Respeite minha autoridade!</entitydescription.securityuniform3>
 <entityname.bodyarmor>Armadura Corporal</entityname.bodyarmor>
 <entitydescription.bodyarmor>Mesmo que a armadura corporal não ofereça uma boa proteção contra a maioria dos habitantes do oceano da subsuperfície, ela pode ser muito útil se houver traidores a bordo.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Capacete Balístico</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Mesmo que o capacete balístico não ofereça uma boa proteção contra a maioria dos habitantes do oceano da subsuperfície, ele pode ser muito útil se houver traidores a bordo.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Capacete Balístico</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Mesmo que o capacete balístico não ofereça uma boa proteção contra a maioria dos habitantes do oceano da subsuperfície, ele pode ser muito útil se houver traidores a bordo.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Capacete Balístico</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Mesmo que o capacete balístico não ofereça uma boa proteção contra a maioria dos habitantes do oceano da subsuperfície, ele pode ser muito útil se houver traidores a bordo.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Capacete Balístico</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Mesmo que o capacete balístico não ofereça uma boa proteção contra a maioria dos habitantes do oceano da subsuperfície, ele pode ser muito útil se houver traidores a bordo.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Algemas</entityname.handcuffs>
 <entitydescription.handcuffs>Útil para prender jogadores problemáticos.</entitydescription.handcuffs>
 <entityname.riotshield>Escudo de Proteção</entityname.riotshield>

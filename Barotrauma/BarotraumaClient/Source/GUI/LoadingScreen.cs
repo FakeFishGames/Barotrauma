@@ -249,7 +249,7 @@ namespace Barotrauma
 
                 font.DrawString(spriteBatch, localizedLanguageName, textPos - textSize / 2, 
                     hover ? Color.White : Color.White * 0.6f);
-                if (hover && PlayerInput.LeftButtonClicked())
+                if (hover && PlayerInput.PrimaryMouseButtonClicked())
                 {
                     GameMain.Config.Language = language;
                     //reload tip in the selected language
@@ -298,7 +298,7 @@ namespace Barotrauma
                 spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
                 spriteBatch.End();
 
-                if (GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.LeftButtonDown()))
+                if (GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.PrimaryMouseButtonDown()))
                 {
                     currSplashScreen.Dispose(); currSplashScreen = null;
                 }

@@ -253,13 +253,14 @@ namespace Barotrauma
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,
-                        mimic = true
+                        mimic = true,
+                        DialogueIdentifier = "dialogcannotreachplace"
                     };
                     break;
                 case "wait":
                     newObjective = new AIObjectiveGoTo(character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = true
+                        AllowGoingOutside = character.CurrentHull == null
                     };
                     break;
                 case "fixleaks":
@@ -293,7 +294,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
                     {
                         IsLoop = true,
-                        // Don't override auto pilot unless it's an order by a player
+                        // Don't override unless it's an order by a player
                         Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
                     };
                     break;
@@ -302,7 +303,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, requireEquip: false, useController: order.UseController, priorityModifier: priorityModifier)
                     {
                         IsLoop = true,
-                        // Don't override auto control unless it's an order by a player
+                        // Don't override unless it's an order by a player
                         Override = orderGiver == Character.Controlled || orderGiver.IsRemotePlayer
                     };
                     break;

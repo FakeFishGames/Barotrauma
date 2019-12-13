@@ -47,6 +47,11 @@ namespace Barotrauma.Items.Components
 
     partial class ItemComponent : ISerializableEntity
     {
+        public bool HasSounds
+        {
+            get { return sounds.Count > 0; }
+        }
+
         private bool[] hasSoundsOfType;
         private Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;

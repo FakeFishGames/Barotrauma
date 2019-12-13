@@ -55,6 +55,51 @@ namespace Barotrauma
 
         }
 
+        public static bool MouseButtonsSwapped()
+        {
+            return false;
+        }
+
+        public static bool PrimaryMouseButtonHeld()
+        {
+            return false;
+        }
+
+        public static bool PrimaryMouseButtonDown()
+        {
+            return false;
+        }
+
+        public static bool PrimaryMouseButtonReleased()
+        {
+            return false;
+        }
+
+        public static bool PrimaryMouseButtonClicked()
+        {
+            return false;
+        }
+
+        public static bool SecondaryMouseButtonHeld()
+        {
+            return false;
+        }
+
+        public static bool SecondaryMouseButtonDown()
+        {
+            return false;
+        }
+
+        public static bool SecondaryMouseButtonReleased()
+        {
+            return false;
+        }
+
+        public static bool SecondaryMouseButtonClicked()
+        {
+            return false;
+        }
+
         public static bool LeftButtonHeld()
         {
             return false;

@@ -5,7 +5,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="0" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
     <attack range="300" damagerange="200" duration="0.25" structuredamage="50" structuresoundtype="StructureSlash" torque="100" force="20" targetforce="-50" severlimbsprobability="1" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="1" secondarycooldown="1" itemdamage="50" stun="0" onlyhumans="False" applyforceonlimbs="0, 1" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="1" cooldownrandomfactor="0.5" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="30" probability="1" />
+      <Affliction identifier="bitewounds" strength="30" probability="1" />
       <Affliction identifier="bleeding" strength="100" probability="1" />
       <Affliction identifier="stun" strength="0.2" probability="1" />
     </attack>
@@ -26,7 +26,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="20" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
     <attack duration="0.1" structuredamage="10" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.1" cooldownrandomfactor="0.1" targetforce="0" range="600" damagerange="250" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="10" probability="1" />
+      <Affliction identifier="bitewounds" strength="10" probability="1" />
       <Affliction identifier="stun" strength="0.5" probability="1" />
     </attack>
   </limb>
@@ -74,7 +74,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
     <attack duration="0.1" structuredamage="10" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="20" severlimbsprobability="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.25" cooldownrandomfactor="0.1" targetforce="0" range="800" damagerange="200" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="10" probability="1" />
+      <Affliction identifier="bitewounds" strength="10" probability="1" />
       <Affliction identifier="stun" strength="0.5" probability="1" />
     </attack>
   </limb>
@@ -127,7 +127,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
     <attack duration="0.15" structuredamage="10" structuresoundtype="StructureSlash" torque="-1000" force="20" targetimpulse="40" severlimbsprobability="0" context="NotDefined" targettype="Character" hitdetectiontype="Distance" afterattack="Pursue" cooldown="5" secondarycooldown="0.5" itemdamage="10" stun="0" onlyhumans="False" applyforceonlimbs="" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0.25" cooldownrandomfactor="0.1" targetforce="0" range="800" damagerange="200" reverse="False" targetlimbtype="None">
-      <Affliction identifier="internaldamage" strength="15" probability="1" />
+      <Affliction identifier="bitewounds" strength="15" probability="1" />
       <Affliction identifier="stun" strength="1" probability="1" />
     </attack>
   </limb>

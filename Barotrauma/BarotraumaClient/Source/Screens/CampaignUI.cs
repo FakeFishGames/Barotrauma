@@ -248,8 +248,10 @@ namespace Barotrauma
                         MapEntityCategory newCategory = (MapEntityCategory)userdata;
                         if (newCategory != selectedItemCategory)
                         {
-                            searchBox.Text = ""; 
+                            searchBox.Text = "";
+                            storeItemList.ScrollBar.BarScroll = 0f;
                         }
+
                         FilterStoreItems((MapEntityCategory)userdata, searchBox.Text);
                         return true;
                     }

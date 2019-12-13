@@ -158,6 +158,48 @@ namespace Barotrauma.Items.Components
         //edge point 1, edge point 2, avoid strength
         private List<ObstacleDebugInfo> debugDrawObstacles = new List<ObstacleDebugInfo>();
 
+        #region Docking
+        public List<DockingPort> DockingSources = new List<DockingPort>();
+        public DockingPort ActiveDockingSource, DockingTarget;
+        private bool searchedConnectedDockingPort;
+
+        private bool dockingModeEnabled;
+        public bool DockingModeEnabled
+        {
+            get { return UseAutoDocking && dockingModeEnabled; }
+            set { dockingModeEnabled = value; }
+        }
+
+        public bool UseAutoDocking
+        {
+            get;
+            set;
+        } = true;
+
+        private void FindConnectedDockingPort()
+        {
+            searchedConnectedDockingPort = true;
+            foreach (MapEntity linkedTo in item.linkedTo)
+            {
+                if (linkedTo is Item item)
+                {
+                    var port = item.GetComponent<DockingPort>();
+                    if (port != null)
+                    {
+                        DockingSources.Add(port);
+                    }
+                }
+            }
+
+            var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
+            if (dockingConnection != null)
+            {
+                var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
+                DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.IsOutpost));
+            }
+        }
+        #endregion
+
         public Steering(Item item, XElement element)
             : base(item, element)
         {
@@ -183,6 +225,10 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (!searchedConnectedDockingPort)
+            {
+                FindConnectedDockingPort();
+            }
             networkUpdateTimer -= deltaTime;
             if (unsentChanges)
             {
@@ -477,11 +523,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool aiDockingToggled;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (user != character && user != null && user.SelectedConstruction == item)
+            if (objective.Override)
             {
-                character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+                if (user != character && user != null && user.SelectedConstruction == item)
+                {
+                    character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+                }
             }
             user = character;
             if (!AutoPilot)
@@ -509,6 +559,10 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigateback":
+                    if (!aiDockingToggled && DockingSources.Any(d => d.Docked))
+                    {
+                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                    }
                     if (objective.Override)
                     {
                         if (MaintainPos || LevelEndSelected || !LevelStartSelected)
@@ -519,6 +573,10 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigatetodestination":
+                    if (!aiDockingToggled && DockingSources.Any(d => d.Docked))
+                    {
+                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                    }
                     if (objective.Override)
                     {
                         if (MaintainPos || !LevelEndSelected || LevelStartSelected)

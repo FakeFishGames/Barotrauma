@@ -89,12 +89,21 @@ namespace Barotrauma
         public static void Update(float deltaTime, Character character, Camera cam)
         {
             if (GUI.DisableHUD) { return; }
-
+            
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
+                if (character.Info != null)
+                {
+                    bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
+                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
+                    {
+                        CharacterHealth.OpenHealthWindow = character.CharacterHealth;
+                    }
+                }
+
                 if (character.Inventory != null)
                 {
-                    if (ShouldDrawInventory(character))
+                    if (!LockInventory(character))
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
@@ -145,7 +154,7 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (!item.Repairables.Any(r => item.ConditionPercentage < r.ShowRepairUIThreshold)) { continue; }
+                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.AIRepairThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
@@ -319,7 +328,7 @@ namespace Barotrauma
                     }
                 }
             }
-            bool drawPortraitToolTip = false;
+            bool mouseOnPortrait = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
                 if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
@@ -328,10 +337,15 @@ namespace Barotrauma
                     {
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), targetWidth: HUDLayoutSettings.PortraitArea.Width);
                     }
-                    drawPortraitToolTip = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
+                    mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
+                    if (mouseOnPortrait)
+                    {
+                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.PortraitArea, Color.LightGreen * 0.5f);
+                    }
                 }
                 if (ShouldDrawInventory(character))
                 {
+                    character.Inventory.Locked = LockInventory(character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
@@ -365,13 +379,24 @@ namespace Barotrauma
                 }
             }
 
-            if (drawPortraitToolTip)
+            if (mouseOnPortrait)
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
                     character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
+        }
+
+        private static bool LockInventory(Character character)
+        {
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands) { return true; }
+
+            //lock if using a controller, except if we're also using a connection panel in the same item
+            return
+                character.SelectedConstruction != null &&
+                character.SelectedConstruction?.GetComponent<Controller>()?.User == character &&
+                character.SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != character;
         }
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)

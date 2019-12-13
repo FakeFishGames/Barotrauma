@@ -45,10 +45,10 @@ namespace Barotrauma.Networking
         {
             { MessageType.Chat, Color.LightBlue },
             { MessageType.ItemInteraction, new Color(205, 205, 180) },
-            { MessageType.Inventory, new Color(238, 208, 0) },
+            { MessageType.Inventory, new Color(255, 234, 85) },
             { MessageType.Attack, new Color(204, 74, 78) },
             { MessageType.Spawning, new Color(163, 73, 164) },
-            { MessageType.Wiring, new Color(238, 208, 0) },
+            { MessageType.Wiring, new Color(255, 157, 85) },
             { MessageType.ServerMessage, new Color(157, 225, 160) },
             { MessageType.ConsoleUsage, new Color(0, 162, 232) },
             { MessageType.Error, Color.Red },

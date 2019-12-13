@@ -10,11 +10,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
-        public GUIScrollBar IsActiveSlider
-        {
-            get { return isActiveSlider; }
-        }
-        private GUIScrollBar isActiveSlider;
+        public GUIScrollBar IsActiveSlider { get; private set; }
+
         private GUIScrollBar pumpSpeedSlider;
         private GUITickBox powerIndicator;
         private GUITickBox autoControlIndicator;
@@ -45,16 +42,16 @@ namespace Barotrauma.Items.Components
 
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
-            isActiveSlider = new GUIScrollBar(new RectTransform(new Point((int)(50 * GUI.Scale), (int)(100 * GUI.Scale)), paddedFrame.RectTransform, Anchor.CenterLeft),
+            IsActiveSlider = new GUIScrollBar(new RectTransform(new Point((int)(50 * GUI.Scale), (int)(100 * GUI.Scale)), paddedFrame.RectTransform, Anchor.CenterLeft),
                 barSize: 0.2f, style: "OnOffLever")
             {
                 IsBooleanSwitch = true,
                 MinValue = 0.25f,
                 MaxValue = 0.75f
             };
-            var sliderHandle = isActiveSlider.GetChild<GUIButton>();
+            var sliderHandle = IsActiveSlider.GetChild<GUIButton>();
             sliderHandle.RectTransform.NonScaledSize = new Point((int)(84 * GUI.Scale), sliderHandle.Rect.Height);
-            isActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+            IsActiveSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 bool active = scrollBar.BarScroll < 0.5f;
                 if (active == IsActive) return false;
@@ -82,7 +79,7 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-            autoControlIndicator = new GUITickBox(new RectTransform(new Point((int)(30 * GUI.Scale)), rightArea.RectTransform), TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), style: "IndicatorLightGreen")
+            autoControlIndicator = new GUITickBox(new RectTransform(new Point((int)(30 * GUI.Scale)), rightArea.RectTransform), TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
@@ -161,13 +158,16 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            pumpSpeedLockTimer -= deltaTime;
+            isActiveLockTimer -= deltaTime;
             powerIndicator.Selected = hasPower && IsActive;
-            autoControlIndicator.Selected = controlLockTimer > 0.0f && IsActive;
-            pumpSpeedSlider.Enabled = controlLockTimer <= 0.0f && IsActive;
+            autoControlIndicator.Selected = pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
+            IsActiveSlider.Enabled = isActiveLockTimer <= 0.0f;
+            pumpSpeedSlider.Enabled = pumpSpeedLockTimer <= 0.0f && IsActive;
 
-            if (!PlayerInput.LeftButtonHeld())
+            if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                isActiveSlider.BarScroll += (IsActive ? -10.0f : 10.0f) * deltaTime;
+                IsActiveSlider.BarScroll += (IsActive ? -10.0f : 10.0f) * deltaTime;
 
                 float pumpSpeedScroll = (FlowPercentage + 100.0f) / 200.0f;
                 if (Math.Abs(pumpSpeedScroll - pumpSpeedSlider.BarScroll) > 0.01f)

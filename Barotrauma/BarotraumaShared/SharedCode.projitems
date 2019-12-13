@@ -146,6 +146,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Projectile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ArithmeticComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AndComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ColorComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Connection.cs" />
@@ -284,6 +285,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\MTRandom.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\Rand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\SaveUtil.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\TaskPool.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\ToolBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\UpdaterUtil.cs" />
   </ItemGroup>

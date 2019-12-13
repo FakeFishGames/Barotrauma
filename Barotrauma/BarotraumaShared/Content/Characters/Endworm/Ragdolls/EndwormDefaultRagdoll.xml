@@ -41,7 +41,7 @@
   <limb id = "8" width="50" height="320">
     <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
     <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="-100" structuredamage="500" structuresoundtype="StructureBlunt">
-      <Affliction identifier="internaldamage" strength="30"/>
+      <Affliction identifier="bitewounds" strength="30"/>
       <Affliction identifier="stun" strength="5"/>        
     </attack>
   </limb>
@@ -49,7 +49,7 @@
   <limb id = "9" width="50" height="320">
     <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
     <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="100" structuredamage="500" structuresoundtype="StructureBlunt">
-      <Affliction identifier="internaldamage" strength="30"/>
+      <Affliction identifier="bitewounds" strength="30"/>
       <Affliction identifier="stun" strength="5"/>
     </attack>
   </limb>        

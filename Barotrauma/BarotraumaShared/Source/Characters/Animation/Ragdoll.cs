@@ -930,7 +930,9 @@ namespace Barotrauma
                 //in -> out
                 if (newHull == null && currentHull.Submarine != null)
                 {
-                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) return;
+                    //don't teleport out yet if the character is going through a gap
+                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) { return; }
+                    if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f) != null) { return; }
                     character.MemLocalState?.Clear();
                     Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
                 }
@@ -986,11 +988,15 @@ namespace Barotrauma
                     }
                 }
 
-                if (!gap.GetOutsideCollider(out Vector2? outsideColliderPos, out Vector2? outsideColliderNormal)) continue;
+                if (!gap.GetOutsideCollider(out Vector2? outsideColliderPos, out Vector2? outsideColliderNormal)) { continue; }
 
-                outsideCollisionBlocker.SetTransform(
-                    outsideColliderPos.Value - currentHull.Submarine.SimPosition, 
-                    MathUtils.VectorToAngle(outsideColliderNormal.Value) - MathHelper.PiOver2);
+                Vector2 colliderPos = outsideColliderPos.Value - currentHull.Submarine.SimPosition;
+                float colliderRotation = MathUtils.VectorToAngle(outsideColliderNormal.Value) - MathHelper.PiOver2;
+                if (Vector2.DistanceSquared(outsideCollisionBlocker.Position, colliderPos) > 0.01f ||
+                    Math.Abs(outsideCollisionBlocker.Rotation - colliderRotation) > 0.01f)
+                {
+                    outsideCollisionBlocker.SetTransform(colliderPos, colliderRotation);
+                }
                 outsideCollisionBlocker.Enabled = true;
                 return;
             }
@@ -1556,7 +1562,7 @@ namespace Barotrauma
             }
             if (MainLimb == null) { return; }
 
-            Vector2 limbMoveAmount = simPosition - MainLimb.SimPosition;
+            Vector2 limbMoveAmount = simPosition - Collider.SimPosition;
 
             if (lerp)
             {

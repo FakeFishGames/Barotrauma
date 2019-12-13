@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Barotrauma.Networking;
+using System;
 
 namespace Barotrauma.Items.Components
 {
@@ -7,7 +8,7 @@ namespace Barotrauma.Items.Components
     {
         partial void SetState(bool open, bool isNetworkMessage, bool sendNetworkMessage, bool forcedOpen)
         {
-            if (isStuck || isOpen == open)
+            if (IsStuck || isOpen == open)
             {
                 return;
             }
@@ -29,6 +30,7 @@ namespace Barotrauma.Items.Components
             msg.Write(isOpen);
             msg.Write(extraData.Length == 3 ? (bool)extraData[2] : false); //forced open
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
+            msg.Write(lastUser == null ? (UInt16)0 : lastUser.ID);
         }
     }
 }

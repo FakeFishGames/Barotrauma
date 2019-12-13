@@ -27,6 +27,10 @@ namespace Barotrauma
         private int totalSize;
         private bool childrenNeedsRecalculation;
         private bool scrollBarNeedsRecalculation;
+        private bool dimensionsNeedsRecalculation;
+
+        // TODO: Define in styles?
+        private int scrollBarSize = 20;
 
         public bool SelectMultiple;
 
@@ -114,6 +118,7 @@ namespace Barotrauma
         /// Disables the scroll bar without hiding it.
         /// </summary>
         public bool ScrollBarEnabled { get; set; } = true;
+        public bool KeepSpaceForScrollBar { get; set; }
 
         public bool ScrollBarVisible
         {
@@ -123,8 +128,9 @@ namespace Barotrauma
             }
             set
             {
+                if (ScrollBar.Visible == value) { return; }
                 ScrollBar.Visible = value;
-                AutoHideScrollBar = false;
+                dimensionsNeedsRecalculation = true;
             }
         }
 
@@ -136,14 +142,8 @@ namespace Barotrauma
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             CanBeFocused = true;
-
             selected = new List<GUIComponent>();
-
-            Point frameSize = isHorizontal ? 
-                new Point(rectT.NonScaledSize.X, rectT.NonScaledSize.Y - 20) :
-                new Point(rectT.NonScaledSize.X - 20, rectT.NonScaledSize.Y);
-
-            Content = new GUIFrame(new RectTransform(frameSize, rectT), style)
+            Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
             {
                 CanBeFocused = false                
             };
@@ -152,50 +152,46 @@ namespace Barotrauma
                 scrollBarNeedsRecalculation = true;
                 childrenNeedsRecalculation = true;
             };
-
-            if (style != null) GUI.Style.Apply(Content, "", this);
-
+            if (style != null)
+            {
+                GUI.Style.Apply(Content, "", this);
+            }
             if (color.HasValue)
             {
                 this.color = color.Value;
             }
-
+            Point size;
+            Anchor anchor;
             if (isHorizontal)
             {
-                ScrollBar = new GUIScrollBar(new RectTransform(new Point(Rect.Width, 20), rectT, Anchor.BottomLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, 20) }, isHorizontal: isHorizontal);
+                size = new Point(Rect.Width, scrollBarSize);
+                anchor = Anchor.BottomLeft;
             }
             else
             {
-                ScrollBar = new GUIScrollBar(new RectTransform(new Point(20, Rect.Height), rectT, Anchor.TopRight, Pivot.TopLeft) { AbsoluteOffset = new Point(20, 0) }, isHorizontal: isHorizontal);
+                size = new Point(scrollBarSize, Rect.Height);
+                anchor = Anchor.TopRight;
             }
+            ScrollBar = new GUIScrollBar(new RectTransform(size, rectT, anchor), isHorizontal: isHorizontal);
             UpdateScrollBarSize();
             Enabled = true;
             ScrollBar.BarScroll = 0.0f;
-            
-            RectTransform.ScaleChanged += UpdateDimensions;
-            RectTransform.SizeChanged += UpdateDimensions;
+            RectTransform.ScaleChanged += () => dimensionsNeedsRecalculation = true;
+            RectTransform.SizeChanged += () => dimensionsNeedsRecalculation = true;
+            UpdateDimensions();
         }
 
         private void UpdateDimensions()
         {
-            if (!ScrollBar.Visible)
-            {
-                Content.RectTransform.NonScaledSize = Rect.Size;
-            }
-            else
-            {
-                Point frameSize = ScrollBar.IsHorizontal ?
-                    new Point(Rect.Width, Rect.Height - 20) :
-                    new Point(Rect.Width - 20, Rect.Height);
-                Content.RectTransform.NonScaledSize = frameSize;
-            }
-            ScrollBar.RectTransform.NonScaledSize = ScrollBar.IsHorizontal ? new Point(Rect.Width, 20) : new Point(20, Rect.Height);
+            dimensionsNeedsRecalculation = false;
+            bool reduceScrollbarSize = KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible;
+            Content.RectTransform.Resize(reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, scrollBarSize) : Rect.Size);
+            ScrollBar.RectTransform.Resize(ScrollBar.IsHorizontal ? new Point(Rect.Width, scrollBarSize) : new Point(scrollBarSize, Rect.Height));
         }
-        
+
         public void Select(object userData, bool force = false, bool autoScroll = true)
         {
             var children = Content.Children;
-
             int i = 0;
             foreach (GUIComponent child in children)
             {
@@ -209,9 +205,11 @@ namespace Barotrauma
             }
         }
 
+        private Point CalculateFrameSize(bool isHorizontal, int scrollBarSize)
+            => isHorizontal ? new Point(Rect.Width, Rect.Height - scrollBarSize) : new Point(Rect.Width - scrollBarSize, Rect.Height);
+
         private void RepositionChildren()
         {
-            var children = Content.Children;
             int x = 0, y = 0;
             if (ScrollBar.BarSize < 1.0f)
             {
@@ -255,7 +253,6 @@ namespace Barotrauma
                         {
                             y += child.Rect.Height + Spacing;
                         }
-
                     }
                     else
                     {
@@ -300,7 +297,7 @@ namespace Barotrauma
                 if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
-                    if (PlayerInput.LeftButtonClicked())
+                    if (PlayerInput.PrimaryMouseButtonClicked())
                     {
                         Select(i, autoScroll: false);
                     }
@@ -396,7 +393,7 @@ namespace Barotrauma
             child.ClampMouseRectToParent = true;
 
             //no need to go through grandchildren if the child is a GUIListBox, it handles this by itself
-            if (child is GUIListBox) return;
+            if (child is GUIListBox) { return; }
 
             foreach (GUIComponent grandChild in child.Children)
             {
@@ -406,7 +403,7 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             UpdateChildrenRect();
             RepositionChildren();
@@ -414,22 +411,19 @@ namespace Barotrauma
             if (scrollBarNeedsRecalculation)
             {
                 UpdateScrollBarSize();
-                scrollBarNeedsRecalculation = false;
             }
-
-            bool prevScrollBarVisible = ScrollBar.Visible;
-
-            ScrollBar.Enabled = ScrollBarEnabled && ScrollBar.BarSize < 1.0f;
-            if (AutoHideScrollBar)
-            {
-                ScrollBar.Visible = ScrollBar.BarSize < 1.0f;
-            }
-
-            if (ScrollBar.Visible != prevScrollBarVisible) { UpdateDimensions(); }
-
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
             {
                 ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
+            }
+            ScrollBar.Enabled = ScrollBarEnabled && BarSize < 1.0f;
+            if (AutoHideScrollBar)
+            {
+                ScrollBarVisible = ScrollBar.Enabled;
+            }
+            if (dimensionsNeedsRecalculation)
+            {
+                UpdateDimensions();
             }
         }
 
@@ -463,14 +457,14 @@ namespace Barotrauma
 
         public void Select(int childIndex, bool force = false, bool autoScroll = true)
         {
-            if (childIndex >= Content.CountChildren || childIndex < 0) return;
+            if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
 
             GUIComponent child = Content.GetChild(childIndex);
 
             bool wasSelected = true;
             if (OnSelected != null) wasSelected = force || OnSelected(child, child.UserData);
-            
-            if (!wasSelected) return;
+
+            if (!wasSelected) { return; }
 
             if (SelectMultiple)
             {
@@ -541,7 +535,8 @@ namespace Barotrauma
 
         public void UpdateScrollBarSize()
         {
-            if (Content == null) return;
+            scrollBarNeedsRecalculation = false;
+            if (Content == null) { return; }
 
             totalSize = 0;
             var children = Content.Children.Where(c => c.Visible);
@@ -603,7 +598,7 @@ namespace Barotrauma
 
         public override void RemoveChild(GUIComponent child)
         {
-            if (child == null) return;
+            if (child == null) { return; } 
             child.RectTransform.Parent = null;
             if (selected.Contains(child)) selected.Remove(child);
             UpdateScrollBarSize();
@@ -617,7 +612,7 @@ namespace Barotrauma
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             Content.DrawManually(spriteBatch, alsoChildren: false);
             
@@ -654,22 +649,25 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: prevRasterizerState);
             }
 
-            if (ScrollBar.Visible) ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+            if (ScrollBarVisible)
+            {
+                ScrollBar.DrawManually(spriteBatch, alsoChildren: true, recursive: true);
+            }
         }
 
         private bool IsChildInsideFrame(GUIComponent child)
         {
-            if (child == null) return false;
+            if (child == null) { return false; }
 
             if (ScrollBar.IsHorizontal)
             {
-                if (child.Rect.Right < Content.Rect.X) return false;
-                if (child.Rect.X > Content.Rect.Right) return false;
+                if (child.Rect.Right < Content.Rect.X) { return false; }
+                if (child.Rect.X > Content.Rect.Right) { return false; }
             }
             else
             {
-                if (child.Rect.Bottom < Content.Rect.Y) return false;
-                if (child.Rect.Y > Content.Rect.Bottom) return false;
+                if (child.Rect.Bottom < Content.Rect.Y) { return false; }
+                if (child.Rect.Y > Content.Rect.Bottom) { return false; }
             }
 
             return true;

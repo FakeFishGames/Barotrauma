@@ -1048,21 +1048,70 @@ namespace Barotrauma
                 }
             }));
 
-#if DEBUG
-            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
-            {
-                GameMain.Client.PrintReceiverTransters();
-            }));
-
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
                 //key = text tag, value = list of languages the tag is missing from
-                Dictionary<string, List<string>> missingTags = new Dictionary<string, List<string>>();
+                Dictionary<string, HashSet<string>> missingTags = new Dictionary<string, HashSet<string>>();
                 Dictionary<string, HashSet<string>> tags = new Dictionary<string, HashSet<string>>();
                 foreach (string language in TextManager.AvailableLanguages)
                 {
                     TextManager.Language = language;
                     tags.Add(language, new HashSet<string>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
+                }
+
+                foreach (string language in TextManager.AvailableLanguages)
+                {
+                    //check missing mission texts
+                    foreach (var missionPrefab in MissionPrefab.List)
+                    {
+                        string nameIdentifier = "missionname." + missionPrefab.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
+                        }
+                        string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        if (!tags[language].Contains(descriptionIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
+                            missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
+                    {
+                        string nameIdentifier = "afflictionname." + affliction.Identifier;
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
+                        }
+
+                        string descriptionIdentifier = "afflictiondescription." + affliction.Identifier;
+                        if (!tags[language].Contains(descriptionIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
+                            missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    //check missing entity names
+                    foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                    {
+                        string nameIdentifier = "entityname." + me.Identifier;
+                        if (tags[language].Contains(nameIdentifier)) { continue; }
+                        if (me is ItemPrefab itemPrefab)
+                        {
+                            nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", null) ?? nameIdentifier;
+                            if (nameIdentifier != null)
+                            {
+                                if (tags[language].Contains("entityname." + nameIdentifier)) { continue; }
+                            }
+                        }
+
+                        if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                        missingTags[nameIdentifier].Add(language);
+                    }
                 }
 
                 foreach (string englishTag in tags["English"])
@@ -1072,19 +1121,26 @@ namespace Barotrauma
                         if (language == "English") { continue; }
                         if (!tags[language].Contains(englishTag))
                         {
-                            if (!missingTags.ContainsKey(englishTag))
-                            {
-                                missingTags[englishTag] = new List<string>();
-                            }
+                            if (!missingTags.ContainsKey(englishTag)) { missingTags[englishTag] = new HashSet<string>(); }
                             missingTags[englishTag].Add(language);
                         }
                     }
                 }
+
+                List<string> lines = missingTags.Select(t => "\"" + t.Key + "\"\n    missing from " + string.Join(", ", t.Value)).ToList();
+
                 string filePath = "missingloca.txt";
-                File.WriteAllLines(filePath, missingTags.Select(t => "\""+t.Key + "\"\n    missing from " + string.Join(", ", t.Value)));
+                File.WriteAllLines(filePath, lines);
                 System.Diagnostics.Process.Start(Path.GetFullPath(filePath));
                 TextManager.Language = "English";
             }));
+
+#if DEBUG
+            commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
+            {
+                GameMain.Client.PrintReceiverTransters();
+            }));
+
 
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {
@@ -1428,6 +1484,69 @@ namespace Barotrauma
             commands.Add(new Command("csvtoxml", "Converts .csv localization files in Content/NPCConversations/language & Content/Texts/language to .xml files for use in-game.", (string[] args) =>
             {
                 LocalizationCSVtoXML.Convert();
+            }));
+
+            commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
+            {
+                string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\propertylocalization.txt";
+                File.WriteAllLines(path, SerializableEntityEditor.MissingLocalizations);
+            }));
+
+            commands.Add(new Command("getproperties", "Goes through the MapEntity prefabs and checks their serializable properties for localization issues.", (string[] args) =>
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen) return;
+                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+                {
+                    ep.DebugCreateInstance();
+                }
+
+                for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
+                {
+                    var entity = MapEntity.mapEntityList[i] as ISerializableEntity;
+                    if (entity != null)
+                    {
+                        List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+
+                        if (entity is Item item)
+                        {
+                            allProperties.AddRange(item.GetProperties<Editable>());
+                            allProperties.AddRange(item.GetProperties<InGameEditable>());
+                        }
+                        else
+                        {
+                            var properties = new List<SerializableProperty>();
+                            properties.AddRange(SerializableProperty.GetProperties<Editable>(entity));
+                            properties.AddRange(SerializableProperty.GetProperties<InGameEditable>(entity));
+
+                            for (int k = 0; k < properties.Count; k++)
+                            {
+                                allProperties.Add(new Pair<object, SerializableProperty>(entity, properties[k]));
+                            }
+                        }
+
+                        for (int j = 0; j < allProperties.Count; j++)
+                        {
+                            var property = allProperties[j].Second;
+                            string propertyName = (allProperties[j].First.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+                            string displayName = TextManager.Get($"sp.{propertyName}.name", returnNull: true);
+                            if (displayName == null)
+                            {
+                                displayName = property.Name.FormatCamelCaseWithSpaces();
+
+                                Editable editable = property.GetAttribute<Editable>();
+                                if (editable != null)
+                                {
+                                    if (!SerializableEntityEditor.MissingLocalizations.Contains($"sp.{propertyName}.name|{displayName}"))
+                                    {
+                                        NewMessage("Missing Localization for property: " + propertyName);
+                                        SerializableEntityEditor.MissingLocalizations.Add($"sp.{propertyName}.name|{displayName}");
+                                        SerializableEntityEditor.MissingLocalizations.Add($"sp.{propertyName}.description|{property.GetAttribute<Serialize>().Description}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }));
 #endif
 
@@ -2034,6 +2153,16 @@ namespace Barotrauma
 
             commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
             {
+                if (GameMain.NetworkMember != null)
+                {
+                    ThrowError("Cannot spawn additional submarines during a multiplayer session.");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please enter the name of the submarine.");
+                    return;
+                }
                 try
                 {
                     Submarine spawnedSub = Submarine.Load(args[0], false);

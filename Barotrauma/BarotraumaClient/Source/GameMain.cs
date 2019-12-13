@@ -409,14 +409,18 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            if (Config.AutoUpdateWorkshopItems)
+            CrossThread.RequestExecutionOnMainThread(() =>
             {
-                if (SteamManager.AutoUpdateWorkshopItems())
+                if (Config.AutoUpdateWorkshopItems)
                 {
-                    ContentPackage.LoadAll();
-                    Config.ReloadContentPackages();
+                    if (SteamManager.AutoUpdateWorkshopItems())
+                    {
+                        ContentPackage.LoadAll();
+                        Config.ReloadContentPackages();
+                    }
                 }
-            }
+            });
+            
 
             if (SelectedPackages.None())
             {
@@ -691,7 +695,7 @@ namespace Barotrauma
                     }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
-                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
+                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.PrimaryMouseButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
                     }
@@ -770,13 +774,20 @@ namespace Barotrauma
                             GUI.TogglePauseMenu();
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
-                        else if (Character.Controlled == null ||
-                            ((Character.Controlled.SelectedConstruction == null || !Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null))
+                        else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null))
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
+                        }
+
+                        bool itemHudActive()
+                        {
+                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            return 
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                                ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
 
@@ -845,6 +856,8 @@ namespace Barotrauma
                 CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
+
+                TaskPool.Update();
 
                 SoundManager?.Update();
 

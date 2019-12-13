@@ -522,11 +522,6 @@ namespace Barotrauma
                 OnSelected = (GUITickBox obj) => { Gap.ShowGaps = obj.Selected; return true; },
             };
 
-            tickBoxHolder.Children.ForEach(c => 
-            {
-                if (c is GUITickBox tb) { tb.RectTransform.MinSize = new Point(0, 32); }
-            });
-
             GUITextBlock.AutoScaleAndNormalize(tickBoxHolder.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
 
             //spacing
@@ -699,8 +694,6 @@ namespace Barotrauma
                 cam.Position = Submarine.MainSub.Position;
             }
 
-            SoundPlayer.OverrideMusicType = "none";
-            SoundPlayer.OverrideMusicDuration = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f, 0);
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
@@ -2381,18 +2374,18 @@ namespace Barotrauma
                 }
             }
 
-            if (PlayerInput.LeftButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
+            if (PlayerInput.PrimaryMouseButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
             {
                 entityFilterBox.Deselect();
             }
 
             if (loadFrame != null)
             {
-                if (PlayerInput.RightButtonClicked()) loadFrame = null;
+                if (PlayerInput.SecondaryMouseButtonClicked()) loadFrame = null;
             }
             else if (saveFrame != null)
             {
-                if (PlayerInput.RightButtonClicked()) saveFrame = null;
+                if (PlayerInput.SecondaryMouseButtonClicked()) saveFrame = null;
             }            
 
             if ((CharacterMode || WiringMode) && dummyCharacter != null)
@@ -2511,7 +2504,7 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            if (!PlayerInput.LeftButtonHeld()) Inventory.draggingItem = null;
+            if (!PlayerInput.PrimaryMouseButtonHeld()) Inventory.draggingItem = null;
                                               
             spriteBatch.End();
         }

@@ -90,7 +90,8 @@ namespace Barotrauma
 #if DEBUG
         public void CheckForDuplicates(int index)
         {
-            Dictionary<string, int> textCounts = new Dictionary<string, int>();
+            Dictionary<string, int> tagCounts = new Dictionary<string, int>();
+            Dictionary<string, int> contentCounts = new Dictionary<string, int>();
 
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return; }
@@ -98,28 +99,54 @@ namespace Barotrauma
             foreach (XElement subElement in doc.Root.Elements())
             {
                 string infoName = subElement.Name.ToString().ToLowerInvariant();
-                if (!textCounts.ContainsKey(infoName))
+                if (!tagCounts.ContainsKey(infoName))
                 {
-                    textCounts.Add(infoName, 1);
+                    tagCounts.Add(infoName, 1);
                 }
                 else
                 {
-                    textCounts[infoName] += 1;
+                    tagCounts[infoName] += 1;
+                }
+                
+                string infoContent = subElement.Value;
+                if (string.IsNullOrEmpty(infoContent)) continue;
+                if (!contentCounts.ContainsKey(infoContent))
+                {
+                    contentCounts.Add(infoContent, 1);
+                }
+                else
+                {
+                    contentCounts[infoContent] += 1;
                 }
             }
 
             StringBuilder sb = new StringBuilder();
             sb.Append("Language: " + Language);
             sb.AppendLine();
-            sb.Append("Duplicate entries:");
+            sb.Append("Duplicate tags:");
             sb.AppendLine();
             sb.AppendLine();
 
-            for (int i = 0; i < textCounts.Keys.Count; i++)
+            for (int i = 0; i < tagCounts.Keys.Count; i++)
             {
-                if (textCounts[texts.Keys.ElementAt(i)] > 1)
+                if (tagCounts[texts.Keys.ElementAt(i)] > 1)
                 {
-                    sb.Append(texts.Keys.ElementAt(i) + " Count: " + textCounts[texts.Keys.ElementAt(i)]);
+                    sb.Append(texts.Keys.ElementAt(i) + " | Count: " + tagCounts[texts.Keys.ElementAt(i)]);
+                    sb.AppendLine();
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.Append("Duplicate content:");
+            sb.AppendLine();
+            sb.AppendLine();
+
+            for (int i = 0; i < contentCounts.Keys.Count; i++)
+            {
+                if (contentCounts[contentCounts.Keys.ElementAt(i)] > 1)
+                {
+                    sb.Append(contentCounts.Keys.ElementAt(i) + " | Count: " + contentCounts[contentCounts.Keys.ElementAt(i)]);
                     sb.AppendLine();
                 }
             }

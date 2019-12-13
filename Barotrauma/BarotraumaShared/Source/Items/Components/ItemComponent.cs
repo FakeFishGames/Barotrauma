@@ -51,7 +51,18 @@ namespace Barotrauma.Items.Components
 
         public List<Skill> requiredSkills;
 
-        public ItemComponent Parent;
+        private ItemComponent parent;
+        public ItemComponent Parent
+        {
+            get { return parent; }
+            set
+            {
+                if (parent == value) { return; }
+                if (parent != null) { parent.OnActiveStateChanged -= SetActiveState; }
+                if (value != null) { value.OnActiveStateChanged += SetActiveState; }
+                parent = value;
+            }
+        }
 
         public readonly XElement originalElement;
 
@@ -67,6 +78,8 @@ namespace Barotrauma.Items.Components
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
+
+        public Action<bool> OnActiveStateChanged;
 
         public float IsActiveTimer;
         public virtual bool IsActive
@@ -84,6 +97,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #endif
+                if (value != IsActive) { OnActiveStateChanged?.Invoke(value); }
                 isActive = value;
             }
         }
@@ -304,15 +318,23 @@ namespace Barotrauma.Items.Components
 
                         break;
                     default:
-                        if (LoadElemProjSpecific(subElement)) break;
+                        if (LoadElemProjSpecific(subElement)) { break; }
                         ItemComponent ic = Load(subElement, item, item.ConfigFile, false);
-                        if (ic == null) break;
+                        if (ic == null) { break; }
 
                         ic.Parent = this;
+                        ic.IsActive = isActive;
+                        OnActiveStateChanged += ic.SetActiveState;
+
                         item.AddComponent(ic);
                         break;
                 }
             }
+        }
+
+        private void SetActiveState(bool isActive)
+        {
+            IsActive = isActive;
         }
 
         public void SetRequiredItems(XElement element)
@@ -587,8 +609,8 @@ namespace Barotrauma.Items.Components
 
         public bool HasRequiredContainedItems(Character user, bool addMessage, string msg = null)
         {
-            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) return true;
-            if (item.OwnInventory == null) return false;
+            if (!requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return true; }
+            if (item.OwnInventory == null) { return false; }
 
             foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Contained])
             {
@@ -608,9 +630,27 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        /// <summary>
+        /// Only checks the id card(s). Much simpler and a bit different than HasRequiredItems.
+        /// </summary>
+        public bool HasAccess(Character character)
+        {
+            if (character.Inventory == null) { return false; }
+            if (requiredItems.None()) { return true; }
+
+            foreach (Item item in character.Inventory.Items)
+            {
+                if (item?.Prefab.Identifier == "idcard" && requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(item))))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
-            if (!requiredItems.Any()) { return true; }
+            if (requiredItems.None()) { return true; }
             if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;
@@ -696,14 +736,18 @@ namespace Barotrauma.Items.Components
 
         public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
-            if (componentElement == null || usePrefabValues) { return; }
-            foreach (XAttribute attribute in componentElement.Attributes())
-            {
-                if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
-                property.TrySetValue(this, attribute.Value);
+            if (componentElement != null && !usePrefabValues) 
+            { 
+                foreach (XAttribute attribute in componentElement.Attributes())
+                {
+                    if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
+                    property.TrySetValue(this, attribute.Value);
+                }
+                ParseMsg();
+                OverrideRequiredItems(componentElement);
             }
-            ParseMsg();
-            OverrideRequiredItems(componentElement);
+
+            if (item.Submarine != null) { SerializableProperty.UpgradeGameVersion(this, originalElement, item.Submarine.GameVersion); }
         }
 
         /// <summary>

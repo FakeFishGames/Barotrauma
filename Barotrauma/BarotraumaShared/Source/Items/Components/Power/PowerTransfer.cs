@@ -267,12 +267,22 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             var connections = Item.Connections;
-            PowerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);  
+            PowerConnections = connections == null ? new List<Connection>() : connections.FindAll(c => c.IsPower);
             if (connections == null)
             {
                 IsActive = false;
                 return;
             }
+
+            if (!(this is RelayComponent))
+            {
+                if (PowerConnections.Any(p => !p.IsOutput) && PowerConnections.Any(p => p.IsOutput))
+                {
+                    DebugConsole.ThrowError("Error in item \"" + Name + "\" - PowerTransfer components should not have separate power inputs and outputs, but transfer power between wires connected to the same power connection. " +
+                        "If you want power to pass from input to output, change the component to a RelayComponent.");
+                }
+            }
+
             SetAllConnectionsDirty();
         }
 
@@ -280,6 +290,8 @@ namespace Barotrauma.Items.Components
         {
             //we've already received this signal
             if (lastPowerProbeRecipients.Contains(this)) { return; }
+            if (item.Condition <= 0.0f) { return; }
+
             lastPowerProbeRecipients.Add(this);
 
             if (power < 0.0f)
@@ -306,9 +318,9 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
-                        //powertransfer components don't need to receive the signal in the pass-through signal connections
+                        //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && connection.Name.Contains("signal")) { continue; }
+                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 

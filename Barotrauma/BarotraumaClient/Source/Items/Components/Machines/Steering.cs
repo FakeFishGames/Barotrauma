@@ -77,19 +77,6 @@ namespace Barotrauma.Items.Components
             set { maintainPosTickBox.Selected = value; }
         }
 
-        private bool dockingModeEnabled;
-        public bool DockingModeEnabled
-        {
-            get { return UseAutoDocking && dockingModeEnabled; }
-            set { dockingModeEnabled = value; }
-        }
-
-        public bool UseAutoDocking
-        {
-            get;
-            set;
-        } = true;
-
         private float steerRadius;
         public float? SteerRadius
         {
@@ -102,11 +89,6 @@ namespace Barotrauma.Items.Components
                 steerRadius = value ?? (steerArea.Rect.Width / 2);
             }
         }
-
-        public List<DockingPort> DockingSources = new List<DockingPort>();
-        public DockingPort ActiveDockingSource, DockingTarget;
-
-        private bool searchedConnectedDockingPort;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -405,28 +387,6 @@ namespace Barotrauma.Items.Components
             steerRadius = steerArea.Rect.Width / 2;
         }
 
-        private void FindConnectedDockingPort()
-        {
-           foreach (MapEntity linkedTo in item.linkedTo)
-            {
-                if (linkedTo is Item item)
-                {
-                    var port = item.GetComponent<DockingPort>();
-                    if (port != null)
-                    {
-                        DockingSources.Add(port);
-                    }
-                }
-            }
-
-            var dockingConnection = item.Connections.FirstOrDefault(c => c.Name == "toggle_docking");
-            if (dockingConnection != null)
-            {
-                var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
-                DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.IsOutpost));
-            }            
-        }
-
         /// <summary>
         /// Makes the sonar view CustomComponent render the steering HUD, preventing it from being drawn behing the sonar
         /// </summary>
@@ -601,12 +561,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!searchedConnectedDockingPort)
-            {
-                FindConnectedDockingPort();
-                searchedConnectedDockingPort = true;
-            }
-
             if (steerArea.Rect.Contains(PlayerInput.MousePosition))
             {
                 if (!PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
@@ -682,7 +636,7 @@ namespace Barotrauma.Items.Components
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
                     displaySubPos.Y = -displaySubPos.Y;

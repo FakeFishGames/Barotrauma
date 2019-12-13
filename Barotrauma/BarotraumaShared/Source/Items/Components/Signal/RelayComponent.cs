@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -59,7 +60,28 @@ namespace Barotrauma.Items.Components
         {
             IsActive = true;
             throttlePowerOutput = MaxPower;
-        }        
+        }
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            var connections = Item.Connections;
+            if (connections != null)
+            {
+                foreach (KeyValuePair<string, string> connectionPair in connectionPairs)
+                {
+                    if (connections.Any(c => c.Name == connectionPair.Key) && !connections.Any(c => c.Name == connectionPair.Value))
+                    {
+                        DebugConsole.ThrowError("Error in item \"" + Name + "\" - matching connection pair not found for the connection \"" + connectionPair.Key + "\" (expecting \"" + connectionPair.Value + "\").");
+                    }
+                    else if (connections.Any(c => c.Name == connectionPair.Value) && !connections.Any(c => c.Name == connectionPair.Key))
+                    {
+                        DebugConsole.ThrowError("Error in item \"" + Name + "\" - matching connection pair not found for the connection \"" + connectionPair.Value + "\" (expecting \"" + connectionPair.Key + "\").");
+                    }
+                }
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             RefreshConnections();
@@ -102,7 +124,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
         {
-            if (!IsOn) { return; }
+            if (!IsOn || item.Condition <= 0.0f) { return; }
 
             //we've already received this signal
             if (lastPowerProbeRecipients.Contains(this)) { return; }

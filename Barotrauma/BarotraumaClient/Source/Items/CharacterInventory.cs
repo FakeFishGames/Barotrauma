@@ -30,7 +30,8 @@ namespace Barotrauma
             TakeFromCharacter,
             PutToContainer,
             PutToCharacter,
-            UseTreatment
+            PutToEquippedItem,
+            UseTreatment,
         }
 
         private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
@@ -621,7 +622,7 @@ namespace Barotrauma
 
             var quickUseAction = GetQuickUseAction(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
             slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
-                "" : TextManager.Get("QuickUseAction." + quickUseAction.ToString());
+                "" : TextManager.GetWithVariable("QuickUseAction." + quickUseAction.ToString(), "[equippeditem]", character.SelectedItems.FirstOrDefault(i => i != null)?.Name);
 
             //equipped item that can't be put in the inventory, use delayed dropping
             if (quickUseAction == QuickUseAction.Drop)
@@ -630,7 +631,7 @@ namespace Barotrauma
                     TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
                     (GameMain.Config.Language == "English" ? "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
 
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     slot.QuickUseTimer = Math.Max(0.1f, slot.QuickUseTimer + deltaTime);
                     if (slot.QuickUseTimer >= 1.0f)
@@ -646,8 +647,8 @@ namespace Barotrauma
             }
             else
             {
-                if (PlayerInput.LeftButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     QuickUseItem(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
                 }
@@ -773,6 +774,10 @@ namespace Barotrauma
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }
+                else if (character.SelectedItems.Any(i => i?.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                {
+                    return QuickUseAction.PutToEquippedItem;
+                }
                 else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
@@ -879,7 +884,22 @@ namespace Barotrauma
                     {
                         success = TryPutItemWithAutoEquipCheck(item, Character.Controlled, item.AllowedSlots, true);
                     }
-                    break;  
+                    break;
+                case QuickUseAction.PutToEquippedItem:
+                    for (int i = 0; i < character.SelectedItems.Length; i++)
+                    {
+                        if (character.SelectedItems[i]?.OwnInventory != null && 
+                            character.SelectedItems[i].OwnInventory.TryPutItem(item, Character.Controlled))
+                        {
+                            success = true;
+                            for (int j = 0; j < capacity; j++)
+                            {
+                                if (Items[j] == character.SelectedItems[i]) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
+                            }
+                            break;
+                        }
+                    }
+                    break;
             }
 
             if (success)

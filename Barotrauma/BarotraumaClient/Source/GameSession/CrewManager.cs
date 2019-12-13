@@ -410,13 +410,12 @@ namespace Barotrauma
             };
 
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                "GUISoundIcon")
+                sprite: GUI.Style.GetComponentStyle("GUISoundIcon").Sprites[GUIComponent.ComponentState.None].FirstOrDefault().Sprite, scaleToFit: true)
             {
-                UserData = "soundicon",
+                UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
                 Visible = true
             };
-            soundIcon.Color = new Color(soundIcon.Color, 0.0f);
             new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
                 "GUISoundIconDisabled")
             {
@@ -646,7 +645,9 @@ namespace Barotrauma
         {
             List<GUIComponent> components = component.GetAllChildren().ToList();
             components.Add(component);
-            components.RemoveAll(c => c.UserData as string == "soundicon" || c.UserData as string == "soundicondisabled");
+            components.RemoveAll(c => 
+                c.UserData is Pair<string, float> pair && pair.First == "soundicon" || 
+                c.UserData as string == "soundicondisabled");
 
             foreach (GUIComponent comp in components)
             {
@@ -730,13 +731,8 @@ namespace Barotrauma
 
             var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
             if (playerFrame == null) { return; }
-            var soundIcon = playerFrame.FindChild("soundicon");
+            var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
             var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
-
-            if (!soundIcon.Visible)
-            {
-                soundIcon.Color = new Color(soundIcon.Color, 0.0f);
-            }
             soundIcon.Visible = !muted && !mutedLocally;
             soundIconDisabled.Visible = muted || mutedLocally;
             soundIconDisabled.ToolTip = TextManager.Get(mutedLocally ? "MutedLocally" : "MutedGlobally");
@@ -751,8 +747,11 @@ namespace Barotrauma
         {
             var playerFrame = characterListBox.Content.FindChild(character)?.FindChild(character);
             if (playerFrame == null) { return; }
-            var soundIcon = playerFrame.FindChild("soundicon");
-            soundIcon.Color = new Color(soundIcon.Color, 1.0f);
+            var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
+            Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
+            userdata.Second = 1.0f;
+
+            soundIcon.Color = Color.White;
         }
 
         #endregion
@@ -1184,12 +1183,8 @@ namespace Barotrauma
                 {
                     child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
 
-                    var soundIcon = child.FindChild(character)?.FindChild("soundicon");
-                    if (soundIcon != null)
-                    {
-                        soundIcon.Color = new Color(soundIcon.Color, (soundIcon.Color.A / 255.0f) - deltaTime);
-                    }
-
+                    var soundIcon = child.FindChild(character)?.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") as GUIImage;
+                    VoipClient.UpdateVoiceIndicator(soundIcon, 0.0f, deltaTime);
 
                     GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
                     if (wrongOrderList != null)
@@ -1263,7 +1258,7 @@ namespace Barotrauma
                 }
                 hoverArea.Inflate(100, 100);
 
-                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
+                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.SecondaryMouseButtonClicked())
                 {
                     orderTargetFrame = null;
                     OrderOptionButtons.Clear();

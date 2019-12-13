@@ -161,6 +161,12 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
+            // Inside of a container
+            if (container != null)
+            {
+                return false;
+            }
+
             //no drawable components and the body has been disabled = nothing to draw
             if (drawableComponents.Count == 0 && body != null && !body.Enabled)
             {
@@ -454,8 +460,8 @@ namespace Barotrauma
             if (!Linkable) { return; }
 
             if (!PlayerInput.KeyDown(Keys.Space)) { return; }
-            bool lClick = PlayerInput.LeftButtonClicked();
-            bool rClick = PlayerInput.RightButtonClicked();
+            bool lClick = PlayerInput.PrimaryMouseButtonClicked();
+            bool rClick = PlayerInput.SecondaryMouseButtonClicked();
             if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -804,10 +810,7 @@ namespace Barotrauma
                 {
                     if (ic is Repairable repairable)
                     {
-                        if (ConditionPercentage < repairable.ShowRepairUIThreshold)
-                        {
-                            color = Color.Cyan;
-                        }
+                        if (!IsFullCondition) { color = Color.Cyan; }
                     }
                     else
                     {
@@ -1006,6 +1009,8 @@ namespace Barotrauma
                 positionBuffer.Clear();
                 return;
             }
+
+            isActive = true;
 
             Vector2 newVelocity = body.LinearVelocity;
             Vector2 newPosition = body.SimPosition;

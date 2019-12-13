@@ -101,8 +101,8 @@ namespace Barotrauma
             }
             
             if (!PlayerInput.KeyDown(Keys.Space)) return;
-            bool lClick = PlayerInput.LeftButtonClicked();
-            bool rClick = PlayerInput.RightButtonClicked();
+            bool lClick = PlayerInput.PrimaryMouseButtonClicked();
+            bool rClick = PlayerInput.SecondaryMouseButtonClicked();
             if (!lClick && !rClick) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -160,13 +160,13 @@ namespace Barotrauma
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
                 if (Submarine.RectContains(WorldRect, position))
                 {
-                    if (PlayerInput.LeftButtonHeld())
+                    if (PlayerInput.PrimaryMouseButtonHeld())
                     {
                         WaterVolume += 1500.0f;
                         networkUpdatePending = true;
                         serverUpdateDelay = 0.5f;
                     }
-                    else if (PlayerInput.RightButtonHeld())
+                    else if (PlayerInput.SecondaryMouseButtonHeld())
                     {
                         WaterVolume -= 1500.0f;
                         networkUpdatePending = true;
@@ -179,7 +179,7 @@ namespace Barotrauma
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
                 if (Submarine.RectContains(WorldRect, position))
                 {
-                    if (PlayerInput.LeftButtonClicked())
+                    if (PlayerInput.PrimaryMouseButtonClicked())
                     {
                         new FireSource(position, this, isNetworkMessage: true);
                         networkUpdatePending = true;

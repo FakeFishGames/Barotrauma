@@ -36,7 +36,8 @@ namespace Barotrauma
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanSpeciesName, "", jobPrefab));
+                    var variant = Rand.Range(0, jobPrefab.Variants);
+                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
                 }
             }
         }

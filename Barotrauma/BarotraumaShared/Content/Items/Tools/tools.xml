@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" preferredcontainers="locker" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" preferredcontainers="locker" showcontentsintooltip="true" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
@@ -14,7 +14,7 @@
     <Body width="45" height="31" density="20" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="0,10" handle2="-15,10" holdangle="0" reload="1" range="50" combatpriority="5" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="10" itemdamage="5" stun="0.6" targetimpulse="30">
-        <Affliction identifier="internaldamage" strength="2" />
+        <Affliction identifier="blunttrauma" strength="2" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
@@ -69,7 +69,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" delay="1.0" stackable="false" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
-        <Explosion range="250.0" structuredamage="50" force="3.0">
+        <Explosion range="250.0" structuredamage="25" force="3.0">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
@@ -77,7 +77,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" delay="1.0" stackable="false" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
-        <Explosion range="250.0" structuredamage="75" force="6.0">
+        <Explosion range="250.0" structuredamage="55" force="6.0">
           <Affliction identifier="burn" strength="75" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
@@ -135,7 +135,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="weldingfueltank,incendiumfueltank" delay="1.0" stackable="false" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
-        <Explosion range="250.0" structuredamage="50" force="3.0">
+        <Explosion range="250.0" structuredamage="25" force="3.0">
           <Affliction identifier="burn" strength="50" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
@@ -143,7 +143,7 @@
       <StatusEffect type="OnUse" targettype="Contained" targets="incendiumfueltank" delay="1.0" stackable="false" Condition="-100.0">
         <sound file="Content/Items/Weapons/ExplosionSmall1.ogg" range="5000" />
         <sound file="Content/Items/Weapons/ExplosionDebris1.ogg" range="5000" />
-        <Explosion range="250.0" structuredamage="75" force="6.0">
+        <Explosion range="250.0" structuredamage="55" force="6.0">
           <Affliction identifier="burn" strength="75" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
@@ -223,7 +223,8 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="extinguisher" category="Equipment" Tags="smallitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
+    <Upgrade gameversion="0.9.600.0" Tags="mediumitem,extinguisher" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -238,7 +239,7 @@
     </Fabricate>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="0,0,64,64" origin="0.5,0.5" />
     <Sprite texture="Content/Items/InventoryIconAtlas.png" depth="0.55" sourcerect="0,0,64,64" origin="0.5,0.5" />
-    <Body radius="10" height="45" density="5" />
+    <Body width="17" height="48" density="5" />
     <Holdable slots="RightHand+LeftHand" controlpose="false" aimpos="40,-20" handle1="-2,30" msg="ItemMsgPickUpSelect" />
     <RepairTool extinguishamount="60.0" range="500" barrelpos="21,25" repairthroughholes="true">
       <ParticleEmitter particle="extinguisher" velocitymin="500.0" velocitymax="650.0" particlespersecond="50" />
@@ -282,7 +283,7 @@
     <Body width="30" height="7" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="40,5" handle1="-12,-5" holdangle="60" reload="1.0" range="50" combatpriority="10" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="2" itemdamage="2" stun="0.2" targetimpulse="20">
-        <Affliction identifier="internaldamage" strength="4" />
+        <Affliction identifier="blunttrauma" strength="4" />
         <Sound file="Content/Items/Weapons/Smack1.ogg" range="800" />
       </Attack>
     </MeleeWeapon>
@@ -305,7 +306,7 @@
     <Body width="60" height="10" density="50" />
     <MeleeWeapon slots="RightHand+LeftHand,Any" controlpose="true" aimpos="45,10" handle1="-20,-7" handle2="-10,0" holdangle="60" reload="1" range="100" combatpriority="20" msg="ItemMsgPickUpSelect">
       <Attack structuredamage="5" itemdamage="5" stun="0.3" targetimpulse="20">
-        <Affliction identifier="internaldamage" strength="8" />
+        <Affliction identifier="blunttrauma" strength="8" />
         <Sound file="Content/Items/Weapons/Smack2.ogg" range="800" />
       </Attack>
     </MeleeWeapon>

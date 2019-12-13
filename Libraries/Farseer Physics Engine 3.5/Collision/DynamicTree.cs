@@ -279,7 +279,7 @@ namespace FarseerPhysics.Collision
         /// <typeparam name="T"></typeparam>
         /// <param name="proxyId">The proxy id.</param>
         /// <param name="userData">The proxy user data.</param>
-        public void SetUserData(int proxyId, T userData, Body body = null)
+        public void SetUserData(int proxyId, T userData, Body body)
         {
             _nodes[proxyId].UserData = userData;
             _nodes[proxyId].Body = body;
@@ -871,7 +871,7 @@ namespace FarseerPhysics.Collision
                     _nodes[iB].Child2 = iD;
                     _nodes[iA].Child1 = iE;
                     _nodes[iE].ParentOrNext = iA;
-                    _nodes[iA].AABB.Combine(ref _nodes[iC].AABB, ref  _nodes[iE].AABB);
+                    _nodes[iA].AABB.Combine(ref _nodes[iC].AABB, ref _nodes[iE].AABB);
                     _nodes[iB].AABB.Combine(ref _nodes[iA].AABB, ref _nodes[iD].AABB);
 
                     _nodes[iA].Height = 1 + Math.Max(_nodes[iC].Height, _nodes[iE].Height);
