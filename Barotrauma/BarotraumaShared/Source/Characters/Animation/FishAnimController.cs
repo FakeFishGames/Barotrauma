@@ -735,6 +735,10 @@ namespace Barotrauma
                 if (limb.LightSource != null)
                 {
                     limb.LightSource.Color = Color.Lerp(limb.InitialLightSourceColor, Color.TransparentBlack, deathAnimTimer / deathAnimDuration);
+                    if (limb.InitialLightSpriteAlpha.HasValue)
+                    {
+                        limb.LightSource.OverrideLightSpriteAlpha = MathHelper.Lerp(limb.InitialLightSpriteAlpha.Value, 0.0f, deathAnimTimer / deathAnimDuration);
+                    }
                 }
 #endif
                 if (limb.type == LimbType.Head || limb.type == LimbType.Tail || limb.IsSevered || !limb.body.Enabled) continue;
