@@ -271,6 +271,7 @@ namespace Barotrauma
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
         public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
+        public bool CanAttackCharacters => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Character));
 
         public float Dir => dir == Direction.Left ? -1.0f : 1.0f;
 

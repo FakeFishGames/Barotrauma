@@ -77,12 +77,14 @@ namespace Barotrauma
         
         private AITargetMemory selectedTargetMemory;
         private float targetValue;
+        private CharacterParams.TargetParams selectedTargetingParams;
                 
         private Dictionary<AITarget, AITargetMemory> targetMemories;
         
         private float colliderWidth;
         private float colliderLength;
         private bool canAttackSub;
+        private bool canAttackCharacters;
 
         // TODO: expose?
         private readonly float priorityAvoidIncreasement = 1;
@@ -100,7 +102,7 @@ namespace Barotrauma
             get
             {
                 var target = GetTarget(Character.HumanSpeciesName);
-                return target != null && target.State == AIState.Attack && target.Priority > 0.0f;
+                return target != null && target.Priority > 0.0f && (target.State == AIState.Attack || target.State == AIState.Aggressive);
             }
         }
 
@@ -109,7 +111,7 @@ namespace Barotrauma
             get
             {
                 var target = GetTarget("room");
-                return target != null && target.State == AIState.Attack && target.Priority > 0.0f;
+                return target != null && target.Priority > 0.0f && (target.State == AIState.Attack || target.State == AIState.Aggressive);
             }
         }
 
@@ -214,6 +216,7 @@ namespace Barotrauma
             avoidLookAheadDistance = Math.Max(colliderWidth * 3, 1.5f);
 
             canAttackSub = Character.AnimController.CanAttackSubmarine;
+            canAttackCharacters = Character.AnimController.CanAttackCharacters;
         }
 
         private CharacterParams.AIParams AIParams => Character.Params.AI;
@@ -227,6 +230,8 @@ namespace Barotrauma
             selectedTargetMemory = GetTargetMemory(target);
             selectedTargetMemory.Priority = priority;
         }
+
+        private float escapeMargin;
         
         public override void Update(float deltaTime)
         {
@@ -292,6 +297,7 @@ namespace Barotrauma
                 }
                 else if (targetingParams != null)
                 {
+                    selectedTargetingParams = targetingParams;
                     State = targetingParams.State;
                 }
             }
@@ -345,59 +351,33 @@ namespace Barotrauma
                         State = AIState.Idle;
                         return;
                     }
-                    float distance = Vector2.Distance(WorldPosition, SelectedAiTarget.WorldPosition);
+                    float distance = Vector2.DistanceSquared(WorldPosition, SelectedAiTarget.WorldPosition);
                     var attackLimb = GetAttackLimb(SelectedAiTarget.WorldPosition);
-                    if (attackLimb != null && distance <= attackLimb.attack.Range)
+                    if (attackLimb != null && distance <= Math.Pow(attackLimb.attack.Range, 2))
                     {
                         run = true;
                         UpdateAttack(deltaTime);
                     }
                     else
                     {
-                        float reactDistance = GetPerceivingRange(SelectedAiTarget);
-                        if (SelectedAiTarget.Entity is Character targetCharacter)
+                        float reactDistance = selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
+                        if (distance <= Math.Pow(reactDistance + escapeMargin, 2))
                         {
-                            // First use species name, if defined.
-                            // Then try to use stronger/weaker tags.
-                            // If none found, just use the perceiving range.
-                            string tag = null;
-                            if (!AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams targetParams))
+                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && distance < Math.Pow(reactDistance / 2, 2))
                             {
-                                if (targetCharacter.AIController is EnemyAIController enemy)
-                                {
-                                    if (enemy.CombatStrength > CombatStrength)
-                                    {
-                                        tag = "stronger";
-                                    }
-                                    else if (enemy.CombatStrength < CombatStrength)
-                                    {
-                                        tag = "weaker";
-                                    }
-                                }
-                            }
-                            if (targetParams == null && tag != null)
-                            {
-                                AIParams.TryGetTarget(tag, out targetParams);
-                            }
-                            if (targetParams?.ReactDistance > 0)
-                            {
-                                reactDistance = targetParams.ReactDistance;
-                            }
-                        }
-                        if (distance <= reactDistance)
-                        {
-                            run = distance < reactDistance / 2;
-                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && run)
-                            {
+                                run = true;
                                 UpdateAttack(deltaTime);
                             }
                             else
                             {
+                                run = distance < Math.Pow(reactDistance / 2, 2);
+                                escapeMargin = MathHelper.Clamp(escapeMargin += deltaTime, 200, 1000);
                                 UpdateEscape(deltaTime);
                             }
                         }
                         else
                         {
+                            escapeMargin = 0;
                             UpdateIdle(deltaTime);
                         }
                     }
@@ -1161,8 +1141,11 @@ namespace Barotrauma
 
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackWhenProvoked)
             {
-                ChangeTargetState(attacker, AIState.Attack, 100);
-                //SelectTarget(attacker.AiTarget, 100);
+                if (attacker.Submarine == Character.Submarine && canAttackCharacters ||
+                    attacker.Submarine != null && canAttackSub)
+                {
+                    ChangeTargetState(attacker, AIState.Attack, 100);
+                }
             }
 
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget);
@@ -1710,48 +1693,35 @@ namespace Barotrauma
         /// </summary>
         private void ChangeTargetState(Character target, AIState state, float? priority = null)
         {
-            string tag = target.SpeciesName;
-            if (!AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
-            {
-                if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
-                {
-                    tempParams.Add(tag, targetParams);
-                }
-            }
-            if (targetParams != null)
-            {
-                if (priority.HasValue)
-                {
-                    targetParams.Priority = priority.Value;
-                }
-                targetParams.State = state;
-                if (!modifiedParams.ContainsKey(tag))
-                {
-                    modifiedParams.Add(tag, targetParams);
-                }
-            }
+            ChangeParams(target.SpeciesName);
             // If the target is shooting from the submarine, we might not perceive it because it doesn't move.
-            // --> Target the submarine too, because they can be more perceivable.
-            if (target.Submarine != null && target.IsHuman && canAttackSub)
+            // --> Target the submarine too.
+            if (target.Submarine != null && state == AIState.Attack && canAttackSub)
             {
-                string roomTag = "room";
-                if (!AIParams.TryGetTarget(roomTag, out CharacterParams.TargetParams roomParams))
+                ChangeParams("room");
+                ChangeParams("wall");
+                ChangeParams("door");
+            }
+
+            void ChangeParams(string tag)
+            {
+                if (!AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
                 {
-                    if (AIParams.TryAddNewTarget(roomTag, state, priority ?? 100, out roomParams))
+                    if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
                     {
-                        tempParams.Add(roomTag, roomParams);
+                        tempParams.Add(tag, targetParams);
                     }
                 }
-                if (roomParams != null)
+                if (targetParams != null)
                 {
                     if (priority.HasValue)
                     {
                         targetParams.Priority = priority.Value;
                     }
-                    roomParams.State = state;
-                    if (!modifiedParams.ContainsKey(roomTag))
+                    targetParams.State = state;
+                    if (!modifiedParams.ContainsKey(tag))
                     {
-                        modifiedParams.Add(roomTag, roomParams);
+                        modifiedParams.Add(tag, targetParams);
                     }
                 }
             }
@@ -1764,6 +1734,7 @@ namespace Barotrauma
             Character.AnimController.ReleaseStuckLimbs();
             escapePoint = Vector2.Zero;
             AttackingLimb = null;
+            escapeMargin = 0;
         }
 
         private float GetPerceivingRange(AITarget target) => Math.Max(target.SightRange * Sight, target.SoundRange * Hearing);
