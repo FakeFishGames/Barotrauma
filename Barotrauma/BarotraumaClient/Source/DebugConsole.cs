@@ -1627,7 +1627,33 @@ namespace Barotrauma
                     ThrowError("TutorialSub.sub not found!");
                 }
             }));
-            
+
+            commands.Add(new Command("reloadcorepackage", "", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    if (Screen.Selected == GameMain.GameScreen)
+                    {
+                        ThrowError("Reloading the core package while in GameScreen WILL break everything; to do it anyway, type 'reloadcorepackage force'");
+                        return;
+                    }
+
+                    if (Screen.Selected == GameMain.SubEditorScreen)
+                    {
+                        ThrowError("Reloading the core package while in sub editor WILL break everything; to do it anyway, type 'reloadcorepackage force'");
+                        return;
+                    }
+                }
+
+                if (GameMain.NetworkMember != null)
+                {
+                    ThrowError("Cannot change content packages while playing online");
+                    return;
+                }
+
+                GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
+            }));
+
             AssignOnClientExecute(
                 "giveperm",
                 (string[] args) =>

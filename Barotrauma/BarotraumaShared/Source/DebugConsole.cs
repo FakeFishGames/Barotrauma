@@ -191,34 +191,6 @@ namespace Barotrauma
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-            commands.Add(new Command("reloadcorepackage", "", (string[] args) =>
-            {
-                if (args.Length < 2)
-                {
-                    if (Screen.Selected == GameMain.GameScreen)
-                    {
-                        ThrowError("Reloading the core package while in GameScreen WILL break everything; to do it anyway, type 'reloadcorepackage force'");
-                        return;
-                    }
-
-                    if (Screen.Selected == GameMain.SubEditorScreen)
-                    {
-                        ThrowError("Reloading the core package while in sub editor WILL break everything; to do it anyway, type 'reloadcorepackage force'");
-                        return;
-                    }
-                }
-
-#if CLIENT
-                if (GameMain.Client != null)
-                {
-                    ThrowError("Cannot change content packages while connected to server");
-                    return;
-                }
-#endif
-
-                GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
-            }));
-
             commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", (string[] args) =>
             {
                 SpawnCharacter(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), out string errorMsg);
