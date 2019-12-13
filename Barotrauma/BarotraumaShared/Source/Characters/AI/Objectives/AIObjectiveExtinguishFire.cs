@@ -111,7 +111,7 @@ namespace Barotrauma
                             extinguisher.Use(deltaTime, character);
                             if (!targetHull.FireSources.Contains(fs))
                             {
-                                character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.RoomName, true), null, 0, "putoutfire", 10.0f);
+                                character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, true), null, 0, "putoutfire", 10.0f);
                             }
                         }
                         else
