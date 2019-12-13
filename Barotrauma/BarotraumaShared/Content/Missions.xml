@@ -239,8 +239,8 @@
     identifier="killthresherswarm1"
     type="Monster"
     description="A swarm of threshers has been terrorizing vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to any crew who can neutralize it."
-    commonness="45"
-    reward="3000"
+    commonness="30"
+    reward="6000"
     sonarlabel="Thresher Swarm"
     successmessage="The swarm has been terminated.">
     <monster character="tigerthresher" min="5" max="10"/>
