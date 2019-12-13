@@ -29,7 +29,7 @@
     <Item identifier="hydroxyapatite" />
     <Item identifier="smallmudraptoregg" />
   </Inventory>
-  <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackonlywhenprovoked="False">
+  <ai combatstrength="250" sight="0.75" hearing="1" aggressiveboarding="True" fleehealththreshold="20" aggressiongreed="30" aggressionhurt="100" attackwhenprovoked="False">
     <latchonto attachtowalls="true" attachtosub="false" />
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="provocative" state="Attack" priority="200" />

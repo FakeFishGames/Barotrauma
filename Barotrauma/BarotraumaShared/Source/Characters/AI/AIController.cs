@@ -12,7 +12,6 @@ namespace Barotrauma
         public readonly Character Character;
 
         private AIState state;
-        private AIState previousState;
 
         protected void ResetAITarget()
         {
@@ -38,6 +37,7 @@ namespace Barotrauma
                     {
                         _lastAiTarget = _previousAiTarget;
                     }
+                    OnTargetChanged(_previousAiTarget, _selectedAiTarget);
                 }
             }
         }
@@ -91,13 +91,13 @@ namespace Barotrauma
             set
             {
                 if (state == value) { return; }
-                previousState = state;
+                PreviousState = state;
                 OnStateChanged(state, value);
                 state = value;
             }
         }
 
-        public AIState PreviousState => previousState;
+        public AIState PreviousState { get; protected set; }
 
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
@@ -143,6 +143,7 @@ namespace Barotrauma
         }
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
-             
+        protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
+
     }
 }

@@ -2,7 +2,7 @@
   <ragdolls folder="Content/Characters/Bonethresher/Ragdolls/" />
   <animations folder="Content/Characters/Bonethresher/Animations/" />
   <health vitality="300" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="2" burnreduction="0" healthregeneration="10" constanthealthregeneration="0" healthregenerationwheneating="2" />
-  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="false">
+  <ai combatstrength="400" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False" avoidgunfire="false">
     <target tag="decoy" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
     <target tag="stronger" state="Attack" priority="80" />

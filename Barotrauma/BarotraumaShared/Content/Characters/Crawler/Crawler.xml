@@ -26,7 +26,7 @@
   <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="50">
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False">
+  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackwhenprovoked="False">
     <target tag="decoy" state="Attack" priority="150" />
     <target tag="stronger" state="Escape" priority="200" />
     <target tag="provocative" state="Attack" priority="90" />

@@ -31,7 +31,7 @@
   <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death2.ogg" state="Die" range="4000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadgold/HAMMERHEADg_death3.ogg" state="Die" range="4000" volume="1" gender="None" />
   
-  <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="50" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+  <ai combatstrength="400" sight="3" hearing="2" aggressionhurt="50" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False">
     <target tag="decoy" state="Attack" priority="300" />
     <target tag="nasonov" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />

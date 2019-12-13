@@ -16,7 +16,7 @@
   <sound file="Content/Characters/Charybdis/CHARYBDIS_damage2.ogg" state="Damage" range="6000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death1.ogg" state="Die" range="8000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death2.ogg" state="Die" range="8000" volume="1" gender="None" />
-  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
+  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="provocative" state="Attack" priority="150" />
     <targetpriority tag="stronger" state="Attack" priority="110" />

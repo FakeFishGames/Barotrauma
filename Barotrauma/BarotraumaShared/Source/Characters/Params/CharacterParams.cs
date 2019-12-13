@@ -438,8 +438,8 @@ namespace Barotrauma
             [Serialize(0f, true, description: "If the health drops below this threshold, the character flees. In percentages."), Editable(minValue: 0f, maxValue: 100f)]
             public float FleeHealthThreshold { get; private set; }
 
-            [Serialize(false, true, description: "Does the character attack ONLY when provoked?"), Editable()]
-            public bool AttackOnlyWhenProvoked { get; private set; }
+            [Serialize(false, true, description: "Does the character attack when provoked? When enabled, overrides the predefined targeting state with Attack and increases the priority of it."), Editable()]
+            public bool AttackWhenProvoked { get; private set; }
 
             [Serialize(true, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
             public bool AvoidGunfire { get; private set; }
@@ -499,7 +499,7 @@ namespace Barotrauma
 
             public bool TryGetTarget(string targetTag, out TargetParams target)
             {
-                target = targets.FirstOrDefault(t => t.Tag == targetTag);
+                target = targets.FirstOrDefault(t => string.Equals(t.Tag, targetTag, StringComparison.OrdinalIgnoreCase));
                 return target != null;
             }
 
@@ -526,8 +526,11 @@ namespace Barotrauma
             [Serialize(AIState.Idle, true), Editable]
             public AIState State { get; set; }
 
-            [Serialize(0f, true, description: "What base priority is given to the target?"), Editable(minValue: 0f, maxValue: 1000f)]
+            [Serialize(0f, true, description: "What base priority is given to the target?"), Editable(minValue: 0f, maxValue: 1000f, ValueStep = 1, DecimalCount = 0)]
             public float Priority { get; set; }
+
+            [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. Eg. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
+            public float ReactDistance { get; set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 
