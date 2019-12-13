@@ -627,9 +627,13 @@ namespace Barotrauma
 
             var extraVoiceSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), voipSettings.RectTransform, Anchor.BottomCenter), style: null);
 
-            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), extraVoiceSettingsContainer.RectTransform));
+            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), extraVoiceSettingsContainer.RectTransform))
+            {
+                Visible = VoiceSetting != VoiceMode.Disabled
+            };
             GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
+                Visible = VoiceSetting == VoiceMode.Activity,
                 TextGetter = () =>
                 {
                     return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
@@ -658,6 +662,7 @@ namespace Barotrauma
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
             noiseGateSlider.BarScroll = MathUtils.InverseLerp(-100.0f, 0.0f, NoiseGateThreshold);
             noiseGateSlider.BarScroll *= noiseGateSlider.BarScroll;
+            noiseGateSlider.Visible = VoiceSetting == VoiceMode.Activity;
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 NoiseGateThreshold = MathHelper.Lerp(-100.0f, 0.0f, (float)Math.Sqrt(scrollBar.BarScroll));
@@ -670,8 +675,11 @@ namespace Barotrauma
                 {
                     RelativeOffset = new Vector2(0.0f, voiceActivityGroup.RectTransform.RelativeSize.Y + 0.1f)
                 },
-                isHorizontal: true);
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice")) { };
+                isHorizontal: true)
+            {
+                Visible = VoiceSetting == VoiceMode.PushToTalk
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
             var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
             {
                 SelectedColor = Color.Gold * 0.3f,
@@ -710,7 +718,7 @@ namespace Barotrauma
 
                     noiseGateText.Visible = (vMode == VoiceMode.Activity);
                     noiseGateSlider.Visible = (vMode == VoiceMode.Activity);
-                    dbMeter.Visible = (vMode != VoiceMode.Disabled);
+                    voiceActivityGroup.Visible = (vMode != VoiceMode.Disabled);
                     voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
                     UnsavedSettings = true;
                 }
