@@ -1,25 +1,25 @@
-﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Hammerheadmatriarch" humanoid="False" group="hammerhead" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" displayname="" eatingspeed="10">
   <ragdolls folder="Content/Characters/Hammerheadmatriarch/Ragdolls/" />
   <animations folder="Content/Characters/Hammerheadmatriarch/Animations/" />
   <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" particleamount="4" anglemin="0" anglemax="0" scalemin="3" scalemax="5" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <health vitality="400" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
+  <health vitality="500" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="0" />
   <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="0" aggressiongreed="0" fleehealththreshold="0" attackwhenprovoked="True" aggressiveboarding="False" avoidgunfire="False">
-    <target tag="nasonov" state="Attack" priority="100" />
-    <target tag="stronger" state="Avoid" priority="100" reactDistance="2000"/>
-    <target tag="human" state="Avoid" priority="100" reactdistance="2000"/>
-    <target tag="room" state="PassiveAggressive" priority="50" reactdistance="2000"/>
-    <target tag="wall" state="PassiveAggressive" priority="50" reactdistance="2000"/>
-    <target tag="door" state="PassiveAggressive" priority="50" reactdistance="2000"/>
-    <target tag="weaker" state="Avoid" priority="10" reactDistance="500"/>
+    <target tag="nasonov" state="Attack" priority="100" reactdistance="0" />
+    <target tag="stronger" state="Avoid" priority="100" reactdistance="2000" />
+    <target tag="human" state="Avoid" priority="100" reactdistance="2000" />
+    <target tag="room" state="PassiveAggressive" priority="50" reactdistance="3000" />
+    <target tag="wall" state="PassiveAggressive" priority="50" reactdistance="3000" />
+    <target tag="door" state="PassiveAggressive" priority="50" reactdistance="3000" />
+    <target tag="weaker" state="Avoid" priority="10" reactdistance="2000" />
     <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="3000" cohesion="0.25" />
   </ai>
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion1.ogg" state="Die" range="10000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion2.ogg" state="Die" range="10000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion3.ogg" state="Die" range="10000" volume="1" gender="None" />
-  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion4.ogg" state="Die" range="10000" volume="1" gender="None" />  
+  <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_explosion4.ogg" state="Die" range="10000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage1.ogg" state="Damage" range="7000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_damage2.ogg" state="Damage" range="7000" volume="1" gender="None" />
   <sound file="Content/Characters/Hammerheadmatriarch/MHAMMERHEAD_idle1.ogg" state="Idle" range="6000" volume="1" gender="None" />
