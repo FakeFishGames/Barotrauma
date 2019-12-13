@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, PassiveAggressive }
+    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive }
 
     abstract partial class AIController : ISteerable
     {
