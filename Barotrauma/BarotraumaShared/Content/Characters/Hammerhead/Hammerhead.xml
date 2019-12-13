@@ -25,16 +25,15 @@
     <Item identifier="alienblood" />
   </Inventory>
   <ai combatstrength="500" sight="2" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False">
-    <!--
-      <target tag="decoy" state="Attack" priority="300" />
+    <target tag="decoy" state="Attack" priority="300" />
     <target tag="nasonov" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
     <target tag="light" state="Attack" priority="100" />
     <target tag="door" state="Attack" priority="80" />
     <target tag="wall" state="Attack" priority="80" />
-    <target tag="human" state="Attack" priority="60" />
-    -->
-    <target tag="weaker" state="Aggressive" priority="100" reactdistance="1000"/>
-    <target tag="stronger" state="Aggressive" priority="100" reactdistance="1000"/>
+    <target tag="stronger" state="Aggressive" priority="75" reactdistance="2000"/>
+    <target tag="human" state="Aggressive" priority="50" reactdistance="2000"/>
+    <target tag="weaker" state="Aggressive" priority="25" reactdistance="1000"/>
+    <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="3000" cohesion="0.25" />
   </ai>
 </Character>
