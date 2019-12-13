@@ -41,5 +41,6 @@
     <target tag="stronger" state="Escape" priority="50" />
     <target tag="human" state="Attack" priority="25" />
     <target tag="weaker" state="Attack" priority="25" />
+    <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="3000" cohesion="0.25" />
   </ai>
 </Character>
