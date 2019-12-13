@@ -381,7 +381,7 @@
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
   </EventSet>
@@ -447,7 +447,7 @@
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="1" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="1" maxamount="2" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
   </EventSet>
@@ -536,7 +536,7 @@
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
   </EventSet>
@@ -596,7 +596,7 @@
       </EventSet>
       <EventSet chooserandom="false">
         <MonsterEvent characterfile="Hammerheadmatriarch" minamount="1" maxamount="1" spawntype="mainpath" musictype="monster" />
-        <MonsterEvent characterfile="Hammerhead" minamount="0" maxamount="3" spawntype="mainpath" musictype="monster" />
+        <MonsterEvent characterfile="Hammerhead" minamount="1" maxamount="3" spawntype="mainpath" musictype="monster" />
       </EventSet>
     </EventSet>
 
