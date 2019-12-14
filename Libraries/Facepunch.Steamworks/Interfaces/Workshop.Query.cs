@@ -62,8 +62,9 @@ namespace Facepunch.Steamworks
             private int _resultsRemain = 0;
             private int _resultSkip = 0;
             private List<Item> _results;
+            private bool returnLongDescriptions = false;
 
-            public  void Run()
+            public void Run(bool returnLongDesc=false)
             {
                 if ( Callback != null )
                     return;
@@ -80,6 +81,7 @@ namespace Facepunch.Steamworks
                 _resultPage = (int) Math.Floor( (float) actualOffset / (float)SteamResponseSize );
                 _results = new List<Item>();
 
+                returnLongDescriptions = returnLongDesc;
                 RunInternal();
             }
 
@@ -125,6 +127,8 @@ namespace Facepunch.Steamworks
 
                 foreach ( var tag in ExcludeTags )
                     workshop.ugc.AddExcludedTag( Handle, tag );
+
+                workshop.ugc.SetReturnLongDescription(Handle, returnLongDescriptions);
 
                 Callback = workshop.ugc.SendQueryUGCRequest( Handle, ResultCallback );
             }

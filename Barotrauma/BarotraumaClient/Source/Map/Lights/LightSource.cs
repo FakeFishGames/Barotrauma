@@ -245,6 +245,12 @@ namespace Barotrauma.Lights
             set;
         } = Vector2.One;
 
+        public float? OverrideLightSpriteAlpha
+        {
+            get { return lightSourceParams.OverrideLightSpriteAlpha; }
+            set { lightSourceParams.OverrideLightSpriteAlpha = value; }
+        }
+
         public Vector2 WorldPosition
         {
             get { return (ParentSub == null) ? position : position + ParentSub.Position; }

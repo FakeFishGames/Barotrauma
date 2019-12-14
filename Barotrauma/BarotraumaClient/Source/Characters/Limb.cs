@@ -181,6 +181,11 @@ namespace Barotrauma
             get;
             private set;
         }
+        public float? InitialLightSpriteAlpha
+        {
+            get;
+            private set;
+        }
 
         public LightSource LightSource
         {
@@ -278,6 +283,7 @@ namespace Barotrauma
                             SpriteScale = Vector2.One * Scale * TextureScale
                         };
                         InitialLightSourceColor = LightSource.Color;
+                        InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
                         break;
                 }
 
@@ -495,6 +501,10 @@ namespace Barotrauma
             {
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
+                if (LightSource.LightSprite != null)
+                {
+                    LightSource.LightSprite.Depth = ActiveSprite.Depth;
+                }
             }
 
             UpdateSpriteStates(deltaTime);
@@ -511,6 +521,7 @@ namespace Barotrauma
             {
                 if (severedFadeOutTimer > SeveredFadeOutTime)
                 {
+                    if (LightSource != null) { LightSource.Enabled = false; }
                     return;
                 }
                 else if (severedFadeOutTimer > SeveredFadeOutTime - 1.0f)

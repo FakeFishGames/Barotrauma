@@ -123,7 +123,7 @@
     <Sprite texture="tools_new.png" sourcerect="0,358,248,136" depth="0.55" origin="0.5,0.5" />
     <Body radius="50" width="180" density="40" />
     <Holdable slots="Any,RightHand+LeftHand" controlpose="true" aimpos="50,0" handle1="-85,-25" handle2="-10,-27" msg="ItemMsgPickUpSelect" />
-    <RepairTool structurefixamount="-0.125" range="150" barrelpos="45,10" combatpriority="30">
+    <RepairTool structurefixamount="-0.125" range="150" barrelpos="45,10" combatpriority="30" repairthroughholes="true">
       <RequiredItems identifier="oxygentank,oxygenitetank,weldingfueltank,incendiumfueltank" type="Contained" msg="ItemMsgOxygenTankRequired" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygentank" Condition="-1.0" />
       <StatusEffect type="OnUse" targettype="Contained" targets="oxygenitetank" Condition="-0.5" />
