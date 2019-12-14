@@ -605,7 +605,7 @@ namespace Barotrauma.Steam
             query.UserQueryType = Workshop.UserQueryType.Subscribed;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
-            query.Run();
+            query.Run(true);
             query.OnResult += (Workshop.Query q) =>
             {
                 onItemsFound?.Invoke(q.Items);
@@ -620,7 +620,7 @@ namespace Barotrauma.Steam
             query.Order = Workshop.Order.RankedByTotalUniqueSubscriptions;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
-            query.Run();
+            query.Run(true);
             query.OnResult += (Workshop.Query q) =>
             {
                 //count the number of each unique tag
@@ -672,7 +672,7 @@ namespace Barotrauma.Steam
             query.UserQueryType = Workshop.UserQueryType.Published;
             query.UploaderAppId = AppID;
             if (requireTags != null) query.RequireTags = requireTags;
-            query.Run();
+            query.Run(true);
             query.OnResult += (Workshop.Query q) =>
             {
                 onItemsFound?.Invoke(q.Items);
@@ -1311,7 +1311,7 @@ namespace Barotrauma.Steam
             var query = instance.client.Workshop.CreateQuery();
             query.FileId = new List<ulong>(instance.client.Workshop.GetSubscribedItemIds());
             query.UploaderAppId = AppID;
-            query.Run();
+            query.Run(true);
             query.OnResult = (Workshop.Query q) =>
             {
                 if (timedOut) { return; }
