@@ -33,6 +33,11 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
+        public RenderTarget2D LimbLightMap
+        {
+            get;
+            private set;
+        }
         public RenderTarget2D SpecularMap
         {
             get;
@@ -125,25 +130,29 @@ namespace Barotrauma.Lights
             currLightMapScale = GameMain.Config.LightMapScale;
 
             LightMap?.Dispose();
-            LightMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
-                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
-                       RenderTargetUsage.DiscardContents);
+            LightMap = CreateRenderTarget();
+
+            LimbLightMap?.Dispose();
+            LimbLightMap = CreateRenderTarget();
 
             SpecularMap?.Dispose();
-            SpecularMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
-                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
-                       RenderTargetUsage.DiscardContents);
+            SpecularMap = CreateRenderTarget();
 
             HighlightMap?.Dispose();
-            HighlightMap = new RenderTarget2D(graphics,
+            HighlightMap = CreateRenderTarget();
+
+            RenderTarget2D CreateRenderTarget()
+            {
+               return new RenderTarget2D(graphics,
                        (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
+            }
 
             LosTexture?.Dispose();
-            LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
+            LosTexture = new RenderTarget2D(graphics, 
+                (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), 
+                (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -219,11 +228,8 @@ namespace Barotrauma.Lights
                 //UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
             }
 
-            graphics.SetRenderTarget(LightMap);
-
             Rectangle viewRect = cam.WorldView;
             viewRect.Y -= cam.WorldView.Height;
-
             //check which lights need to be drawn
             activeLights.Clear();
             foreach (LightSource light in lights)
@@ -239,12 +245,27 @@ namespace Barotrauma.Lights
                 activeLights.Add(light);
             }
 
-            //clear the lightmap
+            //draw light sprites attached to characters
+            //render into a separate rendertarget using alpha blending (instead of on top of everything else with alpha blending)
+            //to prevent the lights from showing through other characters or other light sprites attached to the same character
+            //---------------------------------------------------------------------------------------------------
+            graphics.SetRenderTarget(LimbLightMap);
             graphics.Clear(Color.Black);
-            graphics.BlendState = BlendState.Additive;
+            graphics.BlendState = BlendState.AlphaBlend;
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+            foreach (LightSource light in activeLights)
+            {
+                if (light.IsBackground) { continue; }
+                //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
+                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
+            }
+            spriteBatch.End();
 
             //draw background lights
             //---------------------------------------------------------------------------------------------------
+            graphics.SetRenderTarget(LightMap);
+            graphics.Clear(Color.Black);
+            graphics.BlendState = BlendState.Additive;
             bool backgroundSpritesDrawn = false;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in activeLights)
@@ -346,19 +367,13 @@ namespace Barotrauma.Lights
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled: true);
+
+            spriteBatch.Draw(LimbLightMap, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), Color.White);
 
             foreach (ElectricalDischarger discharger in ElectricalDischarger.List)
             {
                 discharger.DrawElectricity(spriteBatch);
-            }
-
-            foreach (LightSource light in activeLights)
-            {
-                if (light.IsBackground) { continue; }
-                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
-                //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
-                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
             }
 
             lightEffect.World = transform;

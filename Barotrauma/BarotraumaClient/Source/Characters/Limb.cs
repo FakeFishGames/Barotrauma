@@ -472,6 +472,10 @@ namespace Barotrauma
             {
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
+                if (LightSource.LightSprite != null)
+                {
+                    LightSource.LightSprite.Depth = ActiveSprite.Depth;
+                }
             }
 
             UpdateSpriteStates(deltaTime);
