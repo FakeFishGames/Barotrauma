@@ -38,11 +38,6 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
-        public RenderTarget2D SpecularMap
-        {
-            get;
-            private set;
-        }
         public RenderTarget2D LosTexture
         {
             get;
@@ -135,9 +130,6 @@ namespace Barotrauma.Lights
             LimbLightMap?.Dispose();
             LimbLightMap = CreateRenderTarget();
 
-            SpecularMap?.Dispose();
-            SpecularMap = CreateRenderTarget();
-
             HighlightMap?.Dispose();
             HighlightMap = CreateRenderTarget();
 
@@ -216,17 +208,12 @@ namespace Barotrauma.Lights
                 //lightmap scale has changed -> recreate render targets
                 CreateRenderTargets(graphics);
             }
-            
+
             Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             bool highlightsVisible = UpdateHighlights(graphics, spriteBatch, spriteBatchTransform, cam);
-
-            if (GameMain.Config.SpecularityEnabled)
-            {
-                //UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
-            }
 
             Rectangle viewRect = cam.WorldView;
             viewRect.Y -= cam.WorldView.Height;
@@ -421,14 +408,6 @@ namespace Barotrauma.Lights
             }
             spriteBatch.End();
 
-            if (GameMain.Config.SpecularityEnabled)
-            {
-                /*spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
-                spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                spriteBatch.End();*/
-            }
-
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
 
@@ -520,53 +499,6 @@ namespace Barotrauma.Lights
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
 
             return true;
-        }
-
-        public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam, RenderTarget2D backgroundObstructor = null)
-        {
-            graphics.SetRenderTarget(SpecularMap);
-            
-            //clear the lightmap
-            graphics.Clear(Color.Gray);
-            graphics.BlendState = BlendState.AlphaBlend;
-
-            spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
-
-            if (Level.Loaded != null)
-            {
-                Level.Loaded.LevelObjectManager.DrawObjects(spriteBatch, cam, drawFront: false, specular: true);
-            }
-            spriteBatch.End();
-
-            Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
-            DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.Gray.ToVector4());
-            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
-
-            //obstruct specular maps behind the sub and characters by drawing them on the map in solid gray
-            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
-            SolidColorEffect.Parameters["color"].SetValue(Color.Gray.ToVector4());
-            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect);
-            if (backgroundObstructor != null)
-            {
-                spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
-            }
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c.IsVisible) { c.Draw(spriteBatch, cam); }
-            }
-            spriteBatch.End();
-
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
-
-            graphics.SetRenderTarget(null);
-            graphics.BlendState = BlendState.AlphaBlend;
         }
 
         private Dictionary<Hull, Rectangle> GetVisibleHulls(Camera cam)
