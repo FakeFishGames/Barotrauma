@@ -4406,4 +4406,9 @@
   <editor.cut>Cut</editor.cut>
   <editor.paste>Paste</editor.paste>
 
+  <label.batterycharge>Battery charge%</label.batterycharge>
+
+  <submarine.name.hemulen>Hemulen</submarine.name.hemulen>
+  <submarine.description.hemulen>For when you need extra space to stretch your legs or when you need that space to be between you and the poor, choose Hemulen shuttles.</submarine.description.hemulen>
+	
 </infotexts>
