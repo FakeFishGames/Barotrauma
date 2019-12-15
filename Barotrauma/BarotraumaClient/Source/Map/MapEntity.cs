@@ -80,6 +80,11 @@ namespace Barotrauma
             get { return selectedList.Count > 0; }
         }
 
+        public static IEnumerable<MapEntity> CopiedList
+        {
+            get { return copiedList; }
+        }
+
         public bool IsSelected
         {
             get { return selectedList.Contains(this); }
@@ -142,34 +147,15 @@ namespace Barotrauma
                 {
                     if (PlayerInput.KeyHit(Keys.C))
                     {
-                        CopyEntities(selectedList);
+                        Copy(selectedList);
                     }
                     else if (PlayerInput.KeyHit(Keys.X))
                     {
-                        CopyEntities(selectedList);
-
-                        selectedList.ForEach(e => e.Remove());
-                        selectedList.Clear();
+                        Cut(selectedList);
                     }
-                    else if (copiedList.Count > 0 && PlayerInput.KeyHit(Keys.V))
+                    else if (PlayerInput.KeyHit(Keys.V))
                     {
-                        List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
-                        Clone(copiedList);
-
-                        var clones = mapEntityList.Except(prevEntities).ToList();
-
-                        Vector2 center = Vector2.Zero;
-                        clones.ForEach(c => center += c.WorldPosition);
-                        center = Submarine.VectorToWorldGrid(center / clones.Count);
-
-                        Vector2 moveAmount = Submarine.VectorToWorldGrid(cam.WorldViewCenter - center);
-
-                        selectedList = new List<MapEntity>(clones);
-                        foreach (MapEntity clone in selectedList)
-                        {
-                            clone.Move(moveAmount);
-                            clone.Submarine = Submarine.MainSub;
-                        }
+                        Paste(cam.WorldViewCenter);
                     }
                     else if (PlayerInput.KeyHit(Keys.G))
                     {
@@ -696,16 +682,10 @@ namespace Barotrauma
             if (selectedList.Count == 1)
             {
                 selectedList[0].DrawEditing(spriteBatch, cam);
-
                 if (selectedList[0].ResizeHorizontal || selectedList[0].ResizeVertical)
                 {
                     selectedList[0].DrawResizing(spriteBatch, cam);
                 }
-            }
-
-            if (highlightedListBox != null)
-            {
-                highlightedListBox.DrawManually(spriteBatch);
             }
         }
 
@@ -718,6 +698,51 @@ namespace Barotrauma
         {
             DeselectAll();
             AddSelection(entity);
+        }
+
+        /// <summary>
+        /// Copy the selected entities to the "clipboard" (copiedList) 
+        /// </summary>
+        public static void Copy(List<MapEntity> entities)
+        {
+            if (entities.Count == 0) { return; }
+            CopyEntities(entities);
+        }
+        
+        /// <summary>
+         /// Copy the entities to the "clipboard" (copiedList) and delete them
+         /// </summary>
+        public static void Cut(List<MapEntity> entities)
+        {
+            if (entities.Count == 0) { return; }
+
+            CopyEntities(entities);
+
+            entities.ForEach(e => e.Remove());
+            entities.Clear();
+        }
+
+        public static void Paste(Vector2 position)
+        {
+            if (copiedList.Count == 0) { return; }
+
+            List<MapEntity> prevEntities = new List<MapEntity>(mapEntityList);
+            Clone(copiedList);
+
+            var clones = mapEntityList.Except(prevEntities).ToList();
+
+            Vector2 center = Vector2.Zero;
+            clones.ForEach(c => center += c.WorldPosition);
+            center = Submarine.VectorToWorldGrid(center / clones.Count);
+
+            Vector2 moveAmount = Submarine.VectorToWorldGrid(position - center);
+
+            selectedList = new List<MapEntity>(clones);
+            foreach (MapEntity clone in selectedList)
+            {
+                clone.Move(moveAmount);
+                clone.Submarine = Submarine.MainSub;
+            }
         }
 
         /// <summary>

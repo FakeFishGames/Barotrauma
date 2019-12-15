@@ -67,6 +67,8 @@ namespace Barotrauma
         private readonly string containerDeleteTag = "containerdelete";
 
         private GUIImage previewImage;
+        
+        private GUIListBox contextMenu;
 
         private Color primaryColor = new Color(12, 14, 15, 190);
         private Color secondaryColor = new Color(12, 14, 15, 215);
@@ -1489,9 +1491,7 @@ namespace Barotrauma
                 {
                     TryDeleteSub(subList.SelectedComponent.UserData as Submarine);
                 }
-
                 deleteButton.Enabled = false;
-
                 return true;
             };
 
@@ -1759,6 +1759,75 @@ namespace Barotrauma
             dummyCharacter.Remove();
             dummyCharacter = null;
             
+        }
+
+        private void CreateContextMenu()
+        {
+            List<MapEntity> targets = MapEntity.mapEntityList.Any(me => me.IsHighlighted && !MapEntity.SelectedList.Contains(me)) ? 
+                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList() :
+                new List<MapEntity>(MapEntity.SelectedList);
+                        
+            contextMenu = new GUIListBox(new RectTransform(new Vector2(0.1f, 0.1f), GUI.Canvas)
+            {
+                MinSize = new Point(180,0),
+                ScreenSpaceOffset = PlayerInput.MousePosition.ToPoint()
+            }, style: "GUIToolTip");
+
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.cut"), font: GUI.SmallFont)
+            {
+                UserData = "cut",
+                Enabled = targets.Count > 0
+            };
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.copytoclipboard"), font: GUI.SmallFont)
+            {
+                UserData = "copy",
+                Enabled = targets.Count > 0
+            };
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("editor.paste"), font: GUI.SmallFont)
+            {
+                UserData = "paste",
+                Enabled = MapEntity.CopiedList.Any()
+            };            
+            new GUITextBlock(new RectTransform(new Point(contextMenu.Rect.Width, (int)(18 * GUI.Scale)), contextMenu.Content.RectTransform),
+                TextManager.Get("delete"), font: GUI.SmallFont)
+            {
+                UserData = "delete",
+                Enabled = targets.Count > 0
+            };
+
+            foreach (GUITextBlock child in contextMenu.Content.Children)
+            {
+                if (!child.Enabled) { child.TextColor *= 0.5f; }
+            }
+            
+            contextMenu.RectTransform.NonScaledSize = new Point(
+                contextMenu.Rect.Width, 
+                (int)((contextMenu.Content.CountChildren * 18) * GUI.Scale));
+            
+            contextMenu.OnSelected = (GUIComponent component, object obj) =>
+            {
+                if (!component.Enabled) { return false; }
+                switch (obj as string)
+                {
+                    case "copy":
+                        MapEntity.Copy(targets);
+                        break;
+                    case "cut":
+                        MapEntity.Cut(targets);
+                        break;
+                    case "paste":
+                        MapEntity.Paste(cam.ScreenToWorld(contextMenu.Rect.Location.ToVector2()));
+                        break;
+                    case "delete":
+                        targets.ForEach(me => me.Remove());
+                        break;
+                }
+                contextMenu = null;
+                return true;
+            };
         }
 
         private GUIFrame CreateWiringPanel()
@@ -2216,18 +2285,22 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
-            if (MapEntity.HighlightedListBox != null)
-            {
-                MapEntity.HighlightedListBox.AddToGUIUpdateList();
-            }
-
-            EntityMenu.AddToGUIUpdateList();  
+            EntityMenu.AddToGUIUpdateList();
             LeftPanel.AddToGUIUpdateList();
             TopPanel.AddToGUIUpdateList();
 
             if (WiringMode)
             {
                 wiringToolPanel.AddToGUIUpdateList();
+            }
+
+            if (contextMenu != null)
+            {
+                contextMenu.AddToGUIUpdateList();
+            }
+            else if (MapEntity.HighlightedListBox != null)
+            {
+                MapEntity.HighlightedListBox.AddToGUIUpdateList();
             }
 
             if ((CharacterMode || WiringMode) && dummyCharacter != null)
@@ -2251,7 +2324,7 @@ namespace Barotrauma
                 else if (saveFrame != null)
                 {
                     saveFrame.AddToGUIUpdateList();
-                }              
+                }
             }
         }
 
@@ -2278,6 +2351,16 @@ namespace Barotrauma
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
                 moveSpeed.X = -moveSpeed.X;
                 cam.Position += moveSpeed;
+            }
+
+            if (contextMenu != null)
+            {
+                Rectangle expandedRect = contextMenu.Rect;
+                expandedRect.Inflate(20, 20);
+                if (!expandedRect.Contains(PlayerInput.MousePosition))
+                {
+                    contextMenu = null;
+                }                
             }
 
             if (CharacterMode || WiringMode)
@@ -2348,15 +2431,19 @@ namespace Barotrauma
                 MapEntity.UpdateSelecting(cam);
             }
 
-            //GUIComponent.ForceMouseOn(null);
-
             if (!CharacterMode && !WiringMode)
             {
                 if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
                 {
                     MapEntityPrefab.Selected.UpdatePlacing(cam);
                 }
-                
+                else
+                {
+                    if (PlayerInput.RightButtonClicked())
+                    {
+                        CreateContextMenu();                    
+                    }
+                }                
                 MapEntity.UpdateEditor(cam);
             }
 

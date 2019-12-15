@@ -379,9 +379,9 @@ namespace Barotrauma
             };
             filterTextList.Add(filterFriendlyFire.TextBlock);
 
-            filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.voip.true"))
+            filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.voip.false"))
             {
-                ToolTip = TextManager.Get("servertag.voip.true"),
+                ToolTip = TextManager.Get("servertag.voip.false"),
                 OnSelected = (tickBox) => { FilterServers(); return true; }
             };
             filterTextList.Add(filterVoip.TextBlock);
@@ -971,7 +971,7 @@ namespace Barotrauma
                     (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
                     (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
                     (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
-                    (!filterVoip.Selected || serverInfo.VoipEnabled == true) &&
+                    (!filterVoip.Selected || serverInfo.VoipEnabled == false) &&
                     (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
                     ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
                      (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||

@@ -4400,9 +4400,10 @@
   
   <afflictionname.radiationsickness>Radiation sickness</afflictionname.radiationsickness>
   <afflictiondescription.radiationsickness>The patient's skin is red and blistering.</afflictiondescription.radiationsickness>
-  <afflictionname.radiationsickness>Radiation sickness</afflictionname.radiationsickness>
-  <afflictiondescription.radiationsickness>The patient's skin is red and covered in painful blisters.</afflictiondescription.radiationsickness>
   <afflictionname.deliriuminepoisoning>Deliriumine poisoning</afflictionname.deliriuminepoisoning>
   <afflictiondescription.deliriuminepoisoning>The patient seems agitated, with small but noticeable nervous twitches in their face and hands.</afflictiondescription.deliriuminepoisoning>
+
+  <editor.cut>Cut</editor.cut>
+  <editor.paste>Paste</editor.paste>
 
 </infotexts>

@@ -2017,6 +2017,8 @@ namespace Barotrauma.Networking
 
         public override void AddChatMessage(ChatMessage message)
         {
+            // add to local history
+            chatBox.AddHistory(message.Text);
             base.AddChatMessage(message);
 
             if (string.IsNullOrEmpty(message.Text)) { return; }
