@@ -250,22 +250,23 @@ namespace Barotrauma
         /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
         public static MapEntityPrefab Find(string name, string identifier = null, bool showErrorMessages = true)
         {
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                name = name.ToLowerInvariant();
-            }
+            if (name != null) name = name.ToLowerInvariant();
             foreach (MapEntityPrefab prefab in List)
             {
-                if (!string.IsNullOrWhiteSpace(identifier) && identifier == prefab.identifier)
+                if (identifier != null)
                 {
-                    return prefab;
-                }
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    if (name == prefab.name.ToLowerInvariant() || (prefab.Aliases != null && prefab.Aliases.Any(a => name == a.ToLowerInvariant())))
+                    if (prefab.identifier != identifier)
                     {
-                        return prefab;
+                        continue;
                     }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(name)) return prefab;
+                    }
+                }
+                if (!string.IsNullOrEmpty(name))
+                {
+                    if (prefab.name.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
                 }
             }
 
