@@ -376,6 +376,12 @@ namespace Barotrauma.Lights
                 discharger.DrawElectricity(spriteBatch);
             }
 
+            foreach (LightSource light in activeLights)
+            {
+                if (light.IsBackground) { continue; }
+                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
+            }
+
             lightEffect.World = transform;
             
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
