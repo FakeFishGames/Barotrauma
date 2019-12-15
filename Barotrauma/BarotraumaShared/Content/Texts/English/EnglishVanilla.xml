@@ -1686,7 +1686,6 @@
   <character.blackmoloch>Black Moloch</character.blackmoloch>
   <character.hammerheadgold>Golden Hammerhead</character.hammerheadgold>
   <character.hammerheadmatriarch>Hammerhead Matriarch</character.hammerheadmatriarch>
-  <character.bonethresher>Bone Tiger Thresher</character.bonethresher>
 
   <!-- Customization -->
   <clicktoselectjob>Click to select a job</clicktoselectjob>
@@ -4297,6 +4296,8 @@
   <entityname.orangejumpsuit2>Engineer's Jumpsuit</entityname.orangejumpsuit2>
   <entityname.bluejumpsuit1>Mechanic's Jumpsuit</entityname.bluejumpsuit1>
   <entityname.bluejumpsuit2>Mechanic's Jumpsuit</entityname.bluejumpsuit2>
+  
+  <character.bonethresher>Bone Thresher</character.bonethresher>
   
   <!-- New values as of Oct 22 -->
   <timeformathours>[hours] h</timeformathours>
