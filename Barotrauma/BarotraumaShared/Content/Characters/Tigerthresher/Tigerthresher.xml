@@ -5,11 +5,11 @@
   <ai combatstrength="350" sight="1" hearing="1" aggressionhurt="200" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="True">
     <target tag="decoy" state="Attack" priority="200" />
     <target tag="provocative" state="Attack" priority="100" />
-    <target tag="light" state="Attack" priority="50" />
     <target tag="dead" state="Eat" priority="100" />
+    <target tag="light" state="Attack" priority="50" />
     <target tag="human" state="Attack" priority="60" />
     <target tag="weaker" state="Attack" priority="50" />
-    <target tag="stronger" state="Attack" priority="50" />
+    <target tag="stronger" state="Aggressive" priority="50" reactdistance="2000"/>
     <target tag="room" state="Attack" priority="20" />
     <SwarmBehavior mindistfromclosest="400" maxdistfromcenter="2000" cohesion="0.5" />
   </ai>

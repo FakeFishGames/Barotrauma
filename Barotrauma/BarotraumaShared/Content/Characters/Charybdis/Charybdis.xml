@@ -16,16 +16,16 @@
   <sound file="Content/Characters/Charybdis/CHARYBDIS_damage2.ogg" state="Damage" range="6000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death1.ogg" state="Die" range="8000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death2.ogg" state="Die" range="8000" volume="1" gender="None" />
-  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
+  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="True" aggressiveboarding="False" avoidgunfire="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="provocative" state="Attack" priority="150" />
-    <targetpriority tag="stronger" state="Attack" priority="110" />
+    <targetpriority tag="stronger" state="PassiveAggressive" priority="110" reactdistance="2000"/>
     <targetpriority tag="light" state="Attack" priority="80" />
-    <targetpriority tag="human" state="Attack" priority="100" />
+    <targetpriority tag="human" state="Aggressive" priority="100" reactdistance="2000"/>
     <targetpriority tag="sonar" state="Attack" priority="100" />
     <targetpriority tag="nasonov" state="Attack" priority="100" />
     <targetpriority tag="wall" state="Attack" priority="80" />
-    <targetpriority tag="weaker" state="Attack" priority="70" />
+    <targetpriority tag="weaker" state="Aggressive" priority="70" reactdistance="2000" />
     <targetpriority tag="dead" state="Eat" priority="60" />
     <targetpriority tag="room" state="Attack" priority="40" />
   </ai>
