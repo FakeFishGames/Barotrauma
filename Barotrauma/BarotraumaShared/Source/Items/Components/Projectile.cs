@@ -28,6 +28,19 @@ namespace Barotrauma.Items.Components
                 Fraction = fraction;
             }
         }
+        struct Impact
+        {
+            public Fixture Fixture;
+            public Vector2 Normal;
+
+            public Impact(Fixture fixture, Vector2 normal)
+            {
+                Fixture = fixture;
+                Normal = normal;
+            }
+        }
+
+        private readonly Queue<Impact> impactQueue = new Queue<Impact>();
 
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -218,26 +231,10 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            if (stickJoint == null) return;
+            if (stickJoint == null) { return; }
 
-            if (stickTarget != null)
-            {
-#if DEBUG
-                try
-                {
-#endif
-                    item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-#if DEBUG
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to restore collision with stickTarget", e);
-                }
-#endif
-
-                stickTarget = null;
-            }
-            GameMain.World.RemoveJoint(stickJoint);
+            stickTarget = null;            
+            GameMain.World.Remove(stickJoint);
             stickJoint = null;
         }
         
@@ -290,7 +287,7 @@ namespace Barotrauma.Items.Components
             foreach (HitscanResult h in hits)
             {
                 item.body.SetTransform(h.Point, rotation);
-                if (OnProjectileCollision(h.Fixture, h.Normal))
+                if (HandleProjectileCollision(h.Fixture, h.Normal))
                 {
                     hitSomething = true;
                     break;
@@ -341,25 +338,32 @@ namespace Barotrauma.Items.Components
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 //ignore sensors and items
-                if (fixture?.Body == null || fixture.IsSensor) return -1;
-                if (fixture.UserData is Item) return -1;
+                if (fixture?.Body == null || fixture.IsSensor) { return -1; }
+                if (fixture.UserData is Item) { return -1; }
 
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) return -1;
+                System.Diagnostics.Debug.Assert(
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) ||
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionWall) ||
+                    fixture.CollisionCategories.HasFlag(Physics.CollisionLevel),
+                    "Projectile raycast shouldn't have hit a fixture with the collision category " + fixture.CollisionCategories);
 
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return hits.Count < 25 ? 1 : 0;
-            }, rayStart, rayEnd);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
 
             return hits;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null); 
+            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
+
+            while (impactQueue.Count > 0)
+            {
+                var impact = impactQueue.Dequeue();
+                HandleProjectileCollision(impact.Fixture, impact.Normal);
+            }
 
             if (item.body != null && item.body.FarseerBody.IsBullet)
             {
@@ -367,11 +371,11 @@ namespace Barotrauma.Items.Components
                 {
                     item.body.FarseerBody.IsBullet = false;
                     //projectiles with a stickjoint don't become inactive until the stickjoint is detached
-                    if (stickJoint == null) IsActive = false;
+                    if (stickJoint == null) { IsActive = false; }
                 }
             }
 
-            if (stickJoint == null) return;
+            if (stickJoint == null) { return; }
 
             if (persistentStickJointTimer > 0.0f)
             {
@@ -381,36 +385,51 @@ namespace Barotrauma.Items.Components
 
             if (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)  
             {
-                if (stickTarget != null)
-                {
-                    if (GameMain.World.BodyList.Contains(stickTarget))
-                    {
-                        item.body.FarseerBody.RestoreCollisionWith(stickTarget);
-                    }
-                    
-                    stickTarget = null;
-                }
-
+                stickTarget = null;
                 if (stickJoint != null)
                 {
                     if (GameMain.World.JointList.Contains(stickJoint))
                     {
-                        GameMain.World.RemoveJoint(stickJoint);
+                        GameMain.World.Remove(stickJoint);
                     }
-
                     stickJoint = null;
                 }
-                
-                if (!item.body.FarseerBody.IsBullet) IsActive = false; 
+                if (!item.body.FarseerBody.IsBullet) { IsActive = false; }
             }           
         }
 
-        private bool OnProjectileCollision(Fixture f1, Fixture f2, Contact contact)
+
+        private bool OnProjectileCollision(Fixture f1, Fixture target, Contact contact)
         {
-            return OnProjectileCollision(f2, contact.Manifold.LocalNormal);
+            if (User != null && User.Removed) { User = null; return false; }
+            if (IgnoredBodies.Contains(target.Body)) { return false; }
+            if (target.Body.UserData is Submarine submarine)
+            {
+                return !Hitscan;
+            }
+            else if (target.Body.UserData is Limb limb)
+            {
+                //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
+                if (limb.IsSevered)
+                {
+                    target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
+                    return true;
+                }
+            }
+
+            //ignore character colliders (the projectile only hits limbs)
+            if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
+            {
+                return false;
+            }
+
+            impactQueue.Enqueue(new Impact(target, contact.Manifold.LocalNormal));
+            item.body.FarseerBody.OnCollision -= OnProjectileCollision;
+
+            return true;
         }
 
-        private bool OnProjectileCollision(Fixture target, Vector2 collisionNormal)
+        private bool HandleProjectileCollision(Fixture target, Vector2 collisionNormal)
         {
             if (User != null && User.Removed) { User = null; }
 
@@ -587,10 +606,8 @@ namespace Barotrauma.Items.Components
             }
 
             persistentStickJointTimer = PersistentStickJointDuration;
-
-            item.body.FarseerBody.IgnoreCollisionWith(targetBody);
             stickTarget = targetBody;
-            GameMain.World.AddJoint(stickJoint);
+            GameMain.World.Add(stickJoint);
 
             IsActive = true;
         }
@@ -601,7 +618,7 @@ namespace Barotrauma.Items.Components
             {
                 try
                 {
-                    GameMain.World.RemoveJoint(stickJoint);
+                    GameMain.World.Remove(stickJoint);
                 }
                 catch
                 {

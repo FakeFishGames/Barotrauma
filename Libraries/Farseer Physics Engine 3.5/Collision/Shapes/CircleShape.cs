@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -23,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Collision.Shapes
@@ -78,7 +84,7 @@ namespace FarseerPhysics.Collision.Shapes
 
         public override bool TestPoint(ref Transform transform, ref Vector2 point)
         {
-            Vector2 center = transform.p + MathUtils.Mul(transform.q, Position);
+            Vector2 center = transform.p + Complex.Multiply(ref _position, ref transform.q);
             Vector2 d = point - center;
             return Vector2.Dot(d, d) <= _2radius;
         }
@@ -92,7 +98,7 @@ namespace FarseerPhysics.Collision.Shapes
 
             output = new RayCastOutput();
 
-            Vector2 position = transform.p + MathUtils.Mul(transform.q, Position);
+            Vector2 position = transform.p + Complex.Multiply(ref _position, ref transform.q);
             Vector2 s = input.Point1 - position;
             float b = Vector2.Dot(s, s) - _2radius;
 
@@ -128,14 +134,21 @@ namespace FarseerPhysics.Collision.Shapes
 
         public override void ComputeAABB(out AABB aabb, ref Transform transform, int childIndex)
         {
-            Vector2 p = transform.p + MathUtils.Mul(transform.q, Position);
-            aabb.LowerBound = new Vector2(p.X - Radius, p.Y - Radius);
-            aabb.UpperBound = new Vector2(p.X + Radius, p.Y + Radius);
+            // OPT: Vector2 p = transform.p + Complex.Multiply(ref _position, ref transform.q);
+            var pX = (_position.X * transform.q.Real - _position.Y * transform.q.Imaginary) + transform.p.X;
+            var pY = (_position.Y * transform.q.Real + _position.X * transform.q.Imaginary) + transform.p.Y;
+
+            // OPT: aabb.LowerBound = new Vector2(p.X - Radius, p.Y - Radius);
+            // OPT: aabb.UpperBound = new Vector2(p.X + Radius, p.Y + Radius);
+            aabb.LowerBound.X = pX - Radius;
+            aabb.LowerBound.Y = pY - Radius;
+            aabb.UpperBound.X = pX + Radius;
+            aabb.UpperBound.Y = pY + Radius;
         }
 
         protected override sealed void ComputeProperties()
         {
-            float area = Settings.Pi * _2radius;
+            float area = MathHelper.Pi * _2radius;
             MassData.Area = area;
             MassData.Mass = Density * area;
             MassData.Centroid = Position;
@@ -148,7 +161,7 @@ namespace FarseerPhysics.Collision.Shapes
         {
             sc = Vector2.Zero;
 
-            Vector2 p = MathUtils.Mul(ref xf, Position);
+            Vector2 p = Transform.Multiply(ref _position, ref xf);
             float l = -(Vector2.Dot(normal, p) - offset);
             if (l < -Radius + Settings.Epsilon)
             {
@@ -159,12 +172,12 @@ namespace FarseerPhysics.Collision.Shapes
             {
                 //Completely wet
                 sc = p;
-                return Settings.Pi * _2radius;
+                return MathHelper.Pi * _2radius;
             }
 
             //Magic
             float l2 = l * l;
-            float area = _2radius * (float)((Math.Asin(l / Radius) + Settings.Pi / 2) + l * Math.Sqrt(_2radius - l2));
+            float area = _2radius * (float)((Math.Asin(l / Radius) + MathHelper.Pi / 2) + l * Math.Sqrt(_2radius - l2));
             float com = -2.0f / 3.0f * (float)Math.Pow(_2radius - l2, 1.5f) / area;
 
             sc.X = p.X + normal.X * com;

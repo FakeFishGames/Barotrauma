@@ -83,6 +83,8 @@ namespace Barotrauma
 
         private List<Repairable> repairables;
 
+        private Queue<float> impactQueue = new Queue<float>();
+
         //a dictionary containing lists of the status effects in all the components of the item
         private bool[] hasStatusEffectsOfType;
         private Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
@@ -1257,6 +1259,12 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+            while (impactQueue.Count > 0)
+            {
+                float impact = impactQueue.Dequeue();
+                HandleCollision(impact);
+            }
+
             if (!isActive) { return; }
 
             aiTarget?.Update(deltaTime);
@@ -1442,7 +1450,8 @@ namespace Barotrauma
 
             //apply simple angular drag
             body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
-        }
+        }        
+
 
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
@@ -1452,32 +1461,39 @@ namespace Barotrauma
             if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
-            OnCollisionProjSpecific(f1, f2, contact, impact);
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
-
-            if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
+            lock (impactQueue)
             {
-                ApplyStatusEffects(ActionType.OnImpact, 1.0f);
-#if SERVER
-                GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
-#endif
-            }
-
-            var containedItems = ContainedItems;
-            if (containedItems != null)
-            {
-                foreach (Item contained in containedItems)
-                {
-                    if (contained.body == null) continue;
-                    contained.OnCollision(f1, f2, contact);
-                }
+                impactQueue.Enqueue(impact);
             }
 
             return true;
         }
 
-        partial void OnCollisionProjSpecific(Fixture f1, Fixture f2, Contact contact, float impact);
+        private void HandleCollision(float impact)
+        {
+            OnCollisionProjSpecific(impact);
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
+                {
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f);
+#if SERVER
+                    GameMain.Server?.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact });
+#endif
+                }
+
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item contained in containedItems)
+                    {
+                        if (contained.body != null) { contained.HandleCollision(impact); }
+                    }
+                }
+            }
+        }
+
+        partial void OnCollisionProjSpecific(float impact);
 
         public override void FlipX(bool relativeToSub)
         {

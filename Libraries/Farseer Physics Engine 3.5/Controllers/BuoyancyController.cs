@@ -1,8 +1,14 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Collision.Shapes;
+using FarseerPhysics.Common.PhysicsLogic;
 using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Controllers
 {
@@ -35,7 +41,7 @@ namespace FarseerPhysics.Controllers
         private Vector2 _gravity;
         private Vector2 _normal;
         private float _offset;
-        private Dictionary<int, Body> _uniqueBodies = new Dictionary<int, Body>();
+        private ICollection<Body> _uniqueBodies = new List<Body>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BuoyancyController"/> class.
@@ -46,7 +52,6 @@ namespace FarseerPhysics.Controllers
         /// <param name="rotationalDragCoefficient">Rotational drag coefficient of the fluid</param>
         /// <param name="gravity">The direction gravity acts. Buoyancy force will act in opposite direction of gravity.</param>
         public BuoyancyController(AABB container, float density, float linearDragCoefficient, float rotationalDragCoefficient, Vector2 gravity)
-            : base(ControllerType.BuoyancyController)
         {
             Container = container;
             _normal = new Vector2(0, 1);
@@ -71,19 +76,17 @@ namespace FarseerPhysics.Controllers
             _uniqueBodies.Clear();
             World.QueryAABB(fixture =>
                                 {
-                                    if (fixture.Body.IsStatic || !fixture.Body.Awake)
+                                    if (fixture.Body.BodyType == BodyType.Static || !fixture.Body.Awake)
                                         return true;
 
-                                    if (!_uniqueBodies.ContainsKey(fixture.Body.BodyId))
-                                        _uniqueBodies.Add(fixture.Body.BodyId, fixture.Body);
+                                    if (!_uniqueBodies.Contains(fixture.Body))
+                                        _uniqueBodies.Add(fixture.Body);
 
                                     return true;
                                 }, ref _container);
 
-            foreach (KeyValuePair<int, Body> kv in _uniqueBodies)
+            foreach (Body body in _uniqueBodies)
             {
-                Body body = kv.Value;
-
                 Vector2 areac = Vector2.Zero;
                 Vector2 massc = Vector2.Zero;
                 float area = 0;

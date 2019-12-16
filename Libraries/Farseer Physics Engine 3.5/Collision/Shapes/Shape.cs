@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -224,28 +229,6 @@ namespace FarseerPhysics.Collision.Shapes
         /// The inertia tensor is computed about the local origin, not the centroid.
         /// </summary>
         protected abstract void ComputeProperties();
-
-        /// <summary>
-        /// Compare this shape to another shape based on type and properties.
-        /// </summary>
-        /// <param name="shape">The other shape</param>
-        /// <returns>True if the two shapes are the same.</returns>
-        public bool CompareTo(Shape shape)
-        {
-            if (shape is PolygonShape && this is PolygonShape)
-                return ((PolygonShape)this).CompareTo((PolygonShape)shape);
-
-            if (shape is CircleShape && this is CircleShape)
-                return ((CircleShape)this).CompareTo((CircleShape)shape);
-
-            if (shape is EdgeShape && this is EdgeShape)
-                return ((EdgeShape)this).CompareTo((EdgeShape)shape);
-
-            if (shape is ChainShape && this is ChainShape)
-                return ((ChainShape)this).CompareTo((ChainShape)shape);
-
-            return false;
-        }
 
         /// <summary>
         /// Used for the buoyancy controller

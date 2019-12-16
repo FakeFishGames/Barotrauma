@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System.Collections.Generic;
 using System.Diagnostics;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common.PolygonManipulation
@@ -191,7 +195,7 @@ namespace FarseerPhysics.Common.PolygonManipulation
                     //Delete the original shape and create two new. Retain the properties of the body.
                     if (first.CheckPolygon() == PolygonError.NoError)
                     {
-                        Body firstFixture = BodyFactory.CreatePolygon(world, first, fixtures[i].Shape.Density, fixtures[i].Body.Position);
+                        Body firstFixture = world.CreatePolygon(first, fixtures[i].Shape.Density, fixtures[i].Body.Position);
                         firstFixture.Rotation = fixtures[i].Body.Rotation;
                         firstFixture.LinearVelocity = fixtures[i].Body.LinearVelocity;
                         firstFixture.AngularVelocity = fixtures[i].Body.AngularVelocity;
@@ -200,14 +204,14 @@ namespace FarseerPhysics.Common.PolygonManipulation
 
                     if (second.CheckPolygon() == PolygonError.NoError)
                     {
-                        Body secondFixture = BodyFactory.CreatePolygon(world, second, fixtures[i].Shape.Density, fixtures[i].Body.Position);
+                        Body secondFixture = world.CreatePolygon(second, fixtures[i].Shape.Density, fixtures[i].Body.Position);
                         secondFixture.Rotation = fixtures[i].Body.Rotation;
                         secondFixture.LinearVelocity = fixtures[i].Body.LinearVelocity;
                         secondFixture.AngularVelocity = fixtures[i].Body.AngularVelocity;
                         secondFixture.BodyType = BodyType.Dynamic;
                     }
 
-                    world.RemoveBody(fixtures[i].Body);
+                    world.Remove(fixtures[i].Body);
                 }
             }
 

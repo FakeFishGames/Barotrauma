@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -68,11 +74,6 @@ namespace FarseerPhysics.Dynamics.Joints
         private float _invIB;
         private Mat33 _mass;
 
-        /// <summary>
-        /// If true, body B is treated as if it was kinematic (i.e. as if it had infinite mass)
-        /// </summary>
-        public bool KinematicBodyB;
-
         internal WeldJoint()
         {
             JointType = JointType.Weld;
@@ -115,6 +116,11 @@ namespace FarseerPhysics.Dynamics.Joints
         /// The local anchor point on BodyB
         /// </summary>
         public Vector2 LocalAnchorB { get; set; }
+
+        /// <summary>
+        /// If true, body B is treated as if it was kinematic (i.e. as if it had infinite mass)
+        /// </summary>
+        public bool KinematicBodyB;
 
         public override Vector2 WorldAnchorA
         {
@@ -165,6 +171,7 @@ namespace FarseerPhysics.Dynamics.Joints
             _invMassA = BodyA._invMass;
             _invMassB = KinematicBodyB ? 0.0f : BodyB._invMass;
             _invIA = BodyA._invI;
+            _invIB = BodyB._invI;
             _invIB = KinematicBodyB ? 0.0f : BodyB._invI;
 
             float aA = data.positions[_indexA].a;
@@ -175,10 +182,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            _rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            _rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            _rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            _rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
             // J = [-I -r1_skew I r2_skew]
             //     [ 0       -1 0       1]
@@ -213,7 +221,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 float C = aB - aA - ReferenceAngle;
 
                 // Frequency
-                float omega = 2.0f * Settings.Pi * FrequencyHz;
+                float omega = 2.0f * MathHelper.Pi * FrequencyHz;
 
                 // Damping coefficient
                 float d = 2.0f * m * DampingRatio * omega;
@@ -230,6 +238,12 @@ namespace FarseerPhysics.Dynamics.Joints
                 invM += _gamma;
                 _mass.ez.Z = invM != 0.0f ? 1.0f / invM : 0.0f;
             }
+            else if (K.ez.Z == 0.0f)
+            {
+                K.GetInverse22(ref _mass);
+                _gamma = 0.0f;
+                _bias = 0.0f;
+            }
             else
             {
                 K.GetSymInverse33(ref _mass);
@@ -237,7 +251,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _bias = 0.0f;
             }
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Scale impulses to support a variable time step.
                 _impulse *= data.step.dtRatio;
@@ -245,10 +259,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = new Vector2(_impulse.X, _impulse.Y);
 
                 vA -= mA * P;
-                wA -= iA * (MathUtils.Cross(_rA, P) + _impulse.Z);
+                wA -= iA * (MathUtils.Cross(ref _rA, ref P) + _impulse.Z);
 
                 vB += mB * P;
-                wB += iB * (MathUtils.Cross(_rB, P) + _impulse.Z);
+                wB += iB * (MathUtils.Cross(ref _rB, ref P) + _impulse.Z);
             }
             else
             {
@@ -281,7 +295,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 wA -= iA * impulse2;
                 wB += iB * impulse2;
 
-                Vector2 Cdot1 = vB + MathUtils.Cross(wB, _rB) - vA - MathUtils.Cross(wA, _rA);
+                Vector2 Cdot1 = vB + MathUtils.Cross(wB, ref _rB) - vA - MathUtils.Cross(wA, ref _rA);
 
                 Vector2 impulse1 = -MathUtils.Mul22(_mass, Cdot1);
                 _impulse.X += impulse1.X;
@@ -290,14 +304,14 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = impulse1;
 
                 vA -= mA * P;
-                wA -= iA * MathUtils.Cross(_rA, P);
+                wA -= iA * MathUtils.Cross(ref _rA, ref P);
 
                 vB += mB * P;
-                wB += iB * MathUtils.Cross(_rB, P);
+                wB += iB * MathUtils.Cross(ref _rB, ref P);
             }
             else
             {
-                Vector2 Cdot1 = vB + MathUtils.Cross(wB, _rB) - vA - MathUtils.Cross(wA, _rA);
+                Vector2 Cdot1 = vB + MathUtils.Cross(wB, ref _rB) - vA - MathUtils.Cross(wA, ref _rA);
                 float Cdot2 = wB - wA;
                 Vector3 Cdot = new Vector3(Cdot1.X, Cdot1.Y, Cdot2);
 
@@ -307,10 +321,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = new Vector2(impulse.X, impulse.Y);
 
                 vA -= mA * P;
-                wA -= iA * (MathUtils.Cross(_rA, P) + impulse.Z);
+                wA -= iA * (MathUtils.Cross(ref _rA, ref P) + impulse.Z);
 
                 vB += mB * P;
-                wB += iB * (MathUtils.Cross(_rB, P) + impulse.Z);
+                wB += iB * (MathUtils.Cross(ref _rB, ref P) + impulse.Z);
             }
 
             data.velocities[_indexA].v = vA;
@@ -326,13 +340,14 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
 
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
             float positionError, angularError;
 
@@ -357,10 +372,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = -K.Solve22(C1);
 
                 cA -= mA * P;
-                aA -= iA * MathUtils.Cross(rA, P);
+                aA -= iA * MathUtils.Cross(ref rA, ref P);
 
                 cB += mB * P;
-                aB += iB * MathUtils.Cross(rB, P);
+                aB += iB * MathUtils.Cross(ref rB, ref P);
             }
             else
             {
@@ -372,14 +387,23 @@ namespace FarseerPhysics.Dynamics.Joints
 
                 Vector3 C = new Vector3(C1.X, C1.Y, C2);
 
-                Vector3 impulse = -K.Solve33(C);
+                Vector3 impulse;
+                if (K.ez.Z <= 0.0f)
+                {
+                    Vector2 impulse2 = -K.Solve22(C1);
+                    impulse = new Vector3(impulse2.X, impulse2.Y, 0.0f);
+                }
+                else 
+                {
+                    impulse = -K.Solve33(C);
+                }
                 Vector2 P = new Vector2(impulse.X, impulse.Y);
 
                 cA -= mA * P;
-                aA -= iA * (MathUtils.Cross(rA, P) + impulse.Z);
+                aA -= iA * (MathUtils.Cross(ref rA, ref P) + impulse.Z);
 
                 cB += mB * P;
-                aB += iB * (MathUtils.Cross(rB, P) + impulse.Z);
+                aB += iB * (MathUtils.Cross(ref rB, ref P) + impulse.Z);
             }
 
             data.positions[_indexA].c = cA;

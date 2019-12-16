@@ -201,9 +201,9 @@ namespace Barotrauma
                 };
                 physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
-                physicsBody.FarseerBody.IsSensor = true;
-                physicsBody.FarseerBody.IsStatic = true;
-                physicsBody.FarseerBody.IsKinematic = true;
+                physicsBody.FarseerBody.SetIsSensor(true);
+                physicsBody.FarseerBody.BodyType = BodyType.Static;
+                physicsBody.FarseerBody.BodyType = BodyType.Kinematic;
 
                 ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
 
@@ -344,7 +344,7 @@ namespace Barotrauma
             return true;
         }
 
-        private void PhysicsBody_OnSeparation(Fixture fixtureA, Fixture fixtureB)
+        private void PhysicsBody_OnSeparation(Fixture fixtureA, Fixture fixtureB, Contact contact)
         {
             Entity entity = GetEntity(fixtureB);
             if (entity == null) return;

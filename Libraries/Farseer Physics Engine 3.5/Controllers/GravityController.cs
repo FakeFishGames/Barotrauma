@@ -1,7 +1,13 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using FarseerPhysics.Common.PhysicsLogic;
+using FarseerPhysics.Dynamics;
 
 namespace FarseerPhysics.Controllers
 {
@@ -14,7 +20,6 @@ namespace FarseerPhysics.Controllers
     public class GravityController : Controller
     {
         public GravityController(float strength)
-            : base(ControllerType.GravityController)
         {
             Strength = strength;
             MaxRadius = float.MaxValue;
@@ -24,7 +29,6 @@ namespace FarseerPhysics.Controllers
         }
 
         public GravityController(float strength, float maxRadius, float minRadius)
-            : base(ControllerType.GravityController)
         {
             MinRadius = minRadius;
             MaxRadius = maxRadius;
@@ -52,7 +56,7 @@ namespace FarseerPhysics.Controllers
 
                 foreach (Body controllerBody in Bodies)
                 {
-                    if (worldBody == controllerBody || (worldBody.IsStatic && controllerBody.IsStatic) || !controllerBody.Enabled)
+                    if (worldBody == controllerBody || (worldBody.BodyType == BodyType.Static && controllerBody.BodyType == BodyType.Static) || !controllerBody.Enabled)
                         continue;
 
                     Vector2 d = controllerBody.Position - worldBody.Position;

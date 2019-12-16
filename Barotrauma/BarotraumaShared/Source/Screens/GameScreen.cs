@@ -1,4 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿//#define RUN_PHYSICS_IN_SEPARATE_THREAD
+
+using Microsoft.Xna.Framework;
+using System.Threading;
+using FarseerPhysics.Dynamics;
 #if DEBUG && CLIENT
 using Microsoft.Xna.Framework.Input;
 #endif
@@ -8,6 +12,9 @@ namespace Barotrauma
     partial class GameScreen : Screen
     {
         private readonly Camera cam;
+
+        private object updateLock = new object();
+        private double physicsTime;
 
         public override Camera Cam
         {
@@ -43,6 +50,15 @@ namespace Barotrauma
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
                 entity.IsHighlighted = false;
+
+#if RUN_PHYSICS_IN_SEPARATE_THREAD
+            var physicsThread = new Thread(ExecutePhysics)
+            {
+                Name = "Physics thread",
+                IsBackground = true
+            };
+            physicsThread.Start();
+#endif
         }
 
         public override void Deselect()
@@ -62,6 +78,12 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+#if RUN_PHYSICS_IN_SEPARATE_THREAD
+            physicsTime += deltaTime;
+            lock (updateLock)
+            { 
+#endif
+
 
 #if DEBUG && CLIENT
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
@@ -191,10 +213,22 @@ namespace Barotrauma
 #if CLIENT
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("SubmarineUpdate", sw.ElapsedTicks);
-            sw.Restart(); 
+            sw.Restart();
 #endif
 
-            GameMain.World.Step((float)deltaTime);
+#if !RUN_PHYSICS_IN_SEPARATE_THREAD
+            try
+            {
+                GameMain.World.Step((float)Timing.Step);
+            }
+            catch (WorldLockedException e)
+            {
+                string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
+                DebugConsole.ThrowError(errorMsg, e);
+                GameAnalyticsManager.AddErrorEventOnce("GameScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+            }
+#endif
+
 
 #if CLIENT
             sw.Stop();
@@ -208,6 +242,26 @@ namespace Barotrauma
                 Inventory.draggingItem = null;
             }
 #endif
+
+
+#if RUN_PHYSICS_IN_SEPARATE_THREAD
+            }
+#endif
+        }
+
+        private void ExecutePhysics()
+        {
+            while (true)
+            {
+                while (physicsTime >= Timing.Step)
+                {
+                    lock (updateLock)
+                    {
+                        GameMain.World.Step((float)Timing.Step);
+                        physicsTime -= Timing.Step;
+                    }
+                }
+            }
         }
     }
 }

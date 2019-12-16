@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -23,6 +28,7 @@
 using System.Diagnostics;
 using FarseerPhysics.Common;
 using FarseerPhysics.Common.ConvexHull;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Collision.Shapes
@@ -87,7 +93,7 @@ namespace FarseerPhysics.Collision.Shapes
             {
                 _vertices = new Vertices(value);
 
-                //Debug.Assert(_vertices.Count >= 3 && _vertices.Count <= Settings.MaxPolygonVertices);
+                Debug.Assert(_vertices.Count >= 3 && _vertices.Count <= Settings.MaxPolygonVertices);
 
                 if (Settings.UseConvexHullPolygons)
                 {
@@ -179,7 +185,7 @@ namespace FarseerPhysics.Collision.Shapes
                 Vector2 e1 = Vertices[i] - s;
                 Vector2 e2 = i + 1 < Vertices.Count ? Vertices[i + 1] - s : Vertices[0] - s;
 
-                float D = MathUtils.Cross(e1, e2);
+                float D = MathUtils.Cross(ref e1, ref e2);
 
                 float triangleArea = 0.5f * D;
                 area += triangleArea;
@@ -218,7 +224,7 @@ namespace FarseerPhysics.Collision.Shapes
 
         public override bool TestPoint(ref Transform transform, ref Vector2 point)
         {
-            Vector2 pLocal = MathUtils.MulT(transform.q, point - transform.p);
+            Vector2 pLocal = Complex.Divide(point - transform.p, ref transform.q);
 
             for (int i = 0; i < Vertices.Count; ++i)
             {
@@ -237,8 +243,8 @@ namespace FarseerPhysics.Collision.Shapes
             output = new RayCastOutput();
 
             // Put the ray into the polygon's frame of reference.
-            Vector2 p1 = MathUtils.MulT(transform.q, input.Point1 - transform.p);
-            Vector2 p2 = MathUtils.MulT(transform.q, input.Point2 - transform.p);
+            Vector2 p1 = Complex.Divide(input.Point1 - transform.p, ref transform.q);
+            Vector2 p2 = Complex.Divide(input.Point2 - transform.p, ref transform.q);
             Vector2 d = p2 - p1;
 
             float lower = 0.0f, upper = input.MaxFraction;
@@ -296,7 +302,7 @@ namespace FarseerPhysics.Collision.Shapes
             if (index >= 0)
             {
                 output.Fraction = lower;
-                output.Normal = MathUtils.Mul(transform.q, Normals[index]);
+                output.Normal = Complex.Multiply(Normals[index], ref transform.q);
                 return true;
             }
 
@@ -311,19 +317,36 @@ namespace FarseerPhysics.Collision.Shapes
         /// <param name="childIndex">The child shape index.</param>
         public override void ComputeAABB(out AABB aabb, ref Transform transform, int childIndex)
         {
-            Vector2 lower = MathUtils.Mul(ref transform, Vertices[0]);
-            Vector2 upper = lower;
+            // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
+            var vert = Vertices[0];
+            aabb.LowerBound.X = (vert.X * transform.q.Real - vert.Y * transform.q.Imaginary) + transform.p.X;
+            aabb.LowerBound.Y = (vert.Y * transform.q.Real + vert.X * transform.q.Imaginary) + transform.p.Y;
+            aabb.UpperBound = aabb.LowerBound;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
-                Vector2 v = MathUtils.Mul(ref transform, Vertices[i]);
-                lower = Vector2.Min(lower, v);
-                upper = Vector2.Max(upper, v);
+                // OPT: Vector2 v = Transform.Multiply(Vertices[i], ref transform);
+                vert = Vertices[i];
+                float vX = (vert.X * transform.q.Real - vert.Y * transform.q.Imaginary) + transform.p.X;
+                float vY = (vert.Y * transform.q.Real + vert.X * transform.q.Imaginary) + transform.p.Y;
+
+                // OPT: Vector2.Min(ref aabb.LowerBound, ref v, out aabb.LowerBound);
+                // OPT: Vector2.Max(ref aabb.UpperBound, ref v, out aabb.UpperBound);
+                Debug.Assert(aabb.LowerBound.X <= aabb.UpperBound.X);
+                if (vX < aabb.LowerBound.X) aabb.LowerBound.X = vX;
+                else if (vX > aabb.UpperBound.X) aabb.UpperBound.X = vX;
+                Debug.Assert(aabb.LowerBound.Y <= aabb.UpperBound.Y);
+                if (vY < aabb.LowerBound.Y) aabb.LowerBound.Y = vY;
+                else if (vY > aabb.UpperBound.Y) aabb.UpperBound.Y = vY;
             }
 
-            Vector2 r = new Vector2(Radius, Radius);
-            aabb.LowerBound = lower - r;
-            aabb.UpperBound = upper + r;
+            // OPT: Vector2 r = new Vector2(Radius, Radius);
+            // OPT: aabb.LowerBound = aabb.LowerBound - r;
+            // OPT: aabb.UpperBound = aabb.UpperBound + r;
+            aabb.LowerBound.X -= Radius;
+            aabb.LowerBound.Y -= Radius;
+            aabb.UpperBound.X += Radius;
+            aabb.UpperBound.Y += Radius;
         }
 
         public override float ComputeSubmergedArea(ref Vector2 normal, float offset, ref Transform xf, out Vector2 sc)
@@ -331,7 +354,7 @@ namespace FarseerPhysics.Collision.Shapes
             sc = Vector2.Zero;
 
             //Transform plane into shape co-ordinates
-            Vector2 normalL = MathUtils.MulT(xf.q, normal);
+            Vector2 normalL = Complex.Divide(ref normal, ref xf.q);
             float offsetL = offset - Vector2.Dot(normal, xf.p);
 
             float[] depths = new float[Settings.MaxPolygonVertices];
@@ -372,7 +395,7 @@ namespace FarseerPhysics.Collision.Shapes
                     if (lastSubmerged)
                     {
                         //Completely submerged
-                        sc = MathUtils.Mul(ref xf, MassData.Centroid);
+                        sc = Transform.Multiply(MassData.Centroid, ref xf);
                         return MassData.Mass / Density;
                     }
 
@@ -421,7 +444,7 @@ namespace FarseerPhysics.Collision.Shapes
                     Vector2 e1 = p2 - intoVec;
                     Vector2 e2 = p3 - intoVec;
 
-                    float D = MathUtils.Cross(e1, e2);
+                    float D = MathUtils.Cross(ref e1, ref e2);
 
                     float triangleArea = 0.5f * D;
 
@@ -437,7 +460,7 @@ namespace FarseerPhysics.Collision.Shapes
             //Normalize and transform centroid
             center *= 1.0f / area;
 
-            sc = MathUtils.Mul(ref xf, center);
+            sc = Transform.Multiply(ref center, ref xf);
 
             return area;
         }

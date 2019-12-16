@@ -62,7 +62,7 @@ namespace Barotrauma
         private void SpawnItem()
         {
             item = new Item(itemPrefab, spawnPos, null);
-            item.body.FarseerBody.IsKinematic = true;
+            item.body.FarseerBody.BodyType = FarseerPhysics.BodyType.Kinematic;
 
             //try to find an artifact holder and place the artifact inside it
             foreach (Item it in Item.ItemList)
@@ -98,7 +98,7 @@ namespace Barotrauma
             switch (state)
             {
                 case 0:
-                    if (item.ParentInventory != null) item.body.FarseerBody.IsKinematic = false;                    
+                    if (item.ParentInventory != null) { item.body.FarseerBody.BodyType = FarseerPhysics.BodyType.Dynamic; }                
                     if (item.CurrentHull == null) return;
 
                     state = 1;

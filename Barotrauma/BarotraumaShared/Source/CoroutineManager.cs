@@ -57,6 +57,11 @@ namespace Barotrauma
             return handle;
         }
 
+        public static CoroutineHandle Invoke(Action action)
+        {
+            return StartCoroutine(DoInvokeAfter(action, 0.0f));
+        }
+
         public static CoroutineHandle InvokeAfter(Action action, float delay)
         {
             return StartCoroutine(DoInvokeAfter(action, delay));
@@ -69,7 +74,10 @@ namespace Barotrauma
                 yield return CoroutineStatus.Failure;
             }
 
-            yield return new WaitForSeconds(delay);
+            if (delay > 0.0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
 
             action();
 
@@ -79,30 +87,42 @@ namespace Barotrauma
 
         public static bool IsCoroutineRunning(string name)
         {
-            return Coroutines.Any(c => c.Name == name);
+            lock (Coroutines)
+            {
+                return Coroutines.Any(c => c.Name == name);
+            }
         }
 
         public static bool IsCoroutineRunning(CoroutineHandle handle)
         {
-            return Coroutines.Contains(handle);
+            lock (Coroutines)
+            {
+                return Coroutines.Contains(handle);
+            }
         }
-        
+
         public static void StopCoroutines(string name)
         {
-            Coroutines.ForEach(c =>
+            lock (Coroutines)
             {
-                if (c.Name == name)
+                Coroutines.ForEach(c =>
                 {
-                    c.Thread?.Abort();
-                    c.Thread?.Join();
-                }
-            });
-            Coroutines.RemoveAll(c => c.Name == name);
+                    if (c.Name == name)
+                    {
+                        c.Thread?.Abort();
+                        c.Thread?.Join();
+                    }
+                });
+                Coroutines.RemoveAll(c => c.Name == name);
+            }
         }
 
         public static void StopCoroutines(CoroutineHandle handle)
         {
-            Coroutines.RemoveAll(c => c == handle);
+            lock (Coroutines)
+            {
+                Coroutines.RemoveAll(c => c == handle);
+            }
         }
 
         public static void ExecuteCoroutineThread(CoroutineHandle handle)
@@ -210,9 +230,22 @@ namespace Barotrauma
             UnscaledDeltaTime = unscaledDeltaTime;
             DeltaTime = deltaTime;
 
-            foreach (var x in Coroutines.ToList())
-                if(IsDone(x))
-                    Coroutines.Remove(x);
+            List<CoroutineHandle> coroutineList;
+            lock (Coroutines)
+            {
+                coroutineList = Coroutines.ToList();
+            }
+
+            foreach (var coroutine in coroutineList)
+            {
+                if (IsDone(coroutine))
+                {
+                    lock (Coroutines)
+                    {
+                        Coroutines.Remove(coroutine);
+                    }
+                }
+            }
         }
     }
   

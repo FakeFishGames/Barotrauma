@@ -389,7 +389,7 @@ namespace Barotrauma
             }
         }
 
-        partial void OnCollisionProjSpecific(Fixture f1, Fixture f2, Contact contact, float impact)
+        partial void OnCollisionProjSpecific(float impact)
         {
             if (impact > 1.0f &&
                 !string.IsNullOrEmpty(Prefab.ImpactSoundTag) &&

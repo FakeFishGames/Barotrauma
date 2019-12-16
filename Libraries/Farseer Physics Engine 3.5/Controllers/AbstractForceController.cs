@@ -1,6 +1,12 @@
-﻿using System;
-using FarseerPhysics.Dynamics;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using Microsoft.Xna.Framework;
+using FarseerPhysics.Common.PhysicsLogic;
+using FarseerPhysics.Dynamics;
 
 namespace FarseerPhysics.Controllers
 {
@@ -85,10 +91,7 @@ namespace FarseerPhysics.Controllers
         /// Constructor
         /// </summary>
         public AbstractForceController()
-            : base(ControllerType.AbstractForceController)
         {
-            Enabled = true;
-
             Strength = 1.0f;
             Position = new Vector2(0, 0);
             MaximumSpeed = 100.0f;
@@ -115,7 +118,6 @@ namespace FarseerPhysics.Controllers
         /// </summary>
         /// <param name="mode"></param>
         public AbstractForceController(TimingModes mode)
-            : base(ControllerType.AbstractForceController)
         {
             TimingMode = mode;
             switch (mode)

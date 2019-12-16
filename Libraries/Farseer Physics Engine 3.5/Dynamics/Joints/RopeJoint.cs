@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -22,6 +27,7 @@
 
 using System;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -159,10 +165,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            _rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            _rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            _rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            _rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             _u = cB + _rB - cA - _rA;
 
             _length = _u.Length();
@@ -190,22 +197,22 @@ namespace FarseerPhysics.Dynamics.Joints
             }
 
             // Compute effective mass.
-            float crA = MathUtils.Cross(_rA, _u);
-            float crB = MathUtils.Cross(_rB, _u);
+            float crA = MathUtils.Cross(ref _rA, ref _u);
+            float crB = MathUtils.Cross(ref _rB, ref _u);
             float invMass = _invMassA + _invIA * crA * crA + _invMassB + _invIB * crB * crB;
 
             _mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Scale the impulse to support a variable time step.
                 _impulse *= data.step.dtRatio;
 
                 Vector2 P = _impulse * _u;
                 vA -= _invMassA * P;
-                wA -= _invIA * MathUtils.Cross(_rA, P);
+                wA -= _invIA * MathUtils.Cross(ref _rA, ref P);
                 vB += _invMassB * P;
-                wB += _invIB * MathUtils.Cross(_rB, P);
+                wB += _invIB * MathUtils.Cross(ref _rB, ref P);
             }
             else
             {
@@ -226,8 +233,8 @@ namespace FarseerPhysics.Dynamics.Joints
             float wB = data.velocities[_indexB].w;
 
             // Cdot = dot(u, v + cross(w, r))
-            Vector2 vpA = vA + MathUtils.Cross(wA, _rA);
-            Vector2 vpB = vB + MathUtils.Cross(wB, _rB);
+            Vector2 vpA = vA + MathUtils.Cross(wA, ref _rA);
+            Vector2 vpB = vB + MathUtils.Cross(wB, ref _rB);
             float C = _length - MaxLength;
             float Cdot = Vector2.Dot(_u, vpB - vpA);
 
@@ -244,9 +251,9 @@ namespace FarseerPhysics.Dynamics.Joints
 
             Vector2 P = impulse * _u;
             vA -= _invMassA * P;
-            wA -= _invIA * MathUtils.Cross(_rA, P);
+            wA -= _invIA * MathUtils.Cross(ref _rA, ref P);
             vB += _invMassB * P;
-            wB += _invIB * MathUtils.Cross(_rB, P);
+            wB += _invIB * MathUtils.Cross(ref _rB, ref P);
 
             data.velocities[_indexA].v = vA;
             data.velocities[_indexA].w = wA;
@@ -261,10 +268,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             Vector2 u = cB + rB - cA - rA;
 
             float length = u.Length(); u.Normalize();
@@ -276,9 +284,9 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 P = impulse * u;
 
             cA -= _invMassA * P;
-            aA -= _invIA * MathUtils.Cross(rA, P);
+            aA -= _invIA * MathUtils.Cross(ref rA, ref P);
             cB += _invMassB * P;
-            aB += _invIB * MathUtils.Cross(rB, P);
+            aB += _invIB * MathUtils.Cross(ref rB, ref P);
 
             data.positions[_indexA].c = cA;
             data.positions[_indexA].a = aA;

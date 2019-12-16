@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -24,6 +29,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.Xna.Framework;
+using FarseerPhysics.Common.Maths;
 
 namespace FarseerPhysics.Common
 {
@@ -40,9 +46,11 @@ namespace FarseerPhysics.Common
         }
 
         /// Perform the cross product on two vectors.
-        public static Vector3 Cross(Vector3 a, Vector3 b)
+        public static Vector3 Cross(ref Vector3 a, ref Vector3 b)
         {
-            return new Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+            return new Vector3( a.Y * b.Z - a.Z * b.Y, 
+                                a.Z * b.X - a.X * b.Z, 
+                                a.X * b.Y - a.Y * b.X);
         }
 
         public static Vector2 Cross(Vector2 a, float s)
@@ -50,9 +58,19 @@ namespace FarseerPhysics.Common
             return new Vector2(s * a.Y, -s * a.X);
         }
 
-        public static Vector2 Cross(float s, Vector2 a)
+        public static Vector2 Rot270(ref Vector2 a)
+        {
+            return new Vector2(a.Y, -a.X);
+        }
+
+        public static Vector2 Cross(float s, ref Vector2 a)
         {
             return new Vector2(-s * a.Y, s * a.X);
+        }
+
+        public static Vector2 Rot90(ref Vector2 a)
+        {
+            return new Vector2(-a.Y, a.X);
         }
 
         public static Vector2 Abs(Vector2 v)
@@ -69,19 +87,7 @@ namespace FarseerPhysics.Common
         {
             return new Vector2(A.ex.X * v.X + A.ey.X * v.Y, A.ex.Y * v.X + A.ey.Y * v.Y);
         }
-
-        public static Vector2 Mul(ref Transform T, Vector2 v)
-        {
-            return Mul(ref T, ref v);
-        }
-
-        public static Vector2 Mul(ref Transform T, ref Vector2 v)
-        {
-            return new Vector2(
-                (T.q.c * v.X - T.q.s * v.Y) + T.p.X, 
-                (T.q.s * v.X + T.q.c * v.Y) + T.p.Y);
-        }
-
+        
         public static Vector2 MulT(ref Mat22 A, Vector2 v)
         {
             return MulT(ref A, ref v);
@@ -92,18 +98,6 @@ namespace FarseerPhysics.Common
             return new Vector2(v.X * A.ex.X + v.Y * A.ex.Y, v.X * A.ey.X + v.Y * A.ey.Y);
         }
 
-        public static Vector2 MulT(ref Transform T, Vector2 v)
-        {
-            return MulT(ref T, ref v);
-        }
-
-        public static Vector2 MulT(ref Transform T, ref Vector2 v)
-        {
-            float px = v.X - T.p.X;
-            float py = v.Y - T.p.Y;
-
-            return new Vector2(T.q.c * px + T.q.s * py, -T.q.s * px + T.q.c * py);
-        }
 
         // A^T * B
         public static void MulT(ref Mat22 A, ref Mat22 B, out Mat22 C)
@@ -120,26 +114,7 @@ namespace FarseerPhysics.Common
         {
             return v.X * A.ex + v.Y * A.ey + v.Z * A.ez;
         }
-
-        // v2 = A.q.Rot(B.q.Rot(v1) + B.p) + A.p
-        //    = (A.q * B.q).Rot(v1) + A.q.Rot(B.p) + A.p
-        public static Transform Mul(Transform A, Transform B)
-        {
-            Transform C = new Transform();
-            C.q = Mul(A.q, B.q);
-            C.p = Mul(A.q, B.p) + A.p;
-            return C;
-        }
-
-        // v2 = A.q' * (B.q * v1 + B.p - A.p)
-        //    = A.q' * B.q * v1 + A.q' * (B.p - A.p)
-        public static void MulT(ref Transform A, ref Transform B, out Transform C)
-        {
-            C = new Transform();
-            C.q = MulT(A.q, B.q);
-            C.p = MulT(A.q, B.p - A.p);
-        }
-
+        
         public static void Swap<T>(ref T a, ref T b)
         {
             T tmp = a;
@@ -152,65 +127,7 @@ namespace FarseerPhysics.Common
         {
             return new Vector2(A.ex.X * v.X + A.ey.X * v.Y, A.ex.Y * v.X + A.ey.Y * v.Y);
         }
-
-        /// Multiply two rotations: q * r
-        public static Rot Mul(Rot q, Rot r)
-        {
-            // [qc -qs] * [rc -rs] = [qc*rc-qs*rs -qc*rs-qs*rc]
-            // [qs  qc]   [rs  rc]   [qs*rc+qc*rs -qs*rs+qc*rc]
-            // s = qs * rc + qc * rs
-            // c = qc * rc - qs * rs
-            Rot qr;
-            qr.s = q.s * r.c + q.c * r.s;
-            qr.c = q.c * r.c - q.s * r.s;
-            return qr;
-        }
-
-        public static Vector2 MulT(Transform T, Vector2 v)
-        {
-            float px = v.X - T.p.X;
-            float py = v.Y - T.p.Y;
-            float x = (T.q.c * px + T.q.s * py);
-            float y = (-T.q.s * px + T.q.c * py);
-
-            return new Vector2(x, y);
-        }
-
-        /// Transpose multiply two rotations: qT * r
-        public static Rot MulT(Rot q, Rot r)
-        {
-            // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
-            // [-qs qc]   [rs  rc]   [-qs*rc+qc*rs qs*rs+qc*rc]
-            // s = qc * rs - qs * rc
-            // c = qc * rc + qs * rs
-            Rot qr;
-            qr.s = q.c * r.s - q.s * r.c;
-            qr.c = q.c * r.c + q.s * r.s;
-            return qr;
-        }
-
-        // v2 = A.q' * (B.q * v1 + B.p - A.p)
-        //    = A.q' * B.q * v1 + A.q' * (B.p - A.p)
-        public static Transform MulT(Transform A, Transform B)
-        {
-            Transform C = new Transform();
-            C.q = MulT(A.q, B.q);
-            C.p = MulT(A.q, B.p - A.p);
-            return C;
-        }
-
-        /// Rotate a vector
-        public static Vector2 Mul(Rot q, Vector2 v)
-        {
-            return new Vector2(q.c * v.X - q.s * v.Y, q.s * v.X + q.c * v.Y);
-        }
-
-        /// Inverse rotate a vector
-        public static Vector2 MulT(Rot q, Vector2 v)
-        {
-            return new Vector2(q.c * v.X + q.s * v.Y, -q.s * v.X + q.c * v.Y);
-        }
-
+        
         /// Get the skew vector such that dot(skew_vec, other) == cross(vec, other)
         public static Vector2 Skew(Vector2 input)
         {
@@ -301,6 +218,12 @@ namespace FarseerPhysics.Common
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
         }
 
+        /// Perform the dot product on two vectors.
+        public static float Dot(Vector2 a, ref Vector2 b)
+        {
+            return a.X * b.X + a.Y * b.Y;
+        }
+
         public static double VectorAngle(Vector2 p1, Vector2 p2)
         {
             return VectorAngle(ref p1, ref p2);
@@ -389,15 +312,6 @@ namespace FarseerPhysics.Common
 
         #endregion
 
-        public static Vector2 Mul(ref Rot rot, Vector2 axis)
-        {
-            return Mul(rot, axis);
-        }
-
-        public static Vector2 MulT(ref Rot rot, Vector2 axis)
-        {
-            return MulT(rot, axis);
-        }
     }
 
     /// <summary>
@@ -598,7 +512,7 @@ namespace FarseerPhysics.Common
         /// Returns the zero matrix if singular.
         public void GetSymInverse33(ref Mat33 M)
         {
-            float det = MathUtils.Dot(ex, MathUtils.Cross(ey, ez));
+            float det = MathUtils.Dot(ex, MathUtils.Cross(ref ey, ref ez));
             if (det != 0.0f)
             {
                 det = 1.0f / det;
@@ -622,108 +536,108 @@ namespace FarseerPhysics.Common
         }
     }
 
-    /// <summary>
-    /// Rotation
-    /// </summary>
-    public struct Rot
-    {
-        /// Sine and cosine
-        public float s, c;
-
-        /// <summary>
-        /// Initialize from an angle in radians
-        /// </summary>
-        /// <param name="angle">Angle in radians</param>
-        public Rot(float angle)
-        {
-            // TODO_ERIN optimize
-            s = (float)Math.Sin(angle);
-            c = (float)Math.Cos(angle);
-        }
-
-        /// <summary>
-        /// Set using an angle in radians.
-        /// </summary>
-        /// <param name="angle"></param>
-        public void Set(float angle)
-        {
-            // TODO_ERIN optimize
-            s = (float)Math.Sin(angle);
-            c = (float)Math.Cos(angle);
-        }
-
-        /// <summary>
-        /// Set to the identity rotation
-        /// </summary>
-        public void SetIdentity()
-        {
-            s = 0.0f;
-            c = 1.0f;
-        }
-
-        /// <summary>
-        /// Get the angle in radians
-        /// </summary>
-        public float GetAngle()
-        {
-            return (float)Math.Atan2(s, c);
-        }
-
-        /// <summary>
-        /// Get the x-axis
-        /// </summary>
-        public Vector2 GetXAxis()
-        {
-            return new Vector2(c, s);
-        }
-
-        /// <summary>
-        /// Get the y-axis
-        /// </summary>
-        public Vector2 GetYAxis()
-        {
-            return new Vector2(-s, c);
-        }
-    }
-
+    
     /// <summary>
     /// A transform contains translation and rotation. It is used to represent
     /// the position and orientation of rigid frames.
     /// </summary>
     public struct Transform
     {
+        private static readonly Transform _identity = new Transform(Vector2.Zero, Complex.One);
+
+        public Complex q;
         public Vector2 p;
-        public Rot q;
+
+        public static Transform Identity { get { return _identity; } }
 
         /// <summary>
-        /// Initialize using a position vector and a rotation matrix.
+        /// Initialize using a position vector and a Complex rotation.
         /// </summary>
         /// <param name="position">The position.</param>
-        /// <param name="rotation">The r.</param>
-        public Transform(ref Vector2 position, ref Rot rotation)
+        /// <param name="rotation">The rotation</param>
+        public Transform(Vector2 position, Complex rotation)
         {
-            p = position;
             q = rotation;
+            p = position;
         }
 
         /// <summary>
-        /// Set this to the identity transform.
-        /// </summary>
-        public void SetIdentity()
-        {
-            p = Vector2.Zero;
-            q.SetIdentity();
-        }
-
-        /// <summary>
-        /// Set this based on the position and angle.
+        /// Initialize using a position vector and a rotation.
         /// </summary>
         /// <param name="position">The position.</param>
-        /// <param name="angle">The angle.</param>
-        public void Set(Vector2 position, float angle)
+        /// <param name="angle">The rotation angle</param>
+        public Transform(Vector2 position, float angle)
+            : this(position, Complex.FromAngle(angle))
         {
-            p = position;
-            q.Set(angle);
+        }
+                
+        public static Vector2 Multiply(Vector2 left, ref Transform right)
+        {
+            return Multiply(ref left, ref right);
+        }
+
+        public static Vector2 Multiply(ref Vector2 left, ref Transform right)
+        {
+            // Opt: var result = Complex.Multiply(left, right.q) + right.p;
+            return new Vector2(
+                (left.X * right.q.Real - left.Y * right.q.Imaginary) + right.p.X,
+                (left.Y * right.q.Real + left.X * right.q.Imaginary) + right.p.Y);
+        }
+
+        public static Vector2 Divide(Vector2 left, ref Transform right)
+        {
+            return Divide(ref left, ref right);
+        }
+
+        public static Vector2 Divide(ref Vector2 left, ref Transform right)
+        {
+            // Opt: var result = Complex.Divide(left - right.p, right);
+            float px = left.X - right.p.X;
+            float py = left.Y - right.p.Y;
+            return new Vector2(
+                (px * right.q.Real + py * right.q.Imaginary),
+                (py * right.q.Real - px * right.q.Imaginary));
+        }
+
+        public static void Divide(Vector2 left, ref Transform right, out Vector2 result)
+        {
+            // Opt: var result = Complex.Divide(left - right.p, right);
+            float px = left.X - right.p.X;
+            float py = left.Y - right.p.Y;
+            result.X = (px * right.q.Real + py * right.q.Imaginary);
+            result.Y = (py * right.q.Real - px * right.q.Imaginary);
+        }
+
+        public static Transform Multiply(ref Transform left, ref Transform right)
+        {
+            return new Transform(
+                    Complex.Multiply(ref left.p, ref right.q) + right.p,
+                    Complex.Multiply(ref left.q, ref right.q));
+        }
+
+        public static Transform Divide(ref Transform left, ref Transform right)
+        {
+            return new Transform(
+                Complex.Divide(left.p - right.p, ref right.q),
+                Complex.Divide(ref left.q, ref right.q));
+        }
+        
+        public static void Divide(ref Transform left, ref Transform right, out Transform result)
+        {
+            Complex.Divide(left.p - right.p, ref right.q, out result.p);
+            Complex.Divide(ref left.q, ref right.q, out result.q);
+        }
+            
+        public static void Multiply(ref Transform left, Complex right, out Transform result)
+        {
+            result.p = Complex.Multiply(ref left.p, ref right);
+            result.q = Complex.Multiply(ref left.q, ref right);
+        }
+        
+        public static void Divide(ref Transform left, Complex right, out Transform result)
+        {
+            result.p = Complex.Divide(ref left.p, ref right);
+            result.q = Complex.Divide(ref left.q, ref right);
         }
     }
 
@@ -771,10 +685,10 @@ namespace FarseerPhysics.Common
             xfb.p.X = (1.0f - beta) * C0.X + beta * C.X;
             xfb.p.Y = (1.0f - beta) * C0.Y + beta * C.Y;
             float angle = (1.0f - beta) * A0 + beta * A;
-            xfb.q.Set(angle);
+            xfb.q.Phase = angle;
 
             // Shift to origin
-            xfb.p -= MathUtils.Mul(xfb.q, LocalCenter);
+            xfb.p -= Complex.Multiply(ref LocalCenter, ref xfb.q);
         }
 
         /// <summary>

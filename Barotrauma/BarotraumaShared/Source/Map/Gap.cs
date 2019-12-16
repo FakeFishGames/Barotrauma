@@ -2,7 +2,6 @@
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -127,7 +126,7 @@ namespace Barotrauma
             GapList.Add(this);
             InsertToList();
 
-            outsideCollisionBlocker = BodyFactory.CreateEdge(GameMain.World, -Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f, "blocker");
+            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f);
             outsideCollisionBlocker.BodyType = BodyType.Static;
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
             outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
@@ -710,7 +709,7 @@ namespace Barotrauma
 
             if (outsideCollisionBlocker != null)
             {
-                GameMain.World.RemoveBody(outsideCollisionBlocker);
+                GameMain.World.Remove(outsideCollisionBlocker);
                 outsideCollisionBlocker = null;
             }
         }
