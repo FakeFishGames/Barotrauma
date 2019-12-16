@@ -40,7 +40,7 @@
     <target tag="wall" state="Attack" priority="80" />
     <target tag="door" state="Attack" priority="80" />
     <target tag="human" state="PassiveAggressive" priority="25" reactdistance="2000"/>
-    <target tag="weaker" state="PassiveAggressive" priority="25" reactdistance="1000"/>
+    <target tag="weaker" state="PassiveAggressive" priority="25" reactdistance="2000"/>
     <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="3000" cohesion="0.25" />
   </ai>
 </Character>
