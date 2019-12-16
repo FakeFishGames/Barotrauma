@@ -83,6 +83,12 @@ namespace Barotrauma
             }
         }
 
+        public Color ButtonTextColor
+        {
+            get { return button.TextColor; }
+            set { button.TextColor = value; }
+        }
+
         public void ReceiveTextInput(char inputChar)
         {
             GUI.KeyboardDispatcher.Subscriber = null;

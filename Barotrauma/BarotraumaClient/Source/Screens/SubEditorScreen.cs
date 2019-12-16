@@ -1765,9 +1765,9 @@ namespace Barotrauma
 
         private void CreateContextMenu()
         {
-            List<MapEntity> targets = MapEntity.SelectedAny ? 
-                new List<MapEntity>(MapEntity.SelectedList) : 
-                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList();
+            List<MapEntity> targets = MapEntity.mapEntityList.Any(me => me.IsHighlighted && !MapEntity.SelectedList.Contains(me)) ? 
+                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList() :
+                new List<MapEntity>(MapEntity.SelectedList);
                         
             contextMenu = new GUIListBox(new RectTransform(new Vector2(0.1f, 0.1f), GUI.Canvas)
             {
@@ -1821,7 +1821,7 @@ namespace Barotrauma
                         MapEntity.Cut(targets);
                         break;
                     case "paste":
-                        MapEntity.Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
+                        MapEntity.Paste(cam.ScreenToWorld(contextMenu.Rect.Location.ToVector2()));
                         break;
                     case "delete":
                         targets.ForEach(me => me.Remove());
