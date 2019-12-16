@@ -42,7 +42,6 @@ namespace Barotrauma
         public int ParticleLimit { get; set; }
 
         public float LightMapScale { get; set; }
-        public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
         public bool PauseOnFocusLost { get; set; }
@@ -537,7 +536,6 @@ namespace Barotrauma
             gSettings.ReplaceAttributes(
                 new XAttribute("particlelimit", ParticleLimit),
                 new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
                 new XAttribute("hudscale", HUDScale),
@@ -864,7 +862,6 @@ namespace Barotrauma
             gSettings.ReplaceAttributes(
                 new XAttribute("particlelimit", ParticleLimit),
                 new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
                 new XAttribute("hudscale", HUDScale),
@@ -1030,7 +1027,6 @@ namespace Barotrauma
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", ParticleLimit);
             LightMapScale = MathHelper.Clamp(graphicsSettings.GetAttributeFloat("lightmapscale", LightMapScale), 0.1f, 1.0f);
-            SpecularityEnabled = graphicsSettings.GetAttributeBool("specularity", SpecularityEnabled);
             ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", ChromaticAberrationEnabled);
             HUDScale = graphicsSettings.GetAttributeFloat("hudscale", HUDScale);
             InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", InventoryScale);
@@ -1168,7 +1164,6 @@ namespace Barotrauma
 #endif
             ParticleLimit = 1500;
             LightMapScale = 0.5f;
-            SpecularityEnabled = false;
             ChromaticAberrationEnabled = true;
             PauseOnFocusLost = true;
             MuteOnFocusLost = false;

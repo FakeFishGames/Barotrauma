@@ -4399,6 +4399,19 @@
   <entityname.baseballcap>Baseball Cap</entityname.baseballcap>
   <entitydescription.baseballcap>Every self-respecting mechanic should have one.</entitydescription.baseballcap>
   
+  <afflictionname.radiationsickness>Radiation sickness</afflictionname.radiationsickness>
+  <afflictiondescription.radiationsickness>The patient's skin is red and blistering.</afflictiondescription.radiationsickness>
+  <afflictionname.deliriuminepoisoning>Deliriumine poisoning</afflictionname.deliriuminepoisoning>
+  <afflictiondescription.deliriuminepoisoning>The patient seems agitated, with small but noticeable nervous twitches in their face and hands.</afflictiondescription.deliriuminepoisoning>
+
+  <editor.cut>Cut</editor.cut>
+  <editor.paste>Paste</editor.paste>
+
+  <label.batterycharge>Battery charge%</label.batterycharge>
+
+  <submarine.name.hemulen>Hemulen</submarine.name.hemulen>
+  <submarine.description.hemulen>For when you need extra space to stretch your legs or when you need that space to be between you and the poor, choose Hemulen shuttles.</submarine.description.hemulen>
+	
   <missionname.killmatriarch1>Aggressive Hammerheads</missionname.killmatriarch1>
   <missiondescription.killmatriarch1>According to our sources there is a group of hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue travelling safely in the route.</missiondescription.killmatriarch1>
   <missionsonarlabel.killmatriarch1>Aggressive Hammerheads</missionsonarlabel.killmatriarch1>

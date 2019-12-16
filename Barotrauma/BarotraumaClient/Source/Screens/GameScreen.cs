@@ -219,10 +219,12 @@ namespace Barotrauma
 
             //draw characters with deformable limbs last, because they can't be batched into SpriteBatch
             //pretty hacky way of preventing draw order issues between normal and deformable sprites
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
-            foreach (Character c in Character.CharacterList)
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, null, DepthStencilState.None, null, null, cam.Transform);
+            //backwards order to render the most recently spawned characters in front (characters spawned later have a larger sprite depth)
+            for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
             {
-                if (c.AnimController.Limbs.All(l => l.DeformSprite == null) || !c.IsVisible) { continue; }
+                Character c = Character.CharacterList[i];
+                if (!c.IsVisible || c.AnimController.Limbs.All(l => l.DeformSprite == null)) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();

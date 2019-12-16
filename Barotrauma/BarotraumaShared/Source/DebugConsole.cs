@@ -1448,7 +1448,10 @@ namespace Barotrauma
             Inventory spawnInventory = null;
 
             string itemNameOrId = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemNameOrId, identifier: itemNameOrId, showErrorMessages: false) is ItemPrefab itemPrefab))
+            ItemPrefab itemPrefab =
+                (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+            if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemNameOrId + "\" not found!";
                 var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);

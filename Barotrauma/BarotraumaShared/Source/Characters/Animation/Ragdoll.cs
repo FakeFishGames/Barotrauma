@@ -110,8 +110,6 @@ namespace Barotrauma
 
         private Category prevCollisionCategory = Category.None;
 
-        private Body outsideCollisionBlocker;
-
         public bool IsStuck => Limbs.Any(l => l.IsStuck);
 
         public PhysicsBody Collider
@@ -430,15 +428,7 @@ namespace Barotrauma
                 }
             }
 
-            // This block was salvaged from the merge of the dev branch to the animation branch. Not sure if every line made it here.
-            outsideCollisionBlocker = BodyFactory.CreateEdge(GameMain.World, -Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f, "blocker");
-            outsideCollisionBlocker.BodyType = BodyType.Static;
-            outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
-            outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
-            outsideCollisionBlocker.Enabled = false;
-
             UpdateCollisionCategories();
-
             SetInitialLimbPositions();
         }
 
@@ -594,14 +584,10 @@ namespace Barotrauma
                 GameMain.World.RemoveJoint(limbJoint);
             }
         }
-          
+
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
-
-            if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) return false;
-
-            //only collide with the ragdoll's own blocker
-            if (f2.Body.UserData as string == "blocker" && f2.Body != outsideCollisionBlocker) return false;
+            if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) { return false; }
 
             //always collides with bodies other than structures
             if (!(f2.Body.UserData is Structure structure))
@@ -611,40 +597,40 @@ namespace Barotrauma
             }
 
             Vector2 colliderBottom = GetColliderBottom();
-            
+
             if (structure.IsPlatform)
             {
-                if (ignorePlatforms) return false;
+                if (ignorePlatforms) { return false; }
 
                 //the collision is ignored if the lowest limb is under the platform
                 //if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false;
 
-                if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) return false; 
-                if (f1.Body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) return false; 
-                
+                if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
+                if (f1.Body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
+
             }
             else if (structure.StairDirection != Direction.None)
             {
                 Stairs = null;
 
                 //don't collider with stairs if
-                
+
                 //1. bottom of the collider is at the bottom of the stairs and the character isn't trying to move upwards
                 float stairBottomPos = ConvertUnits.ToSimUnits(structure.Rect.Y - structure.Rect.Height + 10);
-                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) return false;
+                if (colliderBottom.Y < stairBottomPos && targetMovement.Y < 0.5f) { return false; }
 
                 //2. bottom of the collider is at the top of the stairs and the character isn't trying to move downwards
-                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) return false;
-                               
+                if (targetMovement.Y >= 0.0f && colliderBottom.Y >= ConvertUnits.ToSimUnits(structure.Rect.Y - Submarine.GridSize.Y * 5)) { return false; }
+
                 //3. collided with the stairs from below
-                if (contact.Manifold.LocalNormal.Y < 0.0f) return false;
+                if (contact.Manifold.LocalNormal.Y < 0.0f) { return false; }
 
                 //4. contact points is above the bottom half of the collider
                 contact.GetWorldManifold(out Vector2 normal, out FarseerPhysics.Common.FixedArray2<Vector2> points);
-                if (points[0].Y > Collider.SimPosition.Y) return false;
-                
+                if (points[0].Y > Collider.SimPosition.Y) { return false; }
+
                 //5. in water
-                if (inWater && targetMovement.Y < 0.5f) return false;
+                if (inWater && targetMovement.Y < 0.5f) { return false; }
 
                 //---------------
 
@@ -934,11 +920,7 @@ namespace Barotrauma
 
         private void PreventOutsideCollision()
         {
-            if (currentHull?.Submarine == null)
-            {
-                outsideCollisionBlocker.Enabled = false;
-                return;
-            }
+            if (currentHull?.Submarine == null) { return; }
 
             var connectedGaps = currentHull.ConnectedGaps.Where(g => !g.IsRoomToRoom);
             foreach (Gap gap in connectedGaps)
@@ -962,20 +944,8 @@ namespace Barotrauma
                     }
                 }
 
-                if (!gap.GetOutsideCollider(out Vector2? outsideColliderPos, out Vector2? outsideColliderNormal)) { continue; }
-
-                Vector2 colliderPos = outsideColliderPos.Value - currentHull.Submarine.SimPosition;
-                float colliderRotation = MathUtils.VectorToAngle(outsideColliderNormal.Value) - MathHelper.PiOver2;
-                if (Vector2.DistanceSquared(outsideCollisionBlocker.Position, colliderPos) > 0.01f ||
-                    Math.Abs(outsideCollisionBlocker.Rotation - colliderRotation) > 0.01f)
-                {
-                    outsideCollisionBlocker.SetTransform(colliderPos, colliderRotation);
-                }
-                outsideCollisionBlocker.Enabled = true;
-                return;
+                gap.RefreshOutsideCollider();
             }
-
-            outsideCollisionBlocker.Enabled = false;
         }
 
         public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
@@ -1750,12 +1720,6 @@ namespace Barotrauma
                     b.Remove();
                 }
                 collider = null;
-            }
-
-            if (outsideCollisionBlocker != null)
-            {
-                GameMain.World.RemoveBody(outsideCollisionBlocker);
-                outsideCollisionBlocker = null;
             }
 
             if (LimbJoints != null)
