@@ -38,6 +38,11 @@
       <DirectionalPingButton index="2" texture="Content/Items/Command/directionalPingButton.png" sourcerect="266,0,91,266" origin="-4.5275,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
       <LineSprite texture="Content/Items/Command/NavUI.png" sourcerect="181,141,109,4" origin="0,0.5"/>
+      <targeticon identifier="outpost" texture="Content/UI/UI_Atlas2.png" sourcerect="301,371,16,8" origin="0.5,0.5"/>
+      <targeticon identifier="submarine" texture="Content/UI/UI_Atlas2.png" sourcerect="302,380,14,6" origin="0.5,0.5"/>
+      <targeticon identifier="shuttle" texture="Content/UI/UI_Atlas2.png" sourcerect="285,380,8,6" origin="0.5,0.5"/>
+      <targeticon identifier="artifact" texture="Content/UI/UI_Atlas2.png" sourcerect="285,387,8,8" origin="0.5,0.5"/>
+      <targeticon identifier="" texture="Content/UI/UI_Atlas2.png" sourcerect="298,389,4,4" origin="0.5,0.5"/>
     </Sonar>
     <CustomInterface canbeselected="true">
       <GuiFrame relativesize="0.15,0.15" anchor="TopRight" relativeoffset="0.25,0.75" style="ItemUI" />
@@ -98,6 +103,11 @@
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
+      <targeticon identifier="outpost" texture="Content/UI/UI_Atlas2.png" sourcerect="301,371,16,8" origin="0.5,0.5"/>
+      <targeticon identifier="submarine" texture="Content/UI/UI_Atlas2.png" sourcerect="302,380,14,6" origin="0.5,0.5"/>
+      <targeticon identifier="shuttle" texture="Content/UI/UI_Atlas2.png" sourcerect="285,380,8,6" origin="0.5,0.5"/>
+      <targeticon identifier="artifact" texture="Content/UI/UI_Atlas2.png" sourcerect="285,387,8,8" origin="0.5,0.5"/>
+      <targeticon identifier="" texture="Content/UI/UI_Atlas2.png" sourcerect="298,389,4,4" origin="0.5,0.5"/>
     </Sonar>
     <CustomInterface canbeselected="true">
       <GuiFrame relativesize="0.15,0.15" anchor="BottomLeft" relativeoffset="0.5,0" style="ItemUI" />
@@ -141,6 +151,11 @@
       <DirectionalPingCircle texture="Content/Items/Command/directionalPingCircle.png" origin="0.0,0.5" />
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
+      <targeticon identifier="outpost" texture="Content/UI/UI_Atlas2.png" sourcerect="301,371,16,8" origin="0.5,0.5"/>
+      <targeticon identifier="submarine" texture="Content/UI/UI_Atlas2.png" sourcerect="302,380,14,6" origin="0.5,0.5"/>
+      <targeticon identifier="shuttle" texture="Content/UI/UI_Atlas2.png" sourcerect="285,380,8,6" origin="0.5,0.5"/>
+      <targeticon identifier="artifact" texture="Content/UI/UI_Atlas2.png" sourcerect="285,387,8,8" origin="0.5,0.5"/>
+      <targeticon identifier="" texture="Content/UI/UI_Atlas2.png" sourcerect="298,389,4,4" origin="0.5,0.5"/>
     </Sonar>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />

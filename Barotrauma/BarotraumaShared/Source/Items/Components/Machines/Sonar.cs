@@ -65,12 +65,6 @@ namespace Barotrauma.Items.Components
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
 
-        private Sprite pingCircle, directionalPingCircle;
-        private Sprite screenOverlay, screenBackground;
-
-        private Sprite sonarBlip;
-        private Sprite lineSprite;
-
         private bool aiPingCheckPending;
 
         //the float value is a timer used for disconnecting the transducer if no signal is received from it for 1 second
@@ -232,18 +226,8 @@ namespace Barotrauma.Items.Components
             return currentPingIndex != -1;
         }
 
-        protected override void RemoveComponentSpecific()
-        {
-            base.RemoveComponentSpecific();
-            sonarBlip?.Remove();
-            pingCircle?.Remove();
-            directionalPingCircle?.Remove();
-            screenOverlay?.Remove();
-            screenBackground?.Remove();
-            lineSprite?.Remove();
-        }
-        
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
+
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (currentMode == Mode.Passive || !aiPingCheckPending) { return false; }

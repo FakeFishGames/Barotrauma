@@ -68,6 +68,7 @@ namespace Barotrauma
         }
 
         public string SonarLabel;
+        public string SonarIconIdentifier;
 
         public bool Enabled = true;
 
@@ -143,9 +144,10 @@ namespace Barotrauma
                 SoundRange = MinSoundRange;
             }
 
-            SonarDisruption = element.GetAttributeFloat("sonardisruption", 0.0f);
-            SonarLabel = element.GetAttributeString("sonarlabel", "");
-            string typeString = element.GetAttributeString("type", "Any");
+            SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
+            SonarLabel          = element.GetAttributeString("sonarlabel", "");
+            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
+            string typeString   = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))
             {
                 Type = t;

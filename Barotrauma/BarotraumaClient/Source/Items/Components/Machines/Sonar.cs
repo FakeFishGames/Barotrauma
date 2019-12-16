@@ -37,6 +37,14 @@ namespace Barotrauma.Items.Components
         private Sprite directionalPingBackground;
         private Sprite[] directionalPingButton;
 
+        private Sprite pingCircle, directionalPingCircle;
+        private Sprite screenOverlay, screenBackground;
+
+        private Sprite sonarBlip;
+        private Sprite lineSprite;
+
+        private Dictionary<string, Sprite> targetIcons = new Dictionary<string, Sprite>();
+
         private float displayBorderSize;
 
         private List<SonarBlip> sonarBlips;
@@ -49,7 +57,7 @@ namespace Barotrauma.Items.Components
         private float zoomSqrt;
 
         private float showDirectionalIndicatorTimer;
-
+        
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
@@ -197,6 +205,10 @@ namespace Barotrauma.Items.Components
                         break;
                     case "linesprite":
                         lineSprite = new Sprite(subElement);
+                        break;
+                    case "targeticon":
+                        var targetIconSprite = new Sprite(subElement);
+                        targetIcons.Add(subElement.GetAttributeString("identifier", ""), targetIconSprite);
                         break;
                 }
             }
@@ -610,11 +622,13 @@ namespace Barotrauma.Items.Components
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
-                (Level.Loaded.StartPosition - transducerCenter), displayScale, center, (rect.Width * 0.5f));
+                "outpost",
+                (Level.Loaded.StartPosition - transducerCenter), displayScale, center, DisplayRadius);
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.EndLocation.Name,
-                (Level.Loaded.EndPosition - transducerCenter), displayScale, center, (rect.Width * 0.5f));
+                "outpost",
+                (Level.Loaded.EndPosition - transducerCenter), displayScale, center, DisplayRadius);
 
             foreach (AITarget aiTarget in AITarget.List)
             {
@@ -625,7 +639,8 @@ namespace Barotrauma.Items.Components
                 {
                     DrawMarker(spriteBatch,
                         aiTarget.SonarLabel,
-                        aiTarget.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                        aiTarget.SonarIconIdentifier,
+                        aiTarget.WorldPosition - transducerCenter, displayScale, center, DisplayRadius * 0.975f);
                 }
             }
             
@@ -639,7 +654,8 @@ namespace Barotrauma.Items.Components
                     {
                         DrawMarker(spriteBatch,
                             mission.SonarLabel,
-                            sonarPosition - transducerCenter, displayScale, center, (rect.Width * 0.47f));
+                            mission.SonarIconIdentifier,
+                            sonarPosition - transducerCenter, displayScale, center, DisplayRadius * 0.95f);
                     }
                 }
             }
@@ -655,7 +671,11 @@ namespace Barotrauma.Items.Components
                 }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                              
-                DrawMarker(spriteBatch, sub.Name, sub.WorldPosition - transducerCenter, displayScale, center, (rect.Width * 0.45f));
+                DrawMarker(spriteBatch, 
+                    sub.Name, 
+                    sub.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
+                    sub.WorldPosition - transducerCenter, 
+                    displayScale, center, DisplayRadius * 0.95f);
             }
 
             if (GameMain.DebugDraw)
@@ -1243,7 +1263,7 @@ namespace Barotrauma.Items.Components
             sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
         }
 
-        private void DrawMarker(SpriteBatch spriteBatch, string label, Vector2 position, float scale, Vector2 center, float radius)
+        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, Vector2 position, float scale, Vector2 center, float radius)
         {
             float dist = position.Length();
 
@@ -1282,7 +1302,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);
+            if (string.IsNullOrEmpty(iconIdentifier) || !targetIcons.ContainsKey(iconIdentifier))
+            {
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);
+            }
+            else
+            {
+                targetIcons[iconIdentifier].Draw(spriteBatch, markerPos);
+            }
 
             if (alpha <= 0.0f) { return; }
 
@@ -1301,7 +1328,24 @@ namespace Barotrauma.Items.Components
                 Color.LightBlue * textAlpha * alpha, Color.Black * textAlpha * 0.8f * alpha,
                 2, GUI.SmallFont);
         }
-        
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            sonarBlip?.Remove();
+            pingCircle?.Remove();
+            directionalPingCircle?.Remove();
+            screenOverlay?.Remove();
+            screenBackground?.Remove();
+            lineSprite?.Remove();
+
+            foreach (Sprite sprite in targetIcons.Values)
+            {
+                sprite.Remove();
+            }
+            targetIcons.Clear();
+        }
+
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
             msg.Write(currentMode == Mode.Active);

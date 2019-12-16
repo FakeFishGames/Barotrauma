@@ -338,6 +338,11 @@
       <ScreenOverlay texture="Content/Items/Command/sonarOverlay.png" origin="0.5,0.5" />
       <ScreenBackground texture="Content/Items/Command/sonarBackground.png" origin="0.5,0.5" />
       <Blip texture="Content/Items/Command/sonarBlip.png" origin="0.5,0.5" />
+      <targeticon identifier="outpost" texture="Content/UI/UI_Atlas2.png" sourcerect="301,371,16,8" origin="0.5,0.5"/>
+      <targeticon identifier="submarine" texture="Content/UI/UI_Atlas2.png" sourcerect="302,380,14,6" origin="0.5,0.5"/>
+      <targeticon identifier="shuttle" texture="Content/UI/UI_Atlas2.png" sourcerect="285,380,8,6" origin="0.5,0.5"/>
+      <targeticon identifier="artifact" texture="Content/UI/UI_Atlas2.png" sourcerect="285,387,8,8" origin="0.5,0.5"/>
+      <targeticon identifier="" texture="Content/UI/UI_Atlas2.png" sourcerect="298,389,4,4" origin="0.5,0.5"/>
     </Sonar>
     <ItemContainer capacity="1" hideitems="true">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
