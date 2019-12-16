@@ -360,7 +360,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        float reactDistance = selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
+                        bool isBeingChased = SelectedAiTarget.Entity is Character targetCharacter && targetCharacter.AIController?.SelectedAiTarget?.Entity is Character;
+                        float reactDistance = !isBeingChased && selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
                         if (distance <= Math.Pow(reactDistance + escapeMargin, 2))
                         {
                             if (State == AIState.Aggressive || State == AIState.PassiveAggressive && distance < Math.Pow(reactDistance / 2, 2))
@@ -370,8 +371,13 @@ namespace Barotrauma
                             }
                             else
                             {
-                                run = distance < Math.Pow(reactDistance / 2, 2);
-                                escapeMargin = MathHelper.Clamp(escapeMargin += deltaTime, 200, 1000);
+                                run = isBeingChased ? true : distance < Math.Pow(reactDistance / 2, 2);
+                                float minMargin = reactDistance / 2;
+                                if (escapeMargin <= 0)
+                                {
+                                    escapeMargin = minMargin;
+                                }
+                                escapeMargin = MathHelper.Clamp(escapeMargin += deltaTime, minMargin, reactDistance);
                                 UpdateEscape(deltaTime);
                             }
                         }
