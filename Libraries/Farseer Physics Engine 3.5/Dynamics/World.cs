@@ -48,7 +48,27 @@ using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Fluids;
 
 namespace FarseerPhysics.Dynamics
-{
+{    
+    /// <summary>
+     /// The exception that is thrown when attempting to modify the state of the physics simulation while a physics step is running.
+     /// </summary>
+    public class WorldLockedException : InvalidOperationException
+    {
+        public WorldLockedException()
+        {
+        }
+
+        public WorldLockedException(string message)
+            : base(message)
+        {
+        }
+
+        public WorldLockedException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
+    }
+
     /// <summary>
     /// The world class manages all physics entities, dynamic simulation,
     /// and asynchronous queries.
@@ -857,18 +877,11 @@ namespace FarseerPhysics.Dynamics
         /// </summary>
         /// <value>The gravity.</value>
         public Vector2 Gravity;
-        
+
         /// <summary>
         /// Is the world locked (in the middle of a time step).
         /// </summary>        
         public bool IsLocked { get; private set; }
-
-        /// <summary>
-        /// Is the world running (in the middle of a time step).
-        /// </summary>        
-        /// <remarks>Deprecated in version 1.3</remarks>
-        [Obsolete("Use IsLocked")]
-        public bool IsStepping { get { return IsLocked; } }
 
         /// <summary>
         /// Get the contact manager for testing.
@@ -926,7 +939,7 @@ namespace FarseerPhysics.Dynamics
         public virtual void Add(Body body)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot add bodies when the World is locked.");
             if (body == null)
                 throw new ArgumentNullException("body");
             if (body._world == this)
@@ -982,7 +995,7 @@ namespace FarseerPhysics.Dynamics
         public virtual void Remove(Body body)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot remove bodies when the World is locked.");
             if (body == null)
                 throw new ArgumentNullException("body");
             if (body.World != this)
@@ -1045,7 +1058,7 @@ namespace FarseerPhysics.Dynamics
         public void Add(Joint joint)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot add joints when the World is locked.");
             if (joint == null)
                 throw new ArgumentNullException("joint");
             if (JointList.Contains(joint))
@@ -1114,7 +1127,7 @@ namespace FarseerPhysics.Dynamics
         public void Remove(Joint joint)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot remove joints when the World is locked.");
             if (joint == null)
                 throw new ArgumentNullException("joint");
             if (!JointList.Contains(joint))
@@ -1390,7 +1403,7 @@ namespace FarseerPhysics.Dynamics
         public void Step(float dt, ref SolverIterations iterations)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot take a time step when the World is locked.");
 
             if (!Enabled)
                 return;
@@ -1571,7 +1584,7 @@ namespace FarseerPhysics.Dynamics
         public void Add(Controller controller)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot add controllers when the World is locked.");
             if (controller == null)
                 throw new ArgumentNullException("controller");
             if (controller.World == this)
@@ -1593,7 +1606,7 @@ namespace FarseerPhysics.Dynamics
         public void Remove(Controller controller)
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot remove controllers when the World is locked.");
             if (controller == null)
                 throw new ArgumentNullException("controller");
             if (controller.World != this)
@@ -1694,7 +1707,7 @@ namespace FarseerPhysics.Dynamics
         public void Clear()
         {
             if (IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot clear the World when it's locked.");
 
             ProcessChanges();
 

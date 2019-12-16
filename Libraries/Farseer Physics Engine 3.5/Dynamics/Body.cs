@@ -113,7 +113,7 @@ namespace FarseerPhysics.Dynamics
             set
             {
                 if (World != null && World.IsLocked)
-                    throw new InvalidOperationException("The World is locked.");
+                    throw new WorldLockedException("Cannot set body type when the World is locked.");
 
                 if (_bodyType == value)
                     return;
@@ -320,11 +320,11 @@ namespace FarseerPhysics.Dynamics
             get { return _enabled; }
             set
             {
-                if (World != null && World.IsLocked)
-                    throw new InvalidOperationException("The World is locked.");
-
                 if (value == _enabled)
                     return;
+
+                if (World != null && World.IsLocked)
+                    throw new WorldLockedException(value ? "Cannot enable a body when the world is locked" : "Cannot disable a body when the World is locked.");
 
                 _enabled = value;
 
@@ -485,7 +485,7 @@ namespace FarseerPhysics.Dynamics
             set
             {
                 if (World != null && World.IsLocked)
-                    throw new InvalidOperationException("The World is locked.");
+                    throw new WorldLockedException("Cannot modify the local center of a body when the World is locked.");
 
                 if (_bodyType != BodyType.Dynamic)
                     return;
@@ -513,7 +513,7 @@ namespace FarseerPhysics.Dynamics
             set
             {
                 if (World != null && World.IsLocked)
-                    throw new InvalidOperationException("The World is locked.");
+                    throw new WorldLockedException("Cannot modify the mass of a body when the World is locked.");
 
                 Debug.Assert(!float.IsNaN(value));
 
@@ -541,7 +541,7 @@ namespace FarseerPhysics.Dynamics
             set
             {
                 if (World != null && World.IsLocked)
-                    throw new InvalidOperationException("The World is locked.");
+                    throw new WorldLockedException("Cannot modify the inertia of a body when the World is locked.");
 
                 Debug.Assert(!float.IsNaN(value));
 
@@ -578,7 +578,7 @@ namespace FarseerPhysics.Dynamics
         public void Add(Fixture fixture)
         {
             if (World != null && World.IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot add fixtures to a body when the World is locked.");
             if (fixture == null)
                 throw new ArgumentNullException("fixture");
             if (fixture.Body != null)
@@ -630,7 +630,7 @@ namespace FarseerPhysics.Dynamics
         public virtual void Remove(Fixture fixture)
         {
             if (World != null && World.IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot remove fixtures from a body when the World is locked.");
             if (fixture == null)
                 throw new ArgumentNullException("fixture");
             if (fixture.Body != this)
@@ -714,7 +714,7 @@ namespace FarseerPhysics.Dynamics
         {
             Debug.Assert(World != null);
             if (World.IsLocked)
-                throw new InvalidOperationException("The World is locked.");
+                throw new WorldLockedException("Cannot modify the transform of a body when the World is locked.");
 
             _xf.q.Phase = angle;
             _xf.p = position;

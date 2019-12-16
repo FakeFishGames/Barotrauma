@@ -2,6 +2,7 @@
 
 using Microsoft.Xna.Framework;
 using System.Threading;
+using FarseerPhysics.Dynamics;
 #if DEBUG && CLIENT
 using Microsoft.Xna.Framework.Input;
 #endif
@@ -216,7 +217,16 @@ namespace Barotrauma
 #endif
 
 #if !RUN_PHYSICS_IN_SEPARATE_THREAD
-            GameMain.World.Step((float)Timing.Step);
+            try
+            {
+                GameMain.World.Step((float)Timing.Step);
+            }
+            catch (WorldLockedException e)
+            {
+                string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
+                DebugConsole.ThrowError(errorMsg, e);
+                GameAnalyticsManager.AddErrorEventOnce("GameScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+            }
 #endif
 
 

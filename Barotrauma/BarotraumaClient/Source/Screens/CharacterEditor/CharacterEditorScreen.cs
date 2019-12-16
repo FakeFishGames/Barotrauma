@@ -8,6 +8,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma.CharacterEditor
 {
@@ -688,7 +689,16 @@ namespace Barotrauma.CharacterEditor
                         UpdateWalls(true);
                     }
                 }
-                GameMain.World.Step((float)deltaTime);
+                try
+                {
+                    GameMain.World.Step((float)Timing.Step);
+                }
+                catch (WorldLockedException e)
+                {
+                    string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterEditorScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+                }
             }
             // Camera
             Cam.MoveCamera((float)deltaTime, allowMove: false);
