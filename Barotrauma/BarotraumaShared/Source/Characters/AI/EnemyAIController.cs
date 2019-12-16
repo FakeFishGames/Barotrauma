@@ -961,13 +961,13 @@ namespace Barotrauma
                 else
                 {
                     SteeringManager.SteeringSeek(steerPos, 10);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
                 }
             }
             else
             {
                 SteeringManager.SteeringSeek(steerPos, 10);
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
             }
 
             if (canAttack)
@@ -1234,7 +1234,7 @@ namespace Barotrauma
             steeringManager.SteeringManual(deltaTime, attackDir);
             if (Character.AnimController.InWater)
             {
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
             }
         }
 
@@ -1273,7 +1273,7 @@ namespace Barotrauma
                     steeringManager.SteeringSeek(attackSimPosition - (mouthPos - SimPosition), 2);
                     if (Character.AnimController.InWater)
                     {
-                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
                     }
                 }
             }

@@ -222,7 +222,7 @@ namespace Barotrauma
                 }
                 if (!insideSteering && character.CurrentHull == null)
                 {
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 1);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
                 }
             }
         }
