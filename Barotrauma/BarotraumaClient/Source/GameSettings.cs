@@ -1083,10 +1083,10 @@ namespace Barotrauma
             return GameMain.Client == null &&
                    (ContentPackage.IngameModSwap ||
                    (Screen.Selected != GameMain.GameScreen &&
-                    Screen.Selected != GameMain.LobbyScreen)) &&
+                    Screen.Selected != GameMain.LobbyScreen) &&
+                    Screen.Selected != GameMain.SubEditorScreen) &&
                    (!core ||
-                   (Screen.Selected != GameMain.SubEditorScreen &&
-                    Screen.Selected != GameMain.CharacterEditorScreen &&
+                   (Screen.Selected != GameMain.CharacterEditorScreen &&
                     Screen.Selected != GameMain.ParticleEditorScreen));
         }
 
