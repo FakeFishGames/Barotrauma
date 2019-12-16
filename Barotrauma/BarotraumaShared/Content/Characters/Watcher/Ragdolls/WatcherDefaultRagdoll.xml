@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="watcher" impacttolerance="15" canentersubmarine="false" canwalk="False">
+<Ragdoll type="watcher" impacttolerance="15" canentersubmarine="false" canwalk="False" texture="Content/Characters/Watcher/watcher.png">
 
   <collider radius="160"/>
     
   <!-- head -->
   <limb id = "0" type="Head" width="350" height="320" steerforce="1.0" flip="true">
-    <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
+    <sprite sourcerect="0,0,369,348" depth="0.02" origin ="0.5,0.6"/>
     <attack range="250" damagerange="170" duration="0.05" force="20" targetforce="100" structuresoundtype="StructureBlunt">
       <Affliction identifier="internaldamage" strength="200"/>
       <Affliction identifier="stun" strength="5"/>
@@ -15,14 +15,14 @@
   </limb>
 
   <limb id = "1" radius="50" height="120" flip="true">
-    <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="395,0,117,239" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="395,0,117,239" depth="0.025" origin="0.5,0.5"/>
     <lightsource range="200.0" color="0.8,0.8,1.0,1.0" castshadows="false">
       <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="391,282,121,230" depth="0.025" origin="0.5,0.5"/>
     </lightsource>
   </limb>
 
   <limb id = "2" width="300" height="119" flip="true" type="Tail">
-    <sprite texture="Content/Characters/Watcher/watcher.png" sourcerect="0,370,302,142" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="0,370,302,142" depth="0.025" origin="0.5,0.5"/>
   </limb>    
 
   <joint limb1="0" limb1anchor="60,130" limb2="1" limb2anchor="-30,100" lowerlimit="70" upperlimit="80"/>

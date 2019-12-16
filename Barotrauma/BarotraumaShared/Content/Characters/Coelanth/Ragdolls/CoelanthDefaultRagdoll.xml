@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="coelanth" canentersubmarine="false" canwalk="False">
+<Ragdoll type="coelanth" canentersubmarine="false" canwalk="False" texture="Content/Characters/Coelanth/coelanth.png">
 
   <collider radius="50" height="250"/>
     
   <!-- head -->
   <limb id = "0" radius="50" height="270" type="Head" steerforce="1.0">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="267,171,162,392" depth="0.02" origin ="0.5,0.5"/>
+    <sprite sourcerect="267,171,162,392" depth="0.02" origin ="0.5,0.5"/>
   </limb>
 
   <!-- lower yaw -->
   <limb id = "1" radius="20" height="240">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="425,1,101,309" depth="0.025" origin="0.5,0.5"/>
     <attack range="300" damagerange="200" duration="0.5" structuredamage="40" structuresoundtype="StructureSlash" torque="100" targetforce="-50" severlimbsprobability="0.8">
       <Affliction identifier="bitewounds" strength="20"/>
       <Affliction identifier="bleeding" strength="50"/>
@@ -19,22 +19,22 @@
 
   <!-- body -->
   <limb id = "2" radius="100" height="350" type="Torso" steerforce="0.1">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="0,0,268,570" depth="0.03" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,268,570" depth="0.03" origin="0.5,0.5"/>
   </limb>
 
   <!-- tail -->
   <limb id = "3" radius="30" height="180" type="Tail">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="441,321,96,301" depth="0.035" origin="0.5,0.5"/>
+    <sprite sourcerect="441,321,96,301" depth="0.035" origin="0.5,0.5"/>
   </limb>
 
   <!-- front fins -->    
   <limb id = "4" radius="30" height="250">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="532,0,92,382" depth="0.008" origin="0.5,0.5"/>
+    <sprite sourcerect="532,0,92,382" depth="0.008" origin="0.5,0.5"/>
   </limb>
 
   <!-- back fins -->
   <limb id = "5" width="80" height="150" ignorecollisions="true">
-    <sprite texture="Content/Characters/Coelanth/coelanth.png" sourcerect="303,5,94,163" depth="0.01" origin="0.5,0.5"/>
+    <sprite sourcerect="303,5,94,163" depth="0.01" origin="0.5,0.5"/>
   </limb>
 
   <!-- body to head -->

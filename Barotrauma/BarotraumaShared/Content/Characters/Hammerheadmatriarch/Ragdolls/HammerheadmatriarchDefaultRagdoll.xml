@@ -1,4 +1,4 @@
-﻿<Ragdoll type="Hammerheadmatriarch" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" mainlimb="Torso">
+﻿<Ragdoll type="Hammerheadmatriarch" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" mainlimb="Torso" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png">
   <collider radius="200" width="0" name="Main Collider" height="600" />
   <limb id="0" name="Torso" type="Torso" height="350" width="500" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1163,1,500,558" origin="0.5112625,0.5286262" depth="0.2" subdivisions="5,5">
@@ -15,7 +15,7 @@
     </deformablesprite>
     <conditionalsprite>
       <conditional isDead="True" />
-      <deformablesprite texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" sourcerect="366,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
+      <deformablesprite sourcerect="366,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
         <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.75" changespeed="0.25" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
         <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.75" changespeed="0.3" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
         <spritedeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row1="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row2="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row3="0,0 0,0 0.25,0.25 0.5,0.5 1,1" row4="0,0 0,0 0.25,0.25 0.5,0.5 1,1" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />

@@ -1,31 +1,31 @@
-﻿<Ragdoll type="Electricparasite" canentersubmarine="True" canwalk="True" spritesheetorientation="90" limbscale="0.1969" jointscale="0.1969" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True">
+﻿<Ragdoll type="Electricparasite" canentersubmarine="True" canwalk="True" spritesheetorientation="90" limbscale="0.1969" jointscale="0.1969" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" texture="Content/Characters/Electricparasite/Electricparasites.png">
   <collider radius="42" width="1" name="Main Collider" height="0" />
   <limb id="0" name="Pelvis" type="Torso" height="0" width="20" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="40" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,319,160,95" origin="0.5,0.5" depth="0.003" />
+    <sprite sourcerect="0,319,160,95" origin="0.5,0.5" depth="0.003" />
   </limb>
   <limb id="1" name="L_OuterLegUpper" type="RightLeg" height="0" width="40" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,0,88,64" origin="0.5,0.5" depth="0.001" />
+    <sprite sourcerect="0,0,88,64" origin="0.5,0.5" depth="0.001" />
   </limb>
   <limb id="2" radius="15" width="40" height="0" mass="0" name="L_OuterLegLower" type="RightFoot" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="20.35053,-3.294063" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="88,0,56,64" origin="0.5535714,0.46875" depth="0.002" />
+    <sprite sourcerect="88,0,56,64" origin="0.5535714,0.46875" depth="0.002" />
   </limb>
   <limb id="3" width="30" height="0" name="Limb 3" type="RightLeg" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,256,64,64" origin="0.5,0.5" depth="0" />
+    <sprite sourcerect="0,256,64,64" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="4" width="25" height="0" name="Limb 4" type="RightFoot" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="23.16496,-2.380147" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="64,256,48,63" origin="0.4375,0.4761905" depth="0" />
+    <sprite sourcerect="64,256,48,63" origin="0.4375,0.4761905" depth="0" />
   </limb>
   <limb id="5" name="Limb 5" type="RightLeg" height="0" width="40" notes="" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="True" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,0,88,64" origin="0.5,0.5" depth="0.03" />
+    <sprite sourcerect="0,0,88,64" origin="0.5,0.5" depth="0.03" />
   </limb>
   <limb id="6" radius="15" width="40" height="0" mass="0" name="Limb 6" type="RightFoot" spriteorientation="270" flip="True" mirrorvertically="False" mirrorhorizontally="True" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="-23.48576,-1.797516" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="88,0,56,64" origin="0.5535714,0.46875" depth="0.002" />
+    <sprite sourcerect="88,0,56,64" origin="0.5535714,0.46875" depth="0.002" />
   </limb>
   <limb id="7" width="30" height="0" name="Limb 7" type="LeftLeg" spriteorientation="90" flip="True" mirrorvertically="False" mirrorhorizontally="True" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="0,256,64,64" origin="0.5,0.5" depth="0" />
+    <sprite sourcerect="0,256,64,64" origin="0.5,0.5" depth="0" />
   </limb>
   <limb id="8" width="25" height="0" name="Limb 8" type="LeftFoot" spriteorientation="270" flip="True" mirrorvertically="False" mirrorhorizontally="True" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="15" mass="0" density="10" pullpos="-16.50906,-0.9111357" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05">
-    <sprite texture="Content/Characters/Electricparasite/Electricparasites.png" sourcerect="64,256,48,63" origin="0.4375,0.4761905" depth="0" />
+    <sprite sourcerect="64,256,48,63" origin="0.4375,0.4761905" depth="0" />
   </limb>
   <joint limb1="0" limb2="1" limb1anchor="54.28773,8.527421" limb2anchor="-28,6" name="Joint 0 - 1" canbesevered="True" limitenabled="True" upperlimit="5.024806" lowerlimit="-63.92076" stiffness="0.25" />
   <joint limb1="1" limb2="2" limb1anchor="42.67993,-2.356417" limb2anchor="-25.2163,-2.11137" name="Joint 1 - 2" canbesevered="True" limitenabled="True" upperlimit="33.88142" lowerlimit="-48.42399" stiffness="0.25" />
