@@ -32,6 +32,8 @@ namespace Barotrauma
                 return chatInput;
             }
         }
+        
+        private readonly ChatManager ChatManager = new ChatManager();
 
         private readonly GUIImage micIcon;
 
@@ -555,6 +557,8 @@ namespace Barotrauma
                 Font = GUI.SmallFont,
                 DeselectAfterMessage = false
             };
+            
+            ChatManager.RegisterKeys(chatInput, ChatManager);
 
             micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
 
@@ -1131,8 +1135,13 @@ namespace Barotrauma
             CampaignCharacterDiscarded = false;
 
             chatInput.Select();
-            chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
+            chatInput.OnEnterPressed = (box, text) =>
+            {
+                ChatManager.Store(text);
+                return GameMain.Client.EnterChatMessage(box, text);
+            };
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
+            chatInput.OnDeselected += (sender, key) => { ChatManager.Clear(); };
 
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = false);
