@@ -206,7 +206,7 @@ namespace Barotrauma.Items.Components
                     case "linesprite":
                         lineSprite = new Sprite(subElement);
                         break;
-                    case "targeticon":
+                    case "icon":
                         var targetIconSprite = new Sprite(subElement);
                         targetIcons.Add(subElement.GetAttributeString("identifier", ""), targetIconSprite);
                         break;
