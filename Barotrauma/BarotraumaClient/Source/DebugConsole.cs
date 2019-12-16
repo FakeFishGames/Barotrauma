@@ -1654,6 +1654,19 @@ namespace Barotrauma
                 GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
             }));
 
+            commands.Add(new Command("ingamemodswap", "", (string[] args) =>
+            {
+                ContentPackage.IngameModSwap = !ContentPackage.IngameModSwap;
+                if (ContentPackage.IngameModSwap)
+                {
+                    NewMessage("Enabled ingame mod swapping");
+                }
+                else
+                {
+                    NewMessage("Disabled ingame mod swapping");
+                }
+            }));
+
             AssignOnClientExecute(
                 "giveperm",
                 (string[] args) =>

@@ -94,6 +94,8 @@ namespace Barotrauma
         {
             get { return corePackageRequiredFiles; }
         }
+
+        public static bool IngameModSwap = false;
         
         public string Name { get; set; }
 

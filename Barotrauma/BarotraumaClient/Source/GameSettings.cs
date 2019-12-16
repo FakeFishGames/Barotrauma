@@ -151,7 +151,7 @@ namespace Barotrauma
                 }
             }
             corePackageDropdown.OnSelected = SelectCorePackage;
-            corePackageDropdown.ListBox.CanBeFocused = GameMain.Client == null;
+            corePackageDropdown.ListBox.CanBeFocused = CanHotswapPackages(true);
 
             foreach (ContentPackage contentPackage in ContentPackage.List
                 .Where(cp => !cp.CorePackage)
@@ -168,7 +168,7 @@ namespace Barotrauma
                     UserData = contentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage),
                     OnSelected = SelectContentPackage,
-                    Enabled = GameMain.Client == null
+                    Enabled = CanHotswapPackages(false)
                 };
                 if (!contentPackage.IsCompatible())
                 {
@@ -188,8 +188,8 @@ namespace Barotrauma
 
                 tickBox.TextBlock.CanBeFocused = true;
             }
-            contentPackageList.CanDragElements = (GameMain.Client == null) && (Screen.Selected != GameMain.SubEditorScreen);
-            contentPackageList.CanBeFocused = (GameMain.Client == null) && (Screen.Selected != GameMain.GameScreen) && (Screen.Selected != GameMain.SubEditorScreen);
+            contentPackageList.CanDragElements = CanHotswapPackages(false);
+            contentPackageList.CanBeFocused = CanHotswapPackages(false);
             contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
@@ -1076,6 +1076,18 @@ namespace Barotrauma
             UnsavedSettings = true;
 
             return true;
+        }
+
+        private bool CanHotswapPackages(bool core)
+        {
+            return GameMain.Client == null &&
+                   (ContentPackage.IngameModSwap ||
+                   (Screen.Selected != GameMain.GameScreen &&
+                    Screen.Selected != GameMain.LobbyScreen)) &&
+                   (!core ||
+                   (Screen.Selected != GameMain.SubEditorScreen &&
+                    Screen.Selected != GameMain.CharacterEditorScreen &&
+                    Screen.Selected != GameMain.ParticleEditorScreen));
         }
 
         private bool SelectCorePackage(GUIComponent component, object userData)
