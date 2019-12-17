@@ -27,6 +27,12 @@ namespace Barotrauma.Networking
             get { return firstNewID.HasValue; }
         }
 
+        public bool MidRoundSyncingDone
+        {
+            get;
+            private set;
+        }
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
@@ -136,16 +142,19 @@ namespace Barotrauma.Networking
                         ", first new ID: " + firstNewID, Microsoft.Xna.Framework.Color.Yellow);
                 }
             }
-            else if (firstNewID != null)
+            else
             {
-                if (GameSettings.VerboseLogging)
+                MidRoundSyncingDone = true;
+                if (firstNewID != null)
                 {
-                    DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
-                        Microsoft.Xna.Framework.Color.Yellow);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
+                            Microsoft.Xna.Framework.Color.Yellow);
+                    }
+                    lastReceivedID = (UInt16)(firstNewID - 1);
+                    firstNewID = null;
                 }
-
-                lastReceivedID = (UInt16)(firstNewID - 1);
-                firstNewID = null;
             }
 
             entities.Clear();
@@ -277,6 +286,8 @@ namespace Barotrauma.Networking
 
             events.Clear();
             eventLastSent.Clear();
+
+            MidRoundSyncingDone = false;
         }
     }
 }

@@ -90,6 +90,8 @@ namespace Barotrauma.Networking
         private UInt16 ID;
 
         private GameServer server;
+
+        private double lastEventCountHighWarning;
         
         public ServerEntityEventManager(GameServer server) 
         {
@@ -125,16 +127,14 @@ namespace Barotrauma.Networking
 
             var newEvent = new ServerEntityEvent(entity, (UInt16)(ID + 1));
             if (extraData != null) newEvent.SetData(extraData);
+
+            bool inGameClientsPresent = server.ConnectedClients.Count(c => c.InGame) > 0;
+
+            //remove old events that have been sent to all clients, they are redundant now
+            //  keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
+            //  and events less than 15 seconds old to give disconnected clients a bit of time to reconnect without getting desynced
+            events.RemoveAll(e => (NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) || !inGameClientsPresent) && e.CreateTime < Timing.TotalTime - 15.0f);
             
-            //remove events that have been sent to all clients, they are redundant now
-            //keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
-            events.RemoveAll(e => NetIdUtils.IdMoreRecent(lastSentToAll, e.ID));
-
-            if (server.ConnectedClients.Count(c => c.InGame) == 0 && events.Count > 1)
-            {
-                events.RemoveRange(0, events.Count - 1);
-            }
-
             for (int i = events.Count - 1; i >= 0; i--)
             {
                 //we already have an identical event that's waiting to be sent
@@ -197,12 +197,13 @@ namespace Barotrauma.Networking
 
                 bufferedEvent.IsProcessed = true;
             }
-            
+
             var inGameClients = clients.FindAll(c => c.InGame && !c.NeedsMidRoundSync);
             if (inGameClients.Count > 0)
             {
                 lastSentToAnyone = inGameClients[0].LastRecvEntityEventID;
                 lastSentToAll = inGameClients[0].LastRecvEntityEventID;
+                
                 if (server.OwnerConnection != null)
                 {
                     var owner = clients.Find(c => c.Connection == server.OwnerConnection);
@@ -236,16 +237,16 @@ namespace Barotrauma.Networking
                     //  in which case we'll wait until the timeout runs out before kicking the client
                     List<Client> toKick = inGameClients.FindAll(c => 
                         NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) && 
-                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut));
+                        (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
-                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event " 
+                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event "
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
                                 (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.Error);
-                            server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncOldEvent");
+                            server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncOldEvent + "/ServerMessage.ExcessiveDesyncOldEvent");
                         }
                     );
                 }
@@ -259,19 +260,19 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
                         GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
-                        server.DisconnectClient(c, "", "ServerMessage.ExcessiveDesyncRemovedEvent");
+                        server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncRemovedEvent + "/ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
             }
-            
+
             var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             foreach (Client timedOutClient in timedOutClients)
             {
                 GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
-                GameMain.Server.DisconnectClient(timedOutClient, "", "ServerMessage.SyncTimeout");
+                GameMain.Server.DisconnectClient(timedOutClient, "", DisconnectReason.SyncTimeout + "/ServerMessage.SyncTimeout");
             }
-            
-            bufferedEvents.RemoveAll(b => b.IsProcessed);           
+
+            bufferedEvents.RemoveAll(b => b.IsProcessed);
         }
 
         private void BufferEvent(BufferedEvent bufferedEvent)
@@ -326,9 +327,10 @@ namespace Barotrauma.Networking
             }
 
             //too many events for one packet
-            if (eventsToSync.Count > 200)
+            //(normal right after a round has just started, don't show a warning if it's been less than 10 seconds)
+            if (eventsToSync.Count > 200 && GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 10.0)
             {
-                if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync)
+                if (eventsToSync.Count > 200 && !client.NeedsMidRoundSync && Timing.TotalTime > lastEventCountHighWarning + 2.0)
                 {
                     Color color = eventsToSync.Count > 500 ? Color.Red : Color.Orange;
                     if (eventsToSync.Count < 300) { color = Color.Yellow; }
@@ -350,6 +352,7 @@ namespace Barotrauma.Networking
                         GameServer.Log(warningMsg, ServerLog.MessageType.Error);
                     }
                     DebugConsole.NewMessage(warningMsg, color);
+                    lastEventCountHighWarning = Timing.TotalTime;
                 }
             }
 
