@@ -10,9 +10,9 @@
     <target tag="nasonov" state="Attack" priority="100" reactdistance="0" />
     <target tag="stronger" state="Avoid" priority="100" reactdistance="2000" />
     <target tag="human" state="Avoid" priority="100" reactdistance="2000" />
-    <target tag="room" state="PassiveAggressive" priority="50" reactdistance="3000" />
-    <target tag="wall" state="PassiveAggressive" priority="50" reactdistance="3000" />
-    <target tag="door" state="PassiveAggressive" priority="50" reactdistance="3000" />
+    <target tag="room" state="PassiveAggressive" priority="50" reactdistance="2000" />
+    <target tag="wall" state="PassiveAggressive" priority="50" reactdistance="2000" />
+    <target tag="door" state="PassiveAggressive" priority="50" reactdistance="2000" />
     <target tag="weaker" state="Avoid" priority="10" reactdistance="1000" />
     <SwarmBehavior mindistfromclosest="300" maxdistfromcenter="3000" cohesion="0.25" />
   </ai>
