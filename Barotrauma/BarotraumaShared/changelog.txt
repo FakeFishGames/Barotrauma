@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.7.0
+---------------------------------------------------------------------------------------------------------
+
+Monsters:
+- New behaviors: avoiding, passive-aggressive, and aggressive.
+- Adjusted Bonethresher, added a berserker attack when the creature is low in health.
+- Revised Matriarch's behavior: Matriarchs now spawn in swarms, protected by other Hammerheads, and they try to keep the distance to the submarine.
+- Added new missions about Hammerhead Matriarch.
+- Revised all the creatures using the new behaviors.
+- Changed how "attack when provoked" works. The previous state is now reset when the target changes. Also fixed several relate issues.
+- Refactored the eating behavior: fixes small creatures not being able to eat significantly larger creatures.
+- Added damage particle effects that are rendered on top of the characters (also under water).
+- Adjusted the commonness and the reward of the Thresher swarm mission.
+- Fixed Tigerthresher and other creatures that can't attack the submarine bumping on the doors.
+- Fixed characters occasionally getting stuck while trying to reach the last known position of the previous target.
+- Fixed a crash when the creature is set to attack when provoked and when the damage source is null.
+- Fixed extra creature being spawned when using the <monster> elements in the monster misson definitions.
+- Fixed Hammerhead Matriarch's skirt going throught the walls.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.6.0
 ---------------------------------------------------------------------------------------------------------
 
