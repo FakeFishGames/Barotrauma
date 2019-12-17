@@ -137,7 +137,7 @@
 	  maxstrength="100"
 	  karmachangeonapplied="-1"
 	  damageoverlayalpha="1">
-		<Effect minstrength="0" maxstrength="100"
+		<Effect minstrength="0" maxstrength="100" multiplybymaxvitality="true"
 		  minvitalitydecrease="0"
 		  maxvitalitydecrease="1"
 		  dialogflag="GunshotWound"/>
