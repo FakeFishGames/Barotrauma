@@ -764,12 +764,17 @@ namespace Barotrauma
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
                     .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
+                string nonHuskedSpeciesName = string.Empty;
                 if (matchingAffliction == null)
                 {
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
-                    return;
+                    // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
+                    nonHuskedSpeciesName = IsHumanoid ? HumanSpeciesName : "crawler";
                 }
-                string nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                else
+                {
+                    nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
+                }
                 ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(nonHuskedSpeciesName) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(nonHuskedSpeciesName) as RagdollParams;
                 if (info == null)
                 {
@@ -1912,7 +1917,7 @@ namespace Barotrauma
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        focusedCharacter = FindCharacterAtPosition(mouseSimPos);
+                        focusedCharacter = CanInteract ? FindCharacterAtPosition(mouseSimPos) : null;
                         focusedItem = CanInteract ?
                             FindItemAtPosition(mouseSimPos, GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f)) : null;
                         findFocusedTimer = 0.05f;
@@ -1972,11 +1977,11 @@ namespace Barotrauma
             {
                 DeselectCharacter();
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged)
+            else if (focusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged && CanInteract)
             {
                 SelectCharacter(focusedCharacter);
             }
-            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow && CanInteractWith(focusedCharacter, 160f, false))
+            else if (focusedCharacter != null && IsKeyHit(InputType.Health) && focusedCharacter.CharacterHealth.UseHealthWindow && CanInteract && CanInteractWith(focusedCharacter, 160f, false))
             {
                 if (focusedCharacter == SelectedCharacter)
                 {

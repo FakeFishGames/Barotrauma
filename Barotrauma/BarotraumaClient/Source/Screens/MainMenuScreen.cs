@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -84,7 +85,7 @@ namespace Barotrauma
                 }
             }   
 #else
-            FetchRemoteContent(Frame.RectTransform);
+            FetchRemoteContent();
 #endif
 
 
@@ -753,11 +754,19 @@ namespace Barotrauma
                     exeName = "DedicatedServer.exe";
                 }
 
-                string arguments = "-name \"" + name.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
+                string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
-                                   " -password \"" + passwordBox.Text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"" +
                                    " -maxplayers " + maxPlayersBox.Text;
+
+                if (!string.IsNullOrWhiteSpace(passwordBox.Text))
+                {
+                    arguments += " -password \"" + ToolBox.EscapeCharacters(passwordBox.Text) + "\"";
+                }
+                else
+                {
+                    arguments += " -nopassword";
+                }
 
                 int ownerKey = 0;
 
@@ -774,6 +783,7 @@ namespace Barotrauma
                 string filename = exeName;
 #if LINUX || OSX
                 filename = "./" + Path.GetFileNameWithoutExtension(exeName);
+                arguments = ToolBox.EscapeCharacters(arguments);
 #endif
                 var processInfo = new ProcessStartInfo
                 {
@@ -1149,34 +1159,15 @@ namespace Barotrauma
         }
 #endregion
 
-        private void FetchRemoteContent(RectTransform parent)
+        private void FetchRemoteContent()
         {
             if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
             try
             {
                 var client = new RestClient(GameMain.Config.RemoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
-
-                IRestResponse response = client.Execute(request);
-                if (response.ResponseStatus != ResponseStatus.Completed)
-                {
-                    return;
-                }
-                if (response.StatusCode != HttpStatusCode.OK)
-                {
-                    return;
-                }
-
-                string xml = response.Content;
-                int index = xml.IndexOf('<');
-                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
-                if (string.IsNullOrWhiteSpace(xml)) { return; }
-
-                XElement element = XDocument.Parse(xml)?.Root;
-                foreach (XElement subElement in element.Elements())
-                {
-                    GUIComponent.FromXML(subElement, parent);
-                }
+                client.ExecuteAsync(request, RemoteContentReceived);
+                CoroutineManager.StartCoroutine(WairForRemoteContentReceived());
             }
 
             catch (Exception e)
@@ -1187,6 +1178,61 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     "Fetching remote content to the main menu failed. " + e.Message);
                 return;
+            }
+        }
+
+        private IEnumerable<object> WairForRemoteContentReceived()
+        {
+            while (true)
+            {
+                lock (remoteContentLock)
+                {
+                    if (remoteContentResponse != null) { break; }
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+            lock (remoteContentLock)
+            {
+                if (remoteContentResponse.ResponseStatus != ResponseStatus.Completed || remoteContentResponse.StatusCode != HttpStatusCode.OK)
+                {
+                    yield return CoroutineStatus.Success;
+                }
+
+                try
+                {
+                    string xml = remoteContentResponse.Content;
+                    int index = xml.IndexOf('<');
+                    if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                    if (!string.IsNullOrWhiteSpace(xml))
+                    {
+                        XElement element = XDocument.Parse(xml)?.Root;
+                        foreach (XElement subElement in element.Elements())
+                        {
+                            GUIComponent.FromXML(subElement, Frame.RectTransform);
+                        }
+                    }
+                }
+
+                catch (Exception e)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+#endif
+                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Reading received remote main menu content failed. " + e.Message);
+                }
+            }
+            yield return CoroutineStatus.Success;            
+        }
+
+        private readonly object remoteContentLock = new object();
+        private IRestResponse remoteContentResponse;
+
+        private void RemoteContentReceived(IRestResponse response, RestRequestAsyncHandle handle)
+        {
+            lock (remoteContentLock)
+            {
+                remoteContentResponse = response;
             }
         }
     }

@@ -248,8 +248,10 @@ namespace Barotrauma
                         MapEntityCategory newCategory = (MapEntityCategory)userdata;
                         if (newCategory != selectedItemCategory)
                         {
-                            searchBox.Text = ""; 
+                            searchBox.Text = "";
+                            storeItemList.ScrollBar.BarScroll = 0f;
                         }
+
                         FilterStoreItems((MapEntityCategory)userdata, searchBox.Text);
                         return true;
                     }
@@ -947,7 +949,9 @@ namespace Barotrauma
                 var itemFrame = myItemList.Content.GetChildByUserData(pi);
                 if (itemFrame == null)
                 {
-                    itemFrame = CreateItemFrame(pi, pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation), myItemList);
+                    var priceInfo = pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation);
+                    if (priceInfo == null) { continue; }
+                    itemFrame = CreateItemFrame(pi, priceInfo, myItemList);
                 }
                 itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
                 existingItemFrames.Add(itemFrame);

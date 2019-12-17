@@ -326,8 +326,8 @@ namespace Barotrauma.Steam
             localQuery.OnFinished = onFinished;
 #endif
 
-            instance.client.LobbyList.OnLobbiesUpdated = () => { UpdateLobbyQuery(onServerFound, onServerRulesReceived, onFinished); };
-            instance.client.LobbyList.Refresh();
+            
+            instance.client.LobbyList.Request();
 
             return true;
         }
@@ -380,42 +380,6 @@ namespace Barotrauma.Steam
             query.OnFinished = onFinished;
 
             return true;
-        }
-
-        private static void UpdateLobbyQuery(Action<Networking.ServerInfo> onServerFound, Action<Networking.ServerInfo> onServerRulesReceived, Action onFinished)
-        {
-            foreach (LobbyList.Lobby lobby in instance.client.LobbyList.Lobbies)
-            {
-                if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { continue; }
-                bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
-                int.TryParse(lobby.GetData("playercount"), out int currPlayers);
-                int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-                UInt64 ownerId = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
-                //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
-                string ip = lobby.GetData("hostipaddress");
-                if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
-
-                var serverInfo = new ServerInfo()
-                {
-                    ServerName = lobby.Name,
-                    Port = "",
-                    QueryPort = "",
-                    IP = ip,
-                    PlayerCount = currPlayers,
-                    MaxPlayers = maxPlayers,
-                    HasPassword = hasPassword,
-                    RespondedToSteamQuery = true,
-                    LobbyID = lobby.LobbyID,
-                    OwnerID = ownerId
-                };
-                serverInfo.PingChecked = false;
-                AssignLobbyDataToServerInfo(lobby, serverInfo);
-
-                onServerFound(serverInfo);
-                //onServerRulesReceived(serverInfo);
-            }
-
-            onFinished();
         }
 
         public static void AssignLobbyDataToServerInfo(LobbyList.Lobby lobby, ServerInfo serverInfo)
@@ -495,6 +459,7 @@ namespace Barotrauma.Steam
                 serverInfo.PingChecked = true;
                 serverInfo.Ping = s.Ping;
                 serverInfo.LobbyID = 0;
+                serverInfo.OwnerVerified = true;
                 if (responded)
                 {
                     s.FetchRules();

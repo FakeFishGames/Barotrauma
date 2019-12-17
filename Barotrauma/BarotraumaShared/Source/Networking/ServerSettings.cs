@@ -328,7 +328,16 @@ namespace Barotrauma.Networking
             }
         }
 
-        public string ServerName;
+        private string serverName;
+        public string ServerName
+        {
+            get { return serverName; }
+            set
+            {
+                serverName = value;
+                if (serverName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
+            }
+        }
 
         private string serverMessageText;
         public string ServerMessageText

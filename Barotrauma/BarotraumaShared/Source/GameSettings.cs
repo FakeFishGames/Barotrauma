@@ -296,10 +296,11 @@ namespace Barotrauma
         {
             get
             {
-#if DEBUG
+                return false;
+/*#if DEBUG
                 return false;
 #endif
-                return sendUserStatistics;
+                return sendUserStatistics;*/
             }
             set
             {

@@ -479,9 +479,12 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (user != character && user != null && user.SelectedConstruction == item)
+            if (objective.Override)
             {
-                character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+                if (user != character && user != null && user.SelectedConstruction == item)
+                {
+                    character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
+                }
             }
             user = character;
             if (!AutoPilot)

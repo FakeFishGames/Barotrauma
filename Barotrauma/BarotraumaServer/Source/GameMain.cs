@@ -73,7 +73,7 @@ namespace Barotrauma
         {
             Instance = this;
 
-            CommandLineArgs = args;
+            CommandLineArgs = ToolBox.MergeArguments(args);
 
             World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
@@ -189,6 +189,13 @@ namespace Barotrauma
                 ownerKey = 0;
             }
             
+#if DEBUG
+            foreach (string s in CommandLineArgs)
+            {
+                Console.WriteLine(s);
+            }
+#endif
+
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
                 switch (CommandLineArgs[i].Trim())
@@ -212,6 +219,9 @@ namespace Barotrauma
                     case "-password":
                         password = CommandLineArgs[i + 1];
                         i++;
+                        break;
+                    case "-nopassword":
+                        password = "";
                         break;
                     case "-upnp":
                     case "-enableupnp":
@@ -303,6 +313,7 @@ namespace Barotrauma
                     Server.Update((float)Timing.Step);
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
+                    TaskPool.Update();
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;

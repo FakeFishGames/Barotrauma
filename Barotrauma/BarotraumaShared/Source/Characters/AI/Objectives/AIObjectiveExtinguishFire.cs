@@ -71,7 +71,7 @@ namespace Barotrauma
                 foreach (FireSource fs in targetHull.FireSources)
                 {
                     bool inRange = fs.IsInDamageRange(character, MathHelper.Clamp(fs.DamageRange * 1.5f, extinguisher.Range * 0.5f, extinguisher.Range));
-                    bool move = !inRange;
+                    bool move = !inRange || !HumanAIController.VisibleHulls.Contains(fs.Hull);
                     if (inRange || useExtinquisherTimer > 0.0f)
                     {
                         useExtinquisherTimer += deltaTime;
@@ -79,7 +79,6 @@ namespace Barotrauma
                         {
                             useExtinquisherTimer = 0.0f;
                         }
-                        character.AIController.SteeringManager.Reset();
                         character.CursorPosition = fs.Position;
                         if (extinguisher.Item.RequireAimToUse)
                         {
@@ -106,19 +105,18 @@ namespace Barotrauma
                         {
                             sightLimb = character.AnimController.GetLimb(LimbType.LeftHand);
                         }
-                        if (!character.CanSeeTarget(fs, sightLimb))
+                        if (character.CanSeeTarget(fs, sightLimb))
                         {
-                            move = true;
-                        }
-                        else
-                        {
-                            move = false;
                             character.SetInput(extinguisher.Item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
                             extinguisher.Use(deltaTime, character);
                             if (!targetHull.FireSources.Contains(fs))
-                            {                                
-                                character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.Name, true), null, 0, "putoutfire", 10.0f);
+                            {
+                                character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.RoomName, true), null, 0, "putoutfire", 10.0f);
                             }
+                        }
+                        else
+                        {
+                            move = true;
                         }
                     }
                     if (move)
@@ -127,6 +125,10 @@ namespace Barotrauma
                         TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager), 
                             onAbandon: () =>  Abandon = true, 
                             onCompleted: () => RemoveSubObjective(ref gotoObjective));
+                    }
+                    else
+                    {
+                        character.AIController.SteeringManager.Reset();
                     }
                     break;
                 }

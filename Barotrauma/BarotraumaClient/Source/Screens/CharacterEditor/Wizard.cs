@@ -40,6 +40,10 @@ namespace Barotrauma.CharacterEditor
             canEnterSubmarine = ragdoll.CanEnterSubmarine;
             canWalk = ragdoll.CanWalk;
             texturePath = ragdoll.Texture;
+            if (string.IsNullOrEmpty(texturePath) && !name.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
+            {
+                texturePath = ragdoll.Limbs.FirstOrDefault()?.GetSprite().Texture;
+            }
         }
 
         public static Wizard instance;
@@ -265,8 +269,30 @@ namespace Barotrauma.CharacterEditor
                                     };
                                     if (ofd.ShowDialog() == DialogResult.OK)
                                     {
+                                        string file = ofd.FileName;
+                                        string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(file), Environment.CurrentDirectory);
+                                        string destinationPath = relativePath;
+
+                                        //copy file to XML path if it's not located relative to the game's files
+                                        if (relativePath.StartsWith("..") ||
+                                            Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
+                                        {
+                                            destinationPath = Path.Combine(Path.GetDirectoryName(XMLPath), Path.GetFileName(file));
+
+                                            string destinationDir = Path.GetDirectoryName(destinationPath);
+                                            if (!Directory.Exists(destinationDir))
+                                            {
+                                                Directory.CreateDirectory(destinationDir);
+                                            }
+
+                                            if (!File.Exists(destinationPath))
+                                            {
+                                                File.Copy(file, Path.GetFullPath(destinationPath), overwrite: true);
+                                            }
+                                        }
+
                                         isTextureSelected = true;
-                                        texturePathElement.Text = ToolBox.ConvertAbsoluteToRelativePath(ofd.FileName);
+                                        texturePathElement.Text = destinationPath;
                                     }
                                     return true;
                                 }

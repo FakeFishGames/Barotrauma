@@ -268,8 +268,8 @@ namespace Barotrauma
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(1, 0, 3);
-                        Client owner = ((Client)extraData[1]);
-                        msg.Write(owner == null ? (byte)0 : owner.ID);
+                        Client owner = (Client)extraData[1];
+                        msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
                         msg.WriteRangedInteger(2, 0, 3);
@@ -445,14 +445,14 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityId)
         {
             if (GameMain.Server == null) return;
             
             int msgLength = msg.LengthBytes;
 
             msg.Write(Info == null);
-            msg.Write(ID);
+            msg.Write(entityId);
             msg.Write(SpeciesName);
             msg.Write(seed);
 

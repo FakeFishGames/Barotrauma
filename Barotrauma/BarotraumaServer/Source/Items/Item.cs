@@ -100,16 +100,26 @@ namespace Barotrauma
                     {
                         ActionType actionType = (ActionType)extraData[1];
                         ItemComponent targetComponent = extraData.Length > 2 ? (ItemComponent)extraData[2] : null;
-                        ushort targetID = extraData.Length > 3 ? (ushort)extraData[3] : (ushort)0;
+                        ushort characterID = extraData.Length > 3 ? (ushort)extraData[3] : (ushort)0;
                         Limb targetLimb = extraData.Length > 4 ? (Limb)extraData[4] : null;
+                        ushort useTargetID = extraData.Length > 5 ? (ushort)extraData[5] : (ushort)0;
+                        Vector2? worldPosition = null;
+                        if (extraData.Length > 6) { worldPosition = (Vector2)extraData[6]; }
 
-                        Character targetCharacter = FindEntityByID(targetID) as Character;
+                        Character targetCharacter = FindEntityByID(characterID) as Character;
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                         msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
                         msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
-                        msg.Write(targetID);
+                        msg.Write(characterID);
                         msg.Write(targetLimbIndex);
+                        msg.Write(useTargetID);
+                        msg.Write(worldPosition.HasValue);
+                        if (worldPosition.HasValue)
+                        {
+                            msg.Write(worldPosition.Value.X);
+                            msg.Write(worldPosition.Value.Y);
+                        }
                     }
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
@@ -197,7 +207,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID)
         {
             if (GameMain.Server == null) return;
 
@@ -209,7 +219,7 @@ namespace Barotrauma
                 msg.Write(Description);
             }
 
-            msg.Write(ID);
+            msg.Write(entityID);
 
             if (ParentInventory == null || ParentInventory.Owner == null)
             {

@@ -13,6 +13,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -426,7 +427,7 @@ namespace Barotrauma
                     ToolTip = mode.Name,
                     Selected = true,
                     OnSelected = (tickBox) => { FilterServers(); return true; },
-                    UserData = mode.Name
+                    UserData = mode.Identifier
                 };
                 gameModeTickBoxes.Add(selectionTick);
                 filterTextList.Add(selectionTick.TextBlock);
@@ -736,6 +737,7 @@ namespace Barotrauma
             info.PlayerCount = GameMain.Client.ConnectedClients.Count;
             info.PingChecked = false;
             info.HasPassword = serverSettings.HasPassword;
+            info.OwnerVerified = true;
 
             if (isInfoNew)
             {
@@ -747,6 +749,12 @@ namespace Barotrauma
 
         public void AddToRecentServers(ServerInfo info)
         {
+            if (!string.IsNullOrEmpty(info.IP))
+            {
+                //don't add localhost to recent servers
+                if (IPAddress.TryParse(info.IP, out IPAddress ip) && IPAddress.IsLoopback(ip)) { return; }
+            }
+
             info.Recent = true;
             ServerInfo existingInfo = recentServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
             if (existingInfo == null)
@@ -898,6 +906,11 @@ namespace Barotrauma
             base.Select();
             SelectedTab = ServerListTab.All;
             RefreshServers();
+
+            if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
+            {
+                SteamManager.Instance.LobbyList.OnLobbyDataReceived = OnLobbyDataReceived;
+            }
         }
 
         public override void Deselect()
@@ -905,7 +918,7 @@ namespace Barotrauma
             base.Deselect();
             if (SteamManager.IsInitialized && SteamManager.Instance.LobbyList != null)
             {
-                SteamManager.Instance.LobbyList.OnLobbiesUpdated = null;
+                SteamManager.Instance.LobbyList.OnLobbyDataReceived = null;
             }
         }
 
@@ -947,6 +960,7 @@ namespace Barotrauma
                     (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
                 child.Visible =
+                    serverInfo.OwnerVerified &&
                     serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
                     (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
                     (!filterPassword.Selected || !serverInfo.HasPassword) &&
@@ -1405,7 +1419,8 @@ namespace Barotrauma
             {
                 yield return new WaitForSeconds((float)(refreshDisableTimer - DateTime.Now).TotalSeconds);
             }
-            
+
+            recentServers.Concat(favoriteServers).ForEach(si => si.OwnerVerified = false);
             if (GameMain.Config.UseSteamMatchmaking)
             {
                 serverList.ClearChildren();
@@ -1479,7 +1494,8 @@ namespace Barotrauma
                     PlayerCount = playerCount,
                     MaxPlayers = maxPlayers,
                     HasPassword = hasPassWord,
-                    GameVersion = gameVersion
+                    GameVersion = gameVersion,
+                    OwnerVerified = true
                 };
                 foreach (string contentPackageName in contentPackageNames.Split(','))
                 {
@@ -1509,6 +1525,37 @@ namespace Barotrauma
             {
                 AddToServerList(serverInfo);
             }
+        }
+
+        private void OnLobbyDataReceived(Facepunch.Steamworks.LobbyList.Lobby lobby)
+        {
+            if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { return; }
+            bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
+            int.TryParse(lobby.GetData("playercount"), out int currPlayers);
+            int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
+            //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
+            string ip = lobby.GetData("hostipaddress");
+            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
+
+            ServerInfo newInfo = new ServerInfo();
+
+            if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
+
+            newInfo.ServerName = lobby.Name;
+            newInfo.Port = "";
+            newInfo.QueryPort = "";
+            newInfo.IP = ip;
+            newInfo.PlayerCount = currPlayers;
+            newInfo.MaxPlayers = maxPlayers;
+            newInfo.HasPassword = hasPassword;
+            newInfo.RespondedToSteamQuery = true;
+            newInfo.LobbyID = lobby.LobbyID;
+            newInfo.OwnerID = ownerId;
+            newInfo.PingChecked = false;
+            newInfo.OwnerVerified = true;
+            SteamManager.AssignLobbyDataToServerInfo(lobby, newInfo);
+
+            AddToServerList(newInfo);
         }
 
         private void AddToServerList(ServerInfo serverInfo)
@@ -1552,7 +1599,8 @@ namespace Barotrauma
             if (serverInfo.OwnerVerified)
             {
                 DebugConsole.NewMessage(serverInfo.OwnerID + " verified!");
-                var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo && info.OwnerID == serverInfo.OwnerID).ToList();
+                var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo &&
+                                                                            (serverInfo.OwnerID != 0 ? info.OwnerID == serverInfo.OwnerID : info.IP == serverInfo.IP)).ToList();
                 foreach (var child in childrenToRemove)
                 {
                     serverList.Content.RemoveChild(child);
@@ -1594,7 +1642,13 @@ namespace Barotrauma
                 UserData = "password"
             };
 
-			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform), serverInfo.ServerName, style: "GUIServerListTextBox");
+			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform),
+#if !DEBUG
+                serverInfo.ServerName,
+#else
+                ((serverInfo.OwnerID != 0 || serverInfo.LobbyID != 0) ? "[STEAMP2P] " : "[LIDGREN] ") + serverInfo.ServerName,
+#endif
+                style: "GUIServerListTextBox");
 
             new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {
@@ -1793,7 +1847,7 @@ namespace Barotrauma
             GameMain.Config.PlayerName = clientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
 
-            CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName));
+            CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName), "ConnectToServer");
 
             return true;
         }
@@ -1822,40 +1876,31 @@ namespace Barotrauma
 
         public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
-            if (activePings.Contains(serverInfo.IP)) { return; }
-            activePings.Add(serverInfo.IP);
+            if (CoroutineManager.IsCoroutineRunning("ConnectToServer")) { return; }
+
+            lock (activePings)
+            {
+                if (activePings.Contains(serverInfo.IP)) { return; }
+                activePings.Add(serverInfo.IP);
+            }
 
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            var pingThread = new Thread(() => { PingServer(serverInfo, 1000); })
-            {
-                IsBackground = true
-            };
-            pingThread.Start();
-
-            CoroutineManager.StartCoroutine(UpdateServerPingText(serverInfo, serverPingText, 1000));
-        }
-
-        private IEnumerable<object> UpdateServerPingText(ServerInfo serverInfo, GUITextBlock serverPingText, int timeOut)
-        {
-			DateTime timeOutTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: timeOut);
-            while (DateTime.Now < timeOutTime)
-            {
-                if (serverInfo.PingChecked)
+            TaskPool.Add(PingServerAsync(serverInfo?.IP, 1000),
+                new Tuple<ServerInfo, GUITextBlock>(serverInfo, serverPingText),
+                (rtt, obj) =>
                 {
-                    if (serverInfo.Ping != -1)
+                    var info = obj.Item1;
+                    var text = obj.Item2;
+                    info.Ping = rtt.Result; info.PingChecked = true;
+                    text.TextColor = GetPingTextColor(info.Ping);
+                    text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
+                    lock (activePings)
                     {
-                        serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
-					}
-                    serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
-                    activePings.Remove(serverInfo.IP);
-                    yield return CoroutineStatus.Success;
-                }
-
-                yield return CoroutineStatus.Running;
-            }
-            yield return CoroutineStatus.Success;
+                        activePings.Remove(serverInfo.IP);
+                    }
+                });
         }
 
         private Color GetPingTextColor(int ping)
@@ -1864,18 +1909,27 @@ namespace Barotrauma
             return ToolBox.GradientLerp(ping / 200.0f, Color.LightGreen, Color.Yellow * 0.8f, Color.Red * 0.75f);
         }
 
-        public void PingServer(ServerInfo serverInfo, int timeOut)
+        public async Task<int> PingServerAsync(string ip, int timeOut)
         {
-            if (string.IsNullOrWhiteSpace(serverInfo?.IP))
+            await Task.Yield();
+            int activePingCount = 100;
+            while (activePingCount > 25)
             {
-                serverInfo.PingChecked = true;
-                serverInfo.Ping = -1;
-                return;
+                lock (activePings)
+                {
+                    activePingCount = activePings.Count;
+                }
+                await Task.Delay(25);
+            }
+
+            if (string.IsNullOrWhiteSpace(ip))
+            {
+                return -1;
             }
 
             long rtt = -1;
             IPAddress address = null;
-            IPAddress.TryParse(serverInfo.IP, out address);
+            IPAddress.TryParse(ip, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported
@@ -1902,8 +1956,8 @@ namespace Barotrauma
                     }
                     catch (PingException ex)
                     {
-                        string errorMsg = "Failed to ping a server (" + serverInfo.ServerName + ", " + serverInfo.IP + ") - " + (ex?.InnerException?.Message ?? ex.Message);
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + serverInfo.IP, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
+                        string errorMsg = "Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message);
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, errorMsg);
 #if DEBUG
                         DebugConsole.NewMessage(errorMsg, Color.Red);
 #endif
@@ -1911,10 +1965,9 @@ namespace Barotrauma
                 }
             }
 
-            serverInfo.PingChecked = true;
-            serverInfo.Ping = (int)rtt;
+            return (int)rtt;
         }
-        
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.CornflowerBlue);

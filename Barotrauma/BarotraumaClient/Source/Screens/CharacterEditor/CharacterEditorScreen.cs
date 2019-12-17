@@ -99,6 +99,7 @@ namespace Barotrauma.CharacterEditor
         private Rectangle spriteSheetRect;
 
         private Rectangle CalculateSpritesheetRectangle() => 
+            Textures == null || Textures.None() ? Rectangle.Empty :
             new Rectangle(
                 spriteSheetOffsetX, 
                 spriteSheetOffsetY, 
@@ -656,12 +657,6 @@ namespace Barotrauma.CharacterEditor
             }
             if (!isFrozen)
             {
-                if (character.AnimController.Invalid)
-                {
-                    Reset(new Character[] { character });
-                    SpawnCharacter(currentCharacterConfig);
-                }
-
                 Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
                 Submarine.MainSub.Update((float)deltaTime);
 
@@ -722,6 +717,7 @@ namespace Barotrauma.CharacterEditor
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
                     if (limb == null || limb.ActiveSprite == null) { continue; }
+                    if (selectedJoints.Any(j => j.LimbA == limb || j.LimbB == limb)) { continue; }
                     // Select limbs on ragdoll
                     if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) && MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition))
                     {
@@ -2727,11 +2723,19 @@ namespace Barotrauma.CharacterEditor
                     return false;
                 }
 #endif
-                character.Params.Save();
-                GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
-                character.AnimController.SaveRagdoll();
-                GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
-                AnimParams.ForEach(p => p.Save());
+                if (!string.IsNullOrEmpty(RagdollParams.Texture) && !File.Exists(RagdollParams.Texture))
+                {
+                    DebugConsole.ThrowError($"Invalid texture path: {RagdollParams.Texture}");
+                    return false;
+                }
+                else
+                {
+                    character.Params.Save();
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    character.AnimController.SaveRagdoll();
+                    GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    AnimParams.ForEach(p => p.Save());
+                }
                 return true;
             };
             // Spacing

@@ -437,5 +437,90 @@ namespace Barotrauma
             IEnumerable<string> filtered = splitted.SkipWhile(part => part != currentFolder).Skip(1);
             return string.Join("/", filtered);
         }
+
+        public static string EscapeCharacters(string str)
+        {
+            return str.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        public static string UnescapeCharacters(string str)
+        {
+            string retVal = "";
+            for (int i=0;i<str.Length;i++)
+            {
+                if (str[i] != '\\')
+                {
+                    retVal += str[i];
+                }
+                else if (i+1<str.Length)
+                {
+                    if (str[i+1] == '\\')
+                    {
+                        retVal += "\\";
+                    }
+                    else if (str[i+1] == '\"')
+                    {
+                        retVal += "\"";
+                    }
+                    i++;
+                }
+            }
+            return retVal;
+        }
+
+        public static string ParseQuotedArgument(string[] arguments, int startIndex, out int endIndex)
+        {
+#if WINDOWS
+            endIndex = startIndex + 1;
+            return arguments[startIndex];
+#else
+            string retVal = "";
+            int currIndex = startIndex;
+            bool escaped = false;
+            if (arguments[startIndex][0] != '\"')
+            {
+                endIndex = startIndex+1;
+                return UnescapeCharacters(arguments[startIndex]);
+            }
+            while (currIndex < arguments.Length)
+            {
+                for (int i=currIndex == startIndex ? 1 : 0;i<arguments[currIndex].Length;i++)
+                {
+                    if (!escaped)
+                    {
+                        if (arguments[currIndex][i] == '\\')
+                        {
+                            escaped = true;
+                        }
+                        else if (arguments[currIndex][i] == '\"')
+                        {
+                            endIndex = currIndex+1;
+                            return UnescapeCharacters(retVal);
+                        }
+                    }
+                    else
+                    {
+                        escaped = false;
+                    }
+                    retVal += arguments[currIndex][i];
+                }
+                retVal += " ";
+                currIndex++;
+            }
+
+            endIndex = arguments.Length;
+            return retVal;
+#endif
+        }
+
+        public static string[] MergeArguments(string[] arguments)
+        {
+            List<string> mergedArgs = new List<string>();
+            for (int i=0;i<arguments.Length;)
+            {
+                mergedArgs.Add(ParseQuotedArgument(arguments, i, out i));
+            }
+            return mergedArgs.ToArray();
+        }
     }
 }

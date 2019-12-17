@@ -279,13 +279,30 @@ namespace Barotrauma.Items.Components
                     var pc = powerSource.Item.GetComponent<PowerContainer>();
                     if (pc != null)
                     {
-                        float voltage = -pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
+                        float voltage = pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
                         powered.voltage += voltage;
                     }
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Returns the amount of power that can be supplied by batteries directly connected to the item
+        /// </summary>
+        protected float GetAvailableBatteryPower()
+        {
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+
+            float availablePower = 0.0f;
+            foreach (PowerContainer battery in batteries)
+            {
+                float batteryPower = Math.Min(battery.Charge * 3600.0f, battery.MaxOutPut);
+                availablePower += batteryPower;
+            }
+
+            return availablePower;
+        }
+
         protected override void RemoveComponentSpecific()
         {
             poweredList.Remove(this);

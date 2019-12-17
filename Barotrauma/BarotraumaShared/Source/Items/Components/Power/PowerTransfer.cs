@@ -280,6 +280,8 @@ namespace Barotrauma.Items.Components
         {
             //we've already received this signal
             if (lastPowerProbeRecipients.Contains(this)) { return; }
+            if (item.Condition <= 0.0f) { return; }
+
             lastPowerProbeRecipients.Add(this);
 
             if (power < 0.0f)
@@ -306,15 +308,15 @@ namespace Barotrauma.Items.Components
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
-                        //powertransfer components don't need to receive the signal in the pass-through signal connections
+                        //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && connection.Name.Contains("signal")) { continue; }
+                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
                         ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
                     }
 
                     foreach (StatusEffect effect in recipient.Effects)
                     {
-                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, null, null, false, false);
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
                     }
                 }
             }

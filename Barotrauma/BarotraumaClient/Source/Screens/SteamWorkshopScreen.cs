@@ -30,7 +30,7 @@ namespace Barotrauma
 
         private List<GUIButton> tabButtons = new List<GUIButton>();
 
-        private HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
+        private readonly HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
         private Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
 
         private enum Tab
@@ -379,10 +379,16 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(item.PreviewImageUrl))
                     {
                         string imagePreviewPath = Path.Combine(SteamManager.WorkshopItemPreviewImageFolder, item.Id + ".png");
-                        if (!pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
-                        {
-                            pendingPreviewImageDownloads.Add(item.PreviewImageUrl);
 
+                        bool isNewImage;
+                        lock (pendingPreviewImageDownloads)
+                        {
+                            isNewImage = !pendingPreviewImageDownloads.Contains(item.PreviewImageUrl);
+                            if (isNewImage) { pendingPreviewImageDownloads.Add(item.PreviewImageUrl); }
+                        }
+
+                        if (isNewImage)
+                        {
                             if (File.Exists(imagePreviewPath))
                             {
                                 File.Delete(imagePreviewPath);
@@ -397,10 +403,13 @@ namespace Barotrauma
                             var request = new RestRequest(fileName, Method.GET);
                             client.ExecuteAsync(request, response =>
                             {
-                                pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                                lock (pendingPreviewImageDownloads)
+                                {
+                                    pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                                }
                                 OnPreviewImageDownloaded(response, imagePreviewPath);
                                 CoroutineManager.StartCoroutine(WaitForItemPreviewDownloaded(item, listBox, imagePreviewPath));
-                            });                            
+                            });
                         }
                         else
                         {
@@ -410,7 +419,10 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                    lock (pendingPreviewImageDownloads)
+                    {
+                        pendingPreviewImageDownloads.Remove(item.PreviewImageUrl);
+                    }
                     DebugConsole.ThrowError("Downloading the preview image of the Workshop item \"" + TextManager.EnsureUTF8(item.Title) + "\" failed.", e);
                 }
             }
@@ -595,8 +607,13 @@ namespace Barotrauma
 
         private IEnumerable<object> WaitForItemPreviewDownloaded(Facepunch.Steamworks.Workshop.Item item, GUIListBox listBox, string previewImagePath)
         {
-            while (pendingPreviewImageDownloads.Contains(item.PreviewImageUrl))
+            while (true)
             {
+                lock (pendingPreviewImageDownloads)
+                {
+                    if (!pendingPreviewImageDownloads.Contains(item.PreviewImageUrl)) { break; }
+                }
+
                 yield return CoroutineStatus.Running;
             }
 

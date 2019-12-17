@@ -318,6 +318,8 @@ namespace Barotrauma
 
         private void InitUserStats()
         {
+            return;
+
             if (GameSettings.ShowUserStatisticsPrompt)
             {
                 if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
@@ -404,14 +406,18 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            if (Config.AutoUpdateWorkshopItems)
+            CrossThread.RequestExecutionOnMainThread(() =>
             {
-                if (SteamManager.AutoUpdateWorkshopItems())
+                if (Config.AutoUpdateWorkshopItems)
                 {
-                    ContentPackage.LoadAll();
-                    Config.ReloadContentPackages();
+                    if (SteamManager.AutoUpdateWorkshopItems())
+                    {
+                        ContentPackage.LoadAll();
+                        Config.ReloadContentPackages();
+                    }
                 }
-            }
+            });
+            
 
             if (SelectedPackages.None())
             {
@@ -843,6 +849,8 @@ namespace Barotrauma
                 CoroutineManager.Update((float)Timing.Step, paused ? 0.0f : (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
+
+                TaskPool.Update();
 
                 SoundManager?.Update();
 

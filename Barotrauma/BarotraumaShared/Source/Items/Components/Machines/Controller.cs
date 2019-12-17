@@ -123,9 +123,9 @@ namespace Barotrauma.Items.Components
 
                 if (user.AnimController.InWater)
                 {
-                    if (diff.Length() > 30.0f)
+                    if (diff.LengthSquared() > 30.0f * 30.0f)
                     {
-                        user.AnimController.TargetMovement = Vector2.Clamp(diff*0.01f, -Vector2.One, Vector2.One);
+                        user.AnimController.TargetMovement = Vector2.Clamp(diff * 0.01f, -Vector2.One, Vector2.One);
                         user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
                     }
                     else
@@ -136,11 +136,29 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     diff.Y = 0.0f;
-                    if (diff != Vector2.Zero && diff.LengthSquared() > 10.0f * 10.0f)
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && user != Character.Controlled)
                     {
-                        user.AnimController.TargetMovement = Vector2.Normalize(diff);
-                        user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
-                        return;
+                        if (Math.Abs(diff.X) > 20.0f)
+                        {                       
+                            //wait for the character to walk to the correct position
+                            return;
+                        }
+                        else if (Math.Abs(diff.X) > 0.1f)
+                        {
+                            //aim to keep the collider at the correct position once close enough
+                            user.AnimController.Collider.LinearVelocity = new Vector2(
+                                diff.X * 0.1f, 
+                                user.AnimController.Collider.LinearVelocity.Y);
+                        }
+                    }
+                    else
+                    {
+                        if (Math.Abs(diff.X) > 10.0f)
+                        {
+                            user.AnimController.TargetMovement = Vector2.Normalize(diff);
+                            user.AnimController.TargetDir = diff.X > 0.0f ? Direction.Right : Direction.Left;
+                            return;
+                        }
                     }
                     user.AnimController.TargetMovement = Vector2.Zero;                    
                 }
@@ -293,7 +311,7 @@ namespace Barotrauma.Items.Components
 
         private void CancelUsing(Character character)
         {
-            if (character == null || character.Removed) return;
+            if (character == null || character.Removed) { return; }
 
             foreach (LimbPos lb in limbPositions)
             {
@@ -304,18 +322,21 @@ namespace Barotrauma.Items.Components
                 limb.PullJointEnabled = false;
             }
 
-            if (character.SelectedConstruction == this.item) character.SelectedConstruction = null;
+            if (character.SelectedConstruction == this.item) { character.SelectedConstruction = null; }
 
             character.AnimController.Anim = AnimController.Animation.None;
             if (character == Character.Controlled)
             {
                 HideHUDs(false);
             }
+#if SERVER
+            item.CreateServerEvent(this);
+#endif
         }
 
         public override bool Select(Character activator)
         {
-            if (activator == null || activator.Removed) return false;
+            if (activator == null || activator.Removed) { return false; }
 
             //someone already using the item
             if (user != null && !user.Removed)
@@ -330,10 +351,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                user = activator;                    
+                user = activator;
                 IsActive = true;
             }
-
+#if SERVER
+            item.CreateServerEvent(this);
+#endif
             item.SendSignal(0, "1", "signal_out", user);
             return true;
         }

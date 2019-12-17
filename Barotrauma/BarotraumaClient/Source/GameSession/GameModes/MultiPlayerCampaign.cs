@@ -204,9 +204,14 @@ namespace Barotrauma
             {
                 campaign.SuppressStateSending = true;
 
-                campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
-                campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-                campaign.Map.SelectMission(selectedMissionIndex);
+                //we need to have the latest save file to display location/mission/store
+                if (campaign.LastSaveID == saveID)
+                {
+                    campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
+                    campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                    campaign.Map.SelectMission(selectedMissionIndex);
+                    campaign.CargoManager.SetPurchasedItems(purchasedItems);
+                }
 
                 campaign.startWatchmanID = startWatchmanID;
                 campaign.endWatchmanID = endWatchmanID;
@@ -215,7 +220,6 @@ namespace Barotrauma
                 campaign.PurchasedHullRepairs = purchasedHullRepairs;
                 campaign.PurchasedItemRepairs = purchasedItemRepairs;
                 campaign.PurchasedLostShuttles = purchasedLostShuttles;
-                campaign.CargoManager.SetPurchasedItems(purchasedItems);
 
                 if (myCharacterInfo != null)
                 {

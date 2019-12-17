@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
             {
                 if (repairSoundChannel == null || !repairSoundChannel.IsPlaying)
                 {
-                repairSoundChannel = SoundPlayer.PlaySound("repair", item.WorldPosition, hullGuess: item.CurrentHull);
+                    repairSoundChannel = SoundPlayer.PlaySound("repair", item.WorldPosition, hullGuess: item.CurrentHull);
                 }
             }
             else
@@ -221,8 +221,17 @@ namespace Barotrauma.Items.Components
             deteriorationTimer = msg.ReadSingle();
             deteriorateAlwaysResetTimer = msg.ReadSingle();
             DeteriorateAlways = msg.ReadBoolean();
-            CurrentFixer = msg.ReadBoolean() ? Character.Controlled : null;
+            ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
+
+            if (currentFixerID == 0)
+            {
+                CurrentFixer = null;
+            }
+            else
+            {
+                CurrentFixer = Entity.FindEntityByID(currentFixerID) as Character;
+            }
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
