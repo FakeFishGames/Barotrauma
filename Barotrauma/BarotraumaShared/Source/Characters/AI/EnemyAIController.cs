@@ -436,7 +436,7 @@ namespace Barotrauma
                     {
                         // Steer towards the target
                         steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
-                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
                         return;
                     }
                 }
