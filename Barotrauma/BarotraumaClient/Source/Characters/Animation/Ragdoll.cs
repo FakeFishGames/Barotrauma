@@ -460,7 +460,7 @@ namespace Barotrauma
                 if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
                 {
                     //at the left side of the ladder, needs to be drawn in front of the rungs
-                    depthOffset = Math.Min(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
+                    depthOffset = Math.Max(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
                 }
                 else
                 {
