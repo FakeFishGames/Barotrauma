@@ -323,6 +323,8 @@ namespace Barotrauma
 
         private void InitUserStats()
         {
+            return;
+
             if (GameSettings.ShowUserStatisticsPrompt)
             {
                 if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
