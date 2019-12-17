@@ -1083,6 +1083,7 @@ namespace Barotrauma
             {
                 inWater = false;
                 headInWater = false;
+                RefreshFloorY(ignoreStairs: Stairs == null);
             }
             //ragdoll isn't in any room -> it's in the water
             else if (currentHull == null)
