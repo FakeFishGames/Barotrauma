@@ -20,7 +20,7 @@ namespace Barotrauma
         /// I couldn't figure out where to register this in <see cref="NetLobbyScreen"/> where it wouldn't register twice
         /// It's probably not the most optimal way of doing this so feel free to change this
         /// <seealso cref="NetLobbyScreen.Select"/> where I'm utilizing this
-        private static readonly List<GUITextBox> registers = new List<GUITextBox>();
+        private readonly List<GUITextBox> registers = new List<GUITextBox>();
 
         // List of previously stored messages
         private readonly List<string> messageList = new List<string> { string.Empty };
@@ -39,7 +39,7 @@ namespace Barotrauma
         public static void RegisterKeys(GUITextBox element, ChatManager manager)
         {
             // If already registered then don't register it again
-            if (registers.Any(p => element == p)) { return; }
+            if (manager.registers.Any(p => element == p)) { return; }
             element.OnKeyHit += (sender, key) =>
             {
                 switch (key)
@@ -63,7 +63,7 @@ namespace Barotrauma
                         break;
                 }
             };
-            registers.Add(element);
+            manager.registers.Add(element);
         }
 
         // Store a new message
