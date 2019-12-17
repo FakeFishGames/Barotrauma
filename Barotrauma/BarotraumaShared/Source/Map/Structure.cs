@@ -246,29 +246,6 @@ namespace Barotrauma
             }
         }
         
-        //for upgrading the dimensions of a structure from xml
-        [Serialize(0, false)]
-        public int RectWidth
-        {
-            get { return rect.Width; }
-            set
-            {
-                if (value <= 0) { return; }
-                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
-            }
-        }
-        //for upgrading the dimensions of a structure from xml
-        [Serialize(0, false)]
-        public int RectHeight
-        {
-            get { return rect.Height; }
-            set
-            {
-                if (value <= 0) { return; }
-                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
-            }
-        }
-
         public float BodyWidth
         {
             get { return Prefab.BodyWidth > 0.0f ? Prefab.BodyWidth * scale : rect.Width; }

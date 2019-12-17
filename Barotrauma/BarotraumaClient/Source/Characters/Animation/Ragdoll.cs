@@ -421,9 +421,9 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (simplePhysicsEnabled) return;
+            if (simplePhysicsEnabled) { return; }
 
             Collider.UpdateDrawPosition();
 
@@ -442,9 +442,38 @@ namespace Barotrauma
                 color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
+            float depthOffset = 0.0f;
+            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
+            if (ladder != null)
+            {
+                float maxDepth = 0.0f;
+                float minDepth = 1.0f;
+                foreach (Limb limb in Limbs)
+                {
+                    var activeSprite = limb.ActiveSprite;
+                    if (activeSprite != null)
+                    {
+                        maxDepth = Math.Max(activeSprite.Depth, maxDepth);
+                        minDepth = Math.Min(activeSprite.Depth, minDepth);
+                    }
+                }
+                if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
+                {
+                    //at the left side of the ladder, needs to be drawn in front of the rungs
+                    depthOffset = Math.Min(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
+                }
+                else
+                {
+                    //at the right side of the ladder, needs to be drawn behind the rungs
+                    depthOffset = Math.Max(ladder.BackgroundSpriteDepth + 0.01f - minDepth, 0.0f);
+                }
+            }
+
             for (int i = 0; i < limbs.Length; i++)
             {
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth += depthOffset; }
                 inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth -= depthOffset; }
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
