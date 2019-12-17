@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
                     containedItem.IsHighlighted = item.IsHighlighted;
                     item.IsHighlighted = false;
                 }
-                                
+
                 Vector2 origin = containedItem.Sprite.Origin;
                 if (item.FlippedX) { origin.X = containedItem.Sprite.SourceRect.Width - origin.X; }
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }

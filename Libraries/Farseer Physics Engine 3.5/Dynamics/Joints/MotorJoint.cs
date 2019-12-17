@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -193,12 +199,12 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA);
-            Rot qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
             // Compute the effective mass matrix.
-            _rA = MathUtils.Mul(qA, -_localCenterA);
-            _rB = MathUtils.Mul(qB, -_localCenterB);
+            _rA = -Complex.Multiply(ref _localCenterA, ref qA);
+            _rB = -Complex.Multiply(ref _localCenterB, ref qB);
 
             // J = [-I -r1_skew I r2_skew]
             //     [ 0       -1 0       1]
@@ -226,10 +232,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 _angularMass = 1.0f / _angularMass;
             }
 
-            _linearError = cB + _rB - cA - _rA - MathUtils.Mul(qA, _linearOffset);
+            _linearError = cB + _rB - cA - _rA - Complex.Multiply(ref _linearOffset, ref qA);
             _angularError = aB - aA - _angularOffset;
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Scale impulses to support a variable time step.
                 _linearImpulse *= data.step.dtRatio;
@@ -238,9 +244,9 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = new Vector2(_linearImpulse.X, _linearImpulse.Y);
 
                 vA -= mA * P;
-                wA -= iA * (MathUtils.Cross(_rA, P) + _angularImpulse);
+                wA -= iA * (MathUtils.Cross(ref _rA, ref P) + _angularImpulse);
                 vB += mB * P;
-                wB += iB * (MathUtils.Cross(_rB, P) + _angularImpulse);
+                wB += iB * (MathUtils.Cross(ref _rB, ref P) + _angularImpulse);
             }
             else
             {
@@ -283,7 +289,7 @@ namespace FarseerPhysics.Dynamics.Joints
 
             // Solve linear friction
             {
-                Vector2 Cdot = vB + MathUtils.Cross(wB, _rB) - vA - MathUtils.Cross(wA, _rA) + inv_h * CorrectionFactor * _linearError;
+                Vector2 Cdot = vB + MathUtils.Cross(wB, ref _rB) - vA - MathUtils.Cross(wA, ref _rA) + inv_h * CorrectionFactor * _linearError;
 
                 Vector2 impulse = -MathUtils.Mul(ref _linearMass, ref Cdot);
                 Vector2 oldImpulse = _linearImpulse;
@@ -300,10 +306,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 impulse = _linearImpulse - oldImpulse;
 
                 vA -= mA * impulse;
-                wA -= iA * MathUtils.Cross(_rA, impulse);
+                wA -= iA * MathUtils.Cross(ref _rA, ref impulse);
 
                 vB += mB * impulse;
-                wB += iB * MathUtils.Cross(_rB, impulse);
+                wB += iB * MathUtils.Cross(ref _rB, ref impulse);
             }
 
             data.velocities[_indexA].v = vA;

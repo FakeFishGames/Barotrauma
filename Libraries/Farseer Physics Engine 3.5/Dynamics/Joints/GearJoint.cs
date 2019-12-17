@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -148,7 +154,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _localAxisC = prismatic.LocalXAxis;
 
                 Vector2 pC = _localAnchorC;
-                Vector2 pA = MathUtils.MulT(xfC.q, MathUtils.Mul(xfA.q, _localAnchorA) + (xfA.p - xfC.p));
+                Vector2 pA = Complex.Divide(Complex.Multiply(ref _localAnchorA, ref xfA.q) + (xfA.p - xfC.p), ref xfC.q);
                 coordinateA = Vector2.Dot(pA - pC, _localAxisC);
             }
 
@@ -180,7 +186,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _localAxisD = prismatic.LocalXAxis;
 
                 Vector2 pD = _localAnchorD;
-                Vector2 pB = MathUtils.MulT(xfD.q, MathUtils.Mul(xfB.q, _localAnchorB) + (xfB.p - xfD.p));
+                Vector2 pB = Complex.Divide(Complex.Multiply(ref _localAnchorB, ref xfB.q) + (xfB.p - xfD.p), ref xfD.q);
                 coordinateB = Vector2.Dot(pB - pD, _localAxisD);
             }
 
@@ -271,7 +277,10 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vD = data.velocities[_indexD].v;
             float wD = data.velocities[_indexD].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB), qC = new Rot(aC), qD = new Rot(aD);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
+            Complex qC = Complex.FromAngle(aC);
+            Complex qD = Complex.FromAngle(aD);
 
             _mass = 0.0f;
 
@@ -284,12 +293,12 @@ namespace FarseerPhysics.Dynamics.Joints
             }
             else
             {
-                Vector2 u = MathUtils.Mul(qC, _localAxisC);
-                Vector2 rC = MathUtils.Mul(qC, _localAnchorC - _lcC);
-                Vector2 rA = MathUtils.Mul(qA, _localAnchorA - _lcA);
+                Vector2 u = Complex.Multiply(ref _localAxisC, ref qC);
+                Vector2 rC = Complex.Multiply(_localAnchorC - _lcC, ref qC);
+                Vector2 rA = Complex.Multiply(_localAnchorA - _lcA, ref qA);
                 _JvAC = u;
-                _JwC = MathUtils.Cross(rC, u);
-                _JwA = MathUtils.Cross(rA, u);
+                _JwC = MathUtils.Cross(ref rC, ref u);
+                _JwA = MathUtils.Cross(ref rA, ref u);
                 _mass += _mC + _mA + _iC * _JwC * _JwC + _iA * _JwA * _JwA;
             }
 
@@ -302,19 +311,19 @@ namespace FarseerPhysics.Dynamics.Joints
             }
             else
             {
-                Vector2 u = MathUtils.Mul(qD, _localAxisD);
-                Vector2 rD = MathUtils.Mul(qD, _localAnchorD - _lcD);
-                Vector2 rB = MathUtils.Mul(qB, _localAnchorB - _lcB);
+                Vector2 u = Complex.Multiply(ref _localAxisD, ref qD);
+                Vector2 rD = Complex.Multiply(_localAnchorD - _lcD, ref qD);
+                Vector2 rB = Complex.Multiply(_localAnchorB - _lcB, ref qB);
                 _JvBD = _ratio * u;
-                _JwD = _ratio * MathUtils.Cross(rD, u);
-                _JwB = _ratio * MathUtils.Cross(rB, u);
+                _JwD = _ratio * MathUtils.Cross(ref rD, ref u);
+                _JwB = _ratio * MathUtils.Cross(ref rB, ref u);
                 _mass += _ratio * _ratio * (_mD + _mB) + _iD * _JwD * _JwD + _iB * _JwB * _JwB;
             }
 
             // Compute effective mass.
             _mass = _mass > 0.0f ? 1.0f / _mass : 0.0f;
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 vA += (_mA * _impulse) * _JvAC;
                 wA += _iA * _impulse * _JwA;
@@ -387,7 +396,10 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cD = data.positions[_indexD].c;
             float aD = data.positions[_indexD].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB), qC = new Rot(aC), qD = new Rot(aD);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
+            Complex qC = Complex.FromAngle(aC);
+            Complex qD = Complex.FromAngle(aD);
 
             const float linearError = 0.0f;
 
@@ -408,16 +420,16 @@ namespace FarseerPhysics.Dynamics.Joints
             }
             else
             {
-                Vector2 u = MathUtils.Mul(qC, _localAxisC);
-                Vector2 rC = MathUtils.Mul(qC, _localAnchorC - _lcC);
-                Vector2 rA = MathUtils.Mul(qA, _localAnchorA - _lcA);
+                Vector2 u = Complex.Multiply(ref _localAxisC, ref qC);
+                Vector2 rC = Complex.Multiply(_localAnchorC - _lcC, ref qC);
+                Vector2 rA = Complex.Multiply(_localAnchorA - _lcA, ref qA);
                 JvAC = u;
-                JwC = MathUtils.Cross(rC, u);
-                JwA = MathUtils.Cross(rA, u);
+                JwC = MathUtils.Cross(ref rC, ref u);
+                JwA = MathUtils.Cross(ref rA, ref u);
                 mass += _mC + _mA + _iC * JwC * JwC + _iA * JwA * JwA;
 
                 Vector2 pC = _localAnchorC - _lcC;
-                Vector2 pA = MathUtils.MulT(qC, rA + (cA - cC));
+                Vector2 pA = Complex.Divide(rA + (cA - cC), ref qC);
                 coordinateA = Vector2.Dot(pA - pC, _localAxisC);
             }
 
@@ -432,16 +444,16 @@ namespace FarseerPhysics.Dynamics.Joints
             }
             else
             {
-                Vector2 u = MathUtils.Mul(qD, _localAxisD);
-                Vector2 rD = MathUtils.Mul(qD, _localAnchorD - _lcD);
-                Vector2 rB = MathUtils.Mul(qB, _localAnchorB - _lcB);
+                Vector2 u = Complex.Multiply(ref _localAxisD, ref qD);
+                Vector2 rD = Complex.Multiply(_localAnchorD - _lcD, ref qD);
+                Vector2 rB = Complex.Multiply(_localAnchorB - _lcB, ref qB);
                 JvBD = _ratio * u;
-                JwD = _ratio * MathUtils.Cross(rD, u);
-                JwB = _ratio * MathUtils.Cross(rB, u);
+                JwD = _ratio * MathUtils.Cross(ref rD, ref u);
+                JwB = _ratio * MathUtils.Cross(ref rB, ref u);
                 mass += _ratio * _ratio * (_mD + _mB) + _iD * JwD * JwD + _iB * JwB * JwB;
 
                 Vector2 pD = _localAnchorD - _lcD;
-                Vector2 pB = MathUtils.MulT(qD, rB + (cB - cD));
+                Vector2 pB = Complex.Divide(rB + (cB - cD), ref qD);
                 coordinateB = Vector2.Dot(pB - pD, _localAxisD);
             }
 

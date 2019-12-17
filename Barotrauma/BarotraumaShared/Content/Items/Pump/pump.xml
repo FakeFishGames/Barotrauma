@@ -2,7 +2,7 @@
 <Items>
   <Item name="" identifier="pump" tags="pump" linkable="true" allowedlinks="hull" category="Machine">
     <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,0,200,126" />
-    <BrokenSprite texture="Pumps.png" sourcerect="200,0,200,126" depth="0.8" maxcondition="40" fadein="true" />
+    <BrokenSprite texture="Pumps.png" sourcerect="200,0,200,126" depth="0.8" maxcondition="80" fadein="true" />
     <BrokenSprite texture="Pumps.png" sourcerect="0,129,200,126" depth="0.8" maxcondition="0" />
     <Pump canbeselected="true" maxflow="600" PowerConsumption="300.0" MinVoltage="0.3" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI" />
@@ -35,16 +35,15 @@
   </Item>
   
   <Item name="" identifier="smallpump" tags="pump" linkable="true" category="Machine" scale="0.5">
-    <Sprite texture="Pumps.png" depth="0.8" sourcerect="0,260,220,128" origin="0.5,0.5" />
+    <Sprite texture="Pumps.png" depth="0.8" sourcerect="1,264,133,89" origin="0.5,0.5" />
+    <BrokenSprite texture="Pumps.png" sourcerect="134,264,133,89" depth="0.8" maxcondition="80" fadein="true" />
+    <BrokenSprite texture="Pumps.png" sourcerect="267,264,133,89" depth="0.8" maxcondition="0" />
     <Pump canbeselected="true" maxflow="100" PowerConsumption="60.0" MinVoltage="0.3" msg="ItemMsgInteractSelect">
       <GuiFrame relativesize="0.25,0.18" minsize="330,145" maxsize="400,175" anchor="Center" style="ItemUI" />
       <sound file="Content/Items/Pump/Pump.ogg" type="OnActive" range="500.0" volumeproperty="CurrFlow" volume="0.005" loop="true" />
-      <PumpInEmitter particle="bubbles" particlespersecond="5" position="36,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="100" />
-      <PumpInEmitter particle="bubbles" particlespersecond="5" position="191,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="100" />
-      <PumpInEmitter particle="watersplash" particlespersecond="10" position="36,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="100" />
-      <PumpInEmitter particle="watersplash" particlespersecond="10" position="191,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="100" />
-      <PumpOutEmitter particle="bubbles" particlespersecond="5" position="36,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" />
-      <PumpOutEmitter particle="bubbles" particlespersecond="5" position="191,-90" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" />
+      <PumpInEmitter particle="bubbles" particlespersecond="5" position="7,-51" anglemin="180" anglemax="180" velocitymin="100" velocitymax="200" scalemin="0.5" scalemax="0.6" />
+      <PumpInEmitter particle="watersplash" particlespersecond="50" position="7,-51" anglemin="180" anglemax="180" velocitymin="200" velocitymax="400" scalemin="0.5" scalemax="0.6" />
+      <PumpOutEmitter particle="bubbles" particlespersecond="5" position="7,-51" anglemin="0" anglemax="360" velocitymin="0" velocitymax="0" scalemin="0.5" scalemax="0.6" />
     </Pump>
     <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />

@@ -326,7 +326,7 @@ namespace Barotrauma
                 MaxForce = 1000 * Mass
             };
 
-            GameMain.World.AddJoint(pullJoint);
+            GameMain.World.Add(pullJoint);
 
             var element = limbParams.Element;
 
@@ -674,7 +674,7 @@ namespace Barotrauma
                     KinematicBodyB = true,
                     CollideConnected = false
                 };
-                GameMain.World.AddJoint(colliderJoint);
+                GameMain.World.Add(colliderJoint);
             }
 
             attachJoint = new WeldJoint(body.FarseerBody, target, from, to, true)
@@ -684,17 +684,17 @@ namespace Barotrauma
                 KinematicBodyB = true,
                 CollideConnected = false
             };
-            GameMain.World.AddJoint(attachJoint);
+            GameMain.World.Add(attachJoint);
         }
 
         public void Release()
         {
             if (!IsStuck) { return; }
-            GameMain.World.RemoveJoint(attachJoint);
+            GameMain.World.Remove(attachJoint);
             attachJoint = null;
             if (colliderJoint != null)
             {
-                GameMain.World.RemoveJoint(colliderJoint);
+                GameMain.World.Remove(colliderJoint);
                 colliderJoint = null;
             }
         }

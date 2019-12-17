@@ -3,7 +3,6 @@ using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -247,29 +246,6 @@ namespace Barotrauma
             }
         }
         
-        //for upgrading the dimensions of a structure from xml
-        [Serialize(0, false)]
-        public int RectWidth
-        {
-            get { return rect.Width; }
-            set
-            {
-                if (value <= 0) { return; }
-                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
-            }
-        }
-        //for upgrading the dimensions of a structure from xml
-        [Serialize(0, false)]
-        public int RectHeight
-        {
-            get { return rect.Height; }
-            set
-            {
-                if (value <= 0) { return; }
-                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
-            }
-        }
-
         public float BodyWidth
         {
             get { return Prefab.BodyWidth > 0.0f ? Prefab.BodyWidth * scale : rect.Width; }
@@ -451,8 +427,7 @@ namespace Barotrauma
 
             float stairHeight = rect.Width * (float)Math.Tan(stairAngle);
 
-            Body newBody = BodyFactory.CreateRectangle(GameMain.World,
-                bodyWidth, bodyHeight, 1.5f);
+            Body newBody = GameMain.World.CreateRectangle(bodyWidth, bodyHeight, 1.5f);
 
             newBody.BodyType = BodyType.Static;
             Vector2 stairPos = new Vector2(Position.X, rect.Y - rect.Height + stairHeight / 2.0f);
@@ -640,7 +615,7 @@ namespace Barotrauma
             if (Bodies != null)
             {
                 foreach (Body b in Bodies)
-                    GameMain.World.RemoveBody(b);
+                    GameMain.World.Remove(b);
             }
 
             if (Sections != null)
@@ -669,7 +644,7 @@ namespace Barotrauma
             if (Bodies != null)
             {
                 foreach (Body b in Bodies)
-                    GameMain.World.RemoveBody(b);
+                    GameMain.World.Remove(b);
             }
 
             if (Sections != null)
@@ -1047,7 +1022,7 @@ namespace Barotrauma
             if (Bodies == null) return;
             foreach (Body b in Bodies)
             {
-                GameMain.World.RemoveBody(b);
+                GameMain.World.Remove(b);
             }
             Bodies.Clear();
             bodyDebugDimensions.Clear();
@@ -1089,7 +1064,7 @@ namespace Barotrauma
             {
                 Body sensorBody = CreateRectBody(rect, createConvexHull: false);
                 sensorBody.CollisionCategories = Physics.CollisionRepair;
-                sensorBody.IsSensor = true;
+                sensorBody.SetIsSensor(true);
             }
         }
 
@@ -1114,7 +1089,7 @@ namespace Barotrauma
             if (FlippedX) { bodyOffset.X = -bodyOffset.X; }
             if (FlippedY) { bodyOffset.Y = -bodyOffset.Y; }
 
-            Body newBody = BodyFactory.CreateRectangle(GameMain.World,
+            Body newBody = GameMain.World.CreateRectangle(
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
                 1.5f);
@@ -1164,7 +1139,7 @@ namespace Barotrauma
             if (StairDirection != Direction.None)
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
-                Bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                Bodies.ForEach(b => GameMain.World.Remove(b));
                 Bodies.Clear();
                 bodyDebugDimensions.Clear();
 
@@ -1190,7 +1165,7 @@ namespace Barotrauma
             if (StairDirection != Direction.None)
             {
                 StairDirection = StairDirection == Direction.Left ? Direction.Right : Direction.Left;
-                Bodies.ForEach(b => GameMain.World.RemoveBody(b));
+                Bodies.ForEach(b => GameMain.World.Remove(b));
                 Bodies.Clear();
                 bodyDebugDimensions.Clear();
 

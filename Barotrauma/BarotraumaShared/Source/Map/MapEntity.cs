@@ -90,6 +90,29 @@ namespace Barotrauma
             get { return prefab != null && prefab.ResizeVertical; }
         }
 
+        //for upgrading the dimensions of the entity from xml
+        [Serialize(0, false)]
+        public int RectWidth
+        {
+            get { return rect.Width; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, value, rect.Height);
+            }
+        }
+        //for upgrading the dimensions of the entity from xml
+        [Serialize(0, false)]
+        public int RectHeight
+        {
+            get { return rect.Height; }
+            set
+            {
+                if (value <= 0) { return; }
+                Rect = new Rectangle(rect.X, rect.Y, rect.Width, value);
+            }
+        }
+
         public override Vector2 Position
         {
             get

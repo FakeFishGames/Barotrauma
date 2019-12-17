@@ -507,7 +507,7 @@ namespace Barotrauma.Networking
 
             reconnectBox?.Close(); reconnectBox = null;
 
-            if (connectCancelled) yield return CoroutineStatus.Success;
+            if (connectCancelled) { yield return CoroutineStatus.Success; }
             
             yield return CoroutineStatus.Success;
         }
@@ -842,9 +842,22 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
+
+            bool eventSyncError = 
+                disconnectReason == DisconnectReason.ExcessiveDesyncOldEvent ||
+                disconnectReason == DisconnectReason.ExcessiveDesyncRemovedEvent ||
+                disconnectReason == DisconnectReason.SyncTimeout;
             
-            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            if (allowReconnect && 
+                (disconnectReason == DisconnectReason.Unknown || eventSyncError))
             {
+                if (eventSyncError)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                    gameStarted = false;
+                    myCharacter = null;
+                }
+
                 DebugConsole.NewMessage("Attempting to reconnect...");
 
                 string msg = TextManager.GetServerMessage(disconnectMsg);
@@ -852,6 +865,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLostReconnecting") :
                     msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
 
+                reconnectBox?.Close();
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
@@ -1315,7 +1329,7 @@ namespace Barotrauma.Networking
 
             ReadPermissions(inc);
 
-            if (gameStarted)
+            if (gameStarted && Screen.Selected != GameMain.GameScreen)
             {
                 new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
@@ -1724,6 +1738,8 @@ namespace Barotrauma.Networking
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.Write((byte)ClientPacketHeader.UPDATE_INGAME);
+            outmsg.Write(entityEventManager.MidRoundSyncingDone);
+            outmsg.WritePadBits();
 
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
@@ -2651,5 +2667,12 @@ namespace Barotrauma.Networking
             }
             clientPeer.Send(outMsg, DeliveryMethod.Reliable);
         }
+
+#if DEBUG
+        public void ForceTimeOut()
+        {
+            clientPeer?.ForceTimeOut();
+        }
+#endif
     }
 }

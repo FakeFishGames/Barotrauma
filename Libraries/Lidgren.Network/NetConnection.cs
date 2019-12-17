@@ -580,5 +580,13 @@ namespace Lidgren.Network
 		{
 			return "[NetConnection to " + m_remoteEndPoint + "]";
 		}
+
+        /// <summary>
+        /// Causes the connection to time out immediately. Only intended for testing.
+        /// </summary>
+        public void ForceTimeOut()
+        {
+            m_timeoutDeadline = 0.0f;
+        }
 	}
 }

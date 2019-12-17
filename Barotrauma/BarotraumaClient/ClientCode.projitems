@@ -96,6 +96,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Ladder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\LevelResource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\LightComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Controller.cs" />
@@ -126,7 +127,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Item.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Rope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\FireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using FarseerPhysics.Dynamics;
 using System.Linq;
 using System.Collections.Generic;
+using FarseerPhysics;
 
 namespace Barotrauma
 {

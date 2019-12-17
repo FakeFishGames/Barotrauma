@@ -65,6 +65,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="hatch" allowedlinks="gap, hull" tags="door" scale="0.5" health="100">
+    <Upgrade gameversion="0.9.7.0" spritedepth="0.7"/>
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgForceOpenCrowbar" PickingTime="10.0" shadowscale="1,0.8">
       <RequiredItem items="crowbar" type="Equipped" />
@@ -165,6 +166,7 @@
     </ConnectionPanel>
   </Item>
   <Item name="" identifier="hatchwbuttons" allowedlinks="gap, hull" tags="door" scale="0.5" health="100" requirebodyinsidetrigger="false">
+    <Upgrade gameversion="0.9.7.0" spritedepth="0.7"/>
     <Sprite texture="hatch.png" sourcerect="0,0,256,98" depth="0.51" origin="0.5,0.5" />
     <DecorativeSprite texture="hatch.png" sourcerect="0,234,256,193" depth="0.89" origin="0.5,0.5"/>
     <Door canbeselected="true" canbepicked="true" horizontal="true" pickkey="Action" msg="ItemMsgOpen" PickingTime="10.0" shadowscale="1,0.8" hasintegratedbuttons="true">

@@ -82,6 +82,10 @@ namespace Barotrauma
         {
             get { return Prefab.SonarLabel; }
         }
+        public string SonarIconIdentifier
+        {
+            get { return Prefab.SonarIconIdentifier; }
+        }
 
         public readonly Location[] Locations;
            

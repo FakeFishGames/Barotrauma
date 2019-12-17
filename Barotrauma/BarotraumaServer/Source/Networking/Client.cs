@@ -100,6 +100,9 @@ namespace Barotrauma.Networking
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
+
+            //initialize to infinity, gets set to a proper value when initializing midround syncing
+            MidRoundSyncTimeOut = double.PositiveInfinity;
         }
 
         partial void DisposeProjSpecific()

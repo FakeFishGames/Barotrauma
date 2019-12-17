@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -322,10 +328,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            _rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            _rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            _rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            _rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
             // J = [-I -r1_skew I r2_skew]
             //     [ 0       -1 0       1]
@@ -396,7 +403,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _limitState = LimitState.Inactive;
             }
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Scale impulses to support a variable time step.
                 _impulse *= data.step.dtRatio;
@@ -405,10 +412,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = new Vector2(_impulse.X, _impulse.Y);
 
                 vA -= mA * P;
-                wA -= iA * (MathUtils.Cross(_rA, P) + MotorImpulse + _impulse.Z);
+                wA -= iA * (MathUtils.Cross(ref _rA, ref P) + MotorImpulse + _impulse.Z);
 
                 vB += mB * P;
-                wB += iB * (MathUtils.Cross(_rB, P) + MotorImpulse + _impulse.Z);
+                wB += iB * (MathUtils.Cross(ref _rB, ref P) + MotorImpulse + _impulse.Z);
             }
             else
             {
@@ -451,7 +458,7 @@ namespace FarseerPhysics.Dynamics.Joints
             // Solve limit constraint.
             if (_enableLimit && _limitState != LimitState.Inactive && fixedRotation == false)
             {
-                Vector2 Cdot1 = vB + MathUtils.Cross(wB, _rB) - vA - MathUtils.Cross(wA, _rA);
+                Vector2 Cdot1 = vB + MathUtils.Cross(wB, ref _rB) - vA - MathUtils.Cross(wA, ref _rA);
                 float Cdot2 = wB - wA;
                 Vector3 Cdot = new Vector3(Cdot1.X, Cdot1.Y, Cdot2);
 
@@ -503,25 +510,25 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 P = new Vector2(impulse.X, impulse.Y);
 
                 vA -= mA * P;
-                wA -= iA * (MathUtils.Cross(_rA, P) + impulse.Z);
+                wA -= iA * (MathUtils.Cross(ref _rA, ref P) + impulse.Z);
 
                 vB += mB * P;
-                wB += iB * (MathUtils.Cross(_rB, P) + impulse.Z);
+                wB += iB * (MathUtils.Cross(ref _rB, ref P) + impulse.Z);
             }
             else
             {
                 // Solve point-to-point constraint
-                Vector2 Cdot = vB + MathUtils.Cross(wB, _rB) - vA - MathUtils.Cross(wA, _rA);
+                Vector2 Cdot = vB + MathUtils.Cross(wB, ref _rB) - vA - MathUtils.Cross(wA, ref _rA);
                 Vector2 impulse = _mass.Solve22(-Cdot);
 
                 _impulse.X += impulse.X;
                 _impulse.Y += impulse.Y;
 
                 vA -= mA * impulse;
-                wA -= iA * MathUtils.Cross(_rA, impulse);
+                wA -= iA * MathUtils.Cross(ref _rA, ref impulse);
 
                 vB += mB * impulse;
-                wB += iB * MathUtils.Cross(_rB, impulse);
+                wB += iB * MathUtils.Cross(ref _rB, ref impulse);
             }
 
             data.velocities[_indexA].v = vA;
@@ -537,7 +544,6 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
 
             float angularError = 0.0f;
             float positionError;
@@ -582,10 +588,10 @@ namespace FarseerPhysics.Dynamics.Joints
 
             // Solve point-to-point constraint.
             {
-                qA.Set(aA);
-                qB.Set(aB);
-                Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-                Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+                Complex qA = Complex.FromAngle(aA);
+                Complex qB = Complex.FromAngle(aB);
+                Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+                Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
                 Vector2 C = cB + rB - cA - rA;
                 positionError = C.Length();
@@ -602,10 +608,10 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 impulse = -K.Solve(C);
 
                 cA -= mA * impulse;
-                aA -= iA * MathUtils.Cross(rA, impulse);
+                aA -= iA * MathUtils.Cross(ref rA, ref impulse);
 
                 cB += mB * impulse;
-                aB += iB * MathUtils.Cross(rB, impulse);
+                aB += iB * MathUtils.Cross(ref rB, ref impulse);
             }
 
             data.positions[_indexA].c = cA;

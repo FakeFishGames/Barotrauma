@@ -151,7 +151,7 @@ namespace Barotrauma
 
         private bool aiming;
 
-        private float movementLerp;
+        private readonly float movementLerp;
 
         private float cprAnimTimer;
         private float cprPump;
@@ -624,8 +624,7 @@ namespace Barotrauma
                 waist.PullJointEnabled = true;
             }
             
-            float floorPos = GetFloorY(colliderPos + new Vector2(Math.Sign(movement.X) * 0.5f, 1.0f), ignoreStairs: Stairs == null);
-            bool onSlope = floorPos > GetColliderBottom().Y + 0.05f;
+            bool onSlope = Math.Abs(movement.X) > 0.01f && Math.Abs(floorNormal.X) > 0.1f && Math.Sign(floorNormal.X) != Math.Sign(movement.X);
 
             if (Stairs != null || onSlope)
             {
@@ -790,7 +789,7 @@ namespace Barotrauma
 
                     if (Stairs == null)
                     {
-                        footPos.Y = Math.Max(Math.Min(floorPos, footPos.Y + 0.5f), footPos.Y);
+                        footPos.Y = Math.Max(Math.Min(FloorY, footPos.Y + 0.5f), footPos.Y);
                     }
 
                     var foot = i == -1 ? rightFoot : leftFoot;
@@ -1095,17 +1094,19 @@ namespace Barotrauma
 
             movement = MathUtils.SmoothStep(movement, tempTargetMovement, 0.3f);
 
-            Limb leftFoot = GetLimb(LimbType.LeftFoot);
-            Limb rightFoot = GetLimb(LimbType.RightFoot);
-            Limb head = GetLimb(LimbType.Head);
-            Limb torso = GetLimb(LimbType.Torso);
-            
-            Limb leftHand = GetLimb(LimbType.LeftHand);
-            Limb rightHand = GetLimb(LimbType.RightHand);
+            Limb leftFoot   = GetLimb(LimbType.LeftFoot);
+            Limb rightFoot  = GetLimb(LimbType.RightFoot);
+            Limb head       = GetLimb(LimbType.Head);
+            Limb torso      = GetLimb(LimbType.Torso);
+
+            Limb leftHand   = GetLimb(LimbType.LeftHand);
+            Limb rightHand  = GetLimb(LimbType.RightHand);
 
             Vector2 ladderSimPos = ConvertUnits.ToSimUnits(
                 character.SelectedConstruction.Rect.X + character.SelectedConstruction.Rect.Width / 2.0f,
                 character.SelectedConstruction.Rect.Y);
+
+            Vector2 ladderSimSize = ConvertUnits.ToSimUnits(character.SelectedConstruction.Rect.Size.ToVector2());
 
             float stepHeight = ConvertUnits.ToSimUnits(30.0f);
 
@@ -1120,10 +1121,10 @@ namespace Barotrauma
 
             float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.radius - Collider.height / 2.0f;
 
-            MoveLimb(head, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
-            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.27f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
+            MoveLimb(head, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
+            MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
 
-            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.2f * Dir, Collider.SimPosition.Y), 10.5f);            
+            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.3f * Dir, Collider.SimPosition.Y), 10.5f);            
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
@@ -1135,12 +1136,12 @@ namespace Barotrauma
             if (!character.IsKeyDown(InputType.Aim) || Math.Abs(movement.Y) > 0.01f)
             {
                 MoveLimb(leftHand,
-                    new Vector2(handPos.X,
+                    new Vector2(handPos.X - ladderSimSize.X * 0.5f,
                     (slide ? handPos.Y : MathUtils.Round(handPos.Y - stepHeight, stepHeight * 2.0f) + stepHeight) + ladderSimPos.Y),
-                    5.2f);
+                    5.2f); ;
 
                 MoveLimb(rightHand,
-                    new Vector2(handPos.X,
+                    new Vector2(slide ? handPos.X + ladderSimSize.X * 0.5f : handPos.X,
                     (slide ? handPos.Y : MathUtils.Round(handPos.Y, stepHeight * 2.0f)) + ladderSimPos.Y),
                     5.2f);
 
@@ -1154,18 +1155,18 @@ namespace Barotrauma
 
             //only move the feet if they're above the bottom of the ladders
             //(if not, they'll just dangle in air, and the character holds itself up with it's arms)
-            if (footPos.Y > -ConvertUnits.ToSimUnits(character.SelectedConstruction.Rect.Height))
+            if (footPos.Y > -ladderSimSize.Y)
             {
                 if (slide)
                 {
-                    MoveLimb(leftFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
-                    MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(rightFoot, new Vector2(footPos.X + ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true);
                 }
                 else
                 {
                     float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
                     float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
-                    MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, leftFootPos + ladderSimPos.Y), 15.5f, true);
 
                     float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
                     float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
@@ -1778,11 +1779,6 @@ namespace Barotrauma
                         holdable.Pusher.Enabled = true;
                         holdable.Pusher.ResetDynamics();
                         holdable.Pusher.SetTransform(currItemPos, itemAngle);
-                        foreach (Character character in Character.CharacterList)
-                        {
-                            holdable.Pusher.FarseerBody.RestoreCollisionWith(character.AnimController.Collider.FarseerBody);
-                        }
-                        holdable.Pusher.FarseerBody.IgnoreCollisionWith(Collider.FarseerBody);
                     }
                     else
                     {

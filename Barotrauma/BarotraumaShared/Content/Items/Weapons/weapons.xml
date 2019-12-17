@@ -148,9 +148,10 @@
     <Body width="29" height="10" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect" />
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="5" stun="0.5" targetforce="10" itemdamage="20">
+      <Attack structuredamage="5" targetforce="10" itemdamage="20">
         <Affliction identifier="bleeding" strength="40" />
         <Affliction identifier="gunshotwound" strength="30" />
+        <Affliction identifier="stun" strength="0.4" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
@@ -195,9 +196,10 @@
     <Body width="40" height="14" density="40" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" hitscan="true" removeonhit="true">
-      <Attack structuredamage="2.5" stun="0.125" targetforce="5" itemdamage="20">
+      <Attack structuredamage="2.5" targetforce="5" itemdamage="20">
         <Affliction identifier="bleeding" strength="15" />
         <Affliction identifier="gunshotwound" strength="15" />
+        <Affliction identifier="stun" strength="0.125" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>
@@ -550,9 +552,10 @@
     <Sprite texture="weapons_new.png" sourcerect="296,3,110,28" depth="0.55" origin="0.5,0.5" />
     <Body width="110" height="25" density="50" />
     <MeleeWeapon slots="Any,RightHand,LeftHand" aimpos="50,0" handle1="-5,-5" holdangle="30" reload="0.75" range="50" combatPriority="25" msg="ItemMsgPickUpSelect">
-      <Attack stun="0.2" targetimpulse="10" severlimbsprobability="0.1" itemdamage="10">
+      <Attack targetimpulse="10" severlimbsprobability="0.1" itemdamage="10">
         <Affliction identifier="lacerations" strength="10" />
         <Affliction identifier="bleeding" strength="10" />
+        <Affliction identifier="stun" strength="0.2" />
         <Sound file="Content/Sounds/Damage/LimbSlash1.ogg" range="500" />
       </Attack>
     </MeleeWeapon>
@@ -606,16 +609,18 @@
     <Body width="58" height="24" density="30" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
-      <Attack structuredamage="1" stun="0.2">
+      <Attack structuredamage="1">
         <Affliction identifier="internaldamage" strength="5" />
+        <Affliction identifier="stun" strength="0.2" />
       </Attack>
       <sound file="Content/Items/Weapons/FragGrenade40mmShot1.ogg" type="OnImpact" range="500" selectionmode="Random" />
       <sound file="Content/Items/Weapons/FragGrenade40mmShot2.ogg" type="OnImpact" range="500" />
       <!--Grenade launcher ammo explodes on impact-->
       <StatusEffect type="OnImpact" Condition="-100.0" disabledeltatime="true" delay="0.0">
-        <Explosion range="250.0" structuredamage="5" itemdamage="10" stun="5" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
+        <Explosion range="250.0" structuredamage="5" itemdamage="10" force="10.0" severlimbsprobability="0.5" decal="explosion" decalsize="0.5">
           <Affliction identifier="bleeding" strength="40" />
           <Affliction identifier="lacerations" strength="60" />
+          <Affliction identifier="stun" strength="0.5" />
         </Explosion>
         <sound file="Content/Items/Weapons/StunGrenade.ogg" />
       </StatusEffect>
@@ -649,8 +654,9 @@
     <Body width="58" height="24" density="30" />
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <Projectile characterusable="false" launchimpulse="20.0" sticktocharacters="false">
-      <Attack structuredamage="1" stun="0.2">
+      <Attack structuredamage="1">
         <Affliction identifier="internaldamage" strength="5" />
+        <Affliction identifier="stun" strength="0.2" />
       </Attack>
       <sound file="Content/Items/Weapons/StunGrenade40mmShot1.ogg" type="OnImpact" range="500" selectionmode="Random" />
       <sound file="Content/Items/Weapons/StunGrenade40mmShot2.ogg" type="OnImpact" range="500" />
@@ -717,9 +723,10 @@
     <Pickable slots="Any" msg="ItemMsgPickUpSelect"/>
     <!--When fired, spawns 8 projectiles simultaneously.-->
     <Projectile characterusable="false" hitscan="true" hitscancount="8" removeonhit="true" spread="15">
-      <Attack structuredamage="0.5" stun="0.125" targetforce="5" itemdamage="20">
+      <Attack structuredamage="0.5" targetforce="5" itemdamage="20">
         <Affliction identifier="bleeding" strength="6" />
-        <Affliction identifier="gunshotwound" strength="5" />
+        <Affliction identifier="gunshotwound" strength="8" />
+        <Affliction identifier="stun" strength="0.2" />
       </Attack>
       <StatusEffect type="OnImpact" target="UseTarget">
         <Conditional entitytype="eq Structure"/>

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -104,8 +105,8 @@ namespace Barotrauma.Items.Components
                 {
                     UserData = item
                 };
-                trigger.FarseerBody.IsSensor = true;
-                trigger.FarseerBody.IsStatic = true;
+                trigger.FarseerBody.SetIsSensor(true);
+                trigger.FarseerBody.BodyType = BodyType.Static;
                 trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
                 trigger.FarseerBody.CollidesWith = Physics.CollisionNone;
             }

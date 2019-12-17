@@ -69,8 +69,10 @@ namespace Barotrauma.Networking
             }
 
             netClient.Start();
-            ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0);
-            ServerConnection.Status = NetworkConnectionStatus.Connected;
+            ServerConnection = new LidgrenConnection("Server", netClient.Connect(ipEndPoint), 0)
+            {
+                Status = NetworkConnectionStatus.Connected
+            };
 
             isActive = true;
         }
@@ -269,5 +271,12 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage("Failed to send message to host: " + result);
             }
         }
+
+#if DEBUG
+        public override void ForceTimeOut()
+        {
+            netClient?.ServerConnection?.ForceTimeOut();
+        }
+#endif
     }
 }

@@ -373,7 +373,7 @@ namespace Barotrauma.Items.Components
         {
             if (!Impassable)
             {
-                Body.FarseerBody.IsSensor = false;
+                Body.FarseerBody.SetIsSensor(false);
                 var ce = Body.FarseerBody.ContactList;
                 while (ce != null && ce.Contact != null)
                 {
@@ -394,7 +394,7 @@ namespace Barotrauma.Items.Components
             //because otherwise repairtool raycasts won't hit it
             if (!Impassable)
             {
-                Body.FarseerBody.IsSensor = true;
+                Body.FarseerBody.SetIsSensor(true);
                 var ce = Body.FarseerBody.ContactList;
                 while (ce != null && ce.Contact != null)
                 {

@@ -1,4 +1,9 @@
-﻿/* Poly2Tri
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/* Poly2Tri
  * Copyright (c) 2009-2010, Poly2Tri Contributors
  * http://code.google.com/p/poly2tri/
  *
@@ -98,7 +103,6 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
                         EdgeEvent(tcx, e, node);
                     }
                 }
-                tcx.Update(null);
             }
         }
 
@@ -518,10 +522,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
                 {
                     throw new PointOnEdgeException("EdgeEvent - Point on constrained edge not supported yet");
                 }
-                if (tcx.IsDebugEnabled)
-                {
-                    Debug.WriteLine("EdgeEvent - Point on constrained edge");
-                }
+                Debug.WriteLine("EdgeEvent - Point on constrained edge");
                 return;
             }
 
@@ -542,10 +543,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
                 {
                     throw new PointOnEdgeException("EdgeEvent - Point on constrained edge not supported yet");
                 }
-                if (tcx.IsDebugEnabled)
-                {
-                    Debug.WriteLine("EdgeEvent - Point on constrained edge");
-                }
+                Debug.WriteLine("EdgeEvent - Point on constrained edge");
                 return;
             }
 
@@ -600,7 +598,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
                     if (eq == tcx.EdgeEvent.ConstrainedEdge.Q
                         && ep == tcx.EdgeEvent.ConstrainedEdge.P)
                     {
-                        if (tcx.IsDebugEnabled) Console.WriteLine("[FLIP] - constrained edge done"); // TODO: remove
+                        Debug.WriteLine("[FLIP] - constrained edge done"); // TODO: remove
                         t.MarkConstrainedEdge(ep, eq);
                         ot.MarkConstrainedEdge(ep, eq);
                         Legalize(tcx, t);
@@ -608,15 +606,13 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay.Sweep
                     }
                     else
                     {
-                        if (tcx.IsDebugEnabled) Console.WriteLine("[FLIP] - subedge done"); // TODO: remove
+                        Debug.WriteLine("[FLIP] - subedge done"); // TODO: remove
                         // XXX: I think one of the triangles should be legalized here?
                     }
                 }
                 else
                 {
-                    if (tcx.IsDebugEnabled)
-                        Console.WriteLine("[FLIP] - flipping and continuing with triangle still crossing edge");
-                    // TODO: remove
+                    Debug.WriteLine("[FLIP] - flipping and continuing with triangle still crossing edge"); // TODO: remove
                     Orientation o = TriangulationUtil.Orient2d(eq, op, ep);
                     t = NextFlipTriangle(tcx, o, t, ot, p, op);
                     FlipEdgeEvent(tcx, ep, eq, t, p);

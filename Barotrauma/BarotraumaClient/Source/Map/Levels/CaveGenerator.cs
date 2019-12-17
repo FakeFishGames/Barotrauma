@@ -86,7 +86,7 @@ namespace Barotrauma
 
                         if (cell.Body != null)
                         {
-                            GameMain.World.RemoveBody(cell.Body);
+                            GameMain.World.Remove(cell.Body);
                             cell.Body = null;
                         }
                         leftNormal = Vector2.UnitX;
@@ -117,7 +117,7 @@ namespace Barotrauma
 
                         if (cell.Body != null)
                         {
-                            GameMain.World.RemoveBody(cell.Body);
+                            GameMain.World.Remove(cell.Body);
                             cell.Body = null;
                         }
                         rightNormal = Vector2.UnitX;

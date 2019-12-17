@@ -3,15 +3,18 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class Ladder : ItemComponent
+    partial class Ladder : ItemComponent
     {
         public static List<Ladder> List { get; } = new List<Ladder>();
 
         public Ladder(Item item, XElement element)
             : base(item, element)
         {
+            InitProjSpecific(element);
             List.Add(this);
         }
+
+        partial void InitProjSpecific(XElement element);
 
         public override bool Select(Character character)
         {
@@ -23,7 +26,10 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            RemoveProjSpecific();
             List.Remove(this);
         }
+
+        partial void RemoveProjSpecific();
     }
 }

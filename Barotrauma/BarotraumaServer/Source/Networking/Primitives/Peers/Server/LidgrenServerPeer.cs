@@ -37,7 +37,7 @@ namespace Barotrauma.Networking
                 Retries = 0;
                 SteamID = null;
                 PasswordSalt = null;
-                UpdateTime = Timing.TotalTime+Timing.Step*3.0;
+                UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
                 AuthSessionStarted = false;
             }

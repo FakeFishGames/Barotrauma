@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -21,7 +26,7 @@
 */
 
 using System;
-using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics
 {
@@ -29,16 +34,8 @@ namespace FarseerPhysics
     {
         public const float MaxFloat = 3.402823466e+38f;
         public const float Epsilon = 1.192092896e-07f;
-        public const float Pi = 3.14159265359f;
 
         // Common
-
-        /// <summary>
-        /// If true, all collision callbacks have to return the same value, and agree
-        /// if there was a collision or not. Swtich this to false to revert to the 
-        /// collision agreement used in FPE 3.3.x
-        /// </summary>
-        public const bool AllCollisionCallbacksAgree = true;
 
         /// <summary>
         /// Enabling diagnistics causes the engine to gather timing information.
@@ -47,14 +44,7 @@ namespace FarseerPhysics
         /// NOTE: If you are using a debug view that shows performance counters,
         /// you might want to enable this.
         /// </summary>
-        public const bool EnableDiagnostics = false;
-
-        /// <summary>
-        /// Set this to true to skip sanity checks in the engine. This will speed up the
-        /// tools by removing the overhead of the checks, but you will need to handle checks
-        /// yourself where it is needed.
-        /// </summary>
-        public const bool SkipSanityChecks = false;
+        public const bool EnableDiagnostics = true;
 
         /// <summary>
         /// The number of velocity iterations used in the solver.
@@ -95,11 +85,6 @@ namespace FarseerPhysics
         public const int MaxSubSteps = 8;
 
         /// <summary>
-        /// Enable/Disable warmstarting
-        /// </summary>
-        public const bool EnableWarmstarting = true;
-
-        /// <summary>
         /// Enable/Disable sleeping
         /// </summary>
         public static bool AllowSleep = true;
@@ -108,34 +93,6 @@ namespace FarseerPhysics
         /// The maximum number of vertices on a convex polygon.
         /// </summary>
         public static int MaxPolygonVertices = 8;
-
-        /// <summary>
-        /// Farseer Physics Engine has a different way of filtering fixtures than Box2d.
-        /// We have both FPE and Box2D filtering in the engine. If you are upgrading
-        /// from earlier versions of FPE, set this to true and DefaultFixtureCollisionCategories
-        /// to Category.All.
-        /// </summary>
-        public static bool UseFPECollisionCategories;
-
-        /// <summary>
-        /// This is used by the Fixture constructor as the default value 
-        /// for Fixture.CollisionCategories member. Note that you may need to change this depending
-        /// on the setting of UseFPECollisionCategories, above.
-        /// </summary>
-        public static Category DefaultFixtureCollisionCategories = Category.Cat1;
-
-        /// <summary>
-        /// This is used by the Fixture constructor as the default value 
-        /// for Fixture.CollidesWith member.
-        /// </summary>
-        public static Category DefaultFixtureCollidesWith = Category.All;
-
-
-        /// <summary>
-        /// This is used by the Fixture constructor as the default value 
-        /// for Fixture.IgnoreCCDWith member.
-        /// </summary>
-        public static Category DefaultFixtureIgnoreCCDWith = Category.None;
 
         /// <summary>
         /// The maximum number of contact points between two convex shapes.
@@ -167,7 +124,7 @@ namespace FarseerPhysics
         /// A small angle used as a collision and constraint tolerance. Usually it is
         /// chosen to be numerically significant, but visually insignificant.
         /// </summary>
-        public const float AngularSlop = (2.0f / 180.0f * Pi);
+        public const float AngularSlop = (2.0f / 180.0f * MathHelper.Pi);
 
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making
@@ -188,7 +145,7 @@ namespace FarseerPhysics
         /// velocity below this threshold will be treated as inelastic.
         /// </summary>
         public const float VelocityThreshold = 1.0f;
-
+        
         /// <summary>
         /// The maximum linear position correction used when solving constraints. This helps to
         /// prevent overshoot.
@@ -199,7 +156,7 @@ namespace FarseerPhysics
         /// The maximum angular position correction used when solving constraints. This helps to
         /// prevent overshoot.
         /// </summary>
-        public const float MaxAngularCorrection = (8.0f / 180.0f * Pi);
+        public const float MaxAngularCorrection = (8.0f / 180.0f * MathHelper.Pi);
 
         /// <summary>
         /// This scale factor controls how fast overlap is resolved. Ideally this would be 1 so
@@ -222,7 +179,7 @@ namespace FarseerPhysics
         /// <summary>
         /// A body cannot sleep if its angular velocity is above this tolerance.
         /// </summary>
-        public const float AngularSleepTolerance = (2.0f / 180.0f * Pi);
+        public const float AngularSleepTolerance = (2.0f / 180.0f * MathHelper.Pi);
 
         /// <summary>
         /// The maximum linear velocity of a body. This limit is very large and is used
@@ -236,7 +193,7 @@ namespace FarseerPhysics
         /// The maximum angular velocity of a body. This limit is very large and is used
         /// to prevent numerical problems. You shouldn't need to adjust this.
         /// </summary>
-        public const float MaxRotation = (0.5f * Pi);
+        public const float MaxRotation = (0.5f * MathHelper.Pi);
 
         public const float MaxRotationSquared = (MaxRotation * MaxRotation);
 
@@ -244,11 +201,6 @@ namespace FarseerPhysics
         /// Defines the maximum number of iterations made by the GJK algorithm.
         /// </summary>
         public const int MaxGJKIterations = 20;
-
-        /// <summary>
-        /// This is only for debugging the solver
-        /// </summary>
-        public const bool EnableSubStepping = false;
 
         /// <summary>
         /// By default, forces are cleared automatically after each call to Step.

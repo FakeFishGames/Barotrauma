@@ -4,7 +4,6 @@ using Barotrauma.Networking;
 using Barotrauma.RuinGeneration;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -627,7 +626,7 @@ namespace Barotrauma
                     newChunk.Body.BodyType = BodyType.Dynamic;
                     newChunk.Body.FixedRotation = true;
                     newChunk.Body.LinearDamping = 0.5f;
-                    newChunk.Body.GravityScale = 0.0f;
+                    newChunk.Body.IgnoreGravity = true;
                     newChunk.Body.Mass *= 10.0f;
                     extraWalls.Add(newChunk);
                     iceChunkPositions.Remove(selectedPos);
@@ -680,7 +679,7 @@ namespace Barotrauma
             // top barrier & sea floor
             //----------------------------------------------------------------------------------
 
-            TopBarrier = BodyFactory.CreateEdge(GameMain.World, 
+            TopBarrier = GameMain.World.CreateEdge( 
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)), 
                 ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
 
@@ -957,7 +956,7 @@ namespace Barotrauma
             seaFloor = new LevelWall(bottomPositions.Select(p => p.ToVector2()).ToList(), new Vector2(0.0f, -2000.0f), generationParams.WallColor, this);
             extraWalls.Add(seaFloor);
 
-            BottomBarrier = BodyFactory.CreateEdge(GameMain.World,
+            BottomBarrier = GameMain.World.CreateEdge(
                 ConvertUnits.ToSimUnits(new Vector2(borders.X, 0)),
                 ConvertUnits.ToSimUnits(new Vector2(borders.Right, 0)));
 

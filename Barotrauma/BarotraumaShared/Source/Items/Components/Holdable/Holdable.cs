@@ -1,5 +1,7 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -138,13 +140,14 @@ namespace Barotrauma.Items.Components
             {
                 Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
                 {
-                    BodyType = FarseerPhysics.Dynamics.BodyType.Dynamic,
+                    BodyType = BodyType.Dynamic,
                     CollidesWith = Physics.CollisionCharacter,
                     CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false
                 };
+                Pusher.FarseerBody.OnCollision += OnPusherCollision;
                 Pusher.FarseerBody.FixedRotation = false;
-                Pusher.FarseerBody.GravityScale = 0.0f;
+                Pusher.FarseerBody.IgnoreGravity = true;
             }
 
             handlePos = new Vector2[2];
@@ -191,6 +194,19 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }    
+        }
+
+        private bool OnPusherCollision(Fixture sender, Fixture other, Contact contact)
+        {
+            if (other.Body.UserData is Character character)
+            {
+                if (!IsActive) { return false; }
+                return character != picker;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public override void Load(XElement componentElement, bool usePrefabValues)
@@ -519,7 +535,7 @@ namespace Barotrauma.Items.Components
             if (item.body == null || !item.body.Enabled) return;
             if (picker == null || !picker.HasEquippedItem(item))
             {
-                if (Pusher != null) Pusher.Enabled = false;
+                if (Pusher != null) { Pusher.Enabled = false; }
                 IsActive = false;
                 return;
             }

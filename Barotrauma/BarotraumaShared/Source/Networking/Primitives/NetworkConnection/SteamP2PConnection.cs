@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Barotrauma.Networking
 {
@@ -23,7 +21,7 @@ namespace Barotrauma.Networking
 
         public void Heartbeat()
         {
-            Timeout = NetworkConnection.TimeoutThreshold;
+            Timeout = TimeoutThreshold;
         }
     }
 }
