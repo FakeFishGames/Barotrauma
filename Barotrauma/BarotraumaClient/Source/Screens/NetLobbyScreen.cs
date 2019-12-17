@@ -1137,7 +1137,10 @@ namespace Barotrauma
             chatInput.Select();
             chatInput.OnEnterPressed = (box, text) =>
             {
-                ChatManager.Store(text);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    ChatManager.Store(text);
+                }
                 return GameMain.Client.EnterChatMessage(box, text);
             };
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
