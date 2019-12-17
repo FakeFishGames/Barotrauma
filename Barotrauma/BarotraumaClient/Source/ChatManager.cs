@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
@@ -14,6 +15,12 @@ namespace Barotrauma
     {
         // Maximum items we want to store in the history
         private const int maxCount = 10;
+
+        /// Keep track of the registered fields so we don't register them twice
+        /// I couldn't figure out where to register this in <see cref="NetLobbyScreen"/> where it wouldn't register twice
+        /// It's probably not the most optimal way of doing this so feel free to change this
+        /// <seealso cref="NetLobbyScreen.Select"/> where I'm utilizing this
+        private static readonly List<GUITextBox> registers = new List<GUITextBox>();
 
         // List of previously stored messages
         private readonly List<string> messageList = new List<string> { string.Empty };
@@ -31,6 +38,8 @@ namespace Barotrauma
         /// <param name="manager">Instance</param>
         public static void RegisterKeys(GUITextBox element, ChatManager manager)
         {
+            // If already registered then don't register it again
+            if (registers.Any(p => element == p)) { return; }
             element.OnKeyHit += (sender, key) =>
             {
                 switch (key)
@@ -54,18 +63,27 @@ namespace Barotrauma
                         break;
                 }
             };
+            registers.Add(element);
         }
 
-        // Store a new object
+        // Store a new message
         public void Store(string message)
         {
             Clear();
-            // inset to the second position as the first position is reserved for the original message if any
+            string strip = stripMessage(message);
+            if (string.IsNullOrWhiteSpace(strip)) { return; }
+            // insert to the second position as the first position is reserved for the original message if any
             messageList.Insert(1, message);
-            // we don't want to add too many messages... just in case
+            // we don't want to add too many messages
             if (messageList.Count > maxCount)
             {
                 messageList.RemoveAt(messageList.Count - 1);
+            }
+            
+            string stripMessage(string text)
+            {
+                ChatMessage.GetChatMessageCommand(text, out string msg);
+                return msg;
             }
         }
 

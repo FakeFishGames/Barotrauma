@@ -32,8 +32,6 @@ namespace Barotrauma
                 return chatInput;
             }
         }
-        
-        private readonly ChatManager ChatManager = new ChatManager();
 
         private readonly GUIImage micIcon;
 
@@ -557,8 +555,6 @@ namespace Barotrauma
                 Font = GUI.SmallFont,
                 DeselectAfterMessage = false
             };
-            
-            ChatManager.RegisterKeys(chatInput, ChatManager);
 
             micIcon = new GUIImage(new RectTransform(new Vector2(0.05f, 1.0f), chatRow.RectTransform), style: "GUIMicrophoneUnavailable");
 
@@ -1135,16 +1131,15 @@ namespace Barotrauma
             CampaignCharacterDiscarded = false;
 
             chatInput.Select();
-            chatInput.OnEnterPressed = (box, text) =>
-            {
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    ChatManager.Store(text);
-                }
-                return GameMain.Client.EnterChatMessage(box, text);
-            };
+            chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
-            chatInput.OnDeselected += (sender, key) => { ChatManager.Clear(); };
+            chatInput.OnDeselected += (sender, key) =>
+            {
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.ChatBox.ChatManager.Clear();
+                }
+            };
 
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = false);
@@ -1154,6 +1149,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
+                ChatManager.RegisterKeys(chatInput, GameMain.Client.ChatBox.ChatManager);
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;

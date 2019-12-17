@@ -2333,11 +2333,7 @@ namespace Barotrauma.Networking
                 if (textBox == chatBox.InputBox) textBox.Deselect();
                 return false;
             }
-
-            if (textBox == chatBox.InputBox)
-            {
-                chatBox.ChatManager.Store(message);
-            }
+            chatBox.ChatManager.Store(message);
             SendChatMessage(message);
 
             if (textBox.DeselectAfterMessage)
