@@ -87,7 +87,6 @@ namespace Barotrauma
         private bool canAttackCharacters;
 
         // TODO: expose?
-        private readonly float priorityAvoidIncreasement = 1;
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
         private readonly float avoidTime = 3;
@@ -364,20 +363,20 @@ namespace Barotrauma
                         float reactDistance = !isBeingChased && selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
                         if (distance <= Math.Pow(reactDistance + escapeMargin, 2))
                         {
-                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && distance < Math.Pow(reactDistance / 2, 2))
+                            float halfReactDistance = reactDistance / 2;
+                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && distance < Math.Pow(halfReactDistance, 2))
                             {
                                 run = true;
                                 UpdateAttack(deltaTime);
                             }
                             else
                             {
-                                run = isBeingChased ? true : distance < Math.Pow(reactDistance / 2, 2);
-                                float minMargin = reactDistance / 2;
+                                run = isBeingChased ? true : distance < Math.Pow(halfReactDistance, 2);
                                 if (escapeMargin <= 0)
                                 {
-                                    escapeMargin = minMargin;
+                                    escapeMargin = halfReactDistance;
                                 }
-                                escapeMargin = MathHelper.Clamp(escapeMargin += deltaTime, minMargin, reactDistance);
+                                escapeMargin = MathHelper.Clamp(escapeMargin += deltaTime, halfReactDistance, reactDistance);
                                 UpdateEscape(deltaTime);
                             }
                         }
@@ -414,34 +413,36 @@ namespace Barotrauma
                 {
                     // Steer straight up if very deep
                     steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 1);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                     return;
                 }
                 SteerInsideLevel(deltaTime);
             }
             var target = SelectedAiTarget ?? _lastAiTarget;
-            if (target?.Entity != null && !target.Entity.Removed && PreviousState == AIState.Attack)
+            if (target?.Entity != null && !target.Entity.Removed && PreviousState == AIState.Attack && Character.CurrentHull == null)
             {
-                if (Character.CurrentHull == null)
+                // Keep heading to the last known position of the target
+                var memory = GetTargetMemory(target);
+                if (memory != null)
                 {
-                    var memory = GetTargetMemory(target);
-                    if (memory != null)
+                    var location = memory.Location;
+                    float dist = Vector2.DistanceSquared(WorldPosition, location);
+                    if (dist < 50 * 50)
                     {
-                        var location = memory.Location;
-                        float dist = Vector2.DistanceSquared(WorldPosition, location);
-                        if (dist < 50 * 50)
-                        {
-                            // Target is gone
-                            ResetAITarget();
-                        }
-                        else
-                        {
-                            // Steer towards the target
-                            steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
-                            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
-                            return;
-                        }
+                        // Target is gone
+                        ResetAITarget();
                     }
+                    else
+                    {
+                        // Steer towards the target
+                        steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                        return;
+                    }
+                }
+                else
+                {
+                    ResetAITarget();
                 }
             }
             if (pathSteering != null && !Character.AnimController.InWater)
