@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
     {
         public float BackgroundSpriteDepth
         {
-            get { return item.SpriteDepth + 0.1f; }
+            get { return item.GetDrawDepth() + 0.1f; }
         }
 
         public Vector2 DrawSize
