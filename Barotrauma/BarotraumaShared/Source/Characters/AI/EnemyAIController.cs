@@ -1397,17 +1397,25 @@ namespace Barotrauma
                     if (targetCharacter.Submarine != Character.Submarine)
                     {
                         // In a different sub or the target is outside when we are inside or vice versa.
-                        // Let's not ignore the target entirely, because there can be a gaps where we or they can go freely
-                        if (targetCharacter.Submarine != null)
+                        if (State == AIState.Avoid && State == AIState.Escape & State == AIState.Flee)
                         {
-                            // Target is inside
-                            valueModifier *= 0.5f;
-                            if (Character.Submarine != null)
+                            // If we are escaping, let's not ignore the target entirely, because there can be a gaps where we or they can go freely
+                            if (targetCharacter.Submarine != null)
                             {
-                                // Both inside different submarines
-                                continue;
+                                // Target is inside -> reduce the priority
+                                valueModifier *= 0.5f;
+                                if (Character.Submarine != null)
+                                {
+                                    // Both inside different submarines -> can ignore safely
+                                    continue;
+                                }
                             }
                         }
+                        else
+                        {
+                            continue;
+                        }
+
                     }
                     if (targetCharacter.IsDead)
                     {
