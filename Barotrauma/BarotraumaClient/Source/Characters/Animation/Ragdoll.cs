@@ -442,6 +442,21 @@ namespace Barotrauma
                 color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
+            float depthOffset = GetDepthOffset();
+            for (int i = 0; i < limbs.Length; i++)
+            {
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth += depthOffset; }
+                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth -= depthOffset; }
+            }
+            LimbJoints.ForEach(j => j.Draw(spriteBatch));
+        }
+
+        /// <summary>
+        /// Offset added to the default draw depth of the character's limbs. For example, climbing on ladders affects the depth of the character to get it to render behind the ladders.
+        /// </summary>
+        public float GetDepthOffset()
+        {
             float depthOffset = 0.0f;
             var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
             if (ladder != null)
@@ -468,14 +483,7 @@ namespace Barotrauma
                     depthOffset = Math.Max(ladder.BackgroundSpriteDepth + 0.01f - minDepth, 0.0f);
                 }
             }
-
-            for (int i = 0; i < limbs.Length; i++)
-            {
-                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth += depthOffset; }
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
-                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth -= depthOffset; }
-            }
-            LimbJoints.ForEach(j => j.Draw(spriteBatch));
+            return depthOffset;
         }
 
         public void DebugDraw(SpriteBatch spriteBatch)
