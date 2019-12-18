@@ -34,16 +34,16 @@ namespace Barotrauma
             }
         }
 
-        private const float UpdateTargetsInterval = 1.0f;
-
-        private const float RaycastInterval = 1.0f;
+        private const float updateTargetsInterval = 1;
+        private const float updateMemoriesInverval = 1;
+        private const float raycastInterval = 1;
 
         private float avoidLookAheadDistance;
 
         private SteeringManager outsideSteering, insideSteering;
 
         private float updateTargetsTimer;
-
+        private float updateMemoriesTimer;
         private float raycastTimer;
                 
         private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0;
@@ -276,15 +276,24 @@ namespace Barotrauma
             {
                 avoidTimer = 0;
             }
-            UpdateTargetMemories(deltaTime);
-            if (updateTargetsTimer > 0.0)
+            UpdateCurrentMemoryLocation();
+            if (updateMemoriesTimer > 0)
+            {
+                updateMemoriesTimer -= deltaTime;
+            }
+            else
+            {
+                FadeMemories(updateMemoriesInverval);
+                updateMemoriesTimer = updateMemoriesInverval;
+            }
+            if (updateTargetsTimer > 0)
             {
                 updateTargetsTimer -= deltaTime;
             }
             else
             {
                 UpdateTargets(Character, out CharacterParams.TargetParams targetingParams);
-                updateTargetsTimer = UpdateTargetsInterval * Rand.Range(0.75f, 1.25f);
+                updateTargetsTimer = updateTargetsInterval * Rand.Range(0.75f, 1.25f);
 
                 if (avoidTimer > 0)
                 {
@@ -560,7 +569,7 @@ namespace Barotrauma
                 {
                     UpdateWallTarget();
                 }
-                raycastTimer = RaycastInterval;
+                raycastTimer = raycastInterval;
             }
 
             if (wallTarget != null)
@@ -1595,8 +1604,7 @@ namespace Barotrauma
             return memory;
         }
 
-        private readonly List<AITarget> removals = new List<AITarget>();
-        private void UpdateTargetMemories(float deltaTime)
+        private void UpdateCurrentMemoryLocation()
         {
             if (_selectedAiTarget != null)
             {
@@ -1610,6 +1618,11 @@ namespace Barotrauma
                     memory.Location = _selectedAiTarget.WorldPosition;
                 }
             }
+        }
+
+        private readonly List<AITarget> removals = new List<AITarget>();
+        private void FadeMemories(float deltaTime)
+        {
             removals.Clear();
             foreach (var kvp in targetMemories)
             {
