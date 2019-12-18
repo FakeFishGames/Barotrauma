@@ -135,6 +135,9 @@ namespace Barotrauma
             }
         }
 
+        public bool IsBeingChasedBy(Character c) => c.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity is Character && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack);
+        private bool IsBeingChased => SelectedAiTarget?.Entity is Character targetCharacter && IsBeingChasedBy(targetCharacter);
+
         public bool Reverse { get; private set; }
 
         public EnemyAIController(Character c, string seed) : base(c)
@@ -367,7 +370,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        bool isBeingChased = SelectedAiTarget.Entity is Character targetCharacter && targetCharacter.AIController?.SelectedAiTarget?.Entity is Character;
+                        bool isBeingChased = IsBeingChased;
                         float reactDistance = !isBeingChased && selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
                         if (distance <= Math.Pow(reactDistance + escapeMargin, 2))
                         {
@@ -420,7 +423,7 @@ namespace Barotrauma
                 if (SimPosition.Y < ConvertUnits.ToSimUnits(Character.CharacterHealth.CrushDepth * 0.75f))
                 {
                     // Steer straight up if very deep
-                    steeringManager.SteeringManual(deltaTime, Vector2.UnitY);
+                    SteeringManager.SteeringManual(deltaTime, Vector2.UnitY);
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                     return;
                 }
@@ -443,7 +446,7 @@ namespace Barotrauma
                     else
                     {
                         // Steer towards the target
-                        steeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
+                        SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(target.Entity, location), 5);
                         SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
                         return;
                     }
@@ -488,7 +491,7 @@ namespace Barotrauma
             {
                 selectedTargetMemory.Priority += deltaTime * priorityFearIncreasement;
             }
-            if (Character.CurrentHull != null && !escapeTargetIsValid && SteeringManager is IndoorsSteeringManager indoorSteering)
+            if (Character.CurrentHull != null && !escapeTargetIsValid && SteeringManager is IndoorsSteeringManager pathSteering)
             {
                 // Seek exit, if inside
                 foreach (Gap gap in Gap.GapList)
@@ -514,7 +517,7 @@ namespace Barotrauma
                     {
                         float priority = MathHelper.Lerp(3, 1, Character.Params.PathFinderPriority);
                         escapeTimer = escapePathFinderTime * priority;
-                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, escapeTarget.SimPosition, Character.Submarine);
+                        var path = pathSteering.PathFinder.FindPath(Character.SimPosition, escapeTarget.SimPosition, Character.Submarine);
                         if (path.Unreachable)
                         {
                             unreachableGaps.Add(escapeTarget);
@@ -1387,7 +1390,17 @@ namespace Barotrauma
                     if (targetCharacter.Submarine != Character.Submarine)
                     {
                         // In a different sub or the target is outside when we are inside or vice versa.
-                        continue;
+                        // Let's not ignore the target entirely, because there can be a gaps where we or they can go freely
+                        if (targetCharacter.Submarine != null)
+                        {
+                            // Target is inside
+                            valueModifier *= 0.5f;
+                            if (Character.Submarine != null)
+                            {
+                                // Both inside different submarines
+                                continue;
+                            }
+                        }
                     }
                     if (targetCharacter.IsDead)
                     {
@@ -1412,10 +1425,17 @@ namespace Barotrauma
                         {
                             targetingTag = "weaker";
                         }
-                        if (targetingTag == "stronger" && State == AIState.Escape && SelectedAiTarget.Entity is Character c && c.AIController is EnemyAIController)
+                        if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
                         {
-                            // Frightened
-                            valueModifier = 2;
+                            if (SelectedAiTarget == aiTarget)
+                            {
+                                // Freightened -> hold on to the target
+                                valueModifier *= 2;
+                            }
+                            if (IsBeingChasedBy(targetCharacter))
+                            {
+                                valueModifier *= 2;
+                            }
                         }
                     }
                 }
