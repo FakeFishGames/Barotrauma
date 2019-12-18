@@ -34,9 +34,9 @@ namespace Barotrauma
             }
         }
 
-        private const float updateTargetsInterval = 1;
-        private const float updateMemoriesInverval = 1;
-        private const float raycastInterval = 1;
+        private readonly float updateTargetsInterval = 1;
+        private readonly float updateMemoriesInverval = 1;
+        private readonly float raycastInterval = 1;
 
         private float avoidLookAheadDistance;
 
@@ -86,7 +86,6 @@ namespace Barotrauma
         private bool canAttackSub;
         private bool canAttackCharacters;
 
-        // TODO: expose?
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
         private readonly float avoidTime = 3;
@@ -473,7 +472,11 @@ namespace Barotrauma
         #endregion
 
         #region Escape
-        private Vector2 escapePoint;
+        private Gap escapeTarget;
+        private float escapeTimer;
+        private bool escapeTargetIsValid;
+        private readonly float escapePathFinderTime = 0.1f;
+        private readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
         private void UpdateEscape(float deltaTime)
         {
             if (SelectedAiTarget == null || SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed)
@@ -485,24 +488,42 @@ namespace Barotrauma
             {
                 selectedTargetMemory.Priority += deltaTime * priorityFearIncreasement;
             }
-            if (Character.CurrentHull != null)
+            if (Character.CurrentHull != null && !escapeTargetIsValid && SteeringManager is IndoorsSteeringManager indoorSteering)
             {
                 // Seek exit, if inside
-                if (SteeringManager is IndoorsSteeringManager indoorSteering && escapePoint == Vector2.Zero)
+                foreach (Gap gap in Gap.GapList)
                 {
-                    foreach (Gap gap in Gap.GapList)
+                    if (gap.Submarine != Character.Submarine) { continue; }
+                    if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
+                    if (escapeTarget == null)
                     {
-                        if (gap.Submarine != Character.Submarine) { continue; }
-                        if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
-                        if (escapePoint != Vector2.Zero)
+                        escapeTarget = gap;
+                    }
+                    else if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) < Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition))
+                    {
+                        escapeTarget = gap;
+                    }
+                }
+                if (escapeTarget != null)
+                {
+                    if (escapeTimer > 0)
+                    {
+                        escapeTimer -= deltaTime;
+                    }
+                    else
+                    {
+                        float priority = MathHelper.Lerp(3, 1, Character.Params.PathFinderPriority);
+                        escapeTimer = escapePathFinderTime * priority;
+                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, escapeTarget.SimPosition, Character.Submarine);
+                        if (path.Unreachable)
                         {
-                            // Ignore the gap if it's further away than the previously assigned escape point
-                            if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) > Vector2.DistanceSquared(Character.SimPosition, escapePoint)) { continue; }
+                            unreachableGaps.Add(escapeTarget);
+                            escapeTarget = null;
+                            escapeTargetIsValid = false;
                         }
-                        var path = indoorSteering.PathFinder.FindPath(Character.SimPosition, gap.SimPosition, Character.Submarine);
-                        if (!path.Unreachable)
+                        else
                         {
-                            escapePoint = gap.SimPosition;
+                            escapeTargetIsValid = true;
                         }
                     }
                 }
@@ -511,14 +532,14 @@ namespace Barotrauma
             {
                 SteerInsideLevel(deltaTime);
             }
-            if (escapePoint != Vector2.Zero && Vector2.DistanceSquared(Character.SimPosition, escapePoint) > 1)
+            if (escapeTarget != null && Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition) > 1)
             {
-                SteeringManager.SteeringSeek(escapePoint, 10);
+                SteeringManager.SteeringSeek(escapeTarget.SimPosition, 10);
             }
             else
             {
                 // If outside or near enough the escapePoint, steer away
-                escapePoint = Vector2.Zero;
+                escapeTarget = null;
                 Vector2 escapeDir = Vector2.Normalize(WorldPosition - SelectedAiTarget.WorldPosition);
                 if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                 SteeringManager.SteeringManual(deltaTime, escapeDir);
@@ -1752,9 +1773,11 @@ namespace Barotrauma
         {
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
-            escapePoint = Vector2.Zero;
+            escapeTarget = null;
             AttackingLimb = null;
             escapeMargin = 0;
+            escapeTargetIsValid = false;
+            unreachableGaps.Clear();
         }
 
         private float GetPerceivingRange(AITarget target) => Math.Max(target.SightRange * Sight, target.SoundRange * Hearing);
