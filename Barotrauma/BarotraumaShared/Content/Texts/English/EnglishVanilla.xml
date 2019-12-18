@@ -4335,7 +4335,7 @@
   <unsavedchangesverification>Are you sure you want to leave without saving the changes made to the settings?</unsavedchangesverification>
 
   <!-- Server permission presets -->
-  <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
+  <permissionpresetname.admin>Admin</permissionpresetname.admin>
   <permissionpresetdescription.admin>Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands.</permissionpresetdescription.admin>
   <permissionpresetname.moderator>Moderator</permissionpresetname.moderator>
   <permissionpresetdescription.moderator>Allowed to manage round settings, kick players and access server logs.</permissionpresetdescription.moderator>
