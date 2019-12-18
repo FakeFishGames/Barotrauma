@@ -17,6 +17,7 @@ Monsters:
 - Fixed a crash when the creature is set to attack when provoked and when the damage source is null.
 - Fixed extra creature being spawned when using the <monster> elements in the monster misson definitions.
 - Fixed Hammerhead Matriarch's skirt going throught the walls.
+- Fixed performance issues when creatures are trying to find a path out from the submarine while escaping. Also improved the escaping behavior in general.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.6.0
