@@ -1110,7 +1110,7 @@ namespace Barotrauma
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
 
-            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.3f * Dir, Collider.SimPosition.Y), 10.5f);            
+            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.1f * Dir, Collider.SimPosition.Y), 10.5f);            
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
