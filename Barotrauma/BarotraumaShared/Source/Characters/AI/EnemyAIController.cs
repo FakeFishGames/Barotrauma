@@ -366,7 +366,14 @@ namespace Barotrauma
                     if (attackLimb != null && distance <= Math.Pow(attackLimb.attack.Range, 2))
                     {
                         run = true;
-                        UpdateAttack(deltaTime);
+                        if (State == AIState.Avoid)
+                        {
+                            UpdateEscape(deltaTime);
+                        }
+                        else
+                        {
+                            UpdateAttack(deltaTime);
+                        }
                     }
                     else
                     {
