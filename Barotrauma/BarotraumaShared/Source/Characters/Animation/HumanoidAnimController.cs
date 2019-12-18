@@ -1124,7 +1124,7 @@ namespace Barotrauma
             MoveLimb(head, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.HeadPosition), 10.5f);
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + WalkParams.TorsoPosition), 10.5f);
 
-            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.3f * Dir, Collider.SimPosition.Y), 10.5f);            
+            Collider.MoveToPos(new Vector2(ladderSimPos.X - 0.1f * Dir, Collider.SimPosition.Y), 10.5f);            
             
             Vector2 handPos = new Vector2(
                 ladderSimPos.X,
@@ -1160,13 +1160,13 @@ namespace Barotrauma
                 if (slide)
                 {
                     MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true);
-                    MoveLimb(rightFoot, new Vector2(footPos.X + ladderSimSize.X * 0.5f, footPos.Y + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(rightFoot, new Vector2(footPos.X, footPos.Y + ladderSimPos.Y), 15.5f, true);
                 }
                 else
                 {
                     float leftFootPos = MathUtils.Round(footPos.Y + stepHeight, stepHeight * 2.0f) - stepHeight;
                     float prevLeftFootPos = MathUtils.Round(prevFootPos + stepHeight, stepHeight * 2.0f) - stepHeight;
-                    MoveLimb(leftFoot, new Vector2(footPos.X - ladderSimSize.X * 0.5f, leftFootPos + ladderSimPos.Y), 15.5f, true);
+                    MoveLimb(leftFoot, new Vector2(footPos.X, leftFootPos + ladderSimPos.Y), 15.5f, true);
 
                     float rightFootPos = MathUtils.Round(footPos.Y, stepHeight * 2.0f);
                     float prevRightFootPos = MathUtils.Round(prevFootPos, stepHeight * 2.0f);
