@@ -4,7 +4,7 @@
   tags="ladder"
   resizevertical="true">
 
-  <Upgrade gameversion="0.9.7.0" spritedepth="0.51" rectwidth="31"/>
+  <Upgrade gameversion="0.9.700.0" spritedepth="0.51" rectwidth="31"/>
 
   <Sprite texture="Content/Items/Ladder/ladder.png" depth="0.51" sourcerect="32,6,31,117"/>
 
