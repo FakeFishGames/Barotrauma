@@ -32,7 +32,7 @@
   </StatusEffect>
   <StatusEffect type="OnDeath" target="This" targetlimb="Head">
     <Explosion range="1000" force="100" smoke="false" sparks="false" shockwave="true" underwaterbubble="false" camerashake="12">
-      <Affliction identifier="stun" strength="5" />
+      <Affliction identifier="stun" strength="2" />
     </Explosion>
     <ParticleEmitter particle="bubbles" particleamount="60" scalemin="1" scalemax="2" velocitymin="50" velocitymax="100" anglemin="0" anglemax="360" />
     <ParticleEmitter particle="bloodtrail" particleamount="40" scalemin="2" scalemax="5" velocitymin="200" velocitymax="1000" anglemin="0" anglemax="360" />
