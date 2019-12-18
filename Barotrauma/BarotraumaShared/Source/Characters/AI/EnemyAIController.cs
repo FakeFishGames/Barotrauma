@@ -483,9 +483,7 @@ namespace Barotrauma
 
         #region Escape
         private Gap escapeTarget;
-        private float escapeTimer;
-        private bool escapeTargetIsValid;
-        private readonly float escapePathFinderTime = 0.1f;
+        private bool allGapsSearched;
         private readonly HashSet<Gap> unreachableGaps = new HashSet<Gap>();
         private void UpdateEscape(float deltaTime)
         {
@@ -498,43 +496,43 @@ namespace Barotrauma
             {
                 selectedTargetMemory.Priority += deltaTime * priorityFearIncreasement;
             }
-            if (Character.CurrentHull != null && !escapeTargetIsValid && SteeringManager is IndoorsSteeringManager pathSteering)
+            if (Character.CurrentHull != null && SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                // Seek exit, if inside
-                foreach (Gap gap in Gap.GapList)
+                // Seek exit if inside
+                if (!allGapsSearched)
                 {
-                    if (gap.Submarine != Character.Submarine) { continue; }
-                    if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
-                    if (escapeTarget == null)
+                    foreach (Gap gap in Gap.GapList)
                     {
-                        escapeTarget = gap;
+                        if (gap == null || gap.Removed) { continue; }
+                        if (escapeTarget == gap) { continue; }
+                        if (unreachableGaps.Contains(gap)) { continue; }
+                        if (gap.Submarine != Character.Submarine) { continue; }
+                        if (gap.Open < 1 || gap.IsRoomToRoom) { continue; }
+                        bool canGetThrough = ConvertUnits.ToDisplayUnits(colliderWidth) < gap.Size;
+                        if (!canGetThrough) { continue; }
+                        if (escapeTarget == null)
+                        {
+                            escapeTarget = gap;
+                        }
+                        else if (gap.FlowTargetHull == Character.CurrentHull)
+                        {
+                            escapeTarget = gap;
+                            break;
+                        }
+                        else if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) < Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition))
+                        {
+                            escapeTarget = gap;
+                        }
                     }
-                    else if (Vector2.DistanceSquared(Character.SimPosition, gap.SimPosition) < Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition))
-                    {
-                        escapeTarget = gap;
-                    }
+                    allGapsSearched = true;
                 }
-                if (escapeTarget != null)
+                else if (escapeTarget != null && escapeTarget.FlowTargetHull != Character.CurrentHull)
                 {
-                    if (escapeTimer > 0)
+                    if (pathSteering.CurrentPath != null && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                     {
-                        escapeTimer -= deltaTime;
-                    }
-                    else
-                    {
-                        float priority = MathHelper.Lerp(3, 1, Character.Params.PathFinderPriority);
-                        escapeTimer = escapePathFinderTime * priority;
-                        var path = pathSteering.PathFinder.FindPath(Character.SimPosition, escapeTarget.SimPosition, Character.Submarine);
-                        if (path.Unreachable)
-                        {
-                            unreachableGaps.Add(escapeTarget);
-                            escapeTarget = null;
-                            escapeTargetIsValid = false;
-                        }
-                        else
-                        {
-                            escapeTargetIsValid = true;
-                        }
+                        unreachableGaps.Add(escapeTarget);
+                        escapeTarget = null;
+                        allGapsSearched = false;
                     }
                 }
             }
@@ -542,14 +540,23 @@ namespace Barotrauma
             {
                 SteerInsideLevel(deltaTime);
             }
-            if (escapeTarget != null && Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition) > 1)
+            if (escapeTarget != null && Vector2.DistanceSquared(Character.SimPosition, escapeTarget.SimPosition) > 0.5f)
             {
-                SteeringManager.SteeringSeek(escapeTarget.SimPosition, 10);
+                // Steer manually through the gap when in the same room
+                if (escapeTarget.FlowTargetHull == Character.CurrentHull)
+                {
+                    SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(escapeTarget.WorldPosition - Character.WorldPosition));
+                }
+                else
+                {
+                    SteeringManager.SteeringSeek(escapeTarget.SimPosition, 10);
+                }
             }
             else
             {
-                // If outside or near enough the escapePoint, steer away
+                // If outside, steer away
                 escapeTarget = null;
+                allGapsSearched = false;
                 Vector2 escapeDir = Vector2.Normalize(WorldPosition - SelectedAiTarget.WorldPosition);
                 if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                 SteeringManager.SteeringManual(deltaTime, escapeDir);
@@ -1029,9 +1036,9 @@ namespace Barotrauma
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
             Hull targetHull = section.gap?.FlowTargetHull;
-            float distance = Vector2.Distance(Character.WorldPosition, targetWorldPos);
+            float distance = Vector2.DistanceSquared(Character.WorldPosition, targetWorldPos);
             float maxDistance = Math.Min(wall.Rect.Width, wall.Rect.Height);
-            if (distance > maxDistance)
+            if (distance * distance > maxDistance * maxDistance)
             {
                 return false;
             }
@@ -1811,7 +1818,7 @@ namespace Barotrauma
             escapeTarget = null;
             AttackingLimb = null;
             escapeMargin = 0;
-            escapeTargetIsValid = false;
+            allGapsSearched = false;
             unreachableGaps.Clear();
         }
 
