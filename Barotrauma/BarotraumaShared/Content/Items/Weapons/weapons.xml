@@ -177,7 +177,7 @@
       <Sound file="Content/Items/Weapons/Revolver1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/Revolver2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/Revolver3.ogg" type="OnUse" range="3000" />
-      <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
+      <ParticleEmitter particle="muzzleflash" particleamount="1" velocitymin="0" velocitymax="0" />
       <StatusEffect type="OnUse">
         <Explosion range="150.0" force="5" shockwave="false" smoke="false" flames="false" sparks="false" underwaterbubble="false" camerashake="6.0" />
       </StatusEffect>
@@ -243,7 +243,7 @@
     <RangedWeapon reload="0.175" barrelpos="14,6" spread="10" unskilledspread="16" combatPriority="80" drawhudwhenequipped="true" crosshairscale="0.2">
       <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
       <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
-      <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
+      <ParticleEmitter particle="muzzleflash" particleamount="1" velocitymin="0" velocitymax="0" />
       <Sound file="Content/Items/Weapons/SMGsingleShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/SMGsingleShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/SMGsingleShot3.ogg" type="OnUse" range="3000" />
@@ -692,7 +692,7 @@
     <RangedWeapon barrelpos="45,10" spread="1" unskilledspread="10" combatPriority="80" reload="1.5" drawhudwhenequipped="true" crosshairscale="0.2">
       <Crosshair texture="Content/Items/Weapons/Crosshairs.png" sourcerect="128,256,128,128" />
       <CrosshairPointer texture="Content/Items/Weapons/Crosshairs.png" sourcerect="0,256,128,128" />
-      <ParticleEmitter particle="muzzleflashcoilgun" particleamount="1" velocitymin="50" velocitymax="100" scalemin="0.1" scalemax="0.15" />
+      <ParticleEmitter particle="muzzleflash" particleamount="1" velocitymin="0" velocitymax="0" />
       <Sound file="Content/Items/Weapons/ShotgunShot1.ogg" type="OnUse" range="3000" selectionmode="Random" />
       <Sound file="Content/Items/Weapons/ShotgunShot2.ogg" type="OnUse" range="3000" />
       <Sound file="Content/Items/Weapons/ShotgunShot3.ogg" type="OnUse" range="3000" />
