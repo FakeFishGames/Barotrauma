@@ -1840,6 +1840,16 @@ namespace Barotrauma
 
         private void FootIK(Limb foot, Vector2 pos, float legTorque, float footTorque, float footAngle)
         {
+            if (!MathUtils.IsValid(pos))
+            {
+                string errorMsg = "Invalid foot position in FootIK (" + pos + ")\n" + Environment.StackTrace;
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidPos", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
             Limb upperLeg, lowerLeg;
             if (foot.type == LimbType.LeftFoot)
             {
@@ -1866,8 +1876,10 @@ namespace Barotrauma
             float legAngle = MathUtils.VectorToAngle(pos - waistPos) + MathHelper.PiOver2;
             if (!MathUtils.IsValid(legAngle))
             {
-                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos;
+                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos + "\n" + Environment.StackTrace;
+#if DEBUG
                 DebugConsole.ThrowError(errorMsg);
+#endif
                 GameAnalyticsManager.AddErrorEventOnce("FootIK:InvalidAngle", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
