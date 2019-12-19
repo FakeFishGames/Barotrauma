@@ -1928,10 +1928,14 @@ namespace Barotrauma
                 findFocusedTimer -= deltaTime;
             }
 #endif
+            var head = AnimController.GetLimb(LimbType.Head);
+            bool headInWater = head == null ? 
+                AnimController.InWater : 
+                head.inWater;
             //climb ladders automatically when pressing up/down inside their trigger area
             Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
             if ((SelectedConstruction == null || currentLadder != null) &&
-                !AnimController.InWater && Screen.Selected != GameMain.SubEditorScreen)
+                !headInWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
                 bool isControlled = Controlled == this;
