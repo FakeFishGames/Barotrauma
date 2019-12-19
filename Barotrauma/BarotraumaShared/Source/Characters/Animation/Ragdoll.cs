@@ -594,8 +594,8 @@ namespace Barotrauma
                 LimbJoints = newJoints;
             }
 
+            SubtractMass(limb);
             limb.Remove();
-            Mass -= limb.Mass;
             foreach (LimbJoint limbJoint in attachedJoints)
             {
                 GameMain.World.Remove(limbJoint);
