@@ -114,13 +114,10 @@ namespace Barotrauma
             public string DialogFlag;
 
             //statuseffects applied on the character when the affliction is active
-            public readonly string ParentDebugName;
-            public readonly List<XElement> StatusEffects = new List<XElement>();
+            public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
             public Effect(XElement element, string parentDebugName)
             {
-                ParentDebugName = parentDebugName;
-
                 MinStrength =  element.GetAttributeFloat("minstrength", 0);
                 MaxStrength =  element.GetAttributeFloat("maxstrength", 0);
 
@@ -168,7 +165,7 @@ namespace Barotrauma
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "statuseffect":
-                            StatusEffects.Add(subElement);
+                            StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                             break;
                     }
                 }
@@ -247,7 +244,6 @@ namespace Barotrauma
         public readonly Color IconColor;
 
         private List<Effect> effects = new List<Effect>();
-        public List<Effect> Effects { get { return effects; } }
 
         private readonly string typeName;
 
