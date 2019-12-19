@@ -80,6 +80,12 @@ namespace Barotrauma
                 }
             }
 
+            if (GlobalFont == null)
+            {
+                GlobalFont = Font;
+                DebugConsole.NewMessage("Global font not defined in the current UI style file. The global font is used to render western symbols when using Chinese/Japanese/Korean localization. Using default font instead...", Color.Orange);
+            }
+
             GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
         }
 
