@@ -555,9 +555,9 @@ namespace Barotrauma
                     OutlineColor = new Color(72, 103, 124, 255),
                     ToolTip = TextManager.Get("DownloadButton"),
                     ForceUpperCase = true,
-                    UserData = item,
-                    OnClicked = DownloadItem
+                    UserData = item
                 };
+                downloadBtn.OnClicked = (btn, userdata) => { DownloadItem(itemFrame, downloadBtn, item); return true; };
             }
 
             innerFrame.Recalculate();
@@ -677,19 +677,28 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private bool DownloadItem(GUIButton btn, object userdata)
+        private bool DownloadItem(GUIComponent frame, GUIButton downloadButton, Facepunch.Steamworks.Workshop.Item item)
         {
-            var item = (Facepunch.Steamworks.Workshop.Item)userdata;
             if (!item.Subscribed) { item.Subscribe(); }
+
+            var parentElement = downloadButton.Parent;
+            parentElement.RemoveChild(downloadButton);
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), parentElement.RectTransform), TextManager.Get("WorkshopItemDownloading"));
+
             item.Download(onInstalled: () =>
             {
-                SteamManager.EnableWorkShopItem(item, false, out _);
+                if (SteamManager.EnableWorkShopItem(item, false, out _))
+                {
+                    textBlock.Text = TextManager.Get("workshopiteminstalled");
+                    frame.Flash(Color.LightGreen);
+                }
+                else
+                {
+                    frame.Flash(Color.Red);
+                }
                 RefreshSubscribedItems();
             });
 
-            var parentElement = btn.Parent;
-            parentElement.RemoveChild(btn);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.5f), parentElement.RectTransform), TextManager.Get("WorkshopItemDownloading"));
             return true;
         }
 

@@ -4342,6 +4342,7 @@
   <workshopitemvisibility.private>Hidden</workshopitemvisibility.private>
 
   <workshoperrorsamepathinstalled>Could not install '[itemname]' because there is already a mod installed at '[itempath]'.</workshoperrorsamepathinstalled>
+  <workshopiteminstalled>Installed</workshopiteminstalled>
   
   <!--Missing mission texts-->
   <missionname.killhammerheadgold>Killing a Golden Hammerhead</missionname.killhammerheadgold>
