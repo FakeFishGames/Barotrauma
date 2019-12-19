@@ -26,10 +26,20 @@ namespace Barotrauma
             texts = new Dictionary<string, List<string>>();
 
             XDocument doc = null;
-            for (int i=0;i<3;i++)
+            for (int i = 0; i < 3; i++)
             {
                 doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc != null) { break; }
+                if (filePath.ToLowerInvariant() == "content/texts/englishvanilla.xml")
+                {
+                    //try fixing legacy EnglishVanilla path
+                    string newPath = "Content/Texts/English/EnglishVanilla.xml";
+                    if (System.IO.File.Exists(newPath))
+                    {
+                        DebugConsole.NewMessage("Content package is using the obsolete text file path \"" + filePath + "\". Attempting to load from \"" + newPath + "\"...");
+                        this.FilePath = filePath = newPath;
+                    }
+                }
                 Thread.Sleep(1000);
             }
             if (doc == null)
