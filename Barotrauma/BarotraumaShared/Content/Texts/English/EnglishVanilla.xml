@@ -4336,7 +4336,7 @@
   <unsavedchangesverification>Are you sure you want to leave without saving the changes made to the settings?</unsavedchangesverification>
 
   <!-- Server permission presets -->
-  <permissionpresetname.admin>Test_Admin</permissionpresetname.admin>
+  <permissionpresetname.admin>Admin</permissionpresetname.admin>
   <permissionpresetdescription.admin>Allowed to ban and kick players, manage round settings, access server logs and use nearly all console commands.</permissionpresetdescription.admin>
   <permissionpresetname.moderator>Moderator</permissionpresetname.moderator>
   <permissionpresetdescription.moderator>Allowed to manage round settings, kick players and access server logs.</permissionpresetdescription.moderator>
@@ -4367,6 +4367,20 @@
   <dialogcannotreachpatient>Can't get to [name]!</dialogcannotreachpatient>
 
   <!--Missing mission texts-->
+  <missionname.killmatriarch1>Aggressive Hammerheads</missionname.killmatriarch1>
+  <missiondescription.killmatriarch1>According to our sources there is a group of Hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue travelling safely in the route.</missiondescription.killmatriarch1>
+  <missionsonarlabel.killmatriarch1>Hammerhead</missionsonarlabel.killmatriarch1>
+  <missionsuccess.killmatriarch1>The Hammerheads have been neutralized. The route is safe again.</missionsuccess.killmatriarch1>
+  <missionheader0.killmatriarch1>Targets neutralized</missionheader0.killmatriarch1>
+  <missionmessage0.killmatriarch1>The Hammerheads have been neutralized. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch1>
+
+  <missionname.killmatriarch2>Killing a Matriarch</missionname.killmatriarch2>
+  <missiondescription.killmatriarch2>We need to get rid of a large creature that we call "Hammerhead Matriarch" spotted in this area. Kill the creature so that vessels can continue travelling safely between [location1] and [location2]. This might not be the easiest task, but the reward is not small either!</missiondescription.killmatriarch2>
+  <missionsonarlabel.killmatriarch2>Matriarch</missionsonarlabel.killmatriarch2>
+  <missionsuccess.killmatriarch2>The Matriarch has been killed. The route is safe again.</missionsuccess.killmatriarch2>
+  <missionheader0.killmatriarch2>Target terminated</missionheader0.killmatriarch2>
+  <missionmessage0.killmatriarch2>The Matriarch and its minions have been taken care of. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch2>
+  
   <missionname.killhammerheadgold>Killing a Golden Hammerhead</missionname.killhammerheadgold>
   <missiondescription.killhammerheadgold>There have been several reports of an aggressive Golden Hammerhead assaulting vessels traveling between [location1] and [location2]. A reward of [reward] credits has been promised to whoever gets rid of the creature.</missiondescription.killhammerheadgold>
   <missionsonarlabel.killhammerheadgold>Golden Hammerhead</missionsonarlabel.killhammerheadgold>
@@ -4411,19 +4425,6 @@
 
   <submarine.name.hemulen>Hemulen</submarine.name.hemulen>
   <submarine.description.hemulen>For when you need extra space to stretch your legs or when you need that space to be between you and the poor, choose Hemulen shuttles.</submarine.description.hemulen>
-	
-  <missionname.killmatriarch1>Aggressive Hammerheads</missionname.killmatriarch1>
-  <missiondescription.killmatriarch1>According to our sources there is a group of Hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue travelling safely in the route.</missiondescription.killmatriarch1>
-  <missionsonarlabel.killmatriarch1>Hammerhead</missionsonarlabel.killmatriarch1>
-  <missionsuccess.killmatriarch1>The Hammerheads have been neutralized. The route is safe again.</missionsuccess.killmatriarch1>
-  <missionheader0.killmatriarch1>Targets neutralized</missionheader0.killmatriarch1>
-  <missionmessage0.killmatriarch1>The Hammerheads have been neutralized. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch1>
 
-  <missionname.killmatriarch2>Killing a Matriarch</missionname.killmatriarch2>
-  <missiondescription.killmatriarch2>We need to get rid of a large creature that we call "Hammerhead Matriarch" spotted in this area. Kill the creature so that vessels can continue travelling safely between [location1] and [location2]. This might not be the easiest task, but the reward is not small either!</missiondescription.killmatriarch2>
-  <missionsonarlabel.killmatriarch2>Matriarch</missionsonarlabel.killmatriarch2>
-  <missionsuccess.killmatriarch2>The Matriarch has been killed. The route is safe again.</missionsuccess.killmatriarch2>
-  <missionheader0.killmatriarch2>Target terminated</missionheader0.killmatriarch2>
-  <missionmessage0.killmatriarch2>The Matriarch and its minions have been taken care of. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch2>
-
+  <particle.muzzleflash>Muzzle Flash</particle.muzzleflash>
 </infotexts>

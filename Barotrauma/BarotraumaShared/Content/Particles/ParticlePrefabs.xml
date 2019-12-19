@@ -1208,6 +1208,41 @@
       rows="8"
       origin="0.5,0.5" />
   </explosionsmoke>
+  <muzzleflash
+    lifetime="0.15"
+    startdelaymin="0"
+    startdelaymax="0"
+    angularvelocitymin="0"
+    angularvelocitymax="0"
+    startrotationmin="0"
+    startrotationmax="0"
+    rotatetodirection="False"
+    drag="0"
+    waterdrag="0"
+    velocitychange="0,0"
+    velocitychangewater="0,0"
+    collisionradius="0"
+    usecollision="False"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.5"
+    startsizemin="0.8,0.8"
+    startsizemax="1.0,1.0"
+    growtime="0.02"
+    startcolor="255,255,255,255"
+    endcolor="255,255,255,0"
+    drawtarget="Both"
+    blendstate="Additive"
+    loopanim="False">
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,384,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="64,384,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="128,384,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="192,384,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="0,448,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="64,448,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="128,448,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+    <sprite texture="Content/Particles/MuzzleFlashParticleSheet.png" sourcerect="192,448,64,64" origin="0.0,0.5" premultiplyalpha="false" />
+  </muzzleflash>
   <muzzleflashcoilgun
     lifetime="0.35"
     startdelaymin="0"

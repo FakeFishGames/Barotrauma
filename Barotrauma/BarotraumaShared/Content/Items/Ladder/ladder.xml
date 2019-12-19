@@ -4,12 +4,12 @@
   tags="ladder"
   resizevertical="true">
 
-  <Upgrade gameversion="0.9.7.0" spritedepth="0.51" rectwidth="31"/>
+  <Upgrade gameversion="0.9.700.0" spritedepth="0.51" rectwidth="11"/>
 
-  <Sprite texture="Content/Items/Ladder/ladder.png" depth="0.51" sourcerect="32,6,31,117"/>
+  <Sprite texture="Content/Items/Ladder/ladder.png" depth="0.51" sourcerect="17,4,11,120"/>
 
   <Ladder canbeselected="true" msg="ItemMsgClimbSelect">
-    <BackgroundSprite texture="Content/Items/Ladder/ladder.png" depth="0.05" sourcerect="0,6,31,117" origin="0.2,0.0"/>
+    <BackgroundSprite texture="Content/Items/Ladder/ladder.png" depth="0.05" sourcerect="4,4,13,120" origin="1.0,0.0"/>
   </Ladder>
 
   <trigger x="-40" y="20" width="90"/>

@@ -659,7 +659,7 @@ namespace Barotrauma
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
-                DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+                //DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
             }
         }
 
