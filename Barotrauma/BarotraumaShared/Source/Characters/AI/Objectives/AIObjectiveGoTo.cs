@@ -23,7 +23,6 @@ namespace Barotrauma
         /// Aborts the objective when this condition is true
         /// </summary>
         public Func<bool> abortCondition;
-        public Func<PathNode, bool> startNodeFilter;
         public Func<PathNode, bool> endNodeFilter;
 
         public bool followControlledCharacter;
@@ -214,14 +213,20 @@ namespace Barotrauma
                     {
                         nodeFilter = node => node.Waypoint.CurrentHull != null;
                     }
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, startNodeFilter, endNodeFilter, nodeFilter);
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, n =>
+                    {
+                        if (n.Waypoint.isObstructed) { return false; }
+                        return (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null);
+                    }, endNodeFilter, nodeFilter);
+                    if (!isInside && PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable)
+                    {
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
+                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                    }
                 }
                 else
                 {
                     SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
-                }
-                if (!insideSteering && character.CurrentHull == null)
-                {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
                 }
             }
