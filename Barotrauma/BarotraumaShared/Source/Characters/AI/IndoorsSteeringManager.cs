@@ -76,7 +76,7 @@ namespace Barotrauma
 
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors) : base(host)
         {
-            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true);
+            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), indoorsSteering: true);
             pathFinder.GetNodePenalty = GetNodePenalty;
 
             this.canOpenDoors = canOpenDoors;
@@ -150,6 +150,7 @@ namespace Barotrauma
                         currentPos -= targetHull.Submarine.SimPosition;
                     }
                 }
+                pathFinder.InsideSubmarine = character.Submarine != null;
                 var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
