@@ -195,7 +195,7 @@ namespace Barotrauma.Networking
 
                     Int32 cpCount = inc.ReadVariableInt32();
                     List<ContentPackage> serverContentPackages = new List<ContentPackage>();
-                    for (int i=0;i<cpCount;i++)
+                    for (int i = 0; i < cpCount; i++)
                     {
                         string hash = inc.ReadString();
                         serverContentPackages.Add(GameMain.Config.SelectedContentPackages.Find(cp => cp.MD5hash.Hash == hash));

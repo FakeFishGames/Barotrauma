@@ -164,7 +164,7 @@ namespace Barotrauma
             {
                 var textPackLanguage = textPackKVP.Key;
                 var textPackList = textPackKVP.Value;
-                for (int i=0;i<textPackList.Count;i++)
+                for (int i = 0; i < textPackList.Count; i++)
                 {
                     if (textPackList[i].FilePath == file)
                     {

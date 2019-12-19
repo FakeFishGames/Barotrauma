@@ -860,9 +860,9 @@ namespace Barotrauma.Networking
         {
             if (!HasPassword) return true;
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
+            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input) + " " + ToolBox.ByteArrayToString(saltedPw));
             if (input.Length != saltedPw.Length) return false;
-            for (int i=0;i<input.Length;i++)
+            for (int i = 0; i < input.Length; i++)
             {
                 if (input[i] != saltedPw[i]) return false;
             }

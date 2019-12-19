@@ -347,8 +347,8 @@ namespace Barotrauma
         public static IReadMessage ExtractBits(this IReadMessage originalBuffer, int numberOfBits)
         {
             var buffer = new ReadWriteMessage();
-            
-            for (int i=0;i<numberOfBits;i++)
+
+            for (int i = 0; i < numberOfBits; i++)
             {
                 bool bit = originalBuffer.ReadBoolean();
                 buffer.Write(bit);
@@ -467,7 +467,7 @@ namespace Barotrauma
         public static string UnescapeCharacters(string str)
         {
             string retVal = "";
-            for (int i=0;i<str.Length;i++)
+            for (int i = 0; i < str.Length; i++)
             {
                 if (str[i] != '\\')
                 {
@@ -505,7 +505,7 @@ namespace Barotrauma
             }
             while (currIndex < arguments.Length)
             {
-                for (int i=currIndex == startIndex ? 1 : 0;i<arguments[currIndex].Length;i++)
+                for (int i = currIndex == startIndex ? 1 : 0; i < arguments[currIndex].Length ;i++)
                 {
                     if (!escaped)
                     {
@@ -537,7 +537,7 @@ namespace Barotrauma
         public static string[] MergeArguments(string[] arguments)
         {
             List<string> mergedArgs = new List<string>();
-            for (int i=0;i<arguments.Length;)
+            for (int i = 0; i < arguments.Length;)
             {
                 mergedArgs.Add(ParseQuotedArgument(arguments, i, out i));
             }

@@ -251,7 +251,7 @@ namespace Barotrauma
             }
         }
 
-        public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll=false)
+        public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll = false)
         {
             ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
 
