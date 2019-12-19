@@ -278,6 +278,7 @@ namespace Barotrauma
             bool shouldRefreshLocationTypes = false;
             bool shouldRefreshMapGenerationParams = false;
             bool shouldRefreshLevelGenerationParams = false;
+            bool shouldRefreshAfflictions = false;
 
             DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder),
                                             ref shouldRefreshSubs,
@@ -289,7 +290,8 @@ namespace Barotrauma
                                             ref shouldRefreshLevelObjectPrefabs,
                                             ref shouldRefreshLocationTypes,
                                             ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams);
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
 
             EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder),
                                             ref shouldRefreshSubs,
@@ -301,8 +303,10 @@ namespace Barotrauma
                                             ref shouldRefreshLevelObjectPrefabs,
                                             ref shouldRefreshLocationTypes,
                                             ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams);
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
 
+            if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
             if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
             if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
             if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
@@ -335,6 +339,7 @@ namespace Barotrauma
                 bool shouldRefreshLocationTypes = false;
                 bool shouldRefreshMapGenerationParams = false;
                 bool shouldRefreshLevelGenerationParams = false;
+                bool shouldRefreshAfflictions = false;
 
                 EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
                                             ref shouldRefreshSubs,
@@ -346,8 +351,10 @@ namespace Barotrauma
                                             ref shouldRefreshLevelObjectPrefabs,
                                             ref shouldRefreshLocationTypes,
                                             ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams);
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
 
+                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
                 if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
                 if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
                 if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
@@ -381,6 +388,7 @@ namespace Barotrauma
                 bool shouldRefreshLocationTypes = false;
                 bool shouldRefreshMapGenerationParams = false;
                 bool shouldRefreshLevelGenerationParams = false;
+                bool shouldRefreshAfflictions = false;
 
                 DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
                                             ref shouldRefreshSubs,
@@ -392,8 +400,10 @@ namespace Barotrauma
                                             ref shouldRefreshLevelObjectPrefabs,
                                             ref shouldRefreshLocationTypes,
                                             ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams);
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
 
+                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
                 if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
                 if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
                 if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
@@ -421,7 +431,8 @@ namespace Barotrauma
                                                 ref bool shouldRefreshLevelObjectPrefabs,
                                                 ref bool shouldRefreshLocationTypes,
                                                 ref bool shouldRefreshMapGenerationParams,
-                                                ref bool shouldRefreshLevelGenerationParams)
+                                                ref bool shouldRefreshLevelGenerationParams,
+                                                ref bool shouldRefreshAfflictions)
         {
             foreach (ContentFile file in files)
             {
@@ -453,7 +464,7 @@ namespace Barotrauma
                         TextManager.LoadTextPack(file.Path);
                         break;
                     case ContentType.Afflictions:
-                        AfflictionPrefab.LoadFromFile(file);
+                        shouldRefreshAfflictions = true;
                         break;
                     case ContentType.RuinConfig:
                         shouldRefreshRuinGenerationParams = true;
@@ -503,7 +514,8 @@ namespace Barotrauma
                                                 ref bool shouldRefreshLevelObjectPrefabs,
                                                 ref bool shouldRefreshLocationTypes,
                                                 ref bool shouldRefreshMapGenerationParams,
-                                                ref bool shouldRefreshLevelGenerationParams)
+                                                ref bool shouldRefreshLevelGenerationParams,
+                                                ref bool shouldRefreshAfflictions)
         {
             foreach (ContentFile file in files)
             {
@@ -535,7 +547,7 @@ namespace Barotrauma
                         TextManager.RemoveTextPack(file.Path);
                         break;
                     case ContentType.Afflictions:
-                        AfflictionPrefab.RemoveByFile(file.Path);
+                        shouldRefreshAfflictions = true;
                         break;
                     case ContentType.RuinConfig:
                         shouldRefreshRuinGenerationParams = true;

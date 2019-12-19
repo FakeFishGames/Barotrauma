@@ -266,18 +266,33 @@ namespace Barotrauma
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {
+            CPRSettings.Unload();
+            InternalDamage = null;
+            Bleeding = null;
+            Burn = null;
+            OxygenLow = null;
+            Bloodloss = null;
+            Pressure = null;
+            Stun = null;
+            var prevPrefabs = Prefabs.ToList();
+            foreach (var prefab in prevPrefabs)
+            {
+                prefab.Dispose();
+            }
+            System.Diagnostics.Debug.Assert(Prefabs.Count() == 0, "All previous AfflictionPrefabs were not removed in AfflictionPrefab.LoadAll");
+
             foreach (ContentFile file in files)
             {
                 LoadFromFile(file);
             }
 
-            if (InternalDamage == null) DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs.");
-            if (Bleeding == null) DebugConsole.ThrowError("Affliction \"Bleeding\" not defined in the affliction prefabs.");
-            if (Burn == null) DebugConsole.ThrowError("Affliction \"Burn\" not defined in the affliction prefabs.");
-            if (OxygenLow == null) DebugConsole.ThrowError("Affliction \"OxygenLow\" not defined in the affliction prefabs.");
-            if (Bloodloss == null) DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs.");
-            if (Pressure == null) DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs.");
-            if (Stun == null) DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs.");
+            if (InternalDamage == null) { DebugConsole.ThrowError("Affliction \"Internal Damage\" not defined in the affliction prefabs."); }
+            if (Bleeding == null) { DebugConsole.ThrowError("Affliction \"Bleeding\" not defined in the affliction prefabs."); }
+            if (Burn == null) { DebugConsole.ThrowError("Affliction \"Burn\" not defined in the affliction prefabs."); }
+            if (OxygenLow == null) { DebugConsole.ThrowError("Affliction \"OxygenLow\" not defined in the affliction prefabs."); }
+            if (Bloodloss == null) { DebugConsole.ThrowError("Affliction \"Bloodloss\" not defined in the affliction prefabs."); }
+            if (Pressure == null) { DebugConsole.ThrowError("Affliction \"Pressure\" not defined in the affliction prefabs."); }
+            if (Stun == null) { DebugConsole.ThrowError("Affliction \"Stun\" not defined in the affliction prefabs."); }
         }
 
         public static void LoadFromFile(ContentFile file)
