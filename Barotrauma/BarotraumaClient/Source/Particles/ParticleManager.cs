@@ -237,7 +237,11 @@ namespace Barotrauma.Particles
             {
                 if (particles[i]?.Prefab == prefab)
                 {
-                    RemoveParticle(i);
+                    if (i < particleCount) { particleCount--; }
+
+                    Particle swap = particles[particleCount];
+                    particles[particleCount] = null;
+                    particles[i] = swap;
                 }
             }
         }
