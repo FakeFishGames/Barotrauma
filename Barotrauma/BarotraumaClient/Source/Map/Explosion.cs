@@ -82,9 +82,8 @@ namespace Barotrauma
 
             if (flash)
             {
-                float displayRange = attack.Range;
-                if (displayRange < 0.1f) return;
-
+                float displayRange = flashRange.HasValue ? flashRange.Value : attack.Range;
+                if (displayRange < 0.1f) { return; }
                 var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
                 CoroutineManager.StartCoroutine(DimLight(light));
             }
@@ -104,12 +103,10 @@ namespace Barotrauma
             float currBrightness = 1.0f;
             float startRange = light.Range;
 
-            while (light.Color.A > 0.0f)
+            while (light.Color.A > 0.0f && flashDuration > 0.0f)
             {
                 light.Color = new Color(light.Color.R, light.Color.G, light.Color.B, currBrightness);
-                light.Range = startRange * currBrightness;
-
-                currBrightness -= CoroutineManager.DeltaTime * 20.0f;
+                currBrightness -= (1.0f / flashDuration) * CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }
