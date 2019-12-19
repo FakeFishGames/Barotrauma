@@ -88,9 +88,9 @@ namespace Barotrauma
                 ignoredContainers.Clear();
             }
 
-            float maxDistanceToSub = 3000;
-            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine != null && 
-                    Vector2.DistanceSquared(Character.WorldPosition, SelectedAiTarget.Entity.Submarine.WorldPosition) < maxDistanceToSub * maxDistanceToSub)
+            // Use the pathfinding also outside of the sub, but not farther than the extents of the sub + 500 units.
+            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null &&
+                    Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + 500, 2))
             {
                 if (steeringManager != insideSteering)
                 {
