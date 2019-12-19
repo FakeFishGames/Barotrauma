@@ -1,4 +1,93 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.7.0
+---------------------------------------------------------------------------------------------------------
+
+UI/UX improvements:
+- Double clicking on an item moves it to the equipped inventory (e.g. ammo to the equipped weapon).
+- Periscopes can be deselected by pressing esc.
+- Fabricators can pull ingredients directly from the user's inventory without having to place them in the fabricator's input slots.
+- Lock the on/off slider in the pump interface when the state is controlled by signals, same with the engine slider.
+- 1 second cooldown before doors can be opened/closed after someone else has opened/closed them. Makes it less likely for doors to be opened/closed accidentally when multiple people are trying to use them at the same time. 
+- Show a warning if trying to start a campaign for the first time without playing the tutorials.
+- Diving suits and fire extinguishers are not automatically picked up from the lockers/brackets when clicking on them to make it less likely to accidentally pick them up. Instead, clicking on them opens the inventory of the container, the same way when interacting with e.g. a steel cabinet.
+- Subinventories (= inventories inside items, toolboxes for example) open/close faster and cannot be interacted with until fully open.
+- Contents of toolboxes and crates are shown in the tooltip when hovering the cursor over the slot.
+- In-game message boxes (mission/traitor notifications) close automatically after 15 seconds if not interacted with.
+- Right-clicking in the sub editor opens a context menu that can be used to remove, cut, copy and paste entities (making it possible to remove them when using a keyboard that doesn't have a delete key).
+- Hide cursor when aiming with a turret or a ranged weapon.
+- Hide inventory when operating a turret.
+- Added filtering to sprite and particle editors.
+- Added a "Decorative" category to the submarine editor.
+- Made docking indicators more visible on the sonar.
+- Show mic input level also when Push-to-Talk mode is selected to make it easier to adjust the level without having to switch the mode to Voice Activity.
+
+Optimization:
+- Major physics optimization. Most importantly, the physics are now multithreaded, making the game perform much better when there are large numbers of characters active.
+- Item optimizations. Items that don't currently have any components active are not updated, which significantly improves the performance especially in large subs with lots of items.
+- More aggressive character culling (characters stop being rendered as soon as they exit the camera view).
+- Dead bodies despawn after a few minutes (or when the character respawns in multiplayer). The despawning character's items are placed in a duffel bag and dropped near the body. Prevents performance issues when lots of bodies start to accumulate in the submarine.
+- Preload necessary monster assets at the start of the round to prevent lag spikes when a monster spawns.
+
+Additions and changes:
+- New shuttle, "Hemulen".
+- Merged Selkie and Bunyip into a new, improved shuttle (just called Selkie now).
+- The job gear variants are not just visually different versions of the same item, but completely separate items. The job variants now allow the players to choose what kind of gear they want to spawn with, not just the look of the uniform.
+- Attachable items and wire nodes can now be freely placed around the character instead of always being placed at the position of the character. When attaching items/wires, there's a placement grid that makes it much easier to neatly attach/wire things mid-round.
+- The submarines now get automatically outfitted with a semi-random selection of supplies when starting a campaign. The items that have been manually placed in the submarine editor are kept as-is.
+- Added a keyboard item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
+- Added muzzle flashes to small firearms.
+- Added a crosshair when aiming with small firearms. The crosshair also indicates the spread of the weapon.
+- Increased the skill requirements to operate the reactor.
+- New background music for editors.
+- Characters with an insufficient electrical engineering skill may get electrocuted when rewiring powered devices.
+- Added holes in the level walls next to the outpost at the end of the level, so the player doesn't have to backtrack through most of the level if they approach the outpost from the wrong side of the level wall.
+- Added heavy water currents at the sides of the level to make it more obvious that you're not supposed to go that way.
+- Added subtle chromatic aberration & blur when suffering from heavy bloodloss.
+- Nerfed hull damage from plasma cutter and welding tool explosions.
+- Removed repair thresholds from items; any device that's not in perfect condition can now be repaired.
+- Bandages now have 3 uses.
+- Mouse button names are now translated.
+- Improved tiger thresher sprite.
+- Replaced the legacy ladder, stair and docking port sprites.
+- New alarm buzzer sprite that actually looks like an alarm buzzer.
+- New (smaller) small pump sprite.
+- Decreased the range and brightness of the "halo" around the players.
+- Exposed pump's MaxFlow parameter in the sub editor.
+- Added a lot more oomph to nuclear explosions.
+
+AI:
+- Bots can now undock the sub.
+- TODO: expand
+
+Multiplayer:
+- Fixed players not getting notified in any way when they connection to the server has timed out, allowing them to keep playing without being able to interact with anything.
+- Fixed clients not attempting to reconnect to the server automatically when if the connection is lost, forcing the client to rejoin the server manually.
+- Karma system can be enabled/disabled in the "host server" menu.
+- Option the set the number of password retries before a ban.
+- Fixed voice chat indicators not working in the in-game crew list.
+- Moved "End Round" button to the pause menu.
+- Added a separate server log category for wiring.
+
+Bugfixes:
+- Fixed camera position "twitching" when moving the cursor around while unconscious.
+- Fixed texts in mission/traitor notifications occasionally overflowing outside the border of the message box.
+- Fixed background structures that are resizeable on both axes always being drawn behind other background structures regardless of the sprite depth.
+- Fixed Kastrull flooding when the drone undocks.
+- Fixed sonar transducers consuming no power.
+- Fixed charactes being unable to get through multi-layer walls from inside the sub (for example the walls above Humpback's command room).
+- Fixed plasma cutter not cutting through holes in walls.
+- Fixed melee weapons not working inside ruins due to the colliders that block subs from entering the ruins.
+- Fixed small "twitch" when a character enters or exits a submarine.
+- Fixed server lobby screen not scaling correctly after changing to a bigger resolution.
+- Made the screen distortion effects caused by afflictions change less abruptly when the condition of the character changes quickly.
+- Fixed items being swapped from slot to another when combining an item with one that has a higher condition.
+- Fixed lights in deviced bleeding through characters and blurry black "shadow" around characters.
+- Fixed '+' and '-' signs in number input fields being misaligned in Chinese and Japanese.
+- Fixed Workshop item descriptions only showing the first 256 characters.
+- Fixed reactor highlight effect extending outside the reactor sprite.
+- Fixed ID-restricted doors only taking the first ID card in the inventory into account.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.6.0
 ---------------------------------------------------------------------------------------------------------
 
