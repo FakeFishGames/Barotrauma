@@ -106,6 +106,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
 
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
+            corePackageDropdown.ButtonEnabled = ContentPackage.List.Count(cp => cp.CorePackage) > 1;
 
             contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
             {
