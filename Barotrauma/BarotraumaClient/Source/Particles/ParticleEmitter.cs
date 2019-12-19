@@ -49,7 +49,10 @@ namespace Barotrauma.Particles
         private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier)
         {
             angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
-            Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
+
+            Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
+            Vector2 velocity = dir * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
+            position += dir * Rand.Range(Prefab.DistanceMin, Prefab.DistanceMax);
 
             var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess);
 
@@ -70,10 +73,10 @@ namespace Barotrauma.Particles
                 Vector2 endPosition = Prefab.ParticlePrefab.CalculateEndPosition(startPosition, velocity);
 
                 bounds = new Rectangle(
-                    (int)Math.Min(bounds.X, endPosition.X),
-                    (int)Math.Min(bounds.Y, endPosition.Y),
-                    (int)Math.Max(bounds.X, endPosition.X),
-                    (int)Math.Max(bounds.Y, endPosition.Y));
+                    (int)Math.Min(bounds.X, endPosition.X - Prefab.DistanceMax),
+                    (int)Math.Min(bounds.Y, endPosition.Y - Prefab.DistanceMax),
+                    (int)Math.Max(bounds.X, endPosition.X + Prefab.DistanceMax),
+                    (int)Math.Max(bounds.Y, endPosition.Y + Prefab.DistanceMax));
             }
 
             bounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - bounds.X, bounds.Height - bounds.Y);
@@ -89,6 +92,8 @@ namespace Barotrauma.Particles
         public readonly ParticlePrefab ParticlePrefab;
 
         public readonly float AngleMin, AngleMax;
+
+        public readonly float DistanceMin, DistanceMax;
 
         public readonly float VelocityMin, VelocityMax;
 
@@ -134,6 +139,16 @@ namespace Barotrauma.Particles
                 ScaleMax = Math.Max(ScaleMin, element.GetAttributeFloat("scalemax", 1.0f));
             }
 
+            if (element.Attribute("distance") == null)
+            {
+                DistanceMin = element.GetAttributeFloat("distancemin", 0.0f);
+                DistanceMax = element.GetAttributeFloat("distancemax", 0.0f);
+            }
+            else
+            {
+                DistanceMin = DistanceMax = element.GetAttributeFloat("distance", 0.0f);
+            }
+
             if (element.Attribute("velocity") == null)
             {
                 VelocityMin = element.GetAttributeFloat("velocitymin", 0.0f);
@@ -141,8 +156,7 @@ namespace Barotrauma.Particles
             }
             else
             {
-                VelocityMin = element.GetAttributeFloat("velocity", 0.0f);
-                VelocityMax = VelocityMin;
+                VelocityMin = VelocityMax = element.GetAttributeFloat("velocity", 0.0f);
             }
 
             EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
