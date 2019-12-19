@@ -544,7 +544,7 @@ namespace Barotrauma
             return mergedArgs.ToArray();
         }
 
-        public static string CleanUpPathCrossPlatform(this string path)
+        public static string CleanUpPathCrossPlatform(this string path, bool correctFilenameCase = true)
         {
             if (string.IsNullOrEmpty(path)) { return ""; }
 
@@ -554,8 +554,11 @@ namespace Barotrauma
                 path = path.Replace("//", "/");
             }
 
-            string correctedPath = CorrectFilenameCase(path, out _);
-            if (!string.IsNullOrEmpty(correctedPath)) { path = correctedPath; }
+            if (correctFilenameCase)
+            {
+                string correctedPath = CorrectFilenameCase(path, out _);
+                if (!string.IsNullOrEmpty(correctedPath)) { path = correctedPath; }
+            }
 
             return path;
         }

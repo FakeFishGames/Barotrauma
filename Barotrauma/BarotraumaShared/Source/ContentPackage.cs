@@ -378,7 +378,7 @@ namespace Barotrauma
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
-                new XAttribute("path", Path.CleanUpPathCrossPlatform()),
+                new XAttribute("path", Path.CleanUpPathCrossPlatform(correctFilenameCase: false)),
                 new XAttribute("corepackage", CorePackage)));
 
 
