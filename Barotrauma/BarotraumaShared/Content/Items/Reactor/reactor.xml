@@ -21,7 +21,9 @@
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
-        <Explosion range="800" structuredamage="100" force="5.0">
+        <Explosion range="800" structuredamage="100" force="5.0" camerashake="200" 
+                   flashrange="10000" flashduration="5.0" 
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
           <Affliction identifier="burn" strength="200" />
           <Affliction identifier="internaldamage" strength="50" />
           <Affliction identifier="radiationsickness" strength="50" />

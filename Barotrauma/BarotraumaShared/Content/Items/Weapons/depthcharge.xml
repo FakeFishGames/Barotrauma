@@ -72,7 +72,10 @@
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="50000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="50000" />
       <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" camerashake="100" camerashakerange="50000">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"
+                   camerashake="500" camerashakerange="50000"
+                   flashrange="10000" flashduration="5.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
           <Affliction identifier="burn" strength="500" />
           <Affliction identifier="radiationsickness" strength="100" />
           <Affliction identifier="internaldamage" strength="400" />

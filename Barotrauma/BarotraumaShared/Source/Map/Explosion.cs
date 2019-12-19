@@ -23,6 +23,8 @@ namespace Barotrauma
         private readonly float screenColorRange, screenColorDuration;
 
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
+        private float flashDuration;
+        private float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
 
@@ -54,7 +56,10 @@ namespace Barotrauma
             flames      = element.GetAttributeBool("flames", true);
             underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
-            flash       = element.GetAttributeBool("flash", true);
+
+            flash           = element.GetAttributeBool("flash", true);
+            flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
+            if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
 
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
 
