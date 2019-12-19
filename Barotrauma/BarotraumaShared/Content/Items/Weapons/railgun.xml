@@ -132,7 +132,7 @@
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="50000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="50000" />
-      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0" 
                    camerashake="500" camerashakerange="50000" 
                    flashrange="10000" flashduration="5.0"
@@ -142,6 +142,7 @@
           <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="10" />
         </Explosion>
+        <SpawnItem identifier="nuclearaftereffectemitter" spawnposition="This"/>
       </StatusEffect>
       <StatusEffect type="OnActive" target="This">
         <ParticleEmitter particle="bubbles" anglemin="0" anglemax="360" particleamount="5" velocitymin="0" velocitymax="50" scalemin="1" scalemax="3" />
@@ -179,7 +180,7 @@
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnUse" selectionmode="Random" range="20000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnUse" selectionmode="Random" range="20000" />
-      <StatusEffect type="OnUse" Condition="-100.0" stun="10.0" disabledeltatime="true">
+      <StatusEffect type="OnUse" target="This" Condition="-100.0" disabledeltatime="true">
         <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0">
           <Affliction identifier="burn" strength="500" />
           <Affliction identifier="internaldamage" strength="500" />

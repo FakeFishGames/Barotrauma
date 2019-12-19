@@ -835,4 +835,22 @@
       <Sound file="Content/Items/Weapons/honk.ogg" type="OnUse" />
     </RangedWeapon>
   </Item>
+
+  <Item name="nuclearaftereffectemitter" identifier="nuclearaftereffectemitter" tags="" sonarsize="20" hideinmenus="true">
+    <AiTarget sightrange="1000.0" soundrange="1000" sonardisruption="10" static="True"/>
+    <Sprite texture="weapons_new.png" sourcerect="0,0,1,1" depth="0.55" origin="0.5,0.5" />
+    <ItemComponent>
+      <!-- reduce condition to remove the emitter after 10 seconds -->
+      <StatusEffect type="Always" target="This" condition="-10">
+        <ParticleEmitter particle="risingbubbles" anglemin="0" anglemax="360" particlespersecond="50" velocitymin="0" velocitymax="50" scalemin="1" scalemax="6" distancemin="0" distancemax="500"/>
+      </StatusEffect>
+      <!-- apply radiation sickness to nearby characters -->
+      <StatusEffect type="Always" target="NearbyCharacters" range="1000">
+        <Affliction identifier="radiationsickness" strength="1" />
+      </StatusEffect>
+      <StatusEffect type="OnBroken" target="This">
+        <Remove />
+      </StatusEffect>
+    </ItemComponent>
+  </Item>
 </Items>
