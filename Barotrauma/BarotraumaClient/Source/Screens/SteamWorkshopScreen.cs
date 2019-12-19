@@ -464,7 +464,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            if (item.Installed)
+            if (item.Subscribed && item.Installed)
             {
                 GUITickBox enabledTickBox = null;
                 try

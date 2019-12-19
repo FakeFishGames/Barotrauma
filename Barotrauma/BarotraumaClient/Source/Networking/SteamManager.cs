@@ -690,7 +690,7 @@ namespace Barotrauma.Steam
                     instance.popularTags.Insert(i, tagCommonness.Key);
                 }
 
-                var nonSubscribedItems = q.Items.Where(it => !it.Subscribed && !it.Installed);
+                var nonSubscribedItems = q.Items.Where(it => !it.Subscribed);
                 if (nonSubscribedItems.Count() > amount)
                 {
                     nonSubscribedItems = nonSubscribedItems.Take(amount);
