@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Input;
 namespace Barotrauma
 {
     // TODO implement into DebugConsole.cs
-    // TODO decide what namespace this falls under. Utils? Root? Also probably a better class name name
+    // TODO decide what namespace this falls under. Utils? Root? Also probably a better class name name [<- no need to create a separate namespace, maybe a folder?]
     /// <summary>
     /// A class used for handling special key actions in chat boxes.
     /// For example tab completion or up/down arrow key history.
@@ -70,7 +70,7 @@ namespace Barotrauma
         public void Store(string message)
         {
             Clear();
-            string strip = stripMessage(message);
+            string strip = StripMessage(message);
             if (string.IsNullOrWhiteSpace(strip)) { return; }
             // insert to the second position as the first position is reserved for the original message if any
             messageList.Insert(1, message);
@@ -79,8 +79,9 @@ namespace Barotrauma
             {
                 messageList.RemoveAt(messageList.Count - 1);
             }
-            
-            string stripMessage(string text)
+
+            // [It's also possible to lambdas too in short methods, if you like: string StripMessage(string text) => ChatMessage.GetChatMessageCommand(text, out string msg);]
+            string StripMessage(string text)
             {
                 ChatMessage.GetChatMessageCommand(text, out string msg);
                 return msg;
@@ -119,9 +120,9 @@ namespace Barotrauma
                 return null;
             }
             
-            return nextIndex < 0 ? localChanges.FirstOrDefault() : entryAt(index = nextIndex);
+            return nextIndex < 0 ? localChanges.FirstOrDefault() : EntryAt(index = nextIndex);
             
-            string entryAt(int i)
+            string EntryAt(int i)
             {
                 // if we've previously edited the entry then give us that, else give us the original message
                 return localChanges[i] ?? messageList[i];
