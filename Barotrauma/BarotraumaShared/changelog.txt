@@ -19,6 +19,10 @@ Monsters:
 - Fixed Hammerhead Matriarch's skirt going throught the walls.
 - Fixed performance issues when creatures are trying to find a path out from the submarine while escaping. Also improved the escaping behavior in general.
 
+Misc fixes:
+- Fixed pathfinding applying a 10x more penalty on vertical distance when the host is outside (should only apply inside).
+- Fixed bots starting the path from obstructed waypoints or waypoints that are inside when they are outside or vice versa.
+
 ---------------------------------------------------------------------------------------------------------
 v0.9.6.0
 ---------------------------------------------------------------------------------------------------------
