@@ -42,6 +42,14 @@ namespace Barotrauma.Steam
                 if (clientInitialized)
                 {
                     DebugConsole.NewMessage("Logged in as " + client.Username + " (SteamID " + SteamIDUInt64ToString(client.SteamId) + ")");
+
+                    popularTags.Clear();
+                    int i = 0;
+                    foreach (KeyValuePair<string, int> commonness in this.tagCommonness)
+                    {
+                        popularTags.Insert(i, commonness.Key);
+                        i++;
+                    }
                 }
             }
             catch (DllNotFoundException)
@@ -830,10 +838,10 @@ namespace Barotrauma.Steam
             string previewImagePath =  Path.GetFullPath(Path.Combine(item.Folder, PreviewImageName));
             item.PreviewImage = File.Exists(previewImagePath) ? previewImagePath : null;
 
-            CoroutineManager.StartCoroutine(PublishItem(item));
+            CoroutineManager.StartCoroutine(PublishItem(item, contentPackage));
         }
 
-        private static IEnumerable<object> PublishItem(Workshop.Editor item)
+        private static IEnumerable<object> PublishItem(Workshop.Editor item, ContentPackage contentPackage)
         {
             if (instance == null || !instance.isInitialized)
             {
@@ -849,6 +857,8 @@ namespace Barotrauma.Steam
             if (string.IsNullOrEmpty(item.Error))
             {
                 DebugConsole.NewMessage("Published workshop item " + item.Title + " successfully.", Microsoft.Xna.Framework.Color.LightGreen);
+                contentPackage.SteamWorkshopUrl = item.Url;
+                contentPackage.Save(contentPackage.Path);
                 var newItem = instance.client.Workshop.GetItem(item.Id);
                 newItem?.Subscribe();
             }
