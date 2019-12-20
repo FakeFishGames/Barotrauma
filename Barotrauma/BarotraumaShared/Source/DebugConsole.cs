@@ -98,9 +98,6 @@ namespace Barotrauma
         private static string currentAutoCompletedCommand;
         private static int currentAutoCompletedIndex;
 
-        //used for keeping track of the message entered when pressing up/down
-        private static int selectedIndex;
-
         public static bool CheatsEnabled;
 
         private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
@@ -1206,24 +1203,6 @@ namespace Barotrauma
         {
             currentAutoCompletedCommand = "";
             currentAutoCompletedIndex = 0;
-        }
-
-        public static string SelectMessage(int direction, string currentText = null)
-        {
-            if (Messages.Count == 0) return "";
-
-            direction = MathHelper.Clamp(direction, -1, 1);
-
-			int i = 0;
-			do
-			{
-				selectedIndex += direction;
-				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
-				selectedIndex %= Messages.Count;
-				if (++i >= Messages.Count) break;
-			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
-
-            return !Messages[selectedIndex].IsCommand ? "" : Messages[selectedIndex].Text;            
         }
 
         public static void ExecuteCommand(string command)
