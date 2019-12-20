@@ -1223,7 +1223,8 @@ namespace Barotrauma.Steam
             };
             //make sure the contentpackage file is present 
             if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) ||
-                !ContentPackage.List.Any(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl))
+                !ContentPackage.List.Any(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl ||
+                                               (string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.Name == contentPackage.Name)))
             {
                 return false;
             }
@@ -1279,7 +1280,8 @@ namespace Barotrauma.Steam
             {
                 SteamWorkshopUrl = item.Url
             };
-            return GameMain.Config.SelectedContentPackages.Any(cp => cp.SteamWorkshopUrl == steamPackage.SteamWorkshopUrl);
+            return GameMain.Config.SelectedContentPackages.Any(cp => cp.SteamWorkshopUrl == steamPackage.SteamWorkshopUrl ||
+                                               (string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.Name == steamPackage.Name));
         }
 
         public static bool AutoUpdateWorkshopItems()
