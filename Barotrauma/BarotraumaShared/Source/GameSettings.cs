@@ -42,7 +42,6 @@ namespace Barotrauma
         public int ParticleLimit { get; set; }
 
         public float LightMapScale { get; set; }
-        public bool SpecularityEnabled { get; set; }
         public bool ChromaticAberrationEnabled { get; set; }
 
         public bool PauseOnFocusLost { get; set; }
@@ -703,11 +702,11 @@ namespace Barotrauma
         {
             get
             {
-#if DEBUG
                 return false;
-#else
-                return sendUserStatistics;
+/*#if DEBUG
+                return false;
 #endif
+                return sendUserStatistics;*/
             }
             set
             {
@@ -820,12 +819,12 @@ namespace Barotrauma
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Attack] = new KeyOrMouse(2);
+            keyMapping[(int)InputType.Attack] = new KeyOrMouse(MouseButton.MiddleMouse);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
             keyMapping[(int)InputType.Ragdoll] = new KeyOrMouse(Keys.Space);
-            keyMapping[(int)InputType.Aim] = new KeyOrMouse(1);
+            keyMapping[(int)InputType.Aim] = new KeyOrMouse(MouseButton.SecondaryMouse);
 
             keyMapping[(int)InputType.InfoTab] = new KeyOrMouse(Keys.Tab);
             keyMapping[(int)InputType.Chat] = new KeyOrMouse(Keys.T);
@@ -857,15 +856,15 @@ namespace Barotrauma
 
             if (legacy)
             {
-                keyMapping[(int)InputType.Use] = new KeyOrMouse(0);
-                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(0);
+                keyMapping[(int)InputType.Use] = new KeyOrMouse(MouseButton.PrimaryMouse);
+                keyMapping[(int)InputType.Shoot] = new KeyOrMouse(MouseButton.PrimaryMouse);
                 keyMapping[(int)InputType.Select] = new KeyOrMouse(Keys.E);
                 keyMapping[(int)InputType.Deselect] = new KeyOrMouse(Keys.E);
             }
             else
             {
                 keyMapping[(int)InputType.Use] = new KeyOrMouse(Keys.E);
-                keyMapping[(int)InputType.Select] = new KeyOrMouse(0);
+                keyMapping[(int)InputType.Select] = new KeyOrMouse(MouseButton.PrimaryMouse);
                 // shoot and deselect are handled in CheckBindings() so that we don't override the legacy settings.
             }
             if (doc != null)
@@ -886,7 +885,7 @@ namespace Barotrauma
                         case InputType.Deselect:
                             if (useDefaults)
                             {
-                                binding = new KeyOrMouse(1);
+                                binding = new KeyOrMouse(MouseButton.SecondaryMouse);
                             }
                             else
                             {
@@ -901,15 +900,15 @@ namespace Barotrauma
                         case InputType.Shoot:
                             if (useDefaults)
                             {
-                                binding = new KeyOrMouse(0);
+                                binding = new KeyOrMouse(MouseButton.PrimaryMouse);
                             }
                             else
                             {
                                 // Legacy support
                                 var useKey = keyMapping[(int)InputType.Use];
-                                if (useKey != null && useKey.MouseButton.HasValue)
+                                if (useKey != null && useKey.MouseButton != MouseButton.None)
                                 {
-                                    binding = new KeyOrMouse(useKey.MouseButton.Value);
+                                    binding = new KeyOrMouse(useKey.MouseButton);
                                 }
                             }
                             break;
@@ -1029,7 +1028,6 @@ namespace Barotrauma
             gSettings.ReplaceAttributes(
                 new XAttribute("particlelimit", ParticleLimit),
                 new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
                 new XAttribute("hudscale", HUDScale),
@@ -1048,7 +1046,7 @@ namespace Barotrauma
             doc.Root.Add(keyMappingElement);
             for (int i = 0; i < keyMapping.Length; i++)
             {
-                if (keyMapping[i].MouseButton == null)
+                if (keyMapping[i].MouseButton == MouseButton.None)
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
                 }
@@ -1365,7 +1363,6 @@ namespace Barotrauma
             gSettings.ReplaceAttributes(
                 new XAttribute("particlelimit", ParticleLimit),
                 new XAttribute("lightmapscale", LightMapScale),
-                new XAttribute("specularity", SpecularityEnabled),
                 new XAttribute("chromaticaberration", ChromaticAberrationEnabled),
                 new XAttribute("losmode", LosMode),
                 new XAttribute("hudscale", HUDScale),
@@ -1383,7 +1380,7 @@ namespace Barotrauma
             {
                 var key = keyMapping[i];
                 if (key == null) { continue; }
-                if (key.MouseButton == null)
+                if (key.MouseButton == MouseButton.None)
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
                 }
@@ -1531,7 +1528,6 @@ namespace Barotrauma
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", ParticleLimit);
             LightMapScale = MathHelper.Clamp(graphicsSettings.GetAttributeFloat("lightmapscale", LightMapScale), 0.1f, 1.0f);
-            SpecularityEnabled = graphicsSettings.GetAttributeBool("specularity", SpecularityEnabled);
             ChromaticAberrationEnabled = graphicsSettings.GetAttributeBool("chromaticaberration", ChromaticAberrationEnabled);
             HUDScale = graphicsSettings.GetAttributeFloat("hudscale", HUDScale);
             InventoryScale = graphicsSettings.GetAttributeFloat("inventoryscale", InventoryScale);
@@ -1610,16 +1606,17 @@ namespace Barotrauma
             {
                 if (!Enum.TryParse(attribute.Name.ToString(), true, out InputType inputType)) { continue; }
 
-                if (int.TryParse(attribute.Value.ToString(), out int mouseButton))
+                if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
+                {
+                    keyMapping[(int)inputType] = new KeyOrMouse((MouseButton)mouseButtonInt);
+                }
+                else if (Enum.TryParse(attribute.Value.ToString(), true, out MouseButton mouseButton))
                 {
                     keyMapping[(int)inputType] = new KeyOrMouse(mouseButton);
                 }
-                else
+                else if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
                 {
-                    if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
-                    {
-                        keyMapping[(int)inputType] = new KeyOrMouse(key);
-                    }
+                    keyMapping[(int)inputType] = new KeyOrMouse(key);
                 }
             }
         }
@@ -1639,24 +1636,16 @@ namespace Barotrauma
         {
             KeyOrMouse bind = keyMapping[(int)inputType];
 
-            if (bind.MouseButton != null)
+            if (bind.MouseButton != MouseButton.None)
             {
                 switch (bind.MouseButton)
                 {
-                    case 0:
-                        return TextManager.Get("input.leftmouse");
-                    case 1:
-                        return TextManager.Get("input.rightmouse");
-                    case 2:
-                        return TextManager.Get("input.middlemouse");
-                    case 3:
-                        return TextManager.Get("input.mousebutton4");
-                    case 4:
-                        return TextManager.Get("input.mousebutton5");
-                    case 5:
-                        return TextManager.Get("input.mousewheelup");
-                    case 6:
-                        return TextManager.Get("input.mousewheeldown");
+                    case MouseButton.PrimaryMouse:
+                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse");
+                    case MouseButton.SecondaryMouse:
+                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse");
+                    default:
+                        return TextManager.Get("input." + bind.MouseButton.ToString().ToLowerInvariant());
 
                 }
             }
@@ -1676,7 +1665,6 @@ namespace Barotrauma
 #endif
             ParticleLimit = 1500;
             LightMapScale = 0.5f;
-            SpecularityEnabled = false;
             ChromaticAberrationEnabled = true;
             PauseOnFocusLost = true;
             MuteOnFocusLost = false;

@@ -44,6 +44,7 @@ namespace Barotrauma
         public readonly string SuccessMessage;
         public readonly string FailureMessage;
         public readonly string SonarLabel;
+        public readonly string SonarIconIdentifier;
 
         public readonly string AchievementIdentifier;
 
@@ -123,7 +124,8 @@ namespace Barotrauma
                 FailureMessage = element.GetAttributeString("failuremessage", "");
             }
 
-            SonarLabel      = TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? element.GetAttributeString("sonarlabel", "");
+            SonarLabel          = TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? element.GetAttributeString("sonarlabel", "");
+            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
             SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);

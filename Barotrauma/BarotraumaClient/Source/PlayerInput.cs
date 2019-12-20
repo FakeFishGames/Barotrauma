@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+#if WINDOWS
+using System.Runtime.InteropServices;
+#endif
 
 namespace Barotrauma
 {
@@ -21,11 +24,19 @@ namespace Barotrauma
         static bool allowInput;
         static bool wasWindowActive;
 
-#if LINUX || OSX
-        static readonly Keys[] manuallyHandledTextInputKeys = { Keys.Left, Keys.Right, Keys.Up, Keys.Down };
-        const float AutoRepeatDelay = 0.5f;
-        const float AutoRepeatRate = 25;
-        static Dictionary<Keys, float> autoRepeatTimer = new Dictionary<Keys, float>();
+#if WINDOWS
+        [DllImport("user32.dll")]
+        static extern int GetSystemMetrics(int smIndex);
+
+        public static bool MouseButtonsSwapped()
+        {
+            return GetSystemMetrics(23) != 0; //SM_SWAPBUTTON
+        }
+#else
+        public static bool MouseButtonsSwapped()
+        {
+            return false; //TODO: implement on other platforms?
+        }
 #endif
 
         public static Vector2 MousePosition
@@ -74,6 +85,78 @@ namespace Barotrauma
 
         }
 
+        public static bool PrimaryMouseButtonHeld()
+        {
+            if (MouseButtonsSwapped())
+            {
+                return RightButtonHeld();
+            }
+            return LeftButtonHeld();
+        }
+
+        public static bool PrimaryMouseButtonDown()
+        {
+            if (MouseButtonsSwapped())
+            {
+                return RightButtonDown();
+            }
+            return LeftButtonDown();
+        }
+
+        public static bool PrimaryMouseButtonReleased()
+        {
+            if (MouseButtonsSwapped())
+            {
+                return RightButtonReleased();
+            }
+            return LeftButtonReleased();
+        }
+
+        public static bool PrimaryMouseButtonClicked()
+        {
+            if (MouseButtonsSwapped())
+            {
+                return RightButtonClicked();
+            }
+            return LeftButtonClicked();
+        }
+
+        public static bool SecondaryMouseButtonHeld()
+        {
+            if (!MouseButtonsSwapped())
+            {
+                return RightButtonHeld();
+            }
+            return LeftButtonHeld();
+        }
+
+        public static bool SecondaryMouseButtonDown()
+        {
+            if (!MouseButtonsSwapped())
+            {
+                return RightButtonDown();
+            }
+            return LeftButtonDown();
+        }
+
+        public static bool SecondaryMouseButtonReleased()
+        {
+            if (!MouseButtonsSwapped())
+            {
+                return RightButtonReleased();
+            }
+            return LeftButtonReleased();
+        }
+
+        public static bool SecondaryMouseButtonClicked()
+        {
+            if (!MouseButtonsSwapped())
+            {
+                return RightButtonClicked();
+            }
+            return LeftButtonClicked();
+        }
+
         public static bool LeftButtonHeld()
         {
             return AllowInput && mouseState.LeftButton == ButtonState.Pressed;
@@ -102,6 +185,18 @@ namespace Barotrauma
         public static bool RightButtonHeld()
         {
             return AllowInput && mouseState.RightButton == ButtonState.Pressed;
+        }
+
+        public static bool RightButtonDown()
+        {
+            return AllowInput &&
+                oldMouseState.RightButton == ButtonState.Released &&
+                mouseState.RightButton == ButtonState.Pressed;
+        }
+
+        public static bool RightButtonReleased()
+        {
+            return AllowInput && mouseState.RightButton == ButtonState.Released;
         }
 
         public static bool RightButtonClicked()
@@ -223,7 +318,7 @@ namespace Barotrauma
             MouseSpeedPerSecond = MouseSpeed / (float)deltaTime;
 
             doubleClicked = false;
-            if (LeftButtonClicked())
+            if (PrimaryMouseButtonClicked())
             {
                 if (timeSinceClick < DoubleClickDelay &&
                     (mouseState.Position - lastClickPosition).ToVector2().Length() < MaxDoubleClickDistance)
@@ -233,35 +328,6 @@ namespace Barotrauma
                 lastClickPosition = mouseState.Position;
                 timeSinceClick = 0.0;
             }
-
-#if LINUX || OSX
-            //arrow keys cannot be received using window.TextInput on Linux (see https://github.com/MonoGame/MonoGame/issues/5808)
-            //so lets do it manually here and pass to the KeyboardDispatcher:
-            foreach (Keys key in manuallyHandledTextInputKeys)
-            {
-                if (!autoRepeatTimer.ContainsKey(key))
-                {
-                    autoRepeatTimer[key] = 0.0f;
-                }
-                if (KeyDown(key))
-                {
-                    if (autoRepeatTimer[key] <= 0.0f)
-                    {
-                        GUI.KeyboardDispatcher.EventInput_KeyDown(null, new EventInput.KeyEventArgs(key));
-                    }
-                    else if (autoRepeatTimer[key] > AutoRepeatDelay)
-                    {
-                        GUI.KeyboardDispatcher.EventInput_KeyDown(null, new EventInput.KeyEventArgs(key));
-                        autoRepeatTimer[key] -= 1.0f / AutoRepeatRate;
-                    }
-                    autoRepeatTimer[key] += (float)deltaTime;
-                }
-                else
-                {
-                    autoRepeatTimer[key] = 0.0f;
-                }
-            }
-#endif
         }
 
         public static void UpdateVariable()

@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="headset" scale="0.5" category="Equipment" tags="smallitem" description="" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="divingcab,crewcab" minamount="0" maxamount="2" spawnprobability="0.75"/>
+    <PreferredContainer primary="storagecab"/>
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
     <Price locationtype="Mine" buyprice="100" />
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="256,0,64,64" origin="0.5,0.5" />
-    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="5,105,68,69" origin="0.5,0.5" />
+    <Sprite name="Headset" texture="Content/Items/Jobgear/headgears.png" depth="0.6" sourcerect="28,321,49,62" origin="0.5,0.5" />
     <Body radius="15" height="10" density="30" />
     <Deconstruct time="10">
       <Item identifier="plastic" />
@@ -26,9 +28,10 @@
     </ItemContainer>
     <Wearable limbtype="Head" slots="Any,Headset" msg="ItemMsgPickUpSelect">
       <StatusEffect type="OnWearing" target="Contained" Condition="-0.05" />
-      <sprite name="Headset Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inherittexturescale="true" hideotherwearables="false" sourcerect="7,106,60,66" origin="0.4850145,0.6084235" />
+      <sprite name="Headset Wearable" texture="Content/Items/Jobgear/headgears.png" limb="Head" hidelimb="false" inheritlimbdepth="true" inherittexturescale="true" hideotherwearables="false" sourcerect="28,321,49,62" origin="0.5,0.6" />
     </Wearable>
   </Item>
+  
   <Item name="" identifier="duffelbag" category="Equipment" tags="mobilecontainer,despawncontainer" fireproof="true" description="" impactsoundtag="impact_soft" scale="0.4">
     <Sprite texture="Content/Items/Jobgear/MiscJobGear.png" sourcerect="0,239,232,118" origin="0.5,0.5" depth="0.56" />
     <Body width="120" radius="45" density="20" friction="1.0" restitution="0.01" />

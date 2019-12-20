@@ -71,13 +71,17 @@
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="50000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="50000" />
-      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" camerashake="100" camerashakerange="50000">
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"
+                   camerashake="500" camerashakerange="50000"
+                   flashrange="10000" flashduration="5.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
           <Affliction identifier="burn" strength="500" />
           <Affliction identifier="radiationsickness" strength="100" />
           <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
+        <SpawnItem identifier="nuclearaftereffectemitter" spawnposition="This"/>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
         <Use />
@@ -151,12 +155,17 @@
       </Attack>
       <sound file="Content/Items/Weapons/ExplosionLarge1.ogg" type="OnImpact" selectionmode="Random" range="20000" />
       <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" type="OnImpact" selectionmode="Random" range="20000" />
-      <StatusEffect type="OnImpact" Condition="-100.0" stun="10.0" disabledeltatime="true">
-        <Explosion range="1000.0" structuredamage="500" force="30.0">
-          <Affliction identifier="burn" strength="300" />
-          <Affliction identifier="internaldamage" strength="300" />
+      <StatusEffect type="OnImpact" target="This" Condition="-100.0" disabledeltatime="true">
+        <Explosion range="1000.0" structuredamage="1000" force="50.0" severlimbsprobability="1.0" decal="explosion" decalsize="1.0"
+                   camerashake="500" camerashakerange="50000"
+                   flashrange="10000" flashduration="5.0"
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
+          <Affliction identifier="burn" strength="500" />
+          <Affliction identifier="radiationsickness" strength="100" />
+          <Affliction identifier="internaldamage" strength="400" />
           <Affliction identifier="stun" strength="5" />
         </Explosion>
+        <SpawnItem identifier="nuclearaftereffectemitter" spawnposition="This"/>
       </StatusEffect>
       <StatusEffect type="OnImpact" target="Contained">
         <Use />

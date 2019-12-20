@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -52,6 +58,7 @@ namespace FarseerPhysics.Dynamics.Joints
     public class WheelJoint : Joint
     {
         // Solver shared
+        private Vector2 _localXAxis;
         private Vector2 _localYAxis;
 
         private float _impulse;
@@ -147,15 +154,15 @@ namespace FarseerPhysics.Dynamics.Joints
             set
             {
                 _axis = value;
-                LocalXAxis = BodyA.GetLocalVector(_axis);
-                _localYAxis = MathUtils.Cross(1.0f, LocalXAxis);
+                _localXAxis = BodyA.GetLocalVector(_axis);
+                _localYAxis = MathUtils.Rot90(ref _localXAxis);
             }
         }
 
         /// <summary>
         /// The axis in local coordinates relative to BodyA
         /// </summary>
-        public Vector2 LocalXAxis { get; private set; }
+        public Vector2 LocalXAxis { get { return _localXAxis; } }
 
         /// <summary>
         /// The desired motor speed in radians per second.
@@ -206,7 +213,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 pA = bA.GetWorldPoint(LocalAnchorA);
                 Vector2 pB = bB.GetWorldPoint(LocalAnchorB);
                 Vector2 d = pB - pA;
-                Vector2 axis = bA.GetWorldVector(LocalXAxis);
+                Vector2 axis = bA.GetWorldVector(ref _localXAxis);
 
                 float translation = Vector2.Dot(d, axis);
                 return translation;
@@ -282,18 +289,19 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
             // Compute the effective masses.
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             Vector2 d1 = cB + rB - cA - rA;
 
             // Point to line constraint
             {
-                _ay = MathUtils.Mul(qA, _localYAxis);
+                _ay = Complex.Multiply(ref _localYAxis, ref qA);
                 _sAy = MathUtils.Cross(d1 + rA, _ay);
-                _sBy = MathUtils.Cross(rB, _ay);
+                _sBy = MathUtils.Cross(ref rB, ref _ay);
 
                 _mass = mA + mB + iA * _sAy * _sAy + iB * _sBy * _sBy;
 
@@ -309,9 +317,9 @@ namespace FarseerPhysics.Dynamics.Joints
             _gamma = 0.0f;
             if (Frequency > 0.0f)
             {
-                _ax = MathUtils.Mul(qA, LocalXAxis);
+                _ax = Complex.Multiply(ref _localXAxis, ref qA);
                 _sAx = MathUtils.Cross(d1 + rA, _ax);
-                _sBx = MathUtils.Cross(rB, _ax);
+                _sBx = MathUtils.Cross(ref rB, ref _ax);
 
                 float invMass = mA + mB + iA * _sAx * _sAx + iB * _sBx * _sBx;
 
@@ -322,7 +330,7 @@ namespace FarseerPhysics.Dynamics.Joints
                     float C = Vector2.Dot(d1, _ax);
 
                     // Frequency
-                    float omega = 2.0f * Settings.Pi * Frequency;
+                    float omega = 2.0f * MathHelper.Pi * Frequency;
 
                     // Damping coefficient
                     float d = 2.0f * _springMass * DampingRatio * omega;
@@ -367,7 +375,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _motorImpulse = 0.0f;
             }
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Account for variable time step.
                 _impulse *= data.step.dtRatio;
@@ -468,16 +476,17 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             Vector2 d = (cB - cA) + rB - rA;
 
-            Vector2 ay = MathUtils.Mul(qA, _localYAxis);
+            Vector2 ay = Complex.Multiply(ref _localYAxis, ref qA);
 
             float sAy = MathUtils.Cross(d + rA, ay);
-            float sBy = MathUtils.Cross(rB, ay);
+            float sBy = MathUtils.Cross(ref rB, ref ay);
 
             float C = Vector2.Dot(d, ay);
 

@@ -344,7 +344,7 @@ namespace Barotrauma
                 if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
-                    if (PlayerInput.LeftButtonClicked())
+                    if (PlayerInput.PrimaryMouseButtonClicked())
                     {
                         Select(i, autoScroll: false);
                     }

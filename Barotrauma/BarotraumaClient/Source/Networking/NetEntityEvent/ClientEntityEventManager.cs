@@ -27,6 +27,12 @@ namespace Barotrauma.Networking
             get { return firstNewID.HasValue; }
         }
 
+        public bool MidRoundSyncingDone
+        {
+            get;
+            private set;
+        }
+
         public ClientEntityEventManager(GameClient client) 
         {
             events = new List<ClientEntityEvent>();
@@ -136,16 +142,19 @@ namespace Barotrauma.Networking
                         ", first new ID: " + firstNewID, Microsoft.Xna.Framework.Color.Yellow);
                 }
             }
-            else if (firstNewID != null)
+            else
             {
-                if (GameSettings.VerboseLogging)
+                MidRoundSyncingDone = true;
+                if (firstNewID != null)
                 {
-                    DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
-                        Microsoft.Xna.Framework.Color.Yellow);
+                    if (GameSettings.VerboseLogging)
+                    {
+                        DebugConsole.NewMessage("midround syncing complete, switching to ID " + (UInt16) (firstNewID - 1),
+                            Microsoft.Xna.Framework.Color.Yellow);
+                    }
+                    lastReceivedID = (UInt16)(firstNewID - 1);
+                    firstNewID = null;
                 }
-
-                lastReceivedID = (UInt16)(firstNewID - 1);
-                firstNewID = null;
             }
 
             entities.Clear();
@@ -200,6 +209,7 @@ namespace Barotrauma.Networking
                     }
                     
                     msg.BitPosition += msgLength * 8;
+                    msg.ReadPadBits();
                 }
                 else
                 {
@@ -213,6 +223,20 @@ namespace Barotrauma.Networking
                     try
                     {
                         ReadEvent(msg, entity, sendingTime);
+                        msg.ReadPadBits();
+
+                        if (msg.BitPosition != msgPosition + msgLength * 8)
+                        {
+                            string errorMsg = "Message byte position incorrect after reading an event for the entity \"" + entity.ToString()
+                                + "\". Read " + (msg.BitPosition - msgPosition) + " bits, expected message length was " + (msgLength * 8) + " bits.";
+#if DEBUG
+                            DebugConsole.ThrowError(errorMsg);
+#endif
+                            GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+
+                            //TODO: force the BitPosition to correct place? Having some entity in a potentially incorrect state is not as bad as a desync kick
+                            //msg.BitPosition = (int)(msgPosition + msgLength * 8);
+                        }
                     }
 
                     catch (Exception e)
@@ -231,9 +255,9 @@ namespace Barotrauma.Networking
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         msg.BitPosition = (int)(msgPosition + msgLength * 8);
+                        msg.ReadPadBits();
                     }
                 }
-                msg.ReadPadBits();
             }
             return true;
         }
@@ -262,6 +286,8 @@ namespace Barotrauma.Networking
 
             events.Clear();
             eventLastSent.Clear();
+
+            MidRoundSyncingDone = false;
         }
     }
 }

@@ -134,6 +134,10 @@ namespace Barotrauma.Networking
                         if (!(b is Enum)) return false;
                         return ((Enum)a).Equals((Enum)b);
                     default:
+                        if (a == null || b == null)
+                        {
+                            return (a == null) == (b == null);
+                        }
                         return a.ToString().Equals(b.ToString(), StringComparison.InvariantCulture);
                 }
             }

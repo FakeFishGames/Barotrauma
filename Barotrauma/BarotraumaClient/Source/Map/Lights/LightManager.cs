@@ -33,7 +33,7 @@ namespace Barotrauma.Lights
             get;
             private set;
         }
-        public RenderTarget2D SpecularMap
+        public RenderTarget2D LimbLightMap
         {
             get;
             private set;
@@ -125,25 +125,26 @@ namespace Barotrauma.Lights
             currLightMapScale = GameMain.Config.LightMapScale;
 
             LightMap?.Dispose();
-            LightMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
-                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
-                       RenderTargetUsage.DiscardContents);
+            LightMap = CreateRenderTarget();
 
-            SpecularMap?.Dispose();
-            SpecularMap = new RenderTarget2D(graphics,
-                       (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
-                       pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
-                       RenderTargetUsage.DiscardContents);
+            LimbLightMap?.Dispose();
+            LimbLightMap = CreateRenderTarget();
 
             HighlightMap?.Dispose();
-            HighlightMap = new RenderTarget2D(graphics,
+            HighlightMap = CreateRenderTarget();
+
+            RenderTarget2D CreateRenderTarget()
+            {
+               return new RenderTarget2D(graphics,
                        (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false,
                        pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount,
                        RenderTargetUsage.DiscardContents);
+            }
 
             LosTexture?.Dispose();
-            LosTexture = new RenderTarget2D(graphics, (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
+            LosTexture = new RenderTarget2D(graphics, 
+                (int)(GameMain.GraphicsWidth * GameMain.Config.LightMapScale), 
+                (int)(GameMain.GraphicsHeight * GameMain.Config.LightMapScale), false, SurfaceFormat.Color, DepthFormat.None);
         }
 
         public void AddLight(LightSource light)
@@ -207,39 +208,51 @@ namespace Barotrauma.Lights
                 //lightmap scale has changed -> recreate render targets
                 CreateRenderTargets(graphics);
             }
-            
+
             Matrix spriteBatchTransform = cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f));
             Matrix transform = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 1) * 0.5f;
 
             bool highlightsVisible = UpdateHighlights(graphics, spriteBatch, spriteBatchTransform, cam);
 
-            if (GameMain.Config.SpecularityEnabled)
-            {
-                //UpdateSpecularMap(graphics, spriteBatch, spriteBatchTransform, cam, backgroundObstructor);
-            }
-
-            graphics.SetRenderTarget(LightMap);
-
             Rectangle viewRect = cam.WorldView;
             viewRect.Y -= cam.WorldView.Height;
-
             //check which lights need to be drawn
             activeLights.Clear();
             foreach (LightSource light in lights)
             {
-                if (!light.Enabled) { continue; }
+                if (!light.Enabled) { continue; }    
                 if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
+                if (light.ParentBody != null)
+                {
+                    light.Position = light.ParentBody.DrawPosition;
+                    if (light.ParentSub != null) { light.Position -= light.ParentSub.DrawPosition; }
+                }
                 if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.LightSourceParams.TextureRange, viewRect)) { continue; }
                 activeLights.Add(light);
             }
 
-            //clear the lightmap
+            //draw light sprites attached to characters
+            //render into a separate rendertarget using alpha blending (instead of on top of everything else with alpha blending)
+            //to prevent the lights from showing through other characters or other light sprites attached to the same character
+            //---------------------------------------------------------------------------------------------------
+            graphics.SetRenderTarget(LimbLightMap);
             graphics.Clear(Color.Black);
-            graphics.BlendState = BlendState.Additive;
+            graphics.BlendState = BlendState.AlphaBlend;
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
+            foreach (LightSource light in activeLights)
+            {
+                if (light.IsBackground) { continue; }
+                //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
+                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
+            }
+            spriteBatch.End();
 
             //draw background lights
             //---------------------------------------------------------------------------------------------------
+            graphics.SetRenderTarget(LightMap);
+            graphics.Clear(Color.Black);
+            graphics.BlendState = BlendState.Additive;
             bool backgroundSpritesDrawn = false;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in activeLights)
@@ -288,7 +301,8 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);            
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                //don't draw limb lights at this point, they need to be drawn after lights have been obstructed by characters
+                if (light.IsBackground || light.ParentBody?.UserData is Limb) { continue; }
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
@@ -340,7 +354,9 @@ namespace Barotrauma.Lights
             //---------------------------------------------------------------------------------------------------
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
 
-            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled:true);
+            GUI.DrawRectangle(spriteBatch, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), AmbientLight, isFilled: true);
+
+            spriteBatch.Draw(LimbLightMap, new Rectangle(cam.WorldView.X, -cam.WorldView.Y, cam.WorldView.Width, cam.WorldView.Height), Color.White);
 
             foreach (ElectricalDischarger discharger in ElectricalDischarger.List)
             {
@@ -352,8 +368,8 @@ namespace Barotrauma.Lights
                 if (light.IsBackground) { continue; }
                 if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
             }
-            Vector3 offset = Vector3.Zero;// new Vector3(Submarine.MainSub.DrawPosition.X, Submarine.MainSub.DrawPosition.Y, 0.0f);
-            lightEffect.World = Matrix.CreateTranslation(Vector3.Zero) * transform;
+
+            lightEffect.World = transform;
             
             GameMain.ParticleManager.Draw(spriteBatch, false, null, Particles.ParticleBlendState.Additive);
 
@@ -391,14 +407,6 @@ namespace Barotrauma.Lights
                 }                
             }
             spriteBatch.End();
-
-            if (GameMain.Config.SpecularityEnabled)
-            {
-                /*spriteBatch.Begin(blendState: CustomBlendStates.Multiplicative);
-                spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                //spriteBatch.Draw(SpecularMap, Vector2.Zero, Color.White);
-                spriteBatch.End();*/
-            }
 
             //draw the actual light volumes, additive particles, hull ambient lights and the halo around the player
             //---------------------------------------------------------------------------------------------------
@@ -491,53 +499,6 @@ namespace Barotrauma.Lights
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
 
             return true;
-        }
-
-        public void UpdateSpecularMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Matrix spriteBatchTransform, Camera cam, RenderTarget2D backgroundObstructor = null)
-        {
-            graphics.SetRenderTarget(SpecularMap);
-            
-            //clear the lightmap
-            graphics.Clear(Color.Gray);
-            graphics.BlendState = BlendState.AlphaBlend;
-
-            spriteBatch.Begin(sortMode: SpriteSortMode.Deferred, blendState: BlendState.AlphaBlend, transformMatrix: spriteBatchTransform);
-
-            if (Level.Loaded != null)
-            {
-                Level.Loaded.LevelObjectManager.DrawObjects(spriteBatch, cam, drawFront: false, specular: true);
-            }
-            spriteBatch.End();
-
-            Level.Loaded?.Renderer?.RenderWalls(graphics, cam, specular: true);
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidColor"];
-            DeformableSprite.Effect.Parameters["solidColor"].SetValue(Color.Gray.ToVector4());
-            DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
-
-            //obstruct specular maps behind the sub and characters by drawing them on the map in solid gray
-            SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
-            SolidColorEffect.Parameters["color"].SetValue(Color.Gray.ToVector4());
-            SolidColorEffect.CurrentTechnique.Passes[0].Apply();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect);
-            if (backgroundObstructor != null)
-            {
-                spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
-                    (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.White);
-            }
-            spriteBatch.End();
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
-            foreach (Character c in Character.CharacterList)
-            {
-                if (c.IsVisible) { c.Draw(spriteBatch, cam); }
-            }
-            spriteBatch.End();
-
-
-            DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];
-
-            graphics.SetRenderTarget(null);
-            graphics.BlendState = BlendState.AlphaBlend;
         }
 
         private Dictionary<Hull, Rectangle> GetVisibleHulls(Camera cam)

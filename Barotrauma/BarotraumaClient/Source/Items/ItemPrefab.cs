@@ -69,7 +69,7 @@ namespace Barotrauma
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
-            if (PlayerInput.RightButtonClicked())
+            if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
@@ -85,7 +85,7 @@ namespace Barotrauma
                 Vector2 placeSize = size;
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
                 }
                 else
                 {

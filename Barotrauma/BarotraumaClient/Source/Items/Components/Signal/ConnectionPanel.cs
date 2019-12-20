@@ -11,17 +11,26 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
+        //how long the rewiring sound plays after doing changes to the wiring
+        const float RewireSoundDuration = 5.0f;
+
         public static Wire HighlightedWire;
 
         private SoundChannel rewireSoundChannel;
+        private float rewireSoundTimer;
 
         partial void InitProjSpecific(XElement element)
         {
-            if (GuiFrame == null) return;
+            if (GuiFrame == null) { return; }
             new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
             {
                 UserData = this
             };
+        }
+
+        public void TriggerRewiringSound()
+        {
+            rewireSoundTimer = RewireSoundDuration;
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -40,8 +49,9 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (user != null && user.SelectedConstruction == item && HasRequiredItems(user, addMessage: false) && 
-                item.GetComponent<Repairable>()?.CurrentFixer != user)
+
+            rewireSoundTimer -= deltaTime;
+            if (user != null && user.SelectedConstruction == item && rewireSoundTimer > 0.0f)
             {
                 if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
                 {
@@ -52,12 +62,13 @@ namespace Barotrauma.Items.Components
             {
                 rewireSoundChannel?.FadeOutAndDispose();
                 rewireSoundChannel = null;
+                rewireSoundTimer = 0.0f;
             }
         }
 
         public override void Move(Vector2 amount)
         {
-            if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) return;
+            if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) { return; }
             MoveConnectedWires(amount);
         }
         
@@ -104,6 +115,7 @@ namespace Barotrauma.Items.Components
                 //delay reading the state until midround syncing is done
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
+                msg.ReadUInt16(); //user ID
                 foreach (Connection connection in Connections)
                 {
                     for (int i = 0; i < Connection.MaxLinked; i++)
@@ -122,6 +134,8 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                //don't trigger rewiring sounds if the rewiring is being done by the local user (in that case we'll trigger it locally)
+                if (Character.Controlled == null || user != Character.Controlled) { TriggerRewiringSound(); }
                 ApplyRemoteState(msg);
             }
         }

@@ -181,6 +181,11 @@ namespace Barotrauma
             get;
             private set;
         }
+        public float? InitialLightSpriteAlpha
+        {
+            get;
+            private set;
+        }
 
         public LightSource LightSource
         {
@@ -272,8 +277,13 @@ namespace Barotrauma
                         CreateDeformations(subElement);
                         break;
                     case "lightsource":
-                        LightSource = new LightSource(subElement);
+                        LightSource = new LightSource(subElement)
+                        {
+                            ParentBody = body,
+                            SpriteScale = Vector2.One * Scale * TextureScale
+                        };
                         InitialLightSourceColor = LightSource.Color;
+                        InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
                         break;
                 }
 
@@ -491,6 +501,10 @@ namespace Barotrauma
             {
                 LightSource.ParentSub = body.Submarine;
                 LightSource.Rotation = (dir == Direction.Right) ? body.Rotation : body.Rotation - MathHelper.Pi;
+                if (LightSource.LightSprite != null)
+                {
+                    LightSource.LightSprite.Depth = ActiveSprite.Depth;
+                }
             }
 
             UpdateSpriteStates(deltaTime);
@@ -507,6 +521,7 @@ namespace Barotrauma
             {
                 if (severedFadeOutTimer > SeveredFadeOutTime)
                 {
+                    if (LightSource != null) { LightSource.Enabled = false; }
                     return;
                 }
                 else if (severedFadeOutTimer > SeveredFadeOutTime - 1.0f)
@@ -555,8 +570,6 @@ namespace Barotrauma
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
             if (LightSource != null)
             {
-                LightSource.Position = body.DrawPosition;
-                if (LightSource.ParentSub != null) { LightSource.Position -= LightSource.ParentSub.DrawPosition; }
                 LightSource.LightSpriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipVertically;
             }
             if (damageOverlayStrength > 0.0f && DamagedSprite != null && !hideLimb)
@@ -646,7 +659,7 @@ namespace Barotrauma
                     //GUI.DrawLine(spriteBatch, mainLimbDrawPos, mainLimbFront, Color.White, width: 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)mainLimbFront.X, (int)mainLimbFront.Y, 10, 10), Color.Yellow, true);
                 }
-                DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
+                //DrawDamageModifiers(spriteBatch, cam, bodyDrawPos, isScreenSpace: false);
             }
         }
 

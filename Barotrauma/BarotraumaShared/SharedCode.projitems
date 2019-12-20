@@ -102,6 +102,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\FrameCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\AutoItemPlacer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CargoManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />
@@ -146,7 +147,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Power\PowerTransfer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Projectile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Repairable.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Rope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AdderComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ArithmeticComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\AndComponent.cs" />
@@ -160,7 +160,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ExponentiationComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\FunctionComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\GreaterComponent.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Terminal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\LightComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MemoryComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ModuloComponent.cs" />

@@ -325,6 +325,8 @@ namespace Barotrauma
 
         private void InitUserStats()
         {
+            return;
+
             if (GameSettings.ShowUserStatisticsPrompt)
             {
                 if (TextManager.ContainsTag("statisticspromptheader") && TextManager.ContainsTag("statisticsprompttext"))
@@ -411,14 +413,18 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            if (Config.AutoUpdateWorkshopItems)
+            CrossThread.RequestExecutionOnMainThread(() =>
             {
-                if (SteamManager.AutoUpdateWorkshopItems())
+                if (Config.AutoUpdateWorkshopItems)
                 {
-                    ContentPackage.LoadAll();
-                    Config.ReloadContentPackages();
+                    if (SteamManager.AutoUpdateWorkshopItems())
+                    {
+                        ContentPackage.LoadAll();
+                        Config.ReloadContentPackages();
+                    }
                 }
-            }
+            });
+            
 
             if (SelectedPackages.None())
             {
@@ -693,7 +699,7 @@ namespace Barotrauma
                     }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
-                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.LeftButtonClicked()) && WindowActive)))
+                        (!waitForKeyHit || ((PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0 || PlayerInput.PrimaryMouseButtonClicked()) && WindowActive)))
                     {
                         loadingScreenOpen = false;
                     }

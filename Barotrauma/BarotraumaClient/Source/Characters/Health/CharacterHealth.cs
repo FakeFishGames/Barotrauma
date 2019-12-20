@@ -733,7 +733,7 @@ namespace Barotrauma
 
                 if (draggingMed != null)
                 {
-                    if (!PlayerInput.LeftButtonHeld())
+                    if (!PlayerInput.PrimaryMouseButtonHeld())
                     {
                         OnItemDropped(draggingMed.UserData as Item, ignoreMousePos: false);
                         draggingMed = null;
@@ -769,7 +769,7 @@ namespace Barotrauma
                 hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     OpenHealthWindow = openHealthWindow == this ? null : this;
                 }
@@ -1216,7 +1216,7 @@ namespace Barotrauma
                 i++;
             }
 
-            if (PlayerInput.LeftButtonClicked() && highlightedLimbIndex > -1)
+            if (PlayerInput.PrimaryMouseButtonClicked() && highlightedLimbIndex > -1)
             {
                 selectedLimbIndex = highlightedLimbIndex;
                 //afflictionContainer.ClearChildren();

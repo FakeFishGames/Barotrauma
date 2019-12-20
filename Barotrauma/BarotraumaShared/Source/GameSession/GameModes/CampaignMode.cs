@@ -23,6 +23,8 @@ namespace Barotrauma
 
         public bool PurchasedHullRepairs, PurchasedLostShuttles, PurchasedItemRepairs;
 
+        public bool InitialSuppliesSpawned;
+
         protected Map map;
         public Map Map
         {
@@ -171,7 +173,8 @@ namespace Barotrauma
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
             JobPrefab watchmanJob = JobPrefab.Get("watchman");
-            CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: watchmanJob);
+            var variant = Rand.Range(0, watchmanJob.Variants, Rand.RandSync.Server);
+            CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: watchmanJob, variant: variant);
             var spawnedCharacter = Character.Create(characterInfo, watchmanSpawnpoint.WorldPosition,
                 Level.Loaded.Seed + (outpost == Level.Loaded.StartOutpost ? "start" : "end"));
             InitializeWatchman(spawnedCharacter);

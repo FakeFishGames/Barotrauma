@@ -720,12 +720,20 @@ namespace Barotrauma
 
         private static string GetCurrentMusicType()
         {
-            if (OverrideMusicType != null) return OverrideMusicType;
+            if (OverrideMusicType != null) { return OverrideMusicType; }
 
-            if (Screen.Selected == null || Screen.Selected != GameMain.GameScreen)
+            if (Screen.Selected == null) { return "menu"; }
+
+            if (Screen.Selected == GameMain.CharacterEditorScreen ||
+                Screen.Selected == GameMain.LevelEditorScreen ||
+                Screen.Selected == GameMain.ParticleEditorScreen ||
+                Screen.Selected == GameMain.SpriteEditorScreen ||
+                Screen.Selected == GameMain.SubEditorScreen)
             {
-                return "menu";
+                return "editor";
             }
+
+            if (Screen.Selected != GameMain.GameScreen) { return "menu"; }
 
             if (Character.Controlled != null &&
                 Level.Loaded != null && Level.Loaded.Ruins != null &&

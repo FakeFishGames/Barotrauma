@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -184,7 +185,7 @@ namespace Barotrauma
                     Submarine.MainSubs[1].Load(false);
                 }
             }
-            
+
             if (Submarine.IsFileCorrupted)
             {
                 DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
@@ -257,9 +258,9 @@ namespace Barotrauma
 
             Entity.Spawner = new EntitySpawner();
 
-            if (GameMode.Mission != null) Mission = GameMode.Mission;
-            if (GameMode != null) GameMode.Start();
-            if (GameMode.Mission != null) Mission.Start(Level.Loaded);
+            if (GameMode.Mission != null) { Mission = GameMode.Mission; }
+            if (GameMode != null) { GameMode.Start(); }
+            if (GameMode.Mission != null) { Mission.Start(Level.Loaded); }
 
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();
@@ -268,6 +269,12 @@ namespace Barotrauma
             {
                 GameMode.ShowStartMessage();
 
+                if (GameMain.NetworkMember == null) 
+                {
+                    //only autoplace items here in single player
+                    //the server does this after loading the respawn shuttle
+                    AutoItemPlacer.PlaceIfNeeded(GameMode);
+                }
                 if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     mpCampaign.CargoManager.CreateItems();

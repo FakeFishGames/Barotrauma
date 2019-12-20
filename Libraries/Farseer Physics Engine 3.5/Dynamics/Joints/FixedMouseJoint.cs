@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -22,6 +27,7 @@
 
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -81,7 +87,7 @@ namespace FarseerPhysics.Dynamics.Joints
             Debug.Assert(worldAnchor.IsValid());
 
             _worldAnchor = worldAnchor;
-            LocalAnchorA = MathUtils.MulT(BodyA._xf, worldAnchor);
+            LocalAnchorA = Transform.Divide(ref worldAnchor, ref BodyA._xf);
         }
 
         /// <summary>
@@ -168,12 +174,12 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vA = data.velocities[_indexA].v;
             float wA = data.velocities[_indexA].w;
 
-            Rot qA = new Rot(aA);
+            Complex qA = Complex.FromAngle(aA);
 
             float mass = BodyA.Mass;
 
             // Frequency
-            float omega = 2.0f * Settings.Pi * Frequency;
+            float omega = 2.0f * MathHelper.Pi * Frequency;
 
             // Damping coefficient
             float d = 2.0f * mass * DampingRatio * omega;
@@ -195,7 +201,7 @@ namespace FarseerPhysics.Dynamics.Joints
             _beta = h * k * _gamma;
 
             // Compute the effective mass matrix.
-            _rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
+            _rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
             // K    = [(1/m1 + 1/m2) * eye(2) - skew(r1) * invI1 * skew(r1) - skew(r2) * invI2 * skew(r2)]
             //      = [1/m1+1/m2     0    ] + invI1 * [r1.Y*r1.Y -r1.X*r1.Y] + invI2 * [r1.Y*r1.Y -r1.X*r1.Y]
             //        [    0     1/m1+1/m2]           [-r1.X*r1.Y r1.X*r1.X]           [-r1.X*r1.Y r1.X*r1.X]
@@ -213,11 +219,11 @@ namespace FarseerPhysics.Dynamics.Joints
             // Cheat with some damping
             wA *= 0.98f;
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 _impulse *= data.step.dtRatio;
                 vA += _invMassA * _impulse;
-                wA += _invIA * MathUtils.Cross(_rA, _impulse);
+                wA += _invIA * MathUtils.Cross(ref _rA, ref _impulse);
             }
             else
             {
@@ -234,7 +240,7 @@ namespace FarseerPhysics.Dynamics.Joints
             float wA = data.velocities[_indexA].w;
 
             // Cdot = v + cross(w, r)
-            Vector2 Cdot = vA + MathUtils.Cross(wA, _rA);
+            Vector2 Cdot = vA + MathUtils.Cross(wA, ref _rA);
             Vector2 impulse = MathUtils.Mul(ref _mass, -(Cdot + _C + _gamma * _impulse));
 
             Vector2 oldImpulse = _impulse;
@@ -247,7 +253,7 @@ namespace FarseerPhysics.Dynamics.Joints
             impulse = _impulse - oldImpulse;
 
             vA += _invMassA * impulse;
-            wA += _invIA * MathUtils.Cross(_rA, impulse);
+            wA += _invIA * MathUtils.Cross(ref _rA, ref impulse);
 
             data.velocities[_indexA].v = vA;
             data.velocities[_indexA].w = wA;

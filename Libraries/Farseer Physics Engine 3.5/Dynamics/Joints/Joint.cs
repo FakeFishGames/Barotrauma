@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -162,7 +167,7 @@ namespace FarseerPhysics.Dynamics.Joints
         /// Set the user data pointer.
         /// </summary>
         /// <value>The data.</value>
-        public object UserData { get; set; }
+        public object Tag;
 
         /// <summary>
         /// Set this flag to true if the attached bodies should collide.

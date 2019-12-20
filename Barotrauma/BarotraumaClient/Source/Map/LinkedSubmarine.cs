@@ -62,7 +62,7 @@ namespace Barotrauma
 
             editingHUD.UpdateManually((float)Timing.Step);
 
-            if (!PlayerInput.LeftButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
+            if (!PlayerInput.PrimaryMouseButtonClicked() || !PlayerInput.KeyDown(Keys.Space)) return;
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 

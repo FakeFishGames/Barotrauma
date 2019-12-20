@@ -21,7 +21,9 @@
       <StatusEffect type="OnBroken" target="This" FissionRate="0.0" disabledeltatime="true">
         <sound file="Content/Items/Weapons/ExplosionLarge2.ogg" range="8000" selectionmode="All" />
         <sound file="Content/Items/Weapons/ExplosionDebris5.ogg" range="8000" />
-        <Explosion range="800" structuredamage="100" force="5.0">
+        <Explosion range="800" structuredamage="100" force="5.0" camerashake="200" 
+                   flashrange="10000" flashduration="5.0" 
+                   screencolor="255,255,255,255" screencolorrange="5000" screencolorduration="3.0">
           <Affliction identifier="burn" strength="200" />
           <Affliction identifier="internaldamage" strength="50" />
           <Affliction identifier="radiationsickness" strength="50" />
@@ -41,6 +43,12 @@
     </LightComponent>
     <ConnectionPanel selectkey="Action" canbeselected = "true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
       <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel"/>
+      <RequiredSkill identifier="electrical" level="80" />
+      <StatusEffect type="OnFailure" target="Character">
+        <Sound file="Content/Items/Weapons/ElectricalDischarger.ogg" range="1000" />
+        <Explosion range="100.0" stun="0" force="5.0" flames="false" shockwave="false" sparks="true" underwaterbubble="false" />
+        <Affliction identifier="stun" strength="5" />
+      </StatusEffect>
       <RequiredItem items="screwdriver" type="Equipped"/>
       <output name="power_out" displayname="connection.powerout"/>
       <output name="temperature_out" displayname="connection.temperatureout"/>
@@ -72,15 +80,10 @@
       <ParticleEmitter particle="fleshsmoke" particlespersecond="2" scalemin="1" scalemax="3" mincondition="0.0" maxcondition="15.0" />
       <ParticleEmitter particle="spark" particleamount="5" emitinterval="5" anglemax="360" velocitymin="5.0" velocitymax="250.0" scalemin="0.5" scalemax="1" mincondition="0.0" maxcondition="15.0" />
     </Repairable>
-</Item>
+  </Item>
 
-  <Item name=""
-    identifier="fuelrod"
-    Tags="smallitem,reactorfuel"
-    preferredcontainers="steelcabinet,mediumsteelcabinet,mediumwindowedsteelcabinet"
-    cargocontaineridentifier="metalcrate"
-    scale="0.5">
-
+  <Item name="" identifier="fuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" scale="0.5">
+    <PreferredContainer primary="reactorcab" minamount="2" maxamount="5" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="100"/>
     <Price locationtype="Research" buyprice="100"/>
     <Price locationtype="City" buyprice="150"/>
@@ -99,7 +102,9 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5" preferredcontainers="locker">
+  
+  <Item name="" identifier="fulguriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="150" scale="0.5">
+    <PreferredContainer primary="reactorcab,storagecab"/>
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="fulgurium" copycondition="true"/>
@@ -113,7 +118,9 @@
     <Body radius="6" width="20" height="70" density="5" />
     <Holdable handle1="0,0" slots="Any,RightHand,LeftHand" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5" preferredcontainers="locker">
+  
+  <Item name="" identifier="thoriumfuelrod" Tags="smallitem,reactorfuel" cargocontaineridentifier="metalcrate" health="200" scale="0.5">
+    <PreferredContainer primary="reactorcab" minamount="1" maxamount="2" spawnprobability="0.05"/>
     <Deconstruct time="10">
       <Item identifier="steel" copycondition="true"/>
       <Item identifier="thorium" copycondition="true"/>

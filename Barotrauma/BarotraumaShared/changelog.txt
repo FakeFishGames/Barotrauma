@@ -1,4 +1,151 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.7.0
+---------------------------------------------------------------------------------------------------------
+
+UI/UX improvements:
+- Double clicking on an item moves it to the equipped inventory (e.g. ammo to the equipped weapon).
+- Periscopes can be deselected by pressing esc.
+- Fabricators can pull ingredients directly from the user's inventory without having to place them in the fabricator's input slots.
+- Lock the on/off slider in the pump interface when the state is controlled by signals, same with the engine slider.
+- 1 second cooldown before doors can be opened/closed after someone else has opened/closed them. Makes it less likely for doors to be opened/closed accidentally when multiple people are trying to use them at the same time. 
+- Show a warning if trying to start a campaign for the first time without playing the tutorials.
+- Diving suits and fire extinguishers are not automatically picked up from the lockers/brackets when clicking on them to make it less likely to accidentally pick them up. Instead, clicking on them opens the inventory of the container, the same way when interacting with e.g. a steel cabinet.
+- Subinventories (= inventories inside items, toolboxes for example) open/close faster and cannot be interacted with until fully open.
+- Contents of toolboxes and crates are shown in the tooltip when hovering the cursor over the slot.
+- In-game message boxes (mission/traitor notifications) close automatically after 15 seconds if not interacted with.
+- Right-clicking in the sub editor opens a context menu that can be used to remove, cut, copy and paste entities (making it possible to remove them when using a keyboard that doesn't have a delete key).
+- Hide cursor when aiming with a turret or a ranged weapon.
+- Hide inventory when operating a turret.
+- Added filtering to sprite and particle editors.
+- Added a "Decorative" category to the submarine editor.
+- Made docking indicators more visible on the sonar.
+- Show mic input level also when Push-to-Talk mode is selected to make it easier to adjust the level without having to switch the mode to Voice Activity.
+
+Optimization:
+- Major physics optimization. Most importantly, the physics are now multithreaded, making the game perform much better when there are large numbers of characters active.
+- Item optimizations. Items that don't currently have any components active are not updated, which significantly improves the performance especially in large subs with lots of items.
+- More aggressive character culling (characters stop being rendered as soon as they exit the camera view).
+- Dead bodies despawn after a few minutes (or when the character respawns in multiplayer). The despawning character's items are placed in a duffel bag and dropped near the body. Prevents performance issues when lots of bodies start to accumulate in the submarine.
+- Preload necessary monster assets at the start of the round to prevent lag spikes when a monster spawns.
+
+Additions and changes:
+- New shuttle, "Hemulen".
+- Merged Selkie and Bunyip into a new, improved shuttle (just called Selkie now).
+- The job gear variants are not just visually different versions of the same item, but completely separate items. The job variants now allow the players to choose what kind of gear they want to spawn with, not just the look of the uniform.
+- Attachable items and wire nodes can now be freely placed around the character instead of always being placed at the position of the character. When attaching items/wires, there's a placement grid that makes it much easier to neatly attach/wire things mid-round.
+- The submarines now get automatically outfitted with a semi-random selection of supplies when starting a campaign. The items that have been manually placed in the submarine editor are kept as-is.
+- Added a keyboard item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
+- Added muzzle flashes to small firearms.
+- Added a crosshair when aiming with small firearms. The crosshair also indicates the spread of the weapon.
+- Increased the skill requirements to operate the reactor.
+- New background music for editors.
+- Characters with an insufficient electrical engineering skill may get electrocuted when rewiring powered devices.
+- Added holes in the level walls next to the outpost at the end of the level, so the player doesn't have to backtrack through most of the level if they approach the outpost from the wrong side of the level wall.
+- Added heavy water currents at the sides of the level to make it more obvious that you're not supposed to go that way.
+- Added subtle chromatic aberration & blur when suffering from heavy bloodloss.
+- Nerfed hull damage from plasma cutter and welding tool explosions.
+- Removed repair thresholds from items; any device that's not in perfect condition can now be repaired.
+- Bandages now have 3 uses.
+- Mouse button names are now translated.
+- Improved tiger thresher sprite.
+- Replaced the legacy ladder, stair and docking port sprites.
+- New alarm buzzer sprite that actually looks like an alarm buzzer.
+- New (smaller) small pump sprite.
+- Decreased the range and brightness of the "halo" around the players.
+- Exposed pump's MaxFlow parameter in the sub editor.
+- Added a lot more oomph to nuclear explosions.
+
+AI:
+- Bots can now undock the sub.
+- TODO: expand
+
+Multiplayer:
+- Fixed players not getting notified in any way when they connection to the server has timed out, allowing them to keep playing without being able to interact with anything.
+- Fixed clients not attempting to reconnect to the server automatically when if the connection is lost, forcing the client to rejoin the server manually.
+- Karma system can be enabled/disabled in the "host server" menu.
+- Option the set the number of password retries before a ban.
+- Fixed voice chat indicators not working in the in-game crew list.
+- Moved "End Round" button to the pause menu.
+- Added a separate server log category for wiring.
+
+Bugfixes:
+- Fixed camera position "twitching" when moving the cursor around while unconscious.
+- Fixed texts in mission/traitor notifications occasionally overflowing outside the border of the message box.
+- Fixed background structures that are resizeable on both axes always being drawn behind other background structures regardless of the sprite depth.
+- Fixed Kastrull flooding when the drone undocks.
+- Fixed sonar transducers consuming no power.
+- Fixed charactes being unable to get through multi-layer walls from inside the sub (for example the walls above Humpback's command room).
+- Fixed plasma cutter not cutting through holes in walls.
+- Fixed melee weapons not working inside ruins due to the colliders that block subs from entering the ruins.
+- Fixed small "twitch" when a character enters or exits a submarine.
+- Fixed server lobby screen not scaling correctly after changing to a bigger resolution.
+- Made the screen distortion effects caused by afflictions change less abruptly when the condition of the character changes quickly.
+- Fixed items being swapped from slot to another when combining an item with one that has a higher condition.
+- Fixed lights in deviced bleeding through characters and blurry black "shadow" around characters.
+- Fixed '+' and '-' signs in number input fields being misaligned in Chinese and Japanese.
+- Fixed Workshop item descriptions only showing the first 256 characters.
+- Fixed reactor highlight effect extending outside the reactor sprite.
+- Fixed ID-restricted doors only taking the first ID card in the inventory into account.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.6.0
+---------------------------------------------------------------------------------------------------------
+
+Networking/multiplayer fixes:
+- Fixed the game occasionally freezing when joining a server.
+- Fixed a bug that occasionally caused clients to disconnect with an "entity not found" error in the multiplayer. In technical terms, the issue occurred when the server spawned an entity with a given ID, sent a network event for that entity, and then spawned another entity that took up the ID of the previous entity. This could happen, for example, if in the multiplayer campaign a player happens to get an item with the same ID as an item in the inventory of another player who isn't currently present, and the other player joins the server. There are still most likely additional bugs that can cause similar error messages, so this fix will probably not get rid of the errors entirely.
+- Fixed start button staying disabled in the server lobby when switching from the campaign mode to another game mode.
+- Fixed clients occasionally getting disconnected due to the campaign store. Happened if a location had changed from one type to another (for example, natural formation to outpost), the players had bought something that wasn't originally available from the location and a new client joined.
+- Fixed clients occasionally being prompted to download subs from the server even if they already have a matching sub.
+- Fixed server having a password even if the password box is left empty in the in-game "host server" menu when hosting with the Linux version.
+- Fixed server name being shortened to one word when hosting from the in-game "host server" menu with the Linux version.
+- Fixed server name length not being restricted when set from serversettings.xml or using console commands.
+- Fixed "ready to start" tickbox disappearing if a client joins while a round is running.
+- Fixed traitors remaining as traitors client-side after restarting the round, allowing them to access the sabotage interface despite not having a traitor objective.
+- Fixed characters occasionally not selecting/deselecting a periscope client-side, causing them to walk in place or not grab the periscope.
+- Fixed male asian heads not appearing in the server lobby.
+- Fixed campaign servers never being filtered out from the server browser when filtering based on game mode.
+- Fixed clients not displaying the "could not connect" popup if the initial connection to a server times out.
+- Fixed door weld state occasionally getting desynced, causing the door to be welded server-side but possible to open client-side.
+
+Electricity fixes:
+- Fixed junction boxes not passing signals to relays.
+- Fixed broken junction boxes and relays carrying power.
+- Fixed devices not receiving power if they're connected directly to batteries/supercapacitors with no relays or junction boxes in between.
+- Fixed light components that receive power from somewhere else than a power input connection not going out when they lose power (e.g. lights on the diving suits).
+- Fixed pumps and batteries operating/recharging faster when receiving overvoltage, with no upper limit, making it possible to for example operate pumps at 10x the speed by connecting them to a relay that's receiving 10x more power than is being drawn from it.
+- Fixed LightComponents being toggled twice when they receive a signal to the toggle connection.
+
+Misc fixes:
+- Fixed "last used" listbox overlapping with the entity visibility tickboxes in the submarine editor on low resolutions. 
+- Fixed misaligned colliders on the "Shell A Cap 0 deg A/B" wall pieces.
+- Fixed links disappearing between linked subs and docking ports when loading in the sub editor.
+- Fixed loading freezing for up to 10 seconds if the game cannot fetch the remote content for the main menu (update notifications, changelogs, etc).
+- Fixed lights on devices (junction boxes, nav terminals, reactor) being rendered on top of characters.
+- Fixed lights lagging a little behind moving objects (e.g. diving suit light).
+- Fixed characters being able to grab/heal others when handcuffed.
+- Character editor: don't switch to the limb mode when clicking a limb in the joint edit mode. Fixes difficulties in using the joint angle widgets when the widgets are interloping limb source rects.
+- Character editor: Fixed the texture path field not being copied if the source character has no texture path defined. In this case, we can use a texture path found in one of the limbs.
+- Fixed bots incorrectly reporting problems in the room they are in instead of the room the issues is spotted at.
+- Fixed bots reporting broken devices or asking medical attendance even if they are taking care of those things.
+- Fixed bots saying "put out a fire in hull" instead of using the name of the room when they extinguish a fire.
+- Fixed AITargets staing active even if the entity is not active (for example, the sonar could still be heard by monsters after it's turned off).
+- The bots now only report about issues that have not been already been reported.
+- Fixed monsters attacking doors that are open.
+- Monsters keep pursuing the target if the behavior is "pursue" even when they cannot attack.
+- Bots stop operating devices if a player starts operating them (unless they have been ordered to operate the device).
+- Fixed bots playing the rewiring sound when repairing an item with a screwdriver.
+- Fixed bots sometimes stopping behind a closed door when trying to extinguish a fire.
+- Fixed chat messages occasionally extending below the lower bound of the chatbox.
+- Fixed searchlight and turret lights disappearing before the light is fully off-screen.
+- Waypoint fixes in Kastrull and the drone.
+- Fixed Kastrull flooding when the drone is undocked.
+- Fixed ballast pumps in Kastrull's drone being off by default.
+- Fixed enormous in-game ballistic helmet sprite.
+- Fire extinguishers can't be placed inside toolboxes anymore.
+- Fixed lobby screen not scaling correctly after changing to a bigger resolution.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.5.1
 ---------------------------------------------------------------------------------------------------------
 
@@ -8,8 +155,7 @@ v0.9.5.1
 - Nerfed Hammerhead Spawns.
 - Fixed occasional disconnections when the Hammerhead Matriarch releases her spawns.
 - Fixed Hammerhead Matriarch exploding twice when it attacks.
-- Fixed bots sometimes getting stuck in an objective loop, causing them to repeatedly drop and pick up
-diving suits or spam doors.
+- Fixed bots sometimes getting stuck in an objective loop, causing them to repeatedly drop and pick up diving suits or spam doors.
 - Fixed bots being allowed to go outside without a diving suit.
 - Fixed characters with a rectangular main collider being unable to use path finding.
 - Fixed microphone volume scrollbar resetting to the maximum value when opening the settings menu.

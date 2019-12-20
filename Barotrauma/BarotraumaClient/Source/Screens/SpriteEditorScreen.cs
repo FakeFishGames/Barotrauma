@@ -360,6 +360,8 @@ namespace Barotrauma
                 element.Elements("ContainedSprite").ForEach(s => CreateSprite(s));
                 element.Elements("inventoryicon").ForEach(s => CreateSprite(s));
                 element.Elements("InventoryIcon").ForEach(s => CreateSprite(s));
+                element.Elements("icon").ForEach(s => CreateSprite(s));
+                element.Elements("Icon").ForEach(s => CreateSprite(s));
                 //decorativesprites don't necessarily have textures (can be used to hide/disable other sprites)
                 element.Elements("decorativesprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
                 element.Elements("DecorativeSprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
@@ -439,7 +441,7 @@ namespace Barotrauma
                     foreach (Sprite sprite in loadedSprites)
                     {
                         if (sprite.Texture != selectedTexture) continue;
-                        if (PlayerInput.LeftButtonClicked())
+                        if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(zoom), sprite.SourceRect.Size.Multiply(zoom));
                             if (scaledRect.Contains(PlayerInput.MousePosition))

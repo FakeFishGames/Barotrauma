@@ -68,9 +68,15 @@ namespace Barotrauma
 
         public bool MatchesItem(Item item)
         {
-            if (item == null) return false;
-            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) return false;
+            if (item == null) { return false; }
+            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
             return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+        }
+        public bool MatchesItem(ItemPrefab itemPrefab)
+        {
+            if (itemPrefab == null) { return false; }
+            if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
+            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id));
         }
 
         public RelatedItem(string[] identifiers, string[] excludedIdentifiers)

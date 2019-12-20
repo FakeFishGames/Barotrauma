@@ -631,13 +631,21 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
-        /// Only checks the id card. Much simpler and a bit different than HasRequiredItems.
+        /// Only checks the id card(s). Much simpler and a bit different than HasRequiredItems.
         /// </summary>
-        public virtual bool HasAccess(Character character)
+        public bool HasAccess(Character character)
         {
+            if (character.Inventory == null) { return false; }
             if (requiredItems.None()) { return true; }
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
-            return requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(idCard)));
+
+            foreach (Item item in character.Inventory.Items)
+            {
+                if (item?.Prefab.Identifier == "idcard" && requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(item))))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
@@ -970,13 +978,13 @@ namespace Barotrauma.Items.Components
                             {
                                 if (isRestrictionsDefined)
                                 {
-                                    return 3;
+                                    return 4;
                                 }
                                 else
                                 {
-                                    if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                                    if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
                                     {
-                                        return isPreferencesDefined ? 2 : 1;
+                                        return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
                                     }
                                     else
                                     {

@@ -102,7 +102,7 @@ namespace Barotrauma
                 editingHUD = CreateEditingHUD();
             }
             
-            if (IsSelected && PlayerInput.LeftButtonClicked())
+            if (IsSelected && PlayerInput.PrimaryMouseButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 

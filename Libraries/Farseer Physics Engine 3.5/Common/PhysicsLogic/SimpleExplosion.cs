@@ -1,8 +1,13 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Dynamics;
-using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common.PhysicsLogic
 {
@@ -11,8 +16,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
     /// </summary>
     public sealed class SimpleExplosion : PhysicsLogic
     {
-        public SimpleExplosion(World world)
-            : base(world, PhysicsLogicType.Explosion)
+        public SimpleExplosion(World world): base(world)
         {
             Power = 1; //linear
         }

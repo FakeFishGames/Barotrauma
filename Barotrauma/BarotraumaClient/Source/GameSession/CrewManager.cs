@@ -152,6 +152,8 @@ namespace Barotrauma
                         if (!string.IsNullOrWhiteSpace(text))
                         {
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
+                            // add to local history
+                            ChatBox.ChatManager.Store(text);
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
                                 msg,
@@ -1258,7 +1260,7 @@ namespace Barotrauma
                 }
                 hoverArea.Inflate(100, 100);
 
-                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.RightButtonClicked())
+                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.SecondaryMouseButtonClicked())
                 {
                     orderTargetFrame = null;
                     OrderOptionButtons.Clear();

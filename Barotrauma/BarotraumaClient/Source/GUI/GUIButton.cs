@@ -200,11 +200,11 @@ namespace Barotrauma
             if (Rect.Contains(PlayerInput.MousePosition) && CanBeSelected && CanBeFocused && Enabled && GUI.IsMouseOn(this))
             {
                 state = ComponentState.Hover;
-                if (PlayerInput.LeftButtonDown())
+                if (PlayerInput.PrimaryMouseButtonDown())
                 {
                     OnButtonDown?.Invoke();
                 }
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if (OnPressed != null)
                     {
@@ -218,7 +218,7 @@ namespace Barotrauma
                         state = ComponentState.Pressed;
                     }
                 }
-                else if (PlayerInput.LeftButtonClicked())
+                else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     GUI.PlayUISound(GUISoundType.Click);
                     if (OnClicked != null)

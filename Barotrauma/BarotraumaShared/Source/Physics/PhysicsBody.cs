@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -394,16 +393,16 @@ namespace Barotrauma
                 switch (bodyShape)
                 {
                     case Shape.Capsule:
-                        body = BodyFactory.CreateCapsule(GameMain.World, height, radius, density);
+                        body = GameMain.World.CreateCapsule(height, radius, density);
                         break;
                     case Shape.HorizontalCapsule:
-                        body = BodyFactory.CreateCapsuleHorizontal(GameMain.World, width, radius, density);
+                        body = GameMain.World.CreateCapsuleHorizontal(width, radius, density);
                         break;
                     case Shape.Circle:
-                        body = BodyFactory.CreateCircle(GameMain.World, radius, density);
+                        body = GameMain.World.CreateCircle(radius, density);
                         break;
                     case Shape.Rectangle:
-                        body = BodyFactory.CreateRectangle(GameMain.World, width, height, density);
+                        body = GameMain.World.CreateRectangle(width, height, density);
                         break;
                     default:
                         throw new NotImplementedException(bodyShape.ToString());
@@ -837,7 +836,7 @@ namespace Barotrauma
                 MathHelper.Clamp(targetRotation - nextAngle, -MathHelper.Pi, MathHelper.Pi);
             float torque = angle * 60.0f * (force / 100.0f);
 
-            if (body.IsKinematic)
+            if (body.BodyType == BodyType.Kinematic)
             {
                 if (!IsValidValue(torque, "torque")) return;
                 body.AngularVelocity = torque;
@@ -851,7 +850,7 @@ namespace Barotrauma
         public void Remove()
         {
             list.Remove(this);
-            GameMain.World.RemoveBody(body);
+            GameMain.World.Remove(body);
 
             DisposeProjSpecific();
         }

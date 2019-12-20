@@ -1,7 +1,6 @@
 ﻿using FarseerPhysics;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -266,12 +265,13 @@ namespace Barotrauma
             List<Vector2> tempVertices = new List<Vector2>();
             List<Vector2> bodyPoints = new List<Vector2>();
 
-            Body cellBody = new Body(GameMain.World)
+            Body cellBody = new Body()
             {
                 SleepingAllowed = false,
                 BodyType = BodyType.Static,
                 CollisionCategories = Physics.CollisionLevel
             };
+            GameMain.World.Add(cellBody);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -336,7 +336,7 @@ namespace Barotrauma
                     if (area < 1.0f) continue;
 
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    var newFixture = FixtureFactory.AttachPolygon(bodyVertices, 5.0f, cellBody);
+                    var newFixture = cellBody.CreatePolygon(bodyVertices, 5.0f);
                     newFixture.UserData = cell;
 
                     if (newFixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)

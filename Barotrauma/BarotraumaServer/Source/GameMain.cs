@@ -170,6 +170,7 @@ namespace Barotrauma
             bool publiclyVisible = false;
             string password = "";
             bool enableUpnp = false;
+
             int maxPlayers = 10;
             int ownerKey = 0;
             UInt64 steamId = 0;
@@ -268,6 +269,17 @@ namespace Barotrauma
                     case "-banafterwrongpassword":
                         bool.TryParse(CommandLineArgs[i + 1], out bool banAfterWrongPassword);
                         Server.ServerSettings.BanAfterWrongPassword = banAfterWrongPassword;
+                        break;
+                    case "-karma":
+                    case "-karmaenabled":
+                        bool.TryParse(CommandLineArgs[i + 1], out bool karmaEnabled);
+                        Server.ServerSettings.KarmaEnabled = karmaEnabled;
+                        i++;
+                        break;
+                    case "-karmapreset":
+                        string karmaPresetName = CommandLineArgs[i + 1];
+                        Server.ServerSettings.KarmaPreset = karmaPresetName;
+                        i++;
                         break;
                 }
             }

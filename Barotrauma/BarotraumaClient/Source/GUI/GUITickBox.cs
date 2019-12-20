@@ -126,6 +126,11 @@ namespace Barotrauma
             set { text.Text = value; }
         }
 
+        public Color? DefaultTextColor
+        {
+            get { return defaultTextColor; }
+        }
+
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
@@ -176,12 +181,12 @@ namespace Barotrauma
             {
                 box.State = ComponentState.Hover;
 
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     box.State = ComponentState.Selected;                    
                 }
 
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     if (radioButtonGroup == null)
                     {

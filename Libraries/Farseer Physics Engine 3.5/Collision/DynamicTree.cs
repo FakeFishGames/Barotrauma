@@ -1,4 +1,11 @@
-﻿/*
+﻿// Copyright (c) 2018 Kastellanos Nikolaos
+
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -47,6 +54,7 @@ namespace FarseerPhysics.Collision
         internal int ParentOrNext;
 
         public object Body;
+
         internal T UserData;
 
         internal bool IsLeaf()
@@ -300,12 +308,35 @@ namespace FarseerPhysics.Collision
             fatAABB = _nodes[proxyId].AABB;
         }
 
+        /// <summary>
+        /// Get the fat AABB for a proxy.
+        /// </summary>
+        /// <param name="proxyId">The proxy id.</param>
+        /// <returns>The fat AABB.</returns>
+        public AABB GetFatAABB(int proxyId)
+        {
+            Debug.Assert(0 <= proxyId && proxyId < _nodeCapacity);
+            return _nodes[proxyId].AABB;
+        }
+
         public object GetBody(int proxyId)
         {
             Debug.Assert(0 <= proxyId && proxyId < _nodeCapacity);
             return _nodes[proxyId].Body;
         }
 
+
+        /// <summary>
+        /// Test overlap of fat AABBs.
+        /// </summary>
+        /// <param name="proxyIdA">The proxy id A.</param>
+        /// <param name="proxyIdB">The proxy id B.</param>
+        public bool TestFatAABBOverlap(int proxyIdA, int proxyIdB)
+        {
+            Debug.Assert(0 <= proxyIdA && proxyIdA < _nodeCapacity);
+            Debug.Assert(0 <= proxyIdB && proxyIdB < _nodeCapacity);
+            return AABB.TestOverlap(ref _nodes[proxyIdA].AABB, ref _nodes[proxyIdB].AABB);
+        }
 
         /// <summary>
         /// Query an AABB for overlapping proxies. The callback class
@@ -388,7 +419,8 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input)
+        /// <param name="collisionCategory">The collision categories of the fixtures to raycast against.</param>
+        public void RayCast(IBroadPhase broadPhase, Func<RayCastInput, FixtureProxy, float> callback, ref RayCastInput input, Category collisionCategory = Category.All)
         {
             Vector2 p1 = input.Point1;
             Vector2 p2 = input.Point2;
@@ -442,12 +474,20 @@ namespace FarseerPhysics.Collision
 
                 if (_nodes[nodeId].IsLeaf())
                 {
+                    FixtureProxy proxy = broadPhase.GetProxy(nodeId);
+                    if (collisionCategory != Category.All &&
+                        //!collisionCategory.HasFlag(proxy.Fixture.CollisionCategories)
+                        (collisionCategory & proxy.Fixture.CollisionCategories) == 0)
+                    {
+                        continue;
+                    }
+
                     RayCastInput subInput;
                     subInput.Point1 = input.Point1;
                     subInput.Point2 = input.Point2;
                     subInput.MaxFraction = maxFraction;
 
-                    float value = callback(subInput, nodeId);
+                    float value = callback(subInput, proxy);
 
                     if (value == 0.0f)
                     {

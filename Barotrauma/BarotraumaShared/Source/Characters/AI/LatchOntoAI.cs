@@ -269,7 +269,7 @@ namespace Barotrauma
                 KinematicBodyB = true,
                 CollideConnected = false,
             };
-            GameMain.World.AddJoint(limbJoint);
+            GameMain.World.Add(limbJoint);
             attachJoints.Add(limbJoint);
 
             // Limb scale is already taken into account when creating the collider.
@@ -285,7 +285,7 @@ namespace Barotrauma
                 CollideConnected = false,
                 //Length = 0.1f
             };
-            GameMain.World.AddJoint(colliderJoint);
+            GameMain.World.Add(colliderJoint);
             attachJoints.Add(colliderJoint);            
         }
 
@@ -293,7 +293,7 @@ namespace Barotrauma
         {
             foreach (Joint joint in attachJoints)
             {
-                GameMain.World.RemoveJoint(joint);
+                GameMain.World.Remove(joint);
             }
             attachJoints.Clear();            
         }

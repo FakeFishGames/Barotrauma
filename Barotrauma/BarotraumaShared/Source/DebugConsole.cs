@@ -98,9 +98,6 @@ namespace Barotrauma
         private static string currentAutoCompletedCommand;
         private static int currentAutoCompletedIndex;
 
-        //used for keeping track of the message entered when pressing up/down
-        private static int selectedIndex;
-
         public static bool CheatsEnabled;
 
         private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
@@ -219,7 +216,7 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 try
@@ -1208,24 +1205,6 @@ namespace Barotrauma
             currentAutoCompletedIndex = 0;
         }
 
-        public static string SelectMessage(int direction, string currentText = null)
-        {
-            if (Messages.Count == 0) return "";
-
-            direction = MathHelper.Clamp(direction, -1, 1);
-
-			int i = 0;
-			do
-			{
-				selectedIndex += direction;
-				if (selectedIndex < 0) selectedIndex = Messages.Count - 1;
-				selectedIndex %= Messages.Count;
-				if (++i >= Messages.Count) break;
-			} while (!Messages[selectedIndex].IsCommand || Messages[selectedIndex].Text == currentText);
-
-            return !Messages[selectedIndex].IsCommand ? "" : Messages[selectedIndex].Text;            
-        }
-
         public static void ExecuteCommand(string command)
         {
             if (activeQuestionCallback != null)
@@ -1415,7 +1394,8 @@ namespace Barotrauma
 
             if (human)
             {
-                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job);
+                var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1451,11 +1431,14 @@ namespace Barotrauma
             Vector2? spawnPos = null;
             Inventory spawnInventory = null;
 
-            string itemName = args[0].ToLowerInvariant();
-            if (!(MapEntityPrefab.Find(itemName, showErrorMessages: false) is ItemPrefab itemPrefab))
+            string itemNameOrId = args[0].ToLowerInvariant();
+            ItemPrefab itemPrefab =
+                (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
+                MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+            if (itemPrefab == null)
             {
-                errorMsg = "Item \"" + itemName + "\" not found!";
-                var matching = ItemPrefab.Prefabs.Find(me => me.Name.ToLowerInvariant().StartsWith(itemName));
+                errorMsg = "Item \"" + itemNameOrId + "\" not found!";
+                var matching = ItemPrefab.Prefabs.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";

@@ -115,6 +115,9 @@ namespace Barotrauma.Networking
         MissingContentPackage,
         IncompatibleContentPackage,
         NotOnWhitelist,
+        ExcessiveDesyncOldEvent,
+        ExcessiveDesyncRemovedEvent,
+        SyncTimeout
     }
 
     abstract partial class NetworkMember

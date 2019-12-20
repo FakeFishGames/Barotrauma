@@ -29,7 +29,8 @@ namespace Barotrauma
         private readonly CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox, wrongPasswordBanBox;
+        private GUITickBox isPublicBox, wrongPasswordBanBox, karmaEnabledBox;
+        private GUIDropDown karmaPresetDD;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -668,9 +669,9 @@ namespace Barotrauma
                     GameMain.MainMenuScreen.Select();
                     return;
                 }
-                var characterInfo = new CharacterInfo(
-                    CharacterPrefab.HumanSpeciesName,
-                    jobPrefab: JobPrefab.Get(jobIdentifiers[i]));
+                var jobPrefab = JobPrefab.Get(jobIdentifiers[i]);
+                var variant = Rand.Range(0, jobPrefab.Variants);
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
@@ -829,6 +830,8 @@ namespace Barotrauma
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
+                                   " -karmaenabled " + karmaEnabledBox.Selected.ToString() +
+                                   " -karmapreset " + (karmaPresetDD.SelectedData?.ToString() ?? "default") +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -974,7 +977,7 @@ namespace Barotrauma
                     if (i == 0)
                     {
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
-                        if (mouseOn && PlayerInput.LeftButtonClicked())
+                        if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
                             GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
@@ -1191,14 +1194,42 @@ namespace Barotrauma
                 Censor = true
             };
 
-            var tickboxArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+            // tickbox upper ---------------
 
-            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("PublicServer"))
+            var tickboxAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("PublicServer"))
             {
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
 
-            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxArea.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
+
+            // tickbox lower ---------------
+
+            var tickboxAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
+
+            karmaEnabledBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), tickboxAreaLower.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
+            {
+                ToolTip = TextManager.Get("karmaexplanation"),
+                OnSelected = (tb) =>
+                {
+                    karmaPresetDD.Enabled = karmaPresetDD.ButtonEnabled = tb.Selected;
+                    return true;
+                }                
+            };
+            karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(0.6f, 1.0f), tickboxAreaLower.RectTransform))
+            {
+                ButtonEnabled = false,
+                Enabled = false
+            };
+            var tempKarmaManager = new KarmaManager();
+            foreach (string karmaPreset in tempKarmaManager.Presets.Keys)
+            {
+                karmaPresetDD.AddItem(TextManager.Get("KarmaPreset." + karmaPreset), karmaPreset);
+                if (karmaPreset == "default") { karmaPresetDD.SelectItem(karmaPreset); }
+            }
+            if (karmaPresetDD.SelectedIndex == -1) { karmaPresetDD.Select(0); }
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
             {

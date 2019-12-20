@@ -83,7 +83,9 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
 
-            timeout = NetworkConnection.TimeoutThreshold;
+            timeout = Screen.Selected == GameMain.GameScreen ?
+                NetworkConnection.TimeoutThresholdInGame :
+                NetworkConnection.TimeoutThreshold;
 
             byte incByte = data[0];
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -150,6 +152,7 @@ namespace Barotrauma.Networking
             if (timeout < 0.0)
             {
                 Close("Timed out");
+                OnDisconnectMessageReceived?.Invoke("");
                 return;
             }
 
@@ -310,7 +313,6 @@ namespace Barotrauma.Networking
                 }
             },
             GameMain.Client.SimulatedMinimumLatency + Rand.Range(0.0f, GameMain.Client.SimulatedRandomLatency));
-
 #else
             Send(buf, length + 4, sendType);
 #endif
@@ -381,5 +383,12 @@ namespace Barotrauma.Networking
 
             OnDisconnect?.Invoke();
         }
+
+#if DEBUG
+        public override void ForceTimeOut()
+        {
+            timeout = 0.0f;
+        }
+#endif
     }
 }

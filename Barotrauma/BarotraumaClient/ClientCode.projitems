@@ -96,6 +96,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\ItemLabel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Ladder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\LevelResource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\LightComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Machines\Controller.cs" />
@@ -115,7 +116,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\CustomInterface.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Keyboard.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Terminal.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\MotionSensor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\WifiComponent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Components\Signal\Wire.cs" />
@@ -126,7 +127,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Item.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemPrefab.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Source\Items\Rope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\FireSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Gap.cs" />
@@ -234,6 +234,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\Sprite.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Sprite\SpriteSheet.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\StatusEffects\StatusEffect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\ChatManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Traitors\TraitorMissionPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\CrossThread.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Utils\LocalizationCSVtoXML.cs" />

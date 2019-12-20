@@ -124,7 +124,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
         {
-            if (!IsOn) { return; }
+            if (!IsOn || item.Condition <= 0.0f) { return; }
 
             //we've already received this signal
             if (lastPowerProbeRecipients.Contains(this)) { return; }

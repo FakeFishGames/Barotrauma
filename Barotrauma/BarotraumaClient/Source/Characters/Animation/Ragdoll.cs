@@ -421,9 +421,9 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (simplePhysicsEnabled) return;
+            if (simplePhysicsEnabled) { return; }
 
             Collider.UpdateDrawPosition();
 
@@ -442,11 +442,48 @@ namespace Barotrauma
                 color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
+            float depthOffset = GetDepthOffset();
             for (int i = 0; i < limbs.Length; i++)
             {
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth += depthOffset; }
                 inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
+                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth -= depthOffset; }
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
+        }
+
+        /// <summary>
+        /// Offset added to the default draw depth of the character's limbs. For example, climbing on ladders affects the depth of the character to get it to render behind the ladders.
+        /// </summary>
+        public float GetDepthOffset()
+        {
+            float depthOffset = 0.0f;
+            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
+            if (ladder != null)
+            {
+                float maxDepth = 0.0f;
+                float minDepth = 1.0f;
+                foreach (Limb limb in Limbs)
+                {
+                    var activeSprite = limb.ActiveSprite;
+                    if (activeSprite != null)
+                    {
+                        maxDepth = Math.Max(activeSprite.Depth, maxDepth);
+                        minDepth = Math.Min(activeSprite.Depth, minDepth);
+                    }
+                }
+                if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
+                {
+                    //at the left side of the ladder, needs to be drawn in front of the rungs
+                    depthOffset = Math.Max(ladder.BackgroundSpriteDepth - 0.01f - maxDepth, 0.0f);
+                }
+                else
+                {
+                    //at the right side of the ladder, needs to be drawn behind the rungs
+                    depthOffset = Math.Max(ladder.BackgroundSpriteDepth + 0.01f - minDepth, 0.0f);
+                }
+            }
+            return depthOffset;
         }
 
         public void DebugDraw(SpriteBatch spriteBatch)
@@ -464,7 +501,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
                 }
 
-                limb.body.DebugDraw(spriteBatch, inWater ? Color.Cyan : Color.White);
+                limb.body.DebugDraw(spriteBatch, inWater ? (currentHull == null ? Color.Blue : Color.Cyan) : Color.White);
             }
 
             Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
@@ -500,16 +537,6 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
             }
 
-            if (outsideCollisionBlocker.Enabled && currentHull?.Submarine != null)
-            {
-                var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;
-                Vector2 startPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex1)) + currentHull.Submarine.Position;
-                Vector2 endPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex2)) + currentHull.Submarine.Position;                
-                startPos.Y = -startPos.Y;
-                endPos.Y = -endPos.Y;
-                GUI.DrawLine(spriteBatch, startPos, endPos, Color.Gray, 0, 5);
-            }
-
             if (character.MemState.Count > 1)
             {
                 Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
@@ -529,7 +556,15 @@ namespace Barotrauma
                 }
             }
 
-            if (ignorePlatforms)
+            if (currentHull != null)
+            {
+                Vector2 displayFloorPos = ConvertUnits.ToDisplayUnits(new Vector2(Collider.SimPosition.X, floorY));
+                if (currentHull?.Submarine != null) { displayFloorPos += currentHull.Submarine.DrawPosition; }
+                displayFloorPos.Y = -displayFloorPos.Y;
+                GUI.DrawLine(spriteBatch, displayFloorPos, displayFloorPos + new Vector2(floorNormal.X, -floorNormal.Y) * 50.0f, Color.Cyan * 0.5f, 0, 2);
+            }
+
+            if (IgnorePlatforms)
             {
                 GUI.DrawLine(spriteBatch,
                     new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y),

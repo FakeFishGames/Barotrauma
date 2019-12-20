@@ -596,6 +596,7 @@ namespace Barotrauma
             else
             {
                 deviceList.AddItem(TextManager.Get("VoipNoDevices") ?? "N/A", null);
+                deviceList.ButtonTextColor = Color.Red;
                 deviceList.ButtonEnabled = false;
                 deviceList.Select(0);
             }
@@ -638,16 +639,12 @@ namespace Barotrauma
             currentDeviceTextBlock.RectTransform.Parent = defaultDeviceGroup.RectTransform;
 #endif
 
-            GUIRadioButtonGroup voiceMode = new GUIRadioButtonGroup();
-            for (int i = 0; i < 3; i++)
+            var voiceModeCount = Enum.GetNames(typeof(VoiceMode)).Length;
+            var voiceModeDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), elementCount: voiceModeCount);
+            for (int i = 0; i < voiceModeCount; i++)
             {
-                string langStr = "VoiceMode." + ((VoiceMode)i).ToString();
-                var tick = new GUITickBox(new RectTransform(tickBoxScale / 0.4f, voipSettings.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get(langStr), style: "GUIRadioButton")
-                {
-                    ToolTip = TextManager.Get(langStr + "ToolTip")
-                };
-
-                voiceMode.AddRadioButton(i, tick);
+                var voiceMode = "VoiceMode." + ((VoiceMode)i).ToString();
+                voiceModeDropDown.AddItem(TextManager.Get(voiceMode), userData: i, toolTip: TextManager.Get(voiceMode + "ToolTip"));
             }
 
             var micVolumeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), voipSettings.RectTransform), TextManager.Get("MicrophoneVolume"));
@@ -671,30 +668,32 @@ namespace Barotrauma
 
             var extraVoiceSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), voipSettings.RectTransform, Anchor.BottomCenter), style: null);
 
-            var voiceInputContainer = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform, Anchor.BottomCenter));
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.25f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 0.25f), voiceInputContainer.RectTransform, Anchor.TopRight),
-                text: KeyBindText(InputType.Voice))
+            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), extraVoiceSettingsContainer.RectTransform))
             {
-                UserData = InputType.Voice
+                Visible = VoiceSetting != VoiceMode.Disabled
             };
-            voiceKeyBox.OnSelected += KeyBoxSelected;
-            voiceKeyBox.SelectedColor = Color.Gold * 0.3f;
-
-            var voiceActivityGroup = new GUILayoutGroup(new RectTransform(Vector2.One, extraVoiceSettingsContainer.RectTransform));
-            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
+            GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"))
             {
+                Visible = VoiceSetting == VoiceMode.Activity,
                 TextGetter = () =>
                 {
                     return TextManager.Get("NoiseGateThreshold") + " " + ((int)NoiseGateThreshold).ToString() + " dB";
                 }
             };
-            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.25f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
+            var dbMeter = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), 0.0f, Color.Lime);
             dbMeter.ProgressGetter = () =>
             {
                 if (VoipCapture.Instance == null) { return 0.0f; }
-                dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
 
+                if (VoiceSetting == VoiceMode.Activity)
+                {
+                    dbMeter.Color = VoipCapture.Instance.LastdB > NoiseGateThreshold ? Color.Lime : Color.Orange; //TODO: i'm a filthy hack
+                }
+                else
+                {
+                    dbMeter.Color = Color.Lime;
+                }
+                
                 float scrollVal = double.IsNegativeInfinity(VoipCapture.Instance.LastdB) ? 0.0f : ((float)VoipCapture.Instance.LastdB + 100.0f) / 100.0f;
                 return scrollVal * scrollVal;
             };
@@ -704,6 +703,7 @@ namespace Barotrauma
             noiseGateSlider.Range = new Vector2(-100.0f, 0.0f);
             noiseGateSlider.BarScroll = MathUtils.InverseLerp(-100.0f, 0.0f, NoiseGateThreshold);
             noiseGateSlider.BarScroll *= noiseGateSlider.BarScroll;
+            noiseGateSlider.Visible = VoiceSetting == VoiceMode.Activity;
             noiseGateSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {
                 NoiseGateThreshold = MathHelper.Lerp(-100.0f, 0.0f, (float)Math.Sqrt(scrollBar.BarScroll));
@@ -711,37 +711,55 @@ namespace Barotrauma
                 return true;
             };
 
-            voiceMode.OnSelect = (GUIRadioButtonGroup rbg, int? value) =>
+            var voiceInputContainer = new GUILayoutGroup(
+                new RectTransform(new Vector2(1.0f, 0.25f), extraVoiceSettingsContainer.RectTransform)
+                {
+                    RelativeOffset = new Vector2(0.0f, voiceActivityGroup.RectTransform.RelativeSize.Y + 0.1f)
+                },
+                isHorizontal: true)
             {
-                if (rbg.Selected != null && rbg.Selected.Equals(value)) return;
+                Visible = VoiceSetting == VoiceMode.PushToTalk
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"));
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
+            {
+                SelectedColor = Color.Gold * 0.3f,
+                UserData = InputType.Voice
+            };
+            voiceKeyBox.OnSelected += KeyBoxSelected;
+
+            voiceModeDropDown.OnSelected = (GUIComponent selected, object userData) =>
+            {
                 try
                 {
-                    VoiceMode vMode = (VoiceMode)value;
+                    VoiceMode vMode = (VoiceMode)userData;
+                    if (vMode == VoiceSetting) { return true; }
                     VoiceSetting = vMode;
-                    if (vMode == VoiceMode.Activity)
+                    if (vMode != VoiceMode.Disabled)
                     {
-                        voiceActivityGroup.Visible = true;
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
                             VoipCapture.Create(GameMain.Config.VoiceCaptureDevice);
                             if (VoipCapture.Instance == null)
                             {
                                 VoiceSetting = vMode = VoiceMode.Disabled;
-                                voiceInputContainer.Visible = false;
                                 voiceActivityGroup.Visible = false;
-                                return;
+                                voiceInputContainer.Visible = false;
+                                return true;
                             }
                         }
                     }
                     else
                     {
-                        voiceActivityGroup.Visible = false;
                         if (GameMain.Client == null)
                         {
                             VoipCapture.Instance?.Dispose();
                         }
                     }
 
+                    noiseGateText.Visible = (vMode == VoiceMode.Activity);
+                    noiseGateSlider.Visible = (vMode == VoiceMode.Activity);
+                    voiceActivityGroup.Visible = (vMode != VoiceMode.Disabled);
                     voiceInputContainer.Visible = (vMode == VoiceMode.PushToTalk);
                     UnsavedSettings = true;
                 }
@@ -751,11 +769,16 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace);
                     VoiceSetting = VoiceMode.Disabled;
                 }
+
+                return true;
             };
-            voiceMode.Selected = (int)VoiceSetting;
+
+            voiceModeDropDown.Select((int)VoiceSetting);
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice))
             {
-                voiceMode.Enabled = false;
+                voiceModeDropDown.ButtonEnabled = false;
+                voiceModeDropDown.Color *= 0.5f;
+                voiceModeDropDown.ButtonTextColor *= 0.5f;
             }
 
             /// Controls tab -------------------------------------------------------------
@@ -821,6 +844,12 @@ namespace Barotrauma
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
+
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                foreach (GUILayoutGroup inputContainer in inputColumnLeft.Children) { inputContainer.Recalculate(); }
+                foreach (GUILayoutGroup inputContainer in inputColumnRight.Children) { inputContainer.Recalculate(); }
+            };
 
             GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
 
@@ -1017,7 +1046,7 @@ namespace Barotrauma
             switch (tab)
             {
                 case Tab.Audio:
-                    if (VoiceSetting == VoiceMode.Activity)
+                    if (VoiceSetting != VoiceMode.Disabled)
                     {
                         if (GameMain.Client == null && VoipCapture.Instance == null)
                         {
@@ -1143,7 +1172,7 @@ namespace Barotrauma
         {
             yield return CoroutineStatus.Running;
 
-            while (PlayerInput.LeftButtonHeld() || PlayerInput.LeftButtonClicked())
+            while (PlayerInput.PrimaryMouseButtonHeld() || PlayerInput.PrimaryMouseButtonClicked())
             {
                 //wait for the mouse to be released, so that we don't interpret clicking on the textbox as the keybinding
                 yield return CoroutineStatus.Running;
@@ -1163,31 +1192,31 @@ namespace Barotrauma
 
             if (PlayerInput.LeftButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(0);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.LeftMouse);
             }
             else if (PlayerInput.RightButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(1);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.RightMouse);
             }
             else if (PlayerInput.MidButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(2);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MiddleMouse);
             }
             else if (PlayerInput.Mouse4ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(3);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton4);
             }
             else if (PlayerInput.Mouse5ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(4);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton5);
             }
             else if (PlayerInput.MouseWheelUpClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(5);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelUp);
             }
             else if (PlayerInput.MouseWheelDownClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(6);
+                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelDown);
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {

@@ -21,7 +21,7 @@ namespace Barotrauma
 
         public Matrix GetTransform()
         {
-            return body.BodyType == FarseerPhysics.Dynamics.BodyType.Static ?
+            return body.BodyType == BodyType.Static ?
                 Matrix.Identity :
                 Matrix.CreateRotationZ(body.Rotation) *
                 Matrix.CreateTranslation(new Vector3(ConvertUnits.ToDisplayUnits(body.Position), 0.0f));

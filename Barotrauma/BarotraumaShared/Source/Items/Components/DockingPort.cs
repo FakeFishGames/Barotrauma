@@ -2,7 +2,6 @@
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -271,7 +270,7 @@ namespace Barotrauma.Items.Components
         {
             if (joint != null)
             {
-                GameMain.World.RemoveJoint(joint);
+                GameMain.World.Remove(joint);
                 joint = null;
             }
 
@@ -368,7 +367,7 @@ namespace Barotrauma.Items.Components
         {
             if (doorBody != null)
             {
-                GameMain.World.RemoveBody(doorBody);
+                GameMain.World.Remove(doorBody);
                 doorBody = null;
             }
 
@@ -390,13 +389,12 @@ namespace Barotrauma.Items.Components
 
             System.Diagnostics.Debug.Assert(doorBody == null);
 
-            doorBody = BodyFactory.CreateRectangle(GameMain.World,
+            doorBody = GameMain.World.CreateRectangle(
                 DockingTarget.door.Body.width,
                 DockingTarget.door.Body.height,
                 1.0f,
-                position,
-                DockingTarget.door);
-
+                position);
+            doorBody.UserData = DockingTarget.door;
             doorBody.CollisionCategories = Physics.CollisionWall;
             doorBody.BodyType = BodyType.Static;
         }
@@ -489,7 +487,7 @@ namespace Barotrauma.Items.Components
 
                     for (int j = 0; j < 2; j++)
                     {
-                        bodies[i + j * 2] = BodyFactory.CreateEdge(GameMain.World,
+                        bodies[i + j * 2] = GameMain.World.CreateEdge(
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X, hullRects[i].Y - hullRects[i].Height * j)),
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Right, hullRects[i].Y - hullRects[i].Height * j)));
                     }
@@ -723,7 +721,7 @@ namespace Barotrauma.Items.Components
 
             if (doorBody != null)
             {
-                GameMain.World.RemoveBody(doorBody);
+                GameMain.World.Remove(doorBody);
                 doorBody = null;
             }
 
@@ -735,7 +733,7 @@ namespace Barotrauma.Items.Components
 
             if (joint != null)
             {
-                GameMain.World.RemoveJoint(joint);
+                GameMain.World.Remove(joint);
                 joint = null;
             }
             
@@ -753,7 +751,7 @@ namespace Barotrauma.Items.Components
                 foreach (Body body in bodies)
                 {
                     if (body == null) continue;
-                    GameMain.World.RemoveBody(body);
+                    GameMain.World.Remove(body);
                 }
                 bodies = null;
             }

@@ -514,7 +514,7 @@ namespace Barotrauma
         {
             IsOutpost = true;
             ShowSonarMarker = false;
-            PhysicsBody.FarseerBody.IsStatic = true;
+            PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = Character.TeamType.FriendlyNPC;
 
             foreach (MapEntity me in MapEntity.mapEntityList)
@@ -825,8 +825,7 @@ namespace Barotrauma
                     if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
-            }
-            , rayStart, rayEnd);
+            }, rayStart, rayEnd, collisionCategory ?? Category.All);
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
@@ -876,7 +875,7 @@ namespace Barotrauma
                 }
                 //continue
                 return -1;
-            }, rayStart, rayEnd);
+            }, rayStart, rayEnd, collisionCategory ?? Category.All);
 
             if (allowInsideFixture)
             {

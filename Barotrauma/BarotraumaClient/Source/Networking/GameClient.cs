@@ -46,7 +46,6 @@ namespace Barotrauma.Networking
         private GUIMessageBox reconnectBox, waitInServerQueueBox;
 
         //TODO: move these to NetLobbyScreen
-        public GUIButton EndRoundButton;
         public GUITickBox EndVoteTickBox;
         private GUIComponent buttonContainer;
 
@@ -176,33 +175,6 @@ namespace Barotrauma.Networking
             {
                 AbsoluteSpacing = 5,
                 CanBeFocused = false
-            };
-
-            EndRoundButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.6f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
-                TextManager.Get("EndRound"))
-            {
-                OnClicked = (btn, userdata) =>
-                {
-                    if (!permissions.HasFlag(ClientPermissions.ManageRound)) { return false; }
-                    if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
-                    {
-                        var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"),
-                            new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                        msgBox.Buttons[0].OnClicked = (_, __) =>
-                        {
-                            GameMain.Client.RequestRoundEnd();
-                            return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked += msgBox.Close;
-                    }
-                    else
-                    {
-                        RequestRoundEnd();
-                    }
-                    return true;
-                },
-                Visible = false
             };
 
             EndVoteTickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.4f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
@@ -535,7 +507,7 @@ namespace Barotrauma.Networking
 
             reconnectBox?.Close(); reconnectBox = null;
 
-            if (connectCancelled) yield return CoroutineStatus.Success;
+            if (connectCancelled) { yield return CoroutineStatus.Success; }
             
             yield return CoroutineStatus.Success;
         }
@@ -870,9 +842,22 @@ namespace Barotrauma.Networking
                 waitInServerQueueBox = null;
                 CoroutineManager.StopCoroutines("WaitInServerQueue");
             }
+
+            bool eventSyncError = 
+                disconnectReason == DisconnectReason.ExcessiveDesyncOldEvent ||
+                disconnectReason == DisconnectReason.ExcessiveDesyncRemovedEvent ||
+                disconnectReason == DisconnectReason.SyncTimeout;
             
-            if (allowReconnect && disconnectReason == DisconnectReason.Unknown)
+            if (allowReconnect && 
+                (disconnectReason == DisconnectReason.Unknown || eventSyncError))
             {
+                if (eventSyncError)
+                {
+                    GameMain.NetLobbyScreen.Select();
+                    gameStarted = false;
+                    myCharacter = null;
+                }
+
                 DebugConsole.NewMessage("Attempting to reconnect...");
 
                 string msg = TextManager.GetServerMessage(disconnectMsg);
@@ -880,6 +865,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("ConnectionLostReconnecting") :
                     msg + '\n' + TextManager.Get("ConnectionLostReconnecting");
 
+                reconnectBox?.Close();
                 reconnectBox = new GUIMessageBox(
                     TextManager.Get("ConnectionLost"),
                     msg, new string[0]);
@@ -1343,7 +1329,7 @@ namespace Barotrauma.Networking
 
             ReadPermissions(inc);
 
-            if (gameStarted)
+            if (gameStarted && Screen.Selected != GameMain.GameScreen)
             {
                 new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
                 GameMain.NetLobbyScreen.Select();
@@ -1752,6 +1738,8 @@ namespace Barotrauma.Networking
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.Write((byte)ClientPacketHeader.UPDATE_INGAME);
+            outmsg.Write(entityEventManager.MidRoundSyncingDone);
+            outmsg.WritePadBits();
 
             outmsg.Write((byte)ClientNetObject.SYNC_IDS);
             //outmsg.Write(GameMain.NetLobbyScreen.LastUpdateID);
@@ -2267,12 +2255,10 @@ namespace Barotrauma.Networking
         {
             if (gameStarted)
             {
-                tickBox.Visible = false;
+                tickBox.Parent.Visible = false;
                 return false;
             }
-
             Vote(VoteType.StartRound, tickBox.Selected);
-
             return true;
         }
 
@@ -2333,7 +2319,7 @@ namespace Barotrauma.Networking
                 if (textBox == chatBox.InputBox) textBox.Deselect();
                 return false;
             }
-
+            chatBox.ChatManager.Store(message);
             SendChatMessage(message);
 
             if (textBox.DeselectAfterMessage)
@@ -2679,5 +2665,12 @@ namespace Barotrauma.Networking
             }
             clientPeer.Send(outMsg, DeliveryMethod.Reliable);
         }
+
+#if DEBUG
+        public void ForceTimeOut()
+        {
+            clientPeer?.ForceTimeOut();
+        }
+#endif
     }
 }

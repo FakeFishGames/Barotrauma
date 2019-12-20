@@ -967,18 +967,32 @@
 <entitydescription.idcard>Permet un accès limité à certaines zones du sous-marin.</entitydescription.idcard>
 <entityname.alienpistol>Pistolet alien</entityname.alienpistol>
 <entitydescription.alienpistol>Un pistolet qui fonctionne grâce à des batteries aliens.</entitydescription.alienpistol>
-<entityname.captainscap>Casquette de capitaine</entityname.captainscap>
-<entitydescription.captainscap>Un symbole de l'autorité incontestable du capitaine.</entitydescription.captainscap>
-<entityname.captainsuniform>Uniforme de capitaine</entityname.captainsuniform>
-<entitydescription.captainsuniform>Ceci vous donnera l'apparence de contrôler la situation.</entitydescription.captainsuniform>
+<entityname.captainscap1>Casquette de capitaine</entityname.captainscap1>
+<entitydescription.captainscap1>Un symbole de l'autorité incontestable du capitaine.</entitydescription.captainscap1>
+<entityname.captainscap2>Casquette de capitaine</entityname.captainscap2>
+<entitydescription.captainscap2>Un symbole de l'autorité incontestable du capitaine.</entitydescription.captainscap2>
+<entityname.captainscap3>Casquette de capitaine</entityname.captainscap3>
+<entitydescription.captainscap3>Un symbole de l'autorité incontestable du capitaine.</entitydescription.captainscap3>
+<entityname.captainsuniform1>Uniforme de capitaine</entityname.captainsuniform1>
+<entitydescription.captainsuniform1>Ceci vous donnera l'apparence de contrôler la situation.</entitydescription.captainsuniform1>
+<entityname.captainsuniform2>Uniforme de capitaine</entityname.captainsuniform2>
+<entitydescription.captainsuniform2>Ceci vous donnera l'apparence de contrôler la situation.</entitydescription.captainsuniform2>
+<entityname.captainsuniform3>Uniforme de capitaine</entityname.captainsuniform3>
+<entitydescription.captainsuniform3>Ceci vous donnera l'apparence de contrôler la situation.</entitydescription.captainsuniform3>
 <entityname.healthscanner>ATH scanner de santé</entityname.healthscanner>
 <entitydescription.healthscanner>Un affichage tête haute qui détaille des informations à propos des constantes vitales et du statut des humains situés à proximité.</entitydescription.healthscanner>
-<entityname.doctorsuniform>Uniforme de docteur</entityname.doctorsuniform>
-<entitydescription.doctorsuniform>Ceci vous donnera l'apparence d'être potentiellement utile en cas d'urgence médicale.</entitydescription.doctorsuniform>
-<entityname.orangejumpsuit>Combinaison orange</entityname.orangejumpsuit>
-<entitydescription.orangejumpsuit>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.orangejumpsuit>
-<entityname.bluejumpsuit>Combinaison bleue</entityname.bluejumpsuit>
-<entitydescription.bluejumpsuit>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.bluejumpsuit>
+<entityname.doctorsuniform1>Uniforme de docteur</entityname.doctorsuniform1>
+<entitydescription.doctorsuniform1>Ceci vous donnera l'apparence d'être potentiellement utile en cas d'urgence médicale.</entitydescription.doctorsuniform1>
+<entityname.doctorsuniform2>Uniforme de docteur</entityname.doctorsuniform2>
+<entitydescription.doctorsuniform2>Ceci vous donnera l'apparence d'être potentiellement utile en cas d'urgence médicale.</entitydescription.doctorsuniform2>
+<entityname.orangejumpsuit1>Combinaison orange</entityname.orangejumpsuit1>
+<entitydescription.orangejumpsuit1>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.orangejumpsuit1>
+<entityname.orangejumpsuit2>Combinaison orange</entityname.orangejumpsuit2>
+<entitydescription.orangejumpsuit2>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.orangejumpsuit2>
+<entityname.bluejumpsuit1>Combinaison bleue</entityname.bluejumpsuit1>
+<entitydescription.bluejumpsuit1>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.bluejumpsuit1>
+<entityname.bluejumpsuit2>Combinaison bleue</entityname.bluejumpsuit2>
+<entitydescription.bluejumpsuit2>Ce tissu résistant au feu vous offrira un peu de protection contre les incendies.</entitydescription.bluejumpsuit2>
 <entityname.toolbox>Boîte à outils</entityname.toolbox>
 <entitydescription.toolbox>Un conteneur portable pour stocker des outils.</entitydescription.toolbox>
 <entityname.headset>Casque audio</entityname.headset>
@@ -991,12 +1005,20 @@
 <entitydescription.assistantclothes>Même un assistant doit s'habiller.</entitydescription.assistantclothes>
 <entityname.watchmanclothes>Vêtements de vigie</entityname.watchmanclothes>
 <entitydescription.watchmanclothes>Ceci vous donnera l'apparence d'être sur le point d'offrir une mission à un passant à tout moment.</entitydescription.watchmanclothes>
-<entityname.securityuniform>Uniforme d'officier de sécurité</entityname.securityuniform>
-<entitydescription.securityuniform>Obéissez à mon autorité !</entitydescription.securityuniform>
+<entityname.securityuniform1>Uniforme d'officier de sécurité</entityname.securityuniform1>
+<entitydescription.securityuniform1>Obéissez à mon autorité !</entitydescription.securityuniform1>
+<entityname.securityuniform2>Uniforme d'officier de sécurité</entityname.securityuniform2>
+<entitydescription.securityuniform2>Obéissez à mon autorité !</entitydescription.securityuniform2>
+<entityname.securityuniform3>Uniforme d'officier de sécurité</entityname.securityuniform3>
+<entitydescription.securityuniform3>Obéissez à mon autorité !</entitydescription.securityuniform3>
 <entityname.bodyarmor>Gilet pare-balles</entityname.bodyarmor>
 <entitydescription.bodyarmor>Le gilet pare-balles n'offrira probablement pas une protection suffisante contre la plupart des habitants des profondeurs de l'océan, mais il se révélera très utile si jamais il y a des traîtres à bord.</entitydescription.bodyarmor>
-<entityname.ballistichelmet>Casque balistique</entityname.ballistichelmet>
-<entitydescription.ballistichelmet>Le casque balistique n'offrira probablement pas une protection suffisante contre la plupart des habitants des profondeurs de l'océan, mais il sera révélera très utile si jamais il y a des traîtres à bord.</entitydescription.ballistichelmet>
+<entityname.ballistichelmet1>Casque balistique</entityname.ballistichelmet1>
+<entitydescription.ballistichelmet1>Le casque balistique n'offrira probablement pas une protection suffisante contre la plupart des habitants des profondeurs de l'océan, mais il sera révélera très utile si jamais il y a des traîtres à bord.</entitydescription.ballistichelmet1>
+<entityname.ballistichelmet2>Casque balistique</entityname.ballistichelmet2>
+<entitydescription.ballistichelmet2>Le casque balistique n'offrira probablement pas une protection suffisante contre la plupart des habitants des profondeurs de l'océan, mais il sera révélera très utile si jamais il y a des traîtres à bord.</entitydescription.ballistichelmet2>
+<entityname.ballistichelmet3>Casque balistique</entityname.ballistichelmet3>
+<entitydescription.ballistichelmet3>Le casque balistique n'offrira probablement pas une protection suffisante contre la plupart des habitants des profondeurs de l'océan, mais il sera révélera très utile si jamais il y a des traîtres à bord.</entitydescription.ballistichelmet3>
 <entityname.handcuffs>Menottes</entityname.handcuffs>
 <entitydescription.handcuffs>Très utiles pour maîtriser les joueurs problématiques.</entitydescription.handcuffs>
 <entityname.riotshield>Bouclier anti-émeutes</entityname.riotshield>

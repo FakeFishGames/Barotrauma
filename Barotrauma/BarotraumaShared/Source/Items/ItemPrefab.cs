@@ -126,6 +126,39 @@ namespace Barotrauma
         }
     }
 
+    class PreferredContainer
+    {
+        public readonly HashSet<string> Primary = new HashSet<string>();
+        public readonly HashSet<string> Secondary = new HashSet<string>();
+        public float SpawnProbability { get; private set; }
+        public int MinAmount { get; private set; }
+        public int MaxAmount { get; private set; }
+
+        public PreferredContainer(XElement element)
+        {
+            Primary = XMLExtensions.GetAttributeStringArray(element, "primary", new string[0]).ToHashSet();
+            Secondary = XMLExtensions.GetAttributeStringArray(element, "secondary", new string[0]).ToHashSet();
+            SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
+            MinAmount = element.GetAttributeInt("minamount", 0);
+            MaxAmount = Math.Max(MinAmount, element.GetAttributeInt("maxamount", 0));
+
+            if (element.Attribute("spawnprobability") == null)
+            {
+                //if spawn probability is not defined but amount is, assume the probability is 1
+                if (MaxAmount > 0)
+                {
+                    SpawnProbability = 1.0f;
+                } 
+            }
+            else if (element.Attribute("minamount") == null && element.Attribute("maxamount") == null)
+            {
+                //spawn probability defined but amount isn't, assume amount is 1
+                MinAmount = MaxAmount = 1;
+                SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
+            }
+        }
+    }
+
     partial class ItemPrefab : MapEntityPrefab
     {
         private string name;
@@ -340,16 +373,12 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool ShowContentsInTooltip { get; private set; }
 
-        private HashSet<string> preferredContainers = new HashSet<string>();
-        [Serialize("", true, description: "Define containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.")]
-        public string PreferredContainers
+        //Containers (by identifiers or tags) that this item should be placed in. These are preferences, which are not enforced.
+        public List<PreferredContainer> PreferredContainers
         {
-            get { return string.Join(",", preferredContainers); }
-            set
-            {
-                StringFormatter.ParseCommaSeparatedStringToCollection(value, preferredContainers);
-            }
-        }
+            get;
+            private set;
+        } = new List<PreferredContainer>();
 
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
@@ -386,7 +415,7 @@ namespace Barotrauma
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
-            if (PlayerInput.RightButtonClicked())
+            if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
@@ -394,7 +423,7 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(sprite.size.X * Scale), (int)(sprite.size.Y * Scale)), this, Submarine.MainSub)
                     {
@@ -413,7 +442,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.LeftButtonHeld()) placePosition = position;
+                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
                 }
                 else
                 {
@@ -422,7 +451,7 @@ namespace Barotrauma
                     if (ResizeVertical)
                         placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
 
-                    if (PlayerInput.LeftButtonReleased())
+                    if (PlayerInput.PrimaryMouseButtonReleased())
                     {
                         var item = new Item(new Rectangle((int)placePosition.X, (int)placePosition.Y, (int)placeSize.X, (int)placeSize.Y), this, Submarine.MainSub);
                         placePosition = Vector2.Zero;
@@ -760,6 +789,17 @@ namespace Barotrauma
                     case "fabricableitem":
                         fabricationRecipeElements.Add(subElement);
                         break;
+                    case "preferredcontainer":
+                        var preferredContainer = new PreferredContainer(subElement);
+                        if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
+                        {
+                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement.ToString()}).");
+                        }
+                        else
+                        {
+                            PreferredContainers.Add(preferredContainer);
+                        }
+                        break;
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10, 10)
                         {
@@ -846,10 +886,14 @@ namespace Barotrauma
             prefab = Find(p => p is ItemPrefab && p.Identifier==identifier) as ItemPrefab;
 
             //not found, see if we can find a prefab with a matching alias
-            if (prefab == null)
+            if (prefab == null && !string.IsNullOrEmpty(name))
             {
                 string lowerCaseName = name.ToLowerInvariant();
                 prefab = Prefabs.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName));
+            }
+            if (prefab == null)
+            {
+                prefab = Prefabs.Find(me => me.Aliases != null && me.Aliases.Contains(identifier));
             }
 
             if (prefab == null)
@@ -864,18 +908,33 @@ namespace Barotrauma
             return prices?.Values;
         }
 
-        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined)
+        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined, out bool isSecondary)
         {
-            isPreferencesDefined = preferredContainers.Any();
+            isPreferencesDefined = PreferredContainers.Any();
+            isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            return preferredContainers.Any(id => itemContainer.Item.Prefab.Identifier == id || itemContainer.Item.HasTag(id));
+            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, itemContainer)))
+            {
+                return true;
+            }
+            isSecondary = true;
+            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, itemContainer));
         }
 
-        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined)
+        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)
         {
-            isPreferencesDefined = preferredContainers.Any();
+            isPreferencesDefined = PreferredContainers.Any();
+            isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            return preferredContainers.Any(id => preferredContainers.Any(p => p == id));
+            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, identifiersOrTags)))
+            {
+                return true;
+            }
+            isSecondary = true;
+            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
+
+        public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
+        public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));
     }
 }

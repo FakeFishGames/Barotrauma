@@ -465,38 +465,7 @@ namespace Barotrauma.Networking
                     if (SteamFriend.IsPlayingThisGame && SteamFriend.ServerLobbyId != 0)
                     {
                         LobbyID = SteamFriend.ServerLobbyId;
-                        SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, (lobby) =>
-                        {
-                            SteamManager.Instance.LobbyList.SetManualLobbyDataCallback(LobbyID, null);
-                            
-                            if (string.IsNullOrWhiteSpace(lobby.GetData("haspassword"))) { return; }
-                            bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
-                            int.TryParse(lobby.GetData("playercount"), out int currPlayers);
-                            int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-                            //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
-                            string ip = lobby.GetData("hostipaddress");
-                            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
-
-                            if (OwnerID != ownerId) { return; }
-
-                            if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
-
-                            ServerName = lobby.Name;
-                            Port = "";
-                            QueryPort = "";
-                            IP = ip;
-                            PlayerCount = currPlayers;
-                            MaxPlayers = maxPlayers;
-                            HasPassword = hasPassword;
-                            RespondedToSteamQuery = true;
-                            LobbyID = lobby.LobbyID;
-                            OwnerID = ownerId;
-                            PingChecked = false;
-                            OwnerVerified = true;
-                            SteamManager.AssignLobbyDataToServerInfo(lobby, this);
-
-                            onServerRulesReceived?.Invoke(this);
-                        });
+                        
                         SteamManager.Instance.LobbyList.RequestLobbyData(LobbyID);
                     }
                     else

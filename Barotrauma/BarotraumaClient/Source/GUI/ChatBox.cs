@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -14,6 +15,8 @@ namespace Barotrauma
         private static Sprite radioIcon;
         private GUIListBox chatBox;
         private Point screenResolution;
+
+        public readonly ChatManager ChatManager = new ChatManager();
 
         public bool IsSinglePlayer { get; private set; }
 
@@ -86,8 +89,12 @@ namespace Barotrauma
                 Font = GUI.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
             };
+
+            ChatManager.RegisterKeys(InputBox, ChatManager);
+            
             InputBox.OnDeselected += (gui, Keys) =>
             {
+                ChatManager.Clear();
                 //gui.Text = "";
             };
 

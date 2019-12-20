@@ -83,6 +83,12 @@ namespace Barotrauma
             }
         }
 
+        public Color ButtonTextColor
+        {
+            get { return button.TextColor; }
+            set { button.TextColor = value; }
+        }
+
         public void ReceiveTextInput(char inputChar)
         {
             GUI.KeyboardDispatcher.Subscriber = null;
@@ -390,7 +396,7 @@ namespace Barotrauma
             if (!Visible) return;
             wasOpened = false;
             base.Update(deltaTime);
-            if (Dropped && PlayerInput.LeftButtonClicked())
+            if (Dropped && PlayerInput.PrimaryMouseButtonClicked())
             {
                 Rectangle listBoxRect = listBox.Rect;
                 if (!listBoxRect.Contains(PlayerInput.MousePosition) && !button.Rect.Contains(PlayerInput.MousePosition))

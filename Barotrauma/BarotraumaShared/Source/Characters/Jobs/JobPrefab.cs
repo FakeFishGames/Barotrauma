@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-using System.Linq;
-using System.IO;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -61,12 +60,11 @@ namespace Barotrauma
             }
         }
 
-        public readonly XElement Items;
-        public readonly List<string> ItemNames = new List<string>();
+        public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
+        public readonly Dictionary<int, List<string>> ItemNames = new Dictionary<int, List<string>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
-
 
         [Serialize("1,1,1,1", false)]
         public Color UIColor
@@ -166,26 +164,28 @@ namespace Barotrauma
 
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
-
-        public XElement PreviewElement { get; private set; }
+        public int Variants { get; private set; }
 
         public JobPrefab(XElement element, string filePath)
         {
             FilePath = filePath;
             SerializableProperty.DeserializeProperties(this, element);
+
             Name = TextManager.Get("JobName." + Identifier);
             Description = TextManager.Get("JobDescription." + Identifier);
             Identifier = Identifier.ToLowerInvariant();
-
             Element = element;
 
+            int variant = 0;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "items":
-                        Items = subElement;
-                        loadItemNames(subElement);
+                    case "itemset":
+                        ItemSets.Add(variant, subElement);
+                        var itemNames = new List<string>();
+                        loadItemNames(subElement, itemNames);
+                        ItemNames.Add(variant++, itemNames);
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -203,14 +203,14 @@ namespace Barotrauma
                 }
             }
 
-            void loadItemNames(XElement parentElement)
+            void loadItemNames(XElement parentElement, List<string> itemNames)
             {
-                foreach (XElement itemElement in parentElement.Elements())
+                foreach (XElement itemElement in parentElement.GetChildElements("Item"))
                 {
                     if (itemElement.Element("name") != null)
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
-                        ItemNames.Add(itemElement.GetAttributeString("name", ""));
+                        itemNames.Add(itemElement.GetAttributeString("name", ""));
                         continue;
                     }
 
@@ -218,7 +218,7 @@ namespace Barotrauma
                     if (string.IsNullOrWhiteSpace(itemIdentifier))
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
-                        ItemNames.Add("");
+                        itemNames.Add("");
                     }
                     else
                     {
@@ -226,30 +226,22 @@ namespace Barotrauma
                         if (prefab == null)
                         {
                             DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \"" + itemIdentifier + "\" not found.");
-                            ItemNames.Add("");
+                            itemNames.Add("");
                         }
                         else
                         {
-                            ItemNames.Add(prefab.Name);
+                            itemNames.Add(prefab.Name);
                         }
                     }
-                    loadItemNames(itemElement);
+                    loadItemNames(itemElement, itemNames);
                 }
             }
 
+            Variants = variant;
+
             Skills.Sort((x,y) => y.LevelRange.X.CompareTo(x.LevelRange.X));
 
-            ClothingElement = element.Element("PortraitClothing");
-            if (ClothingElement == null)
-            {
-                ClothingElement = element.Element("portraitclothing");
-            }
-
-            PreviewElement = element.Element("PreviewSprites");
-            if (PreviewElement == null)
-            {
-                PreviewElement = element.Element("previewsprites");
-            }
+            ClothingElement = element.GetChildElement("PortraitClothing");
         }
         
         public class OutfitPreview
@@ -258,10 +250,12 @@ namespace Barotrauma
             /// Pair.First = sprite, Pair.Second = draw offset
             /// </summary>
             public readonly List<Pair<Sprite, Vector2>> Sprites;
+            public Vector2 Dimensions;
 
             public OutfitPreview()
             {
                 Sprites = new List<Pair<Sprite, Vector2>>();
+                Dimensions = Vector2.One;
             }
 
             public void AddSprite(Sprite sprite, Vector2 drawOffset)
@@ -270,45 +264,56 @@ namespace Barotrauma
             }
         }
 
-        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 dimensions)
+        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 maxDimensions)
         {
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
-            dimensions = PreviewElement.GetAttributeVector2("dims", Vector2.One);
-            if (PreviewElement == null) { return outfitPreviews; }
-             
-            var equipIdentifiers = Element.Elements("Items").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+            maxDimensions = Vector2.One;
 
-            var children = PreviewElement.Elements().ToList();
+            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            var outfitPrefab = ItemPrefab.Prefabs.Find(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier));
-            if (outfitPrefab == null) { return null; }
-            var wearables = outfitPrefab.ConfigElement.Elements("Wearable");
-            if (!wearables.Any()) { return null; }
+            var outfitPrefabs = ItemPrefab.Prefabs.Where(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier)).ToList();
+            if (!outfitPrefabs.Any()) { return null; }
 
-            int variantCount = wearables.First().GetAttributeInt("variants", 1);
-
-            for (int i = 0; i < variantCount; i++)
+            for (int i = 0; i < outfitPrefabs.Count; i++)
             {
                 var outfitPreview = new OutfitPreview();
+
+                if (!ItemSets.TryGetValue(i, out var itemSetElement)) { continue; }
+                var previewElement = itemSetElement.GetChildElement("PreviewSprites");
+                if (previewElement == null)
+                {
+#if CLIENT
+                    if (outfitPrefabs[i] is ItemPrefab prefab && prefab.InventoryIcon != null)
+                    {
+                        outfitPreview.AddSprite(prefab.InventoryIcon, Vector2.Zero);
+                        outfitPreview.Dimensions = prefab.InventoryIcon.SourceRect.Size.ToVector2();
+                        maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
+                        maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
+                    }
+#endif
+                    outfitPreviews.Add(outfitPreview);
+                    continue;
+                }
+
+                var children = previewElement.Elements().ToList();
                 for (int n = 0; n < children.Count; n++)
                 {
                     XElement spriteElement = children[n];
                     string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
-                    string textureVariant = spriteTexture.Replace("[VARIANT]", (i + 1).ToString());
-                    if (!File.Exists(textureVariant))
-                    {
-                        textureVariant = spriteTexture.Replace("[VARIANT]", "1");
-                    }
-                    var torsoSprite = new Sprite(spriteElement, path: "", file: textureVariant);
-                    torsoSprite.size = new Vector2(torsoSprite.SourceRect.Width, torsoSprite.SourceRect.Height);
-                    outfitPreview.AddSprite(torsoSprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
+                    var sprite = new Sprite(spriteElement, file: spriteTexture);
+                    sprite.size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
+                    outfitPreview.AddSprite(sprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
                 }
+
+                outfitPreview.Dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
+                maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
+                maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
+
                 outfitPreviews.Add(outfitPreview);
             }
 
             return outfitPreviews;
         }
-
 
         public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
 

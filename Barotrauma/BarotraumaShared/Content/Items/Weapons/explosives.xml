@@ -2,6 +2,7 @@
 <Items>
   <Item name="" identifier="uex" category="Equipment" description="" Scale="0.5" Tags="smallitem,explosive" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="secarmcab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="125" />
@@ -28,8 +29,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="c4block" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="secarmcab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <Price locationtype="Military" buyprice="100" />
     <Price locationtype="City" buyprice="125" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -55,8 +58,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="compoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="secarmcab,armcab,storagecab"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="60" />
       <RequiredItem identifier="aluminium" />
@@ -80,8 +85,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="volatilecompoundn" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="secarmcab,armcab"/>
     <Fabricate suitablefabricators="medicalfabricator" requiredtime="20">
       <RequiredSkill identifier="medical" level="40" />
       <RequiredItem identifier="compoundn" />
@@ -105,8 +112,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="ic4block" description="" category="Equipment" Tags="smallitem,explosive" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="secarmcab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="960,64,64,64" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" depth="0.8" sourcerect="462,378,50,34" origin="0.5,0.5" />
     <Body width="50" height="30" density="20" />
@@ -129,8 +138,10 @@
       </StatusEffect>
     </Throwable>
   </Item>
+  
   <Item name="" identifier="detonator" description="" category="Equipment" Tags="smallitem,detonator" Scale="0.5" cargocontaineridentifier="explosivecrate" impactsoundtag="impact_metal_light" isshootable="true">
     <Upgrade gameversion="0.9.3.0" scale="0.5"/>
+    <PreferredContainer primary="armcab" minamount="1" maxamount="2" spawnprobability="0.5"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -156,7 +167,9 @@
       </input>
     </ConnectionPanel>
   </Item>
+  
   <Item name="" identifier="nitroglycerin" category="Material" description="" spritecolor="1.0,1.0,1.0,1.0" containercolor="1.0,1.0,1.0,1.0" cargocontaineridentifier="explosivecrate" Tags="smallitem,chem,medical" impacttolerance="6" useinhealthinterface="true" scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="secarmcab,armcab,storagecab"/>
     <InventoryIcon texture="Content/Items/InventoryIconAtlas.png" sourcerect="653,769,37,62" origin="0.5,0.5" />
     <Sprite texture="weapons_new.png" sourcerect="481,-1,31,62" depth="0.6" origin="0.5,0.5" />
     <Body width="35" height="60" density="20" />

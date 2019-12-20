@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
             autoControlIndicator.Selected = controlLockTimer > 0.0f;
             forceSlider.Enabled = controlLockTimer <= 0.0f;
 
-            if (!PlayerInput.LeftButtonHeld())
+            if (!PlayerInput.PrimaryMouseButtonHeld())
             {
                 float newScroll = (targetForce + 100.0f) / 200.0f;
                 if (Math.Abs(newScroll - forceSlider.BarScroll) > 0.01f)

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma.CharacterEditor
 {
@@ -112,8 +113,6 @@ namespace Barotrauma.CharacterEditor
         {
             base.Select();
 
-            SoundPlayer.OverrideMusicType = "none";
-            SoundPlayer.OverrideMusicDuration = null;
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
             GUI.ForceMouseOn(null);
@@ -537,7 +536,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     SetToggle(freezeToggle, !freezeToggle.Selected);
                 }
-                if (PlayerInput.RightButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
+                if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.KeyHit(Keys.Escape))
                 {
                     bool reset = false;
                     if (selectedLimbs.Any())
@@ -690,7 +689,16 @@ namespace Barotrauma.CharacterEditor
                         UpdateWalls(true);
                     }
                 }
-                GameMain.World.Step((float)deltaTime);
+                try
+                {
+                    GameMain.World.Step((float)Timing.Step);
+                }
+                catch (WorldLockedException e)
+                {
+                    string errorMsg = "Attempted to modify the state of the physics simulation while a time step was running.";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterEditorScreen.Update:WorldLockedException" + e.Message, GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, errorMsg);
+                }
             }
             // Camera
             Cam.MoveCamera((float)deltaTime, allowMove: false);
@@ -712,7 +720,7 @@ namespace Barotrauma.CharacterEditor
             limbEditWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             animationWidgets.Values.ForEach(w => w.Update((float)deltaTime));
             // Handle limb selection
-            if (PlayerInput.LeftButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
+            if (PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == null && Widget.selectedWidgets.None())
             {
                 foreach (Limb limb in character.AnimController.Limbs)
                 {
@@ -984,7 +992,7 @@ namespace Barotrauma.CharacterEditor
                         if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                         {
                             jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
-                            if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
+                            if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
                                 anchor1.X = -anchor1.X;
@@ -997,7 +1005,7 @@ namespace Barotrauma.CharacterEditor
                         else
                         {
                             jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
-                            if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
+                            if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor2 = ConvertUnits.ToDisplayUnits(jointEndLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
                                 CreateJoint(jointStartLimb.Params.ID, jointEndLimb.Params.ID, anchor1Pos, anchor2);
@@ -1016,7 +1024,7 @@ namespace Barotrauma.CharacterEditor
                         {
                             anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
                         }
-                        if (PlayerInput.LeftButtonClicked())
+                        if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             jointCreationMode = JointCreationMode.Create;
                         }
@@ -1036,7 +1044,7 @@ namespace Barotrauma.CharacterEditor
                         if (jointCreationMode == JointCreationMode.Create)
                         {
                             jointEndLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
-                            if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
+                            if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos.HasValue ? anchor1Pos.Value / spriteSheetZoom : Vector2.Zero;
                                 anchor1.X = -anchor1.X;
@@ -1046,7 +1054,7 @@ namespace Barotrauma.CharacterEditor
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
-                        else if (PlayerInput.LeftButtonClicked())
+                        else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             jointStartLimb = GetClosestLimbOnSpritesheet(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
                             anchor1Pos = GetLimbSpritesheetRect(jointStartLimb).Center.ToVector2() - PlayerInput.MousePosition;
@@ -1058,7 +1066,7 @@ namespace Barotrauma.CharacterEditor
                         if (jointCreationMode == JointCreationMode.Create)
                         {
                             jointEndLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => l != null && l != jointStartLimb && l.ActiveSprite != null);
-                            if (jointEndLimb != null && PlayerInput.LeftButtonClicked())
+                            if (jointEndLimb != null && PlayerInput.PrimaryMouseButtonClicked())
                             {
                                 Vector2 anchor1 = anchor1Pos ?? Vector2.Zero;
                                 Vector2 anchor2 = ConvertUnits.ToDisplayUnits(jointEndLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
@@ -1066,7 +1074,7 @@ namespace Barotrauma.CharacterEditor
                                 jointCreationMode = JointCreationMode.None;
                             }
                         }
-                        else if (PlayerInput.LeftButtonClicked())
+                        else if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             jointStartLimb = GetClosestLimbOnRagdoll(PlayerInput.MousePosition, l => selectedLimbs.Contains(l));
                             anchor1Pos = ConvertUnits.ToDisplayUnits(jointStartLimb.body.FarseerBody.GetLocalPoint(ScreenToSim(PlayerInput.MousePosition)));
@@ -1094,7 +1102,7 @@ namespace Barotrauma.CharacterEditor
             }
             if (spriteSheetRect.Contains(PlayerInput.MousePosition))
             {
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if (newLimbRect == Rectangle.Empty)
                     {
@@ -1106,7 +1114,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     newLimbRect.Size = new Point(Math.Max(newLimbRect.Width, 2), Math.Max(newLimbRect.Height, 2));
                 }
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     // Take the offset and the zoom into account
                     newLimbRect.Location = new Point(newLimbRect.X - spriteSheetOffsetX, newLimbRect.Y - spriteSheetOffsetY);
@@ -4298,7 +4306,7 @@ namespace Barotrauma.CharacterEditor
                     if (isSelected)
                     {
                         // Origin
-                        if (!lockSpriteOrigin && PlayerInput.LeftButtonHeld())
+                        if (!lockSpriteOrigin && PlayerInput.PrimaryMouseButtonHeld())
                         {
                             Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(limb.Rotation));
                             var input = -scaledMouseSpeed * inputMultiplier / Cam.Zoom / limb.Scale / limb.TextureScale;
@@ -4430,7 +4438,7 @@ namespace Barotrauma.CharacterEditor
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
                             //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
                             GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.Params.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
-                            if (PlayerInput.LeftButtonHeld())
+                            if (PlayerInput.PrimaryMouseButtonHeld())
                             {
                                 if (!selectionWidget.IsControlled) { continue; }
                                 if (jointCreationMode != JointCreationMode.None) { continue; }
@@ -5220,7 +5228,7 @@ namespace Barotrauma.CharacterEditor
                 GUI.DrawLine(spriteBatch, drawPos, zeroPos, Color.Red, width: 3);
             }, autoFreeze, holdPosition, onHovered: () =>
             {
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     GUI.DrawString(spriteBatch, new Vector2(drawPos.X + 5, drawPos.Y - widgetSize / 2),
                         $"{toolTip} ({angle.FormatZeroDecimal()})", color, Color.Black * 0.5f);
@@ -5243,7 +5251,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         var rect = drawRect;
                         rect.Inflate(size * 0.3f, size * 0.3f);
-                        GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3, isFilled: PlayerInput.LeftButtonHeld());
+                        GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3, isFilled: PlayerInput.PrimaryMouseButtonHeld());
                     }
                     else
                     {
@@ -5273,7 +5281,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     onHovered();
                 }
-                if (PlayerInput.LeftButtonHeld())
+                if (PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if (autoFreeze ?? this.autoFreeze)
                     {
@@ -5291,7 +5299,7 @@ namespace Barotrauma.CharacterEditor
                     character.AnimController.Collider.PhysEnabled = true;
                 }
                 // Might not be entirely reliable, since the method is used inside the draw loop.
-                if (PlayerInput.LeftButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     SaveSnapshot();
                 }

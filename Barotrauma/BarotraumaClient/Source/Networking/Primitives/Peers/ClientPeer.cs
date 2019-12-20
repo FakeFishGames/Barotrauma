@@ -29,5 +29,9 @@ namespace Barotrauma.Networking
         public abstract void Update(float deltaTime);
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
         public abstract void SendPassword(string password);
+
+#if DEBUG
+        public abstract void ForceTimeOut();
+#endif
     }
 }

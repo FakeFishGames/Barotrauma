@@ -1,5 +1,4 @@
 ﻿using FarseerPhysics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -496,12 +495,12 @@ namespace Barotrauma.RuinGeneration
                     ruinEntities.Add(new RuinEntity(backgroundConfig, backgroundStructure, room));
                 }
 
-                var submarineBlocker = BodyFactory.CreateRectangle(GameMain.World,
+                var submarineBlocker = GameMain.World.CreateRectangle(
                     ConvertUnits.ToSimUnits(room.Rect.Width),
                     ConvertUnits.ToSimUnits(room.Rect.Height),
                     1, ConvertUnits.ToSimUnits(room.Center));
 
-                submarineBlocker.IsStatic = true;
+                submarineBlocker.BodyType = BodyType.Static;
                 submarineBlocker.CollisionCategories = Physics.CollisionWall;
                 submarineBlocker.CollidesWith = Physics.CollisionWall;
 

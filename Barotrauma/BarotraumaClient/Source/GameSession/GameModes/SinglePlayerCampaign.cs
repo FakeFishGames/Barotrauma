@@ -36,7 +36,8 @@ namespace Barotrauma
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
-                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", jobPrefab));
+                    var variant = Rand.Range(0, jobPrefab.Variants);
+                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
                 }
             }
         }
@@ -401,6 +402,7 @@ namespace Barotrauma
 
             campaign.Money = element.GetAttributeInt("money", 0);
             campaign.CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
+            campaign.InitialSuppliesSpawned = element.GetAttributeBool("initialsuppliesspawned", false);
             if (campaign.CheatsEnabled)
             {
                 DebugConsole.CheatsEnabled = true;
@@ -431,7 +433,8 @@ namespace Barotrauma
             XElement modeElement = new XElement("SinglePlayerCampaign",
                 // Refunds the money when save & quitting from the map if there are items selected in the store
                 new XAttribute("money", Money + (CargoManager != null ? CargoManager.GetTotalItemCost() : 0)),
-                new XAttribute("cheatsenabled", CheatsEnabled));
+                new XAttribute("cheatsenabled", CheatsEnabled),
+                new XAttribute("initialsuppliesspawned", InitialSuppliesSpawned));
             CrewManager.Save(modeElement);
             Map.Save(modeElement);
             element.Add(modeElement);

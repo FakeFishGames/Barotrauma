@@ -1,8 +1,10 @@
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Barotrauma.Sounds;
 using Barotrauma.Tutorials;
 using EventInput;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -317,12 +319,12 @@ namespace Barotrauma
 
                 if (FarseerPhysics.Settings.EnableDiagnostics)
                 {
-                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContinuousPhysicsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ControllersUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.AddRemoveTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.NewContactsTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.ContactsUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime, Color.Lerp(Color.LightGreen, Color.Red, GameMain.World.SolveUpdateTime / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                 }
             }
 
@@ -333,7 +335,7 @@ namespace Barotrauma
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 DrawString(spriteBatch, new Vector2(10, 40),
-                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == FarseerPhysics.Dynamics.BodyType.Dynamic && b.Enabled).Count} dynamic)",
+                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                 if (Screen.Selected.Cam != null)
@@ -709,7 +711,7 @@ namespace Barotrauma
                 if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
-                    if ((!PlayerInput.LeftButtonHeld() && !PlayerInput.LeftButtonClicked()) || c == prevMouseOn)
+                    if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
                     {
                         MouseOn = c;
                     }
@@ -957,13 +959,13 @@ namespace Barotrauma
 
             if (rect.Contains(PlayerInput.MousePosition))
             {
-                clicked = PlayerInput.LeftButtonHeld();
+                clicked = PlayerInput.PrimaryMouseButtonHeld();
 
                 color = clicked ?
                     new Color((int)(color.R * 0.8f), (int)(color.G * 0.8f), (int)(color.B * 0.8f), color.A) :
                     new Color((int)(color.R * 1.2f), (int)(color.G * 1.2f), (int)(color.B * 1.2f), color.A);
 
-                if (!isHoldable) clicked = PlayerInput.LeftButtonClicked();
+                if (!isHoldable) clicked = PlayerInput.PrimaryMouseButtonClicked();
             }
 
             DrawRectangle(sb, rect, color, true);
@@ -1640,6 +1642,37 @@ namespace Barotrauma
                                 return true;
                             };
                             return true;
+                        };
+                    }
+                    else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
+                    {
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("EndRound"), style: "GUIButtonLarge")
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
+                                if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                                {
+                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                                    {
+                                        UserData = "verificationprompt"
+                                    };
+                                    msgBox.Buttons[0].OnClicked = (_, __) =>
+                                    {
+                                        TogglePauseMenu(btn, userdata);
+                                        GameMain.Client.RequestRoundEnd();
+                                        return true;
+                                    };
+                                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                                    msgBox.Buttons[1].OnClicked += msgBox.Close;
+                                }
+                                else
+                                {
+                                    TogglePauseMenu(btn, userdata);
+                                    GameMain.Client.RequestRoundEnd();
+                                }
+                                return true;
+                            }
                         };
                     }
                 }

@@ -21,7 +21,7 @@ namespace Barotrauma
         /// <summary>
         /// How long does it take for the ai target to fade out if not kept alive.
         /// </summary>
-        public float FadeOutTime { get; private set; }
+        public float FadeOutTime { get; private set; } = 1;
 
         public bool Static { get; private set; }
         
@@ -68,6 +68,7 @@ namespace Barotrauma
         }
 
         public string SonarLabel;
+        public string SonarIconIdentifier;
 
         public bool Enabled = true;
 
@@ -143,9 +144,10 @@ namespace Barotrauma
                 SoundRange = MinSoundRange;
             }
 
-            SonarDisruption = element.GetAttributeFloat("sonardisruption", 0.0f);
-            SonarLabel = element.GetAttributeString("sonarlabel", "");
-            string typeString = element.GetAttributeString("type", "Any");
+            SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
+            SonarLabel          = element.GetAttributeString("sonarlabel", "");
+            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
+            string typeString   = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))
             {
                 Type = t;

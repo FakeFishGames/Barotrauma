@@ -976,12 +976,14 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            bool midroundSyncingDone = inc.ReadBoolean();
+            inc.ReadPadBits();
             if (gameStarted)
             {
                 if (!c.InGame)
                 {
                     //check if midround syncing is needed due to missed unique events
-                    entityEventManager.InitClientMidRoundSync(c);
+                    if (!midroundSyncingDone) { entityEventManager.InitClientMidRoundSync(c); }
                     c.InGame = true;
                 }
             }
@@ -1019,8 +1021,7 @@ namespace Barotrauma.Networking
                             }
                         }
 
-                        if (NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.LastRecvChatMsgID) &&   //more recent than the last ID received by the client
-                            !NetIdUtils.IdMoreRecent(lastRecvChatMsgID, c.LastChatMsgQueueID)) //NOT more recent than the latest existing ID
+                        if (NetIdUtils.IsValidId(lastRecvChatMsgID, c.LastRecvChatMsgID, c.LastChatMsgQueueID))
                         {
                             c.LastRecvChatMsgID = lastRecvChatMsgID;
                         }
@@ -1031,8 +1032,7 @@ namespace Barotrauma.Networking
                                 " (previous: " + c.LastChatMsgQueueID + ", latest: " + c.LastChatMsgQueueID + ")");
                         }
 
-                        if (NetIdUtils.IdMoreRecent(lastRecvEntityEventID, c.LastRecvEntityEventID) &&
-                            !NetIdUtils.IdMoreRecent(lastRecvEntityEventID, lastEntityEventID))
+                        if (NetIdUtils.IsValidId(lastRecvEntityEventID, c.LastRecvEntityEventID, lastEntityEventID))
                         {
                             if (c.NeedsMidRoundSync)
                             {
@@ -1869,6 +1869,8 @@ namespace Barotrauma.Networking
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
 
             if (serverSettings.AllowRespawn && missionAllowRespawn) { respawnManager = new RespawnManager(this, usingShuttle ? selectedShuttle : null); }
+
+            AutoItemPlacer.PlaceIfNeeded(GameMain.GameSession.GameMode);
 
             entityEventManager.RefreshEntityIDs();
 
@@ -3164,7 +3166,8 @@ namespace Barotrauma.Networking
                     JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.Prefabs.GetRandom();
                     if (assignedPlayerCount[jobPrefab] >= jobPrefab.MaxNumber) { continue; }
 
-                    unassignedBots[0].Job = new Job(jobPrefab);
+                    var variant = Rand.Range(0, jobPrefab.Variants, Rand.RandSync.Server);
+                    unassignedBots[0].Job = new Job(jobPrefab, variant);
                     assignedPlayerCount[jobPrefab]++;
                     unassignedBots.Remove(unassignedBots[0]);
                     canAssign = true;                    
@@ -3185,7 +3188,9 @@ namespace Barotrauma.Networking
                 }
                 else //some jobs still left, choose one of them by random
                 {
-                    c.Job = new Job(remainingJobs.GetRandom());
+                    var job = remainingJobs.GetRandom();
+                    var variant = Rand.Range(0, job.Variants);
+                    c.Job = new Job(job, variant);
                     assignedPlayerCount[c.Job.Prefab]++;
                 }
             }
