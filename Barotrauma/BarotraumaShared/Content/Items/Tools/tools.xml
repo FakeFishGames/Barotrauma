@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Items>
-  <Item name="" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" preferredcontainers="locker" showcontentsintooltip="true" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
+  <Item name="" identifier="toolbox" category="Equipment" tags="smallitem,mobilecontainer,tools" showcontentsintooltip="true" fireproof="true" description="" impactsoundtag="impact_metal_heavy">
+    <PreferredContainer primary="engcab"/>
     <Deconstruct time="10">
       <Item identifier="steel" />
     </Deconstruct>
@@ -22,7 +23,10 @@
       <Containable items="smallitem" excludeditems="toolbox" />
     </ItemContainer>
   </Item>
-  <Item name="" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="weldingtool" category="Equipment" Tags="smallitem,weldingtool,tools" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab" minamount="2" maxamount="4" spawnprobability="1"/>
+    <PreferredContainer primary="supplycab" minamount="1" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -104,7 +108,10 @@
       </RepairTool>
     </Upgrade>
   </Item>
-  <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="plasmacutter" category="Equipment" Tags="smallitem,plasmacutter,tools" cargocontaineridentifier="metalcrate" description="" Scale="0.32" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="3" spawnprobability="1"/>
+    <PreferredContainer primary="engcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="75" />
     <Price locationtype="Research" buyprice="75" />
     <Price locationtype="Military" buyprice="75" />
@@ -174,7 +181,10 @@
       </RepairTool>
     </Upgrade>
   </Item>
-  <Item name="" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" preferredcontainers="locker" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="weldingfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="weldingtool,flamer" spawnprobability="1"/>
+    <PreferredContainer primary="engcab" minamount="3" maxamount="6" spawnprobability="1"/>
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="60" />
     <Price locationtype="Military" buyprice="75" />
@@ -201,7 +211,9 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" preferredcontainers="locker" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="incendiumfueltank" category="Equipment" Tags="smallitem,weldingfuel" cargocontaineridentifier="metalcrate" scale="0.3" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab"/>
     <Deconstruct time="10">
       <Item identifier="aluminium" />
     </Deconstruct>
@@ -223,8 +235,10 @@
       </StatusEffect>
     </Holdable>
   </Item>
-  <Item name="" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" preferredcontainers="extinguisherholder" description="" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="extinguisher" category="Equipment" Tags="mediumitem,extinguisher" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_light">
     <Upgrade gameversion="0.9.600.0" Tags="mediumitem,extinguisher" />
+    <PreferredContainer primary="extinguisherholder" spawnprobability="1.0"/>
+    <PreferredContainer primary="engcab,reactorcab"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -250,6 +264,7 @@
   </Item>
   
   <Item name="" identifier="screwdriver" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="reactorcab" minamount="1" maxamount="4" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -266,7 +281,9 @@
     <Body width="31" height="6" density="50" />
     <Holdable slots="Any,RightHand,LeftHand" holdangle="30" handle1="-10,-5" msg="ItemMsgPickUpSelect" />
   </Item>
-  <Item name="" identifier="wrench" category="Equipment" Tags="smallitem,tools" preferredcontainers="locker" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="wrench" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab" minamount="1" maxamount="4" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -288,7 +305,9 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="crowbar" category="Equipment" Tags="smallitem,tools" preferredcontainers="locker" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="crowbar" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="engcab" minamount="0" maxamount="1" spawnprobability="1"/>
     <Price locationtype="City" buyprice="10" />
     <Price locationtype="Research" buyprice="10" />
     <Price locationtype="Military" buyprice="10" />
@@ -311,7 +330,9 @@
       </Attack>
     </MeleeWeapon>
   </Item>
-  <Item name="" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" preferredcontainers="locker" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="handheldsonar" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="100" />
@@ -351,7 +372,10 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" preferredcontainers="locker" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
+  
+  <Item name="" identifier="sonarbeacon" category="Equipment" Tags="smallitem,sonar" cargocontaineridentifier="metalcrate" Scale="0.5" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="crewcab,supplycab"/>
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Research" buyprice="100" />
     <Price locationtype="Military" buyprice="150" />
@@ -388,7 +412,9 @@
       </Containable>
     </ItemContainer>
   </Item>
-  <Item name="" identifier="flashlight" category="Equipment" Tags="smallitem,tools" preferredcontainers="suppliescabinet,locker" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
+  <Item name="" identifier="flashlight" category="Equipment" Tags="smallitem,tools" cargocontaineridentifier="metalcrate" Scale="0.32" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="2" spawnprobability="1"/>
+    <PreferredContainer primary="supplycab" minamount="1" maxamount="1" spawnprobability="0.25"/>
     <Price locationtype="City" buyprice="120" />
     <Price locationtype="Research" buyprice="120" />
     <Price locationtype="Military" buyprice="120" />
@@ -420,7 +446,10 @@
     </ItemContainer>
     <AiTarget />
   </Item>
-  <Item name="" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="locker" impactsoundtag="impact_soft" isshootable="true">
+  
+  <Item name="" identifier="flare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft" isshootable="true">
+    <PreferredContainer primary="divingcab" minamount="1" maxamount="5" spawnprobability="1"/>
+    <PreferredContainer primary="supplycab" minamount="1" maxamount="1" spawnprobability="0.5"/>
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
@@ -454,7 +483,9 @@
     </LightComponent>
     <AiTarget />
   </Item>
-  <Item name="" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" preferredcontainers="locker" impactsoundtag="impact_soft">
+  
+  <Item name="" identifier="alienflare" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem,light" impactsoundtag="impact_soft">
+    <PreferredContainer primary="divingcab, suppliescabinet"/>
     <Deconstruct time="10">
       <Item identifier="flashpowder" mincondition="0.9" outcondition="0.25" />
       <Item identifier="plastic" mincondition="0.9" outcondition="0.25" />

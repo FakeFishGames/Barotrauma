@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="orangejumpsuit1" aliases="orangejumpsuit" category="Equipment" tags="smallitem" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -27,6 +28,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="orangejumpsuit2" category="Equipment" tags="smallitem" fireproof="true" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />

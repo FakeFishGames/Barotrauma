@@ -294,7 +294,8 @@ namespace Barotrauma
         {
             XElement modeElement = new XElement("MultiPlayerCampaign",
                 new XAttribute("money", Money),
-                new XAttribute("cheatsenabled", CheatsEnabled));
+                new XAttribute("cheatsenabled", CheatsEnabled),
+                new XAttribute("initialsuppliesspawned", InitialSuppliesSpawned));
             Map.Save(modeElement);
             element.Add(modeElement);
 

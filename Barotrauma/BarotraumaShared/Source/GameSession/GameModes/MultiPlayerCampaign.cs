@@ -171,6 +171,7 @@ namespace Barotrauma
         public void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
+            InitialSuppliesSpawned = element.GetAttributeBool("initialsuppliesspawned", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {

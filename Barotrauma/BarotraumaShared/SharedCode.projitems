@@ -101,6 +101,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Extensions\VectorExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\FrameCounter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameAnalyticsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\AutoItemPlacer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CargoManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\CrewManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\GameSession\GameModes\CampaignMode.cs" />

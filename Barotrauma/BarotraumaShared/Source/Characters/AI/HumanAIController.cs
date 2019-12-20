@@ -504,13 +504,13 @@ namespace Barotrauma
                 {
                     if (isRestrictionsDefined)
                     {
-                        return 3;
+                        return 4;
                     }
                     else
                     {
-                        if (containableItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined))
+                        if (containableItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
                         {
-                            return isPreferencesDefined ? 2 : 1;
+                            return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
                         }
                         else
                         {

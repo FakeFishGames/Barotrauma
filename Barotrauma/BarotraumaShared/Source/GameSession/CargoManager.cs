@@ -160,18 +160,14 @@ namespace Barotrauma
                     if (itemContainer == null)
                     {
                         //no container, place at the waypoint
-#if SERVER
-                        if (GameMain.Server != null)
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
                             Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine);
                         }
                         else
                         {
-#endif
                             new Item(pi.ItemPrefab, position, wp.Submarine);
-#if SERVER
                         }
-#endif
                         continue;
                     }
                     //if the intial container has been removed due to it running out of space, add a new container
@@ -182,7 +178,7 @@ namespace Barotrauma
                         itemContainer = containerItemOverFlow.GetComponent<ItemContainer>();
                         availableContainers.Add(itemContainer, itemContainer.Capacity);
 #if SERVER
-                        if (GameMain.Server != null)
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
                             Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
                         }
@@ -190,19 +186,15 @@ namespace Barotrauma
                     }
 
                     //place in the container
-#if SERVER
-                    if (GameMain.Server != null)
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
                     }
                     else
                     {
-#endif
                         var item = new Item(pi.ItemPrefab, position, wp.Submarine);
                         itemContainer.Inventory.TryPutItem(item, null);
-#if SERVER
                     }
-#endif
 
                     //reduce the number of available slots in the container
                     //if there is a container

@@ -480,7 +480,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
             editingHUDRefreshPending = false;
@@ -496,6 +496,31 @@ namespace Barotrauma
             itemEditor.Children.First().Color = Color.Black * 0.7f;
             if (!inGame)
             {
+                //create a tag picker for item containers to make it easier to pick relevant tags for PreferredContainers
+                var itemContainer = GetComponent<ItemContainer>();
+                if (itemContainer != null)
+                {
+                    var tagsField = itemEditor.Fields["Tags"].First().Parent;
+
+                    //find all the items that can be put inside the container and add their PreferredContainer identifiers/tags to the available tags
+                    HashSet<string> availableTags = new HashSet<string>();
+                    foreach (MapEntityPrefab me in MapEntityPrefab.List)
+                    {
+                        if (!(me is ItemPrefab ip)) { continue; }
+                        if (!itemContainer.CanBeContained(ip)) { continue; }
+                        foreach (string tag in ip.PreferredContainers.SelectMany(pc => pc.Primary)) { availableTags.Add(tag); }
+                        foreach (string tag in ip.PreferredContainers.SelectMany(pc => pc.Secondary)) { availableTags.Add(tag); }
+                    }
+                    //remove identifiers from the available container tags 
+                    //(otherwise the list will include many irrelevant options, 
+                    //e.g. "weldingtool" because a welding fuel tank can be placed inside the container, etc)
+                    availableTags.RemoveWhere(t => MapEntityPrefab.List.Any(me => me.Identifier == t));
+                    new GUIButton(new RectTransform(new Vector2(0.1f, 1), tagsField.RectTransform, Anchor.TopRight), "...")
+                    {
+                        OnClicked = (bt, userData) => { CreateTagPicker(tagsField.GetChild<GUITextBox>(), availableTags); return true; }
+                    };
+                }
+
                 if (Linkable)
                 {
                     var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
@@ -636,7 +661,34 @@ namespace Barotrauma
 
             return editingHUD;
         }
-        
+
+        private void CreateTagPicker(GUITextBox textBox, IEnumerable<string> availableTags)
+        {
+            var msgBox = new GUIMessageBox("", "", new string[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
+
+            var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
+            {
+                OnSelected = (component, userData) =>
+                {
+                    string text = userData as string ?? "";
+                    AddTag(text);
+                    textBox.Text = Tags;
+                    msgBox.Close();
+                    return true;
+                }
+            };
+
+            foreach (string availableTag in availableTags.ToList().OrderBy(t => t))
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    ToolBox.LimitString(availableTag, GUI.Font, textList.Content.Rect.Width))
+                {
+                    UserData = availableTag
+                };
+            }
+        }
+
         /// <summary>
         /// Reposition currently active item interfaces to make sure they don't overlap with each other
         /// </summary>

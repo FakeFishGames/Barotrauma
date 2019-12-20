@@ -2,6 +2,7 @@
 <Items>
   <!-- HATS START -->
   <Item name="" identifier="captainscap1" aliases="captainscap" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -13,6 +14,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="captainscap2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
@@ -24,6 +26,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="captainscap3" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" scale="0.4">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="50" />
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />

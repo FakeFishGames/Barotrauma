@@ -2,6 +2,7 @@
 <Items>
   <!-- UNIFORMS START -->
   <Item name="" identifier="securityuniform1" aliases="securityuniform" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -28,6 +29,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="securityuniform2" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -54,6 +56,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="securityuniform3" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="50" />
     <Price locationtype="Outpost" buyprice="100" />
@@ -80,8 +83,10 @@
     </Wearable>
   </Item>
   <!-- UNIFORMS END -->
+
   <Item name="" identifier="bodyarmor" category="Equipment" tags="smallitem" scale="0.35" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_soft">
     <Upgrade gameversion="0.9.3.0" scale="0.35" />
+    <PreferredContainer primary="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="225" />
     <Price locationtype="City" buyprice="300" />
     <Price locationtype="Outpost" buyprice="500" />
@@ -106,7 +111,8 @@
   </Item>
   <!-- HEADGEAR START -->
   <Item name="" identifier="ballistichelmet1" aliases="ballistichelmet" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
-    <Upgrade gameversion="0.9.6.0" scale="0.4" />
+    <Upgrade gameversion="0.9.6.0" scale="0.4" />  
+    <PreferredContainer primary="armcab" minamount="0" maxamount="1" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -126,6 +132,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="ballistichelmet2" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
+    <PreferredContainer primary="armcab" minamount="0" maxamount="1" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -145,6 +152,7 @@
     </Wearable>
   </Item>
   <Item name="" identifier="ballistichelmet3" category="Equipment" tags="smallitem" cargocontaineridentifier="metalcrate" description="" impactsoundtag="impact_metal_heavy" scale="0.4">
+    <PreferredContainer primary="armcab" minamount="0" maxamount="1" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="125" />
     <Price locationtype="City" buyprice="150" />
     <Price locationtype="Outpost" buyprice="200" />
@@ -165,6 +173,7 @@
   </Item>
   <!-- HEADGEAR END -->
   <Item name="" identifier="handcuffs" category="Equipment" cargocontaineridentifier="metalcrate" tags="smallitem" impactsoundtag="impact_metal_light">
+    <PreferredContainer primary="armcab" minamount="0" maxamount="2" spawnprobability="1"/>
     <Price locationtype="Military" buyprice="50" />
     <Price locationtype="City" buyprice="100" />
     <Price locationtype="Outpost" buyprice="100" />

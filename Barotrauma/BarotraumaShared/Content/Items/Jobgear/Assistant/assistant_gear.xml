@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Items>
   <Item name="" identifier="assistantclothes" category="Equipment" tags="smallitem" fireproof="false" cargocontaineridentifier="metalcrate" description="" scale="0.5" impactsoundtag="impact_soft">
+    <PreferredContainer primary="crewcab" minamount="0" maxamount="1" spawnprobability="0.125"/>
     <Price locationtype="Research" buyprice="20" />
     <Price locationtype="Military" buyprice="20" />
     <Price locationtype="City" buyprice="20" />

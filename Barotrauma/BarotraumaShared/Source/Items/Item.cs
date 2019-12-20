@@ -653,6 +653,7 @@ namespace Barotrauma
                     case "fabricable":
                     case "fabricableitem":
                     case "upgrade":
+                    case "preferredcontainer":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
