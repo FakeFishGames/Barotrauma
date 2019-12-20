@@ -562,6 +562,57 @@
       texture="Content/Particles/ParticleAtlas.png"
       sourcerect="208,64,48,32" />
   </gib>
+  <blackgib
+    lifetime="5"
+    angularvelocitymin="-500"
+    angularvelocitymax="500"
+    startrotationmin="0"
+    startrotationmax="360"
+    rotatetodirection="True"
+    drag="0"
+    waterdrag="0.3"
+    velocitychange="0,-8"
+    velocitychangewater="0,-1"
+    collisionradius="10"
+    usecollision="True"
+    deleteoncollision="False"
+    friction="0.5"
+    restitution="0.1"
+    startsizemin="0.3,0.3"
+    startsizemax="0.6,0.6"
+    sizechangemin="-0.1,-0.1"
+    sizechangemax="-0.1,-0.1"
+    growtime="0"
+    startcolor="20,0,0,255"
+    endcolor="0,0,0,255"
+    drawtarget="Both"
+    blendstate="AlphaBlend"
+    animduration="1"
+    loopanim="True"
+    startdelaymin="0"
+    startdelaymax="0">
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="0,64,32,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="32,64,32,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="64,64,32,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="96,64,32,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="128,64,32,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="160,64,48,32" />
+      <sprite
+        texture="Content/Particles/ParticleAtlas.png"
+        sourcerect="208,64,48,32" />
+  </blackgib>
   <heavygib
     lifetime="1"
     angularvelocitymin="-500"

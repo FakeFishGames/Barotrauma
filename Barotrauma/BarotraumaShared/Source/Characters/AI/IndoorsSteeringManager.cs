@@ -76,7 +76,7 @@ namespace Barotrauma
 
         public IndoorsSteeringManager(ISteerable host, bool canOpenDoors, bool canBreakDoors) : base(host)
         {
-            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true);
+            pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), indoorsSteering: true);
             pathFinder.GetNodePenalty = GetNodePenalty;
 
             this.canOpenDoors = canOpenDoors;
@@ -134,7 +134,7 @@ namespace Barotrauma
 
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
-            bool needsNewPath = currentPath == null || (currentPath.Unreachable || currentPath.NextNode == null) || Vector2.DistanceSquared(target, currentTarget) > 1;
+            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.NextNode == null || Vector2.DistanceSquared(target, currentTarget) > 1);
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (needsNewPath || findPathTimer < -1.0f)
             {
@@ -144,12 +144,13 @@ namespace Barotrauma
                 Vector2 currentPos = host.SimPosition;
                 if (character != null && character.Submarine == null)
                 {
-                    var targetHull = Hull.FindHull(FarseerPhysics.ConvertUnits.ToDisplayUnits(target), null, false);
+                    var targetHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(target), null, false);
                     if (targetHull != null && targetHull.Submarine != null)
                     {
                         currentPos -= targetHull.Submarine.SimPosition;
                     }
                 }
+                pathFinder.InsideSubmarine = character.Submarine != null;
                 var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
                 bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
                 if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
@@ -163,7 +164,8 @@ namespace Barotrauma
                 {
                     currentPath = newPath;
                 }
-                findPathTimer = Rand.Range(1.0f, 1.2f);
+                float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
+                findPathTimer = priority * Rand.Range(1.0f, 1.2f);
                 IsPathDirty = false;
                 return DiffToCurrentNode();
             }
@@ -592,10 +594,7 @@ namespace Barotrauma
             if (wander)
             {
                 SteeringWander();
-                if (currentHull == null)
-                {
-                    SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance));
-                }
+                SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), 5);
             }
             if (!inWater)
             {

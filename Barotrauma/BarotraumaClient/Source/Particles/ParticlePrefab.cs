@@ -201,7 +201,7 @@ namespace Barotrauma.Particles
 
         [Editable, Serialize(ParticleBlendState.AlphaBlend, false, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }
-        
+
         //animation -----------------------------------------
 
         [Editable(0.0f, float.MaxValue), Serialize(1.0f, false, description: "The duration of the particle's animation cycle (if it's animated).")]

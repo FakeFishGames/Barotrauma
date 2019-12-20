@@ -9,6 +9,7 @@
   <ragdolls folder="default"/>
   <animations folder="default"/>
 
+  <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.25" scalemax="0.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" particleamount="10"/>
   <bloodemitter particle="waterblood" particleamount="1"/>
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360"/>

@@ -1,10 +1,10 @@
-﻿<Ragdoll type="mantis" minscale="0.8" maxscale="1.2" impacttolerance="10" draggable="True" limbscale="1" jointscale="1" colliderheightfromfloor="45" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1">
+﻿<Ragdoll type="mantis" minscale="0.8" maxscale="1.2" impacttolerance="10" draggable="True" limbscale="1" jointscale="1" colliderheightfromfloor="45" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1" texture="Content/Characters/Mantis/mantis.png">
   <collider radius="60" name="Main Collider" height="0" width="0" />
   <!-- head -->
   <limb id="0" radius="30" height="86" mass="6" type="Head" flip="True" steerforce="1" bodytype="Dynamic" healthindex="0" attackpriority="1" stepoffset="0,0" width="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" />
+    <sprite sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" subdivisions="15,15">
+    <deformablesprite sourcerect="0,0,101,168" depth="0.02" origin="0.4,0.53" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.05"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.02" changespeed="10" blendmode="add"/>
     </deformablesprite>    
@@ -14,7 +14,7 @@
   </limb>
   <!-- tail root -->
   <limb id="1" width="42" height="61" mass="6" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65" />
+    <sprite sourcerect="3,168,59,64" depth="0.021" origin="0.3,0.65" />
     <!--
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
@@ -26,9 +26,9 @@
   </limb>
   <!-- tail middle -->
   <limb id="2" width="35" height="52" mass="6" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" />
+    <sprite sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" subdivisions="15,15">
+    <deformablesprite sourcerect="66,180,65,70" depth="0.022" origin="0.3,0.65" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
       <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
@@ -39,9 +39,9 @@
   </limb>
   <!-- tail end -->
   <limb id="3" radius="20" mass="6" type="Tail" flip="True" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" height="0" width="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 3" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" />
+    <sprite sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" subdivisions="15,15">
+    <deformablesprite sourcerect="133,158,46,93" depth="0.023" origin="0.37,0.3" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.25"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
       <spritedeformation type="inflate" resolution="15,15" sync="1" frequency="5" scale="0.1" blendmode="add"/>
@@ -52,9 +52,9 @@
   </limb>
   <!-- leg -->
   <limb id="4" width="15" height="63" mass="4" refjoint="3" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" ignorecollisions="False" name="Limb 4" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5" />
+    <sprite sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="232,153,20,63" depth="0.012" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
     </deformablesprite>    
@@ -62,9 +62,9 @@
   </limb>
   <!-- leg -->
   <limb id="5" width="15" height="63" mass="4" refjoint="3" flip="True" type="None" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" ignorecollisions="False" name="Limb 5" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5" />
+    <sprite sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="231,80,23,67" depth="0.011" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
@@ -72,9 +72,9 @@
   </limb>
   <!-- claw -->
   <limb id="6" width="15" height="63" mass="4" flip="True" pullpos="0,30" refjoint="0" type="None" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 6" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5" />
+    <sprite sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="228,1,28,76" depth="0.01" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
@@ -104,18 +104,18 @@
     </attack>
   </limb>
   <limb id="7" width="15" height="63" mass="4" type="LeftLeg" flip="True" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 7" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="205,91,20,63" depth="0.013" origin="0.5,0.5" />
+    <sprite sourcerect="205,91,20,63" depth="0.013" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="205,91,20,63" depth="0.013" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="205,91,20,63" depth="0.013" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
     -->
   </limb>
   <limb id="8" width="15" height="63" mass="4" type="LeftFoot" flip="True" pullpos="8.784374,36.88046" refjoint="0" stepoffset="100,0" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" radius="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 8" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="206,3,20,85" depth="0.014" origin="0.5,0.5" />
+    <sprite sourcerect="206,3,20,85" depth="0.014" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="206,3,20,85" depth="0.014" subdivisions="5,5">
+    <deformablesprite sourcerect="206,3,20,85" depth="0.014" subdivisions="5,5">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.05" changespeed="10" blendmode="add"/>
     </deformablesprite>    
@@ -123,18 +123,18 @@
     <sound tag="footstep_armor_heavy" />
   </limb>
   <limb id="9" width="15" height="63" mass="4" type="RightLeg" flip="True" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 9" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="159,3,38,66" depth="0.015" origin="0.5,0.5" />
+    <sprite sourcerect="159,3,38,66" depth="0.015" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="159,3,38,66" depth="0.015" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="159,3,38,66" depth="0.015" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
     </deformablesprite>    
     -->
   </limb>
   <limb id="10" width="15" height="102" mass="4" type="RightFoot" flip="True" pullpos="-12.60062,51.93931" refjoint="5" stepoffset="-220,0" bodytype="Dynamic" healthindex="0" attackpriority="1" steerforce="0" radius="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 10" notes="">
-    <sprite texture="Content/Characters/Mantis/mantis.png" sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5" />
+    <sprite sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5" />
     <!--
-    <deformablesprite texture="Content/Characters/Mantis/mantis.png" sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5" subdivisions="15,15">
+    <deformablesprite sourcerect="111,0,32,112" depth="0.016" origin="0.5,0.5" subdivisions="15,15">
       <spritedeformation type="bezier" resolution="15,15" multiplier="0.1"/>
       <spritedeformation type="noise" resolution="15,15" frequency="10" amplitude="0.03" changespeed="10" blendmode="add"/>
     </deformablesprite>    

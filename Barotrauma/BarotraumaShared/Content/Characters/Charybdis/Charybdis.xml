@@ -1,8 +1,9 @@
-﻿<Character speciesname="Charybdis" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood">
+﻿<Character speciesname="Charybdis" humanoid="False" group="" husk="False" needsair="False" canspeak="False" noise="100" blooddecal="blood" eatingspeed="100">
   <ragdolls folder="default" />
   <animations folder="default" />
+  <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.5" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" particleamount="10" scalemin="2" scalemax="3" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
-  <bloodemitter particle="waterblood" particleamount="2" scalemin="2" scalemax="3" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
+  <bloodemitter particle="waterblood" particleamount="4" scalemin="3" scalemax="5" anglemin="0" anglemax="0" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="50" velocitymin="200" velocitymax="1500" anglemin="0" anglemax="360" scalemin="2" scalemax="3" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="heavygib" particleamount="20" velocitymin="50" velocitymax="1000" anglemin="0" anglemax="360" scalemin="2" scalemax="3" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <health vitality="1000" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" bleedingreduction="0.5" burnreduction="0" constanthealthregeneration="0" healthregenerationwheneating="1" />
@@ -15,16 +16,16 @@
   <sound file="Content/Characters/Charybdis/CHARYBDIS_damage2.ogg" state="Damage" range="6000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death1.ogg" state="Die" range="8000" volume="1" gender="None" />
   <sound file="Content/Characters/Charybdis/CHARYBDIS_death2.ogg" state="Die" range="8000" volume="1" gender="None" />
-  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
+  <ai combatstrength="2000" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="True" aggressiveboarding="False" avoidgunfire="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
     <targetpriority tag="provocative" state="Attack" priority="150" />
-    <targetpriority tag="stronger" state="Attack" priority="110" />
+    <targetpriority tag="stronger" state="PassiveAggressive" priority="110" reactdistance="2000"/>
     <targetpriority tag="light" state="Attack" priority="80" />
-    <targetpriority tag="human" state="Attack" priority="100" />
+    <targetpriority tag="human" state="Aggressive" priority="100" reactdistance="2000"/>
     <targetpriority tag="sonar" state="Attack" priority="100" />
     <targetpriority tag="nasonov" state="Attack" priority="100" />
     <targetpriority tag="wall" state="Attack" priority="80" />
-    <targetpriority tag="weaker" state="Attack" priority="70" />
+    <targetpriority tag="weaker" state="Aggressive" priority="70" reactdistance="2000" />
     <targetpriority tag="dead" state="Eat" priority="60" />
     <targetpriority tag="room" state="Attack" priority="40" />
   </ai>

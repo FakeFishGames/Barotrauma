@@ -3,6 +3,8 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -143,8 +145,8 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
                     Collider.Enabled = false;
-                    Collider.LinearVelocity = MainLimb.LinearVelocity;
-                    Collider.SetTransformIgnoreContacts(MainLimb.SimPosition, MainLimb.Rotation);
+                    Collider.LinearVelocity = mainLimb.LinearVelocity;
+                    Collider.SetTransformIgnoreContacts(mainLimb.SimPosition, mainLimb.Rotation);
                     //reset pull joints to prevent the character from "hanging" mid-air if pull joints had been active when the character was still moving
                     //(except when dragging, then we need the pull joints)
                     if (!character.CanBeDragged || character.SelectedBy == null) { ResetPullJoints(); }
@@ -229,8 +231,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float refAngle = 0.0f;
                     Limb refLimb = GetLimb(LimbType.Head);
+                    float refAngle;
                     if (refLimb == null)
                     {
                         refAngle = CurrentAnimationParams.TorsoAngleInRadians;
@@ -259,7 +261,10 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedCharacter != null) DragCharacter(character.SelectedCharacter, deltaTime);
+            if (character.SelectedCharacter != null)
+            {
+                DragCharacter(character.SelectedCharacter, deltaTime);
+            }
 
             if (!CurrentFishAnimation.Flip) { return; }
             if (IsStuck) { return; }
@@ -321,24 +326,25 @@ namespace Barotrauma
                 }
             }
 
-            Character targetCharacter = target;
-            float eatSpeed = character.Mass / targetCharacter.Mass * 0.1f;
+            float dmg = character.Params.EatingSpeed;
+            float eatSpeed = dmg / ((float)Math.Sqrt(Math.Max(target.Mass, 1)) * 10);
             eatTimer += deltaTime * eatSpeed;
 
             Vector2 mouthPos = GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
-            float limbDist = limbDiff.Length();
-            if (limbDist < 1.0f)
+            float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 1);
+            if (limbDiff.LengthSquared() < extent * extent)
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
-                if (CanDrag(target))
+                float dragForce = MathHelper.Clamp(eatSpeed * 10, 0, 40);
+                if (dragForce > 0.1f)
                 {
-                    targetCharacter.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
-                    targetCharacter.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, 20.0f);
-                    targetCharacter.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + 10.0f));
+                    target.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    target.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, dragForce * 2);
+                    target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
                 }
 
                 //pull the character's mouth to the target character (again with a fluctuating force)
@@ -347,23 +353,29 @@ namespace Barotrauma
 
                 character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
 
+                float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
+                if (Rand.Value() < particleFrequency / 6)
+                {
+                    target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
+                }
+                if (Rand.Value() < particleFrequency)
+                {
+                    target.AnimController.MainLimb.AddDamage(target.SimPosition, 0, dmg, 0, false);
+                }
                 if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
                 {
-                    //apply damage to the target character to get some blood particles flying 
-                    targetCharacter.AnimController.MainLimb.AddDamage(targetCharacter.SimPosition, 0.0f, 20.0f, 0.0f, false);
-
+                    bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
                     //keep severing joints until there is only one limb left
-                    LimbJoint[] nonSeveredJoints = Array.FindAll(targetCharacter.AnimController.LimbJoints,
-                        l => !l.IsSevered && l.CanBeSevered && l.LimbA != null && !l.LimbA.IsSevered && l.LimbB != null && !l.LimbB.IsSevered);
-                    if (nonSeveredJoints.Length == 0)
+                    var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
+                    if (nonSeveredJoints.None())
                     {
                         //only one limb left, the character is now full eaten
-                        Entity.Spawner?.AddToRemoveQueue(targetCharacter);
+                        Entity.Spawner?.AddToRemoveQueue(target);
                         character.SelectedCharacter = null;
                     }
                     else //sever a random joint
                     {
-                        targetCharacter.AnimController.SeverLimbJoint(nonSeveredJoints[Rand.Int(nonSeveredJoints.Length)]);
+                        target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
                     }
                 }
             }

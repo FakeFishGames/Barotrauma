@@ -97,13 +97,32 @@ namespace Barotrauma
             parsedAfflictionIdentifiers = splitValue;
         }
 
-        public bool MatchesAffliction(Affliction affliction)
+        public bool MatchesAfflictionIdentifier(string identifier)
+        {
+            //if no identifiers have been defined, the damage modifier affects all afflictions
+            if (AfflictionIdentifiers.Length == 0) { return true; }
+            return parsedAfflictionIdentifiers.Any(id => id.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public bool MatchesAfflictionType(string type)
+        {
+            //if no types have been defined, the damage modifier affects all afflictions
+            if (AfflictionTypes.Length == 0) { return true; }
+            return parsedAfflictionTypes.Any(t => t.Equals(type, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Returns true if the type or the identifier matches the defined types/identifiers.
+        /// </summary>
+        public bool MatchesAffliction(string identifier, string type)
         {
             //if no identifiers or types have been defined, the damage modifier affects all afflictions
             if (AfflictionIdentifiers.Length == 0 && AfflictionTypes.Length == 0) { return true; }
-            return parsedAfflictionIdentifiers.Any(id => id.Equals(affliction.Identifier, StringComparison.OrdinalIgnoreCase)) 
-                || parsedAfflictionTypes.Any(t => t.Equals(affliction.Prefab.AfflictionType, StringComparison.OrdinalIgnoreCase));
+            return parsedAfflictionIdentifiers.Any(id => id.Equals(identifier, StringComparison.OrdinalIgnoreCase))
+                || parsedAfflictionTypes.Any(t => t.Equals(type, StringComparison.OrdinalIgnoreCase));
         }
+
+        public bool MatchesAffliction(Affliction affliction) => MatchesAffliction(affliction.Identifier, affliction.Prefab.AfflictionType);
 
         public void Serialize(XElement element)
         {

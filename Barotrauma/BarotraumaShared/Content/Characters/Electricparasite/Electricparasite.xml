@@ -2,7 +2,7 @@
   <ragdolls folder="Content/Characters/Electricparasite/Ragdolls/" />
   <animations folder="Content/Characters/Electricparasite/Animations/" />
   <health vitality="100" doesbleed="True" crushdepth="-Infinity" usehealthwindow="False" />
-  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False">
+  <ai combatstrength="1" sight="1" hearing="1" aggressionhurt="100" aggressiongreed="10" fleehealththreshold="0" attackwhenprovoked="False" aggressiveboarding="False">
     <target tag="human" state="Attack" priority="100" />
   </ai>
 </Character>

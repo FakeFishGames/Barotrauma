@@ -31,12 +31,13 @@ namespace Barotrauma
             }
 
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
+            string monsterFileName = monsterFile;
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
                 string monster = monsterElement.GetAttributeString("character", string.Empty);
-                if (monsterFile == null)
+                if (monsterFileName == null)
                 {
-                    monsterFile = monster;
+                    monsterFileName = monster;
                 }
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)
@@ -48,7 +49,7 @@ namespace Barotrauma
                 monsterFiles.Add(new Tuple<string, int>(monster, Rand.Range(min, max + 1, Rand.RandSync.Server)));
             }
             description = description.Replace("[monster]",
-                TextManager.Get("character." + System.IO.Path.GetFileNameWithoutExtension(monsterFile)));
+                TextManager.Get("character." + System.IO.Path.GetFileNameWithoutExtension(monsterFileName)));
         }
         
         public override void Start(Level level)

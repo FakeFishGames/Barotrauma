@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Character speciesname="Husk" humanoid="true" needsair="false" blooddecal="blackblood">
+<Character speciesname="Husk" group="husk" humanoid="true" needsair="false" blooddecal="blackblood">
 
   <ragdolls folder="default"/>
   <animations folder="default"/>
@@ -33,16 +33,15 @@
     combatstrength="100"
     sight="0.5"
     hearing="1.0"
-    aggressiveboarding="true">
+    aggressiveboarding="true"
+    attackwhenprovoked="true">
     <targetpriority tag="decoy" state="Attack" priority="600" />
     <targetpriority tag="human" state="Attack" priority="500"/>
     <targetpriority tag="nasonov" state="Attack" priority="60"/>
     <targetpriority tag="weaker" state="Attack" priority="50"/>
-    <targetpriority tag="stronger" state="Escape" priority="30"/>
+    <targetpriority tag="stronger" state="PassiveAggressive" priority="30" reactdistance="500"/>
     <targetpriority tag="sonar" state="Attack" priority="25"/>
     <targetpriority tag="room" state="Attack" priority="5"/>
-    <!--Ignore-->
-    <targetpriority tag="humanhusk" state="Attack" priority="0"/>
   </ai>
 
   <inventory slots="RightHand, LeftHand, Head, Any, Any, Any, Any, Any" accessiblewhenalive="false" commonness="10">

@@ -1,45 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="endworm" jointscale="2.0" limbscale="2.0" canentersubmarine="false" canwalk="False">
+<Ragdoll type="endworm" jointscale="2.0" limbscale="2.0" canentersubmarine="false" canwalk="False" texture="Content/Characters/Endworm/endworm.png">
 
   <collider radius="300" height="400"/>
     
   <!-- head -->
   <limb id = "0" radius="250" type="Head" steerforce="3.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,478,720,546" depth="0.05"/>
+    <sprite sourcerect="0,478,720,546" depth="0.05"/>
   </limb>
 
   <!-- body -->
   <limb id = "1" radius="300" type="Torso">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.01" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.01" origin="0.5,0.5"/>
   </limb>
 
   <!-- body -->
   <limb id = "2" radius="300" type="Torso" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.02" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.02" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "3" radius="300" type="Torso" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.03" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.03" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "4" radius="300" type="Tail" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.04" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.04" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "5" radius="300" type="Tail" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.05" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.05" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "6" radius="300" type="Tail" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="0,0,702,448" depth="0.06" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,702,448" depth="0.06" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "7" radius="150" type="Tail" steerforce="0.0">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="704,0,320,400" depth="0.07" origin="0.5,0.5"/>
+    <sprite sourcerect="704,0,320,400" depth="0.07" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "8" width="50" height="320">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
+    <sprite sourcerect="755,552,137,470" depth="0.08" origin="0.5,0.5"/>
     <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="-100" structuredamage="500" structuresoundtype="StructureBlunt">
       <Affliction identifier="bitewounds" strength="30"/>
       <Affliction identifier="stun" strength="5"/>        
@@ -47,7 +47,7 @@
   </limb>
     
   <limb id = "9" width="50" height="320">
-    <sprite texture="Content/Characters/Endworm/endworm.png" sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
+    <sprite sourcerect="892,552,137,470" depth="0.08" origin="0.6,0.5"/>
     <attack range="1000" hitdetectiontype="Contact" duration="0.25" force="100" torque="100" structuredamage="500" structuresoundtype="StructureBlunt">
       <Affliction identifier="bitewounds" strength="30"/>
       <Affliction identifier="stun" strength="5"/>

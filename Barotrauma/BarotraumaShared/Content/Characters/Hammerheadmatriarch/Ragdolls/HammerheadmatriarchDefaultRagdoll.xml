@@ -1,11 +1,11 @@
-﻿<Ragdoll type="Hammerheadmatriarch" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" mainlimb="Torso">
+﻿<Ragdoll type="Hammerheadmatriarch" canentersubmarine="False" canwalk="False" spritesheetorientation="90" limbscale="1" jointscale="1" texturescale="1" colliderheightfromfloor="45" impacttolerance="50" draggable="True" mainlimb="Torso" texture="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.png">
   <collider radius="200" width="0" name="Main Collider" height="600" />
   <limb id="0" name="Torso" type="Torso" height="350" width="500" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1163,1,500,558" origin="0.5112625,0.5286262" depth="0.2" subdivisions="5,5">
       <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="20" strength="5" />
     </deformablesprite>
   </limb>
-  <limb id="1" name="Head" type="Head" height="0" width="0" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="210" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
+  <limb id="1" name="Head" type="Head" height="0" width="0" notes="" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="5" steerforce="0" stepoffset="0,0" radius="210" mass="0" density="50" pullpos="0,0" refjoint="-1" ignorecollisions="False" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1655,0,381,563" origin="0.4631682,0.5593005" depth="0.3" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.2" changespeed="1" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="True" sineoffset="0" />
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="0.25" changespeed="2" blendmode="Add" sync="-1" typename="noise" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="True" sineoffset="0" />
@@ -22,7 +22,8 @@
         <spritedeformation type="bendjoint" resolution="5,5" multiplier="1.0" sync="-1" typename="bendjoint" blendmode="Add" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" maxrotation="45" strength="5" />
       </deformablesprite>
     </conditionalsprite>
-    <damagemodifier damagesound="Gore" damagemultiplier="10" armorsector="0,360" deflectprojectiles="False" afflictionidentifiers="" afflictiontypes="damage,bleeding" />
+    <damagemodifier damagesound="Gore" damagemultiplier="10" armorsector="0,360" deflectprojectiles="False" afflictionidentifiers="gunshotwound,lacerations" />
+    <damagemodifier damagemultiplier="2" armorsector="0,360" deflectprojectiles="False" afflictionidentifiers="monsterbites,blunttrauma,internaldamage"/>
   </limb>
   <limb id="2" radius="0" width="450" height="250" mass="0" name="Tail1" type="Tail" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="7" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="740,1,430,557" origin="0.5415135,0.5051444" depth="0.3" subdivisions="5,5">
@@ -53,7 +54,7 @@
       <spritedeformation type="custom" resolution="3,3" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0" row1="1,0 0.5,0.5 1,0" row2="1,0 1,0 1,0" sync="-1" typename="custom" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" strength="1" maxrotation="90" />
     </deformablesprite>
   </limb>
-  <limb id="7" width="243.95" height="389.3" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+  <limb id="7" width="243.95" height="389.3" name="SkirtA1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1131,585,287,458" origin="0.3528613,0.4009167" depth="0.15" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="1" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row1="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row2="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row3="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row4="0,0 0.5,0.5 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -62,7 +63,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="23" radius="0" width="276.25" height="387.6" name="SkirtA2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="23" radius="0" width="276.25" height="387.6" name="SkirtA2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="False" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="813,583,325,456" origin="0.5271671,0.4288104" depth="0.15" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="1" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row1="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row2="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row3="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row4="0,0 0.5,0.5 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -71,7 +72,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="24" radius="0" width="362.1" height="390.15" name="SkirtA3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="24" radius="0" width="362.1" height="390.15" name="SkirtA3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="False" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="399,582,426,459" origin="0.5,0.5" depth="0.15" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="1" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 1,1 0.5,0.5 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -80,7 +81,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="8" width="179.35" height="307.7" name="SkirtB1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="True" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
+  <limb id="8" width="179.35" height="307.7" name="SkirtB1" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" density="1" pullpos="0,0" refjoint="-1" ignorecollisions="False" notes="" healthindex="0" friction="0.3" restitution="0.05" angulardamping="70" mouthpos="0,0">
     <deformablesprite texture="" sourcerect="1044,1067,211,367" origin="0.4190488,0.5317273" depth="0.2" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="2" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row1="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row2="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row3="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row4="0,0 0.5,0.5 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -89,7 +90,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="25" radius="0" width="192.1" height="314.5" name="SkirtB2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="25" radius="0" width="192.1" height="314.5" name="SkirtB2" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="False" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="824,1066,226,370" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="2" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row1="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row2="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row3="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row4="0,0 0.5,0.5 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -98,7 +99,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="26" radius="0" width="216.75" height="321.3" name="SkirtB3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="26" radius="0" width="216.75" height="321.3" name="SkirtB3" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="False" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="578,1065,255,375" origin="0.5,0.5" depth="0.2" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="2" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row1="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row2="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row3="0,0 0.5,0.5 1,1 0.5,0.5 0,0" row4="0,0 0.5,0.5 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -107,7 +108,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="27" radius="0" width="496.4" height="318.75" name="SkirtB4" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="True" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="27" radius="0" width="496.4" height="318.75" name="SkirtB4" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="1" ignorecollisions="False" angulardamping="70" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="3,1063,584,375" origin="0.7135226,0.5147712" depth="0.2" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="2" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="1,1 1,1 1,1 0.5,0.5 0,0" row1="1,1 1,1 1,1 0.5,0.5 0,0" row2="1,1 1,1 1,1 0.5,0.5 0,0" row3="1,1 1,1 1,1 0.5,0.5 0,0" row4="1,1 1,1 1,1 0.5,0.5 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -143,7 +144,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="10" width="346.8" height="164.9" name="SkirtD1" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="10" width="346.8" height="164.9" name="SkirtD1" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" radius="0" density="0.5" ignorecollisions="False" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="1613,557,437,192" origin="0.4189696,0.6453495" depth="0.7" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="4" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -152,7 +153,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="19" radius="0" width="372.3" height="184.45" name="SkirtD2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="19" radius="0" width="372.3" height="184.45" name="SkirtD2" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="False" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="1612,747,438,217" origin="0.5,0.5" depth="0.7" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="4" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -161,7 +162,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="20" radius="0" width="371.45" height="187.85" name="SkirtD3" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="20" radius="0" width="371.45" height="187.85" name="SkirtD3" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="False" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="1611,959,437,221" origin="0.5367573,0.4486468" depth="0.7" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="4" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="0,0 0,0 0,0 0,0 0,0" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -170,7 +171,7 @@
       <spritedeformation type="bendjoint" resolution="5,5" maxrotation="30" sync="-1" typename="bendjoint" blendmode="Add" strength="1" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
     </deformablesprite>
   </limb>
-  <limb id="21" radius="0" width="373.15" height="313.65" name="SkirtD4" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="True" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
+  <limb id="21" radius="0" width="373.15" height="313.65" name="SkirtD4" type="None" spriteorientation="0" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="False" attackpriority="1" steerforce="0" density="0.5" ignorecollisions="False" angulardamping="140" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <deformablesprite texture="" sourcerect="1611,1175,439,369" origin="0.5366619,0.3074546" depth="0.7" subdivisions="5,5">
       <spritedeformation type="noise" resolution="5,5" frequency="0.01" amplitude="1" changespeed="0.5" blendmode="Add" sync="4" typename="noise" strength="0.5" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
       <SpriteDeformation type="custom" resolution="5,5" frequency="0" amplitude="1" blendmode="Multiply" row0="0,0 0,0 0,0 0,0 0,0" row1="1,0.5 1,0.5 1,0.5 1,0.5 1,0.5" row2="1,1 1,1 1,1 1,1 1,1" row3="1,1 1,1 1,1 1,1 1,1" row4="1,1 1,1 1,1 1,1 1,1" sync="-1" typename="custom" strength="1" maxrotation="90" usemovementsine="False" stopwhenhostisdead="False" sineoffset="0" />
@@ -205,11 +206,11 @@
   </limb>
   <limb id="22" width="93.50001" height="266.05" name="NoseAttack" type="None" spriteorientation="NaN" flip="True" mirrorvertically="False" mirrorhorizontally="False" hide="True" attackpriority="1" steerforce="0" radius="0" density="0.5" ignorecollisions="True" angulardamping="7" pullpos="0,0" stepoffset="0,0" refjoint="-1" mouthpos="0,0" notes="" healthindex="0" friction="0.3" restitution="0.05">
     <sprite texture="" sourcerect="1938,158,110,313" origin="0.5,0.5" depth="0" />
-    <attack targettype="Structure" priority="1" range="150" damagerange="150" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="200" force="50" targetimpulse="500" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="45" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None">
+    <attack targettype="Structure" priority="1" range="300" damagerange="300" cooldown="15" secondarycooldown="1" afterattack="FallBack" structuredamage="200" force="100" targetimpulse="1000" structuresoundtype="StructureBlunt" applyforceonlimbs="0, 3" context="NotDefined" hitdetectiontype="Distance" itemdamage="200" stun="0" onlyhumans="False" torque="0" applyforcesonlyonce="False" targetimpulseworld="0,0" targetforce="0" targetforceworld="0,0" severlimbsprobability="0" stickchance="0" duration="0.1" cooldownrandomfactor="0.1" reverse="False" targetlimbtype="None">
       <Affliction identifier="bitewounds" strength="25" probability="1" />
-      <Affliction identifier="stun" strength="4" probability="1" />
+      <Affliction identifier="stun" strength="1" probability="1" />
       <StatusEffect type="OnUse" target="This" disabledeltatime="true">
-        <Affliction identifier="bitewounds" amount="1000" />
+        <Affliction identifier="internaldamage" strength="1000" />
       </StatusEffect>
     </attack>
   </limb>

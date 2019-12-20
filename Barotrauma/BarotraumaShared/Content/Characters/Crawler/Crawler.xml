@@ -1,6 +1,7 @@
-﻿<Character speciesname="Crawler" humanoid="False" blooddecal="blood" group="" husk="False" needsair="False" canspeak="False" noise="100">
+﻿<Character speciesname="Crawler" humanoid="False" blooddecal="blood" group="" husk="False" needsair="False" canspeak="False" noise="100" eatingspeed="5">
   <ragdolls folder="default" />
   <animations folder="default" />
+  <damageemitter particle="gib" drawontop="True" particleamount="10" velocitymin="50" velocitymax="300" anglemin="0" anglemax="360" scalemin="0.25" scalemax="0.5" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="blood" particleamount="10" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <bloodemitter particle="waterblood" particleamount="1" anglemin="0" anglemax="0" scalemin="1" scalemax="1" velocitymin="0" velocitymax="0" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
   <gibemitter particle="gib" particleamount="20" velocitymin="200" velocitymax="700" anglemin="0" anglemax="360" scalemin="1" scalemax="1" emitinterval="0" particlespersecond="0" highqualitycollisiondetection="False" copyentityangle="False" />
@@ -25,9 +26,9 @@
   <Inventory slots="Any, Any" accessiblewhenalive="False" commonness="50">
     <Item identifier="alienblood" />
   </Inventory>
-  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackonlywhenprovoked="False">
+  <ai combatstrength="100" sight="0.75" hearing="1" fleehealththreshold="10" aggressiveboarding="True" aggressiongreed="10" aggressionhurt="100" attackwhenprovoked="False">
     <target tag="decoy" state="Attack" priority="150" />
-    <target tag="stronger" state="Escape" priority="200" />
+    <target tag="stronger" state="Avoid" priority="200" reactdistance="2000"/>
     <target tag="provocative" state="Attack" priority="90" />
     <target tag="light" state="Attack" priority="80" />
     <target tag="dead" state="Eat" priority="100" />
@@ -42,7 +43,7 @@
   </ai>
   <ai combatstrength="100" sight="0.75" hearing="1.0" fleehealththreshold="10" aggressiveboarding="true" aggressiongreed="10" aggressionhurt="100">
     <target tag="decoy" state="Attack" priority="150" />
-    <target tag="stronger" state="Escape" priority="200" />
+    <target tag="stronger" state="Avoid" priority="200" reactdistance="2000"/>
     <target tag="provocative" state="Attack" priority="90" />
     <target tag="light" state="Attack" priority="80" />
     <target tag="dead" state="Eat" priority="100" />

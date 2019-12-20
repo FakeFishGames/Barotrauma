@@ -27,14 +27,13 @@
     <Item identifier="shellshield" />
     <Item identifier="brockite" />
   </Inventory>
-  <ai combatstrength="1500" sight="0" hearing="1" aggressionhurt="10" aggressiongreed="1" fleehealththreshold="0" attackonlywhenprovoked="False" aggressiveboarding="False" avoidgunfire="False">
+  <ai combatstrength="1500" sight="0" hearing="1" aggressionhurt="10" aggressiongreed="1" fleehealththreshold="0" attackwhenprovoked="True" aggressiveboarding="False" avoidgunfire="False">
     <targetpriority tag="decoy" state="Attack" priority="300" />
-    <targetpriority tag="stronger" state="Escape" priority="100" />
+    <targetpriority tag="stronger" state="Avoid" priority="100" reactdistance="2000"/>
     <targetpriority tag="sonar" state="Attack" priority="100" />
     <targetpriority tag="nasonov" state="Attack" priority="100" />
     <targetpriority tag="provocative" state="Attack" priority="100" />
-    <targetpriority tag="room" state="Attack" priority="30" />
-    <targetpriority tag="human" state="Attack" priority="1" />
-    <targetpriority tag="weaker" state="Attack" priority="0" />
+    <targetpriority tag="room" state="Aggressive" priority="30" reactdistance="3000"/>
+    <targetpriority tag="wall" state="Aggressive" priority="30" reactdistance="3000"/>
   </ai>
 </Character>

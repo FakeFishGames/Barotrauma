@@ -54,7 +54,7 @@ namespace Barotrauma.Particles
             Vector2 velocity = dir * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
             position += dir * Rand.Range(Prefab.DistanceMin, Prefab.DistanceMax);
 
-            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess);
+            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop);
 
             if (particle != null)
             {
@@ -107,6 +107,8 @@ namespace Barotrauma.Particles
         public readonly bool HighQualityCollisionDetection;
 
         public readonly bool CopyEntityAngle;
+
+        public readonly bool DrawOnTop;
 
         public ParticleEmitterPrefab(XElement element)
         {
@@ -164,6 +166,7 @@ namespace Barotrauma.Particles
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
             HighQualityCollisionDetection = element.GetAttributeBool("highqualitycollisiondetection", false);
             CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
+            DrawOnTop = element.GetAttributeBool("drawontop", false);
         }
     }
 }
