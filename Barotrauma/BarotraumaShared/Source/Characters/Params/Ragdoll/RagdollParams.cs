@@ -561,13 +561,13 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(10f, true, description: "The more the density the heavier the limb is"), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
             public float Density { get; set; }
 
             [Serialize(false, true), Editable]
             public bool IgnoreCollisions { get; set; }
 
-            [Serialize(7f, true, description:"Increasing the damping makes the limb turn slower."), Editable]
+            [Serialize(7f, true, description: "Increasing the damping makes the limb stop rotating more quickly."), Editable]
             public float AngularDamping { get; set; }
 
             [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
