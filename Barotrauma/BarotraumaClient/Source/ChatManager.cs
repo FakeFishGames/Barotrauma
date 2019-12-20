@@ -5,16 +5,20 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
-    // TODO implement into DebugConsole.cs
-    // TODO decide what namespace this falls under. Utils? Root? Also probably a better class name name [<- no need to create a separate namespace, maybe a folder?]
+    // TODO decide what folder this falls under. Utils? GUI? or just leave where it is. Also probably a better class name name [<- no need to create a separate namespace, maybe a folder?]
     /// <summary>
     /// A class used for handling special key actions in chat boxes.
     /// For example tab completion or up/down arrow key history.
     /// </summary>
     public class ChatManager
     {
+        private readonly bool loop;
+
         // Maximum items we want to store in the history
-        private const int maxCount = 10;
+        private readonly short maxCount = 10;
+
+        // List of previously stored messages
+        private readonly List<string> messageList = new List<string> { string.Empty };
 
         /// Keep track of the registered fields so we don't register them twice
         /// I couldn't figure out where to register this in <see cref="NetLobbyScreen"/> where it wouldn't register twice
@@ -22,14 +26,27 @@ namespace Barotrauma
         /// <seealso cref="NetLobbyScreen.Select"/> where I'm utilizing this
         private readonly List<GUITextBox> registers = new List<GUITextBox>();
 
-        // List of previously stored messages
-        private readonly List<string> messageList = new List<string> { string.Empty };
+        private readonly bool skipDuplicate;
 
         // Selector index
         private int index;
 
         // Local changes we've made into previously stored messages
-        private string[] localChanges = new string[maxCount];
+        private string[] localChanges;
+
+        public ChatManager(bool skipDuplicate, bool loop, short maxCount)
+        {
+            this.skipDuplicate = skipDuplicate;
+            this.loop = loop;
+            this.maxCount = maxCount;
+            localChanges = new string[maxCount];
+        }
+
+        public ChatManager()
+        {
+            localChanges = new string[maxCount];
+        }
+
 
         /// <summary>
         /// Registers special input actions to the selected input field
@@ -72,6 +89,12 @@ namespace Barotrauma
             Clear();
             string strip = StripMessage(message);
             if (string.IsNullOrWhiteSpace(strip)) { return; }
+
+            if (skipDuplicate && messageList.Any(p => message == p))
+            {
+                return;
+            }
+            
             // insert to the second position as the first position is reserved for the original message if any
             messageList.Insert(1, message);
             // we don't want to add too many messages
@@ -114,10 +137,17 @@ namespace Barotrauma
             int dir = (int) direction;
             
             int nextIndex = (index + dir);
-            // if we are at the end, there is nothing more to scroll
-            if (nextIndex > (messageList.Count - 1))
+
+            if (loop && messageList.Count > 1)
             {
-                return null;
+                nextIndex = LoopAround(nextIndex);
+            }
+            else
+            {
+                if (nextIndex > messageList.Count - 1)
+                {
+                    return null;
+                }
             }
             
             return nextIndex < 0 ? localChanges.FirstOrDefault() : EntryAt(index = nextIndex);
@@ -126,6 +156,13 @@ namespace Barotrauma
             {
                 // if we've previously edited the entry then give us that, else give us the original message
                 return localChanges[i] ?? messageList[i];
+            }
+
+            int LoopAround(int next)
+            {
+                if (next > (messageList.Count - 1)) { return 1; }
+                if (next < 1) { return messageList.Count - 1; }
+                return next;
             }
         }
 
