@@ -4368,16 +4368,16 @@
 
   <!--Missing mission texts-->
   <missionname.killmatriarch1>Aggressive Hammerheads</missionname.killmatriarch1>
-  <missiondescription.killmatriarch1>According to our sources there is a group of Hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue travelling safely in the route.</missiondescription.killmatriarch1>
+  <missiondescription.killmatriarch1>According to our sources, there is a group of Hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue traveling safely through the passage.</missiondescription.killmatriarch1>
   <missionsonarlabel.killmatriarch1>Hammerhead</missionsonarlabel.killmatriarch1>
-  <missionsuccess.killmatriarch1>The Hammerheads have been neutralized. The route is safe again.</missionsuccess.killmatriarch1>
+  <missionsuccess.killmatriarch1>The Hammerheads have been neutralized. The route should be safe again.</missionsuccess.killmatriarch1>
   <missionheader0.killmatriarch1>Targets neutralized</missionheader0.killmatriarch1>
   <missionmessage0.killmatriarch1>The Hammerheads have been neutralized. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch1>
 
   <missionname.killmatriarch2>Killing a Matriarch</missionname.killmatriarch2>
-  <missiondescription.killmatriarch2>We need to get rid of a large creature that we call "Hammerhead Matriarch" spotted in this area. Kill the creature so that vessels can continue travelling safely between [location1] and [location2]. This might not be the easiest task, but the reward is not small either!</missiondescription.killmatriarch2>
+  <missiondescription.killmatriarch2>A large and hostile creature, a so-called "Hammerhead Matriarch", has taken residence in the passageway between [location1] and [location2] and needs to be gotten rid of. Kill the creature so that vessels can continue traveling safely through the route. This might not be the easiest task, but the reward is not small either!</missiondescription.killmatriarch2>
   <missionsonarlabel.killmatriarch2>Matriarch</missionsonarlabel.killmatriarch2>
-  <missionsuccess.killmatriarch2>The Matriarch has been killed. The route is safe again.</missionsuccess.killmatriarch2>
+  <missionsuccess.killmatriarch2>The Matriarch has been killed. The route should be safe again.</missionsuccess.killmatriarch2>
   <missionheader0.killmatriarch2>Target terminated</missionheader0.killmatriarch2>
   <missionmessage0.killmatriarch2>The Matriarch and its minions have been taken care of. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.killmatriarch2>
   
