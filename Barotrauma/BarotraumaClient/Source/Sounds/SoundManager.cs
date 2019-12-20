@@ -278,7 +278,7 @@ namespace Barotrauma.Sounds
                 throw new FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
             }
 
-            Sound newSound = new OggSound(this, filename, stream);
+            Sound newSound = new OggSound(this, filename, stream, null);
             lock (loadedSounds)
             {
                 loadedSounds.Add(newSound);
@@ -296,7 +296,7 @@ namespace Barotrauma.Sounds
                 throw new FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
             }
 
-            var newSound = new OggSound(this, filePath, stream);
+            var newSound = new OggSound(this, filePath, stream, xElement: element);
             if (newSound != null)
             {
                 newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);

@@ -13,13 +13,38 @@ namespace Barotrauma
         Structure = 1, Decorative = 2, Machine = 4, Equipment = 8, Electrical = 16, Material = 32, Misc = 64, Alien = 128, ItemAssembly = 256, Legacy = 512
     }
 
-    partial class MapEntityPrefab
+    abstract partial class MapEntityPrefab : IPrefab, IDisposable
     {
-        public readonly static List<MapEntityPrefab> List = new List<MapEntityPrefab>();
+        public static IEnumerable<MapEntityPrefab> List
+        {
+            get
+            {
+                foreach (var ep in CoreEntityPrefab.Prefabs)
+                {
+                    yield return ep;
+                }
 
-        protected string name;
+                foreach (var ep in StructurePrefab.Prefabs)
+                {
+                    yield return ep;
+                }
+
+                foreach (var ep in ItemPrefab.Prefabs)
+                {
+                    yield return ep;
+                }
+
+                foreach (var ep in ItemAssemblyPrefab.Prefabs)
+                {
+                    yield return ep;
+                }
+            }
+        }
+
+        protected string originalName;
         protected string identifier;
-        
+        protected ContentPackage contentPackage;
+
         public Sprite sprite;
 
         //the position where the structure is being placed (needed when stretching the structure)
@@ -36,9 +61,14 @@ namespace Barotrauma
         //which prefab has been selected for placing
         protected static MapEntityPrefab selected;
         
-        public string Name
+        public string OriginalName
         {
-            get { return name; }
+            get { return originalName; }
+        }
+
+        public virtual string Name
+        {
+            get { return originalName; }
         }
 
         public string GetItemNameTextId()
@@ -59,6 +89,10 @@ namespace Barotrauma
         {
             get { return identifier; }
         }
+
+        public string FilePath { get; protected set; }
+
+        public ContentPackage ContentPackage { get; protected set; }
 
         public HashSet<string> Tags
         {
@@ -86,7 +120,7 @@ namespace Barotrauma
         public bool Linkable
         {
             get;
-            private set;
+            protected set;
         }
 
         /// <summary>
@@ -120,10 +154,10 @@ namespace Barotrauma
 
         public static void Init()
         {
-            MapEntityPrefab ep = new MapEntityPrefab
+            CoreEntityPrefab ep = new CoreEntityPrefab
             {
                 identifier = "hull",
-                name = TextManager.Get("EntityName.hull"),
+                originalName = TextManager.Get("EntityName.hull"),
                 Description = TextManager.Get("EntityDescription.hull"),
                 constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
                 ResizeHorizontal = true,
@@ -132,40 +166,42 @@ namespace Barotrauma
             };
             ep.AllowedLinks.Add("hull");
             ep.Aliases = new HashSet<string> { "hull" };
-            List.Add(ep);
+            CoreEntityPrefab.Prefabs.Add(ep, false);
 
-            ep = new MapEntityPrefab
+            ep = new CoreEntityPrefab
             {
                 identifier = "gap",
-                name = TextManager.Get("EntityName.gap"),
+                originalName = TextManager.Get("EntityName.gap"),
                 Description = TextManager.Get("EntityDescription.gap"),
                 constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
                 ResizeHorizontal = true,
                 ResizeVertical = true
             };
-            List.Add(ep);
+            CoreEntityPrefab.Prefabs.Add(ep, false);
             ep.Aliases = new HashSet<string> { "gap" };
 
-            ep = new MapEntityPrefab
+            ep = new CoreEntityPrefab
             {
                 identifier = "waypoint",
-                name = TextManager.Get("EntityName.waypoint"),
+                originalName = TextManager.Get("EntityName.waypoint"),
                 Description = TextManager.Get("EntityDescription.waypoint"),
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
             };
-            List.Add(ep);
+            CoreEntityPrefab.Prefabs.Add(ep, false);
             ep.Aliases = new HashSet<string> { "waypoint" };
 
-            ep = new MapEntityPrefab
+            ep = new CoreEntityPrefab
             {
                 identifier = "spawnpoint",
-                name = TextManager.Get("EntityName.spawnpoint"),
+                originalName = TextManager.Get("EntityName.spawnpoint"),
                 Description = TextManager.Get("EntityDescription.spawnpoint"),
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
             };
-            List.Add(ep);
+            CoreEntityPrefab.Prefabs.Add(ep, false);
             ep.Aliases = new HashSet<string> { "spawnpoint" };
         }
+
+        public abstract void Dispose();
 
         public MapEntityPrefab()
         {
@@ -266,7 +302,7 @@ namespace Barotrauma
                 }
                 if (!string.IsNullOrEmpty(name))
                 {
-                    if (prefab.name.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
+                    if (prefab.Name.ToLowerInvariant() == name || prefab.originalName.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
                 }
             }
 
@@ -278,18 +314,27 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Find a matching map entity prefab
+        /// </summary>
+        /// <param name="predicate">A predicate that returns true on the desired prefab.</param>
+        public static MapEntityPrefab Find(Predicate<MapEntityPrefab> predicate)
+        {
+            return List.FirstOrDefault(p => predicate(p));
+        }
+
+        /// <summary>
         /// Check if the name or any of the aliases of this prefab match the given name.
         /// </summary>
         public bool NameMatches(string name, bool caseSensitive = false)
         {
             if (caseSensitive)
             {
-                return this.name == name || (Aliases != null && Aliases.Any(a => a == name));
+                return this.originalName == name || (Aliases != null && Aliases.Any(a => a == name));
             }
             else
             {
                 name = name.ToLowerInvariant();
-                return this.name.ToLowerInvariant() == name || (Aliases != null && Aliases.Any(a => a.ToLowerInvariant() == name));
+                return this.originalName.ToLowerInvariant() == name || (Aliases != null && Aliases.Any(a => a.ToLowerInvariant() == name));
             }
         }
 
@@ -313,43 +358,6 @@ namespace Barotrauma
         public static object GetSelected()
         {
             return (object)selected;            
-        }
-        
-        protected bool HandleExisting(string identifier, bool allowOverriding, string file = null)
-        {
-            if (!string.IsNullOrEmpty(identifier))
-            {
-                MapEntityPrefab existingPrefab = List.Find(e => e.Identifier == identifier);
-                if (existingPrefab != null)
-                {
-                    if (allowOverriding)
-                    {
-                        string msg = $"Overriding an existing map entity with the identifier '{identifier}'";
-                        if (!string.IsNullOrWhiteSpace(file))
-                        {
-                            msg += $" using the file '{file}'";
-                        }
-                        msg += ".";
-                        DebugConsole.NewMessage(msg, Color.Yellow);
-                        List.Remove(existingPrefab);
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(file))
-                        {
-                            DebugConsole.ThrowError($"Error in '{file}': Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
-                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError("Map entity prefabs \"" + name + "\" and \"" + existingPrefab.Name + "\" have the same identifier! " +
-                                "Use the <override> XML element as the parent of the map element's definition to override the existing map element.");
-                        }
-                        return false;
-                    }
-                }
-            }
-            return true;
         }
     }
 }

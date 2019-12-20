@@ -143,27 +143,32 @@ namespace Barotrauma.RuinGeneration
         private static void LoadAll()
         {
             paramsList = new List<RuinGenerationParams>();
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     mainElement = doc.Root.FirstElement();
                     paramsList.Clear();
-                    DebugConsole.NewMessage($"Overriding all ruin configuration parameters using the file {configFile}.", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all ruin configuration parameters using the file {configFile.Path}.", Color.Yellow);
                 }
                 else if (paramsList.Any())
                 {
-                    DebugConsole.NewMessage($"Adding additional ruin configuration parameters from file '{configFile}'");
+                    DebugConsole.NewMessage($"Adding additional ruin configuration parameters from file '{configFile.Path}'");
                 }
                 var newParams = new RuinGenerationParams(mainElement)
                 {
-                    filePath = configFile
+                    filePath = configFile.Path
                 };
                 paramsList.Add(newParams);
             }
+        }
+
+        public static void ClearAll()
+        {
+            paramsList?.Clear();
         }
 
         public static void SaveAll()
@@ -176,16 +181,16 @@ namespace Barotrauma.RuinGeneration
 
             foreach (RuinGenerationParams generationParams in List)
             {
-                foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
+                foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.RuinConfig))
                 {
-                    if (configFile != generationParams.filePath) continue;
+                    if (configFile.Path != generationParams.filePath) continue;
 
-                    XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                    XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                     if (doc == null) { continue; }
 
                     SerializableProperty.SerializeProperties(generationParams, doc.Root);
 
-                    using (var writer = XmlWriter.Create(configFile, settings))
+                    using (var writer = XmlWriter.Create(configFile.Path, settings))
                     {
                         doc.WriteTo(writer);
                         writer.Flush();

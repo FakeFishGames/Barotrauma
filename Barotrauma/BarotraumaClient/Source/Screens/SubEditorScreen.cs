@@ -554,7 +554,7 @@ namespace Barotrauma
                 if (ep.HideInMenus) { continue; }                
 #endif
 
-                bool legacy = ep.Category == MapEntityCategory.Legacy;
+                bool legacy = ep.Category.HasFlag(MapEntityCategory.Legacy);
 
                 float relWidth = 1.0f / entitiesPerRow;
                 GUIFrame frame = new GUIFrame(new RectTransform(
@@ -887,7 +887,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(Character.HumanSpeciesName, Vector2.Zero, "", hasAi: false);
+            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", hasAi: false);
 
             //make space for the entity menu
             for (int i = 0; i < dummyCharacter.Inventory.SlotPositions.Length; i++)
@@ -902,20 +902,6 @@ namespace Barotrauma
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
-        }
-
-        private bool IsVanillaSub(Submarine sub)
-        {
-            if (sub == null) { return false; }
-
-            var vanilla = GameMain.VanillaContent;
-            if (vanilla != null)
-            {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
-                string pathToCompare = sub.FilePath.Replace(@"\", @"/").ToLowerInvariant();
-                return (vanillaSubs.Any(s => s.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare));
-            }
-            return false;
         }
 
         private bool SaveSub(GUIButton button, object obj)
@@ -1441,7 +1427,7 @@ namespace Barotrauma
 #if DEBUG
                         deleteBtn.Enabled = true;
 #else
-                        deleteBtn.Enabled = !IsVanillaSub(userData as Submarine);
+                        deleteBtn.Enabled = userData is Submarine sub && sub.IsVanillaSubmarine();
 #endif
                     }
                     return true;
@@ -1841,9 +1827,9 @@ namespace Barotrauma
                 OnSelected = SelectWire
             };
 
-            foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) { continue; }
+                if (string.IsNullOrEmpty(itemPrefab.Name)) { continue; }
                 if (!itemPrefab.Tags.Contains("wire")) { continue; }
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Rect.Width - 20, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
@@ -1853,7 +1839,7 @@ namespace Barotrauma
 
                 var img = new GUIImage(new RectTransform(Vector2.One, imgFrame.RectTransform), itemPrefab.sprite)
                 {
-                    Color = ep.SpriteColor
+                    Color = itemPrefab.SpriteColor
                 };
             }
 

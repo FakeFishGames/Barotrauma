@@ -1911,7 +1911,7 @@ namespace Barotrauma.Networking
 
                     if (client.CharacterInfo == null)
                     {
-                        client.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, client.Name);
+                        client.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob.First)
@@ -1924,7 +1924,7 @@ namespace Barotrauma.Networking
                 int botsToSpawn = serverSettings.BotSpawnMode == BotSpawnMode.Fill ? serverSettings.BotCount - characterInfos.Count : serverSettings.BotCount;
                 for (int i = 0; i < botsToSpawn; i++)
                 {
-                    var botInfo = new CharacterInfo(Character.HumanSpeciesName)
+                    var botInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName)
                     {
                         TeamID = teamID
                     };
@@ -2933,13 +2933,13 @@ namespace Barotrauma.Networking
             {
                 string jobIdentifier = message.ReadString();
                 int variant = message.ReadByte();
-                if (JobPrefab.List.TryGetValue(jobIdentifier, out JobPrefab jobPrefab))
+                if (JobPrefab.Prefabs.ContainsKey(jobIdentifier))
                 {
-                    jobPreferences.Add(new Pair<JobPrefab, int>(jobPrefab, variant));
+                    jobPreferences.Add(new Pair<JobPrefab, int>(JobPrefab.Prefabs[jobIdentifier], variant));
                 }
             }
 
-            sender.CharacterInfo = new CharacterInfo(Character.HumanSpeciesName, sender.Name);
+            sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
             //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
@@ -2952,7 +2952,7 @@ namespace Barotrauma.Networking
 
         public void AssignJobs(List<Client> unassigned)
         {
-            var jobList = JobPrefab.List.Values.ToList();
+            var jobList = JobPrefab.Prefabs.ToList();
             unassigned = new List<Client>(unassigned);
             unassigned = unassigned.OrderBy(sp => Rand.Int(int.MaxValue)).ToList();
 
@@ -3127,7 +3127,7 @@ namespace Barotrauma.Networking
         public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
         {
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
-            foreach (JobPrefab jp in JobPrefab.List.Values)
+            foreach (JobPrefab jp in JobPrefab.Prefabs)
             {
                 assignedPlayerCount.Add(jp, 0);
             }
@@ -3163,7 +3163,7 @@ namespace Barotrauma.Networking
                 {
                     if (unassignedBots.Count == 0) { break; }
 
-                    JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.List.Values.GetRandom();
+                    JobPrefab jobPrefab = spawnPoint.AssignedJob ?? JobPrefab.Prefabs.GetRandom();
                     if (assignedPlayerCount[jobPrefab] >= jobPrefab.MaxNumber) { continue; }
 
                     var variant = Rand.Range(0, jobPrefab.Variants, Rand.RandSync.Server);
@@ -3178,7 +3178,7 @@ namespace Barotrauma.Networking
             foreach (CharacterInfo c in unassignedBots)
             {
                 //find all jobs that are still available
-                var remainingJobs = JobPrefab.List.Values.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
+                var remainingJobs = JobPrefab.Prefabs.Where(jp => assignedPlayerCount[jp] < jp.MaxNumber);
                 //all jobs taken, give a random job
                 if (remainingJobs.Count() == 0)
                 {

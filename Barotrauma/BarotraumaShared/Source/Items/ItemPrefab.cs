@@ -161,8 +161,20 @@ namespace Barotrauma
 
     partial class ItemPrefab : MapEntityPrefab
     {
-        private readonly string configFile;
-        
+        private string name;
+        public override string Name { get { return name; } }
+
+        public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+            Item.RemoveByPrefab(this);
+        }
+
         //default size
         protected Vector2 size;                
 
@@ -180,20 +192,12 @@ namespace Barotrauma
 
         private List<XElement> fabricationRecipeElements = new List<XElement>();
 
-        /// <summary>
-        /// Original, non-translated name as defined in the xml
-        /// </summary>
-        public readonly string OriginalName;
+        private readonly Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
 
         /// <summary>
         /// Is this prefab overriding a prefab in another content package
         /// </summary>
         public bool IsOverride;
-
-        public string ConfigFile
-        {
-            get { return configFile; }
-        }
 
         public XElement ConfigElement
         {
@@ -468,82 +472,103 @@ namespace Barotrauma
 
         }
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void RemoveByFile(string filePath)
         {
-            if (GameSettings.VerboseLogging)
+            Prefabs.RemoveByFile(filePath);
+        }
+
+        public static void LoadFromFile(ContentFile file)
+        {
+            DebugConsole.Log("*** " + file.Path + " ***");
+            RemoveByFile(file.Path);
+
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+            if (doc == null) { return; }
+
+            var rootElement = doc.Root;
+            switch (rootElement.Name.ToString().ToLowerInvariant())
             {
-                DebugConsole.Log("Loading item prefabs: ");
-            }
-
-            foreach (string filePath in filePaths)
-            {
-                if (GameSettings.VerboseLogging)
-                {
-                    DebugConsole.Log("*** " + filePath + " ***");
-                }
-
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { return; }
-
-                var rootElement = doc.Root;
-                switch (rootElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "item":
-                        new ItemPrefab(rootElement, filePath, false);
-                        break;
-                    case "items":
-                        foreach (var element in rootElement.Elements())
+                case "item":
+                    new ItemPrefab(rootElement, file.Path, false)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
+                    break;
+                case "items":
+                    foreach (var element in rootElement.Elements())
+                    {
+                        if (element.IsOverride())
                         {
-                            if (element.IsOverride())
+                            var itemElement = element.GetChildElement("item");
+                            if (itemElement != null)
                             {
-                                var itemElement = element.GetChildElement("item");
-                                if (itemElement != null)
+                                new ItemPrefab(itemElement, file.Path, true)
                                 {
-                                    new ItemPrefab(itemElement, filePath, true)
-                                    {
-                                        IsOverride = true
-                                    };
-                                }
-                                else
-                                {
-                                    DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {filePath}");
-                                }
-                            }
-                            else
-                            {
-                                new ItemPrefab(element, filePath, false);
-                            }
-                        }
-                        break;
-                    case "override":
-                        var items = rootElement.GetChildElement("items");
-                        if (items != null)
-                        {
-                            foreach (var element in items.Elements())
-                            {
-                                new ItemPrefab(element, filePath, true)
-                                {
+                                    ContentPackage = file.ContentPackage,
                                     IsOverride = true
                                 };
                             }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Cannot find an item element from the children of the override element defined in {file.Path}");
+                            }
                         }
-                        foreach (var element in rootElement.GetChildElements("item"))
+                        else
                         {
-                            new ItemPrefab(element, filePath, true);
+                            new ItemPrefab(element, file.Path, false)
+                            {
+                                ContentPackage = file.ContentPackage
+                            };
                         }
-                        break;
-                    default:
-                        DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {filePath}");
-                        break;
-                }
+                    }
+                    break;
+                case "override":
+                    var items = rootElement.GetChildElement("items");
+                    if (items != null)
+                    {
+                        foreach (var element in items.Elements())
+                        {
+                            new ItemPrefab(element, file.Path, true)
+                            {
+                                ContentPackage = file.ContentPackage,
+                                IsOverride = true
+                            };
+                        }
+                    }
+                    foreach (var element in rootElement.GetChildElements("item"))
+                    {
+                        new ItemPrefab(element, file.Path, true)
+                        {
+                            ContentPackage = file.ContentPackage
+                        };
+                    }
+                    break;
+                default:
+                    DebugConsole.ThrowError($"Invalid XML root element: '{rootElement.Name.ToString()}' in {file.Path}");
+                    break;
+            }
+        }
+
+        public static void LoadAll(IEnumerable<ContentFile> files)
+        {
+            DebugConsole.Log("Loading item prefabs: ");
+
+            foreach (ContentFile file in files)
+            {
+                LoadFromFile(file);
             }
 
             //initialize item requirements for fabrication recipes
             //(has to be done after all the item prefabs have been loaded, because the 
             //recipe ingredients may not have been loaded yet when loading the prefab)
-            foreach (MapEntityPrefab me in List)
+            InitFabricationRecipes();
+        }
+
+        public static void InitFabricationRecipes()
+        {
+            foreach (ItemPrefab itemPrefab in Prefabs)
             {
-                if (!(me is ItemPrefab itemPrefab)) { continue; }
+                itemPrefab.FabricationRecipes.Clear();
                 foreach (XElement fabricationRecipe in itemPrefab.fabricationRecipeElements)
                 {
                     itemPrefab.FabricationRecipes.Add(new FabricationRecipe(fabricationRecipe, itemPrefab));
@@ -551,13 +576,18 @@ namespace Barotrauma
             }
         }
 
+        public static string GenerateLegacyIdentifier(string name)
+        {
+            return "legacyitem_" + name.ToLowerInvariant().Replace(" ", "");
+        }
+
         public ItemPrefab(XElement element, string filePath, bool allowOverriding)
         {
-            configFile = filePath;
+            FilePath = filePath;
             ConfigElement = element;
 
-            OriginalName = element.GetAttributeString("name", "");
-            name = OriginalName;
+            originalName = element.GetAttributeString("name", "");
+            name = originalName;
             identifier = element.GetAttributeString("identifier", "");
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
@@ -569,7 +599,7 @@ namespace Barotrauma
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
-            if (string.IsNullOrEmpty(OriginalName))
+            if (string.IsNullOrEmpty(originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
@@ -580,16 +610,21 @@ namespace Barotrauma
                     name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
                 }
             }
-            else if (Category == MapEntityCategory.Legacy)
+            else if (Category.HasFlag(MapEntityCategory.Legacy))
             {
-                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefrore
+                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? OriginalName;
+                    name = TextManager.Get("EntityName." + identifier, true) ?? originalName;
                 }
                 else
                 {
-                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? OriginalName;
+                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? originalName;
+                }
+
+                if (string.IsNullOrWhiteSpace(identifier))
+                {
+                    identifier = GenerateLegacyIdentifier(originalName);
                 }
             }
 
@@ -603,7 +638,7 @@ namespace Barotrauma
             Aliases = new HashSet<string>
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
-            Aliases.Add(OriginalName.ToLowerInvariant());
+            Aliases.Add(originalName.ToLowerInvariant());
             
             Triggers            = new List<Rectangle>();
             DeconstructItems    = new List<DeconstructItem>();
@@ -795,26 +830,9 @@ namespace Barotrauma
 
                         string treatmentIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
 
-                        List<AfflictionPrefab> matchingAfflictions = AfflictionPrefab.List.FindAll(a => a.Identifier == treatmentIdentifier || a.AfflictionType == treatmentIdentifier);
-                        if (matchingAfflictions.Count == 0)
-                        {
-                            DebugConsole.ThrowError("Error in item prefab \"" + Name + "\" - couldn't define as a treatment, no treatments with the identifier or type \"" + treatmentIdentifier + "\" were found.");
-                            continue;
-                        }
-
                         float suitability = subElement.GetAttributeFloat("suitability", 0.0f);
-                        foreach (AfflictionPrefab matchingAffliction in matchingAfflictions)
-                        {
-                            if (matchingAffliction.TreatmentSuitability.ContainsKey(identifier))
-                            {
-                                matchingAffliction.TreatmentSuitability[identifier] =
-                                    Math.Max(matchingAffliction.TreatmentSuitability[identifier], suitability);
-                            }
-                            else
-                            {
-                                matchingAffliction.TreatmentSuitability.Add(identifier, suitability);
-                            }
-                        }
+
+                        treatmentSuitability.Add(treatmentIdentifier, suitability);
                         break;
                 }
             }
@@ -835,7 +853,7 @@ namespace Barotrauma
                 sprite.EntityID = identifier;
             }
             
-            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(identifier))
+            if (string.IsNullOrEmpty(identifier))
             {
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
@@ -843,10 +861,12 @@ namespace Barotrauma
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
-            if (HandleExisting(identifier, allowOverriding, filePath))
-            {
-                List.Add(this);
-            }
+            Prefabs.Add(this, allowOverriding);
+        }
+
+        public float GetTreatmentSuitability(string treatmentIdentifier)
+        {
+            return treatmentSuitability.TryGetValue(treatmentIdentifier, out float suitability) ? suitability : 0.0f;
         }
 
         public PriceInfo GetPrice(Location location)
@@ -860,33 +880,20 @@ namespace Barotrauma
             ItemPrefab prefab;
             if (string.IsNullOrEmpty(identifier))
             {
-                //legacy support: 
-                //1. attempt to find a prefab with an empty identifier and a matching name
-                prefab = Find(name, "", showErrorMessages: false) as ItemPrefab;
-                //2. not found, attempt to find a prefab with a matching name
-                if (prefab == null) prefab = Find(name) as ItemPrefab;
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null)
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-
+                //legacy support
+                identifier = GenerateLegacyIdentifier(name);
             }
-            else
-            {
-                prefab = Find(null, identifier, showErrorMessages: false) as ItemPrefab;
+            prefab = Find(p => p is ItemPrefab && p.Identifier==identifier) as ItemPrefab;
 
-                //not found, see if we can find a prefab with a matching alias
-                if (prefab == null && !string.IsNullOrEmpty(name))
-                {
-                    string lowerCaseName = name.ToLowerInvariant();
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName)) as ItemPrefab;
-                }
-                if (prefab == null)
-                {
-                    prefab = List.Find(me => me.Aliases != null && me.Aliases.Contains(identifier)) as ItemPrefab;
-                }
+            //not found, see if we can find a prefab with a matching alias
+            if (prefab == null && !string.IsNullOrEmpty(name))
+            {
+                string lowerCaseName = name.ToLowerInvariant();
+                prefab = Prefabs.Find(me => me.Aliases != null && me.Aliases.Contains(lowerCaseName));
+            }
+            if (prefab == null)
+            {
+                prefab = Prefabs.Find(me => me.Aliases != null && me.Aliases.Contains(identifier));
             }
 
             if (prefab == null)

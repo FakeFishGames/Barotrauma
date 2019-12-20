@@ -7,66 +7,68 @@ namespace Barotrauma.Particles
 {
     class DecalManager
     {
-        private Dictionary<string, DecalPrefab> prefabs;
+        public PrefabCollection<DecalPrefab> Prefabs { get; private set; }
 
         public DecalManager()
         {
-            var decalElements = new Dictionary<string, XElement>();
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
+            Prefabs = new PrefabCollection<DecalPrefab>();
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Decals))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null) { continue; }
+                LoadFromFile(configFile);
+            }
+        }
 
-                bool allowOverriding = false;
-                var mainElement = doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    allowOverriding = true;
-                }
+        public void LoadFromFile(ContentFile configFile)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
+            if (doc == null) { return; }
 
-                foreach (XElement sourceElement in mainElement.Elements())
+            bool allowOverriding = false;
+            var mainElement = doc.Root;
+            if (doc.Root.IsOverride())
+            {
+                mainElement = doc.Root.FirstElement();
+                allowOverriding = true;
+            }
+
+            foreach (XElement sourceElement in mainElement.Elements())
+            {
+                var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                string name = element.Name.ToString().ToLowerInvariant();
+                if (Prefabs.ContainsKey(name))
                 {
-                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
-                    string name = element.Name.ToString().ToLowerInvariant();
-                    if (decalElements.ContainsKey(name))
+                    if (allowOverriding || sourceElement.IsOverride())
                     {
-                        if (allowOverriding || sourceElement.IsOverride())
-                        {
-                            DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile}'", Color.Yellow);
-                            decalElements.Remove(name);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate decal prefab '{name}' found in '{configFile}'! Each decal prefab must have a unique name. " +
-                                "Use <override></override> tags to override prefabs.");
-                            continue;
-                        }
-
+                        DebugConsole.NewMessage($"Overriding the existing decal prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
                     }
-                    decalElements.Add(name, element);
-                }
-            }
-            //prefabs = decalElements.ToDictionary(d => d.Key, d => new DecalPrefab(d.Value));
-            prefabs = new Dictionary<string, DecalPrefab>();
-            foreach (var kvp in decalElements)
-            {
-                prefabs.Add(kvp.Key, new DecalPrefab(kvp.Value));
-            }
+                    else
+                    {
+                        DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate decal prefab '{name}' found in '{configFile.Path}'! Each decal prefab must have a unique name. " +
+                            "Use <override></override> tags to override prefabs.");
+                        continue;
+                    }
 
+                }
+
+                Prefabs.Add(new DecalPrefab(element, configFile), allowOverriding || sourceElement.IsOverride());
+            }
+        }
+
+        public void RemoveByFile(string filePath)
+        {
+            Prefabs.RemoveByFile(filePath);
         }
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
         {
-            DecalPrefab prefab;
-            prefabs.TryGetValue(decalName, out prefab);
-
-            if (prefab == null)
+            if (!Prefabs.ContainsKey(decalName.ToLowerInvariant()))
             {
                 DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
                 return null;
             }
-            
+
+            DecalPrefab prefab = Prefabs[decalName];
+
             return new Decal(prefab, scale, worldPosition, hull);
         }
     }

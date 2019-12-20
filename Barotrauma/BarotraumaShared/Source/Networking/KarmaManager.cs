@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -122,7 +123,7 @@ namespace Barotrauma
                 }
                 SelectPreset(GameMain.NetworkMember?.ServerSettings?.KarmaPreset ?? "default");
             }
-            herpesAffliction = AfflictionPrefab.List.Find(ap => ap.Identifier == "spaceherpes");
+            herpesAffliction = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == "spaceherpes");
         }
 
         public void SelectPreset(string presetName)

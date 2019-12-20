@@ -1,17 +1,44 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
-    class ParticlePrefab : ISerializableEntity
+    class ParticlePrefab : IPrefab, IDisposable, ISerializableEntity
     {
         public enum DrawTargetType { Air = 1, Water = 2, Both = 3 }
 
         public readonly List<Sprite> Sprites;
 
+        public void Dispose()
+        {
+            GameMain.ParticleManager?.RemoveByPrefab(this);
+            foreach (Sprite spr in Sprites)
+            {
+                spr.Remove();
+            }
+            Sprites.Clear();
+        }
+
         public string Name
+        {
+            get;
+            private set;
+        }
+
+        public string FilePath
+        {
+            get;
+            private set;
+        }
+
+        public string OriginalName { get { return Name; } }
+
+        public string Identifier { get { return Name; } }
+
+        public ContentPackage ContentPackage
         {
             get;
             private set;
@@ -195,9 +222,11 @@ namespace Barotrauma.Particles
 
         //----------------------------------------------------
 
-        public ParticlePrefab(XElement element)
+        public ParticlePrefab(XElement element, ContentFile file)
         {
             Name = element.Name.ToString();
+            FilePath = file.Path;
+            ContentPackage = file.ContentPackage;
             DisplayName = TextManager.Get("particle." + Name, true) ?? Name;
 
             Sprites = new List<Sprite>();

@@ -70,7 +70,7 @@ namespace Barotrauma
 
             protected ItemPrefab FindItemPrefab(string identifier)
             {
-                return (ItemPrefab)MapEntityPrefab.List.Find(prefab => prefab is ItemPrefab && prefab.Identifier == identifier);
+                return (ItemPrefab)MapEntityPrefab.List.FirstOrDefault(prefab => prefab is ItemPrefab && prefab.Identifier == identifier);
             }
 
             protected Item FindRandomContainer(ICollection<Traitor> traitors, ItemPrefab targetPrefabCandidate, bool includeNew, bool includeExisting)

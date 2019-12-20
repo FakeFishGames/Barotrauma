@@ -27,6 +27,7 @@ namespace Facepunch.Steamworks
             public DateTime Modified { get; private set; }
             public DateTime Created { get; private set; }
             public int DownloadSize { get; private set; }
+            public Workshop.Editor.VisibilityType Visibility { get; private set; }
 
             public Item( ulong Id, Workshop workshop )
             {
@@ -48,6 +49,7 @@ namespace Facepunch.Steamworks
                 item.Modified = Utility.Epoch.ToDateTime( details.TimeUpdated );
                 item.Created = Utility.Epoch.ToDateTime( details.TimeCreated );
                 item.DownloadSize = details.FileSize;
+                item.Visibility = (Workshop.Editor.VisibilityType)details.Visibility;
 
                 return item;
             }

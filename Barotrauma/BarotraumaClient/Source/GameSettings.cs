@@ -30,12 +30,6 @@ namespace Barotrauma
 
         public Action OnHUDScaleChanged;
 
-        public bool ContentPackageSelectionDirty
-        {
-            get;
-            private set;
-        }
-
         public GUIFrame SettingsFrame
         {
             get
@@ -44,6 +38,8 @@ namespace Barotrauma
                 return settingsFrame;
             }
         }
+
+        private GUIListBox contentPackageList;
 
         private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
         {
@@ -108,24 +104,73 @@ namespace Barotrauma
             var generalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), leftPanel.RectTransform, Anchor.TopLeft));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform), TextManager.Get("ContentPackages"));
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), generalLayoutGroup.RectTransform))
+
+            var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), generalLayoutGroup.RectTransform));
+            corePackageDropdown.ButtonEnabled = ContentPackage.List.Count(cp => cp.CorePackage) > 1;
+
+            contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), generalLayoutGroup.RectTransform))
             {
-                CanBeFocused = false,
+                OnSelected = (gc, obj) => false,
                 ScrollBarVisible = true
             };
 
-            foreach (ContentPackage contentPackage in ContentPackage.List)
+            foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => cp.CorePackage))
             {
-                var tickBox = new GUITickBox(new RectTransform(tickBoxScale, contentPackageList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name)
+                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), corePackageDropdown.ListBox.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = contentPackage
+                };
+                var text = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform), contentPackage.Name);
+
+                if (!contentPackage.IsCompatible())
+                {
+                    frame.UserData = null;
+                    text.TextColor = Color.Red * 0.6f;
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
+                        new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
+                }
+                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                {
+                    frame.UserData = null;
+                    text.TextColor = Color.Red * 0.6f;
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
+                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
+                }
+                else if (contentPackage.HasErrors)
+                {
+                    text.TextColor = new Color(255, 150, 150);
+                    frame.ToolTip = text.ToolTip =
+                        TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", contentPackage.Name) +
+                        "\n" + string.Join("\n", contentPackage.ErrorMessages);
+                }
+
+                if (SelectedContentPackages.Contains(contentPackage))
+                {
+                    corePackageDropdown.Select(corePackageDropdown.ListBox.Content.GetChildIndex(frame));
+                }
+            }
+            corePackageDropdown.OnSelected = SelectCorePackage;
+            corePackageDropdown.ListBox.CanBeFocused = CanHotswapPackages(true);
+
+            foreach (ContentPackage contentPackage in ContentPackage.List
+                .Where(cp => !cp.CorePackage)
+                .OrderBy(cp => !SelectedContentPackages.Contains(cp))
+                .ThenBy(cp => -SelectedContentPackages.IndexOf(cp)))
+            {
+                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y), contentPackageList.Content.RectTransform), style: "ListBoxElement")
+                {
+                    UserData = contentPackage
+                };
+                var tickBox = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform, scaleBasis: ScaleBasis.BothHeight), contentPackage.Name,
+                    style: "GUITickBox")
                 {
                     UserData = contentPackage,
                     Selected = SelectedContentPackages.Contains(contentPackage),
-                    OnSelected = SelectContentPackage
+                    OnSelected = SelectContentPackage,
+                    Enabled = CanHotswapPackages(false)
                 };
-                if (contentPackage.CorePackage)
-                {
-                    tickBox.TextColor = Color.White;
-                }
                 if (!contentPackage.IsCompatible())
                 {
                     tickBox.Enabled = false;
@@ -134,23 +179,19 @@ namespace Barotrauma
                         TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
                         new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
-                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                else if (contentPackage.HasErrors)
                 {
-                    tickBox.Enabled = false;
-                    tickBox.TextColor = Color.Red * 0.6f;
+                    tickBox.TextColor = new Color(255,150,150);
                     tickBox.ToolTip = tickBox.TextBlock.ToolTip =
-                        TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
-                        new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
-                }
-                else if (contentPackage.Invalid)
-                {
-                    tickBox.Enabled = false;
-                    tickBox.TextColor = Color.Red * 0.6f;
-                    tickBox.ToolTip = tickBox.TextBlock.ToolTip =
-                        TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", contentPackage.Name) +
+                        TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", contentPackage.Name) +
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
+
+                tickBox.TextBlock.CanBeFocused = true;
             }
+            contentPackageList.CanDragElements = CanHotswapPackages(false);
+            contentPackageList.CanBeFocused = CanHotswapPackages(false);
+            contentPackageList.OnRearranged = OnContentPackagesRearranged;
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform), TextManager.Get("Language"));
             var languageDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.045f), generalLayoutGroup.RectTransform));
@@ -232,14 +273,31 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("Resolution"));
             var resolutionDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform))
             {
-                OnSelected = SelectResolution,
                 ButtonEnabled = GameMain.Config.WindowMode != WindowMode.BorderlessWindowed
             };
 
             var supportedDisplayModes = UpdateResolutionDD(resolutionDD);
-            
+            resolutionDD.OnSelected = SelectResolution;
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("DisplayMode"));
             var displayModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform));
+
+            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
+            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
+#if (!OSX)
+            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
+            displayModeDD.SelectItem(GameMain.Config.WindowMode);
+#else
+            // Fullscreen option will just set itself to borderless on macOS.
+            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
+            {
+                displayModeDD.SelectItem(WindowMode.Fullscreen);
+            }
+            else
+            {
+                displayModeDD.SelectItem(GameMain.Config.WindowMode);
+            }
+#endif
 
             displayModeDD.OnSelected = (guiComponent, obj) =>
             {
@@ -260,23 +318,6 @@ namespace Barotrauma
                 }
                 return true;
             };
-
-            displayModeDD.AddItem(TextManager.Get("Fullscreen"), WindowMode.Fullscreen);
-            displayModeDD.AddItem(TextManager.Get("Windowed"), WindowMode.Windowed);
-#if (!OSX)
-            displayModeDD.AddItem(TextManager.Get("BorderlessWindowed"), WindowMode.BorderlessWindowed);
-            displayModeDD.SelectItem(GameMain.Config.WindowMode);
-#else
-            // Fullscreen option will just set itself to borderless on macOS.
-            if (GameMain.Config.WindowMode == WindowMode.BorderlessWindowed)
-            {
-                displayModeDD.SelectItem(WindowMode.Fullscreen);
-            }
-            else
-            {
-                displayModeDD.SelectItem(GameMain.Config.WindowMode);
-            }
-#endif
 
             GUITickBox vsyncTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform, scaleBasis: ScaleBasis.BothHeight), TextManager.Get("EnableVSync"))
             {
@@ -1067,44 +1108,62 @@ namespace Barotrauma
             return true;
         }
 
+        private bool CanHotswapPackages(bool core)
+        {
+            return GameMain.Client == null &&
+                   (ContentPackage.IngameModSwap ||
+                   (Screen.Selected != GameMain.GameScreen &&
+                    Screen.Selected != GameMain.LobbyScreen) &&
+                    Screen.Selected != GameMain.SubEditorScreen) &&
+                   (!core ||
+                   (Screen.Selected != GameMain.CharacterEditorScreen &&
+                    Screen.Selected != GameMain.ParticleEditorScreen));
+        }
+
+        private bool SelectCorePackage(GUIComponent component, object userData)
+        {
+            if (!(userData is ContentPackage contentPackage) || GameMain.Client != null) { return false; }
+
+            SelectCorePackage(contentPackage);
+
+            UnsavedSettings = true;
+            return true;
+        }
+
+        private void OnContentPackagesRearranged(GUIListBox listBox, object userData)
+        {
+            if (GameMain.Client != null) { return; }
+
+            if (userData is ContentPackage contentPackage)
+            {
+                if (!SelectedContentPackages.Contains(contentPackage)) { return; }
+            }
+
+            ReorderSelectedContentPackages(cp => -listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)));
+
+            UnsavedSettings = true;
+        }
+
         private bool SelectContentPackage(GUITickBox tickBox)
         {
-            ContentPackageSelectionDirty = true;
+            if (GameMain.Client != null) { return false; }
+
             var contentPackage = tickBox.UserData as ContentPackage;
-            if (contentPackage.CorePackage)
+
+            ContentPackage.List = ContentPackage.List
+                                    .OrderByDescending(p => p.CorePackage)
+                                    .ThenBy(cp => -contentPackageList.Content.GetChildIndex(contentPackageList.Content.GetChildByUserData(cp)))
+                                    .ToList();
+
+            if (tickBox.Selected)
             {
-                if (tickBox.Selected)
-                {
-                    //make sure no other core packages are selected
-                    SelectedContentPackages.RemoveAll(cp => cp.CorePackage && cp != contentPackage);
-                    SelectContentPackage(contentPackage);
-                    foreach (GUITickBox otherTickBox in tickBox.Parent.Children)
-                    {
-                        ContentPackage otherContentPackage = otherTickBox.UserData as ContentPackage;
-                        if (otherContentPackage == contentPackage) continue;
-                        otherTickBox.Selected = SelectedContentPackages.Contains(otherContentPackage);
-                    }
-                }
-                else if (SelectedContentPackages.Contains(contentPackage))
-                {
-                    //core packages cannot be deselected, only switched by selecting another core package
-                    new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("CorePackageRequiredWarning"));
-                    tickBox.Selected = true;
-                    return true;
-                }
+                SelectContentPackage(contentPackage);
             }
             else
             {
-                if (tickBox.Selected)
-                {
-                    SelectContentPackage(contentPackage);
-                }
-                else
-                {
-                    DeselectContentPackage(contentPackage);
-                }
+                DeselectContentPackage(contentPackage);
             }
-            if (contentPackage.GetFilesOfType(ContentType.Submarine).Any()) { Submarine.RefreshSavedSubs(); }
+            
             UnsavedSettings = true;
             return true;
         }
@@ -1216,11 +1275,17 @@ namespace Barotrauma
         {
             ApplySettings();
             if (Screen.Selected != GameMain.MainMenuScreen) { GUI.SettingsMenuOpen = false; }
-            if (ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+            WarnIfContentPackageSelectionDirty();
+            return true;
+        }
+
+        public void WarnIfContentPackageSelectionDirty()
+        {
+            if (ContentPackageSelectionDirtyNotification)
             {
                 new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("RestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
+                ContentPackageSelectionDirtyNotification = false;
             }
-            return true;
         }
     }
 }

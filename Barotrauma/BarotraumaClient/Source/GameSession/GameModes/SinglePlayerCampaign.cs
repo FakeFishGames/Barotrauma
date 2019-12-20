@@ -32,12 +32,12 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { TryEndRound(GetLeavingSub()); return true; }
             };
 
-            foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
+            foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    CrewManager.AddCharacterInfo(new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
                 }
             }
         }

@@ -279,7 +279,7 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
                             string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.ToLowerInvariant() == afflictionName);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
@@ -289,7 +289,7 @@ namespace Barotrauma
                         else
                         {
                             string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
@@ -324,7 +324,7 @@ namespace Barotrauma
                 AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                afflictionPrefab = AfflictionPrefab.List.Find(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                 if (afflictionPrefab != null)
                 {
                     float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");

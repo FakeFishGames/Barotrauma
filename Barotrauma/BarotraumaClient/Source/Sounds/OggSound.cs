@@ -2,6 +2,7 @@
 using OpenAL;
 using NVorbis;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Barotrauma.Sounds
 {
@@ -15,8 +16,9 @@ namespace Barotrauma.Sounds
         private static List<float> playbackAmplitude;
         private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
 
-        public OggSound(SoundManager owner, string filename, bool stream) : base(owner, filename, stream, true)
+        public OggSound(SoundManager owner, string filename, bool stream, XElement xElement) : base(owner, filename, stream, true, xElement)
         {
+            filename = filename.CleanUpPath();
             if (!ToolBox.IsProperFilenameCase(filename))
             {
                 DebugConsole.ThrowError("Sound file \"" + filename + "\" has incorrect case!");

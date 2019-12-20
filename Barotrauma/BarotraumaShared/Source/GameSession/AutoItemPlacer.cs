@@ -38,7 +38,7 @@ namespace Barotrauma
                 return;
             }
 
-            int sizeApprox = MapEntityPrefab.List.Count / 3;
+            int sizeApprox = MapEntityPrefab.List.Count() / 3;
             var containers = new List<ItemContainer>(100);
             var prefabsWithContainer = new List<ItemPrefab>(sizeApprox / 3);
             var prefabsWithoutContainer = new List<ItemPrefab>(sizeApprox);

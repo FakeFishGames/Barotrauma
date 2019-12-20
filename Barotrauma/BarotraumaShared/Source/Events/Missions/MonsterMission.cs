@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -19,6 +20,16 @@ namespace Barotrauma
             : base(prefab, locations)
         {
             monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", null);
+
+            if (!string.IsNullOrEmpty(monsterFile))
+            {
+                var characterPrefab = CharacterPrefab.FindByFilePath(monsterFile);
+                if (characterPrefab != null)
+                {
+                    monsterFile = characterPrefab.Identifier;
+                }
+            }
+
             monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
             string monsterFileName = monsterFile;
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))

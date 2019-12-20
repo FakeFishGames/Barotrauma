@@ -159,9 +159,9 @@ namespace Barotrauma
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
                 NewMessage("***************", Color.Cyan);
-                foreach (MapEntityPrefab ep in MapEntityPrefab.List)
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    if (!(ep is ItemPrefab itemPrefab) || itemPrefab.Name == null) continue;
+                    if (string.IsNullOrEmpty(itemPrefab.Name)) continue;
                     string text = $"- {itemPrefab.Name}";
                     if (itemPrefab.Tags.Any())
                     {
@@ -198,13 +198,13 @@ namespace Barotrauma
             },
             () =>
             {
-                List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
+                List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
                 for (int i = 0; i < characterFiles.Count; i++)
                 {
                     characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
                 }
 
-                foreach (JobPrefab jobPrefab in JobPrefab.List.Values)
+                foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
                 {
                     characterFiles.Add(jobPrefab.Name);
                 }
@@ -237,9 +237,9 @@ namespace Barotrauma
             () =>
             {
                 List<string> itemNames = new List<string>();
-                foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    if (prefab is ItemPrefab itemPrefab) itemNames.Add(itemPrefab.Name);
+                    itemNames.Add(itemPrefab.Name);
                 }
 
                 List<string> spawnPosParams = new List<string>() { "cursor", "inventory" };
@@ -526,7 +526,7 @@ namespace Barotrauma
             {
                 if (args.Length < 2) return;
 
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a =>
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
                     a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() ||
                     a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
                 if (afflictionPrefab == null)
@@ -1335,11 +1335,16 @@ namespace Barotrauma
             WayPoint spawnPoint = null;
 
             string characterLowerCase = args[0].ToLowerInvariant();
-            if (!JobPrefab.List.TryGetValue(characterLowerCase, out JobPrefab job))
+            JobPrefab job = null;
+            if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
             {
-                job = JobPrefab.List.Values.FirstOrDefault(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+                job = JobPrefab.Prefabs.Find(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
             }
-            bool human = job != null || characterLowerCase == Character.HumanSpeciesName;
+            else
+            {
+                job = JobPrefab.Prefabs[characterLowerCase];
+            }
+            bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
             
             if (args.Length > 1)
             {
@@ -1390,7 +1395,7 @@ namespace Barotrauma
             if (human)
             {
                 var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
-                CharacterInfo characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job, variant: variant);
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)
                 {
@@ -1411,7 +1416,7 @@ namespace Barotrauma
             }
             else
             {
-                if (Character.GetConfigFilePath(args[0]) != null)
+                if (CharacterPrefab.FindBySpeciesName(args[0]) != null)
                 {
                     Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }
@@ -1433,7 +1438,7 @@ namespace Barotrauma
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemNameOrId + "\" not found!";
-                var matching = MapEntityPrefab.List.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);
+                var matching = ItemPrefab.Prefabs.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";

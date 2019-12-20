@@ -101,15 +101,16 @@ namespace Barotrauma
 
         public IEnumerable<ContentFile> GetFilesToPreload()
         {
-            List<ContentFile> filesToPreload = new List<ContentFile>();
             foreach (List<ScriptedEvent> eventList in selectedEvents.Values)
             {
                 foreach (ScriptedEvent scriptedEvent in eventList)
                 {
-                    filesToPreload.AddRange(scriptedEvent.GetFilesToPreload());
+                    foreach (ContentFile contentFile in scriptedEvent.GetFilesToPreload())
+                    {
+                        yield return contentFile;
+                    }
                 }
             }
-            return filesToPreload;
         }
 
         public void PreloadContent(IEnumerable<ContentFile> contentFiles)
@@ -120,10 +121,12 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
 #if CLIENT
-                        if (!Character.TryGetConfigFile(file.Path, out XDocument doc))
+                        CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(file.Path);
+                        if (characterPrefab?.XDocument == null)
                         {
                             throw new Exception($"Failed to load the character config file from {file.Path}!");
                         }
+                        var doc = characterPrefab.XDocument;
                         var rootElement = doc.Root;
                         var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
 
@@ -131,8 +134,20 @@ namespace Barotrauma
                         {
                             var sound = Submarine.LoadRoundSound(soundElement);
                         }
+                        string speciesName = mainElement.GetAttributeString("speciesname", null);
+                        if (string.IsNullOrWhiteSpace(speciesName))
+                        {
+                            speciesName = mainElement.GetAttributeString("name", null);
+                            if (!string.IsNullOrWhiteSpace(speciesName))
+                            {
+                                DebugConsole.NewMessage($"Error in {file.Path}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+                            }
+                            else
+                            {
+                                throw new Exception($"Species name null in {file.Path}");
+                            }
+                        }
 
-                        string speciesName = mainElement.GetAttributeString("speciesname", null) ?? mainElement.GetAttributeString("name", string.Empty);
                         bool humanoid = mainElement.GetAttributeBool("humanoid", false);
                         RagdollParams ragdollParams;
                         if (humanoid)

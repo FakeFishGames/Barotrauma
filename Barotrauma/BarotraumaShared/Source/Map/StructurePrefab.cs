@@ -9,6 +9,22 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
+        public static readonly PrefabCollection<StructurePrefab> Prefabs = new PrefabCollection<StructurePrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
+        private string name;
+        public override string Name
+        {
+            get { return name; }
+        }
+
         public XElement ConfigElement { get; private set; }
 
         private bool canSpriteFlipX, canSpriteFlipY;
@@ -154,49 +170,62 @@ namespace Barotrauma
             private set;
         }
         
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {            
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { return; }
-                var rootElement = doc.Root;
-                if (rootElement.IsOverride())
+                LoadFromFile(file);
+            }
+        }
+        
+        public static void LoadFromFile(ContentFile file)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+            if (doc == null) { return; }
+            var rootElement = doc.Root;
+            if (rootElement.IsOverride())
+            {
+                foreach (var element in rootElement.Elements())
                 {
-                    foreach (var element in rootElement.Elements())
+                    foreach (var childElement in element.Elements())
+                    {
+                        Load(childElement, true, file);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var element in rootElement.Elements())
+                {
+                    if (element.IsOverride())
                     {
                         foreach (var childElement in element.Elements())
                         {
-                            Load(childElement, true);
+                            Load(childElement, true, file);
                         }
                     }
-                }
-                else
-                {
-                    foreach (var element in rootElement.Elements())
+                    else
                     {
-                        if (element.IsOverride())
-                        {
-                            foreach (var childElement in element.Elements())
-                            {
-                                Load(childElement, true);
-                            }
-                        }
-                        else
-                        {
-                            Load(element, false);
-                        }
+                        Load(element, false, file);
                     }
                 }
             }
         }
-        
-        public static StructurePrefab Load(XElement element, bool allowOverride)
+
+        public static void RemoveByFile(string filePath)
+        {
+            Prefabs.RemoveByFile(filePath);
+        }
+
+        private static StructurePrefab Load(XElement element, bool allowOverride, ContentFile file)
         {
             StructurePrefab sp = new StructurePrefab
             {
-                name = element.GetAttributeString("name", "")
+                originalName = element.GetAttributeString("name", ""),
+                FilePath = file.Path,
+                ContentPackage = file.ContentPackage
             };
+            sp.name = sp.originalName;
             sp.ConfigElement = element;
             sp.identifier = element.GetAttributeString("identifier", "");
             if (string.IsNullOrEmpty(sp.name))
@@ -266,6 +295,14 @@ namespace Barotrauma
             }
             sp.Category = category;
 
+            if (category.HasFlag(MapEntityCategory.Legacy))
+            {
+                if (string.IsNullOrWhiteSpace(sp.identifier))
+                {
+                    sp.identifier = "legacystructure_" + sp.name.ToLowerInvariant().Replace(" ", "");
+                }
+            }
+
             sp.Aliases = 
                 (element.GetAttributeStringArray("aliases", null) ?? 
                 element.GetAttributeStringArray("Aliases", new string[0])).ToHashSet();
@@ -300,15 +337,12 @@ namespace Barotrauma
                 }
             }
 
-            if (!category.HasFlag(MapEntityCategory.Legacy) && string.IsNullOrEmpty(sp.identifier))
+            if (string.IsNullOrEmpty(sp.identifier))
             {
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
-            if (sp.HandleExisting(sp.Identifier, allowOverride))
-            {
-                List.Add(sp);
-            }
+            Prefabs.Add(sp, allowOverride);
             return sp;
         }
 

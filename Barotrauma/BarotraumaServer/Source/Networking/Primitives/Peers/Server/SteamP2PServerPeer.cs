@@ -463,7 +463,7 @@ namespace Barotrauma.Networking
 
                     if (!pendingClient.AuthSessionStarted)
                     {
-                        pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password: ConnectionInitialization.Success;
+                        pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password: ConnectionInitialization.ContentPackageOrder;
 
                         pendingClient.Name = name;
                         pendingClient.AuthSessionStarted = true;
@@ -479,7 +479,7 @@ namespace Barotrauma.Networking
                     }
                     if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordSalt.Value))
                     {
-                        pendingClient.InitializationStep = ConnectionInitialization.Success;
+                        pendingClient.InitializationStep = ConnectionInitialization.ContentPackageOrder;
                     }
                     else
                     {
@@ -493,6 +493,10 @@ namespace Barotrauma.Networking
                             return;
                         }
                     }
+                    pendingClient.UpdateTime = Timing.TotalTime;
+                    break;
+                case ConnectionInitialization.ContentPackageOrder:
+                    pendingClient.InitializationStep = ConnectionInitialization.Success;
                     pendingClient.UpdateTime = Timing.TotalTime;
                     break;
             }
@@ -543,6 +547,14 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)pendingClient.InitializationStep);
             switch (pendingClient.InitializationStep)
             {
+                case ConnectionInitialization.ContentPackageOrder:
+                    var mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
+                    outMsg.WriteVariableInt32(mpContentPackages.Count);
+                    for (int i = 0; i < mpContentPackages.Count; i++)
+                    {
+                        outMsg.Write(mpContentPackages[i].MD5hash.Hash);
+                    }
+                    break;
                 case ConnectionInitialization.Password:
                     outMsg.Write(pendingClient.PasswordSalt == null); outMsg.WritePadBits();
                     if (pendingClient.PasswordSalt == null)

@@ -416,16 +416,16 @@ namespace Barotrauma
                 AfflictionPrefab causeOfDeathAffliction = null;
                 if (causeOfDeathType == CauseOfDeathType.Affliction)
                 {
-                    int afflictionIndex = msg.ReadRangedInteger(0, AfflictionPrefab.List.Count - 1);
-                    if (afflictionIndex < 0 || afflictionIndex >= AfflictionPrefab.List.Count)
+                    string afflictionName = msg.ReadString();
+                    if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionName))
                     {
-                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction index out of bounds (index: {afflictionIndex}, affliction count: {AfflictionPrefab.List.Count})";
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found ({afflictionName})";
                         causeOfDeathType = CauseOfDeathType.Unknown;
                         GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                     else
                     {
-                        causeOfDeathAffliction = AfflictionPrefab.List[afflictionIndex];
+                        causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
                     }
                 }
 

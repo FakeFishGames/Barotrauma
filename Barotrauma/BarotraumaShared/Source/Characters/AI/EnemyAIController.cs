@@ -99,7 +99,7 @@ namespace Barotrauma
         {
             get
             {
-                var target = GetTarget(Character.HumanSpeciesName);
+                var target = GetTarget(CharacterPrefab.HumanSpeciesName);
                 return target != null && target.Priority > 0.0f && (target.State == AIState.Attack || target.State == AIState.Aggressive);
             }
         }
@@ -146,12 +146,8 @@ namespace Barotrauma
             {
                 throw new Exception($"Tried to create an enemy ai controller for human!");
             }
-            string file = Character.GetConfigFilePath(c.SpeciesName);
-            if (!Character.TryGetConfigFile(file, out XDocument doc))
-            {
-                throw new Exception($"Failed to load the config file for {c.SpeciesName} from {file}!");
-            }
-            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(c.SpeciesName);
+            var mainElement = prefab.XDocument.Root.IsOverride() ? prefab.XDocument.Root.FirstElement() : prefab.XDocument.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
             steeringManager = outsideSteering;
 
@@ -166,7 +162,7 @@ namespace Barotrauma
             
             if (aiElements.Count == 0)
             {
-                DebugConsole.ThrowError("Error in file \"" + file + "\" - no AI element found.");
+                DebugConsole.ThrowError("Error in file \"" + prefab.FilePath + "\" - no AI element found.");
                 outsideSteering = new SteeringManager(this);
                 insideSteering = new IndoorsSteeringManager(this, false, false);
                 return;

@@ -32,7 +32,7 @@ namespace Barotrauma
                 if (job == null) { return; }
 
                 var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
-                availableCharacters.Add(new CharacterInfo(Character.HumanSpeciesName, jobPrefab: job, variant: variant));
+                availableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant));
             }
         }
 

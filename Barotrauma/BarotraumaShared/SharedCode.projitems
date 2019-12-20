@@ -50,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\AnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\FishAnimController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Animation\HumanoidAnimController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\CharacterPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\AnimationParams.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\FishAnimations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Characters\Params\Animation\HumanoidAnimations.cs" />
@@ -187,6 +188,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemInventory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\ItemPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Items\RelatedItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Map\CoreEntityPrefab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Entity.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\EntityGrid.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Map\Explosion.cs" />
@@ -260,6 +262,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\Physics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\Physics\PhysicsBody.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\PlayerInput.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Prefabs\IPrefab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Source\Prefabs\PrefabCollection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\PerlinNoise.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\Voronoi.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Source\ProcGen\VoronoiElements.cs" />

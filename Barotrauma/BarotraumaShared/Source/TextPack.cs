@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -17,15 +18,35 @@ namespace Barotrauma
 
         private Dictionary<string, List<string>> texts;
         
-        private readonly string filePath;
+        public readonly string FilePath;
 
         public TextPack(string filePath)
         {
-            this.filePath = filePath;
+            this.FilePath = filePath;
             texts = new Dictionary<string, List<string>>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null) { return; }
+            XDocument doc = null;
+            for (int i = 0; i < 3; i++)
+            {
+                doc = XMLExtensions.TryLoadXml(filePath);
+                if (doc != null) { break; }
+                if (filePath.ToLowerInvariant() == "content/texts/englishvanilla.xml")
+                {
+                    //try fixing legacy EnglishVanilla path
+                    string newPath = "Content/Texts/English/EnglishVanilla.xml";
+                    if (System.IO.File.Exists(newPath))
+                    {
+                        DebugConsole.NewMessage("Content package is using the obsolete text file path \"" + filePath + "\". Attempting to load from \"" + newPath + "\"...");
+                        this.FilePath = filePath = newPath;
+                    }
+                }
+                Thread.Sleep(1000);
+            }
+            if (doc == null)
+            {
+                Language = "Unknown";
+                return;
+            }
 
             Language = doc.Root.GetAttributeString("language", "Unknown");
             TranslatedName = doc.Root.GetAttributeString("translatedname", Language);
@@ -93,7 +114,7 @@ namespace Barotrauma
             Dictionary<string, int> tagCounts = new Dictionary<string, int>();
             Dictionary<string, int> contentCounts = new Dictionary<string, int>();
 
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
+            XDocument doc = XMLExtensions.TryLoadXml(FilePath);
             if (doc == null) { return; }
 
             foreach (XElement subElement in doc.Root.Elements())

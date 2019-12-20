@@ -9,6 +9,16 @@ namespace Barotrauma
 {
     partial class LinkedSubmarinePrefab : MapEntityPrefab
     {
+        //public static readonly PrefabCollection<LinkedSubmarinePrefab> Prefabs = new PrefabCollection<LinkedSubmarinePrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            //Prefabs.Remove(this);
+        }
+
         public readonly Submarine mainSub;
         
         public LinkedSubmarinePrefab(Submarine submarine)
@@ -121,8 +131,7 @@ namespace Barotrauma
         {
             List<Vector2> points = new List<Vector2>();
 
-            var wallPrefabs =
-                MapEntityPrefab.List.FindAll(mp => (mp is StructurePrefab) && ((StructurePrefab)mp).Body);
+            var wallPrefabs = StructurePrefab.Prefabs.Where(mp => mp.Body);
 
             foreach (XElement element in rootElement.Elements())
             {

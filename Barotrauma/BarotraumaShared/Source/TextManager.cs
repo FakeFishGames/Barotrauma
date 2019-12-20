@@ -88,22 +88,26 @@ namespace Barotrauma
 
             var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
 
-            foreach (string file in textFiles)
+            foreach (ContentFile file in textFiles)
             {
+#if !DEBUG
                 try
                 {
-                    var textPack = new TextPack(file);
+#endif
+                    var textPack = new TextPack(file.Path);
                     newLanguages.Add(textPack.Language);
                     if (!newTextPacks.ContainsKey(textPack.Language))
                     {
                         newTextPacks.Add(textPack.Language, new List<TextPack>());
                     }
                     newTextPacks[textPack.Language].Add(textPack);
+#if !DEBUG
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Failed to load text file \"" + file + "\"!", e);
+                    DebugConsole.ThrowError("Failed to load text file \"" + file.Path + "\"!", e);
                 }
+#endif
             }
 
             if (newTextPacks.Count == 0)
@@ -127,9 +131,57 @@ namespace Barotrauma
             {
                 textPacks = newTextPacks;
                 availableLanguages = newLanguages;
+
+                string loadedLangsMsg = "Loaded languages: ";
+                foreach (string language in newLanguages)
+                {
+                    loadedLangsMsg += language + ", ";
+                }
+                DebugConsole.NewMessage(loadedLangsMsg.Substring(0,loadedLangsMsg.Length-2));
             }
 
             Initialized = true;
+        }
+
+        public static void LoadTextPack(string file)
+        {
+            lock (mutex)
+            {
+                var textPack = new TextPack(file);
+                availableLanguages.Add(textPack.Language);
+                if (!textPacks.ContainsKey(textPack.Language))
+                {
+                    textPacks.Add(textPack.Language, new List<TextPack>());
+                }
+                textPacks[textPack.Language].Add(textPack);
+            }
+        }
+
+        public static void RemoveTextPack(string file)
+        {
+            List<string> keysToRemove = new List<string>();
+            foreach (var textPackKVP in textPacks)
+            {
+                var textPackLanguage = textPackKVP.Key;
+                var textPackList = textPackKVP.Value;
+                for (int i = 0; i < textPackList.Count; i++)
+                {
+                    if (textPackList[i].FilePath == file)
+                    {
+                        textPackList.Remove(textPackList[i]);
+                        if (textPackList.Count == 0)
+                        {
+                            keysToRemove.Add(textPackLanguage);
+                        }
+                    }
+                }
+            }
+
+            foreach (var key in keysToRemove)
+            {
+                availableLanguages.Remove(key);
+                textPacks.Remove(key);
+            }
         }
 
         public static bool ContainsTag(string textTag)

@@ -59,9 +59,9 @@ namespace Barotrauma
         {
             Prefabs = new Dictionary<string, Order>();
 
-            foreach (string file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
+            foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 bool allowOverriding = false;
@@ -79,19 +79,19 @@ namespace Barotrauma
                         string identifier = orderElement.GetAttributeString("identifier", null);
                         if (string.IsNullOrWhiteSpace(identifier))
                         {
-                            DebugConsole.ThrowError($"Error in file {file}: The order element '{name}' does not have an identifier! All orders must have a unique identifier.");
+                            DebugConsole.ThrowError($"Error in file {file.Path}: The order element '{name}' does not have an identifier! All orders must have a unique identifier.");
                             continue;
                         }
                         if (Prefabs.TryGetValue(identifier, out Order duplicate))
                         {
                             if (allowOverriding || sourceElement.IsOverride())
                             {
-                                DebugConsole.NewMessage($"Overriding an existing order '{identifier}' with another one defined in '{file}'", Color.Yellow);
+                                DebugConsole.NewMessage($"Overriding an existing order '{identifier}' with another one defined in '{file.Path}'", Color.Yellow);
                                 Prefabs.Remove(identifier);
                             }
                             else
                             {
-                                DebugConsole.ThrowError($"Error in file {file}: Duplicate element with the idenfitier '{identifier}' found in '{file}'! All orders must have a unique identifier. Use <override></override> tags to override an order with the same identifier.");
+                                DebugConsole.ThrowError($"Error in file {file.Path}: Duplicate element with the idenfitier '{identifier}' found in '{file.Path}'! All orders must have a unique identifier. Use <override></override> tags to override an order with the same identifier.");
                                 continue;
                             }
                         }
@@ -199,7 +199,7 @@ namespace Barotrauma
             if (character.Info == null || character.Info.Job == null) { return false; }
             if (character.Info.Job.Prefab.AppropriateOrders.Any(appropriateOrderId => Identifier == appropriateOrderId)) { return true; }
 
-            if (!JobPrefab.List.Values.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
+            if (!JobPrefab.Prefabs.Any(jp => jp.AppropriateOrders.Contains(Identifier)) &&
                 (AppropriateJobs == null || AppropriateJobs.Length == 0))
             {
                 return true;

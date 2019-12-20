@@ -52,6 +52,16 @@ namespace Barotrauma
             : base (prefab)
         {
             speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesName);
+            if (characterPrefab != null)
+            {
+                speciesName = characterPrefab.Identifier;
+            }
+
+            if (string.IsNullOrEmpty(speciesName))
+            {
+                throw new Exception("speciesname is null!");
+            }
 
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
@@ -71,7 +81,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null)
             {
                 List<string> monsterNames = GameMain.NetworkMember.ServerSettings.MonsterEnabled.Keys.ToList();
-                string tryKey = monsterNames.Find(s => characterFileName == s.ToLower());
+                string tryKey = monsterNames.Find(s => speciesName.ToLower() == s.ToLower());
 
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
@@ -82,8 +92,16 @@ namespace Barotrauma
 
         public override IEnumerable<ContentFile> GetFilesToPreload()
         {
-            string path = Character.GetConfigFilePath(speciesName);
-            return new List<ContentFile>() { new ContentFile(path, ContentType.Character) };
+            string path = CharacterPrefab.FindBySpeciesName(speciesName)?.FilePath;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                DebugConsole.ThrowError($"Failed to find config file for species \"{speciesName}\"");
+                yield break;
+            }
+            else
+            {
+                yield return new ContentFile(path, ContentType.Character);
+            }
         }
 
         public override bool CanAffectSubImmediately(Level level)

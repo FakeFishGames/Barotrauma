@@ -529,7 +529,7 @@ namespace Barotrauma
                     GameMain.ServerListScreen.Select();
                     break;
                 case Tab.HostServer:
-                    if (GameMain.Config.ContentPackageSelectionDirty || ContentPackage.List.Any(cp => cp.NeedsRestart))
+                    if (GameMain.Config.ContentPackageSelectionDirty)
                     {
                         new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
                         selectedTab = 0;
@@ -671,13 +671,13 @@ namespace Barotrauma
                 }
                 var jobPrefab = JobPrefab.Get(jobIdentifiers[i]);
                 var variant = Rand.Range(0, jobPrefab.Variants);
-                var characterInfo = new CharacterInfo(Character.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + jobIdentifiers[i] + "\"!");
                 }
 
-                var newCharacter = Character.Create(Character.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
+                var newCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, spawnPoint.WorldPosition, ToolBox.RandomSeed(8), characterInfo);
                 newCharacter.GiveJobItems(spawnPoint);
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;
@@ -752,8 +752,7 @@ namespace Barotrauma
             GameMain.Config.SaveNewPlayerConfig();
             
             if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
-                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight ||
-                ContentPackage.List.Any(cp => cp.NeedsRestart))
+                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
             {
                 new GUIMessageBox(
                     TextManager.Get("RestartRequiredLabel"),
@@ -820,7 +819,7 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault();
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault()?.Path;
                 if (string.IsNullOrEmpty(exeName))
                 {
                     DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");

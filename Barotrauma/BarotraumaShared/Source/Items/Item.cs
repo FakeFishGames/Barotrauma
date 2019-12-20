@@ -482,7 +482,7 @@ namespace Barotrauma
 
         public string ConfigFile
         {
-            get { return Prefab.ConfigFile; }
+            get { return Prefab.FilePath; }
         }
 
         //which type of inventory slots (head, torso, any, etc) the item can be placed in
@@ -662,7 +662,7 @@ namespace Barotrauma
                         aiTarget = new AITarget(this, subElement);
                         break;
                     default:
-                        ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.ConfigFile);
+                        ItemComponent ic = ItemComponent.Load(subElement, this, itemPrefab.FilePath);
                         if (ic == null) break;
 
                         AddComponent(ic);
@@ -2461,5 +2461,18 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
+        public static void RemoveByPrefab(ItemPrefab prefab)
+        {
+            if (ItemList == null) { return; }
+            List<Item> list = new List<Item>(ItemList);
+            foreach (Item item in list)
+            {
+                if (item.prefab == prefab)
+                {
+                    item.Remove();
+                }
+            }
+        }
     }
 }

@@ -59,6 +59,7 @@ namespace Barotrauma
 
         public static Texture2D FromFile(string path, bool preMultiplyAlpha = true, bool mipmap=false)
         {
+            path = path.CleanUpPath();
             try
             {
                 using (Stream fileStream = File.OpenRead(path))

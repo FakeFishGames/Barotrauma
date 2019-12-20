@@ -35,7 +35,7 @@ namespace Barotrauma
         
         public virtual IEnumerable<ContentFile> GetFilesToPreload()
         {
-            return Enumerable.Empty<ContentFile>();
+            yield break;
         }
 
         public virtual void Init(bool affectSubImmediately)

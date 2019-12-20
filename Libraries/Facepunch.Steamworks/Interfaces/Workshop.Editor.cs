@@ -15,6 +15,8 @@ namespace Facepunch.Steamworks
             internal CallbackHandle SubmitItemUpdate;
             internal SteamNative.UGCUpdateHandle_t UpdateHandle;
 
+            public string Url { get { return string.Format("http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={0}", Id); } }
+
             public ulong Id { get; internal set; }
             public string Title { get; set; } = null;
             public string Description { get; set; } = null;

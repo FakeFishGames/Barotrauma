@@ -864,9 +864,9 @@ namespace Barotrauma.Networking
         {
             if (!HasPassword) return true;
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input)+" "+ToolBox.ByteArrayToString(saltedPw));
+            DebugConsole.NewMessage(ToolBox.ByteArrayToString(input) + " " + ToolBox.ByteArrayToString(saltedPw));
             if (input.Length != saltedPw.Length) return false;
-            for (int i=0;i<input.Length;i++)
+            for (int i = 0; i < input.Length; i++)
             {
                 if (input[i] != saltedPw[i]) return false;
             }
@@ -887,11 +887,7 @@ namespace Barotrauma.Networking
             //monster spawn settings
             if (MonsterEnabled == null)
             {
-                List<string> monsterNames1 = GameMain.Instance.GetFilesOfType(ContentType.Character).ToList();
-                for (int i = 0; i < monsterNames1.Count; i++)
-                {
-                    monsterNames1[i] = Path.GetFileName(Path.GetDirectoryName(monsterNames1[i]));
-                }
+                List<string> monsterNames1 = CharacterPrefab.Prefabs.Select(p => p.Identifier).ToList();
 
                 MonsterEnabled = new Dictionary<string, bool>();
                 foreach (string s in monsterNames1)

@@ -10,6 +10,7 @@ namespace Barotrauma
     class MapGenerationParams : ISerializableEntity
     {
         private static MapGenerationParams instance;
+        private static string loadedFile;
         public static MapGenerationParams Instance
         {
             get
@@ -160,6 +161,7 @@ namespace Barotrauma
 
         public static void Init()
         {
+
             var files = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.MapGenerationParameters);
             if (!files.Any())
             {
@@ -168,9 +170,10 @@ namespace Barotrauma
             }
             // Let's not actually load the parameters until we have solved which file is the last, because loading the parameters takes some resources that would also need to be released.
             XElement selectedElement = null;
-            foreach (string file in files)
+            string selectedFile = null;
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(file);
+                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
@@ -178,16 +181,36 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     if (selectedElement != null)
                     {
-                        DebugConsole.NewMessage($"Overriding the map generation parameters with '{file}'", Color.Yellow);
+                        DebugConsole.NewMessage($"Overriding the map generation parameters with '{file.Path}'", Color.Yellow);
                     }
                 }
                 else if (selectedElement != null)
                 {
-                    DebugConsole.ThrowError($"Error in {file}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in {file.Path}: Another map generation parameter file already loaded! Use <override></override> tags to override it.");
                     break;
                 }
                 selectedElement = mainElement;
+                selectedFile = file.Path;
             }
+
+            if (selectedFile == loadedFile) { return; }
+
+            instance?.ConnectionSprite?.Remove();
+            instance?.BackgroundTileSprites.ForEach(s => s.Remove());
+#if CLIENT
+            instance?.MapCircle?.Remove();
+            instance?.LocationIndicator?.Remove();
+            instance?.DecorativeMapSprite?.Remove();
+            instance?.DecorativeGraphSprite?.Remove();
+            instance?.DecorativeLineTop?.Remove();
+            instance?.DecorativeLineBottom?.Remove();
+            instance?.DecorativeLineCorner?.Remove();
+            instance?.ReticleLarge?.Remove();
+            instance?.ReticleMedium?.Remove();
+            instance?.ReticleSmall?.Remove();
+#endif
+            instance = null;
+
             if (selectedElement == null)
             {
                 DebugConsole.ThrowError("Could not find a valid element in the map generation parameter files!");
@@ -195,6 +218,7 @@ namespace Barotrauma
             else
             {
                 instance = new MapGenerationParams(selectedElement);
+                loadedFile = selectedFile;
             }
         }
 

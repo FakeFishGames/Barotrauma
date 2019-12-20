@@ -156,15 +156,15 @@ namespace Barotrauma
             Entity.Spawner.AddToRemoveQueue(character);
 
             string speciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
-            string configFile = Character.GetConfigFilePath(speciesName);
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
 
-            if (string.IsNullOrEmpty(configFile))
+            if (prefab == null)
             {
                 DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
                 yield return CoroutineStatus.Success;
             }
 
-            var husk = Character.Create(configFile, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.AnimController.RagdollParams);
+            var husk = Character.Create(speciesName, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.AnimController.RagdollParams);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
@@ -210,13 +210,13 @@ namespace Barotrauma
             }
             string nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
             string huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
-            string filePath = Character.GetConfigFilePath(huskedSpeciesName);
-            if (!Character.TryGetConfigFile(filePath, out XDocument huskDoc))
+            CharacterPrefab huskPrefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
+            if (huskPrefab?.XDocument == null)
             {
-                DebugConsole.ThrowError($"Error in '{filePath}': Failed to load the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
+                DebugConsole.ThrowError($"Failed to find the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
                 return appendage;
             }
-            var mainElement = huskDoc.Root.IsOverride() ? huskDoc.Root.FirstElement() : huskDoc.Root;
+            var mainElement = huskPrefab.XDocument.Root.IsOverride() ? huskPrefab.XDocument.Root.FirstElement() : huskPrefab.XDocument.Root;
             var element = appendageDefinition;
             if (element == null)
             {
@@ -224,7 +224,7 @@ namespace Barotrauma
             }
             if (element == null)
             {
-                DebugConsole.ThrowError($"Error in '{filePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
+                DebugConsole.ThrowError($"Error in '{huskPrefab.FilePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
                 return appendage;
             }
             string pathToAppendage = element.GetAttributeString("path", string.Empty);

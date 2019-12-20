@@ -217,9 +217,9 @@ namespace Barotrauma
         
         private void SerializeAll()
         {
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
 
                 var prefabList = GameMain.ParticleManager.GetPrefabList();
@@ -239,7 +239,7 @@ namespace Barotrauma
                     NewLineOnAttributes = true
                 };
 
-                using (var writer = XmlWriter.Create(configFile, settings))
+                using (var writer = XmlWriter.Create(configFile.Path, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();

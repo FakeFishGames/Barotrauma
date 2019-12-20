@@ -38,13 +38,16 @@ namespace Barotrauma
         public readonly bool DuckVolume;
 
         public readonly Vector2 IntensityRange;
+
+        public readonly XElement Element;
                 
         public BackgroundMusic(XElement element)
         {
-            this.File = Path.GetFullPath(element.GetAttributeString("file", ""));
+            this.File = Path.GetFullPath(element.GetAttributeString("file", "")).CleanUpPath();
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
+            this.Element = element;
         }
     }
 
@@ -105,7 +108,22 @@ namespace Barotrauma
         public static float? OverrideMusicDuration;
 
         public static int SoundCount;
-        
+
+        private static List<XElement> loadedSoundElements;
+
+        private static bool SoundElementsEquivalent(XElement a, XElement b)
+        {
+            string filePathA = a.GetAttributeString("file", "").CleanUpPath();
+            float baseGainA = a.GetAttributeFloat("volume", 1.0f);
+            float rangeA = a.GetAttributeFloat("range", 1000.0f);
+            string filePathB = b.GetAttributeString("file", "").CleanUpPath();
+            float baseGainB = b.GetAttributeFloat("volume", 1.0f);
+            float rangeB = b.GetAttributeFloat("range", 1000.0f);
+            return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&
+                   filePathA == filePathB && MathUtils.NearlyEqual(baseGainA, baseGainB) &&
+                   MathUtils.NearlyEqual(rangeA, rangeB);
+        }
+
         public static IEnumerable<object> Init()
         {
             OverrideMusicType = null;
@@ -113,15 +131,15 @@ namespace Barotrauma
             var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);
 
             List<XElement> soundElements = new List<XElement>();
-            foreach (string soundFile in soundFiles)
+            foreach (ContentFile soundFile in soundFiles)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(soundFile);
+                XDocument doc = XMLExtensions.TryLoadXml(soundFile.Path);
                 if (doc == null) { continue; }
                 var mainElement = doc.Root;
                 if (doc.Root.IsOverride())
                 {
                     mainElement = doc.Root.FirstElement();
-                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile}", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all sounds with {soundFile.Path}", Color.Yellow);
                     soundElements.Clear();
                 }
                 soundElements.AddRange(mainElement.Elements());
@@ -139,19 +157,32 @@ namespace Barotrauma
             yield return CoroutineStatus.Running;
                                     
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
-            damageSounds = new List<DamageSound>();
-            musicClips = new List<BackgroundMusic>();
+            damageSounds = damageSounds ?? new List<DamageSound>();
+            musicClips = musicClips ?? new List<BackgroundMusic>();
             
             foreach (XElement soundElement in soundElements)
             {
                 yield return CoroutineStatus.Running;
+
+                if (loadedSoundElements != null && loadedSoundElements.Any(e => SoundElementsEquivalent(e, soundElement)))
+                {
+                    continue;
+                }
 
                 try
                 {
                     switch (soundElement.Name.ToString().ToLowerInvariant())
                     {
                         case "music":
-                            musicClips.AddIfNotNull(new BackgroundMusic(soundElement));
+                            var newMusicClip = new BackgroundMusic(soundElement);
+                            musicClips.AddIfNotNull(newMusicClip);
+                            if (loadedSoundElements != null)
+                            {
+                                if (newMusicClip.Type.ToLowerInvariant() == "menu")
+                                {
+                                    targetMusic[0] = newMusicClip;
+                                }
+                            }
                             break;
                         case "splash":
                             SplashSounds.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
@@ -189,6 +220,47 @@ namespace Barotrauma
                 }                
             }
 
+            musicClips.RemoveAll(mc => !soundElements.Any(e => SoundElementsEquivalent(mc.Element, e)));
+
+            for (int i=0;i<currentMusic.Length;i++)
+            {
+                if (currentMusic[i] != null && !musicClips.Any(mc => mc.File == currentMusic[i].Filename))
+                {
+                    DisposeMusicChannel(i);
+                }
+            }
+
+            SplashSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            SplashSounds.RemoveAll(s => s.Disposed);
+
+            FlowSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            FlowSounds.RemoveAll(s => s.Disposed);
+
+            waterAmbiences.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+            });
+            waterAmbiences.RemoveAll(s => s.Disposed);
+
+            damageSounds.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.sound.XElement, e))) { s.sound.Dispose(); }
+            });
+            damageSounds.RemoveAll(s => s.sound.Disposed);
+
+            miscSounds?.ForEach(g => g.ForEach(s =>
+            {
+                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+                else { miscSoundList.Add(new KeyValuePair<string, Sound>(g.Key, s)); }
+            }));
+
+
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
             flowVolumeLeft = new float[FlowSounds.Count];
             flowVolumeRight = new float[FlowSounds.Count];
@@ -200,6 +272,8 @@ namespace Barotrauma
             miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
 
             Initialized = true;
+
+            loadedSoundElements = soundElements;
 
             yield return CoroutineStatus.Success;
 
@@ -586,6 +660,11 @@ namespace Barotrauma
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
                         if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
                     }
+                }
+                //something should be playing, but the targetMusic is invalid
+                else if (!musicClips.Any(mc => mc.File == targetMusic[i].File))
+                {
+                    targetMusic[i] = GetSuitableMusicClips(targetMusic[i].Type, 0.0f).GetRandom();
                 }
                 //something should be playing, but the channel is playing nothing or an incorrect clip
                 else if (currentMusic[i] == null || targetMusic[i].File != currentMusic[i].Filename)

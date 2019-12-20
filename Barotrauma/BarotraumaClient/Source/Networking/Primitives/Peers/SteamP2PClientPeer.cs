@@ -189,12 +189,15 @@ namespace Barotrauma.Networking
             if (!isActive) { return; }
 
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
+
+            IWriteMessage outMsg;
+
             //DebugConsole.NewMessage(step + " " + initializationStep);
             switch (step)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
                     if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    IWriteMessage outMsg = new WriteOnlyMessage();
+                    outMsg = new WriteOnlyMessage();
                     outMsg.Write((byte)DeliveryMethod.Reliable);
                     outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
                     outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
@@ -205,7 +208,7 @@ namespace Barotrauma.Networking
 
                     outMsg.Write(GameMain.Version.ToString());
 
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent && !cp.NeedsRestart);
+                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count());
                     foreach (ContentPackage contentPackage in mpContentPackages)
                     {
@@ -216,6 +219,29 @@ namespace Barotrauma.Networking
                     heartbeatTimer = 5.0;
                     SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
                                                                    Facepunch.Steamworks.Networking.SendType.Reliable);
+                    break;
+                case ConnectionInitialization.ContentPackageOrder:
+                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
+                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
+                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
+                    outMsg = new WriteOnlyMessage();
+                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
+                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
+
+                    UInt32 cpCount = inc.ReadVariableUInt32();
+                    List<ContentPackage> serverContentPackages = new List<ContentPackage>();
+                    for (int i = 0; i < cpCount; i++)
+                    {
+                        string hash = inc.ReadString();
+                        serverContentPackages.Add(GameMain.Config.SelectedContentPackages.Find(cp => cp.MD5hash.Hash == hash));
+                    }
+                    GameMain.Config.ReorderSelectedContentPackages(cp => serverContentPackages.Contains(cp) ?
+                                                                         serverContentPackages.IndexOf(cp) :
+                                                                         serverContentPackages.Count + GameMain.Config.SelectedContentPackages.IndexOf(cp));
+
+                    SteamManager.Instance.Networking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes,
+                                                                   Facepunch.Steamworks.Networking.SendType.Reliable);
+
                     break;
                 case ConnectionInitialization.Password:
                     if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }

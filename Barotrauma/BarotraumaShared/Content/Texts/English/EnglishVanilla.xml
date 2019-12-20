@@ -472,7 +472,6 @@
   <wrongfiletype>Wrong file type!</wrongfiletype>
   <debugconsolehelptext>Debug console—press F3 to open/close; enter help for a list of available commands</debugconsolehelptext>
   <failed>Failed</failed>
-  <invalidcontentpackage>Content package '[packagename]' cannot be loaded.</invalidcontentpackage>
   <xmlfileinvalid>File '[filepath]' is not a valid XML file ([errormessage]).</xmlfileinvalid>
   <openlinkinbrowserprompt>Do you want to open the link [link] in your web browser?</openlinkinbrowserprompt>
   <contentpackagemismatchwarninggeneric>The submarine may not be compatible with the currently selected content packages. Are you sure you want to choose the submarine?</contentpackagemismatchwarninggeneric>
@@ -4343,7 +4342,6 @@
   <permissionpresetname.none>None</permissionpresetname.none>
   <permissionpresetdescription.none>No special privileges.</permissionpresetdescription.none>
 
-  <restartrequiredcontentpackage>You need to restart the game for the content package changes to take effect.</restartrequiredcontentpackage>
   <serverrestartrequiredcontentpackage>Before hosting a server, you need to restart the game for the content package changes to take effect.</serverrestartrequiredcontentpackage>
 
   <serveroffline>The server seems to be offline.</serveroffline>
@@ -4366,6 +4364,19 @@
   <dialogcannotreachleak>Can't get to the leak near [name]!</dialogcannotreachleak>
   <dialogcannotreachpatient>Can't get to [name]!</dialogcannotreachpatient>
 
+  <!-- changed as of Nov 27 -->
+  <contentpackagehaserrors>Errors found in content package '[packagename]'; some of its features may not work correctly.</contentpackagehaserrors>
+  <restartrequiredcontentpackage>You need to restart the game for some content package changes to take effect.</restartrequiredcontentpackage>
+
+  <workshopitemvisibility>Visibility</workshopitemvisibility>
+  <workshopitemvisibilitytooltip>Restricts who can see and subscribe to your Workshop item.</workshopitemvisibilitytooltip>
+  <workshopitemvisibility.public>Public</workshopitemvisibility.public>
+  <workshopitemvisibility.friendsonly>Friends only</workshopitemvisibility.friendsonly>
+  <workshopitemvisibility.private>Hidden</workshopitemvisibility.private>
+
+  <workshoperrorsamepathinstalled>Could not install '[itemname]' because there is already a mod installed at '[itempath]'.</workshoperrorsamepathinstalled>
+  <workshopiteminstalled>Installed</workshopiteminstalled>
+  
   <!--Missing mission texts-->
   <missionname.killmatriarch1>Aggressive Hammerheads</missionname.killmatriarch1>
   <missiondescription.killmatriarch1>According to our sources, there is a group of Hammerheads blocking the route from [location1] to [location2]. Get rid of the creatures so that our vessels can continue traveling safely through the passage.</missiondescription.killmatriarch1>

@@ -189,6 +189,8 @@ namespace Barotrauma
 
             Config = new GameSettings();
 
+            Md5Hash.LoadCache();
+
             ConsoleArguments = args;
 
             ConnectName = null;
@@ -471,7 +473,7 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
-            Character.LoadAllConfigFiles();
+            CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
@@ -612,7 +614,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="type"></param>
         /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
+        public IEnumerable<ContentFile> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
         {
             if (searchAllContentPackages)
             {

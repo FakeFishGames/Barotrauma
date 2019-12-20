@@ -48,10 +48,8 @@ namespace Barotrauma.Items.Components
                 }            
             }
 
-            foreach (MapEntityPrefab me in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(me is ItemPrefab itemPrefab)) { continue; }
-
                 foreach (FabricationRecipe recipe in itemPrefab.FabricationRecipes)
                 {
                     if (recipe.SuitableFabricatorIdentifiers.Length > 0)

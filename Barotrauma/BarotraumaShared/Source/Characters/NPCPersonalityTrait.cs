@@ -14,6 +14,8 @@ namespace Barotrauma
             get { return list; }
         }
 
+        public readonly string FilePath;
+
         public readonly string Name;
 
         public readonly List<string> AllowedDialogTags;
@@ -24,8 +26,9 @@ namespace Barotrauma
             get { return commonness; }
         }
 
-        public NPCPersonalityTrait(XElement element)
+        public NPCPersonalityTrait(XElement element, string filePath)
         {
+            FilePath = filePath;
             Name = element.GetAttributeString("name", "");
             AllowedDialogTags = new List<string>(element.GetAttributeStringArray("alloweddialogtags", new string[0]));
             commonness = element.GetAttributeFloat("commonness", 1.0f);

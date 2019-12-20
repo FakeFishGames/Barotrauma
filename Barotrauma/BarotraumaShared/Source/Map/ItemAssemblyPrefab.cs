@@ -10,9 +10,21 @@ namespace Barotrauma
 {
     partial class ItemAssemblyPrefab : MapEntityPrefab
     {
+        private string name;
+        public override string Name { get { return name; } }
+
+        public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
+
+        private bool disposed = false;
+        public override void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
+
         private readonly XElement configElement;
-        private readonly string configPath;
-                
+        
         public List<Pair<MapEntityPrefab, Rectangle>> DisplayEntities
         {
             get;
@@ -23,19 +35,19 @@ namespace Barotrauma
 
         public ItemAssemblyPrefab(string filePath)
         {
-            configPath = filePath;
+            FilePath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return; }
 
-            name = doc.Root.GetAttributeString("name", "");
-            identifier = doc.Root.GetAttributeString("identifier", null) ?? name.ToLowerInvariant().Replace(" ", "");
+            originalName = doc.Root.GetAttributeString("name", "");
+            identifier = doc.Root.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
             configElement = doc.Root;
 
             Category = MapEntityCategory.ItemAssembly;
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? name;
+            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? originalName;
             Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
 
             int minX = int.MaxValue, minY = int.MaxValue;
@@ -44,11 +56,11 @@ namespace Barotrauma
             foreach (XElement entityElement in doc.Root.Elements())
             {
                 string identifier = entityElement.GetAttributeString("identifier", "");
-                MapEntityPrefab mapEntity = List.Find(p => p.Identifier == identifier);
+                MapEntityPrefab mapEntity = List.FirstOrDefault(p => p.Identifier == identifier);
                 if (mapEntity == null)
                 {
                     string entityName = entityElement.GetAttributeString("name", "");
-                    mapEntity = List.Find(p => p.Name == entityName);
+                    mapEntity = List.FirstOrDefault(p => p.Name == entityName);
                 }
 
                 Rectangle rect = entityElement.GetAttributeRect("rect", Rectangle.Empty);
@@ -63,19 +75,13 @@ namespace Barotrauma
             }
 
             Bounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
-            
-            List.Add(this);
+
+            Prefabs.Add(this, false);
         }
 
         public static void Remove(string filePath)
         {
-            var matchingAssembly = List.Find(prefab => 
-                prefab is ItemAssemblyPrefab assemblyPrefab && 
-                assemblyPrefab.configPath == filePath);
-            if (matchingAssembly != null)
-            {
-                List.Remove(matchingAssembly);
-            }
+            Prefabs.RemoveByFile(filePath);
         }
         
         protected override void CreateInstance(Rectangle rect)
@@ -85,7 +91,7 @@ namespace Barotrauma
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub)
         {
-            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, configPath);
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
             if (entities.Count == 0) return entities;
 
             Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
@@ -113,12 +119,12 @@ namespace Barotrauma
         
         public void Delete()
         {
-            List.Remove(this);
-            if (File.Exists(configPath))
+            Dispose();
+            if (File.Exists(FilePath))
             {
                 try
                 {
-                    File.Delete(configPath);
+                    File.Delete(FilePath);
                 }
                 catch (Exception e)
                 {

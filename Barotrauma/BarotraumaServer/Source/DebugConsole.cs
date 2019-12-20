@@ -1442,7 +1442,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.Find(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
                     if (afflictionPrefab == null)
                     {
                         GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);

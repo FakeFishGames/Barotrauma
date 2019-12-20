@@ -1,18 +1,111 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
     public class Md5Hash
     {
-        private static Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        private const string cachePath = "Data/hashcache.txt";
+        private static readonly Dictionary<string, Tuple<Md5Hash, long>> cache = new Dictionary<string, Tuple<Md5Hash, long>>();
+
+        public static void LoadCache()
+        {
+            if (!File.Exists(cachePath)) { return; }
+            string[] lines = File.ReadAllLines(cachePath);
+            if (lines.Length <= 0 || lines[0] != GameMain.Version.ToString()) { return; }
+            foreach (string line in lines.Skip(1))
+            {
+                if (string.IsNullOrWhiteSpace(line)) { continue; }
+                string[] parts = line.Split('|');
+                string path = parts[0].CleanUpPath();
+                string hashStr = parts[1];
+                long timeLong = long.Parse(parts[2]);
+
+                Md5Hash hash = new Md5Hash(hashStr);
+                DateTime time = DateTime.FromBinary(timeLong);
+
+                if (File.GetLastWriteTime(path) == time)
+                {
+                    cache.Add(path, new Tuple<Md5Hash, long>(hash, timeLong));
+                }
+            }
+        }
+
+        public static void SaveCache()
+        {
+            string[] lines = new string[cache.Count+1];
+            lines[0] = GameMain.Version.ToString();
+            int i = 1;
+            foreach (KeyValuePair<string, Tuple<Md5Hash, long>> kpv in cache)
+            {
+                lines[i] = kpv.Key + "|" + kpv.Value.Item1 + "|" + kpv.Value.Item2;
+                i++;
+            }
+            File.WriteAllLines(cachePath, lines);
+        }
+
+        private bool LoadFromCache(string filename)
+        {
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                filename = filename.CleanUpPath();
+                lock (cache)
+                {
+                    if (cache.ContainsKey(filename))
+                    {
+                        Hash = cache[filename].Item1.Hash;
+                        ShortHash = cache[filename].Item1.ShortHash;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void SaveToCache(string filename, long? time=null)
+        {
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                lock (cache)
+                {
+                    Tuple<Md5Hash, long> cacheVal = new Tuple<Md5Hash, long>(this, time ?? File.GetLastWriteTime(filename).ToBinary());
+                    if (cache.ContainsKey(filename))
+                    {
+                        cache[filename] = cacheVal;
+                    }
+                    else
+                    {
+                        cache.Add(filename, cacheVal);
+                    }
+                    SaveCache();
+                }
+            }
+        }
+
+        public static Md5Hash FetchFromCache(string filename)
+        {
+            Md5Hash newHash = new Md5Hash();
+            if (newHash.LoadFromCache(filename)) { return newHash; }
+            return null;
+        }
 
         public string Hash { get; private set; }
 
         public string ShortHash { get; private set; }
+
+        private Md5Hash()
+        {
+            this.Hash = null;
+            ShortHash = null;
+        }
 
         public Md5Hash(string md5Hash)
         {
@@ -27,23 +120,37 @@ namespace Barotrauma
             ShortHash = GetShortHash(Hash);
         }
 
-        public Md5Hash(FileStream fileStream)
+        public Md5Hash(FileStream fileStream, string filename = null, bool tryLoadFromCache = true)
         {
+            if (tryLoadFromCache)
+            {
+                if (LoadFromCache(filename)) { return; }
+            }
+
             Hash = CalculateHash(fileStream);
 
             ShortHash = GetShortHash(Hash);
+
+            SaveToCache(filename);
         }
 
-        public Md5Hash(XDocument doc)
+        public Md5Hash(XDocument doc, string filename = null, bool tryLoadFromCache = true)
         {
+            if (tryLoadFromCache)
+            {
+                if (LoadFromCache(filename)) { return; }
+            }
+
             if (doc == null) { return; }
             
             string docString = removeWhitespaceRegex.Replace(doc.ToString(), "");
             
             byte[] inputBytes = Encoding.ASCII.GetBytes(docString);
             
-            Hash = CalculateHash(inputBytes);            
+            Hash = CalculateHash(inputBytes);
             ShortHash = GetShortHash(Hash);
+
+            SaveToCache(filename);
         }
 
         public override string ToString()

@@ -218,13 +218,155 @@ namespace Barotrauma
 
         public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
 
+        public bool ContentPackageSelectionDirtyNotification
+        {
+            get;
+            set;
+        }
+
+        public bool ContentPackageSelectionDirty
+        {
+            get;
+            private set;
+        }
+
+        public volatile bool SuppressModFolderWatcher;
+
+
+        private FileSystemWatcher modsFolderWatcher;
+
+        private int ContentFileLoadOrder(ContentFile a)
+        {
+            switch (a.Type)
+            {
+                case ContentType.Text:
+                    return -2;
+                case ContentType.Afflictions:
+                    return -1;
+                case ContentType.ItemAssembly:
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+
+        public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll = false)
+        {
+            ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
+
+            SelectedContentPackages.Remove(otherCorePackage);
+            SelectedContentPackages.Add(contentPackage);
+
+            ContentPackage.SortContentPackages();
+
+            List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 => forceReloadAll ||
+                !contentPackage.Files.Any(f2 =>
+                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 => forceReloadAll ||
+                !otherCorePackage.Files.Any(f2 =>
+                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            bool shouldRefreshSubs = false;
+            bool shouldRefreshFabricationRecipes = false;
+            bool shouldRefreshSoundPlayer = false;
+            bool shouldRefreshRuinGenerationParams = false;
+            bool shouldRefreshScriptedEventSets = false;
+            bool shouldRefreshMissionPrefabs = false;
+            bool shouldRefreshLevelObjectPrefabs = false;
+            bool shouldRefreshLocationTypes = false;
+            bool shouldRefreshMapGenerationParams = false;
+            bool shouldRefreshLevelGenerationParams = false;
+            bool shouldRefreshAfflictions = false;
+
+            DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder),
+                                            ref shouldRefreshSubs,
+                                            ref shouldRefreshFabricationRecipes,
+                                            ref shouldRefreshSoundPlayer,
+                                            ref shouldRefreshRuinGenerationParams,
+                                            ref shouldRefreshScriptedEventSets,
+                                            ref shouldRefreshMissionPrefabs,
+                                            ref shouldRefreshLevelObjectPrefabs,
+                                            ref shouldRefreshLocationTypes,
+                                            ref shouldRefreshMapGenerationParams,
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
+
+            EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder),
+                                            ref shouldRefreshSubs,
+                                            ref shouldRefreshFabricationRecipes,
+                                            ref shouldRefreshSoundPlayer,
+                                            ref shouldRefreshRuinGenerationParams,
+                                            ref shouldRefreshScriptedEventSets,
+                                            ref shouldRefreshMissionPrefabs,
+                                            ref shouldRefreshLevelObjectPrefabs,
+                                            ref shouldRefreshLocationTypes,
+                                            ref shouldRefreshMapGenerationParams,
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
+
+            if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
+            if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+            if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+            if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+            if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+            if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+            if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+            if (shouldRefreshLocationTypes) { LocationType.Init(); }
+            if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+            if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+
+#if CLIENT
+            if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
+#endif
+
+        }
         public void SelectContentPackage(ContentPackage contentPackage)
         {
             if (!SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Add(contentPackage);
-                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
+
+                bool shouldRefreshSubs = false;
+                bool shouldRefreshFabricationRecipes = false;
+                bool shouldRefreshSoundPlayer = false;
+                bool shouldRefreshRuinGenerationParams = false;
+                bool shouldRefreshScriptedEventSets = false;
+                bool shouldRefreshMissionPrefabs = false;
+                bool shouldRefreshLevelObjectPrefabs = false;
+                bool shouldRefreshLocationTypes = false;
+                bool shouldRefreshMapGenerationParams = false;
+                bool shouldRefreshLevelGenerationParams = false;
+                bool shouldRefreshAfflictions = false;
+
+                EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
+                                            ref shouldRefreshSubs,
+                                            ref shouldRefreshFabricationRecipes,
+                                            ref shouldRefreshSoundPlayer,
+                                            ref shouldRefreshRuinGenerationParams,
+                                            ref shouldRefreshScriptedEventSets,
+                                            ref shouldRefreshMissionPrefabs,
+                                            ref shouldRefreshLevelObjectPrefabs,
+                                            ref shouldRefreshLocationTypes,
+                                            ref shouldRefreshMapGenerationParams,
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
+
+                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
+                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+
+#if CLIENT
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
+#endif
             }
         }
 
@@ -233,10 +375,286 @@ namespace Barotrauma
             if (SelectedContentPackages.Contains(contentPackage))
             {
                 SelectedContentPackages.Remove(contentPackage);
-                contentPackage.NeedsRestart |= contentPackage.HasMultiplayerIncompatibleContent;
                 ContentPackage.SortContentPackages();
+
+                bool shouldRefreshSubs = false;
+                bool shouldRefreshFabricationRecipes = false;
+                bool shouldRefreshSoundPlayer = false;
+                bool shouldRefreshRuinGenerationParams = false;
+                bool shouldRefreshScriptedEventSets = false;
+                bool shouldRefreshMissionPrefabs = false;
+                bool shouldRefreshLevelObjectPrefabs = false;
+                bool shouldRefreshLocationTypes = false;
+                bool shouldRefreshMapGenerationParams = false;
+                bool shouldRefreshLevelGenerationParams = false;
+                bool shouldRefreshAfflictions = false;
+
+                DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
+                                            ref shouldRefreshSubs,
+                                            ref shouldRefreshFabricationRecipes,
+                                            ref shouldRefreshSoundPlayer,
+                                            ref shouldRefreshRuinGenerationParams,
+                                            ref shouldRefreshScriptedEventSets,
+                                            ref shouldRefreshMissionPrefabs,
+                                            ref shouldRefreshLevelObjectPrefabs,
+                                            ref shouldRefreshLocationTypes,
+                                            ref shouldRefreshMapGenerationParams,
+                                            ref shouldRefreshLevelGenerationParams,
+                                            ref shouldRefreshAfflictions);
+
+                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
+                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
+                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
+                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
+                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
+                if (shouldRefreshLocationTypes) { LocationType.Init(); }
+                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
+                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
+
+#if CLIENT
+                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
+#endif
             }
         }
+
+
+        private void EnableContentPackageItems(IOrderedEnumerable<ContentFile> files,
+                                                ref bool shouldRefreshSubs,
+                                                ref bool shouldRefreshFabricationRecipes,
+                                                ref bool shouldRefreshSoundPlayer,
+                                                ref bool shouldRefreshRuinGenerationParams,
+                                                ref bool shouldRefreshScriptedEventSets,
+                                                ref bool shouldRefreshMissionPrefabs,
+                                                ref bool shouldRefreshLevelObjectPrefabs,
+                                                ref bool shouldRefreshLocationTypes,
+                                                ref bool shouldRefreshMapGenerationParams,
+                                                ref bool shouldRefreshLevelGenerationParams,
+                                                ref bool shouldRefreshAfflictions)
+        {
+            foreach (ContentFile file in files)
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                        CharacterPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.NPCConversations:
+                        NPCConversation.LoadFromFile(file);
+                        break;
+                    case ContentType.Jobs:
+                        JobPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.Item:
+                        ItemPrefab.LoadFromFile(file);
+                        shouldRefreshFabricationRecipes = true;
+                        break;
+                    case ContentType.ItemAssembly:
+                        new ItemAssemblyPrefab(file.Path);
+                        break;
+                    case ContentType.Structure:
+                        StructurePrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.Submarine:
+                        shouldRefreshSubs = true;
+                        break;
+                    case ContentType.Text:
+                        TextManager.LoadTextPack(file.Path);
+                        break;
+                    case ContentType.Afflictions:
+                        shouldRefreshAfflictions = true;
+                        break;
+                    case ContentType.RuinConfig:
+                        shouldRefreshRuinGenerationParams = true;
+                        break;
+                    case ContentType.RandomEvents:
+                        shouldRefreshScriptedEventSets = true;
+                        break;
+                    case ContentType.Missions:
+                        shouldRefreshMissionPrefabs = true;
+                        break;
+                    case ContentType.LevelObjectPrefabs:
+                        shouldRefreshLevelObjectPrefabs = true;
+                        break;
+                    case ContentType.LocationTypes:
+                        shouldRefreshLocationTypes = true;
+                        break;
+                    case ContentType.MapGenerationParameters:
+                        shouldRefreshMapGenerationParams = true;
+                        break;
+                    case ContentType.LevelGenerationParameters:
+                        shouldRefreshLevelGenerationParams = true;
+                        break;
+#if CLIENT
+                    case ContentType.Sounds:
+                        shouldRefreshSoundPlayer = true;
+                        break;
+                    case ContentType.Particles:
+                        GameMain.ParticleManager.LoadPrefabsFromFile(file);
+                        break;
+                    case ContentType.Decals:
+                        GameMain.DecalManager.LoadFromFile(file);
+                        break;
+#endif
+                }
+
+                UpdateContentPackageDirtyFlag(file);
+            }
+        }
+
+        private void DisableContentPackageItems(IOrderedEnumerable<ContentFile> files,
+                                                ref bool shouldRefreshSubs,
+                                                ref bool shouldRefreshFabricationRecipes,
+                                                ref bool shouldRefreshSoundPlayer,
+                                                ref bool shouldRefreshRuinGenerationParams,
+                                                ref bool shouldRefreshScriptedEventSets,
+                                                ref bool shouldRefreshMissionPrefabs,
+                                                ref bool shouldRefreshLevelObjectPrefabs,
+                                                ref bool shouldRefreshLocationTypes,
+                                                ref bool shouldRefreshMapGenerationParams,
+                                                ref bool shouldRefreshLevelGenerationParams,
+                                                ref bool shouldRefreshAfflictions)
+        {
+            foreach (ContentFile file in files)
+            {
+                switch (file.Type)
+                {
+                    case ContentType.Character:
+                        CharacterPrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.NPCConversations:
+                        NPCConversation.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Jobs:
+                        JobPrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Item:
+                        ItemPrefab.RemoveByFile(file.Path);
+                        shouldRefreshFabricationRecipes = true;
+                        break;
+                    case ContentType.ItemAssembly:
+                        ItemAssemblyPrefab.Remove(file.Path);
+                        break;
+                    case ContentType.Structure:
+                        StructurePrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Submarine:
+                        shouldRefreshSubs = true;
+                        break;
+                    case ContentType.Text:
+                        TextManager.RemoveTextPack(file.Path);
+                        break;
+                    case ContentType.Afflictions:
+                        shouldRefreshAfflictions = true;
+                        break;
+                    case ContentType.RuinConfig:
+                        shouldRefreshRuinGenerationParams = true;
+                        break;
+                    case ContentType.RandomEvents:
+                        shouldRefreshScriptedEventSets = true;
+                        break;
+                    case ContentType.Missions:
+                        shouldRefreshMissionPrefabs = true;
+                        break;
+                    case ContentType.LevelObjectPrefabs:
+                        shouldRefreshLevelObjectPrefabs = true;
+                        break;
+                    case ContentType.LocationTypes:
+                        shouldRefreshLocationTypes = true;
+                        break;
+                    case ContentType.MapGenerationParameters:
+                        shouldRefreshMapGenerationParams = true;
+                        break;
+                    case ContentType.LevelGenerationParameters:
+                        shouldRefreshLevelGenerationParams = true;
+                        break;
+#if CLIENT
+                    case ContentType.Sounds:
+                        shouldRefreshSoundPlayer = true;
+                        break;
+                    case ContentType.Particles:
+                        GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
+                        break;
+                    case ContentType.Decals:
+                        GameMain.DecalManager.RemoveByFile(file.Path);
+                        break;
+#endif
+                }
+
+                UpdateContentPackageDirtyFlag(file);
+            }
+        }
+
+        private void UpdateContentPackageDirtyFlag(ContentFile file)
+        {
+            switch (file.Type)
+            {
+                case ContentType.Character:
+                case ContentType.NPCConversations:
+                case ContentType.Jobs:
+                case ContentType.Item:
+                case ContentType.ItemAssembly:
+                case ContentType.Structure:
+                case ContentType.Submarine:
+                case ContentType.Text:
+                case ContentType.Afflictions:
+                case ContentType.RuinConfig:
+                case ContentType.RandomEvents:
+                case ContentType.Missions:
+                case ContentType.LevelObjectPrefabs:
+                case ContentType.LocationTypes:
+                case ContentType.MapGenerationParameters:
+                case ContentType.LevelGenerationParameters:
+                case ContentType.Sounds:
+                case ContentType.Particles:
+                case ContentType.Decals:
+                case ContentType.Outpost:
+                case ContentType.BackgroundCreaturePrefabs:
+                case ContentType.ServerExecutable:
+                case ContentType.None:
+                    break; //do nothing here if the content type is supported
+                default:
+                    ContentPackageSelectionDirty = true;
+                    ContentPackageSelectionDirtyNotification = true;
+                    break;
+            }
+        }
+
+        public void ReorderSelectedContentPackages<T>(Func<ContentPackage, T> orderFunction)
+        {
+            ContentPackage.List = ContentPackage.List
+                                    .OrderByDescending(p => p.CorePackage)
+                                    .ThenBy(orderFunction)
+                                    .ToList();
+
+            ContentPackage.SortContentPackages();
+
+            CharacterPrefab.Prefabs.SortAll();
+            AfflictionPrefab.Prefabs.SortAll();
+            JobPrefab.Prefabs.SortAll();
+            ItemPrefab.Prefabs.SortAll();
+            CoreEntityPrefab.Prefabs.SortAll();
+            ItemAssemblyPrefab.Prefabs.SortAll();
+            StructurePrefab.Prefabs.SortAll();
+
+            Submarine.RefreshSavedSubs();
+            ItemPrefab.InitFabricationRecipes();
+            RuinGeneration.RuinGenerationParams.ClearAll();
+            ScriptedEventSet.LoadPrefabs();
+            MissionPrefab.Init();
+            LevelObjectPrefab.LoadAll();
+            LocationType.Init();
+            MapGenerationParams.Init();
+            LevelGenerationParams.LoadPresets();
+
+#if CLIENT
+            GameMain.DecalManager.Prefabs.SortAll();
+            GameMain.ParticleManager.Prefabs.SortAll();
+            SoundPlayer.Init().ForEach(_ => { return; });
+#endif
+        }
+
 
         private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
 
@@ -321,7 +739,81 @@ namespace Barotrauma
             }
 
             LoadPlayerConfig();
+
+#if WINDOWS
+            //TODO: enable on *nix when we move to .NET Core, it's implemented there
+            modsFolderWatcher = new FileSystemWatcher("Mods");
+            modsFolderWatcher.Filter = "*";
+            modsFolderWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            modsFolderWatcher.Created += OnModFolderUpdate;
+            modsFolderWatcher.Deleted += OnModFolderUpdate;
+            modsFolderWatcher.Renamed += OnModFolderUpdate;
+            modsFolderWatcher.EnableRaisingEvents = true;
+#endif
         }
+
+#if WINDOWS
+        private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
+        {
+            if (SuppressModFolderWatcher || GameMain.Client != null) { return; }
+            switch (e.ChangeType)
+            {
+                case WatcherChangeTypes.Created:
+                    {
+                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        {
+                            var cp = new ContentPackage(cpPath);
+                            ContentPackage.List.Add(cp);
+                        }
+                    }
+                    break;
+                case WatcherChangeTypes.Deleted:
+                    {
+                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
+                        foreach (var cp in packagesToDeselect)
+                        {
+                            if (cp.CorePackage)
+                            {
+                                GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                            }
+                            else
+                            {
+                                GameMain.Config.DeselectContentPackage(cp);
+                            }
+                        }
+
+                        foreach (var cp in toRemove)
+                        {
+                            ContentPackage.List.Remove(cp);
+                        }
+                    }
+                    break;
+                case WatcherChangeTypes.Renamed:
+                    {
+                        RenamedEventArgs renameArgs = e as RenamedEventArgs;
+
+                        string cpPath = Path.GetFullPath(Path.Combine(renameArgs.OldFullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        foreach (var cp in toRemove)
+                        {
+                            GameMain.Config.DeselectContentPackage(cp);
+                            ContentPackage.List.Remove(cp);
+                        }
+
+                        cpPath = Path.GetFullPath(Path.Combine(renameArgs.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        {
+                            var cp = new ContentPackage(cpPath);
+                            ContentPackage.List.Add(cp);
+                        }
+                    }
+                    break;
+            }
+        }
+#endif
 
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)
         {
@@ -676,11 +1168,11 @@ namespace Barotrauma
         {
             var missingPackagePaths = new List<string>();
             var incompatiblePackages = new List<ContentPackage>();
-            var invalidPackages = new List<ContentPackage>();
+            var packagesWithErrors = new List<ContentPackage>();
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
-                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path) == path);
+                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path).CleanUpPath() == path.CleanUpPath());
 
                 if (matchingContentPackage == null)
                 {
@@ -693,24 +1185,21 @@ namespace Barotrauma
                         Color.Red);
                     incompatiblePackages.Add(matchingContentPackage);
                 }
-                else if (!matchingContentPackage.CheckValidity(out List<string> errorMessages))
-                {
-                    DebugConsole.NewMessage(
-                        $"Content package \"{matchingContentPackage.Name}\" is invalid: " + string.Join(", ", errorMessages),
-                        Color.Red);
-                    invalidPackages.Add(matchingContentPackage);
-                    //never consider the vanilla content package invalid
-                    //(otherwise a player might brick the game by, for example, deleting vanilla content files)
-                    if (matchingContentPackage == GameMain.VanillaContent)
-                    {
-                        SelectedContentPackages.Add(matchingContentPackage);
-                    }
-                }
                 else
                 {
+                    if (!matchingContentPackage.CheckErrors(out List<string> errorMessages))
+                    {
+                        DebugConsole.NewMessage(
+                        $"Errors found in content package \"{matchingContentPackage.Name}\": " + string.Join(", ", errorMessages),
+                        Color.Red);
+                        packagesWithErrors.Add(matchingContentPackage);
+                    }
+                    //add content packages with errors as they are generally able to load most of their assets
                     SelectedContentPackages.Add(matchingContentPackage);
                 }
             }
+
+            EnsureCoreContentPackageSelected(gameLoaded: false);
 
             ContentPackage.SortContentPackages();
             TextManager.LoadTextPacks(SelectedContentPackages);
@@ -723,10 +1212,8 @@ namespace Barotrauma
                 }
             }
 
-            EnsureCoreContentPackageSelected();
-
             //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || invalidPackages.Count > 0) { SaveNewPlayerConfig(); }
+            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || packagesWithErrors.Count > 0) { SaveNewPlayerConfig(); }
 
             //display error messages after all content packages have been loaded
             //to make sure the package that contains text files has been loaded before we attempt to use TextManager
@@ -734,9 +1221,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageNotFound", "[packagepath]", missingPackagePath));
             }
-            foreach (ContentPackage invalidPackage in invalidPackages)
+            foreach (ContentPackage invalidPackage in packagesWithErrors)
             {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("InvalidContentPackage", "[packagename]", invalidPackage.Name), createMessageBox: true);
+                DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", invalidPackage.Name), createMessageBox: true);
             }
             foreach (ContentPackage incompatiblePackage in incompatiblePackages)
             {
@@ -746,20 +1233,34 @@ namespace Barotrauma
             }
         }
 
-        public void EnsureCoreContentPackageSelected()
+        public void EnsureCoreContentPackageSelected(bool gameLoaded=true)
         {
             if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
 
             if (GameMain.VanillaContent != null)
             {
-                SelectContentPackage(GameMain.VanillaContent);
+                if (gameLoaded)
+                {
+                    SelectContentPackage(GameMain.VanillaContent);
+                }
+                else
+                {
+                    SelectedContentPackages.Add(GameMain.VanillaContent);
+                }
             }
             else
             {
                 var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
                 if (availablePackage != null)
                 {
-                    SelectContentPackage(availablePackage);
+                    if (gameLoaded)
+                    {
+                        SelectContentPackage(availablePackage);
+                    }
+                    else
+                    {
+                        SelectedContentPackages.Add(availablePackage);
+                    }
                 }
             }
         }

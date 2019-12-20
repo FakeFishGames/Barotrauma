@@ -44,7 +44,7 @@ namespace Barotrauma.Particles
         }
         private Particle[] particles;
 
-        private Dictionary<string, ParticlePrefab> prefabs;
+        public readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
 
         private Camera cam;
 
@@ -63,48 +63,56 @@ namespace Barotrauma.Particles
 
         public void LoadPrefabs()
         {
-            var particleElements = new Dictionary<string, XElement>();
-            foreach (string configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
-                if (doc == null) { continue; }
-
-                bool allowOverriding = false;
-                var mainElement = doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    allowOverriding = true;
-                }
-
-                foreach (XElement sourceElement in mainElement.Elements())
-                {
-                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
-                    string name = element.Name.ToString().ToLowerInvariant();
-                    if (particleElements.ContainsKey(name))
-                    {
-                        if (allowOverriding || sourceElement.IsOverride())
-                        {
-                            DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile}'", Color.Yellow);
-                            particleElements.Remove(name);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Error in '{configFile}': Duplicate particle prefab '{name}' found in '{configFile}'! Each particle prefab must have a unique name. " +
-                                "Use <override></override> tags to override prefabs.");
-                            continue;
-                        }
-
-                    }
-                    particleElements.Add(name, element);
-                }
+                LoadPrefabsFromFile(configFile);
             }
-            //prefabs = particleElements.ToDictionary(p => p.Key, p => new ParticlePrefab(p.Value));
-            prefabs = new Dictionary<string, ParticlePrefab>();
+        }
+
+        public void LoadPrefabsFromFile(ContentFile configFile)
+        {
+            var particleElements = new Dictionary<string, XElement>();
+
+            XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
+            if (doc == null) { return; }
+
+            bool allowOverriding = false;
+            var mainElement = doc.Root;
+            if (doc.Root.IsOverride())
+            {
+                mainElement = doc.Root.FirstElement();
+                allowOverriding = true;
+            }
+
+            foreach (XElement sourceElement in mainElement.Elements())
+            {
+                var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                string name = element.Name.ToString().ToLowerInvariant();
+                if (Prefabs.ContainsKey(name) || particleElements.ContainsKey(name))
+                {
+                    if (allowOverriding || sourceElement.IsOverride())
+                    {
+                        DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate particle prefab '{name}' found in '{configFile.Path}'! Each particle prefab must have a unique name. " +
+                            "Use <override></override> tags to override prefabs.");
+                        continue;
+                    }
+                }
+                particleElements.Add(name, element);
+            }
+
             foreach (var kvp in particleElements)
             {
-                prefabs.Add(kvp.Key, new ParticlePrefab(kvp.Value));
+                Prefabs.Add(new ParticlePrefab(kvp.Value, configFile), allowOverriding);
             }
+        }
+
+        public void RemovePrefabsByFile(string configFile)
+        {
+            Prefabs.RemoveByFile(configFile);
         }
 
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null)
@@ -150,21 +158,12 @@ namespace Barotrauma.Particles
 
         public List<ParticlePrefab> GetPrefabList()
         {
-            return prefabs.Values.ToList();
+            return Prefabs.ToList();
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
         {
-            ParticlePrefab prefab;
-            prefabs.TryGetValue(prefabName, out prefab);
-
-            if (prefab == null)
-            {
-                DebugConsole.ThrowError("Particle prefab " + prefabName + " not found!");
-                return null;
-            }
-
-            return prefab;
+            return Prefabs.Find(p => p.Identifier == prefabName);
         }
 
         private void RemoveParticle(int index)
@@ -243,6 +242,22 @@ namespace Barotrauma.Particles
                 }
                 
                 particles[i].Draw(spriteBatch);
+            }
+        }
+
+        public void RemoveByPrefab(ParticlePrefab prefab)
+        {
+            if (particles == null) { return; }
+            for (int i = particles.Length - 1; i >= 0; i--)
+            {
+                if (particles[i]?.Prefab == prefab)
+                {
+                    if (i < particleCount) { particleCount--; }
+
+                    Particle swap = particles[particleCount];
+                    particles[particleCount] = null;
+                    particles[i] = swap;
+                }
             }
         }
 

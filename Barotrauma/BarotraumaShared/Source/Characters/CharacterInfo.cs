@@ -406,7 +406,7 @@ namespace Barotrauma
                 if (ragdoll == null)
                 {
                     string speciesName = SpeciesName;
-                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.Equals(Character.HumanSpeciesName, StringComparison.OrdinalIgnoreCase));
+                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase));
                     ragdoll = isHumanoid 
                         ? HumanRagdollParams.GetRagdollParams(speciesName, ragdollFileName)
                         : RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName, ragdollFileName) as RagdollParams;
@@ -429,7 +429,7 @@ namespace Barotrauma
             idCounter++;
             _speciesName = speciesName;
             SpriteTags = new List<string>();
-            XDocument doc = Character.GetConfigFile(_speciesName);
+            XDocument doc = CharacterPrefab.FindBySpeciesName(_speciesName)?.XDocument;
             if (doc == null) { return; }
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             head = new HeadInfo();
@@ -490,7 +490,7 @@ namespace Barotrauma
             XDocument doc = null;
             if (_speciesName != null)
             {
-                doc = Character.GetConfigFile(_speciesName);
+                doc = CharacterPrefab.FindBySpeciesName(_speciesName)?.XDocument;
             }
             else
             {

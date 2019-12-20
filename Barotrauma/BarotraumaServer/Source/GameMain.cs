@@ -83,6 +83,8 @@ namespace Barotrauma
 
             Config = new GameSettings();
 
+            Md5Hash.LoadCache();
+
             SteamManager.Initialize();
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();            
             
@@ -91,6 +93,7 @@ namespace Barotrauma
 
         public void Init()
         {
+            CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
@@ -102,7 +105,6 @@ namespace Barotrauma
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            ItemAssemblyPrefab.LoadAll();
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
@@ -148,7 +150,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="type"></param>
         /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<string> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
+        public IEnumerable<ContentFile> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
         {
             if (searchAllContentPackages)
             {

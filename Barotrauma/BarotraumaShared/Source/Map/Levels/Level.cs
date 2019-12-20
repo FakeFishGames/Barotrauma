@@ -1270,10 +1270,8 @@ namespace Barotrauma
         {
             string levelName = generationParams.Name.ToLowerInvariant();
             List<Pair<ItemPrefab, float>> levelItems = new List<Pair<ItemPrefab, float>>();
-            foreach (MapEntityPrefab mapEntityPrefab in MapEntityPrefab.List)
+            foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (!(mapEntityPrefab is ItemPrefab itemPrefab)) { continue; }
-
                 if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
                     itemPrefab.LevelCommonness.TryGetValue("", out commonness))
                 {
@@ -1542,7 +1540,7 @@ namespace Barotrauma
 
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
-                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server);
+                    string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server).Path;
                     outpost = new Submarine(outpostFile, tryLoad: false);
                 }
                 else

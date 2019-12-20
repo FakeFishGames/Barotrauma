@@ -48,10 +48,15 @@ namespace Barotrauma
         public Job(XElement element)
         {
             string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
-            if (!JobPrefab.List.TryGetValue(identifier, out JobPrefab p))
+            JobPrefab p = null;
+            if (!JobPrefab.Prefabs.ContainsKey(identifier))
             {
                 DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
                 p = JobPrefab.Random();
+            }
+            else
+            {
+                p = JobPrefab.Prefabs[identifier];
             }
             prefab = p;
             skills = new Dictionary<string, Skill>();

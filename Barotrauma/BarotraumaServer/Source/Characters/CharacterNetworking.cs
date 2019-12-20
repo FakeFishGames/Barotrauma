@@ -414,7 +414,7 @@ namespace Barotrauma
                 msg.WriteRangedInteger((int)CauseOfDeath.Type, 0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.WriteRangedInteger(AfflictionPrefab.List.IndexOf(CauseOfDeath.Affliction), 0, AfflictionPrefab.List.Count - 1);
+                    msg.Write(CauseOfDeath.Affliction.Identifier);
                 }
 
                 if (AnimController?.LimbJoints == null)

@@ -95,6 +95,8 @@ namespace Barotrauma
             get { return corePackageRequiredFiles; }
         }
 
+        public static bool IngameModSwap = false;
+        
         public string Name { get; set; }
 
         public string Path
@@ -117,7 +119,15 @@ namespace Barotrauma
         {
             get 
             {
-                if (md5Hash == null) CalculateHash();
+                if (md5Hash == null)
+                {
+                    md5Hash = Md5Hash.FetchFromCache(Path);
+                    if (md5Hash == null)
+                    {
+                        CalculateHash();
+                        md5Hash.SaveToCache(Path);
+                    }
+                }
                 return md5Hash; 
             }
         }
@@ -151,6 +161,8 @@ namespace Barotrauma
         public ContentPackage(string filePath, string setPath = "")
             : this()
         {
+            filePath = filePath.CleanUpPath();
+            if (!string.IsNullOrEmpty(setPath)) { setPath = setPath.CleanUpPath(); }
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
 
             Path = setPath == string.Empty ? filePath : setPath;
@@ -179,7 +191,7 @@ namespace Barotrauma
                     errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     type = ContentType.None;
                 }
-                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type));
+                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type, this));
             }
 
             bool compatible = IsCompatible();
@@ -193,16 +205,16 @@ namespace Barotrauma
             }
         }
 
-        private bool? invalid;
-        public bool Invalid
+        private bool? hasErrors;
+        public bool HasErrors
         {
             get
             {
-                if (!invalid.HasValue)
+                if (!hasErrors.HasValue)
                 {
-                    invalid = !CheckValidity(out _);
+                    hasErrors = !CheckErrors(out _);
                 }
-                return invalid.Value;
+                return hasErrors.Value;
             }
         }
 
@@ -211,12 +223,10 @@ namespace Barotrauma
         {
             get
             {
-                if (errorMessages == null) { CheckValidity(out _); }
+                if (errorMessages == null) { CheckErrors(out _); }
                 return errorMessages;
             }
         }
-
-        public bool NeedsRestart;
 
         public override string ToString()
         {
@@ -260,7 +270,7 @@ namespace Barotrauma
             return missingContentTypes.Count == 0;
         }
 
-        public bool CheckValidity(out List<string> errorMessages)
+        public bool CheckErrors(out List<string> errorMessages)
         {
             this.errorMessages = errorMessages = new List<string>();
             foreach (ContentFile file in Files)
@@ -308,8 +318,8 @@ namespace Barotrauma
             VerifyFiles(out List<string> missingFileMessages);
 
             errorMessages.AddRange(missingFileMessages);
-            invalid = errorMessages.Count > 0;
-            return !invalid.Value;
+            hasErrors = errorMessages.Count > 0;
+            return !hasErrors.Value;
         }
 
         /// <summary>
@@ -368,7 +378,7 @@ namespace Barotrauma
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
-                new XAttribute("path", Path),
+                new XAttribute("path", Path.CleanUpPathCrossPlatform(correctFilenameCase: false)),
                 new XAttribute("corepackage", CorePackage)));
 
 
@@ -386,7 +396,7 @@ namespace Barotrauma
 
             foreach (ContentFile file in Files)
             {
-                doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path)));
+                doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path.CleanUpPathCrossPlatform())));
             }
 
             doc.Save(filePath);
@@ -403,7 +413,7 @@ namespace Barotrauma
 
             foreach (ContentFile file in Files)
             {
-                if (!multiplayerIncompatibleContent.Contains(file.Type)) continue;
+                if (!multiplayerIncompatibleContent.Contains(file.Type)) { continue; }
 
                 try
                 {
@@ -448,13 +458,12 @@ namespace Barotrauma
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                         var rootElement = doc.Root;
                         var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                        var speciesName = element.GetAttributeString("speciesname", element.GetAttributeString("name", ""));
-                        var ragdollFolder = RagdollParams.GetFolder(speciesName);
+                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(ragdollFolder))
                         {
                             Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
-                        var animationFolder = AnimationParams.GetFolder(speciesName);
+                        var animationFolder = AnimationParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(animationFolder))
                         {
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
@@ -465,6 +474,7 @@ namespace Barotrauma
                 foreach (string filePath in filePaths)
                 {
                     if (!File.Exists(filePath)) continue;
+
                     using (var stream = File.OpenRead(filePath))
                     {
                         byte[] fileData = new byte[stream.Length];
@@ -497,19 +507,7 @@ namespace Barotrauma
         public static bool IsModFilePathAllowed(ContentFile contentFile)
         {
             string path = contentFile.Path;
-            while (true)
-            {
-                string temp = System.IO.Path.GetDirectoryName(path);
-                if (string.IsNullOrEmpty(temp)) { break; }
-                path = temp;
-            }
-            switch (contentFile.Type)
-            {
-                case ContentType.Submarine:
-                    return path == "Submarines" || path == "Mods";
-                default:
-                    return path == "Mods";
-            }
+            return IsModFilePathAllowed(path);
         }
         /// <summary>
         /// Are mods allowed to install a file into the specified path. If a content package XML includes files
@@ -537,9 +535,9 @@ namespace Barotrauma
             return contentPackages.SelectMany(f => f.Files).Select(f => f.Path).Where(p => p.EndsWith(".xml"));
         }
 
-        public static IEnumerable<string> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
+        public static IEnumerable<ContentFile> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
-            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type).Select(f => f.Path);
+            return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type);
         }
 
         public IEnumerable<string> GetFilesOfType(ContentType type)
@@ -582,20 +580,31 @@ namespace Barotrauma
                     List.Add(new ContentPackage(modFilePath));
                 }
             }
+
+            List = List
+                .OrderByDescending(p => p.CorePackage)
+                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
+                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ToList();
         }
 
         public static void SortContentPackages()
         {
             List = List
                 .OrderByDescending(p => p.CorePackage)
-                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
-                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
+                .ThenBy(p => List.IndexOf(p))
                 .ToList();
 
             if (GameMain.Config != null)
             {
+                var sortedSelected = GameMain.Config.SelectedContentPackages
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
+                GameMain.Config.SelectedContentPackages.Clear(); GameMain.Config.SelectedContentPackages.AddRange(sortedSelected);
+
                 var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
-                DebugConsole.NewMessage($"Content package load order: { new string(reportList.SelectMany(cp => cp.Name + "  |  ").ToArray()) }");
+                DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
             }
         }
 
@@ -622,18 +631,17 @@ namespace Barotrauma
         public string Path;
         public ContentType Type;
 
-        public Workshop.Item WorkShopItem;
+        //public Workshop.Item WorkShopItem;
 
-        public ContentFile(string path, ContentType type, Workshop.Item workShopItem = null)
+        public ContentPackage ContentPackage;
+
+        public ContentFile(string path, ContentType type, ContentPackage contentPackage = null)//, Workshop.Item workShopItem = null)
         {
-            Path = path;
-
-#if OSX || LINUX
-            Path = Path.Replace("\\", "/");
-#endif
+            Path = path.CleanUpPath();
 
             Type = type;
-            WorkShopItem = workShopItem;
+            //WorkShopItem = workShopItem;
+            ContentPackage = contentPackage;
         }
 
         public override string ToString()

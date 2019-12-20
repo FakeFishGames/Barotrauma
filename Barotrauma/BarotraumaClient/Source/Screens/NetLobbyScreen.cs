@@ -1285,7 +1285,7 @@ namespace Barotrauma
         {
             if (characterInfo == null)
             {
-                characterInfo = new CharacterInfo(Character.HumanSpeciesName, GameMain.Client.Name, null);
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(
                     GameMain.Config.CharacterHeadIndex,
                     GameMain.Config.CharacterRace,
@@ -1372,14 +1372,14 @@ namespace Barotrauma
                     while (i < GameMain.Config.JobPreferences.Count)
                     {
                         var jobIdentifier = GameMain.Config.JobPreferences[i];
-                        if (!JobPrefab.List.ContainsKey(jobIdentifier.First))
+                        if (!JobPrefab.Prefabs.ContainsKey(jobIdentifier.First))
                         {
                             GameMain.Config.JobPreferences.RemoveAt(i);
                             continue;
                         }
                         // The old job variant system used one-based indexing
                         // so let's make sure no one get to pick a variant which doesn't exist
-                        var prefab = JobPrefab.List[jobIdentifier.First];
+                        var prefab = JobPrefab.Prefabs[jobIdentifier.First];
                         var variant = Math.Min(jobIdentifier.Second, prefab.Variants - 1);
                         jobPrefab = new Pair<JobPrefab, int>(prefab, variant);
                         break;
@@ -1720,9 +1720,9 @@ namespace Barotrauma
             playerFrame.Text = client.Name;
             
             Color color = Color.White;
-            if (JobPrefab.List.ContainsKey(client.PreferredJob))
+            if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
             {
-                color = JobPrefab.List[client.PreferredJob].UIColor;
+                color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
             }
             playerFrame.Color = color * 0.4f;
             playerFrame.HoverColor = color * 0.6f;
@@ -2553,12 +2553,12 @@ namespace Barotrauma
 
             GUIButton jobButton = null;
 
-            var availableJobs = JobPrefab.List.Values.Where(jobPrefab =>
+            var availableJobs = JobPrefab.Prefabs.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.All(c => !(c.UserData is Pair<JobPrefab, int> prefab) || prefab.First != jobPrefab)
             ).Select(j => new Pair<JobPrefab, int>(j, 0));
 
             availableJobs = availableJobs.Concat(
-                JobPrefab.List.Values.Where(jobPrefab =>
+                JobPrefab.Prefabs.Where(jobPrefab =>
                     jobPrefab.MaxNumber > 0 && JobList.Content.Children.Any(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == jobPrefab)
             ).Select(j => JobList.Content.FindChild(c => (c.UserData is Pair<JobPrefab, int> prefab) && prefab.First == j).UserData as Pair<JobPrefab, int>));
 

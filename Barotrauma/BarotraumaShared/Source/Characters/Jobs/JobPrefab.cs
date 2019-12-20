@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using System;
 using System.Linq;
 
 namespace Barotrauma
@@ -28,21 +29,29 @@ namespace Barotrauma
         }
     }
 
-    partial class JobPrefab
+    partial class JobPrefab : IPrefab, IDisposable
     {
-        public static Dictionary<string, JobPrefab> List;
+        public static readonly PrefabCollection<JobPrefab> Prefabs = new PrefabCollection<JobPrefab>();
+
+        private bool disposed = false;
+        public void Dispose()
+        {
+            if (disposed) { return; }
+            disposed = true;
+            Prefabs.Remove(this);
+        }
 
         public static XElement NoJobElement;
         public static JobPrefab Get(string identifier)
         {
-            if (List == null)
+            if (Prefabs == null)
             {
                 DebugConsole.ThrowError("Issue in the code execution order: job prefabs not loaded.");
                 return null;
             }
-            if (List.TryGetValue(identifier, out JobPrefab job))
+            if (Prefabs.ContainsKey(identifier))
             {
-                return job;
+                return Prefabs[identifier];
             }
             else
             {
@@ -77,6 +86,10 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public string OriginalName { get { return Identifier; } }
+
+        public ContentPackage ContentPackage { get; private set; }
 
         [Serialize("", false)]
         public string Description
@@ -147,12 +160,15 @@ namespace Barotrauma
             private set;
         }
 
+        public string FilePath { get; private set; }
+
         public XElement Element { get; private set; }
         public XElement ClothingElement { get; private set; }
         public int Variants { get; private set; }
 
-        public JobPrefab(XElement element)
+        public JobPrefab(XElement element, string filePath)
         {
+            FilePath = filePath;
             SerializableProperty.DeserializeProperties(this, element);
 
             Name = TextManager.Get("JobName." + Identifier);
@@ -252,10 +268,10 @@ namespace Barotrauma
         {
             List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
             maxDimensions = Vector2.One;
-             
+
             var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
 
-            var outfitPrefabs = MapEntityPrefab.List.FindAll(me => me is ItemPrefab itemPrefab && equipIdentifiers.Contains(itemPrefab.Identifier));
+            var outfitPrefabs = ItemPrefab.Prefabs.Where(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier)).ToList();
             if (!outfitPrefabs.Any()) { return null; }
 
             for (int i = 0; i < outfitPrefabs.Count; i++)
@@ -299,50 +315,52 @@ namespace Barotrauma
             return outfitPreviews;
         }
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => List.Values.GetRandom(sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
 
-        public static void LoadAll(IEnumerable<string> filePaths)
+        public static void LoadAll(IEnumerable<ContentFile> files)
         {
-            List = new Dictionary<string, JobPrefab>();
-
-            foreach (string filePath in filePaths)
+            foreach (ContentFile file in files)
             {
-                XDocument doc = XMLExtensions.TryLoadXml(filePath);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;            
-                if (doc.Root.IsOverride())
-                {
-                    DebugConsole.ThrowError($"Error in '{filePath}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
-                }
-                foreach (XElement element in mainElement.Elements())
-                {
-                    if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
-                    if (element.IsOverride())
-                    {
-                        var job = new JobPrefab(element.FirstElement());
-                        if (List.TryGetValue(job.Identifier, out JobPrefab duplicate))
-                        {
-                            DebugConsole.NewMessage($"Overriding the job '{duplicate.Identifier}' with another defined in '{filePath}'", Color.Yellow);
-                            List.Remove(duplicate.Identifier);
-                        }
-                        List.Add(job.Identifier, job);
-                    }
-                    else
-                    {
-                        if (List.TryGetValue(element.GetAttributeString("identifier", "").ToLowerInvariant(), out JobPrefab duplicate))
-                        {
-                            DebugConsole.ThrowError($"Error in '{filePath}': Duplicate job definition found for: '{duplicate.Identifier}'. Use the <override> XML element as the parent of job element's definition to override the existing job.");
-                        }
-                        else
-                        {
-                            var job = new JobPrefab(element);
-                            List.Add(job.Identifier, job);
-                        }
-                    }
-                }
-                NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
-                NoJobElement = NoJobElement ?? mainElement.Element("nojob");
+                LoadFromFile(file);
             }
+        }
+
+        public static void LoadFromFile(ContentFile file)
+        {
+            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
+            if (doc == null) { return; }
+            var mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+            if (doc.Root.IsOverride())
+            {
+                DebugConsole.ThrowError($"Error in '{file.Path}': Cannot override all job prefabs, because many of them are required by the main game! Please try overriding jobs one by one.");
+            }
+            foreach (XElement element in mainElement.Elements())
+            {
+                if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
+                if (element.IsOverride())
+                {
+                    var job = new JobPrefab(element.FirstElement(), file.Path)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
+                    Prefabs.Add(job, true);
+                }
+                else
+                {
+                    var job = new JobPrefab(element, file.Path)
+                    {
+                        ContentPackage = file.ContentPackage
+                    };
+                    Prefabs.Add(job, false);
+                }
+            }
+            NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
+            NoJobElement = NoJobElement ?? mainElement.Element("nojob");
+        }
+
+        public static void RemoveByFile(string filePath)
+        {
+            Prefabs.RemoveByFile(filePath);
         }
     }
 }
