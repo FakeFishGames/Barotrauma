@@ -3,18 +3,19 @@
   limbscale="1.5"
   jointscale="1.5"
   canentersubmarine="false"
-  canwalk="False">
+  canwalk="False"
+  texture="Content/Characters/Legacycharybdis/charybdis.png">
 
   <collider radius="80" height="440"/>
 
   <!-- body -->
   <limb id = "0" radius="100" height="470" type="Torso" steerforce="1.0">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="160,0,242,688" depth="0.015" origin="0.5,0.5"/>
+    <sprite sourcerect="160,0,242,688" depth="0.015" origin="0.5,0.5"/>
   </limb>
 
   <!-- lower yaw -->
   <limb id = "1" radius="70" height="100">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
+    <sprite sourcerect="416,0,192,256" depth="0.025" origin="0.65,0.5"/>
     <attack range="500" damagerange="65" duration="0.5" structuredamage="250" structuresoundtype="StructureSlash" torque="100" force="50" targetforce="-50" severlimbsprobability="1.0">
       <Affliction identifier="internaldamage" strength="10"/>
       <Affliction identifier="bleeding" strength="100"/>
@@ -23,18 +24,18 @@
 
   <!-- front fins -->
   <limb id = "2" radius="60" height="430">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="432,272,128,560" depth="0.008" origin="0.5,0.5"/>
+    <sprite sourcerect="432,272,128,560" depth="0.008" origin="0.5,0.5"/>
   </limb>
 
   <!-- tail -->
   <limb id = "3" radius="60" height="250" type="Tail">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="0,0,160,379" depth="0.02" origin="0.5,0.5"/>
+    <sprite sourcerect="0,0,160,379" depth="0.02" origin="0.5,0.5"/>
   </limb>
   <limb id = "4" radius="30" height="168" type="Tail">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="24,402,83,228" depth="0.02" origin="0.5,0.5"/>
+    <sprite sourcerect="24,402,83,228" depth="0.02" origin="0.5,0.5"/>
   </limb>
   <limb id = "5" radius="20" height="200" type="Tail">
-    <sprite texture="Content/Characters/Legacycharybdis/charybdis.png" sourcerect="33,645,77,244" depth="0.02" origin="0.5,0.5"/>
+    <sprite sourcerect="33,645,77,244" depth="0.02" origin="0.5,0.5"/>
   </limb>
 
 

@@ -1,49 +1,49 @@
-﻿<Ragdoll type="legacycrawler" colliderheightfromfloor="35" minscale="0.8" maxscale="1.2" impacttolerance="6" draggable="True" limbscale="1" jointscale="1" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1">
+﻿<Ragdoll type="legacycrawler" colliderheightfromfloor="35" minscale="0.8" maxscale="1.2" impacttolerance="6" draggable="True" limbscale="1" jointscale="1" canentersubmarine="True" canwalk="True" spritesheetorientation="0" texturescale="1" texture="Content/Characters/Legacycrawler/legacycrawler.png">
   <collider height="60" radius="22" name="Main Collider" width="0" />
   <!-- head -->
   <limb id="0" radius="22" height="45" type="Head" flip="True" steerforce="15" healthindex="0" attackpriority="1" stepoffset="0,0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 0" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63" />
+    <sprite sourcerect="0,0,51,121" depth="0.02" origin="0.45,0.63" />
   </limb>
   <!-- middle part -->
   <limb id="1" radius="22" height="40" type="Torso" flip="True" steerforce="0.1" healthindex="0" attackpriority="1" stepoffset="0,0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 1" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="57,7,58,55" depth="0.021" origin="0.3,0.65" />
+    <sprite sourcerect="57,7,58,55" depth="0.021" origin="0.3,0.65" />
   </limb>
   <!-- tail -->
   <limb id="2" radius="22" height="45" type="Tail" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" width="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 2" notes="">
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="damage" damagemultiplier="0.2" damagesound="LimbArmor" deflectprojectiles="true" />
     <damagemodifier armorsector="0.0,180.0" afflictiontypes="bleeding" damagemultiplier="0.0" damagesound="LimbArmor" deflectprojectiles="true" />
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="0,142,60,95" depth="0.022" origin="0.37,0.43" />
+    <sprite sourcerect="0,142,60,95" depth="0.022" origin="0.37,0.43" />
   </limb>
   <limb id="3" width="13" height="45" ignorecollisions="True" flip="True" type="None" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" name="Limb 3" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="67,133,26,50" depth="0.15" origin="0.4,0.5" />
+    <sprite sourcerect="67,133,26,50" depth="0.15" origin="0.4,0.5" />
     <attack range="120" damagerange="60" duration="0.25" stun="0.3" structuredamage="5" itemdamage="10" structuresoundtype="StructureSlash" targetforce="-30" severlimbsprobability="0.5" force="15" applyforceonlimbs="0, 1" torque="-20" context="NotDefined" targettype="Any" hitdetectiontype="Distance" cooldown="5" secondarycooldown="0" onlyhumans="False" applyforcesonlyonce="False" targetimpulse="0" targetimpulseworld="0,0" targetforceworld="0,0" stickchance="0" priority="0">
       <Affliction identifier="bleeding" strength="30" />
       <Affliction identifier="internaldamage" strength="10" />
     </attack>
   </limb>
   <limb id="4" width="11" height="34" type="RightLeg" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 4" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5" />
   </limb>
   <limb id="5" width="5" height="40" type="RightFoot" flip="True" pullpos="5.88181,17.62863" refjoint="3" stepoffset="20,0" healthindex="0" attackpriority="1" steerforce="0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 5" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
     <sound tag="footstep_metal" />
   </limb>
   <limb id="6" width="13" height="35" type="LeftLeg" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 6" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="82,83,11,34" depth="0.03" origin="0.5,0.5" />
   </limb>
   <limb id="7" width="5" height="40" type="LeftFoot" flip="True" pullpos="6.76153,16.12763" refjoint="5" stepoffset="20,0" healthindex="0" attackpriority="1" steerforce="0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 7" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
     <sound tag="footstep_metal" />
   </limb>
   <limb id="8" width="13" height="35" type="RightLeg" flip="True" healthindex="0" attackpriority="1" steerforce="0" stepoffset="0,0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" pullpos="0,0" refjoint="-1" ignorecollisions="False" name="Limb 8" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="82,84,11,34" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="82,84,11,34" depth="0.03" origin="0.5,0.5" />
   </limb>
   <limb id="9" width="5" height="40" type="RightFoot" flip="True" pullpos="6.345357,16.36533" refjoint="7" stepoffset="20,0" healthindex="0" attackpriority="1" steerforce="0" radius="0" mass="0" friction="0.3" restitution="0.05" density="10" ignorecollisions="False" name="Limb 9" notes="">
-    <sprite texture="Content/Characters/Legacycrawler/legacycrawler.png" sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
+    <sprite sourcerect="59,78,19,43" depth="0.03" origin="0.5,0.5" />
     <sound tag="footstep_metal" />
   </limb>
   <joint limb1="0" limb1anchor="-5,-38" limb2="1" limb2anchor="-2,25" lowerlimit="-20" upperlimit="40" canbesevered="True" limitenabled="True" name="Joint 0 - 1" stiffness="0.25" />

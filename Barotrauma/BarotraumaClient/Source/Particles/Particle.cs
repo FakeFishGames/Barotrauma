@@ -58,6 +58,8 @@ namespace Barotrauma.Particles
         private float collisionUpdateTimer;
 
         public bool HighQualityCollisionDetection;
+
+        public bool DrawOnTop { get; private set; }
                 
         public ParticlePrefab.DrawTargetType DrawTarget
         {
@@ -91,7 +93,7 @@ namespace Barotrauma.Particles
             get { return prefab; }
         }
         
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false)
         {
             this.prefab = prefab;
 
@@ -158,6 +160,8 @@ namespace Barotrauma.Particles
 
                 prevRotation = rotation;
             }
+
+            DrawOnTop = drawOnTop;
         }
         
         public bool Update(float deltaTime)

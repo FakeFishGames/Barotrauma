@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="carrier" canentersubmarine="false" canwalk="False">
+<Ragdoll type="carrier" canentersubmarine="false" canwalk="False" texture="Content/Characters/Carrier/carrier.png">
 
   <collider radius ="230"/>
 
   <!-- head -->
   <limb id = "0" width="300" height="673" type="Head" steerforce="1.0" flip="true">
-    <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="0,0,393,778" depth="0.02" origin ="0.5,0.45"/>
+    <sprite sourcerect="0,0,393,778" depth="0.02" origin ="0.5,0.45"/>
 
     <lightsource range="1.0" color="0.7,0.8,1.0,1.0" castshadows="false">
-      <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="392,0,307,778" origin="0.5, 0.45"/>
+      <sprite sourcerect="392,0,307,778" origin="0.5, 0.45"/>
     </lightsource>
 
     <damagemodifier armorsector="0.0,360.0" damagesound="StructureBlunt" deflectprojectiles="true"/>
@@ -20,15 +20,15 @@
   </limb>
 
   <limb id = "1" width="50" height="240" flip="true">
-    <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="786,0,54,242" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="786,0,54,242" depth="0.025" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "2" width="50" height="240" flip="true">
-    <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="786,0,54,242" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="786,0,54,242" depth="0.025" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "3" width="120" height="340" flip="true">
-    <sprite texture="Content/Characters/Carrier/carrier.png" sourcerect="863,0,150,390" depth="0.025" origin="0.5,0.5"/>
+    <sprite sourcerect="863,0,150,390" depth="0.025" origin="0.5,0.5"/>
   </limb>
 
 

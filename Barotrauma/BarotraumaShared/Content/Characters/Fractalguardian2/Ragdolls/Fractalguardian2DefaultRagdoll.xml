@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Ragdoll type="fractalguardian2" canentersubmarine="false" canwalk="False" limbscale="0.5" jointscale="0.5">
+<Ragdoll type="fractalguardian2" canentersubmarine="false" canwalk="False" limbscale="0.5" jointscale="0.5" texture="Content/Characters/Fractalguardian/fractalguardian.png">
 
   <collider radius="80" height="30"/>
     
   <!-- head -->
   <limb id = "0" radius="80" height="30" type="Head" steerforce="3.0">
-    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="299,0,171,208" depth="0.05"/>
+    <sprite sourcerect="299,0,171,208" depth="0.05"/>
     <attack cooldown="8" type="Hit" range="120" damagerange="60" duration="0.2" force="5" targetforce="50" structuresoundtype="StructureBlunt">
       <Affliction identifier="bitewounds" strength="10"/>
       <!--<Affliction identifier="stun" strength="1"/>-->
@@ -13,10 +13,10 @@
   </limb>
 
   <limb id = "1" width="30" height="178">
-    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="183,60,53,178" depth="0.08" origin="0.5,0.5"/>
+    <sprite sourcerect="183,60,53,178" depth="0.08" origin="0.5,0.5"/>
   </limb>
   <limb id = "2" width="30" height="175">
-    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
+    <sprite sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
     <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash" severlimbsprobability="0.8">
       <Affliction identifier="bitewounds" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>
@@ -25,11 +25,11 @@
   </limb>
     
   <limb id = "3" width="30" height="178">
-    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="236,60,53,178" size="-1,1" depth="0.08" origin="0.5,0.5"/>
+    <sprite sourcerect="236,60,53,178" size="-1,1" depth="0.08" origin="0.5,0.5"/>
   </limb>
 
   <limb id = "4" width="30" height="175">
-    <sprite texture="Content/Characters/Fractalguardian/fractalguardian.png" sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
+    <sprite sourcerect="131,0,36,175" depth="0.1" origin="0.5,0.5"/>
     <attack cooldown="8" range="150" damagerange="75" duration="0.5" torque="150" structuresoundtype="StructureSlash" severlimbsprobability="0.8">
       <Affliction identifier="bitewounds" strength="5"/>
       <Affliction identifier="bleeding" strength="10"/>

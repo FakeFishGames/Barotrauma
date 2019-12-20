@@ -91,18 +91,18 @@ namespace Barotrauma
 
         private List<PathNode> nodes;
 
-        private bool insideSubmarine;
+        public bool InsideSubmarine { get; set; }
 
-        public PathFinder(List<WayPoint> wayPoints, bool insideSubmarine = false)
+        public PathFinder(List<WayPoint> wayPoints, bool indoorsSteering = false)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => (w.Submarine != null) == insideSubmarine));
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering));
 
             foreach (WayPoint wp in wayPoints)
             {
                 wp.linkedTo.CollectionChanged += WaypointLinksChanged;
             }
 
-            this.insideSubmarine = insideSubmarine;
+            InsideSubmarine = indoorsSteering;
         }
 
         void WaypointLinksChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -180,16 +180,19 @@ namespace Barotrauma
                     yDiff += 10.0f;
                 }
 
-                float dist = xDiff + (insideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
+                float dist = xDiff + (InsideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
                 //prefer nodes that are closer to the end position
                 dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
                 //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null && insideSubmarine) dist *= 10.0f;
+                if (node.Waypoint.CurrentHull == null && InsideSubmarine)
+                {
+                    dist *= 10.0f;
+                }
                 if (dist < closestDist || startNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (insideSubmarine)
+                    if (InsideSubmarine)
                     {
                         var body = Submarine.PickBody(
                             start, nodePos, null, 
@@ -230,7 +233,7 @@ namespace Barotrauma
                     nodePos -= diff;
                 }
                 float dist = Vector2.DistanceSquared(end, nodePos);
-                if (insideSubmarine)
+                if (InsideSubmarine)
                 {
                     //much higher cost to waypoints that are outside
                     if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
@@ -240,7 +243,7 @@ namespace Barotrauma
                 if (dist < closestDist || endNode == null)
                 {
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (insideSubmarine)
+                    if (InsideSubmarine)
                     {
                         var body = Submarine.PickBody(end, nodePos, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );

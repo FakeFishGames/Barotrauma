@@ -26,7 +26,7 @@
 
   <ai
     combatstrength="1000"
-    attackonlywhenprovoked="true"
+    attackwhenprovoked="true"
     sight="1.0"
     hearing="0.0">
     <target tag="decoy" state="Attack" priority="600" />
