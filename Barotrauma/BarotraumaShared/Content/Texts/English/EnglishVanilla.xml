@@ -1644,8 +1644,8 @@
   <sp.throwable.swingwhenusing.description>Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).</sp.throwable.swingwhenusing.description>
   <sp.propulsion.force.name>Force</sp.propulsion.force.name>
   <sp.propulsion.force.description>The force to apply to the user's body.</sp.propulsion.force.description>
-  <sp.keyboard.welcomemessage.name>Welcome Message</sp.keyboard.welcomemessage.name>
-  <sp.keyboard.welcomemessage.description>The message to be displayed when opened.</sp.keyboard.welcomemessage.description>
+  <sp.terminal.welcomemessage.name>Welcome Message</sp.terminal.welcomemessage.name>
+  <sp.terminal.welcomemessage.description>The message to be displayed when opened.</sp.terminal.welcomemessage.description>
   
   <sp.pickingtime.name>Picking Time</sp.pickingtime.name>
   <sp.pickingtime.description>How long it takes to pick up the item (in seconds).</sp.pickingtime.description>
@@ -4326,8 +4326,8 @@
   <entitydescription.loosevent>A place to stash things of dubious nature.</entitydescription.loosevent>
   <entityname.loosepanel>Loose vent</entityname.loosepanel>
   <entitydescription.loosepanel>A place to stash things of dubious nature.</entitydescription.loosepanel>
-  <entityname.keyboard>Keyboard</entityname.keyboard>
-  <entitydescription.keyboard>Outputs a user-submitted string.</entitydescription.keyboard>
+  <entityname.terminal>Terminal</entityname.terminal>
+  <entitydescription.terminal>Outputs a user-submitted string.</entitydescription.terminal>
   
   <roomname.bilge>Bilge</roomname.bilge>
   <settingresetlabel>Confirm reset</settingresetlabel>
@@ -4349,8 +4349,8 @@
 
   <serverlog.wiring>Wiring</serverlog.wiring>
 
-	<!--Keyboard welcome msg-->
-	<keyboardwelcomemsg.humpback>Type 'on' or 'off' to connect batteries to power grid or disconnect them respectively. Enter a number from 0 to 100 to set recharge rate for each battery at once.</keyboardwelcomemsg.humpback>
+	<!--terminal welcome msg-->
+	<terminalwelcomemsg.humpback>Type 'on' or 'off' to connect batteries to power grid or disconnect them respectively. Enter a number from 0 to 100 to set recharge rate for each battery at once.</terminalwelcomemsg.humpback>
 
   <quickuseaction.puttoequippeditem>Put to [equippeditem]</quickuseaction.puttoequippeditem>
   <serversettingsbanafterwrongpassword>Ban after incorrect password</serversettingsbanafterwrongpassword>
@@ -4412,4 +4412,6 @@
   <submarine.description.hemulen>For when you need extra space to stretch your legs or when you need that space to be between you and the poor, choose Hemulen shuttles.</submarine.description.hemulen>
 
   <particle.muzzleflash>Muzzle Flash</particle.muzzleflash>
+
+
 </infotexts>

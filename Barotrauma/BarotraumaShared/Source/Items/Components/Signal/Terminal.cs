@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Items.Components
 {
-    partial class Keyboard : ItemComponent
+    partial class Terminal : ItemComponent
     {
         private const int MaxMessageLength = 150;
 
@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string welcomeMessage;
-        [InGameEditable, Serialize("", true, "Message to be displayed on the keyboard display when it is first opened.", translationTextTag = "keyboardwelcomemsg.")]
+        [InGameEditable, Serialize("", true, "Message to be displayed on the terminal display when it is first opened.", translationTextTag = "terminalwelcomemsg.")]
         public string WelcomeMessage
         {
             get { return welcomeMessage; }
@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
 
         private string OutputValue { get; set; }
 
-        public Keyboard(Item item, XElement element)
+        public Terminal(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;

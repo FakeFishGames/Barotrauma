@@ -204,7 +204,7 @@
     <Compile Include="Source\Items\Components\Repairable.cs" />
     <Compile Include="Source\Items\Components\Signal\ConnectionPanel.cs" />
     <Compile Include="Source\Items\Components\Signal\CustomInterface.cs" />
-    <Compile Include="Source\Items\Components\Signal\Keyboard.cs" />
+    <Compile Include="Source\Items\Components\Signal\Terminal.cs" />
     <Compile Include="Source\Items\Components\Signal\Wire.cs" />
     <Compile Include="Source\Items\Inventory.cs" />
     <Compile Include="Source\Items\Item.cs" />

@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Keyboard : ItemComponent, IClientSerializable, IServerSerializable
+    partial class Terminal : ItemComponent, IClientSerializable, IServerSerializable
     {
         private GUIListBox historyBox;
         private GUITextBlock fillerBlock;
@@ -111,8 +111,8 @@ namespace Barotrauma.Items.Components
         }
 
         // This method is overrided instead of the UpdateHUD method because this ensures the input box is selected
-        // even when the keyboard component is selected for the very first time. Doing the input box selection in the
-        // UpdateHUD method only selects the input box on every keyboard selection except for the very first time.
+        // even when the terminal component is selected for the very first time. Doing the input box selection in the
+        // UpdateHUD method only selects the input box on every terminal selection except for the very first time.
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
