@@ -59,6 +59,8 @@ namespace Barotrauma
         private const int maxLength = 1000;
 
         public static GUITextBox TextBox => textBox;
+        
+        private static readonly ChatManager chatManager = new ChatManager(true, true, 64);
 
         public static void Init()
         {
@@ -101,6 +103,8 @@ namespace Barotrauma
                     ResetAutoComplete();
                 }
             };
+            
+            ChatManager.RegisterKeys(textBox, chatManager);
         }
 
         public static void AddToGUIUpdateList()
@@ -151,15 +155,7 @@ namespace Barotrauma
 
                 Character.DisableControls = true;
 
-                if (PlayerInput.KeyHit(Keys.Up))
-                {
-                    textBox.Text = SelectMessage(-1, textBox.Text);
-                }
-                else if (PlayerInput.KeyHit(Keys.Down))
-                {
-                    textBox.Text = SelectMessage(1, textBox.Text);
-                }
-                else if (PlayerInput.KeyHit(Keys.Tab))
+                if (PlayerInput.KeyHit(Keys.Tab))
                 {
                      textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
@@ -176,6 +172,7 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyHit(Keys.Enter))
                 {
+                    chatManager.Store(textBox.Text);
                     ExecuteCommand(textBox.Text);
                     textBox.Text = "";
                 }
@@ -248,7 +245,7 @@ namespace Barotrauma
                 ThrowError("Failed to add a message to the debug console.", e);
             }
 
-            selectedIndex = Messages.Count;
+            chatManager.Clear();
         }
 
         static partial void ShowHelpMessage(Command command)
@@ -277,7 +274,7 @@ namespace Barotrauma
             listBox.UpdateScrollBarSize();
             listBox.BarScroll = 1.0f;
 
-            selectedIndex = Messages.Count;
+            chatManager.Clear();
         }
 
         private static void AssignOnClientExecute(string names, Action<string[]> onClientExecute)

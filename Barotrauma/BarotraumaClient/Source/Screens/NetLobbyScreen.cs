@@ -1146,6 +1146,13 @@ namespace Barotrauma
             chatInput.Select();
             chatInput.OnEnterPressed = GameMain.Client.EnterChatMessage;
             chatInput.OnTextChanged += GameMain.Client.TypingChatMessage;
+            chatInput.OnDeselected += (sender, key) =>
+            {
+                if (GameMain.Client != null)
+                {
+                    GameMain.Client.ChatBox.ChatManager.Clear();
+                }
+            };
 
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = false);
@@ -1155,6 +1162,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
+                ChatManager.RegisterKeys(chatInput, GameMain.Client.ChatBox.ChatManager);
                 spectateButton.Visible = GameMain.Client.GameStarted;
                 ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
                 ReadyToStartBox.Selected = false;

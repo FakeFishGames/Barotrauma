@@ -153,7 +153,7 @@ namespace Barotrauma
                         {
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             // add to local history
-                            ChatBox.AddHistory(text);
+                            ChatBox.ChatManager.Store(text);
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
                                 msg,
