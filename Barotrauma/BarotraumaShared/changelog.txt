@@ -28,7 +28,8 @@ Optimizations:
 - More aggressive character culling (characters stop being rendered as soon as they exit the camera view).
 - Dead bodies despawn after a few minutes (or when the character respawns in multiplayer). The despawning character's items are placed in a duffel bag and dropped near the body. Prevents performance issues when lots of bodies start to accumulate in the submarine.
 - Preload necessary monster assets at the start of the round to prevent lag spikes when a monster spawns.
-- Fixed serious performance issues when creatures are on the borders of the sub (some issues still remain). 
+- Fixed serious performance issues when creatures are on the borders of the sub (some issues still remain).
+- Improved the performance of human ai (bots).
 
 Additions and changes:
 - New shuttle, "Hemulen".
@@ -71,6 +72,7 @@ AI:
 - Humanoids now use the "group" property like non-humanoids. This allows non-humanoid creatures to be treated as friendly/neutral subjects by the bots.
 - Replaced the generic "cannot reach target" messages with context-specific and more descriptive messages.
 - Bots now take the other bots into account when they evaluate the importance of the tasks. Fixes multiple bots going to fix the same leaks or repair the same items.
+- Bots should now abandon the combat objective only when not fleeing from an enemy. If they fail to flee from an enemy, they will fight (or avoid) instead.
 - Fixed bots loading the turrets only with the default ammunition. 
 - Fixed multiple bots trying to navigate the submarine at the same time.
 - Fixed pathfinding applying 10x more penalty on vertical distance when the host is outside (should only apply inside).
@@ -81,6 +83,8 @@ AI:
 - Fixed issues when the bots try to equip items or contain them inside other items.
 - Fixed bots sometimes going to repair leaks/fix things without a mask or a suit.
 - Fixed bots being unable to put diving suits into lockers when there already is a diving suit in the targeted container. Instead of dropping it on the ground, the bots now try to find a new place for the suit before abandoning the objective.
+- Fixed bots seeking paths through doors when they have a crowbar/wrench equipped.
+- Fixed bots sometimes being unable to put off fires and dying while trying to do it (because of a failing raycast).
 
 Monsters:
 - New behaviors: avoiding, passive-aggressive, and aggressive.
@@ -125,6 +129,9 @@ Bugfixes:
 - Fixed Workshop item descriptions only showing the first 256 characters.
 - Fixed reactor highlight effect extending outside the reactor sprite.
 - Fixed ID-restricted doors only taking the first ID card in the inventory into account.
+- Fixed crashes in the character editor when creating a humanoid with incomplete limb definitions.
+- Fixed the character editor crashing if no textures were found.
+- Don't allow to save invalid texture paths in the character editor.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.6.0
