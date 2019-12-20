@@ -20,6 +20,7 @@ UI/UX improvements:
 - Added a "Decorative" category to the submarine editor.
 - Made docking indicators more visible on the sonar.
 - Show mic input level also when Push-to-Talk mode is selected to make it easier to adjust the level without having to switch the mode to Voice Activity.
+- Pressing the up arrow brings up previously sent chat messages, making it easier to resend them.
 
 Optimization:
 - Major physics optimization. Most importantly, the physics are now multithreaded, making the game perform much better when there are large numbers of characters active.
@@ -34,7 +35,9 @@ Additions and changes:
 - The job gear variants are not just visually different versions of the same item, but completely separate items. The job variants now allow the players to choose what kind of gear they want to spawn with, not just the look of the uniform.
 - Attachable items and wire nodes can now be freely placed around the character instead of always being placed at the position of the character. When attaching items/wires, there's a placement grid that makes it much easier to neatly attach/wire things mid-round.
 - The submarines now get automatically outfitted with a semi-random selection of supplies when starting a campaign. The items that have been manually placed in the submarine editor are kept as-is.
-- Added a keyboard item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
+- Split internal damage into multiple subtypes: blunt force trauma, lacerations and bite wounds. The new afflictions are functionally identical to the default internal damage affliction, but can be used to identify the source of the injuries.
+- Humans are more resistant to gunshot wounds, lacerations and blunt force trauma than monsters. The intention is to allow making weapons more effective towards monsters without making killing your crewmates with them too easy.
+- Added a "terminal" item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
 - Added muzzle flashes to small firearms.
 - Added a crosshair when aiming with small firearms. The crosshair also indicates the spread of the weapon.
 - Increased the skill requirements to operate the reactor.
@@ -54,10 +57,7 @@ Additions and changes:
 - Decreased the range and brightness of the "halo" around the players.
 - Exposed pump's MaxFlow parameter in the sub editor.
 - Added a lot more oomph to nuclear explosions.
-
-AI:
 - Bots can now undock the sub.
-- TODO: expand
 
 Multiplayer:
 - Fixed players not getting notified in any way when they connection to the server has timed out, allowing them to keep playing without being able to interact with anything.
