@@ -1,0 +1,19 @@
+#!/bin/sh
+
+mkdir -p libvpx_x64_linux
+cp -rf libvpx/. libvpx_x64_linux/
+cd libvpx_x64_linux/
+./configure --target=x86_64-linux-gcc --enable-optimizations --enable-pic --disable-shared --disable-install-bins --disable-install-libs --disable-examples --disable-docs --enable-webm-io --disable-vp8-encoder --disable-vp9-encoder
+cd ..
+
+mkdir -p libwebm_x64_linux
+cp -rf libwebm/. libwebm_x64_linux/
+cd libwebm_x64_linux/
+cmake -G "Unix Makefiles" -DCMAKE_CXX_FLAGS="-fPIC -O3" -DCMAKE_C_FLAGS="-fPIC -O3"
+cd ..
+
+mkdir -p opus_x64_linux
+cp -rf opus/. opus_x64_linux/
+cd opus_x64_linux/
+./configure --enable-asm --enable-intrinsics --enable-float-approx --enable-static --disable-shared --with-pic
+cd ..

@@ -59,7 +59,7 @@ namespace Hyper.ComponentModel
         static HyperTypeDescriptor()
         {
             AssemblyName an = new AssemblyName("Hyper.ComponentModel.dynamic");
-            AssemblyBuilder ab = AppDomain.CurrentDomain.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+            AssemblyBuilder ab = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
             moduleBuilder = ab.DefineDynamicModule("Hyper.ComponentModel.dynamic.dll");
 
         }

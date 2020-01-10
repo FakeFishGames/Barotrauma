@@ -1,5 +1,11 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
+using FarseerPhysics.Common.PhysicsLogic;
 using FarseerPhysics.Dynamics;
 
 namespace FarseerPhysics.Controllers
@@ -24,7 +30,6 @@ namespace FarseerPhysics.Controllers
         /// Sets the max angular velocity to Settings.MaxRotation
         /// </summary>
         public VelocityLimitController()
-            : base(ControllerType.VelocityLimitController)
         {
             MaxLinearVelocity = Settings.MaxTranslation;
             MaxAngularVelocity = Settings.MaxRotation;
@@ -38,7 +43,6 @@ namespace FarseerPhysics.Controllers
         /// <param name="maxLinearVelocity">The max linear velocity.</param>
         /// <param name="maxAngularVelocity">The max angular velocity.</param>
         public VelocityLimitController(float maxLinearVelocity, float maxAngularVelocity)
-            : base(ControllerType.VelocityLimitController)
         {
             if (maxLinearVelocity == 0 || maxLinearVelocity == float.MaxValue)
                 LimitLinearVelocity = false;

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>FarseerPhysics</RootNamespace>
+    <Copyright>Copyright Ian Qvist © 2013</Copyright>
+    <Product>Farseer Physics Engine</Product>
+    <Company></Company>
+    <Version>3.5.0.0</Version>
+    <Authors>Ian Qvist</Authors>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DebugLinux\**" />
+    <Compile Remove="DebugWindows\**" />
+    <Compile Remove="ReleaseWindows\**" />
+    <EmbeddedResource Remove="DebugLinux\**" />
+    <EmbeddedResource Remove="DebugWindows\**" />
+    <EmbeddedResource Remove="ReleaseWindows\**" />
+    <None Remove="DebugLinux\**" />
+    <None Remove="DebugWindows\**" />
+    <None Remove="ReleaseWindows\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XNATypes\XNATypes.csproj" />
+  </ItemGroup>
+
+</Project>

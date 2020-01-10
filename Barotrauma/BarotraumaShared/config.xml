@@ -2,6 +2,7 @@
 <config
   language="English"
   masterserverurl="http://www.undertowgames.com/baromaster"
+  remotecontenturl="http://www.barotraumagame.com/gamedata/"
   autocheckupdates="true"
   musicvolume="0.5"
   soundvolume="0.5"
@@ -23,14 +24,14 @@
   <contentpackage path="Data/ContentPackages/Vanilla 0.9.xml" />
   <player name=""/>
   <keymapping
-    Select="0"
+    Select="PrimaryMouse"
     Use="E"
-    Aim="1"
+    Aim="SecondaryMouse"
     Up="W"
     Down="S"
     Left="A"
     Right="D"
-    Attack="2"
+    Attack="MiddleMouse"
     Run="LeftShift"
     Crouch="LeftControl"
     InfoTab="Tab"
@@ -40,17 +41,9 @@
     Ragdoll="Space"
     Health="H"
     Grab="G"
+    Shoot="PrimaryMouse"
+    Deselect="SecondaryMouse"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
-  <gameplay>
-    <jobpreferences>
-      <job identifier="captain" />
-      <job identifier="engineer" />
-      <job identifier="mechanic" />
-      <job identifier="securityofficer" />
-      <job identifier="medicaldoctor" />
-      <job identifier="assistant" />
-    </jobpreferences>
-  </gameplay>
 
 </config>

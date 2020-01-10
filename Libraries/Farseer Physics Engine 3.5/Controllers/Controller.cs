@@ -1,67 +1,28 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using FarseerPhysics.Common.PhysicsLogic;
 using FarseerPhysics.Dynamics;
 
 namespace FarseerPhysics.Controllers
 {
-    [Flags]
-    public enum ControllerType
-    {
-        GravityController = (1 << 0),
-        VelocityLimitController = (1 << 1),
-        AbstractForceController = (1 << 2),
-        BuoyancyController = (1 << 3),
-    }
-
-    public struct ControllerFilter
-    {
-        public ControllerType ControllerFlags;
-
-        /// <summary>
-        /// Ignores the controller. The controller has no effect on this body.
-        /// </summary>
-        /// <param name="controller">The controller type.</param>
-        public void IgnoreController(ControllerType controller)
-        {
-            ControllerFlags |= controller;
-        }
-
-        /// <summary>
-        /// Restore the controller. The controller affects this body.
-        /// </summary>
-        /// <param name="controller">The controller type.</param>
-        public void RestoreController(ControllerType controller)
-        {
-            ControllerFlags &= ~controller;
-        }
-
-        /// <summary>
-        /// Determines whether this body ignores the the specified controller.
-        /// </summary>
-        /// <param name="controller">The controller type.</param>
-        /// <returns>
-        /// 	<c>true</c> if the body has the specified flag; otherwise, <c>false</c>.
-        /// </returns>
-        public bool IsControllerIgnored(ControllerType controller)
-        {
-            return (ControllerFlags & controller) == controller;
-        }
-    }
-
     public abstract class Controller : FilterData
     {
-        public bool Enabled;
-        public World World;
-        private ControllerType _type;
+        public ControllerCategory ControllerCategory = ControllerCategory.Cat01;
 
-        public Controller(ControllerType controllerType)
+        public bool Enabled = true;
+        public World World { get; internal set; }
+
+        public Controller()
         {
-            _type = controllerType;
         }
 
         public override bool IsActiveOn(Body body)
         {
-            if (body.ControllerFilter.IsControllerIgnored(_type))
+            if (body.ControllerFilter.IsControllerIgnored(ControllerCategory))
                 return false;
 
             return base.IsActiveOn(body);

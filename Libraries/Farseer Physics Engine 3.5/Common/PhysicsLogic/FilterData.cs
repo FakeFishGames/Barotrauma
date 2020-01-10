@@ -1,4 +1,9 @@
-﻿using FarseerPhysics.Dynamics;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using FarseerPhysics.Dynamics;
 
 namespace FarseerPhysics.Common.PhysicsLogic
 {
@@ -36,7 +41,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
         /// <returns></returns>
         public virtual bool IsActiveOn(Body body)
         {
-            if (body == null || !body.Enabled || body.IsStatic)
+            if (body == null || !body.Enabled || body.BodyType == BodyType.Static)
                 return false;
 
             if (body.FixtureList == null)

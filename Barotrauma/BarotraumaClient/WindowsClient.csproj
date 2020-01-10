@@ -1,329 +1,159 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">ReleaseWindows</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{008C0F83-E914-4966-9135-EA885059EDD8}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <RootNamespace>Barotrauma</RootNamespace>
+    <Authors>FakeFish, Undertow Games</Authors>
+    <Product>Barotrauma</Product>
+    <Version>0.9.7.0</Version>
+    <Copyright>Copyright © FakeFish 2018-2019</Copyright>
+    <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
-    <FileAlignment>512</FileAlignment>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
-    <ReleaseVersion>0.9.0.0</ReleaseVersion>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>0.1.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions>
-  </PropertyGroup>
-  <PropertyGroup>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\ReleaseWindows\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS;CLIENT;X64</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x64'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT;X64</DefineConstants>
-    <DebugType>full</DebugType>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>TRACE;DEBUG;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
-    <DocumentationFile>
-    </DocumentationFile>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseWindows|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x86\ReleaseWindows\</OutputPath>
-    <DefineConstants>TRACE;WINDOWS;CLIENT;X86</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;CLIENT;WINDOWS;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x86'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x86\DebugWindows\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;WINDOWS;CLIENT;X86</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants>TRACE;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
+
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Remove="..\BarotraumaShared\**\*.cs" />
+    <Compile Include="..\BarotraumaShared\**\*.cs" />
   </ItemGroup>
+
   <ItemGroup>
-    <Reference Include="GameAnalytics.Mono, Version=1.0.7018.15293, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\lib\net45\GameAnalytics.Mono.dll</HintPath>
-    </Reference>
-    <Reference Include="MonoGame.Framework, Version=3.7.1.189, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\lib\net45\MonoGame.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\NLog.4.3.8\lib\net45\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="nVLC, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\nVLC.3.0.0\lib\net40\nVLC.dll</HintPath>
-    </Reference>
-    <Reference Include="NVorbis, Version=0.8.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\NVorbis.0.8.6\lib\net35\NVorbis.dll</HintPath>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct2D1, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.Direct2D1.4.2.0\lib\net45\SharpDX.Direct2D1.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.Direct3D11.4.2.0\lib\net45\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.Direct3D9.4.2.0\lib\net45\SharpDX.Direct3D9.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DXGI, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.DXGI.4.2.0\lib\net45\SharpDX.DXGI.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Mathematics, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.Mathematics.4.2.0\lib\net45\SharpDX.Mathematics.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.MediaFoundation, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.MediaFoundation.4.2.0\lib\net45\SharpDX.MediaFoundation.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.XAudio2, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.XAudio2.4.2.0\lib\net45\SharpDX.XAudio2.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.XInput, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\SharpDX.XInput.4.2.0\lib\net45\SharpDX.XInput.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Data.SQLite, Version=1.0.102.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\lib\net45\System.Data.SQLite.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\NuGet\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
+    <None Remove="freetype6.dll" />
+    <None Remove="soft_oal_x64.dll" />
+    <None Remove="x64\SDL2.dll" />
+    <None Remove="webm_mem_playback_x64.dll" />
+    <None Remove="libfreetype6.so" />
+    <None Remove="libopenal.so.1" />
+    <None Remove="libSDL2-2.0.so.0" />
+    <None Remove="webm_mem_playback_x64.so" />
+    <None Remove="libopenal.1.dylib" />
+    <None Remove="libSDL2-2.0.0.dylib" />
+    <None Remove="libwebm_mem_playback_x64.dylib" />
   </ItemGroup>
-  <Choose>
-    <When Condition="'$(Configuration)|$(Platform)' == 'DebugWindows|x86' Or '$(Configuration)|$(Platform)' == 'ReleaseWindows|x86'">
-      <ItemGroup>
-        <ContentWithTargetPath Include="lib86/freetype6.dll">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <TargetPath>freetype6.dll</TargetPath>
-        </ContentWithTargetPath>
-        <Content Include="steam_api.dll">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Content Include="freetype6.dll">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="steam_api64.dll">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
+
   <ItemGroup>
-    <Content Include="libvlc.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="libvlccore.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\access\libfilesystem_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_filter\libaudio_format_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_filter\libugly_resampler_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\audio_output\libamem_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\codec\libavcodec_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\demux\libmp4_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\packetizer\libpacketizer_mpeg4audio_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\packetizer\libpacketizer_mpeg4video_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_chroma\librv32_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_chroma\libswscale_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="plugins\video_output\libvmem_plugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Shaders\blurshader.fx" />
-    <Content Include="Shaders\damageshader.fx" />
-    <Content Include="Shaders\deformshader.fx" />
-    <Content Include="Shaders\solidcolor.fx" />
-    <Content Include="Shaders\losshader.fx" />
-    <Content Include="Shaders\postprocess.fx" />
-    <Content Include="Shaders\watershader.fx" />
-    <Content Include="MonoGame.Framework.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SharpFont.dll.config">
+    <Content Include="freetype6.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="soft_oal_x64.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="soft_oal_x86.dll">
+    <Content Include="x64\SDL2.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="webm_mem_playback_x64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
+    <Content Include="Content\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
   <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 4.5</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
+    <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" />
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" />
+    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\Concentus\CSharp\Concentus\Concentus.csproj">
-      <Project>{0e7fee6a-15e5-4a4e-943c-80276003478c}</Project>
-      <Name>Concentus</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.csproj">
-      <Project>{3af0347c-5a9b-4421-868c-8ee3dbfaebc6}</Project>
-      <Name>Facepunch.Steamworks</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer Physics MonoGame WindowsDX.csproj">
-      <Project>{830461aa-3e2e-4bde-9b27-1b3280836521}</Project>
-      <Name>Farseer Physics MonoGame WindowsDX</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.csproj">
-      <Project>{3b8f9edb-6e5e-450c-abc2-ec49075d0b50}</Project>
-      <Name>Hyper.ComponentModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.Network.csproj">
-      <Project>{49ba1c69-6104-41ac-a5d8-b54fa9f696e8}</Project>
-      <Name>Lidgren.Network</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.csproj">
-      <Project>{c293db32-fa42-486d-b128-5a12522fae4e}</Project>
-      <Name>SharpFont</Name>
-    </ProjectReference>
+    <Folder Include="Properties\" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Content\Effects\blurshader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\damageshader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\deformshader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\losshader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\postprocess.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\solidcolor.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Content\Effects\watershader.xnb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="packages.config" />
-    <None Include="Shaders\Content.mgcb" />
+    <PackageReference Include="NVorbis" Version="0.8.6" />
+    <PackageReference Include="RestSharp" Version="106.6.10" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="ClientCode.projitems" Label="Shared" />
-  <Import Project="..\BarotraumaShared\SharedCode.projitems" Label="Shared" />
-  <Import Project="..\BarotraumaShared\SharedContent.projitems" Label="Shared" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets" Condition="Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+
+  <!-- Sourced from https://stackoverflow.com/a/45248069 -->
+  <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+      <!-- temp file for the git version (lives in "obj" folder)-->
+      <VerFile>$(IntermediateOutputPath)gitver</VerFile>
+      <BranchFile>$(IntermediateOutputPath)gitbranch</BranchFile>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\GameAnalytics.Mono.SDK.2.1.6\build\net45\GameAnalytics.Mono.SDK.targets'))" />
-    <Error Condition="!Exists('..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\build\MonoGame.Framework.WindowsDX.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\build\MonoGame.Framework.WindowsDX.targets'))" />
-  </Target>
-  <Import Project="..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\build\MonoGame.Framework.WindowsDX.targets" Condition="Exists('..\..\Libraries\NuGet\MonoGame.Framework.WindowsDX.3.7.1.189\build\MonoGame.Framework.WindowsDX.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  -->
-  <Target Name="AfterBuild">
-    <!-- Write version number to a "Version.txt" file in the output folder -->
-    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-      <Output TaskParameter="Assemblies" ItemName="CurrentAssembly" />
-    </GetAssemblyIdentity>
-    <Exec Command="echo v%(CurrentAssembly.Version) &gt; $(TargetDir)Version.txt">
+
+    <!-- write the hash to the temp file.-->
+    <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD &gt; $(VerFile)" ContinueOnError="true">
+      <Output TaskParameter="exitcode" ItemName="exitcodes"/>
     </Exec>
+    <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD --symbolic-full-name --abbrev-ref=strict &gt; $(BranchFile)" ContinueOnError="true" />
+
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(VerFile)" Condition="'%(exitcodes.identity)'>0"/>
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(BranchFile)" Condition="'%(exitcodes.identity)'>0"/>
+    
+    <!-- read the version into the GitVersion itemGroup-->
+    <ReadLinesFromFile File="$(VerFile)">
+      <Output TaskParameter="Lines" ItemName="GitVersion" />
+    </ReadLinesFromFile>
+    <!-- Set the BuildHash property to contain the GitVersion, if it wasn't already set.-->
+    <PropertyGroup>
+      <BuildHash>@(GitVersion)</BuildHash>
+    </PropertyGroup>
+
+    <!-- read the branch into the GitBranch itemGroup-->
+    <ReadLinesFromFile File="$(BranchFile)">
+      <Output TaskParameter="Lines" ItemName="GitBranch" />
+    </ReadLinesFromFile>
+    <!-- Set the BuildHash property to contain the GitVersion, if it wasn't already set.-->
+    <PropertyGroup>
+      <BuildBranch>@(GitBranch)</BuildBranch>
+    </PropertyGroup>
   </Target>
+
+  <Target Name="WriteGitRevision" BeforeTargets="CoreCompile">
+    <!-- names the obj/.../CustomAssemblyInfo.cs file -->
+    <PropertyGroup>
+      <CustomAssemblyInfoFile>$(IntermediateOutputPath)CustomAssemblyInfo.cs</CustomAssemblyInfoFile>
+    </PropertyGroup>
+    <!-- includes the CustomAssemblyInfo for compilation into your project -->
+    <ItemGroup>
+      <Compile Include="$(CustomAssemblyInfoFile)" />
+    </ItemGroup>
+    <!-- defines the AssemblyMetadata attribute that will be written -->
+    <ItemGroup>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>GitRevision</_Parameter1>
+        <_Parameter2>$(BuildHash)</_Parameter2>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>GitBranch</_Parameter1>
+        <_Parameter2>$(BuildBranch)</_Parameter2>
+      </AssemblyAttributes>
+    </ItemGroup>
+    <!-- writes the attribute to the customAssemblyInfo file -->
+    <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
+  </Target>
+
 </Project>

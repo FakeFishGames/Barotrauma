@@ -1,0 +1,114 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <RootNamespace>Barotrauma</RootNamespace>
+    <Authors>FakeFish, Undertow Games</Authors>
+    <Product>Barotrauma Dedicated Server</Product>
+    <Version>0.9.7.0</Version>
+    <Copyright>Copyright © FakeFish 2018-2019</Copyright>
+    <Platforms>AnyCPU;x64</Platforms>
+    <AssemblyName>DedicatedServer</AssemblyName>
+    <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DefineConstants>TRACE;DEBUG;SERVER;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants>TRACE;SERVER;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Remove="..\BarotraumaShared\**\*.cs" />
+    <Compile Include="..\BarotraumaShared\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj" />
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" />
+    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" />
+    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" />
+  </ItemGroup>
+
+  <!-- Sourced from https://stackoverflow.com/a/45248069 -->
+  <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
+    <PropertyGroup>
+      <!-- temp file for the git version (lives in "obj" folder)-->
+      <VerFile>$(IntermediateOutputPath)gitver</VerFile>
+      <BranchFile>$(IntermediateOutputPath)gitbranch</BranchFile>
+    </PropertyGroup>
+
+    <!-- write the hash to the temp file.-->
+    <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD &gt; $(VerFile)" ContinueOnError="true">
+      <Output TaskParameter="exitcode" ItemName="exitcodes"/>
+    </Exec>
+    <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD --symbolic-full-name --abbrev-ref=strict &gt; $(BranchFile)" ContinueOnError="true" />
+
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(VerFile)" Condition="'%(exitcodes.identity)'>0"/>
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(BranchFile)" Condition="'%(exitcodes.identity)'>0"/>
+    
+    <!-- read the version into the GitVersion itemGroup-->
+    <ReadLinesFromFile File="$(VerFile)">
+      <Output TaskParameter="Lines" ItemName="GitVersion" />
+    </ReadLinesFromFile>
+    <!-- Set the BuildHash property to contain the GitVersion, if it wasn't already set.-->
+    <PropertyGroup>
+      <BuildHash>@(GitVersion)</BuildHash>
+    </PropertyGroup>
+
+    <!-- read the branch into the GitBranch itemGroup-->
+    <ReadLinesFromFile File="$(BranchFile)">
+      <Output TaskParameter="Lines" ItemName="GitBranch" />
+    </ReadLinesFromFile>
+    <!-- Set the BuildHash property to contain the GitVersion, if it wasn't already set.-->
+    <PropertyGroup>
+      <BuildBranch>@(GitBranch)</BuildBranch>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="WriteGitRevision" BeforeTargets="CoreCompile">
+    <!-- names the obj/.../CustomAssemblyInfo.cs file -->
+    <PropertyGroup>
+      <CustomAssemblyInfoFile>$(IntermediateOutputPath)CustomAssemblyInfo.cs</CustomAssemblyInfoFile>
+    </PropertyGroup>
+    <!-- includes the CustomAssemblyInfo for compilation into your project -->
+    <ItemGroup>
+      <Compile Include="$(CustomAssemblyInfoFile)" />
+    </ItemGroup>
+    <!-- defines the AssemblyMetadata attribute that will be written -->
+    <ItemGroup>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>GitRevision</_Parameter1>
+        <_Parameter2>$(BuildHash)</_Parameter2>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>GitBranch</_Parameter1>
+        <_Parameter2>$(BuildBranch)</_Parameter2>
+      </AssemblyAttributes>
+    </ItemGroup>
+    <!-- writes the attribute to the customAssemblyInfo file -->
+    <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
+  </Target>
+
+</Project>

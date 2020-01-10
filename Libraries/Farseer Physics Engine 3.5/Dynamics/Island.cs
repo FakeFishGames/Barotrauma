@@ -1,4 +1,11 @@
-﻿/*
+﻿// Copyright (c) 2017 Kastellanos Nikolaos
+
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -22,10 +29,11 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 using FarseerPhysics.Common;
+using FarseerPhysics.Diagnostics;
 using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
-using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics
 {
@@ -54,7 +62,7 @@ namespace FarseerPhysics.Dynamics
         public int BodyCapacity;
         public int ContactCapacity;
         public int JointCapacity;
-        public float JointUpdateTime;
+        public TimeSpan JointUpdateTime;
 
         public void Reset(int bodyCapacity, int contactCapacity, int jointCapacity, ContactManager contactManager)
         {
@@ -118,7 +126,7 @@ namespace FarseerPhysics.Dynamics
                     if (b.IgnoreGravity)
                         v += h * (b._invMass * b._force);
                     else
-                        v += h * (b.GravityScale * gravity + b._invMass * b._force);
+                        v += h * (gravity + b._invMass * b._force);
 
                     w += h * b._invI * b._torque;
 
@@ -145,10 +153,11 @@ namespace FarseerPhysics.Dynamics
             solverData.positions = _positions;
             solverData.velocities = _velocities;
 
-            _contactSolver.Reset(step, ContactCount, _contacts, _positions, _velocities);
+            _contactSolver.Reset(ref step, ContactCount, _contacts, _positions, _velocities,
+                _contactManager.VelocityConstraintsMultithreadThreshold, _contactManager.PositionConstraintsMultithreadThreshold);
             _contactSolver.InitializeVelocityConstraints();
 
-            if (Settings.EnableWarmstarting)
+            if (step.warmStarting)
             {
                 _contactSolver.WarmStart();
             }
@@ -166,7 +175,7 @@ namespace FarseerPhysics.Dynamics
                 _watch.Stop();
 
             // Solve velocity constraints.
-            for (int i = 0; i < Settings.VelocityIterations; ++i)
+            for (int i = 0; i < step.velocityIterations; ++i)
             {
                 for (int j = 0; j < JointCount; ++j)
                 {
@@ -227,7 +236,7 @@ namespace FarseerPhysics.Dynamics
 
             // Solve position constraints
             bool positionSolved = false;
-            for (int i = 0; i < Settings.PositionIterations; ++i)
+            for (int i = 0; i < step.positionIterations; ++i)
             {
                 bool contactsOkay = _contactSolver.SolvePositionConstraints();
 
@@ -260,7 +269,7 @@ namespace FarseerPhysics.Dynamics
 
             if (Settings.EnableDiagnostics)
             {
-                JointUpdateTime = _watch.ElapsedTicks;
+                JointUpdateTime = TimeSpan.FromTicks(_watch.ElapsedTicks);
                 _watch.Reset();
             }
 
@@ -311,7 +320,7 @@ namespace FarseerPhysics.Dynamics
             }
         }
 
-        internal void SolveTOI(ref TimeStep subStep, int toiIndexA, int toiIndexB, bool warmstarting)
+        internal void SolveTOI(ref TimeStep subStep, int toiIndexA, int toiIndexB)
         {
             Debug.Assert(toiIndexA < BodyCount);
             Debug.Assert(toiIndexB < BodyCount);
@@ -326,10 +335,11 @@ namespace FarseerPhysics.Dynamics
                 _velocities[i].w = b._angularVelocity;
             }
 
-            _contactSolver.Reset(subStep, ContactCount, _contacts, _positions, _velocities, warmstarting);
+            _contactSolver.Reset(ref subStep, ContactCount, _contacts, _positions, _velocities,
+                _contactManager.VelocityConstraintsMultithreadThreshold, _contactManager.PositionConstraintsMultithreadThreshold);
 
             // Solve position constraints.
-            for (int i = 0; i < Settings.TOIPositionIterations; ++i)
+            for (int i = 0; i < subStep.positionIterations; ++i)
             {
                 bool contactsOkay = _contactSolver.SolveTOIPositionConstraints(toiIndexA, toiIndexB);
                 if (contactsOkay)
@@ -349,7 +359,7 @@ namespace FarseerPhysics.Dynamics
             _contactSolver.InitializeVelocityConstraints();
 
             // Solve velocity constraints.
-            for (int i = 0; i < Settings.TOIVelocityIterations; ++i)
+            for (int i = 0; i < subStep.velocityIterations; ++i)
             {
                 _contactSolver.SolveVelocityConstraints();
             }

@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Authors>Lidgren</Authors>
+    <Company />
+    <Product>Lidgren.Network</Product>
+    <Copyright>Copyright (c) 2015 lidgren</Copyright>
+    <Version>2012.1.7.0</Version>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

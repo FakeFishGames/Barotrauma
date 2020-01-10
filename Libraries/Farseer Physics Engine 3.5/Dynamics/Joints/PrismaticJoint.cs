@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -23,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -98,6 +104,7 @@ namespace FarseerPhysics.Dynamics.Joints
     /// </summary>
     public class PrismaticJoint : Joint
     {
+        private Vector2 _localXAxis;
         private Vector2 _localYAxisA;
         private Vector3 _impulse;
         private float _lowerTranslation;
@@ -207,7 +214,7 @@ namespace FarseerPhysics.Dynamics.Joints
             get
             {
                 Vector2 d = BodyB.GetWorldPoint(LocalAnchorB) - BodyA.GetWorldPoint(LocalAnchorA);
-                Vector2 axis = BodyA.GetWorldVector(LocalXAxis);
+                Vector2 axis = BodyA.GetWorldVector(ref _localXAxis);
 
                 return Vector2.Dot(d, axis);
             }
@@ -221,23 +228,22 @@ namespace FarseerPhysics.Dynamics.Joints
         {
             get
             {
-                Transform xf1, xf2;
-                BodyA.GetTransform(out xf1);
-                BodyB.GetTransform(out xf2);
+                Transform xf1 = BodyA.GetTransform();
+                Transform xf2 = BodyB.GetTransform();
 
-                Vector2 r1 = MathUtils.Mul(ref xf1.q, LocalAnchorA - BodyA.LocalCenter);
-                Vector2 r2 = MathUtils.Mul(ref xf2.q, LocalAnchorB - BodyB.LocalCenter);
+                Vector2 r1 = Complex.Multiply(LocalAnchorA - BodyA.LocalCenter, ref xf1.q);
+                Vector2 r2 = Complex.Multiply(LocalAnchorB - BodyB.LocalCenter, ref xf2.q);
                 Vector2 p1 = BodyA._sweep.C + r1;
                 Vector2 p2 = BodyB._sweep.C + r2;
                 Vector2 d = p2 - p1;
-                Vector2 axis = BodyA.GetWorldVector(LocalXAxis);
+                Vector2 axis = BodyA.GetWorldVector(ref _localXAxis);
 
                 Vector2 v1 = BodyA._linearVelocity;
                 Vector2 v2 = BodyB._linearVelocity;
                 float w1 = BodyA._angularVelocity;
                 float w2 = BodyB._angularVelocity;
 
-                float speed = Vector2.Dot(d, MathUtils.Cross(w1, axis)) + Vector2.Dot(axis, v2 + MathUtils.Cross(w2, r2) - v1 - MathUtils.Cross(w1, r1));
+                float speed = Vector2.Dot(d, MathUtils.Cross(w1, ref axis)) + Vector2.Dot(axis, v2 + MathUtils.Cross(w2, ref r2) - v1 - MathUtils.Cross(w1, ref r1));
                 return speed;
             }
         }
@@ -380,16 +386,16 @@ namespace FarseerPhysics.Dynamics.Joints
             set
             {
                 _axis1 = value;
-                LocalXAxis = BodyA.GetLocalVector(_axis1);
-                LocalXAxis.Normalize();
-                _localYAxisA = MathUtils.Cross(1.0f, LocalXAxis);
+                _localXAxis = BodyA.GetLocalVector(_axis1);
+                _localXAxis.Normalize();
+                _localYAxisA = MathUtils.Cross(1.0f, ref _localXAxis);
             }
         }
 
         /// <summary>
         /// The axis in local coordinates relative to BodyA
         /// </summary>
-        public Vector2 LocalXAxis { get; private set; }
+        public Vector2 LocalXAxis { get { return _localXAxis; } }
 
         /// <summary>
         /// The reference angle.
@@ -427,11 +433,12 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
             // Compute the effective masses.
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             Vector2 d = (cB - cA) + rB - rA;
 
             float mA = _invMassA, mB = _invMassB;
@@ -439,9 +446,9 @@ namespace FarseerPhysics.Dynamics.Joints
 
             // Compute motor Jacobian and effective mass.
             {
-                _axis = MathUtils.Mul(qA, LocalXAxis);
+                _axis = Complex.Multiply(ref _localXAxis, ref qA);
                 _a1 = MathUtils.Cross(d + rA, _axis);
-                _a2 = MathUtils.Cross(rB, _axis);
+                _a2 = MathUtils.Cross(ref rB, ref _axis);
 
                 _motorMass = mA + mB + iA * _a1 * _a1 + iB * _a2 * _a2;
                 if (_motorMass > 0.0f)
@@ -452,10 +459,10 @@ namespace FarseerPhysics.Dynamics.Joints
 
             // Prismatic constraint.
             {
-                _perp = MathUtils.Mul(qA, _localYAxisA);
+                _perp = Complex.Multiply(ref _localYAxisA, ref qA);
 
                 _s1 = MathUtils.Cross(d + rA, _perp);
-                _s2 = MathUtils.Cross(rB, _perp);
+                _s2 = MathUtils.Cross(ref rB, ref _perp);
 
                 float k11 = mA + mB + iA * _s1 * _s1 + iB * _s2 * _s2;
                 float k12 = iA * _s1 + iB * _s2;
@@ -515,7 +522,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 MotorImpulse = 0.0f;
             }
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Account for variable time step.
                 _impulse *= data.step.dtRatio;
@@ -647,23 +654,24 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
 
             // Compute fresh Jacobians
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
             Vector2 d = cB + rB - cA - rA;
 
-            Vector2 axis = MathUtils.Mul(qA, LocalXAxis);
+            Vector2 axis = Complex.Multiply(ref _localXAxis, ref qA);
             float a1 = MathUtils.Cross(d + rA, axis);
-            float a2 = MathUtils.Cross(rB, axis);
-            Vector2 perp = MathUtils.Mul(qA, _localYAxisA);
+            float a2 = MathUtils.Cross(ref rB, ref axis);
+            Vector2 perp = Complex.Multiply(ref _localYAxisA, ref qA);
 
             float s1 = MathUtils.Cross(d + rA, perp);
-            float s2 = MathUtils.Cross(rB, perp);
+            float s2 = MathUtils.Cross(ref rB, ref perp);
 
             Vector3 impulse;
             Vector2 C1 = new Vector2();

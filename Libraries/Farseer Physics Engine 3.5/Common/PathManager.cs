@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common.Decomposition;
@@ -90,7 +95,7 @@ namespace FarseerPhysics.Common
 
             for (int i = 0; i < centers.Count; i++)
             {
-                Body b = new Body(world);
+                Body b = world.CreateBody();
 
                 // copy the type from original body
                 b.BodyType = type;
@@ -120,20 +125,14 @@ namespace FarseerPhysics.Common
         /// <param name="copies">The copies.</param>
         /// <param name="userData">The user data.</param>
         /// <returns></returns>
-        public static List<Body> EvenlyDistributeShapesAlongPath(World world, Path path, Shape shape, BodyType type,
-                                                                 int copies, object userData)
+        public static List<Body> EvenlyDistributeShapesAlongPath(World world, Path path, Shape shape, BodyType type, int copies, object userData = null)
         {
             List<Shape> shapes = new List<Shape>(1);
             shapes.Add(shape);
 
             return EvenlyDistributeShapesAlongPath(world, path, shapes, type, copies, userData);
         }
-
-        public static List<Body> EvenlyDistributeShapesAlongPath(World world, Path path, Shape shape, BodyType type, int copies)
-        {
-            return EvenlyDistributeShapesAlongPath(world, path, shape, type, copies, null);
-        }
-
+        
         /// <summary>
         /// Moves the given body along the defined path.
         /// </summary>
@@ -168,7 +167,7 @@ namespace FarseerPhysics.Common
             {
                 RevoluteJoint joint = new RevoluteJoint(bodies[i], bodies[i - 1], localAnchorA, localAnchorB);
                 joint.CollideConnected = collideConnected;
-                world.AddJoint(joint);
+                world.Add(joint);
                 joints.Add(joint);
             }
 
@@ -176,7 +175,7 @@ namespace FarseerPhysics.Common
             {
                 RevoluteJoint lastjoint = new RevoluteJoint(bodies[0], bodies[bodies.Count - 1], localAnchorA, localAnchorB);
                 lastjoint.CollideConnected = collideConnected;
-                world.AddJoint(lastjoint);
+                world.Add(lastjoint);
                 joints.Add(lastjoint);
             }
 

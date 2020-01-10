@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Original source Box2D:
 * Copyright (c) 2006-2011 Erin Catto http://www.box2d.org 
 * 
@@ -40,6 +45,11 @@ namespace FarseerPhysics.Dynamics
         /// Inverse time step (0 if dt == 0).
         /// </summary>
         public float inv_dt;
+
+        public int positionIterations;
+        public int velocityIterations;
+
+        public bool warmStarting;
     }
 
     /// This is an internal structure.
@@ -47,6 +57,7 @@ namespace FarseerPhysics.Dynamics
     {
         public Vector2 c;
         public float a;
+        internal int Lock;
     }
 
     /// This is an internal structure.
@@ -54,6 +65,7 @@ namespace FarseerPhysics.Dynamics
     {
         public Vector2 v;
         public float w;
+        internal int Lock;
     }
 
     /// Solver Data
