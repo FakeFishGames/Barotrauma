@@ -351,7 +351,16 @@ namespace Barotrauma
                 {
                     OnClicked = (btn, userdata) =>
                     {
-                        System.Diagnostics.Process.Start(SaveUtil.SaveFolder);
+                        try
+                        {
+                            ToolBox.OpenFileWithShell(SaveUtil.SaveFolder);
+                        }
+                        catch (Exception e)
+                        {
+                            new GUIMessageBox(
+                                TextManager.Get("error"), 
+                                TextManager.GetWithVariables("showinfoldererror", new string[] { "[folder]", "[errormessage]" }, new string[] { SaveUtil.SaveFolder, e.Message }));
+                        }
                         return true;
                     }
                 };

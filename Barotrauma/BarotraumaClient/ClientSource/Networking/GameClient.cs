@@ -1071,6 +1071,7 @@ namespace Barotrauma.Networking
         {
             if (Character != null) Character.Remove();
             HasSpawned = false;
+            eventErrorWritten = false;
 
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
@@ -2670,6 +2671,48 @@ namespace Barotrauma.Networking
                     break;
             }
             clientPeer.Send(outMsg, DeliveryMethod.Reliable);
+
+            if (!eventErrorWritten)
+            {
+                WriteEventErrorData(error, expectedID, eventID, entityID);
+                eventErrorWritten = true;
+            }
+        }
+
+        private bool eventErrorWritten;
+        private void WriteEventErrorData(ClientNetError error, UInt16 expectedID, UInt16 eventID, UInt16 entityID)
+        {
+            List<string> errorLines = new List<string>
+            {
+                error.ToString(), ""
+            };
+
+            if (IsServerOwner)
+            {
+                errorLines.Add("SERVER OWNER");
+            }
+
+            if (error == ClientNetError.MISSING_EVENT)
+            {
+                errorLines.Add("Expected ID: " + expectedID + ", received " + eventID);
+            }
+            else if (error == ClientNetError.MISSING_ENTITY)
+            {
+                errorLines.Add("Event ID: " + eventID + ", entity ID " + entityID);
+            }
+
+            errorLines.Add("Entity IDs:");
+            List<Entity> sortedEntities = Entity.GetEntityList();
+            sortedEntities.Sort((e1, e2) => e1.ID.CompareTo(e2.ID));
+            foreach (Entity e in sortedEntities)
+            {
+                errorLines.Add(e.ID + ": " + e.ToString());
+            }
+
+            string filePath = "event_error_log_client_" + Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
+            filePath = Path.Combine(ServerLog.SavePath, filePath);
+
+            File.WriteAllLines(filePath, errorLines);
         }
 
 #if DEBUG

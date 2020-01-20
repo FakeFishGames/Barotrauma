@@ -1506,6 +1506,17 @@ namespace Barotrauma
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 #if DEBUG
+            commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
+            {
+                Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery().FilterDistanceWorldwide();
+
+                Steamworks.Data.Lobby[] lobbies = lobbyQuery.RequestAsync().Result;
+                foreach (var lobby in lobbies)
+                {
+                    DebugConsole.NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"));
+                }
+            }));
+
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
                 if (args.Length != 1) return;
@@ -2264,6 +2275,18 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Cannot pause when a multiplayer session is active.");
                 }
             }));
+
+            AssignOnClientExecute("showseed|showlevelseed", (string[] args) =>
+            {
+                if (Level.Loaded == null)
+                {
+                    ThrowError("No level loaded.");
+                }
+                else
+                {
+                    NewMessage("Level seed: " + Level.Loaded.Seed);
+                }
+            });
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

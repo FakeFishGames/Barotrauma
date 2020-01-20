@@ -56,17 +56,30 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Watchman");
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
 
-            var revolver = captain.Inventory.FindItemByIdentifier("revolver");
+            var revolver = FindOrGiveItem(captain, "revolver");
             revolver.Unequip(captain);
             captain.Inventory.RemoveItem(revolver);
 
-            var captainscap = captain.Inventory.FindItemByIdentifier("captainscap");
-            captainscap.Unequip(captain);
-            captain.Inventory.RemoveItem(captainscap);
+            var captainscap = 
+                captain.Inventory.FindItemByIdentifier("captainscap1") ??
+                captain.Inventory.FindItemByIdentifier("captainscap2") ??
+                captain.Inventory.FindItemByIdentifier("captainscap3");
 
-            var captainsuniform = captain.Inventory.FindItemByIdentifier("captainsuniform");
-            captainsuniform.Unequip(captain);
-            captain.Inventory.RemoveItem(captainsuniform);
+            if (captainscap != null)
+            {
+                captainscap.Unequip(captain);
+                captain.Inventory.RemoveItem(captainscap);
+            }
+
+            var captainsuniform = 
+                captain.Inventory.FindItemByIdentifier("captainsuniform1") ??
+                captain.Inventory.FindItemByIdentifier("captainsuniform2") ??
+                captain.Inventory.FindItemByIdentifier("captainsuniform3");
+            if (captainsuniform != null)
+            {
+                captainsuniform.Unequip(captain);
+                captain.Inventory.RemoveItem(captainsuniform);
+            }
 
             var steerOrder = Order.GetPrefab("steer");
             captain_steerIcon = steerOrder.SymbolSprite;

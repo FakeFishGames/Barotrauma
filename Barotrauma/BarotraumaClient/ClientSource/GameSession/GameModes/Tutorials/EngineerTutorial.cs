@@ -87,7 +87,7 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             engineer = Character.Controlled;
 
-            var toolbox = engineer.Inventory.FindItemByIdentifier("toolbox");
+            var toolbox = FindOrGiveItem(engineer, "toolbox");
             toolbox.Unequip(engineer);
             engineer.Inventory.RemoveItem(toolbox);
 

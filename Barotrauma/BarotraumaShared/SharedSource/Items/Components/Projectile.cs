@@ -341,7 +341,7 @@ namespace Barotrauma.Items.Components
                 //ignore sensors and items
                 if (fixture?.Body == null || fixture.IsSensor) { return -1; }
 
-                if (fixture.Body.UserData is Item) { return -1; }
+                if (fixture.Body.UserData is Item item && item.GetComponent<Door>() == null) { return -1; }
                 if (fixture.Body?.UserData as string == "ruinroom") { return -1; }
 
                 //ignore everything else than characters, sub walls and level walls

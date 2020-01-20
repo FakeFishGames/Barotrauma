@@ -546,6 +546,8 @@ namespace Barotrauma
 
         private void HandleLimbCollision(Impact collision, Limb limb)
         {
+            if (limb?.body?.FarseerBody == null || limb.character == null) { return; }
+
             if (limb.Mass > MinImpactLimbMass)
             {
                 Vector2 normal = 
@@ -565,18 +567,18 @@ namespace Barotrauma
             //find all contacts between the limb and level walls
             List<Contact> levelContacts = new List<Contact>();
             ContactEdge contactEdge = limb.body.FarseerBody.ContactList;
-            while (contactEdge != null)
+            while (contactEdge?.Contact != null)
             {
                 if (contactEdge.Contact.Enabled &&
-                    contactEdge.Other.UserData is VoronoiCell &&
-                    contactEdge.Contact.IsTouching)
+                    contactEdge.Contact.IsTouching &&
+                    contactEdge.Other?.UserData is VoronoiCell)
                 {
                     levelContacts.Add(contactEdge.Contact);
                 }
                 contactEdge = contactEdge.Next;
             }
 
-            if (levelContacts.Count == 0) return;
+            if (levelContacts.Count == 0) { return; }
 
             //if the limb is in contact with the level, apply an artifical impact to prevent the sub from bouncing on top of it
             //not a very realistic way to handle the collisions (makes it seem as if the characters were made of reinforced concrete),

@@ -353,6 +353,19 @@ namespace Barotrauma.Sounds
         private uint[] unqueuedBuffers;
         private float[] streamBufferAmplitudes;
 
+        public int StreamSeekPos
+        {
+            get { return streamSeekPos; }
+            set 
+            {
+                if (!IsStream)
+                {
+                    throw new InvalidOperationException("Cannot set StreamSeekPos on a non-streaming sound channel.");
+                }
+                streamSeekPos = Math.Max(value, 0);
+            }
+        }
+
         private object mutex;
 
         public bool IsPlaying

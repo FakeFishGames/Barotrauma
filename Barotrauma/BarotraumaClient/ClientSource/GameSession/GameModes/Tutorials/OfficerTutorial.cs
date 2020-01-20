@@ -89,19 +89,19 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
 
-            var handcuffs = officer.Inventory.FindItemByIdentifier("handcuffs");
+            var handcuffs = FindOrGiveItem(officer, "handcuffs");
             handcuffs.Unequip(officer);
             officer.Inventory.RemoveItem(handcuffs);
 
-            var stunbaton = officer.Inventory.FindItemByIdentifier("stunbaton");
+            var stunbaton = FindOrGiveItem(officer, "stunbaton");
             stunbaton.Unequip(officer);
             officer.Inventory.RemoveItem(stunbaton);
 
-            var ballistichelmet = officer.Inventory.FindItemByIdentifier("ballistichelmet");
+            var ballistichelmet = FindOrGiveItem(officer, "ballistichelmet");
             ballistichelmet.Unequip(officer);
             officer.Inventory.RemoveItem(ballistichelmet);
 
-            var bodyarmor = officer.Inventory.FindItemByIdentifier("bodyarmor");
+            var bodyarmor = FindOrGiveItem(officer, "bodyarmor");
             bodyarmor.Unequip(officer);
             officer.Inventory.RemoveItem(bodyarmor);
 

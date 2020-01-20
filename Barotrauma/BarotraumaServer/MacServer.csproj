@@ -6,12 +6,13 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>0.9.7.0</Version>
-    <Copyright>Copyright © FakeFish 2018-2019</Copyright>
+    <Version>0.9.700.0</Version>
+    <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
     <ReleaseVersion>0.9.0.0</ReleaseVersion>
+    <Configurations>Debug;Release;Unstable</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,8 +36,21 @@
     <OutputPath>..\bin\ReleaseMac</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|AnyCPU'">
+    <DefineConstants>TRACE;SERVER;OSX;USE_STEAM;RELEASE;NETCOREAPP;NETCOREAPP3_0;UNSTABLE</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType />
+    <OutputPath>..\bin\ReleaseMac</OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DefineConstants>TRACE;SERVER;OSX;X64;USE_STEAM</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>..\bin\$(Configuration)Mac\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|x64'">
+    <DefineConstants>TRACE;SERVER;OSX;X64;USE_STEAM;UNSTABLE</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Mac\</OutputPath>
   </PropertyGroup>
@@ -49,12 +63,19 @@
     <Content Remove="..\BarotraumaShared\libsteam_api64.so" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix64.csproj" />
-    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" />
-    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" />
-    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" />
-    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" />
+  <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix64.csproj" AdditionalProperties="Configuration=Release" />
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
+    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Release" />
+    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
+    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Release" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <ProjectReference Include="..\..\Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix64.csproj" AdditionalProperties="Configuration=Debug" />
+    <ProjectReference Include="..\..\Libraries\Farseer Physics Engine 3.5\Farseer.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
+    <ProjectReference Include="..\..\Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj" AdditionalProperties="Configuration=Debug" />
+    <ProjectReference Include="..\..\Libraries\Hyper.ComponentModel\Hyper.ComponentModel.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
+    <ProjectReference Include="..\..\Libraries\Lidgren.Network\Lidgren.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
   </ItemGroup>
 
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
@@ -73,12 +94,12 @@
 
     <!-- write the hash to the temp file.-->
     <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD &gt; $(VerFile)" ContinueOnError="true">
-      <Output TaskParameter="exitcode" ItemName="exitcodes"/>
+      <Output TaskParameter="exitcode" ItemName="exitcodes" />
     </Exec>
     <Exec Command="git -C $(ProjectDir) rev-parse --short HEAD --symbolic-full-name --abbrev-ref=strict &gt; $(BranchFile)" ContinueOnError="true" />
 
-    <Exec Command="echo GIT_UNAVAILABLE &gt; $(VerFile)" Condition="'%(exitcodes.identity)'>0"/>
-    <Exec Command="echo GIT_UNAVAILABLE &gt; $(BranchFile)" Condition="'%(exitcodes.identity)'>0"/>
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(VerFile)" Condition="'%(exitcodes.identity)'&gt;0" />
+    <Exec Command="echo GIT_UNAVAILABLE &gt; $(BranchFile)" Condition="'%(exitcodes.identity)'&gt;0" />
     
     <!-- read the version into the GitVersion itemGroup-->
     <ReadLinesFromFile File="$(VerFile)">

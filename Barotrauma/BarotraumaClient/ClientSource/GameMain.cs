@@ -1026,11 +1026,17 @@ namespace Barotrauma
 
         public void ShowBugReporter()
         {
+            if (GUIMessageBox.VisibleBox != null && GUIMessageBox.VisibleBox.UserData as string == "bugreporter")
+            {
+                return;
+            }
+
             var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
             msgBox.UserData = "bugreporter";
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
+#if !UNSTABLE
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportfeedbackform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
                 UserData = "https://steamcommunity.com/app/602960/discussions/1/",
@@ -1041,10 +1047,15 @@ namespace Barotrauma
                     return true;
                 }
             };
+#endif
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
+#if UNSTABLE
+                UserData = "https://barotraumagame.com/unstable-3rf3w5t4ter/",
+#else
                 UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
+#endif
                 OnClicked = (btn, userdata) =>
                 {
                     ShowOpenUrlInWebBrowserPrompt(userdata as string);

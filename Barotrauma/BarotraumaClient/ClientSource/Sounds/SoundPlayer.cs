@@ -39,6 +39,9 @@ namespace Barotrauma
 
         public readonly Vector2 IntensityRange;
 
+        public readonly bool ContinueFromPreviousTime;
+        public int PreviousTime;
+
         public readonly XElement Element;
                 
         public BackgroundMusic(XElement element)
@@ -47,6 +50,7 @@ namespace Barotrauma
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
+            this.ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
             this.Element = element;
         }
     }
@@ -681,6 +685,10 @@ namespace Barotrauma
                         DisposeMusicChannel(i);
                         currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        if (targetMusic[i].ContinueFromPreviousTime)
+                        {
+                            musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
+                        }
                         musicChannel[i].Looping = true;
                     }
                 }
@@ -705,6 +713,12 @@ namespace Barotrauma
 
         private static void DisposeMusicChannel(int index)
         {
+            var clip = musicClips.Find(m => m.File == musicChannel[index]?.Sound?.Filename);
+            if (clip != null)
+            {
+                if (clip.ContinueFromPreviousTime) { clip.PreviousTime = musicChannel[index].StreamSeekPos; }
+            }
+
             musicChannel[index]?.Dispose(); musicChannel[index] = null;
             currentMusic[index]?.Dispose(); currentMusic[index] = null;
         }

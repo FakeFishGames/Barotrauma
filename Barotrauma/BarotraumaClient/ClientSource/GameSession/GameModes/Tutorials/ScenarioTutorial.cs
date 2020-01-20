@@ -298,5 +298,16 @@ namespace Barotrauma.Tutorials
             character.Bloodloss = 0.0f;
             character.SetStun(0.0f, true);
         }
+
+        protected Item FindOrGiveItem(Character character, string identifier)
+        {
+            var item = character.Inventory.FindItemByIdentifier(identifier);
+            if (item != null) { return item; }
+
+            ItemPrefab itemPrefab = MapEntityPrefab.Find(name: null, identifier: identifier) as ItemPrefab;
+            item = new Item(itemPrefab, Vector2.Zero, submarine: null);
+            character.Inventory.TryPutItem(item, character);
+            return item;
+        }
     }
 }

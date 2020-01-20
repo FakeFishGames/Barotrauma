@@ -742,6 +742,15 @@ namespace Barotrauma.Networking
             Log(c.Name + " has reported an error: " + errorStr, ServerLog.MessageType.Error);
             GameAnalyticsManager.AddErrorEventOnce("GameServer.HandleClientError:" + errorStr, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorStr);
 
+            try
+            {
+                WriteEventErrorData(c, errorStr);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to write event error data", e);
+            }
+
             if (c.Connection == OwnerConnection)
             {
                 SendDirectChatMessage(errorStr, c, ChatMessageType.MessageBox);
@@ -751,6 +760,44 @@ namespace Barotrauma.Networking
             {
                 KickClient(c, errorStr);
             }
+
+        }
+
+        private void WriteEventErrorData(Client client, string errorStr)
+        {
+            string filePath = "event_error_log_server_" + client.Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
+            filePath = Path.Combine(ServerLog.SavePath, filePath);
+            if (File.Exists(filePath)) { return; }
+
+            List<string> errorLines = new List<string>
+            {
+                errorStr, ""
+            };
+
+            errorLines.Add("Entity IDs:");
+            List<Entity> sortedEntities = Entity.GetEntityList();
+            sortedEntities.Sort((e1, e2) => e1.ID.CompareTo(e2.ID));
+            foreach (Entity e in sortedEntities)
+            {
+                errorLines.Add(e.ID + ": " + e.ToString());
+            }
+
+            errorLines.Add("");
+            errorLines.Add("EntitySpawner events:");
+            foreach (var entityEvent in entityEventManager.UniqueEvents)
+            {
+                if (entityEvent.Entity is EntitySpawner)
+                {
+                    var spawnData = entityEvent.Data[0] as EntitySpawner.SpawnOrRemove;
+                    errorLines.Add(
+                        entityEvent.ID + ": " + 
+                        (spawnData.Remove ? "Remove " : "Create ") + 
+                        spawnData.Entity.ToString() + 
+                        " (" + spawnData.OriginalID + ", " + spawnData.Entity.ID + ")");
+                }
+            }
+
+            File.WriteAllLines(filePath, errorLines);
         }
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)

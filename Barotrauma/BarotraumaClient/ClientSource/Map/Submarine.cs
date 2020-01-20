@@ -417,7 +417,7 @@ namespace Barotrauma
             }
             
             // show what game version the submarine was created on
-            if (!IsVanillaSubmarine())
+            if (!IsVanillaSubmarine() && GameVersion != null)
             {
                 var versionText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
                         TextManager.Get("serverlistversion"), textAlignment: Alignment.TopLeft, font: font, wrap: true)

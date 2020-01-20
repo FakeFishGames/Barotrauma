@@ -29,7 +29,11 @@ namespace Barotrauma.Networking
 
         //arbitrary extra data that will be passed to the Write method of the serializable entity
         //(the index of an itemcomponent for example)
-        protected object[] Data;
+        public object[] Data
+        {
+            get;
+            private set;
+        }
 
         public bool Sent;
 

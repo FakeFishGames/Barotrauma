@@ -87,11 +87,11 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             mechanic = Character.Controlled;
 
-            var toolbox = mechanic.Inventory.FindItemByIdentifier("toolbox");
+            var toolbox = FindOrGiveItem(mechanic, "toolbox");
             toolbox.Unequip(mechanic);
             mechanic.Inventory.RemoveItem(toolbox);
 
-            var crowbar = mechanic.Inventory.FindItemByIdentifier("crowbar");
+            var crowbar = FindOrGiveItem(mechanic, "crowbar");
             crowbar.Unequip(mechanic);
             mechanic.Inventory.RemoveItem(crowbar);
 

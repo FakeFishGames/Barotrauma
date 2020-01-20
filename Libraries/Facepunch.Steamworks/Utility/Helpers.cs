@@ -40,33 +40,41 @@ namespace Steamworks
 
 		private static byte[][] BufferPool;
 		private static int BufferPoolIndex;
+		private static object BufferMutex = new object();
 
 		/// <summary>
 		/// Returns a buffer. This will get returned and reused later on.
 		/// </summary>
 		public static byte[] TakeBuffer( int minSize )
 		{
-			if ( BufferPool == null )
+			int bufferPoolIndex;
+			lock (BufferMutex)
 			{
-				//
-				// The pool has 8 items.
-				//
-				BufferPool = new byte[8][];
+				if (BufferPool == null)
+				{
+					//
+					// The pool has 8 items.
+					//
+					BufferPool = new byte[8][];
 
-				for ( int i = 0; i < BufferPool.Length; i++ )
-					BufferPool[i] = new byte[ 1024 * 128 ];
+					for (int i = 0; i < BufferPool.Length; i++)
+						BufferPool[i] = new byte[1024 * 128];
+				}
+
+				BufferPoolIndex++;
+
+				if (BufferPoolIndex < 0 || BufferPoolIndex >= BufferPool.Length)
+					BufferPoolIndex = 0;
+
+				bufferPoolIndex = BufferPoolIndex;
 			}
 
-			BufferPoolIndex++;
-			if ( BufferPoolIndex >= BufferPool.Length )
-				BufferPoolIndex = 0;
-
-			if ( BufferPool[BufferPoolIndex].Length < minSize )
+			if ( BufferPool[bufferPoolIndex].Length < minSize )
 			{
-				BufferPool[BufferPoolIndex] = new byte[minSize + 1024];
+				BufferPool[bufferPoolIndex] = new byte[minSize + 1024];
 			}
 
-			return BufferPool[BufferPoolIndex];
+			return BufferPool[bufferPoolIndex];
 		}
 
 		internal unsafe static string MemoryToString( IntPtr ptr )

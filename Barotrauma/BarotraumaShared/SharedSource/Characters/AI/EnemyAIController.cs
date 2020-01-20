@@ -1233,13 +1233,13 @@ namespace Barotrauma
             LatchOntoAI?.DeattachFromBody();
             Character.AnimController.ReleaseStuckLimbs();
 
+            if (attacker == null || attacker.AiTarget == null) { return; }
+
             if (State == AIState.Flee)
             {
                 SelectTarget(attacker.AiTarget);
                 return;
             }
-
-            if (attacker == null || attacker.AiTarget == null) { return; }
 
             if (attackResult.Damage > 0.0f && Character.Params.AI.AttackWhenProvoked)
             {

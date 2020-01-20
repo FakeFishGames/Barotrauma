@@ -278,19 +278,30 @@ namespace Barotrauma
             {
                 //filter out the items published by the player (they're shown in the publish tab)
                 var mySteamID = SteamManager.GetSteamID();
-                OnItemsReceived(items.Where(it => it.Owner.Id != mySteamID).ToList(), subscribedItemList);
+                OnItemsReceived(GetVisibleItems(items.Where(it => it.Owner.Id != mySteamID)), subscribedItemList);
             });
         }
 
         private void RefreshPopularItems()
         {
-            SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(items, topItemList); }, 20);
+            SteamManager.GetPopularWorkshopItems((items) => { OnItemsReceived(GetVisibleItems(items), topItemList); }, 20);
         }
 
         private void RefreshPublishedItems()
         {
             SteamManager.GetPublishedWorkshopItems((items) => { OnItemsReceived(items, publishedItemList); });
             RefreshMyItemList();
+        }
+
+        private IEnumerable<Steamworks.Ugc.Item> GetVisibleItems(IEnumerable<Steamworks.Ugc.Item> items)
+        {
+#if UNSTABLE
+            //show everything in Unstable
+            return items;
+#else
+            //hide Unstable items in normal version
+            return items.Where(it => !it.HasTag("unstable"));
+#endif
         }
 
         private void RefreshMyItemList()
@@ -341,7 +352,7 @@ namespace Barotrauma
             }
         }
 
-        private void OnItemsReceived(IList<Steamworks.Ugc.Item> itemDetails, GUIListBox listBox)
+        private void OnItemsReceived(IEnumerable<Steamworks.Ugc.Item> itemDetails, GUIListBox listBox)
         {
             CrossThread.RequestExecutionOnMainThread(() =>
             {
@@ -351,7 +362,7 @@ namespace Barotrauma
                     CreateWorkshopItemFrame(item, listBox);
                 }
 
-                if (itemDetails.Count == 0 && listBox == subscribedItemList)
+                if (itemDetails.Count() == 0 && listBox == subscribedItemList)
                 {
                     new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.9f), listBox.Content.RectTransform, Anchor.Center), TextManager.Get("NoSubscribedMods"), wrap: true)
                     {
@@ -1530,11 +1541,30 @@ namespace Barotrauma
 
         private void PublishWorkshopItem()
         {
-            if (itemContentPackage == null || itemEditor == null) return;
-            
+            if (itemContentPackage == null || itemEditor == null) { return; }
+
+#if UNSTABLE
+            var msgBox = new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("unstableworkshopitempublishwarning"),
+                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
+            {
+                var workshopPublishStatus = SteamManager.StartPublishItem(itemContentPackage, itemEditor);
+                if (workshopPublishStatus != null)
+                {
+                    if (!itemEditor.Value.Tags.Contains("unstable")) { itemEditor.Value.Tags.Add("unstable"); }
+                    CoroutineManager.StartCoroutine(WaitForPublish(workshopPublishStatus), "WaitForPublish");
+                }
+                msgBox.Close();
+                return true;
+            };
+            msgBox.Buttons[1].OnClicked += msgBox.Close;
+#else
             var workshopPublishStatus = SteamManager.StartPublishItem(itemContentPackage, itemEditor);
             if (workshopPublishStatus == null) { return; }
+            if (itemEditor.Value.Tags.Contains("unstable")) { itemEditor.Value.Tags.Remove("unstable"); }
             CoroutineManager.StartCoroutine(WaitForPublish(workshopPublishStatus), "WaitForPublish");
+#endif
+
         }
 
         private IEnumerable<object> WaitForPublish(SteamManager.WorkshopPublishStatus workshopPublishStatus)
@@ -1591,7 +1621,7 @@ namespace Barotrauma
             SelectTab(Tab.Browse);
         }
 
-        #region UI management
+#region UI management
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -1613,6 +1643,6 @@ namespace Barotrauma
         {
         }
         
-        #endregion
+#endregion
     }
 }

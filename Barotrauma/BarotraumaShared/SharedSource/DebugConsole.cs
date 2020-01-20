@@ -1370,7 +1370,7 @@ namespace Barotrauma
 
             if (human)
             {
-                var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
+                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.Server) : 0;
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (job != null)

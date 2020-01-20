@@ -949,28 +949,37 @@ namespace Barotrauma
                     Version.TryParse(serverInfo.GameVersion, out remoteVersion);
                 }
 
-                bool incompatible =
-                    (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
-                    (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
+                //never show newer versions
+                //(ignore revision number, it doesn't affect compatibility)
+                if (remoteVersion != null &&
+                    (remoteVersion.Major > GameMain.Version.Major || remoteVersion.Minor > GameMain.Version.Minor || remoteVersion.Build > GameMain.Version.Build))
+                {
+                    child.Visible = false;
+                }
+                else
+                {
+                    bool incompatible =
+                        (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
+                        (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
-                child.Visible =
-                    serverInfo.OwnerVerified &&
-                    serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
-                    (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
-                    (!filterPassword.Selected || !serverInfo.HasPassword) &&
-                    (!filterIncompatible.Selected || !incompatible) &&
-                    (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
-                    (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
-                    (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
-                    (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
-                    (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
-                    (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
-                    (!filterVoip.Selected || serverInfo.VoipEnabled == false) &&
-                    (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
-                    ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
-                     (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
-                     (selectedTab == ServerListTab.Favorites && serverInfo.Favorite)) &&
-                    (remoteVersion != null && remoteVersion <= GameMain.Version);
+                    child.Visible =
+                        serverInfo.OwnerVerified &&
+                        serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
+                        (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
+                        (!filterPassword.Selected || !serverInfo.HasPassword) &&
+                        (!filterIncompatible.Selected || !incompatible) &&
+                        (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
+                        (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
+                        (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
+                        (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
+                        (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
+                        (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
+                        (!filterVoip.Selected || serverInfo.VoipEnabled == false) &&
+                        (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
+                        ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
+                         (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
+                         (selectedTab == ServerListTab.Favorites && serverInfo.Favorite));
+                }
 
                 foreach (GUITickBox tickBox in playStyleTickBoxes)
                 {
@@ -1672,6 +1681,14 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Ping is null", ex);
                 }
+            }
+            else if (serverInfo.PingLocation != null)
+            {
+                Steamworks.Data.PingLocation pingLocation = serverInfo.PingLocation.Value;
+                serverInfo.Ping = Steamworks.SteamNetworkingUtils.LocalPingLocation?.EstimatePingTo(pingLocation) ?? -1;
+                serverInfo.PingChecked = true;
+                serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
+                serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
             }
 
             if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))

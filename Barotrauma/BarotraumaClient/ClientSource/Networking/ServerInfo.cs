@@ -15,6 +15,7 @@ namespace Barotrauma.Networking
         public string Port;
         public string QueryPort;
 
+        public Steamworks.Data.PingLocation? PingLocation;
         public UInt64 LobbyID;
         public UInt64 OwnerID;
         public bool OwnerVerified;
@@ -500,18 +501,19 @@ namespace Barotrauma.Networking
             bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
             int.TryParse(lobby.GetData("playercount"), out int currPlayers);
             int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-            //UInt64.TryParse(lobby.GetData("connectsteamid"), out ulong connectSteamId);
-            string ip = lobby.GetData("hostipaddress");
             UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
 
             if (OwnerID != ownerId) { return; }
 
-            if (string.IsNullOrWhiteSpace(ip)) { ip = ""; }
-
             ServerName = lobby.GetData("name");
+            IP = "";
             Port = "";
             QueryPort = "";
-            IP = ip;
+            string pingLocation = lobby.GetData("pinglocation");
+            if (!string.IsNullOrEmpty(pingLocation))
+            {
+                PingLocation = Steamworks.Data.PingLocation.TryParseFromString(pingLocation);
+            }
             PlayerCount = currPlayers;
             MaxPlayers = maxPlayers;
             HasPassword = hasPassword;

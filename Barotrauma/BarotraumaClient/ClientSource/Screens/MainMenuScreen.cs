@@ -312,22 +312,8 @@ namespace Barotrauma
                 }
             };
 #endif
-
             var minButtonSize = new Point(120, 20);
             var maxButtonSize = new Point(480, 80);
-
-            /*new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonsParent.RectTransform), TextManager.Get("TutorialButton"), style: "GUIButtonLarge")
-            {
-                UserData = Tab.Tutorials,
-                OnClicked = SelectTab,
-                Enabled = false
-            };*/
-            
-           /* var buttons = GUI.CreateButtons(9, new Vector2(1, 0.04f), buttonsParent.RectTransform, anchor: Anchor.BottomLeft,
-                minSize: minButtonSize, maxSize: maxButtonSize, relativeSpacing: 0.005f, extraSpacing: i => i % 2 == 0 ? 20 : 0);
-            buttons.ForEach(b => b.Color *= 0.8f);
-            SetupButtons(buttons);
-            buttons.ForEach(b => b.TextBlock.SetTextPos());*/
 
             var relativeSize = new Vector2(0.6f, 0.65f);
             var minSize = new Point(600, 400);
@@ -491,7 +477,7 @@ namespace Barotrauma
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
                         selectedTab = 0;
-                        ShowTutorialSkipWarning(selectedTab);
+                        ShowTutorialSkipWarning(Tab.NewGame);
                         return true;
                     }
                     if (!GameMain.Config.CampaignDisclaimerShown)
@@ -516,7 +502,7 @@ namespace Barotrauma
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
                         selectedTab = 0;
-                        ShowTutorialSkipWarning(tab);
+                        ShowTutorialSkipWarning(Tab.JoinServer);
                         return true;
                     }
                     if (!GameMain.Config.CampaignDisclaimerShown)
@@ -955,8 +941,9 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
+#if !UNSTABLE
             GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
-
+#endif
             if (selectedTab != Tab.Credits)
             {
                 Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);

@@ -279,6 +279,28 @@ namespace Barotrauma
                     ScreenOverlayColor, true);
             }
 
+#if UNSTABLE
+            string line1 = "Barotrauma Unstable v" + GameMain.Version;
+            string line2 = "(" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
+
+            Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
+                spriteBatch, new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100), Color.Black * 0.8f);
+            LargeFont.DrawString(spriteBatch, line1,
+                new Vector2(10, GameMain.GraphicsHeight - 30 - LargeFont.MeasureString(line1).Y), Color.White * 0.6f);
+            Font.DrawString(spriteBatch, line2,
+                new Vector2(10, GameMain.GraphicsHeight - 30), Color.White * 0.6f);
+
+            if (Screen.Selected != GameMain.GameScreen)
+            {
+                var buttonRect =
+                    new Rectangle(20 + (int)Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X), GameMain.GraphicsHeight - (int)(45 * Scale), (int)(150 * Scale), (int)(40 * Scale));
+                if (DrawButton(spriteBatch, buttonRect, "Report Bug", Style.GetComponentStyle("GUIBugButton").Color * 0.8f))
+                {
+                    GameMain.Instance.ShowBugReporter();
+                }
+            }
+#endif
+
             if (DisableHUD) { return; }
 
             if (GameMain.ShowFPS || GameMain.DebugDraw)

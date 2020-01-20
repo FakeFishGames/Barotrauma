@@ -110,43 +110,40 @@ namespace Barotrauma.Steam
         {
             get { return currentLobby?.Id ?? 0; }
         }
-        private static Task<Steamworks.Data.Lobby?> lobbyCreationTask;
-        private static Task<Steamworks.Data.Lobby?> lobbyJoinTask;
 
         public static void CreateLobby(ServerSettings serverSettings)
         {
-            Steamworks.SteamMatchmaking.ResetActions();
-            Steamworks.SteamMatchmaking.OnLobbyCreated += (result, lobby) =>
-            {
-                currentLobby = lobby;
-
-                if (result != Steamworks.Result.OK)
-                {
-                    DebugConsole.ThrowError("Failed to create Steam lobby: "+result.ToString());
-                    lobbyState = LobbyState.NotConnected;
-                    return;
-                }
-                
-                DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
-
-                lobbyState = LobbyState.Owner;
-                lobbyID = lobby.Id;
-
-                if (serverSettings.isPublic)
-                {
-                    lobby.SetPublic();
-                }
-                else
-                {
-                    lobby.SetFriendsOnly();
-                }
-                lobby.SetJoinable(true);
-
-                UpdateLobby(serverSettings);
-            };
             if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
-            lobbyCreationTask = Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers+10);
+            TaskPool.Add(Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers + 10),
+                (lobby) =>
+                {
+                    if (currentLobby == null)
+                    {
+                        DebugConsole.ThrowError("Failed to create Steam lobby");
+                        lobbyState = LobbyState.NotConnected;
+                        return;
+                    }
+
+                    currentLobby = lobby.Result;
+
+                    DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
+
+                    lobbyState = LobbyState.Owner;
+                    lobbyID = (currentLobby?.Id).Value;
+
+                    if (serverSettings.isPublic)
+                    {
+                        currentLobby?.SetPublic();
+                    }
+                    else
+                    {
+                        currentLobby?.SetFriendsOnly();
+                    }
+                    currentLobby?.SetJoinable(true);
+
+                    UpdateLobby(serverSettings);
+                });
         }
         
         public static void UpdateLobby(ServerSettings serverSettings)
@@ -169,10 +166,11 @@ namespace Barotrauma.Steam
             var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
             
             currentLobby?.SetData("name", serverSettings.ServerName);
-            currentLobby?.SetData("owner", SteamIDUInt64ToString(GetSteamID()));
-            currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count??0).ToString());
+            currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             currentLobby?.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
-            //lobby?..CurrentLobbyData.SetData("connectsteamid", Steam.SteamManager.GetSteamID().ToString());
+            //currentLobby?.SetData("hostipaddress", lobbyIP);
+            currentLobby?.SetData("pinglocation", Steamworks.SteamNetworkingUtils.LocalPingLocation.ToString() ?? "");
+            currentLobby?.SetData("lobbyowner", SteamIDUInt64ToString(GetSteamID()));
             currentLobby?.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             currentLobby?.SetData("message", serverSettings.ServerMessageText);
@@ -187,9 +185,12 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
             currentLobby?.SetData("allowspectating", serverSettings.AllowSpectating.ToString());
             currentLobby?.SetData("allowrespawn", serverSettings.AllowRespawn.ToString());
+            currentLobby?.SetData("karmaenabled", serverSettings.KarmaEnabled.ToString());
+            currentLobby?.SetData("friendlyfireenabled", serverSettings.AllowFriendlyFire.ToString());
             currentLobby?.SetData("traitors", serverSettings.TraitorsEnabled.ToString());
             currentLobby?.SetData("gamestarted", GameMain.Client.GameStarted.ToString());
-            currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier??"");
+            currentLobby?.SetData("playstyle", serverSettings.PlayStyle.ToString());
+            currentLobby?.SetData("gamemode", GameMain.NetLobbyScreen?.SelectedMode?.Identifier ?? "");
 
             DebugConsole.Log("Lobby updated!");
         }
@@ -208,30 +209,22 @@ namespace Barotrauma.Steam
         {
             if (currentLobby.HasValue && currentLobby.Value.Id == id) { return; }
             if (lobbyID == id) { return; }
-            Steamworks.SteamMatchmaking.ResetActions();
-            Steamworks.SteamMatchmaking.OnLobbyEntered += (lobby) =>
-            {
-                try
-                {
-                    currentLobby = lobby;
-                    lobbyState = LobbyState.Joined;
-                    lobbyID = lobby.Id;
-                    if (joinServer)
-                    {
-                        GameMain.Instance.ConnectLobby = 0;
-                        GameMain.Instance.ConnectName = lobby.GetData("servername");
-                        GameMain.Instance.ConnectEndpoint = SteamIDUInt64ToString(lobby.Owner.Id.Value);
-                    }
-                }
-                finally
-                {
-                    Steamworks.SteamMatchmaking.ResetActions();
-                }
-            };
             lobbyState = LobbyState.Joining;
             lobbyID = id;
 
-            lobbyJoinTask = Steamworks.SteamMatchmaking.JoinLobbyAsync(lobbyID);
+            TaskPool.Add(Steamworks.SteamMatchmaking.JoinLobbyAsync(lobbyID),
+                (lobby) =>
+                {
+                    currentLobby = lobby.Result;
+                    lobbyState = LobbyState.Joined;
+                    lobbyID = (currentLobby?.Id).Value;
+                    if (joinServer)
+                    {
+                        GameMain.Instance.ConnectLobby = 0;
+                        GameMain.Instance.ConnectName = currentLobby?.GetData("servername");
+                        GameMain.Instance.ConnectEndpoint = SteamIDUInt64ToString((currentLobby?.Owner.Id).Value);
+                    }
+                });
         }
 
         public static bool GetServers(Action<ServerInfo> addToServerList, Action serverQueryFinished)
@@ -362,10 +355,13 @@ namespace Barotrauma.Steam
             serverInfo.AllowSpectating = getLobbyBool("allowspectating");
             serverInfo.AllowRespawn = getLobbyBool("allowrespawn");
             serverInfo.VoipEnabled = getLobbyBool("voicechatenabled");
+            serverInfo.KarmaEnabled = getLobbyBool("karmaenabled");
+            serverInfo.FriendlyFireEnabled = getLobbyBool("friendlyfireenabled");
             if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
 
             serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
             serverInfo.GameMode = lobby.GetData("gamemode");
+            if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
 
             if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
                 serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)

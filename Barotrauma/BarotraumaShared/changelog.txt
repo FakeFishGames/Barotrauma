@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.7000 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Additional logging to diagnose event/entity ID errors: server and clients write a log file with a bunch of debug information the error happens. The files can be found in the ServerLogs folder after the error has occurred. If you get log files, please send them to us to help us diagnose these bugs!
+
+- Fixed "skip tutorials" returning to the main menu instead of opening the correct tab when starting a new game.
+- Fixed crashing when an enemy takes damage from something else than a character.
+- Fixed clients disconnecting if a sub with no version number (or a sub the client hasn't received yet) is selected.
+- Fixed crash when spawning a human without specified job through the console.
+- Fixed several bugs that were causing crashes due to race conditions in the server list.
+- Made "showseed" console command usable by clients.
+- Fixed accordion collider.
+- Fixed doors not blocking hitscan weapons.
+- Continue playing the main menu and editor musics from previous position instead of restarting when switching between screens.
+- Added missing sonar display background to sonar monitor.
+- Fuel rods now always return their steel on deconstruction.
+- Constructing fuel rods now requires lead.
+- Added an improved version of Typhon.
+- Reworked Berilia.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.7.0
 ---------------------------------------------------------------------------------------------------------
 

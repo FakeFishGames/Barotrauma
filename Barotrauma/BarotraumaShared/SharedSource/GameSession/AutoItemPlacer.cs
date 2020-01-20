@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Barotrauma.Extensions;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -71,6 +69,7 @@ namespace Barotrauma
             for (int i = 0; i < prefabsWithContainer.Count; i++)
             {
                 var itemPrefab = prefabsWithContainer[i];
+                if (itemPrefab == null) { continue; }
                 if (SpawnItems(itemPrefab))
                 {
                     removals.Add(itemPrefab);
