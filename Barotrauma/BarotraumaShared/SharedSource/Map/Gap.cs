@@ -228,7 +228,9 @@ namespace Barotrauma
                 if (hulls[i] == null) hulls[i] = Hull.FindHullOld(searchPos[i], null, false, true);
             }
 
-            if (hulls[0] == null && hulls[1] == null) return;
+            if (hulls[1] == hulls[0]) { hulls[1] = null; }
+
+            if (hulls[0] == null && hulls[1] == null) { return; }
 
             if (hulls[0] == null && hulls[1] != null)
             {

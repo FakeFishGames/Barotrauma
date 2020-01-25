@@ -1283,7 +1283,7 @@ namespace Barotrauma
                 }
             }
 
-            ApplyStatusEffects(ActionType.Always, deltaTime, null);
+            ApplyStatusEffects(ActionType.Always, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
             for (int i = 0; i < updateableComponents.Count; i++)
             {
@@ -1306,7 +1306,7 @@ namespace Barotrauma
 #endif
                 ic.WasUsed = false;
 
-                ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime);
+                ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
                 if (ic.IsActive)
                 {

@@ -231,6 +231,7 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
+            HoverCursor = CursorState.IBeam;
             CanBeFocused = true;
 
             Enabled = true;

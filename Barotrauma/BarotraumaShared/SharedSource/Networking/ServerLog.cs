@@ -154,10 +154,16 @@ namespace Barotrauma.Networking
                 }                
             }
 
-            string fileName = ServerName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm") + ".txt";
+            string fileName = ServerName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm");
             fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
 
-            string filePath = Path.Combine(SavePath, fileName);
+            string filePath = Path.Combine(SavePath, fileName + ".txt");
+            int i = 2;
+            while (File.Exists(filePath))
+            {
+                filePath = Path.Combine(SavePath, fileName + " (" + i + ").txt");
+                i++;
+            }
 
             try
             {

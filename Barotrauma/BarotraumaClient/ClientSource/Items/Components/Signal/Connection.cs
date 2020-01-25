@@ -24,6 +24,12 @@ namespace Barotrauma.Items.Components
         {
             get { return flashTimer; }
         }
+
+        public static Wire DraggingConnected
+        {
+            get => draggingConnected;
+        }
+
         private float flashTimer;
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)

@@ -907,6 +907,7 @@ namespace Barotrauma
                     new XAttribute("width", GraphicsWidth),
                     new XAttribute("height", GraphicsHeight),
                     new XAttribute("vsync", VSyncEnabled),
+                    new XAttribute("framelimit", Timing.FrameLimit),
                     new XAttribute("displaymode", windowMode));
             }
 
@@ -1228,6 +1229,7 @@ namespace Barotrauma
                     new XAttribute("width", GraphicsWidth),
                     new XAttribute("height", GraphicsHeight),
                     new XAttribute("vsync", VSyncEnabled),
+                    new XAttribute("framelimit", Timing.FrameLimit),
                     new XAttribute("displaymode", windowMode));
             }
 
@@ -1423,6 +1425,7 @@ namespace Barotrauma
             GraphicsWidth = graphicsMode.GetAttributeInt("width", GraphicsWidth);
             GraphicsHeight = graphicsMode.GetAttributeInt("height", GraphicsHeight);
             VSyncEnabled = graphicsMode.GetAttributeBool("vsync", VSyncEnabled);
+            Timing.FrameLimit = graphicsMode.GetAttributeInt("framelimit", 200);
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
             ParticleLimit = graphicsSettings.GetAttributeInt("particlelimit", ParticleLimit);
@@ -1504,6 +1507,7 @@ namespace Barotrauma
             GraphicsWidth = 0;
             GraphicsHeight = 0;
             VSyncEnabled = true;
+            Timing.FrameLimit = 200;
 #if DEBUG
             EnableSplashScreen = false;
 #else

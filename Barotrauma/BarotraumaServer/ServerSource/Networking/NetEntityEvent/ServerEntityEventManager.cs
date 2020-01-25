@@ -313,11 +313,11 @@ namespace Barotrauma.Networking
             List<NetEntityEvent> eventsToSync = null;
             if (client.NeedsMidRoundSync)
             {
-                eventsToSync = GetEventsToSync(client, uniqueEvents);
+                eventsToSync = GetEventsToSync(client);
             }
             else
             {
-                eventsToSync = GetEventsToSync(client, events);
+                eventsToSync = GetEventsToSync(client);
             }
 
             if (eventsToSync.Count == 0)
@@ -380,13 +380,13 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Returns a list of events that should be sent to the client from the eventList 
         /// </summary>
-        /// <param name="client"></param>
-        /// <param name="eventList"></param>
-        /// <returns></returns>
-        private List<NetEntityEvent> GetEventsToSync(Client client, List<ServerEntityEvent> eventList)
+        private List<NetEntityEvent> GetEventsToSync(Client client)
         {
             List<NetEntityEvent> eventsToSync = new List<NetEntityEvent>();
-            if (eventList.Count == 0) return eventsToSync;
+
+            var eventList = client.NeedsMidRoundSync ? uniqueEvents : events;
+
+            if (eventList.Count == 0) { return eventsToSync; }
 
             //find the index of the first event the client hasn't received
             int startIndex = eventList.Count;
@@ -409,7 +409,18 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                eventsToSync.AddRange(eventList.GetRange(i, eventList.Count - i));
+                if (client.NeedsMidRoundSync)
+                {
+                    if (i <= client.UnreceivedEntityEventCount)
+                    {
+                        eventsToSync.AddRange(eventList.GetRange(i, client.UnreceivedEntityEventCount - i));
+                    }
+                }
+                else
+                {
+                    eventsToSync.AddRange(eventList.GetRange(i, eventList.Count - i));
+                }
+
                 break;
             }
 

@@ -20,10 +20,12 @@
 
         public virtual void Select()
         {
+
             if (selected != null && selected != this)
             {
                 selected.Deselect();
 #if CLIENT
+                GUI.ClearCursorWait();
                 //make sure any textbox in the previously selected screen doesn't stay selected
                 if (GUI.KeyboardDispatcher.Subscriber != DebugConsole.TextBox)
                 {

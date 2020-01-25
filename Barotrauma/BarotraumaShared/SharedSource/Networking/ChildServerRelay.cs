@@ -14,6 +14,7 @@ namespace Barotrauma.Networking
         private static Stream writeStream;
         private static Stream readStream;
         private static volatile bool shutDown;
+        private static ManualResetEvent writeManualResetEvent;
 
         private static byte[] tempBytes;
         private enum ReadState
@@ -49,6 +50,8 @@ namespace Barotrauma.Networking
 
             readCancellationToken = new CancellationTokenSource();
 
+            writeManualResetEvent = new ManualResetEvent(false);
+
             readThread = new Thread(UpdateRead);
             writeThread = new Thread(UpdateWrite);
             readThread.Start();
@@ -58,6 +61,7 @@ namespace Barotrauma.Networking
         private static void PrivateShutDown()
         {
             shutDown = true;
+            writeManualResetEvent.Set();
             readCancellationToken?.Cancel();
             readThread?.Join(); readThread = null;
             writeThread?.Join(); writeThread = null;
@@ -152,7 +156,11 @@ namespace Barotrauma.Networking
                         msgAvailable = msgsToWrite.TryDequeue(out msg);
                     }
                 }
-                Thread.Yield();
+                if (!shutDown)
+                {
+                    writeManualResetEvent.Reset();
+                    writeManualResetEvent.WaitOne();
+                }
             }
         }
 
@@ -163,6 +171,7 @@ namespace Barotrauma.Networking
             lock (msgsToWrite)
             {
                 msgsToWrite.Enqueue(msg);
+                writeManualResetEvent.Set();
             }
         }
 

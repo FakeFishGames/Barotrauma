@@ -746,6 +746,21 @@ namespace Barotrauma.CharacterEditor
             buttonsPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-buttonsPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), buttonsPanel.RectTransform);
         }
 
+        public CursorState GetMouseCursorState()
+        {
+            foreach (var limb in character.AnimController.Limbs)
+            {
+                if (limb?.ActiveSprite == null) { continue; }
+                if (selectedJoints.Any(j => j.LimbA == limb || j.LimbB == limb)) { continue; }
+                // character limbs
+                if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) &&
+                    MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition)) { return CursorState.Hand; }
+                // spritesheet
+                if (GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition)) { return CursorState.Hand; }
+            }
+            return CursorState.Default;
+        }
+
         /// <summary>
         /// Fps independent mouse input. The draw method is called multiple times per frame.
         /// </summary>

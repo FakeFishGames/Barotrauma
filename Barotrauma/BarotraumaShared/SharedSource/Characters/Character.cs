@@ -980,8 +980,7 @@ namespace Barotrauma
 
         public void GiveJobItems(WayPoint spawnPoint = null)
         {
-            if (info == null || info.Job == null) return;
-
+            if (info == null || info.Job == null) { return; }
             info.Job.GiveJobItems(this, spawnPoint);
         }
 

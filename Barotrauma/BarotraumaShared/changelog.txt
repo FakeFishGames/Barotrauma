@@ -1,5 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.7000 (Unstable)
+v0.9.701 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Fixed SteamP2P server hosting.
+- Fixed a bug that caused "missing entity" errors when joining mid-round. Occurred if entities were created or removed while the client was in the process of getting in sync with the server, for example if the other players were firing turrets while the client was joining. However, there may still other bugs left that can cause the same "missing entity" error message.
+- Cap the framerate to 200 FPS when VSync is off to prevent overloading the GPU. The cap can be adjusted by changing the "framelimit" attribute in config_player.xml.
+- Rebalanced random events.
+- Numerous fixes and improvements to Berilia.
+- Give job items to humans spawned with the "spawn" command.
+- Fixed content package hash mismatches between Windows and Linux.
+- Fixed client crashing when disconnecting from the server as a host.
+- Fixed clients crashing when an order message is received while in the server lobby.
+- New sprites (that actually match the worn sprite) for dropped outfits.
+- Slightly increased the view range of the coilguns and railguns.
+- Cursor changes according to what it's hovered on (hand icon when on a button, caret icon when on a textbox, etc).
+- The automatically placed items are not listed in the debug console by default anymore. Listing them can be re-enabled with the command "outfitdebug".
+- Fixed crashing when saving structures into item assemblies.
+- Fixed sub editor allowing vanilla subs to be deleted.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.700 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 - Additional logging to diagnose event/entity ID errors: server and clients write a log file with a bunch of debug information the error happens. The files can be found in the ServerLogs folder after the error has occurred. If you get log files, please send them to us to help us diagnose these bugs!
@@ -24,10 +44,12 @@ v0.9.7.0
 ---------------------------------------------------------------------------------------------------------
 
 UI/UX improvements:
+- Graphical and functional overhaul of all user interfaces.
+- Better feedback on shooting.
 - Double clicking on an item moves it to the equipped inventory (e.g. ammo to the equipped weapon).
 - Periscopes can be deselected by pressing esc.
 - Fabricators can pull ingredients directly from the user's inventory without having to place them in the fabricator's input slots.
-- Lock the on/off slider in the pump interface when the state is controlled by signals, same with the engine slider.
+- Lock the on/off switch in the pump interface when the state is controlled by signals, same with the engine slider.
 - 1 second cooldown before doors can be opened/closed after someone else has opened/closed them. Makes it less likely for doors to be opened/closed accidentally when multiple people are trying to use them at the same time. 
 - Show a warning if trying to start a campaign for the first time without playing the tutorials.
 - Diving suits and fire extinguishers are not automatically picked up from the lockers/brackets when clicking on them to make it less likely to accidentally pick them up. Instead, clicking on them opens the inventory of the container, the same way when interacting with e.g. a steel cabinet.
@@ -58,7 +80,7 @@ Additions and changes:
 - The job gear variants are not just visually different versions of the same item, but completely separate items. The job variants now allow the players to choose what kind of gear they want to spawn with, not just the look of the uniform.
 - Attachable items and wire nodes can now be freely placed around the character instead of always being placed at the position of the character. When attaching items/wires, there's a placement grid that makes it much easier to neatly attach/wire things mid-round.
 - The submarines now get automatically outfitted with a semi-random selection of supplies when starting a campaign. The items that have been manually placed in the submarine editor are kept as-is.
-- Split internal damage into multiple subtypes: blunt force trauma, lacerations and bite wounds. The new afflictions are functionally identical to the default internal damage affliction, but can be used to identify the source of the injuries.
+- Splitted internal damage into multiple subtypes: blunt force trauma, lacerations and bite wounds. The new afflictions are functionally identical to the default internal damage affliction, but can be used to identify the source of the injuries.
 - Humans are more resistant to gunshot wounds, lacerations and blunt force trauma than monsters. The intention is to allow making weapons more effective towards monsters without making killing your crewmates with them too easy.
 - Added a "terminal" item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
 - Added muzzle flashes to small firearms.

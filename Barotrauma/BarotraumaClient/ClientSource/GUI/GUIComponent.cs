@@ -16,6 +16,8 @@ namespace Barotrauma
         #region Hierarchy
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
         
+        public CursorState HoverCursor = CursorState.Default;
+        
         public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
         
         public T GetChild<T>() where T : GUIComponent

@@ -619,7 +619,10 @@ namespace Barotrauma
             if (Bodies != null)
             {
                 foreach (Body b in Bodies)
+                {
                     GameMain.World.Remove(b);
+                }
+                Bodies.Clear();
             }
 
             if (Sections != null)
@@ -648,7 +651,10 @@ namespace Barotrauma
             if (Bodies != null)
             {
                 foreach (Body b in Bodies)
+                {
                     GameMain.World.Remove(b);
+                }
+                Bodies.Clear();
             }
 
             if (Sections != null)

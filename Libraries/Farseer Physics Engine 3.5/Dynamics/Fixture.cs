@@ -307,7 +307,7 @@ namespace FarseerPhysics.Dynamics
         internal void CreateProxies(IBroadPhase broadPhase, ref Transform xf)
         {
             if (ProxyCount != 0)
-                throw new InvalidOperationException("Proxies allready created for this Fixture.");
+                throw new InvalidOperationException("Proxies already created for this Fixture.");
 
             // Create proxies in the broad-phase.
             ProxyCount = Shape.ChildCount;

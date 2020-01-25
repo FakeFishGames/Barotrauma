@@ -509,11 +509,6 @@ namespace Barotrauma.Networking
             IP = "";
             Port = "";
             QueryPort = "";
-            string pingLocation = lobby.GetData("pinglocation");
-            if (!string.IsNullOrEmpty(pingLocation))
-            {
-                PingLocation = Steamworks.Data.PingLocation.TryParseFromString(pingLocation);
-            }
             PlayerCount = currPlayers;
             MaxPlayers = maxPlayers;
             HasPassword = hasPassword;

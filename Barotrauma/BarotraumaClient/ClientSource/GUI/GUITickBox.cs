@@ -134,6 +134,7 @@ namespace Barotrauma
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
+            HoverCursor = CursorState.Hand;
 
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), true);
 
@@ -176,6 +177,7 @@ namespace Barotrauma
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;
+            base.Update(deltaTime);
 
             if (GUI.MouseOn == this && Enabled)
             {

@@ -891,7 +891,13 @@ namespace Barotrauma
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
-            PerformanceCounter.Update(deltaTime);
+            double step = 1.0 / Timing.FrameLimit;
+            while (!Config.VSyncEnabled && sw.Elapsed.TotalSeconds + deltaTime < step)
+            {
+                Thread.Sleep(1);
+            }
+
+            PerformanceCounter.Update(sw.Elapsed.TotalSeconds + deltaTime);
 
             if (loadingScreenOpen)
             {

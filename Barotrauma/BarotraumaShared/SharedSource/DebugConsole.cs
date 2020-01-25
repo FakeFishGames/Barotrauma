@@ -489,6 +489,14 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("dumptofile", "", (string[] args) =>
+            {
+                string filename = "consoleOutput.txt";
+                if (args.Length > 0) { filename = string.Join(" ", args); }
+
+                File.WriteAllLines(filename, Messages.Select(m => m.Text).ToArray());
+            }));
+
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
                 if (args.Length == 0) return;
@@ -924,6 +932,12 @@ namespace Barotrauma
             }));
 
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
+            
+            commands.Add(new Command("autoitemplacerdebug|outfitdebug", "autoitemplacerdebug: Toggle automatic item placer debug info on/off. The automatically placed items are listed in the debug console at the start of a round.", (string[] args) =>
+            {
+                AutoItemPlacer.OutputDebugInfo = !AutoItemPlacer.OutputDebugInfo;
+                NewMessage((AutoItemPlacer.OutputDebugInfo ? "Enabled" : "Disabled") + " automatic item placer logging.", Color.White);
+            }, isCheat: false));
 
             commands.Add(new Command("verboselogging", "verboselogging: Toggle verbose console logging on/off. When on, additional debug information is written to the debug console.", (string[] args) =>
             {
@@ -1373,10 +1387,7 @@ namespace Barotrauma
                 var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.Server) : 0;
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-                if (job != null)
-                {
-                    spawnedCharacter.GiveJobItems(spawnPoint);
-                }
+                spawnedCharacter.GiveJobItems(spawnPoint);
 
                 if (GameMain.GameSession != null)
                 {

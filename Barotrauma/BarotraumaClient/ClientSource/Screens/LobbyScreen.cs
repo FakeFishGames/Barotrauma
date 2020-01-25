@@ -18,6 +18,11 @@ namespace Barotrauma
             get { return GameMain.GameSession.CrewManager; }
         }
 
+        public CampaignUI CampaignUI
+        {
+            get { return campaignUI; }
+        }
+        
         public string GetMoney()
         {
             return campaignUI == null ? "" : campaignUI.GetMoney();

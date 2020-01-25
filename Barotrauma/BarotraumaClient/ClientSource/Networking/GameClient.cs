@@ -401,6 +401,7 @@ namespace Barotrauma.Networking
         // Before main looping starts, we loop here and wait for approval message
         private IEnumerable<object> WaitForStartingInfo()
         {
+            GUI.SetCursorWaiting();
             requiresPw = false;
             pwRetries = -1;
 
@@ -503,6 +504,7 @@ namespace Barotrauma.Networking
 
             reconnectBox?.Close(); reconnectBox = null;
 
+            GUI.ClearCursorWait();
             if (connectCancelled) { yield return CoroutineStatus.Success; }
             
             yield return CoroutineStatus.Success;
@@ -1435,6 +1437,11 @@ namespace Barotrauma.Networking
 
                 if (clientPeer is SteamP2POwnerPeer)
                 {
+                    TaskPool.Add(Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
+                    {
+                        Steam.SteamManager.UpdateLobby(serverSettings);
+                    });
+
                     Steam.SteamManager.UpdateLobby(serverSettings);
                 }
             }
@@ -1978,7 +1985,7 @@ namespace Barotrauma.Networking
             if (ChildServerRelay.Process != null)
             {
                 int checks = 0;
-                while (!ChildServerRelay.Process.HasExited)
+                while (ChildServerRelay.Process != null && !ChildServerRelay.Process.HasExited)
                 {
                     if (checks > 10)
                     {

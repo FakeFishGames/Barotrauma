@@ -26,17 +26,14 @@ namespace Barotrauma
         /// <seealso cref="NetLobbyScreen.Select"/> where I'm utilizing this
         private readonly List<GUITextBox> registers = new List<GUITextBox>();
 
-        private readonly bool skipDuplicate;
-
         // Selector index
         private int index;
 
         // Local changes we've made into previously stored messages
         private string[] localChanges;
 
-        public ChatManager(bool skipDuplicate, bool loop, short maxCount)
+        public ChatManager(bool loop, short maxCount)
         {
-            this.skipDuplicate = skipDuplicate;
             this.loop = loop;
             this.maxCount = maxCount;
             localChanges = new string[maxCount];
@@ -87,13 +84,10 @@ namespace Barotrauma
         public void Store(string message)
         {
             Clear();
-            string strip = StripMessage(message);
+            var strip = StripMessage(message);
             if (string.IsNullOrWhiteSpace(strip)) { return; }
 
-            if (skipDuplicate && messageList.Any(p => message == p))
-            {
-                return;
-            }
+            if (messageList.Count > 1 && messageList[1] == message) { return; }
             
             // insert to the second position as the first position is reserved for the original message if any
             messageList.Insert(1, message);
@@ -104,7 +98,7 @@ namespace Barotrauma
             }
 
             // [It's also possible to lambdas too in short methods, if you like: string StripMessage(string text) => ChatMessage.GetChatMessageCommand(text, out string msg);]
-            string StripMessage(string text)
+            static string StripMessage(string text)
             {
                 ChatMessage.GetChatMessageCommand(text, out string msg);
                 return msg;
@@ -129,40 +123,61 @@ namespace Barotrauma
         /// <returns>A message or null</returns>
         private string SelectMessage(Direction direction, string original)
         {
-            if (direction == Direction.Other) { return null; }
-            
-            // temporarily save our changes in case we fat-finger and want to go back
-            localChanges[index] = original;
-
-            int dir = (int) direction;
-            
-            int nextIndex = (index + dir);
-
-            if (loop && messageList.Count > 1)
+            var originalIndex = index;
+            while (true)
             {
-                nextIndex = LoopAround(nextIndex);
-            }
-            else
-            {
-                if (nextIndex > messageList.Count - 1)
+                if (direction == Direction.Other)
                 {
                     return null;
                 }
-            }
-            
-            return nextIndex < 0 ? localChanges.FirstOrDefault() : EntryAt(index = nextIndex);
-            
-            string EntryAt(int i)
-            {
-                // if we've previously edited the entry then give us that, else give us the original message
-                return localChanges[i] ?? messageList[i];
-            }
 
-            int LoopAround(int next)
-            {
-                if (next > (messageList.Count - 1)) { return 1; }
-                if (next < 1) { return messageList.Count - 1; }
-                return next;
+                // temporarily save our changes in case we fat-finger and want to go back
+                localChanges[index] = original;
+
+                var dir = (int) direction;
+
+                var nextIndex = (index + dir);
+
+                if (loop && messageList.Count > 1)
+                {
+                    nextIndex = LoopAround(nextIndex);
+                }
+                else
+                {
+                    if (nextIndex > messageList.Count - 1)
+                    {
+                        return null;
+                    }
+                }
+
+                if (nextIndex >= 0 && EntryAt(nextIndex) == original && nextIndex != originalIndex && originalIndex != 0)
+                {
+                    index = nextIndex;
+                    continue;
+                }
+
+                return nextIndex < 0 ? localChanges.FirstOrDefault() : EntryAt(index = nextIndex);
+
+                string EntryAt(int i)
+                {
+                    // if we've previously edited the entry then give us that, else give us the original message
+                    return localChanges[i] ?? messageList[i];
+                }
+
+                int LoopAround(int next)
+                {
+                    if (next > (messageList.Count - 1))
+                    {
+                        return 1;
+                    }
+
+                    if (next < 1)
+                    {
+                        return messageList.Count - 1;
+                    }
+
+                    return next;
+                }
             }
         }
 

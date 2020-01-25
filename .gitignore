@@ -13,9 +13,6 @@ bld/
 [Rr]elease*/
 *.o
 
-# Barotrauma content folder
-BarotraumaShared/Content/
-
 # Misc vs crap 
 *.v12.suo
 *.suo

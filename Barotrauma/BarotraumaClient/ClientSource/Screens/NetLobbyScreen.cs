@@ -1080,6 +1080,7 @@ namespace Barotrauma
 
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
         {
+            GUI.SetCursorWaiting();
             string headerText = TextManager.Get("RoundStartingPleaseWait");
             var msgBox = new GUIMessageBox(headerText, TextManager.Get("RoundStarting"),
                 allowCancel ? new string[] { TextManager.Get("Cancel") } : new string[0]);
@@ -1091,6 +1092,7 @@ namespace Barotrauma
                     startButton.Enabled = true;
                     GameMain.Client.RequestRoundEnd();
                     CoroutineManager.StopCoroutines("WaitForStartRound");
+                    GUI.ClearCursorWait();
                     return true;
                 };
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
@@ -1113,7 +1115,7 @@ namespace Barotrauma
             {
                 startButton.Enabled = true;
             }
-
+            GUI.ClearCursorWait();
             yield return CoroutineStatus.Success;
         }
 

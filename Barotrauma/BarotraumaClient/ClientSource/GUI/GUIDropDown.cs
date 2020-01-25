@@ -147,6 +147,7 @@ namespace Barotrauma
                 
         public GUIDropDown(RectTransform rectT, string text = "", int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false) : base(style, rectT)
         {
+            HoverCursor = CursorState.Hand;
             CanBeFocused = true;
 
             this.selectMultiple = selectMultiple;

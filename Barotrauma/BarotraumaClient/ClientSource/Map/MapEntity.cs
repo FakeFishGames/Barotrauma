@@ -13,7 +13,9 @@ namespace Barotrauma
         protected static Vector2 selectionPos = Vector2.Zero;
         protected static Vector2 selectionSize = Vector2.Zero;
 
-        protected static Vector2 startMovingPos = Vector2.Zero;
+        private static Vector2 startMovingPos = Vector2.Zero;
+
+        public static Vector2 StartMovingPos => startMovingPos;
 
         private static bool resizing;
         private int resizeDirX, resizeDirY;

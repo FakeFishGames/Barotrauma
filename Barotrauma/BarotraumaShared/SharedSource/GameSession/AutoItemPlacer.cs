@@ -10,6 +10,8 @@ namespace Barotrauma
     {
         private static readonly List<Item> spawnedItems = new List<Item>();
 
+        public static bool OutputDebugInfo = false;
+
         public static void PlaceIfNeeded(GameMode gameMode)
         {
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
@@ -82,14 +84,24 @@ namespace Barotrauma
             // Spawn items that don't have containers last
             prefabsWithoutContainer.Randomize().ForEach(i => SpawnItems(i));
 
-            DebugConsole.NewMessage("Automatically placed items: ");
-            foreach (string itemName in spawnedItems.Select(it => it.Name).Distinct())
+            if (OutputDebugInfo)
             {
-                DebugConsole.NewMessage(" - " + itemName + " x" + spawnedItems.Count(it => it.Name == itemName));
+                DebugConsole.NewMessage("Automatically placed items: ");
+                foreach (string itemName in spawnedItems.Select(it => it.Name).Distinct())
+                {
+                    DebugConsole.NewMessage(" - " + itemName + " x" + spawnedItems.Count(it => it.Name == itemName));
+                }
             }
 
             bool SpawnItems(ItemPrefab itemPrefab)
             {
+                if (itemPrefab == null)
+                {
+                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n"+Environment.StackTrace;
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    return false;
+                }
                 bool success = false;
                 foreach (PreferredContainer preferredContainer in itemPrefab.PreferredContainers)
                 {

@@ -10,7 +10,28 @@ namespace Barotrauma
         public static double TotalTime;
 
         public static double Accumulator;
-        public static double Step = 1.0 / 60.0;
+        public const int FixedUpdateRate = 60;
+        public static double Step = 1.0 / FixedUpdateRate;
+
+        private static int frameLimit;
+        /// <summary>
+        /// Maximum FPS (0 = unlimited).
+        /// </summary>
+        public static int FrameLimit
+        {
+            get { return frameLimit; }
+            set 
+            {
+                if (value <= 0)
+                {
+                    frameLimit = 0;
+                }
+                else
+                {
+                    frameLimit = Math.Max(value, FixedUpdateRate);
+                }
+            }
+        }
 
         public static double Alpha
         {

@@ -176,6 +176,8 @@ namespace Barotrauma
             healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
                 barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
+                Enabled = true,
+                HoverCursor =  CursorState.Hand,
                 IsHorizontal = horizontal
             };
             healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),

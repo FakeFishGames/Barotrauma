@@ -118,14 +118,14 @@ namespace Barotrauma.Steam
             TaskPool.Add(Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers + 10),
                 (lobby) =>
                 {
+                    currentLobby = lobby.Result;
+
                     if (currentLobby == null)
                     {
                         DebugConsole.ThrowError("Failed to create Steam lobby");
                         lobbyState = LobbyState.NotConnected;
                         return;
                     }
-
-                    currentLobby = lobby.Result;
 
                     DebugConsole.NewMessage("Lobby created!", Microsoft.Xna.Framework.Color.Lime);
 
@@ -169,7 +169,8 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             currentLobby?.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             //currentLobby?.SetData("hostipaddress", lobbyIP);
-            currentLobby?.SetData("pinglocation", Steamworks.SteamNetworkingUtils.LocalPingLocation.ToString() ?? "");
+            string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation.ToString();
+            currentLobby?.SetData("pinglocation", pingLocation ?? "");
             currentLobby?.SetData("lobbyowner", SteamIDUInt64ToString(GetSteamID()));
             currentLobby?.SetData("haspassword", serverSettings.HasPassword.ToString());
 
@@ -254,6 +255,7 @@ namespace Barotrauma.Steam
 
                     ServerInfo serverInfo = new ServerInfo();
                     serverInfo.ServerName = lobby.GetData("name");
+                    serverInfo.OwnerID = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
                     serverInfo.LobbyID = lobby.Id;
                     serverInfo.PlayerCount = int.TryParse(lobby.GetData("playercount"), out int playerCount) ? playerCount : 0;
                     serverInfo.MaxPlayers = int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers) ? maxPlayers : 1;
@@ -369,6 +371,12 @@ namespace Barotrauma.Steam
                 //invalid contentpackage info
                 serverInfo.ContentPackageNames.Clear();
                 serverInfo.ContentPackageHashes.Clear();
+            }
+
+            string pingLocation = lobby.GetData("pinglocation");
+            if (!string.IsNullOrEmpty(pingLocation))
+            {
+                serverInfo.PingLocation = Steamworks.Data.PingLocation.TryParseFromString(pingLocation);
             }
 
             bool? getLobbyBool(string key)

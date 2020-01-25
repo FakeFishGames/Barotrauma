@@ -44,6 +44,8 @@ namespace Barotrauma
         
         private Location highlightedLocation;
 
+        public Location HighlightedLocation => highlightedLocation;
+
         private Vector2 drawOffset;
         private Vector2 drawOffsetNoise;
 

@@ -25,7 +25,7 @@ namespace Barotrauma
         public ScalableFont ObjectiveTitleFont { get; private set; }
         public ScalableFont ObjectiveNameFont { get; private set; }
 
-        public Sprite CursorSprite { get; private set; }
+        public readonly Sprite[] CursorSprite = new Sprite[7];
 
         public UISprite UIGlow { get; private set; }
 
@@ -38,10 +38,15 @@ namespace Barotrauma
             configElement = element;
             foreach (XElement subElement in configElement.Elements())
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                var name = subElement.Name.ToString().ToLowerInvariant();
+                switch (name)
                 {
                     case "cursor":
-                        CursorSprite = new Sprite(subElement);
+                        foreach (var children in subElement.Descendants())
+                        {
+                            var index = children.GetAttributeInt("state", (int) CursorState.Default);
+                            CursorSprite[index] = new Sprite(children);
+                        }
                         break;
                     case "uiglow":
                         UIGlow = new UISprite(subElement);

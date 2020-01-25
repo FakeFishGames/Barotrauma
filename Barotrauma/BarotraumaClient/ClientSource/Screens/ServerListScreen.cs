@@ -147,6 +147,8 @@ namespace Barotrauma
         private DateTime refreshDisableTimer;
         private bool waitingForRefresh;
 
+        private bool steamPingInfoReady;
+
         private const float sidebarWidth = 0.2f;
         public ServerListScreen()
         {
@@ -1423,6 +1425,15 @@ namespace Barotrauma
         {
             if (waitingForRefresh) { return; }
 
+            steamPingInfoReady = false;
+
+            CoroutineManager.StopCoroutines("EstimateLobbyPing");
+
+            TaskPool.Add(Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
+            {
+                steamPingInfoReady = true;
+            });
+
             friendsListUpdateTime = Timing.TotalTime - 1.0;
             UpdateFriendsList();
 
@@ -1684,11 +1695,7 @@ namespace Barotrauma
             }
             else if (serverInfo.PingLocation != null)
             {
-                Steamworks.Data.PingLocation pingLocation = serverInfo.PingLocation.Value;
-                serverInfo.Ping = Steamworks.SteamNetworkingUtils.LocalPingLocation?.EstimatePingTo(pingLocation) ?? -1;
-                serverInfo.PingChecked = true;
-                serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
-                serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+                CoroutineManager.StartCoroutine(EstimateLobbyPing(serverInfo, serverPingText), "EstimateLobbyPing");
             }
 
             if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))
@@ -1747,6 +1754,22 @@ namespace Barotrauma
 
             SortList(sortedBy, toggle: false);
             FilterServers();
+        }
+
+        private IEnumerable<object> EstimateLobbyPing(ServerInfo serverInfo, GUITextBlock serverPingText)
+        {
+            while (!steamPingInfoReady)
+            {
+                yield return CoroutineStatus.Running;
+            }
+
+            Steamworks.Data.PingLocation pingLocation = serverInfo.PingLocation.Value;
+            serverInfo.Ping = Steamworks.SteamNetworkingUtils.LocalPingLocation?.EstimatePingTo(pingLocation) ?? -1;
+            serverInfo.PingChecked = true;
+            serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
+            serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
+
+            yield return CoroutineStatus.Success;
         }
 
         private void ServerQueryFinished()

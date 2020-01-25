@@ -51,6 +51,11 @@ namespace Barotrauma.Items.Components
             get { return sectionExtents; }
         }
 
+        public static Wire DraggingWire
+        {
+            get => draggingWire;
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             if (defaultWireSprite == null)

@@ -88,8 +88,15 @@ namespace Barotrauma
                 float arrowWidth = 32.0f;
                 float arrowSize = 15.0f;
 
+                bool invalidDir = false;
+                if (dir == Vector2.Zero)
+                {
+                    invalidDir = true;
+                    dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
+                }
+
                 GUI.Arrow.Draw(sb,
-                    arrowPos, clr * 0.8f,
+                    arrowPos, invalidDir ? Color.Red : clr * 0.8f,
                     GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
                     IsHorizontal ? 
                         new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y) : 

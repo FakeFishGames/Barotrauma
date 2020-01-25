@@ -1435,7 +1435,7 @@ namespace Barotrauma
 #if DEBUG
                         deleteBtn.Enabled = true;
 #else
-                        deleteBtn.Enabled = userData is Submarine sub && sub.IsVanillaSubmarine();
+                        deleteBtn.Enabled = userData is Submarine sub && !sub.IsVanillaSubmarine();
 #endif
                     }
                     return true;

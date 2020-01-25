@@ -61,7 +61,7 @@ namespace Barotrauma
 
         public static GUITextBox TextBox => textBox;
         
-        private static readonly ChatManager chatManager = new ChatManager(true, true, 64);
+        private static readonly ChatManager chatManager = new ChatManager(true, 64);
 
         public static void Init()
         {

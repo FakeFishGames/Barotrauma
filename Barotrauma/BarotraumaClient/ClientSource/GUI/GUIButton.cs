@@ -154,6 +154,7 @@ namespace Barotrauma
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null, ScalableFont font = null) : base(style, rectT)
         {
             CanBeFocused = true;
+            HoverCursor = CursorState.Hand;
 
             if (color.HasValue)
             {

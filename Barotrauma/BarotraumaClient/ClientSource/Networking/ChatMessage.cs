@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
                 }
                 txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
 
-                if (GameMain.Client.GameStarted)
+                if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                 {
                     if (order.TargetAllCharacters)
                     {

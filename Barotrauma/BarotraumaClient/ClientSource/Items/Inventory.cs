@@ -653,10 +653,19 @@ namespace Barotrauma
 
             if (Character.Controlled.Inventory != null)
             {
-                foreach (InventorySlot slot in Character.Controlled.Inventory.slots)
+                var inv = Character.Controlled.Inventory;
+                for (var i = 0; i < inv.slots.Length; i++)
                 {
-                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
-                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    var slot = inv.slots[i];
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition))
+                    {
+                        return true;
+                    }
+
+                    // check if the equip button actually exists
+                    if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && 
+                        i >= 0 && inv.Items.Length > i &&
+                        inv.Items[i] != null)
                     {
                         return true;
                     }
@@ -664,10 +673,19 @@ namespace Barotrauma
             }
             if (Character.Controlled.SelectedCharacter?.Inventory != null)
             {
-                foreach (InventorySlot slot in Character.Controlled.SelectedCharacter.Inventory.slots)
+                var inv = Character.Controlled.SelectedCharacter.Inventory;
+                for (var i = 0; i < inv.slots.Length; i++)
                 {
-                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
-                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    var slot = inv.slots[i];
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition))
+                    {
+                        return true;
+                    }
+                    
+                    // check if the equip button actually exists
+                    if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && 
+                        i >= 0 && inv.Items.Length > i &&
+                        inv.Items[i] != null)
                     {
                         return true;
                     }
@@ -676,7 +694,7 @@ namespace Barotrauma
 
             if (Character.Controlled.SelectedConstruction != null)
             {
-                foreach (ItemComponent ic in Character.Controlled.SelectedConstruction.Components)
+                foreach (var ic in Character.Controlled.SelectedConstruction.ActiveHUDs)
                 {
                     var itemContainer = ic as ItemContainer;
                     if (itemContainer?.Inventory?.slots == null) continue;
@@ -698,6 +716,88 @@ namespace Barotrauma
             }
 
             return false;
+        }
+        
+        public static CursorState GetInventoryMouseCursor()
+        {
+            var character = Character.Controlled;
+            if (character == null) { return CursorState.Default; }
+            if (draggingItem != null || DraggingInventory != null) { return CursorState.Dragging; }
+            
+            var inv = character.Inventory;
+            var selInv = character.SelectedCharacter?.Inventory;
+            
+            if (inv == null) { return CursorState.Default; }
+
+            foreach (var item in inv.Items)
+            {
+                var container = item?.GetComponent<ItemContainer>();
+                if (container == null) { continue; }
+
+                if (container.Inventory.slots != null)
+                {
+                    if (container.Inventory.slots.Any(slot => slot.IsHighlighted))
+                    {
+                        return CursorState.Hand;
+                    }
+                }
+
+                if (container.Inventory.movableFrameRect.Contains(PlayerInput.MousePosition))
+                {
+                    return CursorState.Move;
+                }
+            }
+            
+            
+            if (selInv != null)
+            {
+                foreach (var slot in selInv.slots)
+                {
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    {
+                        return CursorState.Hand;
+                    }
+                }
+            }
+            
+            if (character.SelectedConstruction != null)
+            {
+                foreach (var ic in character.SelectedConstruction.ActiveHUDs)
+                {
+                    var itemContainer = ic as ItemContainer;
+                    if (itemContainer?.Inventory?.slots == null) continue;
+
+                    foreach (var slot in itemContainer.Inventory.slots)
+                    {
+                        if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
+                            slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                        {
+                            return CursorState.Hand;
+                        }
+                    }
+                }
+            }
+
+            foreach (var slot in inv.slots)
+            {
+                if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                {
+                    return CursorState.Hand;
+                }
+                
+                // This is the only place we double check this because if we have a inventory container
+                // highlighting any area within that container registers as highlighting the
+                // original slot the item is in thus giving us a false hand cursor.
+                if (slot.InteractRect.Contains(PlayerInput.MousePosition))
+                {
+                    if (slot.IsHighlighted)
+                    {
+                        return CursorState.Hand;
+                    }
+                }
+            }
+            return CursorState.Default;
         }
 
         protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot, List<ColorData> colorData = null)

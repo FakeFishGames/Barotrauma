@@ -420,7 +420,7 @@ namespace Barotrauma
                     if (logging)
                     {
                         var fileMd5 = new Md5Hash(hash);
-                        DebugConsole.NewMessage("   " + file.Path + ": " + fileMd5.ShortHash);
+                        DebugConsole.NewMessage("   " + file.Path + ": " + fileMd5.Hash);
                     }                    
                     hashes.Add(hash);
                 }
@@ -440,7 +440,7 @@ namespace Barotrauma
             md5Hash = new Md5Hash(bytes);
             if (logging)
             {
-                DebugConsole.NewMessage("****************************** Package hash: " + md5Hash.ShortHash);
+                DebugConsole.NewMessage("****************************** Package hash: " + md5Hash.Hash);
             }
         }
 
@@ -468,6 +468,14 @@ namespace Barotrauma
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
                         break;
+                }
+
+                if (filePaths.Count > 1)
+                {
+                    using (MD5 tempMd5 = MD5.Create())
+                    {
+                        filePaths = filePaths.OrderBy(f => ToolBox.StringToUInt32Hash(f.CleanUpPathCrossPlatform(true), tempMd5)).ToList();
+                    }
                 }
 
                 foreach (string filePath in filePaths)

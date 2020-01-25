@@ -192,12 +192,28 @@ namespace Barotrauma
         public GUIScrollBar(RectTransform rectT, float barSize = 1, Color? color = null, string style = "", bool? isHorizontal = null) : base(style, rectT)
         {
             CanBeFocused = true;
-
             this.isHorizontal = isHorizontal ?? (Rect.Width > Rect.Height);
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
             Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color);
+
+            switch (style)
+            {
+                case "":
+                    HoverCursor = CursorState.Default;
+                    Bar.HoverCursor = CursorState.Default;
+                    break;
+                case "GUISlider":
+                    HoverCursor = CursorState.Default;
+                    Bar.HoverCursor = CursorState.Hand;
+                    break;
+                default:
+                    HoverCursor = CursorState.Hand;
+                    Bar.HoverCursor = CursorState.Hand;
+                    break;
+            }
+
             GUI.Style.Apply(Bar, IsHorizontal ? "GUIButtonHorizontal" : "GUIButtonVertical", this);
             Bar.OnPressed = SelectBar;
             enabled = true;
@@ -221,8 +237,6 @@ namespace Barotrauma
         protected override void Update(float deltaTime)
         {
             if (!Visible) { return; }
-
-            base.Update(deltaTime);
 
             if (!enabled) { return; }
             

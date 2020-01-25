@@ -244,6 +244,7 @@ namespace Barotrauma
 
         private IEnumerable<object> WaitForCampaignSetup()
         {
+            GUI.SetCursorWaiting();
             string headerText = TextManager.Get("CampaignStartingPleaseWait");
             var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new string[] { TextManager.Get("Cancel") });
 
@@ -251,6 +252,7 @@ namespace Barotrauma
             {
                 GameMain.NetLobbyScreen.HighlightMode(GameMain.NetLobbyScreen.SelectedModeIndex);
                 GameMain.NetLobbyScreen.SelectMode(GameMain.NetLobbyScreen.SelectedModeIndex);
+                GUI.ClearCursorWait();
                 CoroutineManager.StopCoroutines("WaitForCampaignSetup");
                 return true;
             };
@@ -263,6 +265,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
             msgBox.Close();
+            GUI.ClearCursorWait();
             yield return CoroutineStatus.Success;
         }
 

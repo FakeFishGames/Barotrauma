@@ -1,17 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Sounds;
-using Barotrauma.Tutorials;
 using EventInput;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -26,11 +28,23 @@ namespace Barotrauma
         PickItemFail,
         DropItem
     }
+
+    public enum CursorState
+    {
+        Default, // Cursor
+        Hand, // Hand with a finger
+        Move, // arrows pointing to all directions
+        IBeam, // Text
+        Dragging,// Closed hand
+        Waiting, // Hourglass
+        WaitingBackground // Cursor + Hourglass
+    }
     
     public static class GUI
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
-
+        public static CursorState MouseCursor = CursorState.Default;
+        
         public static readonly SamplerState SamplerState = new SamplerState()
         {
             Filter = TextureFilter.Linear,
@@ -82,8 +96,7 @@ namespace Barotrauma
         public static GUIStyle Style;
 
         private static Texture2D t;
-
-        private static Sprite Cursor => Style.CursorSprite;
+        private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
         private static bool debugDrawSounds, debugDrawEvents;
 
@@ -184,7 +197,7 @@ namespace Barotrauma
 
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
-            GUI.GraphicsDevice = graphicsDevice;
+            GraphicsDevice = graphicsDevice;
 
             var files = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.UIStyle);
             XElement selectedStyle = null;
@@ -306,7 +319,7 @@ namespace Barotrauma
             if (GameMain.ShowFPS || GameMain.DebugDraw)
             {
                 DrawString(spriteBatch, new Vector2(10, 10),
-                    "FPS: " + (int)GameMain.PerformanceCounter.AverageFramesPerSecond,
+                    "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                     Color.White, Color.Black * 0.5f, 0, SmallFont);
             }
 
@@ -339,7 +352,7 @@ namespace Barotrauma
                     y += 15;
                 }
 
-                if (FarseerPhysics.Settings.EnableDiagnostics)
+                if (Settings.EnableDiagnostics)
                 {
                     DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
                     DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, Color.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
@@ -415,10 +428,10 @@ namespace Barotrauma
                         }
                         else
                         {
-                            soundStr += System.IO.Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
+                            soundStr += Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
 
 #if DEBUG
-                            if (PlayerInput.GetKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.G))
+                            if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.G))
                             {
                                 if (PlayerInput.MousePosition.Y >= y && PlayerInput.MousePosition.Y <= y + 12)
                                 {
@@ -507,10 +520,13 @@ namespace Barotrauma
             if (GameMain.WindowActive && !HideCursor)
             {
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
-                Cursor.Draw(spriteBatch, PlayerInput.LatestMousePosition, 0, Scale / 2f);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
+                
+                var sprite = MouseCursorSprites[(int) MouseCursor];
+                sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
+
                 spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
             HideCursor = false;
         }
@@ -723,13 +739,14 @@ namespace Barotrauma
             GUIComponent prevMouseOn = MouseOn;
             MouseOn = null;
             int inventoryIndex = -1;
+            
             if (Inventory.IsMouseOnInventory())
             {
                 inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
             }
-            for (int i = updateList.Count - 1; i > inventoryIndex; i--)
+            for (var i = updateList.Count - 1; i > inventoryIndex; i--)
             {
-                GUIComponent c = updateList[i];
+                var c = updateList[i];
                 if (!c.CanBeFocused) { continue; }
                 if (c.MouseRect.Contains(PlayerInput.MousePosition))
                 {
@@ -740,7 +757,197 @@ namespace Barotrauma
                     break;
                 }
             }
+
+            MouseCursor = UpdateMouseCursorState(MouseOn);
             return MouseOn;
+        }
+        
+        private static CursorState UpdateMouseCursorState(GUIComponent c)
+        {
+            // Waiting and drag cursor override everything else
+            if (MouseCursor == CursorState.Waiting) { return CursorState.Waiting; }
+            if (GUIScrollBar.DraggingBar != null) { return GUIScrollBar.DraggingBar.Bar.HoverCursor; }
+
+            // Wire cursors
+            if (ConnectionPanel.HighlightedWire != null) { return CursorState.Hand; }
+            if (Wire.DraggingWire != null) { return CursorState.Dragging; }
+            if (Connection.DraggingConnected != null) { return CursorState.Dragging; }
+           
+            if (c == null || c is GUICustomComponent)
+            {
+                switch (Screen.Selected)
+                {
+                    // Character editor limbs
+                    case CharacterEditorScreen editor:
+                        return editor.GetMouseCursorState();
+                    // Portrait area during gameplay
+                    case GameScreen _ when HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition):
+                        return CursorState.Hand;
+                    // Sub editor drag and highlight
+                    case SubEditorScreen editor:
+                    {
+                        // Portrait area
+                        if ((editor.CharacterMode || editor.WiringMode) && 
+                            HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition))
+                        {
+                            return CursorState.Hand;
+                        }
+                        
+                        foreach (var mapEntity in MapEntity.mapEntityList)
+                        {
+                            if (MapEntity.StartMovingPos != Vector2.Zero)
+                            {
+                                return CursorState.Dragging;
+                            }
+                            if (mapEntity.IsHighlighted)
+                            {
+                                return CursorState.Hand;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    // Campaign map highlighted location
+                    case LobbyScreen lobby:
+                    {
+                        if (lobby.CampaignUI?.Campaign.Map.HighlightedLocation != null) { return CursorState.Hand; }
+                        break;
+                    }
+                    
+                    case NetLobbyScreen lobby:
+                    {
+                        if (lobby.CampaignUI?.Campaign.Map.HighlightedLocation != null) { return CursorState.Hand; }
+                        break;
+                    }
+                }
+            }
+            
+            if (c != null && c.Visible)
+            {
+                // When a button opens a submenu, it increases to the size of the entire screen.
+                // And this is of course picked up as clickable area.
+                // There has to be a better way of checking this but for now this works.
+                var monitorRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                
+                var parent = FindInteractParent(c);
+                
+                if (c.Enabled)
+                {
+                    // Some parent elements take priority
+                    // but not when the child is a GUIButton or GUITickBox
+                    if (!(parent is GUIButton) && !(parent is GUIListBox) || 
+                              (c is GUIButton) || (c is GUITickBox))
+                    {
+                        if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
+                    }
+                }
+                
+                // Children in list boxes can be interacted with despite not having
+                // a GUIButton inside of them so instead of hard coding we check if
+                // the children can be interacted with by checking their hover state
+                if (parent is GUIListBox)
+                {
+                    var hoverParent = c;
+                    while (true)
+                    {
+                        if (hoverParent == parent || hoverParent == null) { break; }
+                        if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                        hoverParent = hoverParent.Parent;
+                    }
+                }
+                
+                if (parent != null)
+                {
+                    if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
+                }
+            }
+            
+            if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+
+            var character = Character.Controlled;
+            // ReSharper disable once InvertIf
+            if (character != null)
+            {
+                // Health menus
+                if (character.CharacterHealth.MouseOnElement) { return CursorState.Hand; }
+                
+                if (character.SelectedCharacter != null)
+                {
+                    if (character.SelectedCharacter.CharacterHealth.MouseOnElement)
+                    {
+                        return CursorState.Hand;
+                    }
+                }
+
+                // Character is hovering over an item placed in the world
+                if (character.FocusedItem != null) { return CursorState.Hand; }
+            }
+            
+            return CursorState.Default;
+
+            static GUIComponent FindInteractParent(GUIComponent component)
+            {
+                while (true)
+                {
+                    var parent = component.Parent;
+                    if (parent == null) { return null; }
+
+                    if (ContainsMouse(parent))
+                    {
+                        if (parent.Enabled)
+                        {
+                            switch (parent)
+                            {
+                                case GUIButton button:
+                                    return button;
+                                case GUITextBox box:
+                                    return box;
+                                case GUIListBox list:
+                                    return list;
+                                case GUIScrollBar bar:
+                                    return bar;
+                            }
+                        }
+                        component = parent;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            
+            static bool ContainsMouse(GUIComponent component)
+            {
+                // If component has a mouse rectangle then use that, if not use it's physical rect
+                return !component.MouseRect.Equals(Rectangle.Empty) ?
+                    component.MouseRect.Contains(PlayerInput.MousePosition) :
+                    component.Rect.Contains(PlayerInput.MousePosition);
+            }
+        }
+
+        /// <summary>
+        /// Set the cursor to an hourglass.
+        /// Will automatically revert after 10 seconds or when <see cref="ClearCursorWait"/> is called.
+        /// </summary>
+        public static void SetCursorWaiting()
+        {
+            CoroutineManager.StartCoroutine(WaitCursorCoroutine(), "WaitCursorTimeout");
+
+            static IEnumerable<object> WaitCursorCoroutine()
+            {
+                MouseCursor = CursorState.Waiting;
+                var timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+                while (DateTime.Now < timeOut) { yield return CoroutineStatus.Running; }
+                if (MouseCursor == CursorState.Waiting) { MouseCursor = CursorState.Default; }
+                yield return CoroutineStatus.Success;
+            }
+        }
+        
+        public static void ClearCursorWait()
+        {
+            CoroutineManager.StopCoroutines("WaitCursorTimeout");
+            MouseCursor = CursorState.Default;
         }
 
         public static bool HasSizeChanged(Point referenceResolution, float referenceUIScale, float referenceHUDScale)
@@ -754,7 +961,7 @@ namespace Barotrauma
             HandlePersistingElements(deltaTime);
             RefreshUpdateList();
             UpdateMouseOn();
-            System.Diagnostics.Debug.Assert(updateList.Count == updateListSet.Count);
+            Debug.Assert(updateList.Count == updateListSet.Count);
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
             UpdateMessages(deltaTime);
         }

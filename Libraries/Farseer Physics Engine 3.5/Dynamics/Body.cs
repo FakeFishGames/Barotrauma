@@ -82,8 +82,8 @@ namespace FarseerPhysics.Dynamics
             BodyType = BodyType.Static;
         }
 
-        public World World { get {return _world; } }
-        
+        public World World { get { return _world; } }
+
         public int IslandIndex { get; set; }
 
         /// <summary>
@@ -350,7 +350,17 @@ namespace FarseerPhysics.Dynamics
         /// Create all proxies.
         /// </summary>
         internal void CreateProxies()
-        {   
+        {
+            for (int i = 0; i < FixtureList.Count; i++)
+            {
+                Debug.Assert(FixtureList[i].ProxyCount == 0, "Proxies already created for a Fixture.");
+                if (FixtureList[i].ProxyCount > 0)
+                {
+                    DestroyProxies();
+                    break;
+                }
+            }
+
             IBroadPhase broadPhase = World.ContactManager.BroadPhase;
             for (int i = 0; i < FixtureList.Count; i++)
                 FixtureList[i].CreateProxies(broadPhase, ref _xf);

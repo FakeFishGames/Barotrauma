@@ -545,10 +545,10 @@ namespace Barotrauma
                     break;
                 case Tab.CharacterEditor:
                     Submarine.MainSub = null;
-                    GameMain.CharacterEditorScreen.Select();
+                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.CharacterEditorScreen));
                     break;
                 case Tab.SubmarineEditor:
-                    GameMain.SubEditorScreen.Select();
+                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SubEditorScreen));
                     break;
                 case Tab.QuickStartDev:
                     QuickStart();
@@ -560,7 +560,7 @@ namespace Barotrauma
                     break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
-                    GameMain.SteamWorkshopScreen.Select();
+                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SteamWorkshopScreen));
                     break;
                 case Tab.Credits:
                     titleText.Visible = false;
@@ -575,6 +575,16 @@ namespace Barotrauma
             selectedTab = tab;
 
             return true;
+        }
+
+        private IEnumerable<object> SelectScreenWithWaitCursor(Screen screen)
+        {
+            GUI.SetCursorWaiting();
+            //tiny delay to get the cursor to render
+            yield return new WaitForSeconds(0.02f);
+            GUI.ClearCursorWait();
+            screen.Select();
+            yield return CoroutineStatus.Success;
         }
 
         public bool ReturnToMainMenu(GUIButton button, object obj)
@@ -1165,7 +1175,8 @@ namespace Barotrauma
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
                 Text = maxPlayers.ToString(),
-                Enabled = false
+                // ?
+                // Enabled = false
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
             {
