@@ -110,7 +110,7 @@ namespace Barotrauma.CharacterEditor
                     msgBox.Close();
                     if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), Color.Green, font: GUI.Font);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), GUI.Style.Green, font: GUI.Font);
                     }
                     Wizard.Instance.SelectTab(Tab.None);
                     return true;
@@ -126,7 +126,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (CharacterEditorScreen.Instance.CreateCharacter(name, Path.GetDirectoryName(xmlPath), isHumanoid, contentPackage, ragdollElement, characterElement, animations))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), Color.Green, font: GUI.Font);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterCreated").Replace("[name]", name), GUI.Style.Green, font: GUI.Font);
                 }
                 Wizard.Instance.SelectTab(Tab.None);
             }
@@ -141,12 +141,12 @@ namespace Barotrauma.CharacterEditor
 
             protected override GUIMessageBox Create()
             {
-                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), IsCopy ? TextManager.Get("Create") : TextManager.Get("Next") }, new Vector2(0.65f, 1f));
+                var box = new GUIMessageBox(GetCharacterEditorTranslation("CreateNewCharacter"), string.Empty, new string[] { TextManager.Get("Cancel"), IsCopy ? TextManager.Get("Create") : TextManager.Get("Next") }, new Vector2(0.65f, 0.9f));
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
-                var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(80 * GUI.xScale), box.Content.Rect.Height - (int)(100 * GUI.yScale)), 
+                var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(40 * GUI.xScale), box.Content.Rect.Height - (int)(50 * GUI.yScale)), 
                     box.Content.RectTransform, Anchor.Center), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
@@ -174,13 +174,11 @@ namespace Barotrauma.CharacterEditor
                 {
                     var mainElement = new GUIFrame(new RectTransform(new Point(topGroup.RectTransform.Rect.Width, elementSize), topGroup.RectTransform), style: null, color: Color.Gray * 0.25f);
                     fields.Add(mainElement);
-                    RectTransform leftElement = new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.TopLeft);
-                    RectTransform rightElement = new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.TopRight);
                     switch (i)
                     {
                         case 0:
-                            new GUITextBlock(leftElement, TextManager.Get("Name"));
-                            var nameField = new GUITextBox(rightElement, Name ?? GetCharacterEditorTranslation("DefaultName")) { CaretColor = Color.White };
+                            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("Name"));
+                            var nameField = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), Name ?? GetCharacterEditorTranslation("DefaultName")) { CaretColor = Color.White };
                             string ProcessText(string text) => text.RemoveWhitespace().CapitaliseFirstInvariant();
                             Name = ProcessText(nameField.Text);
                             nameField.OnTextChanged += (tb, text) =>
@@ -191,8 +189,8 @@ namespace Barotrauma.CharacterEditor
                             };
                             break;
                         case 1:
-                            var label = new GUITextBlock(leftElement, GetCharacterEditorTranslation("IsHumanoid"));
-                            var tickBox = new GUITickBox(rightElement, string.Empty)
+                            var label = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("IsHumanoid"));
+                            var tickBox = new GUITickBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), string.Empty)
                             {
                                 Selected = IsHumanoid,
                                 Enabled = !IsCopy,
@@ -204,8 +202,8 @@ namespace Barotrauma.CharacterEditor
                             }
                             break;
                         case 2:
-                            var l = new GUITextBlock(leftElement, GetCharacterEditorTranslation("CanEnterSubmarines"));
-                            var t = new GUITickBox(rightElement, string.Empty)
+                            var l = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("CanEnterSubmarines"));
+                            var t = new GUITickBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), string.Empty)
                             {
                                 Selected = CanEnterSubmarine,
                                 Enabled = !IsCopy,
@@ -217,8 +215,8 @@ namespace Barotrauma.CharacterEditor
                             }
                             break;
                         case 3:
-                            var lbl = new GUITextBlock(leftElement, GetCharacterEditorTranslation("CanWalk"));
-                            var txt = new GUITickBox(rightElement, string.Empty)
+                            var lbl = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("CanWalk"));
+                            var txt = new GUITickBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), string.Empty)
                             {
                                 Selected = CanWalk,
                                 Enabled = !IsCopy,
@@ -230,8 +228,8 @@ namespace Barotrauma.CharacterEditor
                             }
                             break;
                         case 4:
-                            new GUITextBlock(leftElement, GetCharacterEditorTranslation("ConfigFileOutput"));
-                            xmlPathElement = new GUITextBox(rightElement, string.Empty)
+                            new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("ConfigFileOutput"));
+                            xmlPathElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), string.Empty)
                             {
                                 Text = XMLPath,
                                 CaretColor = Color.White
@@ -243,127 +241,138 @@ namespace Barotrauma.CharacterEditor
                             };
                             break;
                         case 5:
-                            //new GUITextBlock(leftElement, GetCharacterEditorTranslation("TexturePath"));
-                            texturePathElement = new GUITextBox(rightElement, string.Empty)
                             {
-                                Text = TexturePath,
-                                CaretColor = Color.White,
-                            };
-                            texturePathElement.OnTextChanged += (tb, text) =>
-                            {
-                                updateTexturePath = false;
-                                TexturePath = text;
-                                return true;
-                            };
-                            string title = GetCharacterEditorTranslation("SelectTexture");
-                            new GUIButton(leftElement, title)
-                            {
-                                OnClicked = (button, data) =>
+                                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), GetCharacterEditorTranslation("TexturePath"));
+                                var rightContainer = new GUIFrame(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), style: null);
+                                texturePathElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), rightContainer.RectTransform, Anchor.CenterLeft), string.Empty)
                                 {
-                                    FileSelection.OnFileSelected = (file) =>
+                                    Text = TexturePath,
+                                    CaretColor = Color.White,
+                                };
+                                texturePathElement.OnTextChanged += (tb, text) =>
+                                {
+                                    updateTexturePath = false;
+                                    TexturePath = text;
+                                    return true;
+                                };
+                                string title = GetCharacterEditorTranslation("SelectTexture");
+                                new GUIButton(new RectTransform(new Vector2(0.3f / texturePathElement.RectTransform.RelativeSize.X, 1.0f), texturePathElement.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), title, style: "GUIButtonSmall")
+                                {
+                                    OnClicked = (button, data) =>
                                     {
-                                        string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(file), Environment.CurrentDirectory);
-                                        string destinationPath = relativePath;
+                                        FileSelection.OnFileSelected = (file) =>
+                                        {
+                                            string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(file), Environment.CurrentDirectory);
+                                            string destinationPath = relativePath;
 
                                         //copy file to XML path if it's not located relative to the game's files
                                         if (relativePath.StartsWith("..") ||
-                                            Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
-                                        {
-                                            destinationPath = Path.Combine(Path.GetDirectoryName(XMLPath), Path.GetFileName(file));
-
-                                            string destinationDir = Path.GetDirectoryName(destinationPath);
-                                            if (!Directory.Exists(destinationDir))
+                                                Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
                                             {
-                                                Directory.CreateDirectory(destinationDir);
+                                                destinationPath = Path.Combine(Path.GetDirectoryName(XMLPath), Path.GetFileName(file));
+
+                                                string destinationDir = Path.GetDirectoryName(destinationPath);
+                                                if (!Directory.Exists(destinationDir))
+                                                {
+                                                    Directory.CreateDirectory(destinationDir);
+                                                }
+
+                                                if (!File.Exists(destinationPath))
+                                                {
+                                                    File.Copy(file, Path.GetFullPath(destinationPath), overwrite: true);
+                                                }
                                             }
 
-                                            if (!File.Exists(destinationPath))
-                                            {
-                                                File.Copy(file, Path.GetFullPath(destinationPath), overwrite: true);
-                                            }
-                                        }
-
-                                        isTextureSelected = true;
-                                        texturePathElement.Text = destinationPath;
-                                    };
-                                    FileSelection.ClearFileTypeFilters();
-                                    FileSelection.AddFileTypeFilter("PNG", "*.png");
-                                    FileSelection.AddFileTypeFilter("JPEG", "*.jpg, *.jpeg");
-                                    FileSelection.AddFileTypeFilter("All files", "*.*");
-                                    FileSelection.SelectFileTypeFilter("*.png");
-                                    FileSelection.Open = true;
-                                    return true;
-                                }
-                            };
+                                            isTextureSelected = true;
+                                            texturePathElement.Text = destinationPath;
+                                        };
+                                        FileSelection.ClearFileTypeFilters();
+                                        FileSelection.AddFileTypeFilter("PNG", "*.png");
+                                        FileSelection.AddFileTypeFilter("JPEG", "*.jpg, *.jpeg");
+                                        FileSelection.AddFileTypeFilter("All files", "*.*");
+                                        FileSelection.SelectFileTypeFilter("*.png");
+                                        FileSelection.Open = true;
+                                        return true;
+                                    }
+                                };
+                            }
                             break;
                         case 6:
-                            mainElement.RectTransform.NonScaledSize = new Point(
-                                mainElement.RectTransform.NonScaledSize.X,
-                                mainElement.RectTransform.NonScaledSize.Y * 2);
-                            new GUITextBlock(leftElement, TextManager.Get("ContentPackage"));
-                            var rightContainer = new GUIFrame(rightElement, style: null);
-                            contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
-                            foreach (ContentPackage cp in ContentPackage.List)
                             {
+                                mainElement.RectTransform.NonScaledSize = new Point(
+                                    mainElement.RectTransform.NonScaledSize.X,
+                                    mainElement.RectTransform.NonScaledSize.Y * 2);
+                                new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("ContentPackage"));
+                                var rightContainer = new GUIFrame(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), style: null);
+                                contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
+                                foreach (ContentPackage cp in ContentPackage.List)
+                                {
 #if !DEBUG
                                 if (cp == GameMain.VanillaContent) { continue; }
 #endif
-                                contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
-                            }
-                            contentPackageDropDown.OnSelected = (obj, userdata) =>
-                            {
-                                ContentPackage = userdata as ContentPackage;
-                                updateTexturePath = !isTextureSelected && !IsCopy;
-                                UpdatePaths();
-                                return true;
-                            };
-                            contentPackageDropDown.Select(0);
-                            var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft),
-                                GetCharacterEditorTranslation("NewContentPackage"))
-                            {
-                                CaretColor = Color.White,
-                            };
-                            var createNewPackageButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), rightContainer.RectTransform, Anchor.BottomRight), TextManager.Get("CreateNew"))
-                            {
-                                OnClicked = (btn, userdata) =>
+                                    contentPackageDropDown.AddItem(cp.Name, userData: cp, toolTip: cp.Path);
+                                }
+                                contentPackageDropDown.OnSelected = (obj, userdata) =>
                                 {
-                                    if (string.IsNullOrEmpty(contentPackageNameElement.Text))
-                                    {
-                                        contentPackageNameElement.Flash();
-                                        return false;
-                                    }
-                                    if (ContentPackage.List.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
-                                    {
-                                        new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
-                                        return false;
-                                    }
-                                    string modName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
-                                    ContentPackage = ContentPackage.CreatePackage(contentPackageNameElement.Text, Path.Combine("Mods", modName, Steam.SteamManager.MetadataFileName), false);
-                                    ContentPackage.List.Add(ContentPackage);
-                                    GameMain.Config.SelectContentPackage(ContentPackage);
-                                    contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
-                                    contentPackageDropDown.SelectItem(ContentPackage);
-                                    contentPackageNameElement.Text = "";
+                                    ContentPackage = userdata as ContentPackage;
+                                    updateTexturePath = !isTextureSelected && !IsCopy;
+                                    UpdatePaths();
                                     return true;
-                                },
-                                Enabled = false
-                            };
-                            Color textColor = contentPackageNameElement.TextColor;
-                            contentPackageNameElement.TextColor *= 0.6f;
-                            contentPackageNameElement.OnSelected += (sender, key) =>
-                            {
-                                contentPackageNameElement.Text = "";
-                            };
-                            contentPackageNameElement.OnTextChanged += (textBox, text) =>
-                            {
-                                textBox.TextColor = textColor;
-                                createNewPackageButton.Enabled = !string.IsNullOrWhiteSpace(text);
-                                return true;
-                            };
+                                };
+                                contentPackageDropDown.Select(0);
+                                var contentPackageNameElement = new GUITextBox(new RectTransform(new Vector2(0.7f, 0.5f), rightContainer.RectTransform, Anchor.BottomLeft),
+                                    GetCharacterEditorTranslation("NewContentPackage"))
+                                {
+                                    CaretColor = Color.White,
+                                };
+                                var createNewPackageButton = new GUIButton(new RectTransform(new Vector2(0.3f / contentPackageNameElement.RectTransform.RelativeSize.X, 1.0f), contentPackageNameElement.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), TextManager.Get("CreateNew"), style: "GUIButtonSmall")
+                                {
+                                    OnClicked = (btn, userdata) =>
+                                    {
+                                        if (string.IsNullOrEmpty(contentPackageNameElement.Text))
+                                        {
+                                            contentPackageNameElement.Flash();
+                                            return false;
+                                        }
+                                        if (ContentPackage.List.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
+                                        {
+                                            new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
+                                            return false;
+                                        }
+                                        string modName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
+                                        ContentPackage = ContentPackage.CreatePackage(contentPackageNameElement.Text, Path.Combine("Mods", modName, Steam.SteamManager.MetadataFileName), false);
+                                        ContentPackage.List.Add(ContentPackage);
+                                        GameMain.Config.SelectContentPackage(ContentPackage);
+                                        contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
+                                        contentPackageDropDown.SelectItem(ContentPackage);
+                                        contentPackageNameElement.Text = "";
+                                        return true;
+                                    },
+                                    Enabled = false
+                                };
+                                Color textColor = contentPackageNameElement.TextColor;
+                                contentPackageNameElement.TextColor *= 0.6f;
+                                contentPackageNameElement.OnSelected += (sender, key) =>
+                                {
+                                    contentPackageNameElement.Text = "";
+                                };
+                                contentPackageNameElement.OnTextChanged += (textBox, text) =>
+                                {
+                                    textBox.TextColor = textColor;
+                                    createNewPackageButton.Enabled = !string.IsNullOrWhiteSpace(text);
+                                    return true;
+                                };
+                                rightContainer.RectTransform.MinSize = new Point(0, 
+                                    contentPackageDropDown.RectTransform.MinSize.Y + Math.Max(contentPackageNameElement.RectTransform.MinSize.Y, createNewPackageButton.RectTransform.MinSize.Y));
+                            }
                             break;
                     }
+                    int contentSize = mainElement.RectTransform.Children.Max(c => c.MinSize.Y) ;
+                    mainElement.RectTransform.Resize(new Point(mainElement.Rect.Width, Math.Max(mainElement.Rect.Height, contentSize)));
                 }
                 UpdatePaths();
+                box.Buttons[0].Parent.RectTransform.SetAsLastChild();
+                box.Buttons[1].RectTransform.SetAsLastChild();
                 // Cancel
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
@@ -380,15 +389,15 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (!File.Exists(TexturePath))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), Color.Red);
-                        texturePathElement.Flash(Color.Red);
+                        GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUI.Style.Red);
+                        texturePathElement.Flash(GUI.Style.Red);
                         return false;
                     }
                     var path = Path.GetFileName(TexturePath);
                     if (!path.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        GUI.AddMessage(TextManager.Get("WrongFileType"), Color.Red);
-                        texturePathElement.Flash(Color.Red);
+                        GUI.AddMessage(TextManager.Get("WrongFileType"), GUI.Style.Red);
+                        texturePathElement.Flash(GUI.Style.Red);
                         return false;
                     }
                     if (IsCopy)
@@ -421,27 +430,32 @@ namespace Barotrauma.CharacterEditor
                 var box = new GUIMessageBox(GetCharacterEditorTranslation("DefineRagdoll"), string.Empty, new string[] { TextManager.Get("Previous"), TextManager.Get("Create") }, new Vector2(0.65f, 1f));
                 box.Header.Font = GUI.LargeFont;
                 box.Content.ChildAnchor = Anchor.TopCenter;
-                box.Content.AbsoluteSpacing = 20;
-                int elementSize = 30;
+                box.Content.AbsoluteSpacing = (int)(20 * GUI.Scale);
+                int elementSize = (int)(30 * GUI.Scale);
                 var frame = new GUIFrame(new RectTransform(new Point(box.Content.Rect.Width - (int)(80 * GUI.xScale), box.Content.Rect.Height - (int)(200 * GUI.yScale)),
                     box.Content.RectTransform, Anchor.Center), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
                 };
-                var topGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.05f), frame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.TopCenter) { AbsoluteSpacing = 2 };
-                var bottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), frame.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter) { AbsoluteSpacing = 10 };
+                var content = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), frame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.TopCenter) 
+                { 
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
+                };
                 // HTML
                 GUIMessageBox htmlBox = null;
-                var loadHtmlButton = new GUIButton(new RectTransform(new Point(topGroup.Rect.Width / 3, elementSize), topGroup.RectTransform), GetCharacterEditorTranslation("LoadFromHTML"));
+                var loadHtmlButton = new GUIButton(new RectTransform(new Point(content.Rect.Width / 3, elementSize), content.RectTransform), GetCharacterEditorTranslation("LoadFromHTML"));
                 // Limbs
-                var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbsElement.RectTransform), $"{GetCharacterEditorTranslation("Limbs")}: ");
-                var limbButtonElement = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), limbsElement.RectTransform)
-                { RelativeOffset = new Vector2(0.1f, 0) }, style: null)
-                { CanBeFocused = false };
-                var limbEditLayout = new GUILayoutGroup(new RectTransform(Vector2.One, limbButtonElement.RectTransform), isHorizontal: true) { AbsoluteSpacing = 10 };
-                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
-                var removeLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), "-")
+                var limbsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
+
+                var limbEditLayout = new GUILayoutGroup(new RectTransform(Vector2.One, limbsElement.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbEditLayout.RectTransform), GetCharacterEditorTranslation("Limbs"), font: GUI.SubHeadingFont);
+                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var removeLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
                     {
@@ -452,7 +466,7 @@ namespace Barotrauma.CharacterEditor
                         return true;
                     }
                 };
-                var addLimbButton = new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Height, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), "+")
+                var addLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
                 {
                     OnClicked = (b, d) =>
                     {
@@ -472,9 +486,7 @@ namespace Barotrauma.CharacterEditor
                 };
 
                 int _x = 1, _y = 1, w = 100, h = 100;
-                int otherElements = limbButtonElement.Rect.Width / 4 + 10 + limbButtonElement.Rect.Height * 2 + 10 + limbButtonElement.RectTransform.AbsoluteOffset.X;
-                frame = new GUIFrame(new RectTransform(new Point(limbEditLayout.Rect.Width - otherElements, limbButtonElement.Rect.Height), limbEditLayout.RectTransform), color: Color.Transparent);
-                var inputArea = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
+                var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), limbEditLayout.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.01f
@@ -523,8 +535,9 @@ namespace Barotrauma.CharacterEditor
                         }
                     };
                 }
-                new GUIButton(new RectTransform(new Point(limbButtonElement.Rect.Width / 4, limbButtonElement.Rect.Height), limbEditLayout.RectTransform)
-                    , GetCharacterEditorTranslation("AddMultipleLimbsButton"))
+                inputArea.Recalculate();
+                new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), limbEditLayout.RectTransform),
+                    GetCharacterEditorTranslation("AddMultipleLimbsButton"))
                 {
                     OnClicked = (b, d) =>
                     {
@@ -532,6 +545,8 @@ namespace Barotrauma.CharacterEditor
                         return true;
                     }
                 };
+                limbsElement.RectTransform.MinSize = new Point(0, limbEditLayout.RectTransform.Children.Max(c => c.MinSize.Y));
+
                 // If no elements are defined, create some as default
                 if (LimbGUIElements.None())
                 {
@@ -606,14 +621,14 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
                 // Joints
-                new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
-                var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), bottomGroup.RectTransform), style: null) { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), $"{GetCharacterEditorTranslation("Joints")}: ");
+                new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
+                var jointsElement = new GUIFrame(new RectTransform(new Vector2(1, 0.05f), content.RectTransform), style: null) { CanBeFocused = false };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), jointsElement.RectTransform), GetCharacterEditorTranslation("Joints"), font: GUI.SubHeadingFont);
                 var jointButtonElement = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), jointsElement.RectTransform)
-                { RelativeOffset = new Vector2(0.1f, 0) }, style: null)
+                { RelativeOffset = new Vector2(0.15f, 0) }, style: null)
                 { CanBeFocused = false };
-                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), bottomGroup.RectTransform));
-                var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), "-")
+                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
                     {
@@ -624,10 +639,10 @@ namespace Barotrauma.CharacterEditor
                         return true;
                     }
                 };
-                var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
+                var addJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height), jointButtonElement.RectTransform)
                 {
                     AbsoluteOffset = new Point(removeJointButton.Rect.Width + 10, 0)
-                }, "+")
+                }, style: "GUIPlusButton")
                 {
                     OnClicked = (b, d) =>
                     {
@@ -713,14 +728,14 @@ namespace Barotrauma.CharacterEditor
                         LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "head").FirstOrDefault();
                     if (main == null)
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), Color.Red);
+                        GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), GUI.Style.Red);
                         return false;
                     }
                     if (IsHumanoid)
                     {
                         if (!IsValid(LimbXElements.Values, true, out string missingType))
                         {
-                            GUI.AddMessage(GetCharacterEditorTranslation("MissingLimbType").Replace("[limbtype]", missingType.FormatCamelCaseWithSpaces()), Color.Red);
+                            GUI.AddMessage(GetCharacterEditorTranslation("MissingLimbType").Replace("[limbtype]", missingType.FormatCamelCaseWithSpaces()), GUI.Style.Red);
                             return false;
                         }
                     }
@@ -810,7 +825,7 @@ namespace Barotrauma.CharacterEditor
                     CanBeFocused = false
                 };
                 var group = new GUILayoutGroup(new RectTransform(Vector2.One, limbElement.RectTransform)) { AbsoluteSpacing = 2 };
-                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name);
+                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), name, font: GUI.SubHeadingFont);
                 var idField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 var limbTypeField = GUI.CreateEnumField(limbType, elementSize, GetCharacterEditorTranslation("LimbType"), group.RectTransform, font: GUI.Font);
@@ -850,7 +865,7 @@ namespace Barotrauma.CharacterEditor
                     CanBeFocused = false
                 };
                 var group = new GUILayoutGroup(new RectTransform(Vector2.One, jointElement.RectTransform)) { AbsoluteSpacing = 2 };
-                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName);
+                var label = new GUITextBlock(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), jointName, font: GUI.SubHeadingFont);
                 var nameField = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopLeft), TextManager.Get("Name"));
                 var nameInput = new GUITextBox(new RectTransform(new Vector2(0.5f, 1), nameField.RectTransform, Anchor.TopRight), jointName)
@@ -991,7 +1006,7 @@ namespace Barotrauma.CharacterEditor
                     string limbName = GetField(TextManager.Get("Name")).Parent.GetChild<GUITextBox>().Text;
                     LimbType limbType = (LimbType)GetField(GetCharacterEditorTranslation("LimbType")).Parent.GetChild<GUIDropDown>().SelectedData;
                     // Reverse, because the elements are created from right to left
-                    var rectInputs = GetField(GetCharacterEditorTranslation("SourceRectangle")).Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
+                    var rectInputs = GetField(GetCharacterEditorTranslation("SourceRectangle")).Parent.GetAllChildren<GUINumberInput>().Reverse().ToArray();
                     int width = rectInputs[2].IntValue;
                     int height = rectInputs[3].IntValue;
                     var colliderAttributes = new List<XAttribute>();
@@ -1042,8 +1057,8 @@ namespace Barotrauma.CharacterEditor
                     int limb1ID = GetField(GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "1")).Parent.GetChild<GUINumberInput>().IntValue;
                     int limb2ID = GetField(GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "2")).Parent.GetChild<GUINumberInput>().IntValue;
                     // Reverse, because the elements are created from right to left
-                    var anchor1Inputs = GetField(GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "1")).Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
-                    var anchor2Inputs = GetField(GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "2")).Parent.GetAllChildren().Where(c => c is GUINumberInput).Select(c => c as GUINumberInput).Reverse().ToArray();
+                    var anchor1Inputs = GetField(GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "1")).Parent.GetAllChildren<GUINumberInput>().Reverse().ToArray();
+                    var anchor2Inputs = GetField(GetCharacterEditorTranslation("LimbWithIndexAnchor").Replace("[index]", "2")).Parent.GetAllChildren<GUINumberInput>().Reverse().ToArray();
                     JointXElements.Add(new XElement("joint",
                         new XAttribute("name", jointName),
                         new XAttribute("limb1", limb1ID),

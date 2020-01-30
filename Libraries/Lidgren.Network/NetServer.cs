@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 
 namespace Lidgren.Network
 {
@@ -65,6 +67,34 @@ namespace Lidgren.Network
 		public override string ToString()
 		{
 			return "[NetServer " + ConnectionsCount + " connections]";
+		}
+
+		/// <summary>
+		/// Changes the number of maximum allowed connections, closing existing ones if the limit is lowered below the current amount.
+		/// </summary>
+		public void ChangeMaximumConnections(int num)
+		{
+			m_configuration.ChangeMaximumConnectionsInternal(num);
+
+			int reservedSlots = m_handshakes.Count + m_connections.Count;
+			while (reservedSlots >= m_configuration.m_maximumConnections)
+			{
+				if (m_handshakes.Count > 0)
+				{
+					IPEndPoint endpoint = m_handshakes.Keys.Last();
+
+					// server full
+					NetOutgoingMessage full = CreateMessage("Server full");
+					full.m_messageType = NetMessageType.Disconnect;
+					SendLibrary(full, endpoint);
+				}
+				else
+				{
+					m_connections.Last().Disconnect("Server full");
+				}
+
+				reservedSlots = m_handshakes.Count + m_connections.Count;
+			}
 		}
 	}
 }

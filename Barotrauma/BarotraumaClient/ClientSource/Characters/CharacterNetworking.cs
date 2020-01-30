@@ -288,6 +288,7 @@ namespace Barotrauma
                                 GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 
                                 //read anyway to prevent messing up reading the rest of the message
+                                UInt16 lastEventID = msg.ReadUInt16();
                                 byte itemCount = msg.ReadByte();
                                 for (int i = 0; i < itemCount; i++)
                                 {

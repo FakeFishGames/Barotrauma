@@ -80,7 +80,11 @@ namespace Barotrauma
             {
                 enabled = value;
                 Bar.Enabled = value;
-                if (!enabled) Bar.Selected = false;
+                Children.ForEach(c => c.Enabled = value);
+                if (!enabled)
+                {
+                    Bar.Selected = false;
+                }
             }
         }
 
@@ -196,7 +200,8 @@ namespace Barotrauma
             Frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(Frame, IsHorizontal ? "GUIFrameHorizontal" : "GUIFrameVertical", this);
             this.barSize = barSize;
-            Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color);
+
+            Bar = new GUIButton(new RectTransform(Vector2.One, rectT, IsHorizontal ? Anchor.CenterLeft : Anchor.TopCenter), color: color, style: null);
 
             switch (style)
             {

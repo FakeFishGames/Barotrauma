@@ -90,7 +90,7 @@ namespace Barotrauma
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
                             
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), 
-                    headerText, textAlignment: Alignment.Center, wrap: true);
+                    headerText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
                 GUI.Style.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);
 
@@ -103,21 +103,28 @@ namespace Barotrauma
                     Text.RectTransform.IsFixedSize = true;
                 }
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter, maxSize: new Point(1000, 50)),
-                    isHorizontal: true, childAnchor: buttons.Length > 1 ? Anchor.BottomLeft : Anchor.Center)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), Content.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
                 {
                     AbsoluteSpacing = 5,
                     IgnoreLayoutGroups = true
                 };
+
+                int buttonSize = 35;
+                var buttonStyle = GUI.Style.GetComponentStyle("GUIButton");
+                if (buttonStyle != null && buttonStyle.Height.HasValue)
+                {
+                    buttonSize = buttonStyle.Height.Value;
+                }
+
                 buttonContainer.RectTransform.NonScaledSize = buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.MaxSize = 
-                    new Point(buttonContainer.Rect.Width, (int)(30 * GUI.Scale));
+                    new Point(buttonContainer.Rect.Width, (int)((buttonSize + 5) * buttons.Length));
                 buttonContainer.RectTransform.IsFixedSize = true;
 
                 if (height == 0)
                 {
                     height += Header.Rect.Height + Content.AbsoluteSpacing;
                     height += (Text == null ? 0 : Text.Rect.Height) + Content.AbsoluteSpacing;
-                    height += buttonContainer.Rect.Height;
+                    height += buttonContainer.Rect.Height + 20;
                     if (minSize.HasValue) { height = Math.Max(height, minSize.Value.Y); }
 
                     InnerFrame.RectTransform.NonScaledSize = 
@@ -129,7 +136,7 @@ namespace Barotrauma
                 Buttons = new List<GUIButton>(buttons.Length);
                 for (int i = 0; i < buttons.Length; i++)
                 {
-                    var button = new GUIButton(new RectTransform(new Vector2(Math.Min(0.9f / buttons.Length, 0.5f), 1.0f), buttonContainer.RectTransform), buttons[i], style: "GUIButtonLarge");
+                    var button = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f / buttons.Length), buttonContainer.RectTransform), buttons[i]);
                     Buttons.Add(button);
                 }
             }
@@ -157,7 +164,7 @@ namespace Barotrauma
                 Buttons = new List<GUIButton>(1)
                 {
                     new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
-                        style: GUI.Style.GetComponentStyle("GUIButtonSolidHorizontalArrow") != null ? "GUIButtonSolidHorizontalArrow" : "GUIButtonHorizontalArrow")
+                        style: "GUIButtonHorizontalArrow")
                     {
                         OnClicked = Close
                     }

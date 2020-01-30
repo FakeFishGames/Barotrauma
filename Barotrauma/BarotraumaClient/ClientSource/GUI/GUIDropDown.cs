@@ -13,8 +13,9 @@ namespace Barotrauma
         public OnSelectedHandler OnSelected;
         public OnSelectedHandler OnDropped;
 
-        private GUIButton button;
-        private GUIListBox listBox;
+        private readonly GUIButton button;
+        private readonly GUIImage icon;
+        private readonly GUIListBox listBox;
 
         private RectTransform currentHighestParent;
         private List<RectTransform> parentHierarchy = new List<RectTransform>();
@@ -41,7 +42,11 @@ namespace Barotrauma
         public bool ButtonEnabled
         {
             get { return  button.Enabled; }
-            set { button.Enabled = value; }
+            set 
+            { 
+                button.Enabled = value;
+                if (icon != null) { icon.Enabled = value; }
+            }
         }
 
         public GUIComponent SelectedComponent
@@ -49,6 +54,7 @@ namespace Barotrauma
             get { return listBox.SelectedComponent; }
         }
         
+        // TODO: fix implicit hiding
         public bool Selected
         {
             get
@@ -157,17 +163,25 @@ namespace Barotrauma
                 OnClicked = OnClicked
             };
             GUI.Style.Apply(button, "", this);
+            button.TextBlock.SetTextPos();
 
             Anchor listAnchor = dropAbove ? Anchor.TopCenter : Anchor.BottomCenter;
             Pivot listPivot = dropAbove ? Pivot.BottomCenter : Pivot.TopCenter;
-
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
+
             { IsFixedSize = false }, style: null)
             {
                 Enabled = !selectMultiple,
                 OnSelected = SelectItem
             };
-            GUI.Style.Apply(listBox.Content, "GUIListBox", this);
+            GUI.Style.Apply(listBox, "GUIListBox", this);
+            GUI.Style.Apply(listBox.ContentBackground, "GUIListBox", this);
+
+            if (button.Style.ChildStyles.ContainsKey("dropdownicon"))
+            {
+                icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), button.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) }, null, scaleToFit: true);
+                icon.ApplyStyle(button.Style.ChildStyles["dropdownicon"]);
+            }
 
             currentHighestParent = FindHighestParent();
             currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
@@ -253,6 +267,7 @@ namespace Barotrauma
                             i++;
                         }
                         button.Text = string.Join(", ", texts);
+                        // TODO: The callback is called at least twice, remove this?
                         OnSelected?.Invoke(tb.Parent, tb.Parent.UserData);
                         return true;
                     }
@@ -300,6 +315,7 @@ namespace Barotrauma
                 button.Text = textBlock.Text;
             }
             Dropped = false;
+            // TODO: OnSelected can be called multiple times and when it shouldn't be called -> turn into an event so that nobody else can call it.
             OnSelected?.Invoke(component, component.UserData);
             return true;
         }

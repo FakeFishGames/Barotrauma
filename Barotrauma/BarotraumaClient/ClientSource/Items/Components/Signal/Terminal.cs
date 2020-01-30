@@ -15,9 +15,14 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            GUILayoutGroup layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(.9f, .8f), GuiFrame.RectTransform, anchor: Anchor.Center));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset })
+            {
+                ChildAnchor = Anchor.TopCenter,
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
 
-            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform))
+            historyBox = new GUIListBox(new RectTransform(new Vector2(1, .9f), layoutGroup.RectTransform), style: null)
             {
                 AutoHideScrollBar = false
             };
@@ -28,6 +33,8 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
+
+            new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
             inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
             {

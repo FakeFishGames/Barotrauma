@@ -311,7 +311,7 @@ namespace Barotrauma
                 {
                     Freeze = true;
                 }
-                if (CharacterHealth.OpenHealthWindow != null)
+                if (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen)
                 {
                     offset *= 0;
                     Freeze = false;

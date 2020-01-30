@@ -130,7 +130,7 @@ namespace Barotrauma.Networking
             ServerMessageText = incMsg.ReadString();
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
-            isPublic = incMsg.ReadBoolean();
+            IsPublic = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
@@ -269,7 +269,7 @@ namespace Barotrauma.Networking
             settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
-                if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ToggleSettingsFrame(btn, userData);
+                if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) { ToggleSettingsFrame(btn, userData); }
                 return true;
             };
             
@@ -279,16 +279,22 @@ namespace Barotrauma.Networking
             };
 
             //center frames
-            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.75f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
-            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
+            GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.8f), settingsFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 430) });
+            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), innerFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), TextManager.Get("Settings"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform), TextManager.Get("Settings"), font: GUI.LargeFont);
 
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, isHorizontal: true)
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), paddedFrame.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
+
+            var tabContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.85f), paddedFrame.RectTransform), style: "InnerFrame");
 
             //tabs
             var tabValues = Enum.GetValues(typeof(SettingsTab)).Cast<SettingsTab>().ToArray();
@@ -301,10 +307,8 @@ namespace Barotrauma.Networking
             tabButtons = new GUIButton[tabNames.Length];
             for (int i = 0; i < tabNames.Length; i++)
             {
-                settingsTabs[i] = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.79f), paddedFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) },
-                    style: "InnerFrame");
-
-                tabButtons[i] = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), tabNames[i], style: "GUITabButton")
+                settingsTabs[i] = new GUIFrame(new RectTransform(Vector2.One, tabContent.RectTransform, Anchor.Center), style: null);
+                tabButtons[i] = new GUIButton(new RectTransform(new Vector2(0.2f, 1.2f), buttonArea.RectTransform), tabNames[i], style: "GUITabButton")
                 {
                     UserData = i,
                     OnClicked = SelectSettingsTab
@@ -314,7 +318,8 @@ namespace Barotrauma.Networking
             SelectSettingsTab(tabButtons[0], 0);
 
             //"Close"
-            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), paddedFrame.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.05f), paddedFrame.RectTransform), style: null);
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonContainer.RectTransform, Anchor.BottomRight), TextManager.Get("Close"))
             {
                 OnClicked = ToggleSettingsFrame
             };
@@ -327,36 +332,14 @@ namespace Barotrauma.Networking
             var serverTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.General].RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.01f
             };
 
             //***********************************************
 
-            // Play Style Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"));
-            var playStyleSelection = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), serverTab.RectTransform))
-            {
-                AutoHideScrollBar = true,
-                UseGridLayout = true
-            };
-
-            List<GUITickBox> playStyleTickBoxes = new List<GUITickBox>();
-            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
-            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
-            {
-                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playStyleSelection.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
-                {
-                    ToolTip = TextManager.Get("servertagdescription." + playStyle)
-                };
-                selectionPlayStyle.AddRadioButton((int)playStyle, selectionTick);
-                playStyleTickBoxes.Add(selectionTick);
-            }
-            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
-            GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
-
             // Sub Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"));
-            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsSubSelection"), font: GUI.SubHeadingFont);
+            var selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -368,12 +351,14 @@ namespace Barotrauma.Networking
                 var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton(i, selectionTick);
             }
-            DebugConsole.NewMessage(SubSelectionMode.ToString(), Color.White);
+            selectionFrame.RectTransform.NonScaledSize = new Point(selectionFrame.Rect.Width, selectionFrame.Children.First().Rect.Height);
+            selectionFrame.RectTransform.IsFixedSize = true;
+
             GetPropertyData("SubSelectionMode").AssignGUIComponent(selectionMode);
 
             // Mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"));
-            selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), isHorizontal: true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), TextManager.Get("ServerSettingsModeSelection"), font: GUI.SubHeadingFont);
+            selectionFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -385,8 +370,11 @@ namespace Barotrauma.Networking
                 var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), selectionFrame.RectTransform), TextManager.Get(((SelectionMode)i).ToString()), font: GUI.SmallFont, style: "GUIRadioButton");
                 selectionMode.AddRadioButton(i, selectionTick);
             }
+            selectionFrame.RectTransform.NonScaledSize = new Point(selectionFrame.Rect.Width, selectionFrame.Children.First().Rect.Height);
+            selectionFrame.RectTransform.IsFixedSize = true;
             GetPropertyData("ModeSelectionMode").AssignGUIComponent(selectionMode);
 
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), serverTab.RectTransform), style: "HorizontalLine");
 
             //***********************************************
 
@@ -397,8 +385,8 @@ namespace Barotrauma.Networking
             //***********************************************
 
             string autoRestartDelayLabel = TextManager.Get("ServerSettingsAutoRestartDelay") + " ";
-            var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), autoRestartDelayLabel);
-            var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f)
+            var startIntervalText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverTab.RectTransform), autoRestartDelayLabel);
+            var startIntervalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), barSize: 0.1f, style: "GUISlider")
             {
                 UserData = startIntervalText,
                 Step = 0.05f,
@@ -436,7 +424,6 @@ namespace Barotrauma.Networking
             var allowSpecBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsAllowSpectating"));
             GetPropertyData("AllowSpectating").AssignGUIComponent(allowSpecBox);
 
-
             var shareSubsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsShareSubFiles"));
             GetPropertyData("AllowFileTransfers").AssignGUIComponent(shareSubsBox);
 
@@ -464,6 +451,29 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.02f
             };
 
+            // Play Style Selection
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUI.SubHeadingFont);
+            var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), roundsTab.RectTransform))
+            {                
+                AutoHideScrollBar = true,
+                UseGridLayout = true
+            };
+            playstyleList.Padding *= 2.0f;
+
+            List<GUITickBox> playStyleTickBoxes = new List<GUITickBox>();
+            GUIRadioButtonGroup selectionPlayStyle = new GUIRadioButtonGroup();
+            foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
+            {
+                var selectionTick = new GUITickBox(new RectTransform(new Vector2(0.32f, 0.49f), playstyleList.Content.RectTransform), TextManager.Get("servertag." + playStyle), font: GUI.SmallFont, style: "GUIRadioButton")
+                {
+                    ToolTip = TextManager.Get("servertagdescription." + playStyle)
+                };
+                selectionPlayStyle.AddRadioButton((int)playStyle, selectionTick);
+                playStyleTickBoxes.Add(selectionTick);
+            }
+            GetPropertyData("PlayStyle").AssignGUIComponent(selectionPlayStyle);
+            GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
+            playstyleList.RectTransform.MinSize = new Point(0, (int)(playstyleList.Content.Children.First().Rect.Height * 2.0f + playstyleList.Padding.Y + playstyleList.Padding.W));
 
             var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundWhenDestReached"));
@@ -615,7 +625,7 @@ namespace Barotrauma.Networking
             };
 
             var monsterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonHolder.RectTransform),
-                TextManager.Get("ServerSettingsMonsterSpawns"))
+                TextManager.Get("ServerSettingsMonsterSpawns"), style: "GUIButtonSmall")
             {
                 Enabled = !GameMain.NetworkMember.GameStarted
             };
@@ -655,7 +665,7 @@ namespace Barotrauma.Networking
             }
 
             var cargoButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), buttonHolder.RectTransform),
-                TextManager.Get("ServerSettingsAdditionalCargo"))
+                TextManager.Get("ServerSettingsAdditionalCargo"), style: "GUIButtonSmall")
             {
                 Enabled = !GameMain.NetworkMember.GameStarted
             };
@@ -740,20 +750,30 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.02f
             };
 
-            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+            var tickBoxContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), antigriefingTab.RectTransform))
+            {
+                AutoHideScrollBar = true,
+                UseGridLayout = true
+            };
+            tickBoxContainer.Padding *= 2.0f;
+
+            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
             GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
 
-            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
 
-            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform),
+            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));
             GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
 
-            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), antigriefingTab.RectTransform), TextManager.Get("ServerSettingsAllowVoteKick"));
+            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform), 
+                TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
+
+            tickBoxContainer.RectTransform.MinSize = new Point(0, (int)(tickBoxContainer.Content.Children.First().Rect.Height * 2.0f + tickBoxContainer.Padding.Y + tickBoxContainer.Padding.W));
 
             CreateLabeledSlider(antigriefingTab, "ServerSettingsKickVotesRequired", out slider, out sliderLabel);
             string votesRequiredLabel = sliderLabel.Text + " ";
@@ -801,10 +821,19 @@ namespace Barotrauma.Networking
             }
 
             var karmaSettingsContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), antigriefingTab.RectTransform), style: null);
-            var karmaSettingsList = new GUIListBox(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform));
+            var karmaSettingsList = new GUIListBox(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform))
+            {
+                Spacing = (int)(8 * GUI.Scale)
+            };
+            karmaSettingsList.Padding *= 2.0f;
 
-            karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) { MaxSize = new Point(karmaSettingsList.Content.Rect.Width, int.MaxValue) }, 
-                style: "InnerFrame");
+            karmaSettingsBlocker = new GUIFrame(new RectTransform(Vector2.One, karmaSettingsContainer.RectTransform, Anchor.CenterLeft) 
+            { MaxSize = new Point(karmaSettingsList.ContentBackground.Rect.Width, int.MaxValue) }, style: null)
+            {
+                UserData = "karmasettingsblocker",
+                Color = Color.Black * 0.95f
+            };
+            karmaSettingsBlocker.Color *= 0.5f;
             karmaPresetDD.SelectItem(KarmaPreset);
             karmaSettingsBlocker.Visible = !karmaBox.Selected || KarmaPreset != "custom";
             GameMain.NetworkMember.KarmaManager.CreateSettingsFrame(karmaSettingsList.Content);
@@ -864,9 +893,12 @@ namespace Barotrauma.Networking
                 RelativeSpacing = 0.05f
             };
 
-            slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform), barSize: 0.1f);
-            label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.8f), container.RectTransform),
-                string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), font: GUI.SmallFont);
+            slider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform), barSize: 0.1f, style: "GUISlider");
+            label = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform),
+                string.IsNullOrEmpty(labelTag) ? "" : TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont);
+
+            container.RectTransform.MinSize = new Point(0, slider.RectTransform.MinSize.Y);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, slider.RectTransform.MaxSize.Y);
 
             //slider has a reference to the label to change the text when it's used
             slider.UserData = label;
@@ -881,13 +913,18 @@ namespace Barotrauma.Networking
                 ToolTip = TextManager.Get(labelTag)
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.8f), container.RectTransform),
-                TextManager.Get(labelTag), font: GUI.SmallFont);
-            return new GUINumberInput(new RectTransform(new Vector2(0.3f, 0.8f), container.RectTransform), GUINumberInput.NumberType.Int)
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform),
+                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont);
+            var input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max
             };
+
+            container.RectTransform.MinSize = new Point(0, input.RectTransform.MinSize.Y);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, input.RectTransform.MaxSize.Y);
+
+            return input;
         }
 
         private bool SelectSettingsTab(GUIButton button, object obj)

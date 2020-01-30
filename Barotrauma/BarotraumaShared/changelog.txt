@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.702 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- UI overhaul
+- Increased level sizes.
+- Rebalanced monster spawns.
+- Added a few new artifact missions.
+- Fixed server not sending condition updates for inactive items, potentially causing the condition to get desynced when all of the components of the item go inactive.
+- Fixed clients being unable to rejoin a SteamP2P server after they've left.
+- Fix to inventory items occasionally getting mixed up in the campaign.
+- Power consumption of damaged devices doesn't increase as much anymore.
+- Player cap can be adjusted in the server settings.
+- Fixed "cannot remove joints when the world is locked" error message when a character latched onto the sub is attacked.
+- Fixed currents heavily slowing down the submarine regardless of the force or direction of the current.
+- Improved name tag hiding.
+- Fixed explosives that disappear after exploding (e.g. nuclear explosives) not playing the explosion sound.
+- Fixed server list not listing passworded SteamP2P servers correctly.
+- Reduced Daedalic splash screen volume further!
+- Made tonic liquid purchasable.
+- Subscribed Workshop items aren't shown in the Popular tab.
+- Fixed some held items vibrating/twitching when moving.
+- Fixed turrets emitting muzzle flash particles in an incorrect direction (the rotation of the particle was correct but the direction it flied towards not, which isn't noticeable with the non-moving vanilla particles).
+- Fixed clients not relaying console commands that don't exist client-side to the server (i.e. custom commands implemented by a server mod can now be used by clients).
+- Added combat priorities to alien weapons to allow bots to use them.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.701 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 

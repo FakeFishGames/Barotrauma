@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using RestSharp.Contrib;
 using System.Xml.Linq;
 using System.Xml;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma.Steam
 {
@@ -132,7 +133,7 @@ namespace Barotrauma.Steam
                     lobbyState = LobbyState.Owner;
                     lobbyID = (currentLobby?.Id).Value;
 
-                    if (serverSettings.isPublic)
+                    if (serverSettings.IsPublic)
                     {
                         currentLobby?.SetPublic();
                     }
@@ -203,6 +204,8 @@ namespace Barotrauma.Steam
                 currentLobby?.Leave(); currentLobby = null;
                 lobbyState = LobbyState.NotConnected;
 
+                lobbyID = 0;
+
                 Steamworks.SteamMatchmaking.ResetActions();
             }
         }
@@ -257,6 +260,7 @@ namespace Barotrauma.Steam
                     serverInfo.ServerName = lobby.GetData("name");
                     serverInfo.OwnerID = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
                     serverInfo.LobbyID = lobby.Id;
+                    bool.TryParse(lobby.GetData("haspassword"), out serverInfo.HasPassword);
                     serverInfo.PlayerCount = int.TryParse(lobby.GetData("playercount"), out int playerCount) ? playerCount : 0;
                     serverInfo.MaxPlayers = int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers) ? maxPlayers : 1;
                     serverInfo.RespondedToSteamQuery = true;
@@ -327,6 +331,7 @@ namespace Barotrauma.Steam
             TaskPool.Add(serverQuery.RunQueryAsync(),
             (t) =>
             {
+                serverQuery.Dispose();
                 taskDone();
                 if (t.Status == TaskStatus.Faulted)
                 {
@@ -610,7 +615,7 @@ namespace Barotrauma.Steam
                         nonSubscribedItems = nonSubscribedItems.Take(amount - processedResults);
                     }
 
-                    onItemsFound?.Invoke(resultPage.Value.Entries.ToList());
+                    onItemsFound?.Invoke(nonSubscribedItems.ToList());
                     
                     processedResults += resultPage.Value.ResultCount;
                     pageIndex++;
@@ -785,7 +790,7 @@ namespace Barotrauma.Steam
             {
                 if (!EnableWorkShopItem(existingItem, false, out string errorMsg))
                 {
-                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                    DebugConsole.NewMessage(errorMsg, Color.Red);
                     new GUIMessageBox(
                         TextManager.Get("Error"),
                         TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { existingItem?.Title, errorMsg }));
@@ -895,13 +900,13 @@ namespace Barotrauma.Steam
                 workshopPublishStatus.Success = false;
                 workshopPublishStatus.TaskStatus = task.Status;
 
-                DebugConsole.NewMessage("Publishing workshop item " + item?.Title + " failed: task failed with status " + task.Status.ToString(), Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage("Publishing workshop item " + item?.Title + " failed: task failed with status " + task.Status.ToString(), Color.Red);
             }
             else if (!task.Result.Success)
             {
                 workshopPublishStatus.Success = false;
                 workshopPublishStatus.Result = task.Result;
-                DebugConsole.NewMessage("Publishing workshop item " + item?.Title + " failed: Workshop result "+task.Result.Result.ToString(), Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage("Publishing workshop item " + item?.Title + " failed: Workshop result "+task.Result.Result.ToString(), Color.Red);
             }
             else
             {
@@ -926,7 +931,7 @@ namespace Barotrauma.Steam
             if (!(item?.IsInstalled ?? false))
             {
                 errorMsg = TextManager.GetWithVariable("WorkshopErrorInstallRequiredToEnable", "[itemname]", item?.Title ?? "[NULL]");
-                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage(errorMsg, Color.Red);
                 return false;
             }
 
@@ -1036,7 +1041,7 @@ namespace Barotrauma.Steam
                 if (File.Exists(newContentPackagePath) && !CheckFileEquality(newContentPackagePath, metaDataFilePath))
                 {
                     errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item?.Title, newContentPackagePath });
-                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                    DebugConsole.NewMessage(errorMsg, Color.Red);
                     return false;
                 }
 
@@ -1047,7 +1052,7 @@ namespace Barotrauma.Steam
                     if (File.Exists(sourceFile) && File.Exists(contentFile.Path) && !CheckFileEquality(sourceFile, contentFile.Path))
                     {
                         errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item?.Title, contentFile.Path });
-                        DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                        DebugConsole.NewMessage(errorMsg, Color.Red);
                         return false;
                     }
                 }
@@ -1121,7 +1126,7 @@ namespace Barotrauma.Steam
             catch (Exception e)
             {
                 errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " {" + e.Message + "}";
-                DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                DebugConsole.NewMessage(errorMsg, Color.Red);
                 return false;
             }
 
@@ -1155,7 +1160,7 @@ namespace Barotrauma.Steam
                 errorMsg = "Cannot disable workshop item \"" + item?.Title + "\" because it has not been installed.";
                 if (!noLog)
                 {
-                    DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
+                    DebugConsole.NewMessage(errorMsg, Color.Red);
                 }
                 return false;
             }
@@ -1304,7 +1309,9 @@ namespace Barotrauma.Steam
             {
                 return false;
             }
-            return item?.Updated <= myPackage.InstallTime.Value;
+            DateTime latestTime = item.Value.Updated > item.Value.Created ? item.Value.Updated : item.Value.Created;
+            bool upToDate = latestTime <= myPackage.InstallTime.Value;
+            return upToDate;
         }
 
         public static bool AutoUpdateWorkshopItems()
@@ -1385,11 +1392,8 @@ namespace Barotrauma.Steam
         {
             errorMsg = "";
             if (!(item?.IsInstalled ?? false)) { return false; }
-            if (item.Value.NeedsUpdate)
-            {
-                if (!DisableWorkShopItem(item, false, out errorMsg)) { return false; }
-                if (!EnableWorkShopItem(item, allowFileOverwrite: false, errorMsg: out errorMsg)) { return false; }
-            }
+            if (!DisableWorkShopItem(item, false, out errorMsg)) { return false; }
+            if (!EnableWorkShopItem(item, allowFileOverwrite: false, errorMsg: out errorMsg)) { return false; }
 
             return true;
         }

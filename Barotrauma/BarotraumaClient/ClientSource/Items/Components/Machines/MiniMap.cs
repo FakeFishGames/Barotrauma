@@ -19,25 +19,25 @@ namespace Barotrauma.Items.Components
 
         private string noPowerTip = "";
 
-        private List<Submarine> displayedSubs = new List<Submarine>();
+        private readonly List<Submarine> displayedSubs = new List<Submarine>();
 
         partial void InitProjSpecific(XElement element)
         {
             noPowerTip = TextManager.Get("SteeringNoPowerTip");
 
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
-            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
+            new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset },
                 DrawHUDBack, null);
             submarineContainer = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center),
+            new GUICustomComponent(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset },
                 DrawHUDFront, null)
             {
                 CanBeFocused = false
             };
 
             hullInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.13f), GUI.Canvas, minSize: new Point(250, 150)),
-                style: "InnerFrame")
+                style: "GUIToolTip")
             {
                 CanBeFocused = false
             };
@@ -120,7 +120,7 @@ namespace Barotrauma.Items.Components
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
 
                 GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip,
-                    Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
+                    GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f, font: GUI.SubHeadingFont);
                 return;
             }
 
@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
                     if (textPos.X - textSize.X / 2 < submarineContainer.Rect.X)
                         textPos.X += (submarineContainer.Rect.X - (textPos.X - textSize.X / 2)) + 10 * GUI.xScale;
                     GUI.DrawString(spriteBatch, textPos - textSize / 2, text,
-                       Color.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
+                       GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f);
                     break;
                 }
             }            
@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
                 if (ShowHullIntegrity)
                 {
                     gapOpenSum = hull.ConnectedGaps.Where(g => !g.IsRoomToRoom).Sum(g => g.Open);
-                    borderColor = Color.Lerp(neutralColor, Color.Red, Math.Min((float)gapOpenSum, 1.0f));
+                    borderColor = Color.Lerp(neutralColor, GUI.Style.Red, Math.Min((float)gapOpenSum, 1.0f));
                 }
 
                 float? oxygenAmount = null;
@@ -222,7 +222,7 @@ namespace Barotrauma.Items.Components
                     oxygenAmount = RequireOxygenDetectors ? hullData.Oxygen : hull.OxygenPercentage;
                     GUI.DrawRectangle(
                         spriteBatch, hullFrame.Rect, 
-                        Color.Lerp(Color.Red * 0.5f, Color.Green * 0.3f, (float)oxygenAmount / 100.0f), 
+                        Color.Lerp(GUI.Style.Red * 0.5f, GUI.Style.Green * 0.3f, (float)oxygenAmount / 100.0f), 
                         true);
                 }
 
@@ -271,15 +271,15 @@ namespace Barotrauma.Items.Components
                     waterAmount /= (hullData.LinkedHulls.Count + 1);
 
                     hullBreachText.Text = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : "";
-                    hullBreachText.TextColor = Color.Red;
+                    hullBreachText.TextColor = GUI.Style.Red;
 
                     hullAirQualityText.Text = oxygenAmount == null ? TextManager.Get("MiniMapAirQualityUnavailable") :
                         TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), + (int)oxygenAmount + " %");
-                    hullAirQualityText.TextColor = oxygenAmount == null ? Color.Red : Color.Lerp(Color.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
+                    hullAirQualityText.TextColor = oxygenAmount == null ? GUI.Style.Red : Color.Lerp(GUI.Style.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
 
                     hullWaterText.Text = waterAmount == null ? TextManager.Get("MiniMapWaterLevelUnavailable") : 
                         TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)(waterAmount * 100.0f) + " %");
-                    hullWaterText.TextColor = waterAmount == null ? Color.Red : Color.Lerp(Color.LightGreen, Color.Red, (float)waterAmount);
+                    hullWaterText.TextColor = waterAmount == null ? GUI.Style.Red : Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)waterAmount);
                 }
                 
                 hullFrame.Color = borderColor;

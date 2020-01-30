@@ -43,9 +43,9 @@ namespace Barotrauma.Items.Components
 
             if (storeOriginalState)
             {
-                crewAreaOriginalState = crewManager.ToggleCrewAreaOpen;
+                crewAreaOriginalState = crewManager.ToggleCrewListOpen;
             }
-            crewManager.ToggleCrewAreaOpen = value;
+            crewManager.ToggleCrewListOpen = value;
         }
 
         private void ToggleChatBox(bool value, bool storeOriginalState)

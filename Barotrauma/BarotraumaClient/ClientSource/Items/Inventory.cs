@@ -131,7 +131,8 @@ namespace Barotrauma
         protected float prevHUDScale = GUI.Scale;
         protected Point prevScreenResolution;
 
-        protected static Sprite slotSpriteSmall, slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound;
+        protected static Sprite slotSpriteHorizontal, slotSpriteVertical, slotSpriteRound, slotHotkeySprite;
+        public static Sprite SlotSpriteSmall;
         public static Sprite EquipIndicator, EquipIndicatorHighlight;
         public static Sprite DropIndicator, DropIndicatorHighlight;
         public static Inventory DraggingInventory;
@@ -293,8 +294,7 @@ namespace Barotrauma
             Vector2 spacing = new Vector2(10 * UIScale, (10 + EquipIndicator.size.Y) * UIScale);
             Vector2 rectSize = new Vector2(60.0f * UIScale);
 
-            //y is larger to give more space for the header
-            padding = new Vector4(spacing.X, 40 * UIScale, spacing.X, spacing.X);
+            padding = new Vector4(spacing.X, spacing.Y, spacing.X, spacing.X);
 
             Vector2 slotAreaSize = new Vector2(
                 columns * rectSize.X + (columns - 1) * spacing.X,
@@ -546,9 +546,6 @@ namespace Barotrauma
             else
             {
                 Rectangle subRect = slot.Rect;
-                subRect.Width = slots[slotIndex].SlotSprite == null ? (int)(60 * UIScale) : (int)(slots[slotIndex].SlotSprite.size.X * UIScale);
-                subRect.Height = (int)(60 * UIScale);
-
                 Vector2 spacing = new Vector2(10 * UIScale, (10 + EquipIndicator.size.Y) * UIScale);
 
                 int columns = (int)Math.Max(Math.Floor(Math.Sqrt(itemCapacity)), 1);
@@ -615,7 +612,7 @@ namespace Barotrauma
                 if (canMove)
                 {
                     subInventory.movableFrameRect.X = subRect.X - (int)spacing.X;
-                    subInventory.movableFrameRect.Y = subRect.Y + (int)(spacing.Y / 2f);
+                    subInventory.movableFrameRect.Y = subRect.Y + (int)(spacing.Y);
                 }
                 slots[slotIndex].State = GUIComponent.ComponentState.Hover;
             }
@@ -933,7 +930,7 @@ namespace Barotrauma
                                     selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                                 }
                             }
-                            selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                            selectedInventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
                         }
                         GUI.PlayUISound(GUISoundType.PickItem);
                     }
@@ -944,7 +941,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.Red, 0.1f, 0.9f); }
+                        if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
                         GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
                     selectedInventory.HideTimer = 2.0f;
@@ -1056,7 +1053,7 @@ namespace Barotrauma
                             new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), draggingItem.Name, Color.White);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
-                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? Color.Red : Color.LightGreen,
+                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? GUI.Style.Red : Color.LightGreen,
                             font: GUI.SmallFont);
                     }
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
@@ -1075,7 +1072,7 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, int slotIndex, bool drawItem = true)
+        public static void DrawSlot(SpriteBatch spriteBatch, Inventory inventory, InventorySlot slot, Item item, int slotIndex, bool drawItem = true, InvSlotType type = InvSlotType.Any)
         {
             Rectangle rect = slot.Rect;
             rect.Location += slot.DrawOffset.ToPoint();
@@ -1086,6 +1083,7 @@ namespace Barotrauma
                 rect.Inflate(rect.Width * inflateAmount, rect.Height * inflateAmount);
             }
 
+            Color slotColor = Color.White;
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -1099,8 +1097,18 @@ namespace Barotrauma
             }
             else
             {
-                Sprite slotSprite = slot.SlotSprite ?? slotSpriteSmall;
-                Color slotColor = slot.IsHighlighted ? Color.White : Color.White * 0.8f;
+                Sprite slotSprite = slot.SlotSprite ?? SlotSpriteSmall;
+
+                if (inventory != null && (CharacterInventory.PersonalSlots.HasFlag(type) || (inventory.isSubInventory && (inventory.Owner as Item) != null 
+                    && (inventory.Owner as Item).AllowedSlots.Any(a => CharacterInventory.PersonalSlots.HasFlag(a)))))
+                {
+                    slotColor = slot.IsHighlighted ? GUIColorSettings.EquipmentSlotColor : GUIColorSettings.EquipmentSlotColor * 0.8f;
+                }
+                else
+                {
+                    slotColor = slot.IsHighlighted ? GUIColorSettings.InventorySlotColor : GUIColorSettings.InventorySlotColor * 0.8f;
+                }
+
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
 
@@ -1125,7 +1133,7 @@ namespace Barotrauma
                 }
                 if (slot.MouseOn() && canBePut)
                 {
-                    GUI.UIGlow.Draw(spriteBatch, rect, Color.LightGreen);
+                    GUI.UIGlow.Draw(spriteBatch, rect, GUI.Style.Green);
                 }
 
                 if (item != null && drawItem)
@@ -1135,7 +1143,7 @@ namespace Barotrauma
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
                             new Rectangle(rect.X, rect.Bottom - 8, (int)(rect.Width * (item.Condition / item.MaxCondition)), 8),
-                            Color.Lerp(Color.Red, Color.Green, item.Condition / item.MaxCondition) * 0.8f, true);
+                            Color.Lerp(GUI.Style.Red, GUI.Style.Green, item.Condition / item.MaxCondition) * 0.8f, true);
                     }
 
                     if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
@@ -1163,7 +1171,7 @@ namespace Barotrauma
                             GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.DarkGray * 0.9f, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
-                                Color.Lerp(Color.Red, Color.Green, containedState) * 0.8f, true);
+                                Color.Lerp(GUI.Style.Red, GUI.Style.Green, containedState) * 0.8f, true);
                         }
                         else
                         {
@@ -1172,7 +1180,7 @@ namespace Barotrauma
                                 containedIndicatorArea.Width / (float)indicatorSprite.SourceRect.Width,
                                 containedIndicatorArea.Height / (float)indicatorSprite.SourceRect.Height);
 
-                            if (containedState >= 0.0f && containedState < 0.25f)
+                            if (containedState >= 0.0f && containedState < 0.25f && inventory == Character.Controlled?.Inventory && Character.Controlled.HasEquippedItem(item))
                             {
                                 indicatorScale += ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) * 0.25f;
                             }
@@ -1183,7 +1191,7 @@ namespace Barotrauma
                                 rotate: 0.0f,
                                 scale: indicatorScale);
 
-                            Color indicatorColor = ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.Green);
+                            Color indicatorColor = ToolBox.GradientLerp(containedState, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
                             if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
 
                             spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
@@ -1212,7 +1220,7 @@ namespace Barotrauma
             if (item != null && drawItem)
             {
                 Sprite sprite = item.Prefab.InventoryIcon ?? item.Sprite;
-                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 3.0f);
+                float scale = Math.Min(Math.Min((rect.Width - 10) / sprite.size.X, (rect.Height - 10) / sprite.size.Y), 2.0f);
                 Vector2 itemPos = rect.Center.ToVector2();
                 if (itemPos.Y > GameMain.GraphicsHeight)
                 {
@@ -1245,15 +1253,14 @@ namespace Barotrauma
                 Character.Controlled?.Inventory == inventory &&
                 slot.QuickUseKey != Keys.None)
             {
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2(),
-                    slot.QuickUseKey.ToString().Substring(1, 1),
-                    item == null || !drawItem ? Color.Gray : Color.White,
-                    Color.Black * 0.8f);
+                spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.25f), slotHotkeySprite.SourceRect, slotColor);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2(1, -2), slot.QuickUseKey.ToString().Substring(1, 1), Color.Black, font: GUI.SmallFont);
             }
         }
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            UInt16 lastEventID = msg.ReadUInt16();
             byte itemCount = msg.ReadByte();
             receivedItemIDs = new ushort[itemCount];
             for (int i = 0; i < itemCount; i++)
@@ -1268,7 +1275,7 @@ namespace Barotrauma
             if (syncItemsDelay > 0.0f || GameMain.Client.MidRoundSyncing)
             {
                 if (syncItemsCoroutine != null) CoroutineManager.StopCoroutines(syncItemsCoroutine);
-                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay());
+                syncItemsCoroutine = CoroutineManager.StartCoroutine(SyncItemsAfterDelay(lastEventID));
             }
             else
             {
@@ -1281,9 +1288,13 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> SyncItemsAfterDelay()
+        private IEnumerable<object> SyncItemsAfterDelay(UInt16 lastEventID)
         {
-            while (syncItemsDelay > 0.0f || (GameMain.Client != null && GameMain.Client.MidRoundSyncing))
+            while (syncItemsDelay > 0.0f || 
+                //don't apply inventory updates until 
+                //  1. MidRound syncing is done AND
+                //  2. We've received all the events created before the update was written (otherwise we may not yet know about some items the server has spawned in the inventory)
+                (GameMain.Client != null && (GameMain.Client.MidRoundSyncing || NetIdUtils.IdMoreRecent(lastEventID, GameMain.Client.EntityEventManager.LastReceivedID))))
             {
                 syncItemsDelay = Math.Max((float)(syncItemsDelay - Timing.Step), 0.0f);
                 yield return CoroutineStatus.Running;

@@ -512,7 +512,11 @@ namespace Barotrauma.Sounds
             return debugName;
         }
 
-        public bool FadingOutAndDisposing;
+        public bool FadingOutAndDisposing
+        {
+            get;
+            private set;
+        }
         public void FadeOutAndDispose()
         {
             FadingOutAndDisposing = true;

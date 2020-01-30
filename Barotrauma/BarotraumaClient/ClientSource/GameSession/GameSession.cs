@@ -1,21 +1,19 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     partial class GameSession
     {
         private InfoFrameTab selectedTab;
-        private GUIButton infoFrame;
+        private GUIFrame infoFrame;
+
+        private readonly List<GUIButton> tabButtons = new List<GUIButton>();
 
         private GUIFrame infoFrameContent;
+        public RoundSummary RoundSummary { get; private set; }
 
-        private RoundSummary roundSummary;
-        public RoundSummary RoundSummary
-        {
-            get { return roundSummary; }
-        }
-        
         private bool ToggleInfoFrame()
         {
             if (GameMain.NetworkMember != null && GameMain.NetLobbyScreen != null)
@@ -40,7 +38,9 @@ namespace Barotrauma
         {
             int width = 600, height = 400;
 
-            infoFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            tabButtons.Clear();
+
+            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.35f), infoFrame.RectTransform, Anchor.Center) { MinSize = new Point(width, height), RelativeOffset = new Vector2(0.0f, 0.033f) });
 
@@ -56,12 +56,14 @@ namespace Barotrauma
                 UserData = InfoFrameTab.Crew,
                 OnClicked = SelectInfoFrameTab
             };
+            tabButtons.Add(crewButton);
 
             var missionButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"), style: "GUITabButton")
             {
                 UserData = InfoFrameTab.Mission,
                 OnClicked = SelectInfoFrameTab
             };
+            tabButtons.Add(missionButton);
 
             if (GameMain.NetworkMember != null)
             {
@@ -70,6 +72,7 @@ namespace Barotrauma
                     UserData = InfoFrameTab.MyCharacter,
                     OnClicked = SelectInfoFrameTab
                 };
+                tabButtons.Add(myCharacterButton);
             }
 
             /*TODO: fix
@@ -89,6 +92,7 @@ namespace Barotrauma
             selectedTab = (InfoFrameTab)userData;
 
             CreateInfoFrame();
+            tabButtons.ForEach(tb => tb.Selected = (InfoFrameTab)tb.UserData == selectedTab);
 
             switch (selectedTab)
             {

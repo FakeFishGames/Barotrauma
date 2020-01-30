@@ -207,15 +207,9 @@ namespace Barotrauma
                 Stretch = true
             };
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), font: GUI.Font);
+            searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), createClearButton: true);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
-
-            searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), filterContainer.RectTransform), "x")
-            {
-                OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterStoreItems(selectedItemCategory, ""); searchBox.Flash(Color.White); return true; }
-            };
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
@@ -307,12 +301,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.SubHeadingFont)
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
-            repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("Repair"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -352,12 +346,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.LargeFont)
+            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.SubHeadingFont)
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
-            repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("Repair"), style: "GUIButtonLarge")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("Repair"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -401,8 +395,8 @@ namespace Barotrauma
             {
                 ForceUpperCase = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUI.LargeFont);
-            replaceShuttlesButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceShuttles"), style: "GUIButtonLarge")
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            replaceShuttlesButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceShuttles"))
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -462,7 +456,7 @@ namespace Barotrauma
                 UserData = "missionlabel",
                 AutoScale = true
             };
-            var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionPanel.RectTransform, Anchor.Center))
+            var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), missionPanel.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -473,7 +467,8 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f,
                 Stretch = true
             };
-            selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.25f), missionPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight))
+            selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.25f), missionPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight)
+                { MinSize = new Point(0, (int)(250 * GUI.Scale)) })
             {
                 Visible = false
             };
@@ -683,13 +678,13 @@ namespace Barotrauma
             {
                 AutoScale = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.Name);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.Name, font: GUI.SubHeadingFont);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             new GUIImage(new RectTransform(new Vector2(1.0f, 0.6f),
                 container.RectTransform), portrait, scaleToFit: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), TextManager.Get("SelectMission"), font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), TextManager.Get("SelectMission"), font: GUI.SubHeadingFont)
             {
                 AutoScale = true
             };
@@ -704,7 +699,6 @@ namespace Barotrauma
             SelectedLevel = connection?.Level;
             if (connection != null)
             {
-                Point maxTickBoxSize = new Point(int.MaxValue, missionContent.Rect.Height / 4) ;
                 List<Mission> availableMissions = Campaign.Map.CurrentLocation.GetMissionsInConnection(connection).ToList();
                 if (!availableMissions.Contains(null)) { availableMissions.Add(null); }
 
@@ -719,7 +713,7 @@ namespace Barotrauma
                 for (int i = 0; i < availableMissions.Count; i++)
                 {
                     var mission = availableMissions[i];
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform) { MaxSize = maxTickBoxSize },
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform),
                        mission?.Name ?? TextManager.Get("NoMission"), style: "GUIRadioButton")
                     {
                         Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign)
@@ -727,6 +721,9 @@ namespace Barotrauma
                     missionTickBoxes.Add(tickBox);
                     missionRadioButtonGroup.AddRadioButton(i, tickBox);
                 }
+
+                missionFrame.RectTransform.MinSize = 
+                    new Point(0, (int)(missionContent.RectTransform.Children.Sum(c => c.MinSize.Y * 1.02f) / missionContent.RectTransform.RelativeSize.Y));
 
                 if (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
                 {
@@ -818,24 +815,26 @@ namespace Barotrauma
 
         private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox)
         {
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.Scale * 50)), listBox.Content.RectTransform), style: "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), listBox.Content.RectTransform), style: "ListBoxElement")
             {
                 UserData = pi,
                 ToolTip = pi.ItemPrefab.Description
             };
+            frame.RectTransform.MinSize = new Point(0, (int)(GUI.Scale * 50));
 
-            var content = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform), isHorizontal: true)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center), 
+                isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true
             };
 
-            ScalableFont font = listBox.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
+            ScalableFont font = listBox.Content.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
             Sprite itemIcon = pi.ItemPrefab.InventoryIcon ?? pi.ItemPrefab.sprite;
             if (itemIcon != null)
             {
-                GUIImage img = new GUIImage(new RectTransform(new Point((int)(content.Rect.Height * 0.8f)), content.RectTransform, Anchor.CenterLeft), itemIcon, scaleToFit: true)
+                GUIImage img = new GUIImage(new RectTransform(new Point((int)(content.Rect.Height * 0.8f)), content.RectTransform), itemIcon, scaleToFit: true)
                 {
                     Color = itemIcon == pi.ItemPrefab.InventoryIcon ? pi.ItemPrefab.InventoryIconColor : pi.ItemPrefab.SpriteColor
                 };
@@ -900,8 +899,8 @@ namespace Barotrauma
             content.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
-            content.RectTransform.IsFixedSize = true;
-            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
+            /*content.RectTransform.IsFixedSize = true;
+            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);*/
 
             return frame;
         }
@@ -950,6 +949,7 @@ namespace Barotrauma
                     var priceInfo = pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                     if (priceInfo == null) { continue; }
                     itemFrame = CreateItemFrame(pi, priceInfo, myItemList);
+                    itemFrame.Flash(GUI.Style.Green);
                 }
                 itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
                 existingItemFrames.Add(itemFrame);
@@ -1094,8 +1094,9 @@ namespace Barotrauma
                 {
                     UserData = characterInfo
                 };
+                var characterPreviewContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), characterPreviewFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) }, style: null);
 
-                characterInfo.CreateInfoFrame(characterPreviewFrame);
+                characterInfo.CreateInfoFrame(characterPreviewContent);
             }
 
             var currentCrew = GameMain.GameSession.CrewManager.GetCharacterInfos();
@@ -1104,7 +1105,7 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), characterPreviewFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) }, 
                     TextManager.Get("FireButton"))
                 {
-                    Color = Color.Red,
+                    Color = GUI.Style.Red,
                     UserData = characterInfo,
                     Enabled = currentCrew.Count() > 1, //can't fire if there's only one character in the crew
                     OnClicked = (btn, obj) =>

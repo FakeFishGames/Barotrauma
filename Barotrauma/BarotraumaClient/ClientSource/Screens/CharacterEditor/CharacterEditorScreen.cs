@@ -278,12 +278,8 @@ namespace Barotrauma.CharacterEditor
         #region Main methods
         public override void AddToGUIUpdateList()
         {
-            fileEditPanel.AddToGUIUpdateList();
-            modesPanel.AddToGUIUpdateList();
-            minorModesPanel.AddToGUIUpdateList();
-            buttonsPanel.AddToGUIUpdateList();
-            optionsPanel.AddToGUIUpdateList();
-            characterSelectionPanel.AddToGUIUpdateList();
+            rightArea.AddToGUIUpdateList();
+            leftArea.AddToGUIUpdateList();
 
             Wizard.instance?.AddToGUIUpdateList();
             if (displayBackgroundColor)
@@ -738,7 +734,7 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
             }
-            optionsToggle?.UpdateOpenState((float)deltaTime, new Vector2(optionsPanel.Rect.Width + rightArea.RectTransform.AbsoluteOffset.X, 0), optionsPanel.RectTransform);
+            optionsToggle?.UpdateOpenState((float)deltaTime, new Vector2(-optionsPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), optionsPanel.RectTransform);
             fileEditToggle?.UpdateOpenState((float)deltaTime, new Vector2(-fileEditPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), fileEditPanel.RectTransform);
             characterPanelToggle?.UpdateOpenState((float)deltaTime, new Vector2(-characterSelectionPanel.Rect.Width - rightArea.RectTransform.AbsoluteOffset.X, 0), characterSelectionPanel.RectTransform);
             minorModesToggle?.UpdateOpenState((float)deltaTime, new Vector2(-minorModesPanel.Rect.Width - leftArea.RectTransform.AbsoluteOffset.X, 0), minorModesPanel.RectTransform);
@@ -802,7 +798,7 @@ namespace Barotrauma.CharacterEditor
             else if (showColliders)
             {
                 character.AnimController.Collider.DebugDraw(spriteBatch, Color.White, forceColor: true);
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, Color.LightGreen, forceColor: true));
+                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, GUI.Style.Green, forceColor: true));
             }
             spriteBatch.End();
 
@@ -867,8 +863,8 @@ namespace Barotrauma.CharacterEditor
                 }
                 if (jointEndLimb != null && jointEndLimb.ActiveSprite != null)
                 {
-                    GUI.DrawRectangle(spriteBatch, GetLimbSpritesheetRect(jointEndLimb), Color.LightGreen, thickness: 3);
-                    GUI.DrawRectangle(spriteBatch, GetLimbPhysicRect(jointEndLimb), Color.LightGreen, thickness: 3);
+                    GUI.DrawRectangle(spriteBatch, GetLimbSpritesheetRect(jointEndLimb), GUI.Style.Green, thickness: 3);
+                    GUI.DrawRectangle(spriteBatch, GetLimbPhysicRect(jointEndLimb), GUI.Style.Green, thickness: 3);
                 }
                 if (spriteSheetRect.Contains(PlayerInput.MousePosition))
                 {
@@ -878,7 +874,7 @@ namespace Barotrauma.CharacterEditor
                         var offset = anchor1Pos ?? Vector2.Zero;
                         offset = -offset;
                         startPos += offset;
-                        GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
+                        GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, GUI.Style.Green, width: 3);
                     }
                 }
                 else
@@ -888,7 +884,7 @@ namespace Barotrauma.CharacterEditor
                         // TODO: there's something wrong here
                         var offset = anchor1Pos.HasValue ? Vector2.Transform(ConvertUnits.ToSimUnits(anchor1Pos.Value), Matrix.CreateRotationZ(jointStartLimb.Rotation)) : Vector2.Zero;
                         var startPos = SimToScreen(jointStartLimb.SimPosition + offset);
-                        GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, Color.LightGreen, width: 3);
+                        GUI.DrawLine(spriteBatch, startPos, PlayerInput.MousePosition, GUI.Style.Green, width: 3);
                     }
                 }
             }
@@ -976,11 +972,11 @@ namespace Barotrauma.CharacterEditor
                 var colliderDrawPos = SimToScreen(collider.SimPosition);
                 Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
                 var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
-                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, Color.LightGreen);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, GUI.Style.Green);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 Vector2 left = forward.Left();
-                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), Color.Red);
-                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, Color.LightGreen);
+                GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + left * 0.25f), GUI.Style.Red);
+                ShapeExtensions.DrawCircle(spriteBatch, colliderDrawPos, (endPos - colliderDrawPos).Length(), 40, GUI.Style.Green);
                 GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 300, 0), $"Collider rotation: {MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(collider.Rotation))}", Color.White, font: GUI.SmallFont);
             }
             spriteBatch.End();
@@ -1662,7 +1658,7 @@ namespace Barotrauma.CharacterEditor
 #if !DEBUG
             if (vanilla != null && contentPackage == vanilla)
             {
-                GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
+                GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUI.Style.Red, font: GUI.LargeFont);
                 return false;
             }
 #endif
@@ -1828,12 +1824,9 @@ namespace Barotrauma.CharacterEditor
 
         #region GUI
         private static Point outerMargin = new Point(0, 0);
-        private static Point innerMargin = new Point(40, 40);
-        private static Color panelColor = new Color(20, 20, 20, 255);
-        private static Color toggleButtonColor = new Color(0.4f, 0.4f, 0.4f, 1);
+        private static Vector2 innerScale = new Vector2(0.95f, 0.95f);
 
-        private GUIFrame rightArea;
-        private GUIFrame leftArea;
+        private GUILayoutGroup rightArea, leftArea;
         private GUIFrame centerArea;
 
         private GUIFrame characterSelectionPanel;
@@ -1904,49 +1897,43 @@ namespace Barotrauma.CharacterEditor
             }
 
             // Create the areas
-            rightArea = new GUIFrame(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight)
+            rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight), childAnchor: Anchor.BottomRight)
             {
-                AbsoluteOffset = new Point(outerMargin.X, 0)
-            }, style: null) { CanBeFocused = false };
+                RelativeSpacing = 0.02f
+            };
             centerArea = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
                 AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + 20), outerMargin.Y + 20)
 
             }, style: null)
             { CanBeFocused = false };
-            leftArea = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft)
+            leftArea = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterLeft), childAnchor: Anchor.BottomLeft)
             {
-                AbsoluteOffset = new Point(outerMargin.X, 0)
-            }, style: null)
-            {
-                CanBeFocused = false
+                RelativeSpacing = 0.02f
             };
 
-            Vector2 buttonSize = new Vector2(1, 0.04f);
             Vector2 toggleSize = new Vector2(1.0f, 0.03f);
 
-            CreateCharacterSelectionPanel();
-            CreateMinorModesPanel(toggleSize);
-            CreateModesPanel(toggleSize);
-            CreateButtonsPanel();
             CreateFileEditPanel();
             CreateOptionsPanel(toggleSize);
+            CreateCharacterSelectionPanel();
+
+            CreateButtonsPanel();
+            CreateModesPanel(toggleSize);
+            CreateMinorModesPanel(toggleSize);
+
             CreateContextualControls();
         }
 
         private void CreateMinorModesPanel(Vector2 toggleSize)
         {
-            minorModesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.25f), leftArea.RectTransform, Anchor.BottomLeft)
-            {
-                RelativeOffset = new Vector2(0, 0.21f)
-            }, style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(minorModesPanel.Rect.Width - innerMargin.X, minorModesPanel.Rect.Height - innerMargin.Y),
-                minorModesPanel.RectTransform, Anchor.Center))
+            minorModesPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), leftArea.RectTransform));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(innerScale, minorModesPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("MinorModesTitle"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.0f), layoutGroup.RectTransform), GetCharacterEditorTranslation("MinorModesTitle"), font: GUI.LargeFont);
             paramsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ShowParameters")) { Selected = showParamsEditor };
             paramsToggle.OnSelected = box =>
             {
@@ -1992,19 +1979,19 @@ namespace Barotrauma.CharacterEditor
                 drawDamageModifiers = box.Selected;
                 return true;
             };
-            minorModesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), minorModesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            minorModesToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), minorModesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            minorModesPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
 
         private void CreateModesPanel(Vector2 toggleSize)
         {
-            modesPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.2f), leftArea.RectTransform, Anchor.BottomLeft), style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(modesPanel.Rect.Width - innerMargin.X, modesPanel.Rect.Height - innerMargin.Y),
-                modesPanel.RectTransform, Anchor.Center))
+            modesPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), leftArea.RectTransform));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(innerScale, modesPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.0f), layoutGroup.RectTransform), GetCharacterEditorTranslation("ModesPanel"), font: GUI.LargeFont);
             characterInfoToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditCharacter")) { Selected = editCharacterInfo };
             ragdollToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditRagdoll")) { Selected = editRagdoll };
             limbsToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("EditLimbs")) { Selected = editLimbs };
@@ -2086,7 +2073,8 @@ namespace Barotrauma.CharacterEditor
                 ResetParamsEditor();
                 return true;
             };
-            modesToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            modesToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), modesPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            modesPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
 
         private void SetToggle(GUITickBox toggle, bool value)
@@ -2095,11 +2083,11 @@ namespace Barotrauma.CharacterEditor
             {
                 if (value)
                 {
-                    toggle.Box.Flash(Color.LightGreen, useRectangleFlash: true);
+                    toggle.Box.Flash(GUI.Style.Green, useRectangleFlash: true);
                 }
                 else
                 {
-                    toggle.Box.Flash(Color.Red, useRectangleFlash: true);
+                    toggle.Box.Flash(GUI.Style.Red, useRectangleFlash: true);
                 }
             }
             toggle.Selected = value;
@@ -2107,11 +2095,7 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateButtonsPanel()
         {
-            buttonsPanel = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.1f), leftArea.RectTransform, Anchor.BottomLeft)
-            {
-                MinSize = new Point(120, 60),
-                RelativeOffset = new Vector2(0, 0.47f)
-            }, style: null, color: panelColor);
+            buttonsPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), leftArea.RectTransform));
             Vector2 buttonSize = new Vector2(1, 0.45f);
             var parent = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.70f), buttonsPanel.RectTransform, Anchor.Center), style: null);
             var reloadTexturesButton = new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.TopCenter), GetCharacterEditorTranslation("ReloadTextures"));
@@ -2136,23 +2120,20 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            buttonsPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.125f, 1), buttonsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            buttonsPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), buttonsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
+            buttonsPanel.RectTransform.MinSize = new Point(0, (int)(parent.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.5f));
         }
 
 
         private void CreateOptionsPanel(Vector2 toggleSize)
         {
-            optionsPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), rightArea.RectTransform, Anchor.Center)
-            {
-                RelativeOffset = new Vector2(0, -0.075f)
-            }, style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(optionsPanel.Rect.Width - innerMargin.X, optionsPanel.Rect.Height - innerMargin.Y),
-                optionsPanel.RectTransform, Anchor.Center))
+            optionsPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), rightArea.RectTransform));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(innerScale, optionsPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 2,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("OptionsPanel"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.0f), layoutGroup.RectTransform), GetCharacterEditorTranslation("OptionsPanel"), font: GUI.LargeFont);
             freezeToggle = new GUITickBox(new RectTransform(toggleSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("Freeze"))
             {
                 Selected = isFrozen,
@@ -2218,7 +2199,8 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            optionsToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), optionsPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+            optionsToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), optionsPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+            optionsPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
 
         private void CreateContextualControls()
@@ -2266,12 +2248,12 @@ namespace Barotrauma.CharacterEditor
                 switch (i)
                 {
                     case 0:
-                        colorLabel.TextColor = Color.Red;
+                        colorLabel.TextColor = GUI.Style.Red;
                         numberInput.IntValue = backgroundColor.R;
                         numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)numInput.IntValue;
                         break;
                     case 1:
-                        colorLabel.TextColor = Color.LightGreen;
+                        colorLabel.TextColor = GUI.Style.Green;
                         numberInput.IntValue = backgroundColor.G;
                         numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)numInput.IntValue;
                         break;
@@ -2294,7 +2276,7 @@ namespace Barotrauma.CharacterEditor
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), GetCharacterEditorTranslation("SpriteSheetZoom") + ":", Color.White);
             var spriteSheetControlElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2, textAreaHeight), layoutGroupSpriteSheet.RectTransform), style: null);
             CalculateSpritesheetZoom();
-            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.75f, 1), spriteSheetControlElement.RectTransform), barSize: 0.2f)
+            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.75f, 1), spriteSheetControlElement.RectTransform, Anchor.CenterLeft), barSize: 0.2f)
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom)),
                 Step = 0.01f,
@@ -2304,8 +2286,9 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1), spriteSheetControlElement.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"))
-            {
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1), spriteSheetControlElement.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.75f, 0.0f) },
+                GetCharacterEditorTranslation("Reset"))
+            {                
                 OnClicked = (box, data) =>
                 {
                     spriteSheetZoom = Math.Min(1, spriteSheetMaxZoom);
@@ -2437,11 +2420,11 @@ namespace Barotrauma.CharacterEditor
             {
                 ToolTip = GetCharacterEditorTranslation("CopyJointSettingsTooltip"),
                 Selected = copyJointSettings,
-                TextColor = copyJointSettings ? Color.Red : Color.White,
+                TextColor = copyJointSettings ? GUI.Style.Red : Color.White,
                 OnSelected = (GUITickBox box) =>
                 {
                     copyJointSettings = box.Selected;
-                    box.TextColor = copyJointSettings ? Color.Red : Color.White;
+                    box.TextColor = copyJointSettings ? GUI.Style.Red : Color.White;
                     return true;
                 }
             };
@@ -2523,7 +2506,7 @@ namespace Barotrauma.CharacterEditor
                 return true;
             };
 
-            Point buttonSize = new Point(140, 30);
+            Point buttonSize = new Point(180, 30);
             int innerMargin = 5;
             int outerMargin = 10;
             extraRagdollControls = new GUIFrame(new RectTransform(new Point(buttonSize.X + outerMargin * 2, buttonSize.Y * 4 + innerMargin * 3 + outerMargin * 2), centerArea.RectTransform, Anchor.BottomRight)
@@ -2569,6 +2552,11 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
+
+            extraRagdollLayout.RectTransform.Resize(
+                new Point(extraRagdollLayout.Rect.Width, extraRagdollLayout.RectTransform.Children.Sum(c => c.MinSize.Y + extraRagdollLayout.AbsoluteSpacing)));
+            extraRagdollControls.RectTransform.Resize(new Point(extraRagdollControls.Rect.Width, extraRagdollLayout.Rect.Height + outerMargin * 2));
+            GUITextBlock.AutoScaleAndNormalize(extraRagdollLayout.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
 
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
@@ -2647,25 +2635,20 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateCharacterSelectionPanel()
         {
-            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), rightArea.RectTransform, Anchor.TopRight), style: null, color: panelColor);
-            var padding = new GUIFrame(new RectTransform(new Point(characterSelectionPanel.Rect.Width - innerMargin.X, characterSelectionPanel.Rect.Height - innerMargin.Y),
-                characterSelectionPanel.RectTransform, Anchor.Center), style: null)
+            characterSelectionPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), rightArea.RectTransform));
+            var content = new GUILayoutGroup(new RectTransform(innerScale, characterSelectionPanel.RectTransform, Anchor.Center))
             {
-                CanBeFocused = false
+                Stretch = true
             };
 
-            // Disclaimer
-            var disclaimerBtnHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), padding.RectTransform), style: null);
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), disclaimerBtnHolder.RectTransform, Anchor.TopRight), style: "GUINotificationButton")
+            // Character selection
+            var characterLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUI.LargeFont);
+            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.2f, 0.7f), characterLabel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
             {
                 OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
             };
-            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
 
-            // Character selection
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.2f), padding.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUI.LargeFont);
-
-            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), padding.RectTransform)
+            var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), content.RectTransform)
             {
                 RelativeOffset = new Vector2(0, 0.2f)
             }, elementCount: 8, style: null);
@@ -2682,7 +2665,7 @@ namespace Barotrauma.CharacterEditor
             };
             if (currentCharacterConfig == CharacterPrefab.HumanConfigFile)
             {
-                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.15f), padding.RectTransform)
+                var jobDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.15f), content.RectTransform)
                 {
                     RelativeOffset = new Vector2(0, 0.45f)
                 }, elementCount: 8, style: null);
@@ -2701,7 +2684,7 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 };
             }
-            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), parent: padding.RectTransform, anchor: Anchor.BottomLeft), style: null);
+            var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), parent: content.RectTransform, anchor: Anchor.BottomLeft), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
             prevCharacterButton.TextBlock.AutoScale = true;
             prevCharacterButton.OnClicked += (b, obj) =>
@@ -2716,33 +2699,34 @@ namespace Barotrauma.CharacterEditor
                 SpawnCharacter(GetNextConfigFile());
                 return true;
             };
-            characterPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), characterSelectionPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+            charButtons.RectTransform.MinSize = new Point(0, prevCharacterButton.RectTransform.MinSize.Y);
+            characterPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), characterSelectionPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+            characterSelectionPanel.RectTransform.MinSize = new Point(0, (int)(content.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.2f));
         }
 
         private void CreateFileEditPanel()
         {
             Vector2 buttonSize = new Vector2(1, 0.04f);
 
-            fileEditPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), rightArea.RectTransform, Anchor.BottomRight), style: null, color: panelColor);
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Point(fileEditPanel.Rect.Width - innerMargin.X, fileEditPanel.Rect.Height - innerMargin.Y),
-                fileEditPanel.RectTransform, Anchor.Center))
+            fileEditPanel = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), rightArea.RectTransform));
+            var layoutGroup = new GUILayoutGroup(new RectTransform(innerScale, fileEditPanel.RectTransform, Anchor.Center))
             {
                 AbsoluteSpacing = 1,
                 Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.06f), layoutGroup.RectTransform), GetCharacterEditorTranslation("FileEditPanel"), font: GUI.LargeFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.03f, 0.0f), layoutGroup.RectTransform), GetCharacterEditorTranslation("FileEditPanel"), font: GUI.LargeFont);
 
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             var saveAllButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), TextManager.Get("editor.saveall"));
-            saveAllButton.Color = Color.LightGreen;
+            saveAllButton.Color = GUI.Style.Green;
             saveAllButton.OnClicked += (button, userData) =>
             {
 #if !DEBUG
                 if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                 {
-                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUI.Style.Red, font: GUI.LargeFont);
                     return false;
                 }
 #endif
@@ -2754,9 +2738,9 @@ namespace Barotrauma.CharacterEditor
                 else
                 {
                     character.Params.Save();
-                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    GUI.AddMessage(GetCharacterEditorTranslation("CharacterSavedTo").Replace("[path]", CharacterParams.FullPath), GUI.Style.Green, font: GUI.Font, lifeTime: 5);
                     character.AnimController.SaveRagdoll();
-                    GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), Color.Green, font: GUI.Font, lifeTime: 5);
+                    GUI.AddMessage(GetCharacterEditorTranslation("RagdollSavedTo").Replace("[path]", RagdollParams.FullPath), GUI.Style.Green, font: GUI.Font, lifeTime: 5);
                     AnimParams.ForEach(p => p.Save());
                 }
                 return true;
@@ -2781,7 +2765,7 @@ namespace Barotrauma.CharacterEditor
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUI.Style.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
@@ -2848,7 +2832,7 @@ namespace Barotrauma.CharacterEditor
                         try
                         {
                             File.Delete(selectedFile);
-                            GUI.AddMessage(GetCharacterEditorTranslation("RagdollDeletedFrom").Replace("[file]", selectedFile), Color.Red, font: GUI.Font);
+                            GUI.AddMessage(GetCharacterEditorTranslation("RagdollDeletedFrom").Replace("[file]", selectedFile), GUI.Style.Red, font: GUI.Font);
                         }
                         catch (Exception e)
                         {
@@ -2916,7 +2900,7 @@ namespace Barotrauma.CharacterEditor
 #if !DEBUG
                     if (VanillaCharacters != null && VanillaCharacters.Contains(currentCharacterConfig))
                     {
-                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), Color.Red, font: GUI.LargeFont);
+                        GUI.AddMessage(GetCharacterEditorTranslation("CannotEditVanillaCharacters"), GUI.Style.Red, font: GUI.LargeFont);
                         box.Close();
                         return false;
                     }
@@ -3005,7 +2989,7 @@ namespace Barotrauma.CharacterEditor
                         try
                         {
                             File.Delete(selectedFile);
-                            GUI.AddMessage(GetCharacterEditorTranslation("AnimationOfTypeDeleted").Replace("[type]", selectedType.ToString()).Replace("[file]", selectedFile), Color.Red, font: GUI.Font);
+                            GUI.AddMessage(GetCharacterEditorTranslation("AnimationOfTypeDeleted").Replace("[type]", selectedType.ToString()).Replace("[file]", selectedFile), GUI.Style.Red, font: GUI.Font);
                         }
                         catch (Exception e)
                         {
@@ -3080,7 +3064,7 @@ namespace Barotrauma.CharacterEditor
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
             var resetButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("ResetButton"));
-            resetButton.Color = Color.Red;
+            resetButton.Color = GUI.Style.Red;
             resetButton.OnClicked += (button, userData) =>
             {
                 CharacterParams.Reset(true);
@@ -3121,7 +3105,7 @@ namespace Barotrauma.CharacterEditor
                 }
             };
 
-            fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.1f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
+            fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
 
             void ResetView()
             {
@@ -3135,6 +3119,8 @@ namespace Barotrauma.CharacterEditor
                 skeletonToggle.Selected = false;
                 damageModifiersToggle.Selected = false;
             }
+
+            fileEditPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
         #endregion
 
@@ -3165,9 +3151,9 @@ namespace Barotrauma.CharacterEditor
 
             public ToggleButton(RectTransform rectT, Direction dir)
             {
+                rectT.MaxSize = new Point(int.MaxValue, (int)(100 * GUI.Scale));
                 toggleButton = new GUIButton(rectT, style: "UIToggleButton")
                 {
-                    Color = toggleButtonColor,
                     OnClicked = (button, data) =>
                     {
                         IsHidden = !IsHidden;
@@ -3196,8 +3182,8 @@ namespace Barotrauma.CharacterEditor
 
             public void UpdateOpenState(float deltaTime, Vector2 hiddenPos, RectTransform panel)
             {
-                panel.AbsoluteOffset = Vector2.SmoothStep(hiddenPos, Vector2.Zero, OpenState).ToPoint();
-                OpenState = isHidden ? Math.Max(OpenState - deltaTime * 2, 0) : Math.Min(OpenState + deltaTime * 2, 1);
+                panel.AbsoluteOffset = new Vector2(MathHelper.SmoothStep(hiddenPos.X, 0.0f, OpenState), panel.AbsoluteOffset.Y).ToPoint();
+                OpenState = isHidden ? Math.Max(OpenState - deltaTime * 5, 0) : Math.Min(OpenState + deltaTime * 5, 1);
             }
         }
 
@@ -3354,7 +3340,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     CanBeFocused = false
                 };
-                new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight), "X", color: Color.Red)
+                new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton", color: GUI.Style.Red)
                 {
                     OnClicked = (button, data) =>
                     {
@@ -3832,7 +3818,7 @@ namespace Barotrauma.CharacterEditor
                 DrawRadialWidget(spriteBatch, SimToScreen(head.SimPosition), animParams.HeadAngle, GetCharacterEditorTranslation("HeadAngle"), Color.White,
                     angle => TryUpdateAnimParam("headangle", angle), circleRadius: 25, rotationOffset: collider.Rotation + MathHelper.Pi, clockWise: dir < 0, wrapAnglePi: true, holdPosition: true);
                 // Head position and leaning
-                Color color = Color.Red;
+                Color color = GUI.Style.Red;
                 if (animParams.IsGroundedAnimation)
                 {
                     if (humanGroundedParams != null && character.AnimController is HumanoidAnimController humanAnimController)
@@ -4110,7 +4096,7 @@ namespace Barotrauma.CharacterEditor
             {
                 if (hand != null || arm != null)
                 {
-                    GetAnimationWidget("HandMoveAmount", Color.LightGreen, Color.Black, initMethod: w =>
+                    GetAnimationWidget("HandMoveAmount", GUI.Style.Green, Color.Black, initMethod: w =>
                     {
                         w.tooltip = GetCharacterEditorTranslation("HandMoveAmount");
                         float offset = 0.1f;
@@ -4131,7 +4117,7 @@ namespace Barotrauma.CharacterEditor
                         {
                             if (w.IsSelected)
                             {
-                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), Color.LightGreen);
+                                GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), GUI.Style.Green);
                             }
                         };
                     }).Draw(spriteBatch, deltaTime);
@@ -4250,7 +4236,7 @@ namespace Barotrauma.CharacterEditor
                 lengthWidget.Draw(spriteBatch, deltaTime);
                 amplitudeWidget.Draw(spriteBatch, deltaTime);
                 // Arms
-                GetAnimationWidget("HandMoveAmount", Color.LightGreen, Color.Black, initMethod: w =>
+                GetAnimationWidget("HandMoveAmount", GUI.Style.Green, Color.Black, initMethod: w =>
                 {
                     w.tooltip = GetCharacterEditorTranslation("HandMoveAmount");
                     float offset = 0.4f;
@@ -4273,7 +4259,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         if (w.IsSelected)
                         {
-                            GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), Color.LightGreen);
+                            GUI.DrawLine(sp, w.DrawPos, SimToScreen(collider.SimPosition + GetSimSpaceForward() * offset), GUI.Style.Green);
                         }
                     };
                 }).Draw(spriteBatch, deltaTime);
@@ -4284,7 +4270,7 @@ namespace Barotrauma.CharacterEditor
                 if (limb.type == LimbType.LeftFoot || limb.type == LimbType.RightFoot)
                 {
                     GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugRefPos) - Vector2.One * 3, Vector2.One * 6, Color.White, isFilled: true);
-                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3, Vector2.One * 6, Color.LightGreen, isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, SimToScreen(limb.DebugTargetPos) - Vector2.One * 3, Vector2.One * 6, GUI.Style.Green, isFilled: true);
                 }
             }
         }
@@ -4379,7 +4365,7 @@ namespace Barotrauma.CharacterEditor
                     {
                         var pullJointWidgetSize = new Vector2(5, 5);
                         Vector2 tformedPullPos = SimToScreen(limb.PullJointWorldAnchorA);
-                        GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, Color.Red, true);
+                        GUI.DrawRectangle(spriteBatch, tformedPullPos - pullJointWidgetSize / 2, pullJointWidgetSize, GUI.Style.Red, true);
                         DrawWidget(spriteBatch, tformedPullPos, WidgetType.Rectangle, 8, Color.Cyan, $"IK ({limb.Name})", () =>
                         {
                             if (!selectedLimbs.Contains(limb))
@@ -4451,7 +4437,7 @@ namespace Barotrauma.CharacterEditor
                             //GUI.DrawRectangle(spriteBatch, tformedJointPos - dotSize / 2, dotSize, color, true);
                             //GUI.DrawLine(spriteBatch, tformedJointPos, tformedJointPos + up * 20, Color.White, width: 3);
                             GUI.DrawLine(spriteBatch, limbScreenPos, tformedJointPos, Color.Yellow, width: 3);
-                            //GUI.DrawRectangle(spriteBatch, inputRect, Color.Red);
+                            //GUI.DrawRectangle(spriteBatch, inputRect, GUI.Style.Red);
                             GUI.DrawString(spriteBatch, tformedJointPos + new Vector2(dotSize.X, -dotSize.Y) * 2, $"{joint.Params.Name} {jointPos.FormatZeroDecimal()}", Color.White, Color.Black * 0.5f);
                             if (PlayerInput.PrimaryMouseButtonHeld())
                             {
@@ -4717,7 +4703,7 @@ namespace Barotrauma.CharacterEditor
                         {
                             if (isSelected || !onlyShowSourceRectForSelectedLimbs)
                             {
-                                GUI.DrawRectangle(spriteBatch, rect, isSelected ? Color.Yellow : (isMouseOn ? Color.White : Color.Red));
+                                GUI.DrawRectangle(spriteBatch, rect, isSelected ? Color.Yellow : (isMouseOn ? Color.White : GUI.Style.Red));
                             }
                         }
                         if (isSelected)
@@ -5048,7 +5034,7 @@ namespace Barotrauma.CharacterEditor
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, bool holdPosition, float rotationOffset = 0)
         {
             rotationOffset -= limb.Params.GetSpriteOrientation();
-            Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? Color.LightGreen * 0.5f : Color.Red;
+            Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? GUI.Style.Green * 0.5f : GUI.Style.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
                 joint.UpperLimit = MathHelper.ToRadians(angle);
@@ -5240,7 +5226,7 @@ namespace Barotrauma.CharacterEditor
                 }
                 onClick(angle);
                 var zeroPos = drawPos + VectorExtensions.ForwardFlipped(rotationOffset, circleRadius);
-                GUI.DrawLine(spriteBatch, drawPos, zeroPos, Color.Red, width: 3);
+                GUI.DrawLine(spriteBatch, drawPos, zeroPos, GUI.Style.Red, width: 3);
             }, autoFreeze, holdPosition, onHovered: () =>
             {
                 if (!PlayerInput.PrimaryMouseButtonHeld())
@@ -5399,7 +5385,7 @@ namespace Barotrauma.CharacterEditor
                 widget.refresh = () =>
                 {
                     widget.showTooltip = !selectedJoints.Contains(joint);
-                    widget.color = selectedJoints.Contains(joint) ? Color.Yellow : Color.Red;
+                    widget.color = selectedJoints.Contains(joint) ? Color.Yellow : GUI.Style.Red;
                 };
                 widget.refresh();
                 widget.PreUpdate += dTime => widget.Enabled = editJoints;

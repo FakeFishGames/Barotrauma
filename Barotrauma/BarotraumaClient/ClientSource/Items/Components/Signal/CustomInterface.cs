@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
             var visibleElements = customInterfaceElementList.Where(ciElement => !string.IsNullOrEmpty(ciElement.Label));
 
-            uiElementContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center),
+            uiElementContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.65f), GuiFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) },
                 childAnchor: customInterfaceElementList.Count > 1 ? Anchor.TopCenter : Anchor.Center)
             {
                 RelativeSpacing = 0.05f,
@@ -49,12 +49,15 @@ namespace Barotrauma.Items.Components
                         }
                         return true;
                     };
+                    //reset size restrictions set by the Style to make sure the elements can fit the interface
+                    tickBox.RectTransform.MinSize = new Point(0, 0);
+                    tickBox.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
                     uiElements.Add(tickBox);
                 }
                 else
                 {
                     var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), 
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "GUIButtonLarge")
+                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "DeviceButton")
                     {
                         UserData = ciElement
                     };
@@ -71,6 +74,12 @@ namespace Barotrauma.Items.Components
                         }
                         return true;
                     };
+
+                    //reset size restrictions set by the Style to make sure the elements can fit the interface
+                    btn.RectTransform.MinSize = btn.Frame.RectTransform.MinSize = new Point(0, 0);
+                    btn.RectTransform.MaxSize = btn.Frame.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                    btn.TextBlock.Wrap = true;
+
                     uiElements.Add(btn);
                 }
             }

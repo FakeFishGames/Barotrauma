@@ -13,7 +13,7 @@ namespace Barotrauma.RuinGeneration
             }
             foreach (Line line in walls)
             {
-                GUI.DrawLine(spriteBatch, new Vector2(line.A.X, -line.A.Y), new Vector2(line.B.X, -line.B.Y), Color.Red, 0.0f, 10);
+                GUI.DrawLine(spriteBatch, new Vector2(line.A.X, -line.A.Y), new Vector2(line.B.X, -line.B.Y), GUI.Style.Red, 0.0f, 10);
             }
         }
     }

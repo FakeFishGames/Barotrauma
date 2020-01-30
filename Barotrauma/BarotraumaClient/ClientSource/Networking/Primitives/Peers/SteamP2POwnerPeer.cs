@@ -188,6 +188,14 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
+            if (ChildServerRelay.HasShutDown || (ChildServerRelay.Process?.HasExited ?? true))
+            {
+                Close();
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
+                return;
+            }
+
             for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
                 if (remotePeers[i].DisconnectTime != null && remotePeers[i].DisconnectTime < Timing.TotalTime)

@@ -43,6 +43,7 @@
   public="false"
   port="27015"
   queryport="27016"
+  playstyle="Casual"
   maxplayers="10"
   enableupnp="false"
   autorestart="false"

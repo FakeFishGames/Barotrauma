@@ -116,7 +116,7 @@ namespace Barotrauma.Items.Components
                 MinSize = new Point(100,20),
                 RelativeOffset = new Vector2(0.0f, 0.01f)
             }, 
-            barSize: 0.0f);
+            barSize: 0.0f, style: "DeviceProgressBar");
         }
 
         public override void Move(Vector2 amount)
@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation);
+                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
             }
         }
 
@@ -260,12 +260,12 @@ namespace Barotrauma.Items.Components
             GUI.DrawLine(spriteBatch,
                 drawPos,
                 drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius,
-                Color.Green);
+                GUI.Style.Green);
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
                 drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius,
-                Color.Green);
+                GUI.Style.Green);
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
@@ -278,7 +278,7 @@ namespace Barotrauma.Items.Components
              {
                  widget.MouseDown += () =>
                  {
-                     widget.color = Color.Green;
+                     widget.color = GUI.Style.Green;
                      prevAngle = minRotation;
                  };
                  widget.Deselected += () =>
@@ -319,7 +319,7 @@ namespace Barotrauma.Items.Components
             {
                 widget.MouseDown += () =>
                 {
-                    widget.color = Color.Green;
+                    widget.color = GUI.Style.Green;
                     prevAngle = minRotation;
                 };
                 widget.Deselected += () =>
@@ -431,7 +431,7 @@ namespace Barotrauma.Items.Components
             bool readyToFire = reload <= 0.0f && charged && availableAmmo.Any(p => p != null);
             if (ShowChargeIndicator && PowerConsumption > 0.0f)
             {
-                powerIndicator.Color = charged ? Color.Green : Color.Red;
+                powerIndicator.Color = charged ? GUI.Style.Green : GUI.Style.Red;
                 if (flashLowPower)
                 {
                     powerIndicator.BarSize = 1;
@@ -452,7 +452,7 @@ namespace Barotrauma.Items.Components
 
             if (ShowProjectileIndicator)
             {
-                Point slotSize = new Point((int)(60 * GUI.Scale), (int)(30 * GUI.Scale));
+                Point slotSize = (Inventory.SlotSpriteSmall.size * Inventory.UIScale).ToPoint();
                 int spacing = 5;
                 int slotsPerRow = Math.Min(availableAmmo.Count, 6);
                 int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);
@@ -469,7 +469,7 @@ namespace Barotrauma.Items.Components
                     Rectangle rect = new Rectangle(invSlotPos.X, invSlotPos.Y, totalWidth, slotSize.Y);
                     float inflate = MathHelper.Lerp(3, 8, (float)Math.Abs(1 * Math.Sin(flashTimer * 5)));
                     rect.Inflate(inflate, inflate);
-                    Color color = Color.Red * MathHelper.Max(0.5f, (float)Math.Sin(flashTimer * 12));
+                    Color color = GUI.Style.Red * MathHelper.Max(0.5f, (float)Math.Sin(flashTimer * 12));
                     GUI.DrawRectangle(spriteBatch, rect, color, thickness: 3);
                 }
             }

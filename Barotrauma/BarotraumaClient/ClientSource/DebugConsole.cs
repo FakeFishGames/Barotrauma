@@ -787,12 +787,9 @@ namespace Barotrauma
 
             commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
             {
-                if (args.Length < 1) return;
+                if (args.Length < 1) { return; }
 
-                if (GameMain.SubEditorScreen.CharacterMode)
-                {
-                    GameMain.SubEditorScreen.SetCharacterMode(false);
-                }
+                GameMain.SubEditorScreen.SetMode(SubEditorScreen.Mode.Default);
 
                 string fileName = string.Join(" ", args);
                 if (fileName.Contains("../"))

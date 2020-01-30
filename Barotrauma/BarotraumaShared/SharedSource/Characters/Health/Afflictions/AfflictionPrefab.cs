@@ -256,7 +256,7 @@ namespace Barotrauma
         public readonly string AchievementOnRemoved;
 
         public readonly Sprite Icon;
-        public readonly Color IconColor;
+        public readonly Color[] IconColors;
 
         private List<Effect> effects = new List<Effect>();
 
@@ -510,7 +510,7 @@ namespace Barotrauma
             CauseOfDeathDescription     = TextManager.Get("AfflictionCauseOfDeath." + Identifier, true) ?? element.GetAttributeString("causeofdeathdescription", "");
             SelfCauseOfDeathDescription = TextManager.Get("AfflictionCauseOfDeathSelf." + Identifier, true) ?? element.GetAttributeString("selfcauseofdeathdescription", "");
 
-
+            IconColors = element.GetAttributeColorArray("iconcolors", null);
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
             
             foreach (XElement subElement in element.Elements())
@@ -519,7 +519,6 @@ namespace Barotrauma
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
-                        IconColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "effect":
                         effects.Add(new Effect(subElement, Name));

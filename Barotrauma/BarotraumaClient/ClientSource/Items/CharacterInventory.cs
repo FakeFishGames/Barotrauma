@@ -98,9 +98,10 @@ namespace Barotrauma
                 limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/IconAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
                 limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
                 limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 383 + margin, 128 - margin * 2, 128 - margin * 2)));
+
+                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));                
+                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(640 + margin, 0 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(768 + margin, 0 + margin, 128 - margin * 2, 128 - margin * 2)));                
                 limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 896 + margin, 128 - margin * 2, 128 - margin * 2)));
             }
             SlotPositions = new Vector2[SlotTypes.Length];
@@ -146,7 +147,7 @@ namespace Barotrauma
             {
                 InventorySlot prevSlot = slots[i];
                 
-                Sprite slotSprite = slotSpriteSmall;
+                Sprite slotSprite = SlotSpriteSmall;
                 Rectangle slotRect = new Rectangle(
                     (int)(SlotPositions[i].X), 
                     (int)(SlotPositions[i].Y),
@@ -243,7 +244,7 @@ namespace Barotrauma
         private void SetSlotPositions(Layout layout)
         {
             int spacing = (int)(10 * UIScale);
-            Point slotSize = (slotSpriteSmall.size * UIScale).ToPoint();
+            Point slotSize = (SlotSpriteSmall.size * UIScale).ToPoint();
             int bottomOffset = slotSize.Y + spacing * 2 + ContainedIndicatorHeight;
 
             if (slots == null) CreateSlots();
@@ -258,7 +259,7 @@ namespace Barotrauma
                         int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s));
 
                         int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
-                        int upperX = HUDLayoutSettings.PortraitArea.X - slotSize.X * 2;
+                        int upperX = GameMain.GraphicsWidth - slotSize.X * 2;
 
                         //make sure the rightmost normal slot doesn't overlap with the personal slots
                         x -= Math.Max((x + normalSlotCount * (slotSize.X + spacing)) - (upperX - personalSlotCount * (slotSize.X + spacing)), 0);
@@ -631,7 +632,7 @@ namespace Barotrauma
                     TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
                     (GameMain.Config.Language == "English" ? "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
 
-                if (PlayerInput.PrimaryMouseButtonHeld())
+                if (PlayerInput.LeftButtonHeld())
                 {
                     slot.QuickUseTimer = Math.Max(0.1f, slot.QuickUseTimer + deltaTime);
                     if (slot.QuickUseTimer >= 1.0f)
@@ -894,7 +895,7 @@ namespace Barotrauma
                             success = true;
                             for (int j = 0; j < capacity; j++)
                             {
-                                if (Items[j] == character.SelectedItems[i]) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
+                                if (Items[j] == character.SelectedItems[i]) slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.4f);
                             }
                             break;
                         }
@@ -906,7 +907,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (Items[i] == item) slots[i].ShowBorderHighlight(Color.Green, 0.1f, 0.4f);
+                    if (Items[i] == item) slots[i].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.4f);
                 }
             }
 
@@ -937,8 +938,18 @@ namespace Barotrauma
                     character.Name, Color.White * 0.9f);
             }
 
-            base.Draw(spriteBatch);
-            
+            for (int i = 0; i < capacity; i++)
+            {
+                if (HideSlot(i)) continue;
+
+                Rectangle interactRect = slots[i].InteractRect;
+                interactRect.Location += slots[i].DrawOffset.ToPoint();
+
+                //don't draw the item if it's being dragged out of the slot
+                bool drawItem = draggingItem == null || draggingItem != Items[i] || interactRect.Contains(PlayerInput.MousePosition);
+                DrawSlot(spriteBatch, this, slots[i], Items[i], i, drawItem, SlotTypes[i]);
+            }
+
             if (hideButton != null && hideButton.Visible && !Locked)
             {
                 hideButton.DrawManually(spriteBatch, alsoChildren: true);
@@ -957,7 +968,7 @@ namespace Barotrauma
                     if (limbSlotIcons.ContainsKey(SlotTypes[i]))
                     {
                         var icon = limbSlotIcons[SlotTypes[i]];
-                        icon.Draw(spriteBatch, slots[i].Rect.Center.ToVector2() + slots[i].DrawOffset, Color.White * 0.3f, origin: icon.size / 2, scale: slots[i].Rect.Width / icon.size.X);
+                        icon.Draw(spriteBatch, slots[i].Rect.Center.ToVector2() + slots[i].DrawOffset, GUIColorSettings.EquipmentSlotIconColor, origin: icon.size / 2, scale: slots[i].Rect.Width / icon.size.X);
                     }
                     continue;
                 }

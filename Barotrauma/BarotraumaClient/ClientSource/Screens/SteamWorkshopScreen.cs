@@ -26,12 +26,10 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
-        private GUIComponent buttonContainer;
-
-        private List<GUIButton> tabButtons = new List<GUIButton>();
+        private readonly List<GUIButton> tabButtons = new List<GUIButton>();
 
         private readonly HashSet<string> pendingPreviewImageDownloads = new HashSet<string>();
-        private Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Sprite> itemPreviewSprites = new Dictionary<string, Sprite>();
 
         private enum Tab
         {
@@ -40,7 +38,7 @@ namespace Barotrauma
             Publish
         }
 
-        private GUIFrame[] tabs;
+        private GUIComponent[] tabs;
 
         private ContentPackage itemContentPackage;
         private Steamworks.Ugc.Editor? itemEditor;
@@ -54,50 +52,63 @@ namespace Barotrauma
 
         public SteamWorkshopScreen()
         {
-            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+            GameMain.Instance.OnResolutionChanged += CreateUI;
+            CreateUI();
+        }
+        
+        private void CreateUI()
+        {
+            tabs = new GUIComponent[Enum.GetValues(typeof(Tab)).Length];
+            menu = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
 
-            tabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length];
-
-            menu = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.85f), GUI.Canvas, Anchor.Center) { MinSize = new Point(GameMain.GraphicsHeight, 0) });
-
-            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), menu.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.05f) }) { Stretch = true };
-
-            var tabContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), container.RectTransform), style: "InnerFrame");
-
-            var tabButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), tabContainer.RectTransform, Anchor.TopRight, Pivot.BottomRight),
-                isHorizontal: true)
-            {
-                RelativeSpacing = 0.01f,
-                Stretch = true
-            };
-
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), menu.RectTransform, Anchor.Center)) { Stretch = true };
+            var topButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.03f), container.RectTransform), isHorizontal: true);
+            
             foreach (Tab tab in Enum.GetValues(typeof(Tab)))
             {
-                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), tabButtonHolder.RectTransform),
+                GUIButton tabButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), topButtonContainer.RectTransform),
                     TextManager.Get(tab.ToString() + "Tab"), style: "GUITabButton")
                 {
                     UserData = tab,
-                    OnClicked = (btn, userData) => 
+                    OnClicked = (btn, userData) =>
                     {
                         SelectTab((Tab)userData); return true;
                     }
                 };
                 tabButtons.Add(tabButton);
             }
+            topButtonContainer.RectTransform.MinSize = new Point(0, topButtonContainer.RectTransform.Children.Max(c => c.MinSize.Y));
+            topButtonContainer.RectTransform.MaxSize = new Point(int.MaxValue, topButtonContainer.RectTransform.MinSize.Y);
+
+            var tabContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), container.RectTransform), style: "InnerFrame");
+
+            var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), container.RectTransform), isHorizontal: true);
+            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.9f), bottomButtonContainer.RectTransform) { MinSize = new Point(150, 0) },
+                TextManager.Get("Back"))
+            {
+                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
+            };
+            backButton.SelectedColor = backButton.Color;
+            topButtonContainer.RectTransform.MinSize = new Point(0, backButton.RectTransform.MinSize.Y);
+            topButtonContainer.RectTransform.MaxSize = new Point(int.MaxValue, backButton.RectTransform.MinSize.Y);
 
             //-------------------------------------------------------------------------------
             //Subscribed Mods tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Mods] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
-
-            var modsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Mods].RectTransform))
+            tabs[(int)Tab.Mods] = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), tabContainer.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
 
-            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), modsContainer.RectTransform))
+            var modsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Mods].RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            subscribedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), modsContainer.RectTransform))
             {
                 ScrollBarVisible = true,
                 OnSelected = (GUIComponent component, object userdata) =>
@@ -108,21 +119,25 @@ namespace Barotrauma
                 }
             };
 
-            modsPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Mods].RectTransform, Anchor.TopRight), style: "InnerFrame");
+            modsPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 1.0f), tabs[(int)Tab.Mods].RectTransform, Anchor.TopRight), style: null);
 
             //-------------------------------------------------------------------------------
             //Popular Mods tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Browse] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
-
-            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Browse].RectTransform))
+            tabs[(int)Tab.Browse] = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), tabContainer.RectTransform, Anchor.Center), isHorizontal: true)
             {
-                RelativeSpacing = 0.01f,
-                Stretch = true
+                Stretch = true,
+                RelativeSpacing = 0.02f
             };
 
-            topItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), listContainer.RectTransform))
+            var listContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Browse].RectTransform), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+
+            topItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.9f), listContainer.RectTransform))
             {
                 ScrollBarVisible = true,
                 OnSelected = (GUIComponent component, object userdata) =>
@@ -132,13 +147,8 @@ namespace Barotrauma
                 }
             };
 
-            var findModsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listContainer.RectTransform), style: null);
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.9f), findModsButtonContainer.RectTransform, Anchor.Center), TextManager.Get("FindModsButton"), style: null)
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.02f), listContainer.RectTransform), TextManager.Get("FindModsButton"), style: "GUIButtonSmall")
             {
-                Color = new Color(38, 86, 38, 75),
-                HoverColor = new Color(85, 203, 99, 50),
-                TextColor = Color.White,
-                OutlineColor = new Color(72, 124, 77, 255),
                 OnClicked = (btn, userdata) =>
                 {
                     SteamManager.OverlayCustomURL("steam://url/SteamWorkshopPage/" + SteamManager.AppID);
@@ -146,13 +156,17 @@ namespace Barotrauma
                 }
             };
 
-            browsePreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), tabs[(int)Tab.Browse].RectTransform, Anchor.TopRight), style: "InnerFrame");
+            browsePreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 1.0f), tabs[(int)Tab.Browse].RectTransform, Anchor.TopRight), style: null);
 
             //-------------------------------------------------------------------------------
             //Publish tab
             //-------------------------------------------------------------------------------
 
-            tabs[(int)Tab.Publish] = new GUIFrame(new RectTransform(Vector2.One, tabContainer.RectTransform, Anchor.Center), style: null);
+            tabs[(int)Tab.Publish] = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), tabContainer.RectTransform, Anchor.Center), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
             var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), tabs[(int)Tab.Publish].RectTransform))
             {
@@ -160,7 +174,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("PublishedWorkshopItems"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("PublishedWorkshopItems"), font: GUI.SubHeadingFont);
             publishedItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
             {
                 OnSelected = (component, userdata) =>
@@ -178,7 +192,7 @@ namespace Barotrauma
                 }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourWorkshopItems"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), TextManager.Get("YourWorkshopItems"), font: GUI.SubHeadingFont);
             myItemList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), leftColumn.RectTransform))
             {
                 OnSelected = (component, userdata) =>
@@ -198,23 +212,9 @@ namespace Barotrauma
                 }
             };
 
-            createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: "InnerFrame");
-
-            buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), container.RectTransform), childAnchor: Anchor.CenterLeft);
-
-            GUIButton backButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), buttonContainer.RectTransform) { MinSize = new Point(150, 0) },
-                TextManager.Get("Back"), style: "GUIButtonLarge")
-            {
-                OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
-            };
-            backButton.SelectedColor = backButton.Color;
+            createItemFrame = new GUIFrame(new RectTransform(new Vector2(0.58f, 1.0f), tabs[(int)Tab.Publish].RectTransform, Anchor.TopRight), style: null);
 
             SelectTab(Tab.Mods);
-        }
-
-        private void OnResolutionChanged()
-        {
-            menu.RectTransform.MinSize = new Point(GameMain.GraphicsHeight, 0);
         }
 
         public override void Select()
@@ -307,7 +307,8 @@ namespace Barotrauma
         private void RefreshMyItemList()
         {
             myItemList.ClearChildren();
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), TextManager.Get("WorkshopLabelSubmarines"), textAlignment: Alignment.Center, font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), TextManager.Get("WorkshopLabelSubmarines"), 
+                textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont)
             {
                 CanBeFocused = false
             };
@@ -339,7 +340,8 @@ namespace Barotrauma
                 CreateMyItemFrame(sub, myItemList);
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), TextManager.Get("WorkshopLabelContentPackages"), textAlignment: Alignment.Center, font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), myItemList.Content.RectTransform), TextManager.Get("WorkshopLabelContentPackages"), 
+                textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont)
             {
                 CanBeFocused = false
             };
@@ -495,7 +497,7 @@ namespace Barotrauma
                     if (compatible.HasValue && !compatible.Value)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.3f), rightColumn.RectTransform),
-                            TextManager.Get("WorkshopItemIncompatible"), textColor: Color.Red)
+                            TextManager.Get("WorkshopItemIncompatible"), textColor: GUI.Style.Red)
                         {
                             ToolTip = TextManager.Get("WorkshopItemIncompatibleTooltip")
                         };
@@ -515,10 +517,10 @@ namespace Barotrauma
                 {
                     if (enabledTickBox != null) { enabledTickBox.Enabled = false; }
                     itemFrame.ToolTip = e.Message;
-                    itemFrame.Color = Color.Red;
-                    itemFrame.HoverColor = Color.Red;
-                    itemFrame.SelectedColor = Color.Red;
-                    titleText.TextColor = Color.Red;
+                    itemFrame.Color = GUI.Style.Red;
+                    itemFrame.HoverColor = GUI.Style.Red;
+                    itemFrame.SelectedColor = GUI.Style.Red;
+                    titleText.TextColor = GUI.Style.Red;
 
                     if (item?.IsSubscribed ?? false)
                     {
@@ -568,13 +570,8 @@ namespace Barotrauma
             }
             else
             {
-                var downloadBtn = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), rightColumn.RectTransform), "+", style: null)
+                var downloadBtn = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), rightColumn.RectTransform), "", style: "GUIPlusButton")
                 {
-                    Font = GUI.LargeFont,
-                    Color = new Color(38, 65, 86, 255),
-                    HoverColor = new Color(85, 160, 203, 255),
-                    TextColor = Color.White,
-                    OutlineColor = new Color(72, 103, 124, 255),
                     ToolTip = TextManager.Get("DownloadButton"),
                     ForceUpperCase = true,
                     UserData = item
@@ -675,9 +672,7 @@ namespace Barotrauma
                     itemPreviewSprites.Add(item?.PreviewImageUrl, newSprite);
                 }
 
-
-                var previewImage = listBox.Content.FindChild(item)?.GetChildByUserData("previewimage") as GUIImage;
-                if (previewImage != null)
+                if (listBox.Content.FindChild(item)?.GetChildByUserData("previewimage") is GUIImage previewImage)
                 {
                     previewImage.Sprite = newSprite;
                 }
@@ -714,11 +709,11 @@ namespace Barotrauma
                 if (SteamManager.EnableWorkShopItem(item, false, out _))
                 {
                     textBlock.Text = TextManager.Get("workshopiteminstalled");
-                    frame.Flash(Color.LightGreen);
+                    frame.Flash(GUI.Style.Green);
                 }
                 else
                 {
-                    frame.Flash(Color.Red);
+                    frame.Flash(GUI.Style.Red);
                 }
                 RefreshSubscribedItems();
             });
@@ -738,14 +733,14 @@ namespace Barotrauma
 
             var updateButton = tickBox.Parent.FindChild("updatebutton");
 
-            string errorMsg = "";
+            string errorMsg;
             if (tickBox.Selected)
             {
                 if (!SteamManager.EnableWorkShopItem(item, false, out errorMsg))
                 {
                     tickBox.Visible = false;
                     tickBox.Selected = false;
-                    if (tickBox.Parent.GetChildByUserData("titletext") is GUITextBlock titleText) { titleText.TextColor = Color.Red; }
+                    if (tickBox.Parent.GetChildByUserData("titletext") is GUITextBlock titleText) { titleText.TextColor = GUI.Style.Red; }
                 }
             }
             else
@@ -773,35 +768,26 @@ namespace Barotrauma
         {
             itemPreviewFrame.ClearChildren();
 
-            if (item == null) return;
+            if (item == null) { return; }
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), itemPreviewFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                UserData = item,
-                RelativeSpacing = 0.015f
+                UserData = item
             };
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), content.RectTransform), style: null);
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), item?.Title, textAlignment: Alignment.TopLeft, font: GUI.LargeFont, wrap: true);
-
-            var creatorHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform)) { IsHorizontal = true, Stretch = true };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), creatorHolder.RectTransform), 
-                TextManager.Get("WorkshopItemCreator"), textAlignment: Alignment.TopLeft, wrap: true);
-
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), creatorHolder.RectTransform), 
-                item?.Owner.Name, textAlignment: Alignment.TopRight, wrap: true);
-
-
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), creatorHolder.RectTransform, Anchor.BottomRight), TextManager.Get("WorkshopShowItemInSteam"), style: null)
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), content.RectTransform))
             {
-                Color = new Color(38, 86, 38, 75),
-                HoverColor = new Color(85, 203, 99, 50),
-                TextColor = Color.White,
-                OutlineColor = new Color(72, 124, 77, 255),
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerArea.RectTransform), item?.Title, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont, wrap: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.0f), headerArea.RectTransform), item?.Owner.Name, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont);
+
+            var btn = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), headerArea.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopShowItemInSteam"), style: "GUIButtonSmall")
+            {
+                IgnoreLayoutGroups = true,
                 OnClicked = (btn, userdata) =>
                 {
                     SteamManager.OverlayCustomURL("steam://url/CommunityFilePage/" + item?.Id);
@@ -809,11 +795,20 @@ namespace Barotrauma
                 }
             };
 
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.005f), content.RectTransform), style: "HorizontalLine");
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+
+            //---------------
+
             var centerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.01f,
-                Color = Color.Black * 0.9f
+                RelativeSpacing = 0.01f
             };
             
             if (itemPreviewSprites.ContainsKey(item?.PreviewImageUrl))
@@ -824,43 +819,33 @@ namespace Barotrauma
             {
                 new GUIImage(new RectTransform(new Vector2(0.5f, 0.0f), centerArea.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
             }
-            
-            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f), centerArea.RectTransform)) { ScrollBarVisible = true };
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
-
-            string description = item?.Description;
-            description = ToolBox.RemoveBBCodeTags(description);
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), description, wrap: true)
+            var statsFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), centerArea.RectTransform), style: "GUIFrameListBox");
+            var statsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), statsFrame.RectTransform, Anchor.Center))
             {
-                CanBeFocused = false
+                Stretch = true,
+                RelativeSpacing = 0.01f
             };
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
-
 
             //score -------------------------------------
-            var scoreContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var scoreContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), statsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
+                Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemScore"));
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.Get("WorkshopItemScore"), font: GUI.SubHeadingFont);
             int starCount = (int)Math.Round((item?.Score ?? 0.0f) * 5);
             for (int i = 0; i < 5; i++)
             {
                 new GUIImage(new RectTransform(new Point(scoreContainer.Rect.Height), scoreContainer.RectTransform),
                     i < starCount ? "GUIStarIconBright" : "GUIStarIconDark");
             }
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), TextManager.GetWithVariable("WorkshopItemVotes", "[votecount]", (item.Value.VotesUp + item.Value.VotesDown).ToString()));
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.0f), scoreContainer.RectTransform), 
+                TextManager.GetWithVariable("WorkshopItemVotes", "[votecount]", (item.Value.VotesUp + item.Value.VotesDown).ToString()),
+                textAlignment: Alignment.CenterRight);
 
-            //tags ------------------------------------
-            var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags"));
+            //tags ------------------------------------   
+            
             List<string> tags = new List<string>();
             for (int i = 0; i < item?.Tags.Length && i < 5; i++)
             {
@@ -871,31 +856,37 @@ namespace Barotrauma
             }
             if (tags.Count > 0)
             {
-                if (tags.Count == 1)
+                var tagContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), statsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
                 {
-                    tagContainer.RectTransform.RelativeSize = new Vector2(0.7f, tagContainer.RectTransform.RelativeSize.Y);
-                }
-                new GUITextBlock(new RectTransform(new Vector2(tags.Count == 1 ? 0.5f : 0.8f, 1.0f), tagContainer.RectTransform, Anchor.TopRight), string.Join(", ", tags))
+                    Stretch = true,
+                    RelativeSpacing = 0.05f,
+                    CanBeFocused = true
+                };
+                new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), tagContainer.RectTransform), TextManager.Get("WorkshopItemTags"), font: GUI.SubHeadingFont);
+
+                var t = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), tagContainer.RectTransform, Anchor.TopRight), string.Join(", ", tags), textAlignment: Alignment.CenterRight);
+                t.RectTransform.SizeChanged += () =>
                 {
-                    AutoScale = true
+                    t.TextScale = 1.0f;
+                    t.AutoScale = true;
                 };
             }
 
-            var fileSize = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemFileSize"));
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item?.IsInstalled ?? false ? (long)item.Value.SizeBytes : item.Value.DownloadBytesDownloaded), textAlignment: Alignment.TopRight);
+            var fileSize = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), statsContent.RectTransform), TextManager.Get("WorkshopItemFileSize"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), fileSize.RectTransform, Anchor.TopRight), MathUtils.GetBytesReadable(item?.IsInstalled ?? false ? (long)item.Value.SizeBytes : item.Value.DownloadBytesDownloaded), textAlignment: Alignment.CenterRight);
 
             //var dateContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), isHorizontal: true);
 
-            var creationDate = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemCreationDate"));
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item?.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
+            var creationDate = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), statsContent.RectTransform), TextManager.Get("WorkshopItemCreationDate"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), creationDate.RectTransform, Anchor.CenterRight), item?.Created.ToString("dd.MM.yyyy"), textAlignment: Alignment.CenterRight);
 
-            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), content.RectTransform), TextManager.Get("WorkshopItemModificationDate"));
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item?.Updated.ToString("dd.MM.yyyy"), textAlignment: Alignment.TopRight);
+            var modificationDate = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), statsContent.RectTransform), TextManager.Get("WorkshopItemModificationDate"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), modificationDate.RectTransform, Anchor.CenterRight), item?.Updated.ToString("dd.MM.yyyy"), textAlignment: Alignment.CenterRight);
 
             if (item?.IsSubscribed ?? false)
             {
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform) { MinSize = new Point(0, 25) }, isHorizontal: true);
-                new GUIButton(new RectTransform(new Vector2(0.5f, 0.95f), buttonContainer.RectTransform), TextManager.Get("WorkshopItemUnsubscribe"))
+                var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), statsContent.RectTransform), style: null);
+                var unsubscribeButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.95f), buttonContainer.RectTransform, Anchor.Center), TextManager.Get("WorkshopItemUnsubscribe"), style: "GUIButtonSmall")
                 {
                     UserData = item,
                     OnClicked = (btn, userdata) =>
@@ -907,7 +898,26 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                buttonContainer.RectTransform.MinSize = unsubscribeButton.RectTransform.MinSize;
+                statsContent.Recalculate();
             }
+
+            //------------------
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform)) { ScrollBarVisible = true };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform) { MinSize = new Point(0, 5) }, style: null);
+
+            string description = item?.Description;
+            description = ToolBox.RemoveBBCodeTags(description);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), descriptionContainer.Content.RectTransform), description, wrap: true)
+            {
+                CanBeFocused = false
+            };
         }
         
         private void CreateWorkshopItem(Submarine sub)
@@ -1021,7 +1031,7 @@ namespace Barotrauma
                 return;
             }
 
-            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 0.92f), createItemFrame.RectTransform, Anchor.Center))
+            var createItemContent = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.98f), createItemFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -1030,15 +1040,15 @@ namespace Barotrauma
             var topPanel = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), createItemContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.01f
             };
 
-            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), topPanel.RectTransform))
+            var topLeftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), topPanel.RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
-            var topRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), topPanel.RectTransform))
+            var topRightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), topPanel.RectTransform))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -1046,17 +1056,18 @@ namespace Barotrauma
 
             // top right column --------------------------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTitle"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTitle"), font: GUI.SubHeadingFont);
             var titleBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.15f), topRightColumn.RectTransform), itemEditor?.Title);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemDescription"), font: GUI.SubHeadingFont);
 
             var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), topRightColumn.RectTransform));
-            var descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), itemEditor?.Description, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true);
+            var descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform), itemEditor?.Description,
+                textAlignment: Alignment.TopLeft, style: "GUITextBoxNoBorder", font: GUI.SmallFont, wrap: true);
             descriptionBox.OnTextChanged += (textBox, text) => 
             {
                 Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
-                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Rect.Height, (int)textSize.Y + 10));
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Content.Rect.Height, (int)textSize.Y + 10));
                 descriptionContainer.UpdateScrollBarSize();
                 descriptionContainer.BarScroll = 1.0f;
                 itemEditor = itemEditor?.WithDescription(text);
@@ -1064,7 +1075,7 @@ namespace Barotrauma
             };
             descriptionContainer.RectTransform.SizeChanged += () => { descriptionBox.Text = descriptionBox.Text; };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topRightColumn.RectTransform), TextManager.Get("WorkshopItemTags"), font: GUI.SubHeadingFont);
             var tagHolder = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.17f), topRightColumn.RectTransform) { MinSize = new Point(0, 50) }, isHorizontal: true)
             {
                 Spacing = 5
@@ -1083,15 +1094,13 @@ namespace Barotrauma
 
             foreach (string tag in availableTags)
             {
-                var tagBtn = new GUIButton(new RectTransform(new Vector2(0.25f, 0.8f), tagHolder.Content.RectTransform, anchor: Anchor.CenterLeft), tag.CapitaliseFirstInvariant());
+                var tagBtn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tagHolder.Content.RectTransform, anchor: Anchor.CenterLeft), 
+                    tag.CapitaliseFirstInvariant(), style: "GUIButtonRound");
                 tagBtn.TextBlock.AutoScale = true;
-                tagBtn.Color *= 0.5f;
-                tagBtn.SelectedColor = Color.LightGreen;
-                tagBtn.HoverColor = Color.Lerp(tagBtn.HoverColor, Color.LightGreen, 0.5f);
                 tagBtn.Selected = itemEditor?.Tags?.Any(t => t.ToLowerInvariant() == tag) ?? false;
 
                 Color defaultTextColor = tagBtn.TextColor;
-                tagBtn.TextColor = tagBtn.Selected ? Color.LightGreen : defaultTextColor;
+                tagBtn.TextColor = tagBtn.Selected ? GUI.Style.Green : defaultTextColor;
 
                 tagBtn.OnClicked = (btn, userdata) =>
                 {
@@ -1099,7 +1108,7 @@ namespace Barotrauma
                     {
                         if (!(itemEditor?.Tags?.Any(t => t.ToLowerInvariant() == tag) ?? false)) { itemEditor = itemEditor?.WithTag(tagBtn.Text); }
                         tagBtn.Selected = true;
-                        tagBtn.TextColor = Color.LightGreen;
+                        tagBtn.TextColor = GUI.Style.Green;
                     }
                     else
                     {
@@ -1114,10 +1123,10 @@ namespace Barotrauma
 
             // top left column --------------------------------------------------------------------------------------
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"), font: GUI.SubHeadingFont);
 
             var previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"))
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"), style: "GUIButtonSmall")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1190,8 +1199,8 @@ namespace Barotrauma
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), createItemContent.RectTransform), style: null);
 
-            var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"));
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"))
+            var fileListTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), TextManager.Get("WorkshopItemFiles"), font: GUI.SubHeadingFont);
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), fileListTitle.RectTransform, Anchor.CenterRight), TextManager.Get("WorkshopItemShowFolder"), style: "GUIButtonSmall")
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = (btn, userdata) => { ToolBox.OpenFileWithShell(Path.GetFullPath(Path.GetDirectoryName(itemContentPackage.Path))); return true; }
@@ -1201,10 +1210,10 @@ namespace Barotrauma
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), createItemContent.RectTransform), isHorizontal: true)
             {
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.02f
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform, Anchor.TopRight), TextManager.Get("WorkshopItemRefreshFileList"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform, Anchor.TopRight), TextManager.Get("WorkshopItemRefreshFileList"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("WorkshopItemRefreshFileListTooltip"),
                 OnClicked = (btn, userdata) =>
@@ -1214,7 +1223,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform, Anchor.TopRight), TextManager.Get("WorkshopItemAddFiles"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonContainer.RectTransform, Anchor.TopRight), TextManager.Get("WorkshopItemAddFiles"), style: "GUIButtonSmall")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1236,58 +1245,56 @@ namespace Barotrauma
                 }
             };
 
-            var bottomRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), createItemContent.RectTransform), isHorizontal: true);
             //the item has been already published if it has a non-zero ID -> allow adding a changenote
             if ((itemEditor?.FileId ?? 0) > 0)
             {
+                var bottomRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), createItemContent.RectTransform), isHorizontal: true);
                 var changeNoteLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), bottomRow.RectTransform));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), changeNoteLayout.RectTransform), TextManager.Get("WorkshopItemChangenote"))
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), changeNoteLayout.RectTransform), TextManager.Get("WorkshopItemChangenote"), font: GUI.SubHeadingFont)
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
                 };
 
-
                 var changenoteContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), changeNoteLayout.RectTransform));
-                var changenoteBox = new GUITextBox(new RectTransform(Vector2.One, changenoteContainer.Content.RectTransform), "", textAlignment: Alignment.TopLeft, wrap: true)
+                var changenoteBox = new GUITextBox(new RectTransform(Vector2.One, changenoteContainer.Content.RectTransform), "", 
+                    textAlignment: Alignment.TopLeft, style: "GUITextBoxNoBorder", wrap: true)
                 {
                     ToolTip = TextManager.Get("WorkshopItemChangenoteTooltip")
                 };
                 changenoteBox.OnTextChanged += (textBox, text) =>
                 {
                     Vector2 textSize = textBox.Font.MeasureString(changenoteBox.WrappedText);
-                    textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(changenoteContainer.Rect.Height, (int)textSize.Y + 10));
+                    textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(changenoteContainer.Content.Rect.Height, (int)textSize.Y + 10));
                     changenoteContainer.UpdateScrollBarSize();
                     changenoteContainer.BarScroll = 1.0f;
                     itemEditor = itemEditor?.WithChangeLog(text);
                     return true;
                 };
             }
-            else
-            {
-                //spacing
-                new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), bottomRow.RectTransform), style: null);
-            }
-            
-            var visibilityLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomRow.RectTransform));
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), visibilityLayout.RectTransform), TextManager.Get("WorkshopItemVisibility"))
+            var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), 
+                isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                RelativeSpacing = 0.03f
+            };
+
+            var visibilityLabel = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), bottomButtonContainer.RectTransform), TextManager.Get("WorkshopItemVisibility"), 
+               textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont)
             {
                 ToolTip = TextManager.Get("WorkshopItemVisibilityTooltip")
             };
+            visibilityLabel.RectTransform.MaxSize = new Point((int)(visibilityLabel.TextSize.X * 1.1f), 0);
 
-            var visibilityListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), visibilityLayout.RectTransform));
+            var visibilityDropDown = new GUIDropDown(new RectTransform(new Vector2(0.2f, 1.0f), bottomButtonContainer.RectTransform));
             foreach (VisibilityType visibilityType in Enum.GetValues(typeof(VisibilityType)))
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), visibilityListBox.Content.RectTransform), TextManager.Get("WorkshopItemVisibility."+visibilityType.ToString()))
-                {
-                    UserData = visibilityType
-                };
+                visibilityDropDown.AddItem(TextManager.Get("WorkshopItemVisibility." + visibilityType), visibilityType);
             }
-            visibilityListBox.Select(itemEditor.Value.IsPublic      ? VisibilityType.Public :
-                                     itemEditor.Value.IsFriendsOnly ? VisibilityType.FriendsOnly :
-                                                                      VisibilityType.Private);
-            visibilityListBox.OnSelected = (lb, ud) =>
+            visibilityDropDown.SelectItem(itemEditor.Value.IsPublic ? VisibilityType.Public : 
+                itemEditor.Value.IsFriendsOnly ? VisibilityType.FriendsOnly : 
+                VisibilityType.Private);
+            visibilityDropDown.OnSelected = (c, ud) =>
             {
                 if (!(ud is VisibilityType visibilityType)) { return false; }
                 switch (visibilityType)
@@ -1306,18 +1313,13 @@ namespace Barotrauma
                 return true;
             };
 
-            var bottomButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.08f), createItemContent.RectTransform), isHorizontal: true)
-            {
-                RelativeSpacing = 0.05f
-            };
-
             if ((itemEditor?.FileId ?? 0) > 0)
             {
-                new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform),
-                    TextManager.Get("WorkshopItemDelete"), style: "GUIButtonLarge")
+                new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), bottomButtonContainer.RectTransform),
+                    TextManager.Get("WorkshopItemDelete"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("WorkshopItemDeleteTooltip"),
-                    TextColor = Color.Red,
+                    TextColor = GUI.Style.Red,
                     OnClicked = (btn, userData) =>
                     {
                         if (itemEditor == null) { return false; }
@@ -1350,7 +1352,7 @@ namespace Barotrauma
                 };
             }
             var publishBtn = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomButtonContainer.RectTransform, Anchor.CenterRight),
-                TextManager.Get((itemEditor?.FileId ?? 0) > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"), style: "GUIButtonLarge")
+                TextManager.Get((itemEditor?.FileId ?? 0) > 0 ? "WorkshopItemUpdate" : "WorkshopItemPublish"))
             {
                 IgnoreLayoutGroups = true,
                 ToolTip = TextManager.Get("WorkshopItemPublishTooltip"),
@@ -1360,17 +1362,17 @@ namespace Barotrauma
                     itemEditor = itemEditor?.WithDescription(descriptionBox.Text);
                     if (string.IsNullOrWhiteSpace(itemEditor?.Title))
                     {
-                        titleBox.Flash(Color.Red);
+                        titleBox.Flash(GUI.Style.Red);
                         return false;
                     }
                     if (string.IsNullOrWhiteSpace(itemEditor?.Description))
                     {
-                        descriptionBox.Flash(Color.Red);
+                        descriptionBox.Flash(GUI.Style.Red);
                         return false;
                     }
                     if (createItemFileList.Content.CountChildren == 0)
                     {
-                        createItemFileList.Flash(Color.Red);
+                        createItemFileList.Flash(GUI.Style.Red);
                     }
 
                     if (!itemContentPackage.CheckErrors(out List<string> errorMessages))
@@ -1472,6 +1474,7 @@ namespace Barotrauma
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     style: "ListBoxElement")
                 {
+                    CanBeFocused = false,
                     UserData = contentFile
                 };
 
@@ -1494,12 +1497,12 @@ namespace Barotrauma
                 };
                 if (!fileExists)
                 {
-                    nameText.TextColor = Color.Red;
+                    nameText.TextColor = GUI.Style.Red;
                     tickBox.ToolTip = TextManager.Get("WorkshopItemFileNotFound");
                 }
                 else if (illegalPath && !ContentPackage.List.Any(cp => cp.Files.Any(f => Path.GetFullPath(f.Path) == Path.GetFullPath(contentFile.Path))))
                 {
-                    nameText.TextColor = Color.Red;
+                    nameText.TextColor = GUI.Style.Red;
                     tickBox.ToolTip = TextManager.Get("WorkshopItemIllegalPath");
                 }
 
@@ -1521,7 +1524,7 @@ namespace Barotrauma
                     return true;
                 };
 
-                new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"))
+                new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"), style: "GUIButtonSmall")
                 {
                     OnClicked = (btn, userdata) =>
                     {
@@ -1534,7 +1537,8 @@ namespace Barotrauma
                 };
 
                 content.Recalculate();
-                tickBox.RectTransform.NonScaledSize = new Point(content.Rect.Height);
+                fileFrame.RectTransform.MinSize = 
+                    new Point(0, (int)(content.RectTransform.Children.Max(c => c.MinSize.Y) / content.RectTransform.RelativeSize.Y));
                 nameText.Text = ToolBox.LimitString(nameText.Text, nameText.Font, maxWidth: nameText.Rect.Width);
             }
         }

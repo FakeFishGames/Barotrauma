@@ -462,7 +462,7 @@ namespace Barotrauma.Items.Components
                         this,
                         targetItem.WorldPosition,
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        Color.Red, Color.Green);
+                        GUI.Style.Red, GUI.Style.Green);
 #endif
                 }
                 FixItemProjSpecific(user, deltaTime, targetItem);

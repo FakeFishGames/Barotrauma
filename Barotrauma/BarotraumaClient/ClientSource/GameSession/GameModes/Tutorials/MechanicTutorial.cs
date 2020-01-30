@@ -254,7 +254,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect)); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -296,7 +296,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Welding objective
+            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask"))
@@ -323,9 +323,9 @@ namespace Barotrauma.Tutorials
                 yield return null;
                 if (IsSelectedItem(mechanic_workingPump.Item))
                 {
-                    if (mechanic_workingPump.IsActiveSlider.FlashTimer <= 0)
+                    if (mechanic_workingPump.PowerButton.FlashTimer <= 0)
                     {
-                        mechanic_workingPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
+                        mechanic_workingPump.PowerButton.Flash(uiHighlightColor, 1.5f, true);
                     }
                 }
             } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
@@ -554,9 +554,9 @@ namespace Barotrauma.Tutorials
                 {
                     if (IsSelectedItem(mechanic_brokenPump.Item))
                     {
-                        if (mechanic_brokenPump.IsActiveSlider.FlashTimer <= 0)
+                        if (mechanic_brokenPump.PowerButton.FlashTimer <= 0)
                         {
-                            mechanic_brokenPump.IsActiveSlider.Flash(uiHighlightColor, 1.5f, true);
+                            mechanic_brokenPump.PowerButton.Flash(uiHighlightColor, 1.5f, true);
                         }
                     }
                 }

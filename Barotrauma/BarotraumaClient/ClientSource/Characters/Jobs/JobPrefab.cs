@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Linq;
 using System;
+using System.Xml.Linq;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -8,7 +10,7 @@ namespace Barotrauma
     {
         public GUIButton CreateInfoFrame(int variant)
         {
-            int width = 500, height = 400;
+            int width = 500, height = 450;
 
             GUIButton backFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), backFrame.RectTransform, Anchor.Center));
@@ -47,6 +49,76 @@ namespace Barotrauma
             }
 
             return backFrame;
+        }
+
+
+        public class OutfitPreview
+        {
+            /// <summary>
+            /// Pair.First = sprite, Pair.Second = draw offset
+            /// </summary>
+            public readonly List<Pair<Sprite, Vector2>> Sprites;
+            public Vector2 Dimensions;
+
+            public OutfitPreview()
+            {
+                Sprites = new List<Pair<Sprite, Vector2>>();
+                Dimensions = Vector2.One;
+            }
+
+            public void AddSprite(Sprite sprite, Vector2 drawOffset)
+            {
+                Sprites.Add(new Pair<Sprite, Vector2>(sprite, drawOffset));
+            }
+        }
+
+        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, bool useInventoryIcon, out Vector2 maxDimensions)
+        {
+            List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
+            maxDimensions = Vector2.One;
+
+            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
+
+            var outfitPrefabs = ItemPrefab.Prefabs.Where(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier)).ToList();
+            if (!outfitPrefabs.Any()) { return null; }
+
+            for (int i = 0; i < outfitPrefabs.Count; i++)
+            {
+                var outfitPreview = new OutfitPreview();
+
+                if (!ItemSets.TryGetValue(i, out var itemSetElement)) { continue; }
+                var previewElement = itemSetElement.GetChildElement("PreviewSprites");
+                if (previewElement == null || useInventoryIcon)
+                {
+                    if (outfitPrefabs[i] is ItemPrefab prefab && prefab.InventoryIcon != null)
+                    {
+                        outfitPreview.AddSprite(prefab.InventoryIcon, Vector2.Zero);
+                        outfitPreview.Dimensions = prefab.InventoryIcon.SourceRect.Size.ToVector2();
+                        maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
+                        maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
+                    }
+                    outfitPreviews.Add(outfitPreview);
+                    continue;
+                }
+
+                var children = previewElement.Elements().ToList();
+                for (int n = 0; n < children.Count; n++)
+                {
+                    XElement spriteElement = children[n];
+                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
+                    var sprite = new Sprite(spriteElement, file: spriteTexture);
+                    sprite.size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
+                    outfitPreview.AddSprite(sprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
+                }
+
+                outfitPreview.Dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
+                maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
+                maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
+
+                outfitPreviews.Add(outfitPreview);
+            }
+
+            return outfitPreviews;
         }
     }
 }

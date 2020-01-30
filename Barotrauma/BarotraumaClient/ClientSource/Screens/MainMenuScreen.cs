@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private readonly GUIFrame[] menuTabs;
 
-        private readonly CampaignSetupUI campaignSetupUI;
+        private CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaEnabledBox;
@@ -46,13 +46,24 @@ namespace Barotrauma
 
         private readonly CreditsPlayer creditsPlayer;
 
-        #if OSX
+#if OSX
         private bool firstLoadOnMac = true;
-        #endif
+#endif
 
-        #region Creation
+#region Creation
         public MainMenuScreen(GameMain game)
         {
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                if (Selected == this && selectedTab == Tab.Settings)
+                {
+                    GameMain.Config.ResetSettingsFrame();
+                    SelectTab(Tab.Settings);
+                }
+                CreateHostServerFields();
+                CreateCampaignSetupUI();
+            };
+
             backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
             new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
@@ -89,6 +100,8 @@ namespace Barotrauma
             FetchRemoteContent();
 #endif
 
+            float labelHeight = 0.18f;
+
 
             // === CAMPAIGN
             var campaignHolder = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), parent: buttonsParent.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, isHorizontal: true);
@@ -103,7 +116,7 @@ namespace Barotrauma
 
             var campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), campaignNavigation.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), campaignNavigation.RectTransform),
                 TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             var campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
@@ -160,7 +173,7 @@ namespace Barotrauma
 
             var multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), multiplayerNavigation.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), multiplayerNavigation.RectTransform),
                 TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             var multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
@@ -205,7 +218,7 @@ namespace Barotrauma
 
             var customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), customizeNavigation.RectTransform),
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), customizeNavigation.RectTransform),
                 TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
 
             var customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
@@ -289,7 +302,7 @@ namespace Barotrauma
             //debug button for quickly starting a new round
 #if DEBUG
             new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 80) },
-                "Quickstart (dev)", style: "GUIButtonLarge", color: Color.Red)
+                "Quickstart (dev)", style: "GUIButtonLarge", color: GUI.Style.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.QuickStartDev,
@@ -300,7 +313,7 @@ namespace Barotrauma
                 }
             };
             new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 130) },
-                "Profiling", style: "GUIButtonLarge", color: Color.Red)
+                "Profiling", style: "GUIButtonLarge", color: GUI.Style.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.ProfilingTestBench,
@@ -328,19 +341,14 @@ namespace Barotrauma
                 style: null);
 
             menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
-            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center), style: null);
             menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
-            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center), style: null);
-            
-            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, Submarine.SavedSubmarines)
-            {
-                LoadGame = LoadGame,
-                StartNewGame = StartGame
-            };
+
+            CreateCampaignSetupUI();
 
             var hostServerScale = new Vector2(0.7f, 1.2f);
             menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
-                Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale)) { RelativeOffset = relativeSpacing });
+                Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale))
+            { RelativeOffset = relativeSpacing });
 
             CreateHostServerFields();
 
@@ -350,8 +358,7 @@ namespace Barotrauma
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
-                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[(int)Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) }, 
-                false, null, "");
+                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[(int)Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) });
             foreach (Tutorial tutorial in Tutorial.Tutorials)
             {
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUI.LargeFont)
@@ -383,7 +390,7 @@ namespace Barotrauma
         }
 #endregion
 
-#region Selection
+        #region Selection
         public override void Select()
         {
             base.Select();
@@ -520,7 +527,6 @@ namespace Barotrauma
                         selectedTab = 0;
                         return false;
                     }
-                    SetServerPlayStyle(PlayStyle.Serious);
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
                         selectedTab = 0;
@@ -617,7 +623,7 @@ namespace Barotrauma
         }
 #endregion
 
-        private void QuickStart(bool fixedSeed = false)
+        public void QuickStart(bool fixedSeed = false)
         {
             if (fixedSeed)
             {
@@ -717,7 +723,7 @@ namespace Barotrauma
             {
                 if (i < completedTutorials + 1)
                 {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.LightGreen;
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = GUI.Style.Green;
 #if !DEBUG
                     (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
 #endif
@@ -1048,12 +1054,46 @@ namespace Barotrauma
             GameMain.LobbyScreen.Select();
         }
 
-#region UI Methods      
+        #region UI Methods
+        private void CreateCampaignSetupUI()
+        {
+            menuTabs[(int)Tab.NewGame].ClearChildren();
+            menuTabs[(int)Tab.LoadGame].ClearChildren();
+
+            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) })
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
+            var newGameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerNewGame.RectTransform, Anchor.Center),
+                style: "InnerFrame");
+
+            var paddedNewGame = new GUIFrame(new RectTransform(new Vector2(0.95f), newGameContent.RectTransform, Anchor.Center), style: null);
+            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
+                style: null);
+
+            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, Submarine.SavedSubmarines)
+            {
+                LoadGame = LoadGame,
+                StartNewGame = StartGame
+            };
+
+            var startButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), style: null);
+            campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
+            campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
+                (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
+                campaignSetupUI.StartButton.RectTransform.MinSize.Y);
+            startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
+        }
+
         private void CreateHostServerFields()
         {
+            menuTabs[(int)Tab.HostServer].ClearChildren();
+
             int port = NetConfig.DefaultPort;
             int queryPort = NetConfig.DefaultQueryPort;
             int maxPlayers = 8;
+            PlayStyle selectedPlayStyle = PlayStyle.Casual;
             if (File.Exists(ServerSettings.SettingsFile))
             {
                 XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
@@ -1062,6 +1102,8 @@ namespace Barotrauma
                     port = settingsDoc.Root.GetAttributeInt("port", port);
                     queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
                     maxPlayers = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+                    string playStyleStr = settingsDoc.Root.GetAttributeString("playstyle", "Casual");
+                    Enum.TryParse(playStyleStr, out selectedPlayStyle);
                 }
             }
 
@@ -1069,25 +1111,35 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
             Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.85f, 0.8f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.9f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true
-            }; 
-            GUIComponent parent = paddedFrame;
+            };
+            GUIComponent parent = content;
 
             new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
 
             //play style -----------------------------------------------------
 
-            var playstyleContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), parent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var playstyleContainer = new GUIFrame(new RectTransform(new Vector2(1.5f, 0.1f), parent.RectTransform), style: null, color: Color.Black);
+
+            playstyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 0.1f), playstyleContainer.RectTransform), 
+                ServerListScreen.PlayStyleBanners[0], scaleToFit: true)
             {
-                Stretch = true,
-                Color = Color.Black
-                //RelativeSpacing = 0.02f
+                UserData = PlayStyle.Serious
             };
+            float bannerAspectRatio = (float) playstyleBanner.Sprite.SourceRect.Width / playstyleBanner.Sprite.SourceRect.Height;
+            playstyleBanner.RectTransform.NonScaledSize = new Point(playstyleBanner.Rect.Width, (int)(playstyleBanner.Rect.Width / bannerAspectRatio));
+            playstyleBanner.RectTransform.IsFixedSize = true;
+            new GUIFrame(new RectTransform(Vector2.One, playstyleBanner.RectTransform), "InnerGlow", color: Color.Black);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.03f) },
+                "playstyle name goes here", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
             
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterLeft) 
+                { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) }, 
+                style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1098,14 +1150,9 @@ namespace Barotrauma
                 }
             }.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipHorizontally);
 
-            playstyleBanner = new GUIImage(new RectTransform(new Vector2(0.8f, 1.0f), playstyleContainer.RectTransform), style: null, scaleToFit: true)
-            {
-                UserData = PlayStyle.Serious
-            };
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.06f) },
-                "playstyle name goes here", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
-
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform), style: "UIToggleButton")
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterRight) 
+                { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) },
+                style: "UIToggleButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -1123,17 +1170,25 @@ namespace Barotrauma
                 if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
             }
 
-            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleBanner.RectTransform, Anchor.BottomCenter),
-                "playstyle description goes here", style: null, wrap: true)
+            playstyleDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), playstyleContainer.RectTransform, Anchor.BottomCenter),
+                longestPlayStyleStr, style: null, wrap: true)
             {
                 Color = Color.Black * 0.8f,
-                TextColor = Color.White
+                TextColor = GUI.Style.GetComponentStyle("GUITextBlock").TextColor
             };
             playstyleDescription.Padding = Vector4.One * 10.0f * GUI.Scale;
             playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
-            playstyleDescription.RectTransform.MinSize = new Point(0, playstyleDescription.Rect.Height);
+            playstyleDescription.RectTransform.NonScaledSize = new Point(playstyleDescription.Rect.Width, playstyleDescription.Rect.Height);
+            playstyleDescription.RectTransform.IsFixedSize = true;
+            playstyleContainer.RectTransform.NonScaledSize = new Point(playstyleContainer.Rect.Width, playstyleBanner.Rect.Height + playstyleDescription.Rect.Height);
+            playstyleContainer.RectTransform.IsFixedSize = true;
+
+            SetServerPlayStyle(selectedPlayStyle);
 
             //other settings -----------------------------------------------------
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
             serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
@@ -1141,6 +1196,7 @@ namespace Barotrauma
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
+            label.RectTransform.MaxSize = serverNameBox.RectTransform.MaxSize;
  
             /* TODO: allow lidgren servers from client?
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
@@ -1166,29 +1222,29 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.1f
             };
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "-", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
             {
                 UserData = -1,
                 OnClicked = ChangeMaxPlayers
             };
-
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
                 Text = maxPlayers.ToString(),
-                // ?
-                // Enabled = false
+                CanBeFocused = false
             };
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform), "+", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
             };
-            
+            maxPlayersLabel.RectTransform.MaxSize = maxPlayersBox.RectTransform.MaxSize;
+
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
             {
                 Censor = true
             };
+            label.RectTransform.MaxSize = passwordBox.RectTransform.MaxSize;
 
             // tickbox upper ---------------
 
@@ -1200,6 +1256,8 @@ namespace Barotrauma
             };
 
             wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
+
+            tickboxAreaUpper.RectTransform.MaxSize = isPublicBox.RectTransform.MaxSize;
 
             // tickbox lower ---------------
 
@@ -1227,30 +1285,32 @@ namespace Barotrauma
             }
             if (karmaPresetDD.SelectedIndex == -1) { karmaPresetDD.Select(0); }
 
-            new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.BottomRight)
+            tickboxAreaLower.RectTransform.MaxSize = karmaEnabledBox.RectTransform.MaxSize;
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
+
+            new GUIButton(new RectTransform(new Vector2(0.4f, 0.07f), content.RectTransform), TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
             {
-                RelativeOffset = new Vector2(0.05f, 0.05f)
-            }, TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
-            {
-                IgnoreLayoutGroups = true,
                 OnClicked = HostServerClicked
             };
         }
 
         private void SetServerPlayStyle(PlayStyle playStyle)
         {
-            playstyleBanner.Sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
+            playstyleBanner.Sprite = ServerListScreen.PlayStyleBanners[(int)playStyle];
             playstyleBanner.UserData = playStyle;
 
             var nameText = playstyleBanner.GetChild<GUITextBlock>();
             nameText.Text = TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag." + playStyle));
-            nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
+            nameText.Color = ServerListScreen.PlayStyleColors[(int)playStyle];
             nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
 
             playstyleDescription.Text = TextManager.Get("servertagdescription." + playStyle);
-            playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
+            playstyleDescription.TextAlignment = playstyleDescription.WrappedText.Contains('\n') ?
+               Alignment.CenterLeft : Alignment.Center;
         }
-#endregion
+        #endregion
 
         private void FetchRemoteContent()
         {

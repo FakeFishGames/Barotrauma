@@ -577,6 +577,8 @@ namespace Barotrauma.Items.Components
             railSprite?.Remove(); railSprite = null;
 
 #if CLIENT
+            crosshairSprite?.Remove(); crosshairSprite = null;
+            crosshairPointerSprite?.Remove(); crosshairPointerSprite = null;
             moveSoundChannel?.Dispose(); moveSoundChannel = null;
 #endif
         }

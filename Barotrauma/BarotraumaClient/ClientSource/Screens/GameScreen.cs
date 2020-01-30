@@ -17,15 +17,11 @@ namespace Barotrauma
         private RenderTarget2D renderTargetFinal;
 
         private Effect damageEffect;
-        private Effect postProcessEffect;
-
         private Texture2D damageStencil;       
         private Texture2D distortTexture;
 
-        public Effect PostProcessEffect
-        {
-            get { return postProcessEffect; }            
-        }
+        public Effect PostProcessEffect { get; private set; }
+        public Effect GradientEffect { get; private set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -41,11 +37,13 @@ namespace Barotrauma
 #if LINUX || OSX
             //var blurEffect = content.Load<Effect>("Effects/blurshader_opengl");
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
-            postProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
+            PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
+            GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
 #else
             //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
-            postProcessEffect = content.Load<Effect>("Effects/postprocess");
+            PostProcessEffect = content.Load<Effect>("Effects/postprocess");
+            GradientEffect = content.Load<Effect>("Effects/gradientshader");
 #endif
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
@@ -54,7 +52,7 @@ namespace Barotrauma
             damageEffect.Parameters["cMultiplier"].SetValue(200.0f);
 
             distortTexture = TextureLoader.FromFile("Content/Effects/distortnormals.png");
-            postProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
+            PostProcessEffect.Parameters["xDistortTexture"].SetValue(distortTexture);
         }
 
         private void CreateRenderTargets(GraphicsDevice graphics)
@@ -119,7 +117,7 @@ namespace Barotrauma
                     if (Submarine.MainSubs[i] == null) continue;
                     if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
                     
-                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : Color.Red * 0.5f;
+                    Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUI.Style.Red * 0.5f;
                     GUI.DrawIndicator(
                         spriteBatch, Submarine.MainSubs[i].WorldPosition, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
@@ -346,22 +344,22 @@ namespace Barotrauma
             if (BlurStrength > 0.0f)
             {
                 postProcessTechnique += "Blur";
-                postProcessEffect.Parameters["blurDistance"].SetValue(BlurStrength);
+                PostProcessEffect.Parameters["blurDistance"].SetValue(BlurStrength);
             }
             if (chromaticAberrationStrength != Vector3.Zero)
             {
                 postProcessTechnique += "ChromaticAberration";
-                postProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(chromaticAberrationStrength);
+                PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(chromaticAberrationStrength);
             }
             if (DistortStrength > 0.0f)
             {
                 postProcessTechnique += "Distort";
-                postProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
-                postProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
+                PostProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
+                PostProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
 #if LINUX || OSX
-                postProcessEffect.Parameters["xTexture"].SetValue(distortTexture);
+                PostProcessEffect.Parameters["xTexture"].SetValue(distortTexture);
 #else
-                postProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
+                PostProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
 #endif
             }
 
@@ -371,9 +369,9 @@ namespace Barotrauma
             }
             else
             {
-                postProcessEffect.CurrentTechnique = postProcessEffect.Techniques[postProcessTechnique];
-                postProcessEffect.CurrentTechnique.Passes[0].Apply();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: postProcessEffect);
+                PostProcessEffect.CurrentTechnique = PostProcessEffect.Techniques[postProcessTechnique];
+                PostProcessEffect.CurrentTechnique.Passes[0].Apply();
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: PostProcessEffect);
             }
 #if LINUX || OSX
             spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);

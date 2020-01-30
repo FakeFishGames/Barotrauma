@@ -32,13 +32,11 @@ namespace Barotrauma
         private static GUIFrame window;
         private static GUIListBox sidebar;
         private static GUIListBox fileList;
-        private static GUIButton moveToParentButton;
         private static GUITextBox directoryBox;
         private static GUITextBox filterBox;
         private static GUITextBox fileBox;
         private static GUIDropDown fileTypeDropdown;
         private static GUIButton openButton;
-        private static GUIButton cancelButton;
 
         private static FileSystemWatcher fileSystemWatcher;
 
@@ -46,7 +44,7 @@ namespace Barotrauma
 
         private static readonly string[] ignoredDrivePrefixes = new string[]
         {
-            "/sys/","/snap/"
+            "/sys/", "/snap/"
         };
 
         private static string currentDirectory;
@@ -62,14 +60,14 @@ namespace Barotrauma
                 List<string> dirs = new List<string>();
                 for (int i = 0; i < dirSplit.Length; i++)
                 {
-                    if (dirSplit[i].Trim()=="..")
+                    if (dirSplit[i].Trim() == "..")
                     {
                         if (dirs.Count > 1)
                         {
                             dirs.RemoveAt(dirs.Count - 1);
                         }
                     }
-                    else if (dirSplit[i].Trim()!=".")
+                    else if (dirSplit[i].Trim() != ".")
                     {
                         dirs.Add(dirSplit[i]);
                     }
@@ -80,9 +78,11 @@ namespace Barotrauma
                     currentDirectory += "/";
                 }
                 fileSystemWatcher?.Dispose();
-                fileSystemWatcher = new FileSystemWatcher(currentDirectory);
-                fileSystemWatcher.Filter = "*";
-                fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                fileSystemWatcher = new FileSystemWatcher(currentDirectory)
+                {
+                    Filter = "*",
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
+                };
                 fileSystemWatcher.Created += OnFileSystemChanges;
                 fileSystemWatcher.Deleted += OnFileSystemChanges;
                 fileSystemWatcher.Renamed += OnFileSystemChanges;
@@ -103,8 +103,10 @@ namespace Barotrauma
             {
                 case WatcherChangeTypes.Created:
                     {
-                        var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), e.Name);
-                        itemFrame.UserData = (bool?)Directory.Exists(e.FullPath);
+                        var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), e.Name)
+                        {
+                            UserData = (bool?)Directory.Exists(e.FullPath)
+                        };
                         if ((itemFrame.UserData as bool?) ?? false)
                         {
                             itemFrame.Text += "/";
@@ -164,7 +166,7 @@ namespace Barotrauma
 
             window = new GUIFrame(new RectTransform(Vector2.One * 0.8f, backgroundFrame.RectTransform, Anchor.Center));
 
-            var horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One*0.9f, window.RectTransform, Anchor.Center), true);
+            var horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, window.RectTransform, Anchor.Center), true);
             sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform));
 
             var drives = DriveInfo.GetDrives();
@@ -186,8 +188,8 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), horizontalLayout.RectTransform), style: null);
 
             var fileListLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1.0f), horizontalLayout.RectTransform));
-            var firstRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), fileListLayout.RectTransform), true);
-            moveToParentButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), firstRow.RectTransform), "^")
+            var firstRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), fileListLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), firstRow.RectTransform), "^")
             {
                 OnClicked = MoveToParentDirectory
             };
@@ -212,6 +214,8 @@ namespace Barotrauma
             {
                 OverflowClip = true
             };
+            firstRow.RectTransform.MinSize = new Point(0, firstRow.RectTransform.Children.Max(c => c.MinSize.Y));
+
             filterBox.OnTextChanged += (txtbox, txt) =>
             {
                 RefreshFileList();
@@ -220,49 +224,53 @@ namespace Barotrauma
             //spacing between rows
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), fileListLayout.RectTransform), style: null);
 
-            fileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), fileListLayout.RectTransform));
-
-            fileList.OnSelected = (child, userdata) =>
+            fileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), fileListLayout.RectTransform))
             {
-                if (userdata == null) { return false; }
-
-                fileBox.Text = (child as GUITextBlock).Text;
-                if (PlayerInput.DoubleClicked())
+                OnSelected = (child, userdata) =>
                 {
-                    bool isDir = (userdata as bool?).Value;
-                    if (isDir)
-                    {
-                        CurrentDirectory += (child as GUITextBlock).Text;
-                    }
-                    else
-                    {
-                        OnFileSelected?.Invoke(CurrentDirectory + (child as GUITextBlock).Text);
-                        Open = false;
-                    }
-                }
+                    if (userdata == null) { return false; }
 
-                return true;
+                    var fileName = (child as GUITextBlock).Text;
+                    fileBox.Text = fileName;
+                    if (PlayerInput.DoubleClicked())
+                    {
+                        bool isDir = (userdata as bool?).Value;
+                        if (isDir)
+                        {
+                            CurrentDirectory += fileName;
+                        }
+                        else
+                        {
+                            OnFileSelected?.Invoke(CurrentDirectory + fileName);
+                            Open = false;
+                        }
+                    }
+
+                    return true;
+                }
             };
 
             //spacing between rows
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), fileListLayout.RectTransform), style: null);
 
             var thirdRow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), fileListLayout.RectTransform), true);
-            fileBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), thirdRow.RectTransform));
-            fileBox.OnEnterPressed = (tb, txt) => openButton?.OnClicked?.Invoke(openButton, null) ?? false;
-
-            fileTypeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), thirdRow.RectTransform), dropAbove: true);
-
-            fileTypeDropdown.OnSelected = (child, userdata) =>
+            fileBox = new GUITextBox(new RectTransform(new Vector2(0.7f, 1.0f), thirdRow.RectTransform))
             {
-                currentFileTypePattern = (child as GUITextBlock).UserData as string;
-                RefreshFileList();
+                OnEnterPressed = (tb, txt) => openButton?.OnClicked?.Invoke(openButton, null) ?? false
+            };
 
-                return true;
+            fileTypeDropdown = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), thirdRow.RectTransform), dropAbove: true)
+            {
+                OnSelected = (child, userdata) =>
+                {
+                    currentFileTypePattern = (child as GUITextBlock).UserData as string;
+                    RefreshFileList();
+
+                    return true;
+                }
             };
 
             fileTypeDropdown.Select(4);
-
 
             //spacing between rows
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), fileListLayout.RectTransform), style: null);
@@ -271,7 +279,7 @@ namespace Barotrauma
             //padding for open/cancel buttons
             new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), fourthRow.RectTransform), style: null);
 
-            openButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), fourthRow.RectTransform), "Open")
+            openButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), fourthRow.RectTransform), TextManager.Get("opensubbutton"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -279,13 +287,13 @@ namespace Barotrauma
                     {
                         CurrentDirectory += fileBox.Text;
                     }
-                    if (!File.Exists(CurrentDirectory+fileBox.Text)) { return false; }
+                    if (!File.Exists(CurrentDirectory + fileBox.Text)) { return false; }
                     OnFileSelected?.Invoke(CurrentDirectory + fileBox.Text);
                     Open = false;
                     return false;
                 }
             };
-            cancelButton = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), fourthRow.RectTransform), "Cancel")
+            new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), fourthRow.RectTransform), TextManager.Get("cancel"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -306,7 +314,7 @@ namespace Barotrauma
         public static void AddFileTypeFilter(string name, string pattern)
         {
             if (backgroundFrame == null) { Init(); }
-            fileTypeDropdown.AddItem(name + " ("+pattern+")", pattern);
+            fileTypeDropdown.AddItem(name + " (" + pattern + ")", pattern);
         }
 
         public static void SelectFileTypeFilter(string pattern)
@@ -322,21 +330,28 @@ namespace Barotrauma
 
             try
             {
-                var directories = Directory.EnumerateDirectories(currentDirectory, "*"+filterBox.Text+"*");
+                var directories = Directory.EnumerateDirectories(currentDirectory, "*" + filterBox.Text + "*");
                 foreach (var directory in directories)
                 {
                     string txt = directory;
                     if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
                     if (!txt.EndsWith("/")) { txt += "/"; }
-                    var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt);
-                    itemFrame.UserData = (bool?)true;
+                    var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
+                    {
+                        UserData = (bool?)true
+                    };
+                    var folderIcon = new GUIImage(new RectTransform(new Point((int)(itemFrame.Rect.Height * 0.8f)), itemFrame.RectTransform, Anchor.CenterLeft)
+                    {
+                        AbsoluteOffset = new Point((int)(itemFrame.Rect.Height * 0.25f), 0)
+                    }, style: "OpenButton", scaleToFit: true);
+                    itemFrame.Padding = new Vector4(folderIcon.Rect.Width * 1.5f, itemFrame.Padding.Y, itemFrame.Padding.Z, itemFrame.Padding.W);
                 }
 
                 IEnumerable<string> files = null;
                 foreach (string pattern in currentFileTypePattern.Split(','))
                 {
                     string patternTrimmed = pattern.Trim();
-                    patternTrimmed = "*"+filterBox.Text+"*"+patternTrimmed;
+                    patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
                     if (files == null)
                     {
                         files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
@@ -351,8 +366,10 @@ namespace Barotrauma
                 {
                     string txt = file;
                     if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
-                    var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt);
-                    itemFrame.UserData = (bool?)false;
+                    var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
+                    {
+                        UserData = (bool?)false
+                    };
                 }
             }
             catch (Exception e)

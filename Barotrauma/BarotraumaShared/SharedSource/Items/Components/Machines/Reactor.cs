@@ -48,7 +48,19 @@ namespace Barotrauma.Items.Components
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
 
-        private bool shutDown;
+        private bool _powerOn;
+
+        public bool PowerOn
+        {
+            get { return _powerOn; }
+            set
+            {
+                _powerOn = value;
+#if CLIENT
+                UpdateUIElementStates();
+#endif
+            }
+        }
 
         private Character lastAIUser;
 
@@ -152,12 +164,7 @@ namespace Barotrauma.Items.Components
             { 
                 autoTemp = value;
 #if CLIENT
-                if (autoTempSlider != null) 
-                {
-                    autoTempSlider.BarScroll = value ? 
-                        Math.Min(0.45f, autoTempSlider.BarScroll) : 
-                        Math.Max(0.55f, autoTempSlider.BarScroll);
-                }
+                UpdateUIElementStates();
 #endif
             }
         }
@@ -257,7 +264,7 @@ namespace Barotrauma.Items.Components
             }
             currPowerConsumption += autoAdjustAmount;
 
-            if (shutDown)
+            if (!PowerOn)
             {
                 targetFissionRate = 0.0f;
                 targetTurbineOutput = 0.0f;
@@ -472,8 +479,8 @@ namespace Barotrauma.Items.Components
             targetFissionRate = Math.Max(targetFissionRate - deltaTime * 10.0f, 0.0f);
             targetTurbineOutput = Math.Max(targetTurbineOutput - deltaTime * 10.0f, 0.0f);
 #if CLIENT
-            fissionRateScrollBar.BarScroll = 1.0f - FissionRate / 100.0f;
-            turbineOutputScrollBar.BarScroll = 1.0f - TurbineOutput / 100.0f;
+            FissionRateScrollBar.BarScroll = 1.0f - FissionRate / 100.0f;
+            TurbineOutputScrollBar.BarScroll = 1.0f - TurbineOutput / 100.0f;
             UpdateGraph(deltaTime);
 #endif
         }
@@ -582,14 +589,14 @@ namespace Barotrauma.Items.Components
             LastUser = lastAIUser = character;
 
             bool prevAutoTemp = autoTemp;
-            bool prevShutDown = shutDown;
+            bool prevPowerOn = _powerOn;
             float prevFissionRate = targetFissionRate;
             float prevTurbineOutput = targetTurbineOutput;
 
             switch (objective.Option.ToLowerInvariant())
             {
                 case "powerup":
-                    shutDown = false;
+                    PowerOn = true;
                     if (objective.Override || !autoTemp)
                     {
                         //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
@@ -604,24 +611,20 @@ namespace Barotrauma.Items.Components
                         }
                     }
 #if CLIENT
-                    onOffSwitch.BarScroll = 0.0f;
-                    fissionRateScrollBar.BarScroll = FissionRate / 100.0f;
-                    turbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+                    FissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                    TurbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
 #endif
                     break;
                 case "shutdown":
-#if CLIENT
-                    onOffSwitch.BarScroll = 1.0f;
-#endif
+                    PowerOn = false;
                     AutoTemp = false;
-                    shutDown = true;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
                     break;
             }
 
             if (autoTemp != prevAutoTemp ||
-                prevShutDown != shutDown ||
+                prevPowerOn != _powerOn ||
                 Math.Abs(prevFissionRate - targetFissionRate) > 1.0f || 
                 Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
             {
@@ -640,14 +643,11 @@ namespace Barotrauma.Items.Components
                 case "shutdown":
                     if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
                     {
-                        shutDown = true;
+                        PowerOn = false;
                         AutoTemp = false;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
                         unsentChanges = true;
-#if CLIENT
-                        onOffSwitch.BarScroll = 1.0f;
-#endif
                     }
                     break;
             }

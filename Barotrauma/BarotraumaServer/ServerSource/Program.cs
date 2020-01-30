@@ -25,20 +25,19 @@ namespace Barotrauma
         {
             GameMain game = null;
 
-#if !DEBUG || TRUE
+#if !DEBUG
             try
             {
 #endif
-
                 Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                     " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
 
                 game = new GameMain(args);
 
                 game.Run();
-                if (GameSettings.SendUserStatistics) GameAnalytics.OnQuit();
+                if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
                 SteamManager.ShutDown();
-#if !DEBUG || TRUE
+#if !DEBUG
             }
             catch (Exception e)
             {

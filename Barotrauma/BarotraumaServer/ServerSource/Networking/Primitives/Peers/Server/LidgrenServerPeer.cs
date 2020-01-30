@@ -67,7 +67,7 @@ namespace Barotrauma.Networking
             {
                 AcceptIncomingConnections = true,
                 AutoExpandMTU = false,
-                MaximumConnections = serverSettings.MaxPlayers * 2,
+                MaximumConnections = NetConfig.MaxPlayers * 2,
                 EnableUPnP = serverSettings.EnableUPnP,
                 Port = serverSettings.Port
             };
@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
             netPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
             netServer = new NetServer(netPeerConfiguration);
-            
+
             netServer.Start();
 
             if (serverSettings.EnableUPnP)

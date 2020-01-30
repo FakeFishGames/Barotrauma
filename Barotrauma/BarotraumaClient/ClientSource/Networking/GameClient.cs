@@ -128,6 +128,11 @@ namespace Barotrauma.Networking
             get { return entityEventManager.MidRoundSyncing; }
         }
 
+        public ClientEntityEventManager EntityEventManager
+        {
+            get { return entityEventManager; }
+        }
+
         private object serverEndpoint;
         private int ownerKey;
         private bool steamP2POwner;
@@ -1028,33 +1033,39 @@ namespace Barotrauma.Networking
             if (!IsServerOwner)
             {
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "permissions");
+                GUIMessageBox msgBox = new GUIMessageBox("", "") { UserData = "permissions" };
+                msgBox.Content.ClearChildren();
+                msgBox.Content.RectTransform.RelativeSize = new Vector2(0.95f, 0.9f);
 
-                string msg = "";
-                if (newPermissions == ClientPermissions.None)
+                var header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgBox.Content.RectTransform), TextManager.Get("PermissionsChanged"), textAlignment: Alignment.Center, font: GUI.LargeFont);
+                header.RectTransform.IsFixedSize = true;
+
+                var permissionArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
+                var leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionArea.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+                var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), permissionArea.RectTransform)) { Stretch = true, RelativeSpacing = 0.05f };
+
+                var permissionsLabel = new GUITextBlock(new RectTransform(new Vector2(newPermissions == ClientPermissions.None ? 2.0f : 1.0f, 0.0f), leftColumn.RectTransform),
+                    TextManager.Get(newPermissions == ClientPermissions.None ? "PermissionsRemoved" : "CurrentPermissions"),
+                    wrap: true, font: (newPermissions == ClientPermissions.None ? GUI.Font : GUI.SubHeadingFont));
+                permissionsLabel.RectTransform.NonScaledSize = new Point(permissionsLabel.Rect.Width, permissionsLabel.Rect.Height);
+                permissionsLabel.RectTransform.IsFixedSize = true;
+                if (newPermissions != ClientPermissions.None)
                 {
-                    msg = TextManager.Get("PermissionsRemoved");
-                }
-                else
-                {
-                    msg = TextManager.Get("CurrentPermissions") + '\n';
+                    string permissionList = "";
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
-                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) continue;
-                        msg += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
+                        if (!newPermissions.HasFlag(permission) || permission == ClientPermissions.None) { continue; }
+                        permissionList += "   - " + TextManager.Get("ClientPermission." + permission) + "\n";
                     }
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), leftColumn.RectTransform),
+                        permissionList);
                 }
-
-                GUIMessageBox msgBox = new GUIMessageBox(TextManager.Get("PermissionsChanged"), msg)
-                {
-                    UserData = "permissions"
-                };
 
                 if (newPermissions.HasFlag(ClientPermissions.ConsoleCommands))
                 {
-                    int listBoxWidth = (int)(msgBox.InnerFrame.Rect.Width) / 2 - 30;
-                    new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.1f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.15f) },
-                         TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SmallFont);
-                    var commandList = new GUIListBox(new RectTransform(new Vector2(0.4f, 0.55f), msgBox.InnerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.05f, 0.25f) });
+                    var commandsLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), rightColumn.RectTransform),
+                         TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SubHeadingFont);
+                    var commandList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform));
                     foreach (string permittedCommand in permittedConsoleCommands)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), commandList.Content.RectTransform, minSize: new Point(0, 15)),
@@ -1063,7 +1074,23 @@ namespace Barotrauma.Networking
                             CanBeFocused = false
                         };
                     }
+                    permissionsLabel.RectTransform.NonScaledSize = commandsLabel.RectTransform.NonScaledSize = 
+                        new Point(permissionsLabel.Rect.Width, Math.Max(permissionsLabel.Rect.Height, commandsLabel.Rect.Height));
+                    commandsLabel.RectTransform.IsFixedSize = true;
                 }
+
+                new GUIButton(new RectTransform(new Vector2(0.5f, 0.05f), msgBox.Content.RectTransform), TextManager.Get("ok"))
+                {
+                    OnClicked = msgBox.Close
+                };
+
+                permissionArea.RectTransform.MinSize = new Point(0, Math.Max( leftColumn.RectTransform.Children.Sum(c => c.Rect.Height), rightColumn.RectTransform.Children.Sum(c => c.Rect.Height)));
+                permissionArea.RectTransform.IsFixedSize = true;
+                int contentHeight = (int)(msgBox.Content.RectTransform.Children.Sum(c => c.Rect.Height + msgBox.Content.AbsoluteSpacing) * 1.05f);
+                msgBox.Content.ChildAnchor = Anchor.TopCenter;
+                msgBox.Content.Stretch = true;
+                msgBox.Content.RectTransform.MinSize = new Point(0, contentHeight);
+                msgBox.InnerFrame.RectTransform.MinSize = new Point(0, (int)(contentHeight / permissionArea.RectTransform.RelativeSize.Y / msgBox.Content.RectTransform.RelativeSize.Y));
             }
 
             GameMain.NetLobbyScreen.UpdatePermissions();
@@ -2488,7 +2515,7 @@ namespace Barotrauma.Networking
                         //oscillate between 0-1
                         float phase = (float)(Math.Sin(timeLeft * MathHelper.Pi) + 1.0f) * 0.5f;
                         textScale = 1.0f + phase * 0.5f;
-                        textColor = Color.Lerp(Color.Red, Color.White, 1.0f - phase);
+                        textColor = Color.Lerp(GUI.Style.Red, Color.White, 1.0f - phase);
                     }
                 }
                 
@@ -2536,14 +2563,17 @@ namespace Barotrauma.Networking
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
                 if (client == null) { return false; }
 
-                var mute = new GUITickBox(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) },
+                var content = new GUIFrame(new RectTransform(new Vector2(0.9f, 1.0f - characterFrame.RectTransform.RelativeSize.Y), characterFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter), 
+                    style: null);
+
+                var mute = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, Anchor.TopCenter),
                     TextManager.Get("Mute"))
                 {
                     Selected = client.MutedLocally,
                     OnSelected = (tickBox) => { client.MutedLocally = tickBox.Selected; return true; }
                 };
 
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.1f), characterFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, Anchor.BottomCenter), isHorizontal: true)
                 {
                     RelativeSpacing = 0.05f,
                     ChildAnchor = Anchor.CenterLeft,
@@ -2553,7 +2583,7 @@ namespace Barotrauma.Networking
                 if (HasPermission(ClientPermissions.Ban))
                 {
                     var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("Ban"))
+                        TextManager.Get("Ban"), style: "GUIButtonSmall")
                     {
                         UserData = client,
                         OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
@@ -2562,7 +2592,7 @@ namespace Barotrauma.Networking
                 if (HasPermission(ClientPermissions.Kick))
                 {
                     var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("Kick"))
+                        TextManager.Get("Kick"), style: "GUIButtonSmall")
                     {
                         UserData = client,
                         OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
@@ -2571,7 +2601,7 @@ namespace Barotrauma.Networking
                 else if (serverSettings.Voting.AllowVoteKick)
                 {
                     var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("VoteToKick"))
+                        TextManager.Get("VoteToKick"), style: "GUIButtonSmall")
                     {
                         UserData = client,
                         OnClicked = (btn, userdata) => { VoteForKick(client); btn.Enabled = false; return true; }
@@ -2708,6 +2738,19 @@ namespace Barotrauma.Networking
                 errorLines.Add("Event ID: " + eventID + ", entity ID " + entityID);
             }
 
+            if (GameMain.GameSession?.GameMode != null)
+            {
+                errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+            }
+            if (GameMain.GameSession?.Submarine != null)
+            {
+                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Name);
+            }
+            if (Level.Loaded != null)
+            {
+                errorLines.Add("Level: " + Level.Loaded.Seed + ", " + Level.Loaded.EqualityCheckVal);
+            }
+
             errorLines.Add("Entity IDs:");
             List<Entity> sortedEntities = Entity.GetEntityList();
             sortedEntities.Sort((e1, e2) => e1.ID.CompareTo(e2.ID));
@@ -2716,9 +2759,20 @@ namespace Barotrauma.Networking
                 errorLines.Add(e.ID + ": " + e.ToString());
             }
 
+            errorLines.Add("");
+            errorLines.Add("Last debug messages:");
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
+            {
+                errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
+            }
+
             string filePath = "event_error_log_client_" + Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
             filePath = Path.Combine(ServerLog.SavePath, filePath);
 
+            if (!Directory.Exists(ServerLog.SavePath))
+            {
+                Directory.CreateDirectory(ServerLog.SavePath);
+            }
             File.WriteAllLines(filePath, errorLines);
         }
 

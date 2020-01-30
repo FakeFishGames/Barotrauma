@@ -8,6 +8,7 @@ namespace Barotrauma
     {      
         public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
         {
+            Enabled = true;
             if (color.HasValue)
             {
                 this.color = color.Value;
@@ -18,7 +19,7 @@ namespace Barotrauma
         {
             if (!Visible) return;
 
-            Color currColor = GetCurrentColor(state);
+            Color currColor = GetColor(State);
 
             if (sprites == null || !sprites.Any(s => s.Value.Any())) GUI.DrawRectangle(spriteBatch, Rect, currColor * (currColor.A/255.0f), true);
             base.Draw(spriteBatch);

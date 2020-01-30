@@ -18,14 +18,12 @@ namespace Barotrauma
 
         private GUIRadioButtonGroup radioButtonGroup;
 
-        private bool selected;
-
-        public bool Selected
+        public override bool Selected
         {
             get { return selected; }
             set 
-            { 
-                if (value == selected) return;
+            {
+                if (value == selected) { return; } 
                 if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
                 {
                     selected = true;
@@ -33,8 +31,7 @@ namespace Barotrauma
                 }
                 
                 selected = value;
-                state = (selected) ? ComponentState.Selected : ComponentState.None;
-                box.State = state;
+                State = selected ? ComponentState.Selected : ComponentState.None;
                 if (value && radioButtonGroup != null)
                 {
                     radioButtonGroup.SelectRadioButton(this);
@@ -44,7 +41,18 @@ namespace Barotrauma
             }
         }
 
-        private Color? defaultTextColor;
+        public override ComponentState State 
+        {
+            get 
+            { 
+                return base.State; 
+            }
+            set
+            {
+                base.State = value;
+                box.State = TextBlock.State = value;
+            }
+        }
 
         public override bool Enabled
         {
@@ -56,12 +64,7 @@ namespace Barotrauma
             set
             {
                 if (value == enabled) { return; }
-                enabled = value;
-                if (color.A == 0)
-                {
-                    if (defaultTextColor == null) { defaultTextColor = TextBlock.TextColor; }
-                    TextBlock.TextColor = enabled ? defaultTextColor.Value : defaultTextColor.Value * 0.5f;
-                }
+                enabled = box.Enabled = TextBlock.Enabled = value;
             }
         }
 
@@ -126,11 +129,6 @@ namespace Barotrauma
             set { text.Text = value; }
         }
 
-        public Color? DefaultTextColor
-        {
-            get { return defaultTextColor; }
-        }
-
         public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
@@ -138,9 +136,9 @@ namespace Barotrauma
 
             layoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), true);
 
-            box = new GUIFrame(new RectTransform(Vector2.One, layoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight)
+            box = new GUIFrame(new RectTransform(Vector2.One, layoutGroup.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.BothHeight)
             {
-                IsFixedSize = false
+                IsFixedSize = true
             }, string.Empty, Color.DarkGray)
             {
                 HoverColor = Color.Gray,
@@ -148,12 +146,20 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
+            if (box.RectTransform.MinSize.Y > 0)
+            {
+                RectTransform.MinSize = box.RectTransform.MinSize;
+                RectTransform.MaxSize = box.RectTransform.MaxSize;
+                RectTransform.Resize(new Point(RectTransform.NonScaledSize.X, RectTransform.MinSize.Y));
+                box.RectTransform.MinSize = new Point(box.RectTransform.MinSize.Y);
+                box.RectTransform.Resize(box.RectTransform.MinSize);
+            }
             Vector2 textBlockScale = new Vector2((float)(Rect.Width - Rect.Height) / (float)Math.Max(Rect.Width, 1.0), 1.0f);
-            text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform), label, font: font, textAlignment: Alignment.CenterLeft)
+            text = new GUITextBlock(new RectTransform(textBlockScale, layoutGroup.RectTransform, Anchor.CenterLeft), label, font: font, textAlignment: Alignment.CenterLeft)
             {
                 CanBeFocused = false
             };
-            GUI.Style.Apply(text, "GUIButtonHorizontal", this);
+            GUI.Style.Apply(text, "GUITextBlock", this);
             Enabled = true;
 
             ResizeBox();
@@ -171,21 +177,26 @@ namespace Barotrauma
         {
             Vector2 textBlockScale = new Vector2(Math.Max(Rect.Width - box.Rect.Width, 0.0f) / Math.Max(Rect.Width, 1.0f), 1.0f);
             text.RectTransform.RelativeSize = textBlockScale;
+            box.RectTransform.MinSize = new Point(Rect.Height);
+            box.RectTransform.Resize(box.RectTransform.MinSize);
             text.SetTextPos();
         }
         
         protected override void Update(float deltaTime)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
+
             base.Update(deltaTime);
 
             if (GUI.MouseOn == this && Enabled)
             {
-                box.State = ComponentState.Hover;
+                State = Selected ?
+                    ComponentState.HoverSelected :
+                    ComponentState.Hover;
 
                 if (PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    box.State = ComponentState.Selected;                    
+                    State = ComponentState.Selected;                    
                 }
 
                 if (PlayerInput.PrimaryMouseButtonClicked())
@@ -200,14 +211,13 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (selected)
+            {
+                State = ComponentState.Selected;
+            }
             else
             {
-                box.State = ComponentState.None;
-            }
-
-            if (selected)
-            {
-                box.State = ComponentState.Selected;
+                State = ComponentState.None;
             }
         }
     }

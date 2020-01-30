@@ -194,7 +194,18 @@ namespace Barotrauma
                     string loadText;
                     if (LoadState == 100.0f)
                     {
-                        loadText = TextManager.Get("PressAnyKey");
+#if DEBUG
+                        if (GameMain.Config.AutomaticQuickStartEnabled && GameMain.FirstLoad)
+                        {
+                            loadText = "QUICKSTARTING ...";
+                        }
+                        else
+                        {
+#endif
+                            loadText = TextManager.Get("PressAnyKey");
+#if DEBUG
+                        }
+#endif
                     }
                     else
                     {

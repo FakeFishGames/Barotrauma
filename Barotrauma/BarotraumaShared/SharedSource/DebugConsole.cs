@@ -1210,7 +1210,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") return;
+            if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") { return; }
 
             string[] splitCommand = SplitCommand(command);
             if (splitCommand.Length == 0)
@@ -1231,12 +1231,17 @@ namespace Barotrauma
 #if CLIENT
             if (GameMain.Client != null)
             {
-                if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
+                Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
+                if (matchingCommand == null)
                 {
-                    Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
-
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
-                    if (matchingCommand == null || matchingCommand.RelayToServer)
+                    GameMain.Client.SendConsoleCommand(command);
+                    NewMessage("Server command: " + command, Color.White);
+                    return;
+                }
+                else if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
+                {
+                    if (matchingCommand.RelayToServer)
                     {
                         GameMain.Client.SendConsoleCommand(command);
                         NewMessage("Server command: " + command, Color.White);
@@ -1245,7 +1250,6 @@ namespace Barotrauma
                     {
                         matchingCommand.ClientExecute(splitCommand.Skip(1).ToArray());
                     }
-                    
                     return;
                 }
             }

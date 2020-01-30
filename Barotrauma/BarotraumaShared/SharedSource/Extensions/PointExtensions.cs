@@ -37,9 +37,20 @@ namespace Barotrauma.Extensions
             return new Point((int)(p.X / v.X), (int)(p.Y / v.Y));
         }
 
+        /// <summary>
+        /// Negates the X and Y components.
+        /// </summary>
         public static Point Inverse(this Point p)
         {
             return new Point(-p.X, -p.Y);
+        }
+
+        /// <summary>
+        /// Flips the X and Y components.
+        /// </summary>
+        public static Point Flip(this Point p)
+        {
+            return new Point(p.Y, p.X);
         }
 
         public static Point Clamp(this Point p, Point min, Point max)

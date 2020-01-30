@@ -86,7 +86,7 @@ namespace Barotrauma
         {
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
-            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true);
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
 
             PositionEditingHUD();
 
@@ -260,7 +260,7 @@ namespace Barotrauma
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                Color.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                GUI.Style.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -271,14 +271,14 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
                 if (WaterVolume > Volume)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), Color.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), GUI.Style.Red, true);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
 
                 foreach (FireSource fs in FireSources)
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
-                    GUI.DrawRectangle(spriteBatch, fireSourceRect, Color.Orange, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Orange, false, 0, 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
 
@@ -296,7 +296,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X + 5, -drawRect.Y + 5),
                     new Vector2(rect.Width - 10, rect.Height - 10),
-                    IsHighlighted ? Color.LightBlue * 0.5f : Color.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                    IsHighlighted ? Color.LightBlue * 0.5f : GUI.Style.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
             }
 
             foreach (MapEntity e in linkedTo)
@@ -322,7 +322,7 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch,
                     new Vector2(currentHullRect.X, -currentHullRect.Y),
                     new Vector2(connectedHullRect.X, -connectedHullRect.Y),
-                    Color.Green, width: 2);
+                    GUI.Style.Green, width: 2);
                 }
             }
         }

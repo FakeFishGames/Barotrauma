@@ -75,6 +75,7 @@ namespace Barotrauma
                         break;
                     }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
+                    msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                     (components[containerIndex] as ItemContainer).Inventory.ServerWrite(msg, c);
                     break;
                 case NetEntityEvent.Type.Status:

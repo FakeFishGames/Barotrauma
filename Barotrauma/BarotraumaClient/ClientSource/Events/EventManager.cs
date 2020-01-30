@@ -27,14 +27,14 @@ namespace Barotrauma
         {
             GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + eventCoolDown, Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)(currentIntensity * 100), Color.Lerp(Color.White, Color.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)(targetIntensity * 100), Color.Lerp(Color.White, Color.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)(avgCrewHealth * 100), Color.Lerp(Color.Red, Color.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)(avgHullIntegrity * 100), Color.Lerp(Color.Red, Color.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)(floodingAmount * 100), Color.Lerp(Color.Green, Color.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)(fireAmount * 100), Color.Lerp(Color.Green, Color.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)(enemyDanger * 100), Color.Lerp(Color.Green, Color.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) && 
@@ -61,8 +61,8 @@ namespace Barotrauma
             Rectangle graphRect = new Rectangle(15, y + 150, 150, 50);
 
             GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.5f, true);
-            intensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, Color.Red, currentIntensity));
-            targetIntensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, Color.Red, targetIntensity) * 0.5f);
+            intensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, currentIntensity));
+            targetIntensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, targetIntensity) * 0.5f);
 
             GUI.DrawLine(spriteBatch,
                 new Vector2(graphRect.Right, graphRect.Y + graphRect.Height * (1.0f - eventThreshold)),

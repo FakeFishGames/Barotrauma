@@ -14,8 +14,6 @@ namespace Barotrauma.Items.Components
         private float? targetLevel;
 
         private float pumpSpeedLockTimer, isActiveLockTimer;
-        
-        private bool hasPower;
 
         [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public float FlowPercentage
@@ -23,7 +21,7 @@ namespace Barotrauma.Items.Components
             get { return flowPercentage; }
             set
             {
-                if (!MathUtils.IsValid(flowPercentage)) return;
+                if (!MathUtils.IsValid(flowPercentage)) { return; }
                 flowPercentage = MathHelper.Clamp(value, -100.0f, 100.0f);
                 flowPercentage = MathUtils.Round(flowPercentage, 1.0f);
             }
@@ -41,11 +39,26 @@ namespace Barotrauma.Items.Components
         {
             get 
             {
-                if (!IsActive) return 0.0f;
+                if (!IsActive) { return 0.0f; }
                 return Math.Abs(currFlow); 
             }
         }
-        
+
+        public override bool IsActive 
+        { 
+            get => base.IsActive;
+            set
+            {
+                base.IsActive = value;
+                if (!IsActive)
+                {
+                    powerConsumption = 0;
+                }
+            }
+        }
+
+        public bool HasPower => IsActive && Voltage >= MinVoltage;
+
         public Pump(Item item, XElement element)
             : base(item, element)
         {
@@ -57,7 +70,6 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             currFlow = 0.0f;
-            hasPower = false;
 
             if (targetLevel != null)
             {
@@ -74,13 +86,11 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
             //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(2.0f, 1.0f, item.Condition / item.MaxCondition);
+            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
 
-            if (Voltage < MinVoltage) { return; }
+            if (!HasPower) { return; }
 
             UpdateProjSpecific(deltaTime);
-
-            hasPower = true;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -102,8 +112,8 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "toggle")
             {
-                isActiveLockTimer = 0.1f;
                 IsActive = !IsActive;
+                isActiveLockTimer = 0.1f;
             }
             else if (connection.Name == "set_active")
             {
@@ -126,21 +136,23 @@ namespace Barotrauma.Items.Components
                     pumpSpeedLockTimer = 0.1f;
                 }
             }
-
-            if (!IsActive) currPowerConsumption = 0.0f;
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
 #if CLIENT
-            if (GameMain.Client != null) return false;
+            if (GameMain.Client != null) { return false; }
 #endif
 
             if (objective.Option.ToLowerInvariant() == "stoppumping")
             {
 #if SERVER
-                if (FlowPercentage > 0.0f) item.CreateServerEvent(this);
+                if (FlowPercentage > 0.0f)
+                {
+                    item.CreateServerEvent(this);
+                }
 #endif
+                IsActive = false;
                 FlowPercentage = 0.0f;
             }
             else

@@ -252,12 +252,12 @@ namespace Barotrauma.Tutorials
                 {
                     HighlightInventorySlot(officer.Inventory, "bodyarmor", highlightColor, .5f, .5f, 0f);
                 }
-                if (!officer.HasEquippedItem("ballistichelmet"))
+                if (!officer.HasEquippedItem("ballistichelmet1"))
                 {
-                    HighlightInventorySlot(officer.Inventory, "ballistichelmet", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "ballistichelmet1", highlightColor, .5f, .5f, 0f);
                 }
                 yield return new WaitForSeconds(1f, false);
-            } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet"));
+            } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet1"));
             RemoveCompletedObjective(segments[1]);
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, true);
 

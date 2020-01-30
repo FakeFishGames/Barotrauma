@@ -291,8 +291,8 @@ namespace Barotrauma.Networking
             Port = port;
             QueryPort = queryPort;
             EnableUPnP = enableUPnP;
-            this.maxPlayers = maxPlayers;
-            this.isPublic = isPublic;
+            MaxPlayers = maxPlayers;
+            IsPublic = isPublic;
 
             netProperties = new Dictionary<UInt32, NetPropertyData>();
 
@@ -376,7 +376,7 @@ namespace Barotrauma.Networking
 
         private bool autoRestart;
 
-        public bool isPublic;
+        public bool IsPublic;
 
         private int maxPlayers;
 
@@ -810,6 +810,7 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(8, true)]
         public int MaxPlayers
         {
             get { return maxPlayers; }

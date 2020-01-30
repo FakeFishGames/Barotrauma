@@ -26,7 +26,6 @@ namespace Barotrauma.Networking
             PrivateStart();
 
             processInfo.Arguments += " -pipes " + writePipe.GetClientHandleAsString() + " " + readPipe.GetClientHandleAsString();
-            DebugConsole.NewMessage(processInfo.Arguments, Microsoft.Xna.Framework.Color.Orange);
             Process = Process.Start(processInfo);
 
             localHandlesDisposed = false;

@@ -6,30 +6,32 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
     partial class Sonar : Powered, IServerSerializable, IClientSerializable
     {
+        public enum BlipType
+        {
+            Default,
+            Disruption
+        }
+
         private bool dynamicDockingIndicator = true;
 
         private bool unsentChanges;
         private float networkUpdateTimer;
 
-        public GUITickBox ActiveTickBox
-        {
-            get { return activeTickBox; }
-        }
+        public GUIButton SonarModeSwitch { get; private set; }
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
         private GUIScrollBar zoomSlider;
 
-        private GUITickBox directionalTickBox;
-        private GUIScrollBar directionalSlider;
+        private GUIButton directionalModeSwitch;
         private Vector2? pingDragDirection = null;
 
-        private GUILayoutGroup activeControlsContainer;
         private GUIFrame controlContainer;
 
         private GUICustomComponent sonarView;
@@ -54,21 +56,32 @@ namespace Barotrauma.Items.Components
         private Vector2 center;
         private float displayScale;
 
+        private const float DisruptionUpdateInterval = 0.2f;
+        private float disruptionUpdateTimer;
+
         private float zoomSqrt;
 
         private float showDirectionalIndicatorTimer;
-        
+
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
         List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
-        
-        private static readonly Color[] blipColorGradient =
+
+        private readonly Color positiveColor = Color.Green;
+        private readonly Color warningColor = Color.Orange;
+        private readonly Color negativeColor = Color.Red;
+        private readonly Color markerColor = Color.Red;
+
+        private static readonly Dictionary<BlipType, Color[]> blipColorGradient = new Dictionary<BlipType, Color[]>()
         {
-            Color.TransparentBlack,
-            new Color(0, 50, 160),
-            new Color(0, 133, 166),
-            new Color(2, 159, 30),
-            new Color(255, 255, 255)
+            { 
+                BlipType.Default,
+                new Color[] { Color.TransparentBlack, new Color(0, 50, 160), new Color(0, 133, 166), new Color(2, 159, 30), new Color(255, 255, 255) } 
+            },
+            { 
+                BlipType.Disruption,
+                new Color[] { Color.TransparentBlack, new Color(254, 68, 19), new Color(255, 220, 62), new Color(255, 255, 255) } 
+            }
         };
 
         private float prevDockingDist;
@@ -79,102 +92,8 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
+            System.Diagnostics.Debug.Assert(Enum.GetValues(typeof(BlipType)).Cast<BlipType>().All(t => blipColorGradient.ContainsKey(t)));
             sonarBlips = new List<SonarBlip>();
-            
-            sonarView = new GUICustomComponent(new RectTransform(Point.Zero, GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
-
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.TopLeft)
-                { MinSize = new Point(150, 0) }, "SonarFrame");
-
-            controlContainer.RectTransform.SetAsFirstChild();
-
-            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), controlContainer.RectTransform, Anchor.Center))
-            {
-                RelativeSpacing = 0.03f,
-                Stretch = true
-            };
-
-            passiveTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.2f), paddedControlContainer.RectTransform), TextManager.Get("SonarPassive"), style: "GUIRadioButton")
-            {
-                ToolTip = TextManager.Get("SonarTipPassive"),
-                Selected = true
-            };
-
-            activeTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.2f), paddedControlContainer.RectTransform), TextManager.Get("SonarActive"), style: "GUIRadioButton")
-            {
-                ToolTip = TextManager.Get("SonarTipActive"),
-                OnSelected = (GUITickBox box) =>
-                {
-                    CurrentMode = box.Selected ? Mode.Active : Mode.Passive;
-                    if (GameMain.Client != null)
-                    {
-                        unsentChanges = true;
-                        correctionTimer = CorrectionDelay;
-                    }
-                    return true;
-                }
-            };
-            
-            var zoomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedControlContainer.RectTransform), isHorizontal: true);
-            new GUITextBlock(new RectTransform(new Vector2(0.35f, 1.0f), zoomContainer.RectTransform), TextManager.Get("SonarZoom"), font: GUI.SmallFont)
-            {
-                Padding = Vector4.Zero
-            };
-            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.65f, 1.0f), zoomContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
-            {
-                OnMoved = (scrollbar, scroll) =>
-                {
-                    zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
-                    if (GameMain.Client != null)
-                    {
-                        unsentChanges = true;
-                        correctionTimer = CorrectionDelay;
-                    }
-                    return true;
-                }
-            };
-
-            var activeControls = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.6f), paddedControlContainer.RectTransform) { RelativeOffset = new Vector2(0.1f, 0.0f) }, "InnerFrame");
-            activeControlsContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), activeControls.RectTransform, Anchor.Center))
-            {
-                RelativeSpacing = 0.03f,
-                Stretch = true
-            };
-            
-            directionalTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), activeControlsContainer.RectTransform), TextManager.Get("SonarDirectionalPing"))
-            {
-                OnSelected = (tickBox) =>
-                {
-                    useDirectionalPing = tickBox.Selected;
-                    if (GameMain.Client != null)
-                    {
-                        unsentChanges = true;
-                        correctionTimer = CorrectionDelay;
-                    }
-                    return true;
-                }
-            };
-            directionalSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), activeControlsContainer.RectTransform), barSize: 0.1f, isHorizontal: true)
-            {
-                OnMoved = (scrollbar, scroll) =>
-                {
-                    showDirectionalIndicatorTimer = 1.0f;
-                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, scroll);
-                    SetPingDirection(new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle)));
-                    return true;
-                },
-                Range = new Vector2(0,MathHelper.TwoPi)
-            };
-            
-            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", Color.Orange, textAlignment: Alignment.Center);
-
-            GUIRadioButtonGroup sonarMode = new GUIRadioButtonGroup();
-            sonarMode.AddRadioButton((int)Mode.Active, activeTickBox);
-            sonarMode.AddRadioButton((int)Mode.Passive, passiveTickBox);
-            sonarMode.Selected = (int)Mode.Passive;
-            
-            GuiFrame.CanBeFocused = false;
 
             foreach (XElement subElement in element.Elements())
             {
@@ -212,19 +131,124 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-
-            SetUILayout();
-
-            GameMain.Instance.OnResolutionChanged += SetUILayout;
-            GameMain.Config.OnHUDScaleChanged += SetUILayout;
+            CreateGUI();
+            GameMain.Instance.OnResolutionChanged += ResetLayout;
+            // TODO: do we need to react on this?
+            GameMain.Config.OnHUDScaleChanged += ResetLayout;
         }
 
-        private void SetUILayout()
+        private void ResetLayout()
         {
-            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-            sonarView.RectTransform.NonScaledSize = new Point(viewSize);
-            controlContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
+            GuiFrame.RectTransform.Children.ForEachMod(c => c.Parent = null);
+            CreateGUI();
         }
+
+        private void CreateGUI()
+        {
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(controlContainerRelativeWidth, 0.32f), GuiFrame.RectTransform, Anchor.TopRight)
+            {
+                RelativeOffset = new Vector2(controlContainerRelativeOffset, 0)
+            }, "ItemUI");
+
+            var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
+            {
+                AbsoluteOffset = GUIStyle.ItemFrameOffset
+            }, style: null);
+            var sonarModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), paddedControlContainer.RectTransform, Anchor.TopCenter), style: null);
+            SonarModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), sonarModeArea.RectTransform), string.Empty, style: "SwitchVertical")
+            {
+                Selected = false,
+                Enabled = true,
+                OnClicked = (button, data) =>
+                {
+                    button.Selected = !button.Selected;
+                    CurrentMode = button.Selected ? Mode.Active : Mode.Passive;
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        correctionTimer = CorrectionDelay;
+                    }
+                    return true;
+                }
+            };
+            var sonarModeRightSide = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.8f), sonarModeArea.RectTransform, Anchor.CenterLeft)
+            {
+                RelativeOffset = new Vector2(SonarModeSwitch.RectTransform.RelativeSize.X, 0)
+            }, style: null);
+            passiveTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), sonarModeRightSide.RectTransform, Anchor.TopLeft),
+                TextManager.Get("SonarPassive"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
+            {
+                ToolTip = TextManager.Get("SonarTipPassive"),
+                Selected = true,
+                Enabled = false
+            };
+            activeTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), sonarModeRightSide.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("SonarActive"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
+            {
+                ToolTip = TextManager.Get("SonarTipActive"),
+                Selected = false,
+                Enabled = false
+            };
+            passiveTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            activeTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+
+            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), paddedControlContainer.RectTransform, Anchor.TopCenter)
+            {
+                RelativeOffset = new Vector2(0, sonarModeArea.RectTransform.RelativeSize.Y + 0.025f)
+            }, style: null);
+            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.6f), zoomContainer.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("SonarZoom"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
+            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.6f, 0.8f), zoomContainer.RectTransform, Anchor.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0.35f, 0)
+            }, barSize: 0.15f, isHorizontal: true, style: "DeviceSlider")
+            {
+                OnMoved = (scrollbar, scroll) =>
+                {
+                    zoom = MathHelper.Lerp(MinZoom, MaxZoom, scroll);
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        correctionTimer = CorrectionDelay;
+                    }
+                    return true;
+                }
+            };
+
+            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), directionalModeFrame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, -0.15f)
+            }, style: "HorizontalLine");
+            directionalModeSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), directionalModeFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
+            {
+                OnClicked = (button, data) =>
+                {
+                    useDirectionalPing = !useDirectionalPing;
+                    button.Selected = useDirectionalPing;
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        correctionTimer = CorrectionDelay;
+                    }
+                    return true;
+                }
+            };
+            var directionalModeSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), directionalModeFrame.RectTransform, Anchor.CenterRight),
+                TextManager.Get("SonarDirectionalPing"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
+
+            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", warningColor, textAlignment: Alignment.Center);
+
+            GuiFrame.CanBeFocused = false;
+
+            sonarView = new GUICustomComponent(new RectTransform(SonarAreaSize, GuiFrame.RectTransform, Anchor.CenterLeft),
+                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
+            sonarView.RectTransform.SetAsFirstChild();
+        }
+
+        public static readonly float controlContainerRelativeWidth = 0.35f;
+        public static readonly float controlContainerRelativeOffset = 0.1f;
+        public static Vector2 SonarAreaSize => Vector2.One - new Vector2(controlContainerRelativeWidth + controlContainerRelativeOffset);
 
         private void SetPingDirection(Vector2 direction)
         {
@@ -278,15 +302,7 @@ namespace Barotrauma.Items.Components
                 sonarBlips[i].FadeTimer -= deltaTime * MathHelper.Lerp(0.5f, 2.0f, distort);
                 sonarBlips[i].Position += sonarBlips[i].Velocity * deltaTime;
 
-                if (sonarBlips[i].FadeTimer <= 0.0f) sonarBlips.RemoveAt(i);
-            }
-
-            foreach (GUIComponent component in activeControlsContainer.Parent.GetAllChildren())
-            {
-                if (component is GUITextBlock textBlock)
-                {
-                    textBlock.TextColor = currentMode == Mode.Active ? textBlock.Style.textColor : textBlock.Style.textColor * 0.5f;
-                }
+                if (sonarBlips[i].FadeTimer <= 0.0f) { sonarBlips.RemoveAt(i); }
             }
 
             //sonar view can only get focus when the cursor is inside the circle
@@ -415,44 +431,46 @@ namespace Barotrauma.Items.Components
                         null;                
             }
 
-            if (useDirectionalPing && PlayerInput.PrimaryMouseButtonHeld())
+            if (useDirectionalPing)
             {
-                if ((MouseInDirectionalPingRing(sonarView.Rect, false) && PlayerInput.PrimaryMouseButtonDown()) || pingDragDirection != null)
+                Vector2 newDragDir = Vector2.Normalize(PlayerInput.MousePosition - sonarView.Rect.Center.ToVector2());
+                if (MouseInDirectionalPingRing(sonarView.Rect, true) && PlayerInput.PrimaryMouseButtonDown())
                 {
-                    Vector2 newDragDir = Vector2.Normalize(PlayerInput.MousePosition - sonarView.Rect.Center.ToVector2());
-                    if (pingDragDirection == null && !MouseInDirectionalPingRing(sonarView.Rect, true))
-                    {
-                        directionalSlider.BarScrollValue = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(newDragDir));
-                        directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
-                    }
-                    else if (pingDragDirection != null)
-                    {
-                        float newAngle = MathUtils.VectorToAngle(newDragDir);
-                        float oldAngle = MathUtils.VectorToAngle(pingDragDirection.Value);
-                        float pingAngle = MathUtils.VectorToAngle(pingDirection);
-                        pingAngle = MathUtils.WrapAngleTwoPi(pingAngle + MathUtils.GetShortestAngle(oldAngle, newAngle));
-                        directionalSlider.BarScrollValue = pingAngle;
-                        directionalSlider.OnMoved(directionalSlider, directionalSlider.BarScroll);
-                    }
-
                     pingDragDirection = newDragDir;
+                }
+
+                if (pingDragDirection != null && PlayerInput.PrimaryMouseButtonHeld())
+                {
+                    float newAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(newDragDir));
+                    SetPingDirection(new Vector2((float)Math.Cos(newAngle), (float)Math.Sin(newAngle)));
+                }
+                else
+                {
+                    pingDragDirection = null;
                 }
             }
             else
             {
                 pingDragDirection = null;
             }
+            
+            disruptionUpdateTimer -= deltaTime;
 
             for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
             {
                 var activePing = activePings[pingIndex];
                 float pingRadius = DisplayRadius * activePing.State / zoom;
-                UpdateDisruptions(transducerCenter, pingRadius / displayScale, activePing.PrevPingRadius / displayScale);
+                if (disruptionUpdateTimer <= 0.0f) { UpdateDisruptions(transducerCenter, pingRadius / displayScale); }               
                 Ping(transducerCenter, transducerCenter,
                     pingRadius, activePing.PrevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
                 activePing.PrevPingRadius = pingRadius;
-
             }
+
+            if (disruptionUpdateTimer <= 0.0f)
+            {
+                disruptionUpdateTimer = DisruptionUpdateInterval;
+            }
+
             if (currentMode == Mode.Active && currentPingIndex != -1)
             {
                 return;
@@ -464,7 +482,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f || !t.Enabled) { continue; }
+                    if (t.SoundRange <= 0.0f || !t.Enabled || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
@@ -610,7 +628,7 @@ namespace Barotrauma.Items.Components
             if (signalStrength <= 0.5f)
             {
                 signalWarningText.Text = TextManager.Get(signalStrength <= 0.0f ? "SonarNoSignal" : "SonarSignalWeak");
-                signalWarningText.Color = signalStrength <= 0.0f ? Color.Red : Color.Orange;
+                signalWarningText.Color = signalStrength <= 0.0f ? negativeColor : warningColor;
                 signalWarningText.Visible = true;
             }
             else
@@ -796,7 +814,7 @@ namespace Barotrauma.Items.Components
                     size.Y = 0.0f;
                 }
                 GUI.DrawLine(spriteBatch, center + offset - size - Vector2.Normalize(size) * zoom, center + offset + size + Vector2.Normalize(size) * zoom, Color.Black * signalStrength * 0.5f, width: (int)(zoom * 5.0f));
-                GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, Color.LightGreen * signalStrength, width: (int)(zoom * 2.5f));
+                GUI.DrawLine(spriteBatch, center + offset - size, center + offset + size, positiveColor * signalStrength, width: (int)(zoom * 2.5f));
             }
         }
 
@@ -845,7 +863,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 midNormal = new Vector2(-normalizedDockingDir.Y, normalizedDockingDir.X);
 
-            DrawLine(spriteBatch, targetPortPos, targetPortPos + normalizedDockingDir * midLength, readyToDock ? Color.LightGreen : staticLineColor, width: 2);
+            DrawLine(spriteBatch, targetPortPos, targetPortPos + normalizedDockingDir * midLength, readyToDock ? positiveColor : staticLineColor, width: 2);
             DrawLine(spriteBatch, targetPortPos,
                 targetPortPos + MathUtils.RotatePoint(normalizedDockingDir, sector) * sectorLength, staticLineColor, width: 2);
             DrawLine(spriteBatch, targetPortPos,
@@ -859,7 +877,7 @@ namespace Barotrauma.Items.Components
 
             if (readyToDock)
             {
-                Color indicatorColor = Color.LightGreen * 0.8f;
+                Color indicatorColor = positiveColor * 0.8f;
 
                 float indicatorSize = (float)Math.Sin((float)Timing.TotalTime * 5.0f) * DisplayRadius * 0.75f;
                 Vector2 midPoint = (sourcePortPos + targetPortPos) / 2.0f;
@@ -882,7 +900,8 @@ namespace Barotrauma.Items.Components
                     Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
                     Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));
 
-                Color indicatorColor = withinSector ? Color.LightGreen * 0.8f : Color.Red * 0.8f;
+                Color indicatorColor = withinSector ? positiveColor : negativeColor;
+                indicatorColor *= 0.8f;
 
                 DrawLine(spriteBatch, targetPortPos,
                     targetPortPos + MathUtils.RotatePoint(normalizedDockingDir,indicatorSector) * indicatorSectorLength, indicatorColor, width: 3);
@@ -892,7 +911,7 @@ namespace Barotrauma.Items.Components
             
         }
 
-        private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius, float worldPrevPingRadius)
+        private void UpdateDisruptions(Vector2 pingSource, float worldPingRadius)
         {
             float worldPingRadiusSqr = worldPingRadius * worldPingRadius;
 
@@ -912,10 +931,8 @@ namespace Barotrauma.Items.Components
                     float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
                     disruptedDirections.Add(new Pair<Vector2, float>((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
 
-                    if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
-                    {
-                        CreateBlipsForDisruption(disruptionPos, disruptionStrength);
-                    }
+                    CreateBlipsForDisruption(disruptionPos, disruptionStrength);
+                    
                 }
                 foreach (AITarget aiTarget in AITarget.List)
                 {
@@ -926,18 +943,23 @@ namespace Barotrauma.Items.Components
                     float disruptionDist = (float)Math.Sqrt(distSqr);
                     disruptedDirections.Add(new Pair<Vector2, float>((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
 
-                    if (disruptionDist > worldPrevPingRadius && disruptionDist <= worldPingRadius)
-                    {
-                        CreateBlipsForDisruption(aiTarget.WorldPosition, aiTarget.SonarDisruption);
-                    }
+                    CreateBlipsForDisruption(aiTarget.WorldPosition, aiTarget.SonarDisruption);                    
                 }
             }
 
             void CreateBlipsForDisruption(Vector2 disruptionPos, float disruptionStrength)
             {
-                for (int i = 0; i < disruptionStrength * Level.GridCellSize * 0.02f; i++)
+                disruptionStrength = Math.Min(disruptionStrength, 10.0f);
+                Vector2 dir = disruptionPos - pingSource;
+                for (int i = 0; i < disruptionStrength * 10.0f; i++)
                 {
-                    var blip = new SonarBlip(disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength)), MathHelper.Lerp(1.0f, 1.5f, disruptionStrength), Rand.Range(1.0f, 2.0f + disruptionStrength));
+                    Vector2 pos = disruptionPos + Rand.Vector(Rand.Range(0.0f, Level.GridCellSize * 4 * disruptionStrength));
+                    if (Vector2.Dot(pos - pingSource, -dir) > 1.0f - disruptionStrength) { continue; }
+                    var blip = new SonarBlip(
+                        pos, 
+                        MathHelper.Lerp(0.1f, 1.5f, Math.Min(disruptionStrength, 1.0f)), 
+                        Rand.Range(0.2f, 1.0f + disruptionStrength),
+                        BlipType.Disruption);
                     sonarBlips.Add(blip);
                 }
             }
@@ -1143,6 +1165,8 @@ namespace Barotrauma.Items.Components
             Vector2 lineDir = (point2 - point1) / length;
             for (float x = 0; x < length; x += lineStep * Rand.Range(0.8f, 1.2f))
             {
+                if (Rand.Int(sonarBlips.Count) > 500) { continue; }
+
                 Vector2 point = point1 + lineDir * x;
 
                 //ignore if outside the display
@@ -1253,7 +1277,7 @@ namespace Barotrauma.Items.Components
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
             float scale = (strength + 3.0f) * blip.Scale * zoomSqrt;
-            Color color = ToolBox.GradientLerp(strength, blipColorGradient);
+            Color color = ToolBox.GradientLerp(strength, blipColorGradient[blip.BlipType]);
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
                 blip.Size * scale * 0.04f, SpriteEffects.None, 0);
@@ -1304,7 +1328,7 @@ namespace Barotrauma.Items.Components
 
             if (string.IsNullOrEmpty(iconIdentifier) || !targetIcons.ContainsKey(iconIdentifier))
             {
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), Color.Red, thickness: 2);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), markerColor, thickness: 2);
             }
             else
             {
@@ -1355,7 +1379,8 @@ namespace Barotrauma.Items.Components
                 msg.Write(useDirectionalPing);
                 if (useDirectionalPing)
                 {
-                    msg.WriteRangedSingle(directionalSlider.BarScroll, 0.0f, 1.0f, 8);
+                    float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
+                    msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
             }
         }
@@ -1380,7 +1405,7 @@ namespace Barotrauma.Items.Components
 
             if (correctionTimer > 0.0f)
             {
-                int msgLength = (int)(msg.BitPosition - msgStartPos);
+                int msgLength = msg.BitPosition - msgStartPos;
                 msg.BitPosition = msgStartPos;
                 StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
@@ -1389,21 +1414,24 @@ namespace Barotrauma.Items.Components
             CurrentMode = isActive ? Mode.Active : Mode.Passive;
             if (isActive)
             {
-                activeTickBox.Selected = true;
                 zoomSlider.BarScroll = zoomT;
                 zoom = MathHelper.Lerp(MinZoom, MaxZoom, zoomT);
                 if (directionalPing)
                 {
-                    directionalSlider.BarScroll = directionT;
-                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, directionalSlider.BarScroll);
+                    float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, directionT);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
-                useDirectionalPing = directionalTickBox.Selected = directionalPing;
+                useDirectionalPing = directionalModeSwitch.Selected = directionalPing;
             }
-            else
-            {
-                passiveTickBox.Selected = true;
-            }
+        }
+
+        private void UpdateGUIElements()
+        {
+            bool isActive = CurrentMode == Mode.Active;
+            SonarModeSwitch.Selected = isActive;
+            passiveTickBox.Selected = !isActive;
+            activeTickBox.Selected = isActive;
+            directionalModeSwitch.Selected = useDirectionalPing;
         }
     }
 
@@ -1415,13 +1443,15 @@ namespace Barotrauma.Items.Components
         public Vector2 Velocity;
         public float? Rotation;
         public Vector2 Size;
+        public Sonar.BlipType BlipType;
 
-        public SonarBlip(Vector2 pos, float fadeTimer, float scale)
+        public SonarBlip(Vector2 pos, float fadeTimer, float scale, Sonar.BlipType blipType = Sonar.BlipType.Default)
         {
             Position = pos;
             FadeTimer = Math.Max(fadeTimer, 0.0f);
             Scale = scale;
             Size = new Vector2(0.5f, 1.0f);
+            BlipType = blipType;
         }
     }
 }

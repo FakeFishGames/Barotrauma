@@ -73,13 +73,14 @@ namespace Barotrauma.Networking
                 if (localRemoved.Contains(wlp.UniqueIdentifier)) continue;
                 string blockText = wlp.Name;
                 if (!string.IsNullOrWhiteSpace(wlp.IP)) blockText += " (" + wlp.IP + ")";
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), listBox.Content.RectTransform),
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform),
                     blockText)
                 {
                     UserData = wlp
                 };
 
-                var removeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("WhiteListRemove"))
+                var removeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), 
+                    TextManager.Get("WhiteListRemove"), style: "GUIButtonSmall")
                 {
                     UserData = wlp,
                     OnClicked = RemoveFromWhiteList
@@ -90,20 +91,26 @@ namespace Barotrauma.Networking
             {
                 string blockText = lad.Name;
                 if (!string.IsNullOrWhiteSpace(lad.IP)) blockText += " (" + lad.IP + ")";
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), listBox.Content.RectTransform),
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform),
                     blockText)
                 {
                     UserData = lad
                 };
 
-                var removeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), TextManager.Get("WhiteListRemove"))
+                var removeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), textBlock.RectTransform, Anchor.CenterRight), 
+                    TextManager.Get("WhiteListRemove"), style: "GUIButtonSmall")
                 {
                     UserData = lad,
                     OnClicked = RemoveFromWhiteList
                 };
             }
 
-            var nameArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), whitelistFrame.RectTransform), isHorizontal: true)
+            foreach (GUIComponent c in listBox.Content.Children)
+            {
+                c.RectTransform.MinSize = new Point(0, Math.Max((int)(20 * GUI.Scale), c.RectTransform.Children.Max(c2 => c2.MinSize.Y)));
+            }
+
+            var nameArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), whitelistFrame.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -115,8 +122,9 @@ namespace Barotrauma.Networking
                 addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
                 return true;
             };
+            nameArea.RectTransform.MinSize = new Point(0, nameBox.RectTransform.MinSize.Y);
 
-            var ipArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), whitelistFrame.RectTransform), isHorizontal: true)
+            var ipArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), whitelistFrame.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -128,11 +136,13 @@ namespace Barotrauma.Networking
                 addNewButton.Enabled = !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
                 return true;
             };
+            ipBox.RectTransform.MinSize = new Point(0, ipBox.RectTransform.MinSize.Y);
 
-            addNewButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.1f), whitelistFrame.RectTransform), TextManager.Get("WhiteListAdd"))
+            addNewButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), whitelistFrame.RectTransform), TextManager.Get("WhiteListAdd"), style: "GUIButtonSmall")
             {
                 OnClicked = AddToWhiteList
             };
+            GUITextBlock.AutoScaleAndNormalize(addNewButton.TextBlock);
 
             nameBox.Enabled = localEnabled;
             ipBox.Enabled = localEnabled;

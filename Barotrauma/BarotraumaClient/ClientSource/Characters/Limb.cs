@@ -81,7 +81,7 @@ namespace Barotrauma
             //{
             //    var pos = ConvertUnits.ToDisplayUnits(mouthPos.Value);
             //    pos.Y = -pos.Y;
-            //    ShapeExtensions.DrawPoint(spriteBatch, pos, Color.Red, size: 5);
+            //    ShapeExtensions.DrawPoint(spriteBatch, pos, GUI.Style.Red, size: 5);
             //}
             return;
             // A debug visualisation on the bezier curve between limbs.
@@ -98,7 +98,7 @@ namespace Barotrauma
             //GUI.DrawLine(spriteBatch, start, end, Color.White);
             //GUI.DrawLine(spriteBatch, start, control, Color.Black);
             //GUI.DrawLine(spriteBatch, control, end, Color.Black);
-            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, Color.Red);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, GUI.Style.Red);
         }
     }
 
@@ -433,14 +433,17 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(damageSoundType, Math.Max(damage, bleedingDamage), WorldPosition);
             }
 
-            // Always spawn damage particles
+            // spawn damage particles
             float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
-            foreach (ParticleEmitter emitter in character.DamageEmitters)
+            if (damageParticleAmount > 0.001f)
             {
-                if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+                foreach (ParticleEmitter emitter in character.DamageEmitters)
+                {
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
 
-                emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
+                    emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
+                }
             }
 
             if (bleedingDamage > 0)
@@ -631,7 +634,7 @@ namespace Barotrauma
                 if (pullJoint != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits(pullJoint.WorldAnchorB);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), GUI.Style.Red, true);
                 }
                 var bodyDrawPos = body.DrawPosition;
                 bodyDrawPos.Y = -bodyDrawPos.Y;
@@ -645,11 +648,11 @@ namespace Barotrauma
                     var front = ConvertUnits.ToDisplayUnits(body.FarseerBody.GetWorldPoint(localFront));
                     front.Y = -front.Y;
                     GUI.DrawLine(spriteBatch, bodyDrawPos, front, Color.Yellow, width: 2);
-                    GUI.DrawLine(spriteBatch, from, to, Color.Red, width: 1);
+                    GUI.DrawLine(spriteBatch, from, to, GUI.Style.Red, width: 1);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 12, 12), Color.White, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)from.X, (int)from.Y, 10, 10), Color.Blue, true);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), Color.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)to.X, (int)to.Y, 10, 10), GUI.Style.Red, true);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)front.X, (int)front.Y, 10, 10), Color.Yellow, true);
 
                     //Vector2 mainLimbFront = ConvertUnits.ToDisplayUnits(ragdoll.MainLimb.body.FarseerBody.GetWorldPoint(ragdoll.MainLimb.body.GetFrontLocal(MathHelper.ToRadians(limbParams.Orientation))));
@@ -748,8 +751,8 @@ namespace Barotrauma
                 //{
                 //    width = (int)Math.Round(width / cam.Zoom);
                 //}
-                //GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(up) * size, Color.Red, width: width);
-                Color color = modifier.DamageMultiplier > 1 ? Color.Red : Color.GreenYellow;
+                //GUI.DrawLine(spriteBatch, startPos, startPos + Vector2.Normalize(up) * size, GUI.Style.Red, width: width);
+                Color color = modifier.DamageMultiplier > 1 ? GUI.Style.Red : GUI.Style.Green;
                 float size = ConvertUnits.ToDisplayUnits(body.GetSize().Length() / 2);
                 if (isScreenSpace)
                 {

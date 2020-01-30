@@ -160,6 +160,7 @@ namespace Barotrauma
             private set;
         }
 
+        public Sprite Icon;
         public string FilePath { get; private set; }
 
         public XElement Element { get; private set; }
@@ -199,6 +200,9 @@ namespace Barotrauma
                     case "appropriateobjectives":
                     case "appropriateorders":
                         subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeString("identifier", "").ToLowerInvariant()));
+                        break;
+                    case "icon":
+                        Icon = new Sprite(subElement.FirstElement());
                         break;
                 }
             }
@@ -244,76 +248,6 @@ namespace Barotrauma
             ClothingElement = element.GetChildElement("PortraitClothing");
         }
         
-        public class OutfitPreview
-        {
-            /// <summary>
-            /// Pair.First = sprite, Pair.Second = draw offset
-            /// </summary>
-            public readonly List<Pair<Sprite, Vector2>> Sprites;
-            public Vector2 Dimensions;
-
-            public OutfitPreview()
-            {
-                Sprites = new List<Pair<Sprite, Vector2>>();
-                Dimensions = Vector2.One;
-            }
-
-            public void AddSprite(Sprite sprite, Vector2 drawOffset)
-            {
-                Sprites.Add(new Pair<Sprite, Vector2>(sprite, drawOffset));
-            }
-        }
-
-        public List<OutfitPreview> GetJobOutfitSprites(Gender gender, out Vector2 maxDimensions)
-        {
-            List<OutfitPreview> outfitPreviews = new List<OutfitPreview>();
-            maxDimensions = Vector2.One;
-
-            var equipIdentifiers = Element.GetChildElements("ItemSet").Elements().Where(e => e.GetAttributeBool("outfit", false)).Select(e => e.GetAttributeString("identifier", ""));
-
-            var outfitPrefabs = ItemPrefab.Prefabs.Where(itemPrefab => equipIdentifiers.Contains(itemPrefab.Identifier)).ToList();
-            if (!outfitPrefabs.Any()) { return null; }
-
-            for (int i = 0; i < outfitPrefabs.Count; i++)
-            {
-                var outfitPreview = new OutfitPreview();
-
-                if (!ItemSets.TryGetValue(i, out var itemSetElement)) { continue; }
-                var previewElement = itemSetElement.GetChildElement("PreviewSprites");
-                if (previewElement == null)
-                {
-#if CLIENT
-                    if (outfitPrefabs[i] is ItemPrefab prefab && prefab.InventoryIcon != null)
-                    {
-                        outfitPreview.AddSprite(prefab.InventoryIcon, Vector2.Zero);
-                        outfitPreview.Dimensions = prefab.InventoryIcon.SourceRect.Size.ToVector2();
-                        maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
-                        maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
-                    }
-#endif
-                    outfitPreviews.Add(outfitPreview);
-                    continue;
-                }
-
-                var children = previewElement.Elements().ToList();
-                for (int n = 0; n < children.Count; n++)
-                {
-                    XElement spriteElement = children[n];
-                    string spriteTexture = spriteElement.GetAttributeString("texture", "").Replace("[GENDER]", (gender == Gender.Female) ? "female" : "male");
-                    var sprite = new Sprite(spriteElement, file: spriteTexture);
-                    sprite.size = new Vector2(sprite.SourceRect.Width, sprite.SourceRect.Height);
-                    outfitPreview.AddSprite(sprite, children[n].GetAttributeVector2("offset", Vector2.Zero));
-                }
-
-                outfitPreview.Dimensions = previewElement.GetAttributeVector2("dims", Vector2.One);
-                maxDimensions.X = MathHelper.Max(maxDimensions.X, outfitPreview.Dimensions.X);
-                maxDimensions.Y = MathHelper.Max(maxDimensions.Y, outfitPreview.Dimensions.Y);
-
-                outfitPreviews.Add(outfitPreview);
-            }
-
-            return outfitPreviews;
-        }
 
         public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
 

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -264,7 +265,8 @@ namespace Barotrauma
                 {
                     case NetEntityEvent.Type.InventoryState:
                         msg.WriteRangedInteger(0, 0, 3);
-                        Inventory.SharedWrite(msg, extraData);
+                        msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
+                        Inventory.ServerWrite(msg, c);
                         break;
                     case NetEntityEvent.Type.Control:
                         msg.WriteRangedInteger(1, 0, 3);

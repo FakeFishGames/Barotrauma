@@ -22,8 +22,16 @@ namespace Barotrauma
         public delegate void OnRearrangedHandler(GUIListBox listBox, object obj);
         public OnRearrangedHandler OnRearranged;
 
-        public GUIScrollBar ScrollBar { get; private set; }
+        /// <summary>
+        /// A frame drawn behind the content of the listbox
+        /// </summary>
+        public GUIFrame ContentBackground { get; private set; }
+
+        /// <summary>
+        /// A frame that contains the contents of the listbox. The frame itself is not rendered.
+        /// </summary>
         public GUIFrame Content { get; private set; }
+        public GUIScrollBar ScrollBar { get; private set; }
 
         private Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
 
@@ -33,7 +41,7 @@ namespace Barotrauma
         private bool dimensionsNeedsRecalculation;
 
         // TODO: Define in styles?
-        private int scrollBarSize = 20;
+        private int scrollBarSize = 25;
 
         public bool SelectMultiple;
 
@@ -53,6 +61,18 @@ namespace Barotrauma
             }
         }
 
+        private Vector4? overridePadding;
+        public Vector4 Padding
+        {
+            get
+            {
+                if (overridePadding.HasValue) { return overridePadding.Value; }
+                if (Style == null) { return Vector4.Zero; }
+                return Style.Padding;
+            }
+            set { overridePadding = value; }
+        }
+
         public GUIComponent SelectedComponent
         {
             get
@@ -61,6 +81,7 @@ namespace Barotrauma
             }
         }
 
+        // TODO: fix implicit hiding
         public bool Selected { get; set; }
 
         public List<GUIComponent> AllSelected
@@ -148,13 +169,19 @@ namespace Barotrauma
         private Rectangle draggedReferenceRectangle;
         private Point draggedReferenceOffset;
 
+        public GUIComponent DraggedElement => draggedElement;
+
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
         {
             CanBeFocused = true;
             selected = new List<GUIComponent>();
-            Content = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
+            ContentBackground = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
             {
                 CanBeFocused = false                
+            };
+            Content = new GUIFrame(new RectTransform(Vector2.One, ContentBackground.RectTransform), style: null)
+            {
+                CanBeFocused = false
             };
             Content.RectTransform.ChildrenChanged += (_) => 
             {
@@ -163,7 +190,7 @@ namespace Barotrauma
             };
             if (style != null)
             {
-                GUI.Style.Apply(Content, "", this);
+                GUI.Style.Apply(ContentBackground, "", this);
             }
             if (color.HasValue)
             {
@@ -173,15 +200,17 @@ namespace Barotrauma
             Anchor anchor;
             if (isHorizontal)
             {
-                size = new Point(Rect.Width, scrollBarSize);
-                anchor = Anchor.BottomLeft;
+                size = new Point((int)(Rect.Width - Padding.X - Padding.Z), (int)(scrollBarSize * GUI.Scale));
+                anchor = Anchor.BottomCenter;
             }
             else
             {
-                size = new Point(scrollBarSize, Rect.Height);
-                anchor = Anchor.TopRight;
+                size = new Point((int)(scrollBarSize * GUI.Scale), (int)(Rect.Height - Padding.Y - Padding.W));
+                anchor = Anchor.CenterRight;
             }
-            ScrollBar = new GUIScrollBar(new RectTransform(size, rectT, anchor), isHorizontal: isHorizontal);
+            ScrollBar = new GUIScrollBar(new RectTransform(size, rectT, anchor)
+                { AbsoluteOffset = isHorizontal ? new Point(0, (int)Padding.W) : new Point((int)Padding.Z, 0) },
+                isHorizontal: isHorizontal);
             UpdateScrollBarSize();
             Enabled = true;
             ScrollBar.BarScroll = 0.0f;
@@ -193,9 +222,18 @@ namespace Barotrauma
         private void UpdateDimensions()
         {
             dimensionsNeedsRecalculation = false;
+            ContentBackground.RectTransform.Resize(Rect.Size);
             bool reduceScrollbarSize = KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible;
-            Content.RectTransform.Resize(reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, scrollBarSize) : Rect.Size);
-            ScrollBar.RectTransform.Resize(ScrollBar.IsHorizontal ? new Point(Rect.Width, scrollBarSize) : new Point(scrollBarSize, Rect.Height));
+            Point contentSize = reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, scrollBarSize) : Rect.Size;
+            Content.RectTransform.Resize(new Point((int)(contentSize.X - Padding.X - Padding.Z), (int)(contentSize.Y - Padding.Y - Padding.W)));
+            Content.RectTransform.AbsoluteOffset = new Point((int)Padding.X, (int)Padding.Y);
+            ScrollBar.RectTransform.Resize(ScrollBar.IsHorizontal ?
+                new Point((int)(Rect.Width - Padding.X - Padding.Z), (int)(scrollBarSize * GUI.Scale)) :
+                new Point((int)(scrollBarSize * GUI.Scale), (int)(Rect.Height - Padding.Y - Padding.W)));
+            ScrollBar.RectTransform.AbsoluteOffset = ScrollBar.IsHorizontal ? 
+                new Point(0, (int)Padding.W) : 
+                new Point((int)Padding.Z, 0);
+            UpdateScrollBarSize();
         }
 
         public void Select(object userData, bool force = false, bool autoScroll = true)
@@ -380,7 +418,7 @@ namespace Barotrauma
             {
                 foreach (GUIComponent child in Children)
                 {
-                    if (child == Content || child == ScrollBar) { continue; }
+                    if (child == Content || child == ScrollBar || child == ContentBackground) { continue; }
                     child.AddToGUIUpdateList(ignoreChildren, order);
                 }       
             }
@@ -411,7 +449,7 @@ namespace Barotrauma
                 OnAddedToGUIUpdateList?.Invoke(this);
                 return;
             }
-            Content.AddToGUIUpdateList(true, order);
+            
             int lastVisible = 0;
             for (int i = 0; i < Content.CountChildren; i++)
             {
@@ -516,7 +554,11 @@ namespace Barotrauma
             GUIComponent child = Content.GetChild(childIndex);
 
             bool wasSelected = true;
-            if (OnSelected != null) wasSelected = force || OnSelected(child, child.UserData);
+            if (OnSelected != null)
+            {
+                // TODO: The callback is called twice, fix this!
+                wasSelected = force || OnSelected(child, child.UserData);
+            }
 
             if (!wasSelected) { return; }
 
@@ -638,10 +680,10 @@ namespace Barotrauma
                 totalSize += Content.CountChildren * Spacing;
             }
 
-
+            float minScrollBarSize = 20.0f;
             ScrollBar.BarSize = ScrollBar.IsHorizontal ?
-                Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), 5.0f / Content.Rect.Width) :
-                Math.Max(Math.Min(Content.Rect.Height / (float)totalSize, 1.0f), 5.0f / Content.Rect.Height);
+                Math.Max(Math.Min(Content.Rect.Width / (float)totalSize, 1.0f), minScrollBarSize / Content.Rect.Width) :
+                Math.Max(Math.Min(Content.Rect.Height / (float)totalSize, 1.0f), minScrollBarSize / Content.Rect.Height);
         }
         
         public override void ClearChildren()
@@ -668,8 +710,8 @@ namespace Barotrauma
         {
             if (!Visible) { return; }
 
-            Content.DrawManually(spriteBatch, alsoChildren: false);
-            
+            ContentBackground.DrawManually(spriteBatch, alsoChildren: false);
+
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             RasterizerState prevRasterizerState = spriteBatch.GraphicsDevice.RasterizerState;
             if (HideChildrenOutsideFrame)

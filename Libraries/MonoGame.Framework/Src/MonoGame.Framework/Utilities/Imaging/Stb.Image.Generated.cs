@@ -2467,6 +2467,8 @@ namespace MonoGame.Utilities
             sbyte* zout = a->zout;
             for (;;)
             {
+                if (a->zbuffer >= a->zbuffer_end) return (int)(stbi__err("overread"));
+
                 int z = (int) (stbi__zhuffman_decode(a, &a->z_length));
                 if ((z) < (256))
                 {

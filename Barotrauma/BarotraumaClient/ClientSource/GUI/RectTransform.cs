@@ -23,7 +23,9 @@ namespace Barotrauma
 
     public enum ScaleBasis
     {
-        Normal, BothWidth, BothHeight
+        Normal,
+        BothWidth, BothHeight,
+        Smallest, Largest
     }
 
     public class RectTransform
@@ -56,7 +58,7 @@ namespace Barotrauma
             }
         }
 
-        private List<RectTransform> children = new List<RectTransform>();
+        private readonly List<RectTransform> children = new List<RectTransform>();
         public IEnumerable<RectTransform> Children => children;
 
         public int CountChildren => children.Count;
@@ -291,7 +293,11 @@ namespace Barotrauma
             }
         }
 
-        private ScaleBasis scaleBasis;
+        public ScaleBasis ScaleBasis 
+        { 
+            get; 
+            private set; 
+        }
 
         public bool IsLastChild
         {
@@ -330,7 +336,7 @@ namespace Barotrauma
         public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null, ScaleBasis scaleBasis = ScaleBasis.Normal)
         {
             Init(parent, anchor, pivot);
-            this.scaleBasis = scaleBasis;
+            this.ScaleBasis = scaleBasis;
             this.relativeSize = relativeSize;
             this.minSize = minSize;
             this.maxSize = maxSize;
@@ -348,7 +354,7 @@ namespace Barotrauma
         public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
         {
             Init(parent, anchor, pivot);
-            this.scaleBasis = ScaleBasis.Normal;
+            this.ScaleBasis = ScaleBasis.Normal;
             this.nonScaledSize = absoluteSize;
             RecalculateScale();
             RecalculateRelativeSize();            
@@ -364,8 +370,14 @@ namespace Barotrauma
             Enum.TryParse(element.GetAttributeString("pivot", anchor.ToString()), out Pivot pivot);
 
             Point? minSize = null, maxSize = null;
-            if (element.Attribute("minsize") != null) minSize = element.GetAttributePoint("minsize", Point.Zero);
-            //if (element.Attribute("maxsize") != null) maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
+            if (element.Attribute("minsize") != null)
+            {
+                minSize = element.GetAttributePoint("minsize", Point.Zero);
+            }
+            if (element.Attribute("maxsize") != null)
+            {
+                maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
+            }
 
             RectTransform rectTransform;
             if (element.Attribute("absolutesize") != null)
@@ -426,13 +438,35 @@ namespace Barotrauma
         protected void RecalculateAbsoluteSize()
         {
             Point size = NonScaledParentRect.Size;
-            if (scaleBasis == ScaleBasis.BothWidth)
+            if (ScaleBasis == ScaleBasis.BothWidth)
             {
                 size.Y = size.X;
             }
-            else if (scaleBasis == ScaleBasis.BothHeight)
+            else if (ScaleBasis == ScaleBasis.BothHeight)
             {
                 size.X = size.Y;
+            }
+            else if (ScaleBasis == ScaleBasis.Smallest)
+            {
+                if (size.X < size.Y)
+                {
+                    size.Y = size.X;
+                }
+                else
+                {
+                    size.X = size.Y;
+                }
+            }
+            else if (ScaleBasis == ScaleBasis.Largest)
+            {
+                if (size.X > size.Y)
+                {
+                    size.Y = size.X;
+                }
+                else
+                {
+                    size.X = size.Y;
+                }
             }
             nonScaledSize = size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
             recalculateRect = true;
@@ -573,7 +607,7 @@ namespace Barotrauma
         /// </summary>
         public IEnumerable<RectTransform> GetAllChildren()
         {
-            return children.SelectManyRecursive(c => c.children);
+            return children.Concat(children.SelectManyRecursive(c => c.children)); 
         }
 
         public int GetChildIndex(RectTransform rectT)

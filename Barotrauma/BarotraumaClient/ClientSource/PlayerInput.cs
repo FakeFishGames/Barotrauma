@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 #if WINDOWS
 using System.Runtime.InteropServices;
 #endif
@@ -144,7 +145,10 @@ namespace Barotrauma
         static Point lastClickPosition;
 
         const float DoubleClickDelay = 0.4f;
-        const float MaxDoubleClickDistance = 10.0f;
+        public static float MaxDoubleClickDistance 
+        {
+            get { return Math.Max(15.0f * Math.Max(GameMain.GraphicsHeight / 1920.0f, GameMain.GraphicsHeight / 1080.0f), 10.0f); }
+        }
 
         static bool doubleClicked;
 

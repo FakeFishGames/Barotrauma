@@ -127,7 +127,7 @@ namespace Barotrauma.Tutorials
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
             engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
             engineer_reactor.FuelConsumptionRate = 0.0f;
-            engineer_reactor.OnOffSwitch.BarScroll = 1f;
+            engineer_reactor.PowerOn = true;
             reactorOperatedProperly = false;
 
             engineer_secondDoor = Item.ItemList.Find(i => i.HasTag("engineer_seconddoor")).GetComponent<Door>(); ;
@@ -195,7 +195,7 @@ namespace Barotrauma.Tutorials
             engineer_submarineJunctionBox_2 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_2"));
             engineer_submarineJunctionBox_3 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_3"));
             engineer_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
-            engineer_submarineReactor.OnOffSwitch.BarScrollValue = .25f;
+            engineer_submarineReactor.PowerOn = true;
             engineer_submarineReactor.IsActive = engineer_submarineReactor.AutoTemp = false;
 
             engineer_submarineJunctionBox_1.Indestructible = false;
@@ -235,7 +235,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(0.5f, false);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect)); // Retrieve equipment
+            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
             bool thirdSlotRemoved = false;
@@ -289,19 +289,19 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item))
                 {
-                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
-                    if (engineer_reactor.OnOffSwitch.FlashTimer <= 0)
+                    engineer_reactor.AutoTemp = false;
+                    if (engineer_reactor.PowerButton.FlashTimer <= 0)
                     {
-                        engineer_reactor.OnOffSwitch.Flash(highlightColor, 1.5f, false);
+                        engineer_reactor.PowerButton.Flash(highlightColor, 1.5f, false);
                     }
                 }
                 yield return null;
-            } while (engineer_reactor.OnOffSwitch.BarScroll > 0.45f);
+            } while (!engineer_reactor.PowerOn);
             do
             {
                 if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.slots != null)
                 {
-                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
+                    engineer_reactor.AutoTemp = false;
                     HighlightInventorySlot(engineer.Inventory, "fuelrod", highlightColor, 0.5f, 0.5f, 0f);
 
                     for (int i = 0; i < engineer_reactor.Item.OwnInventory.slots.Length; i++)
@@ -316,7 +316,7 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item))
                 {
-                    engineer_reactor.AutoTempSlider.BarScrollValue = 1.0f;
+                    engineer_reactor.AutoTemp = false;
                     if (engineer_reactor.FissionRateScrollBar.FlashTimer <= 0)
                     {
                         engineer_reactor.FissionRateScrollBar.Flash(highlightColor, 1.5f);
@@ -335,9 +335,9 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(engineer_reactor.Item))
                 {
-                    if (engineer_reactor.AutoTempSlider.FlashTimer <= 0)
+                    if (engineer_reactor.AutoTempSwitch.FlashTimer <= 0)
                     {
-                        engineer_reactor.AutoTempSlider.Flash(highlightColor, 1.5f, false, new Vector2(10, 10));
+                        engineer_reactor.AutoTempSwitch.Flash(highlightColor, 1.5f, false, false, new Vector2(10, 10));
                     }
                 }
                 yield return null;
@@ -348,7 +348,7 @@ namespace Barotrauma.Tutorials
             {
                 yield return new WaitForSeconds(0.1f, false);
                 wait -= 0.1f;
-                engineer_reactor.AutoTempSlider.BarScrollValue = 0.0f;
+                engineer_reactor.AutoTemp = true;
             } while (wait > 0.0f);
             engineer.SelectedConstruction = null;
             engineer_reactor.CanBeSelected = false;

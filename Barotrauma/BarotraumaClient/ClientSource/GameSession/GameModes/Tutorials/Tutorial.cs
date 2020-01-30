@@ -372,9 +372,10 @@ namespace Barotrauma.Tutorials
 
         private void CreateObjectiveGUI(TutorialSegment segment, int index, TutorialContentTypes type)
         {
-            Point replayButtonSize = new Point((int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).X), (int)(GUI.ObjectiveNameFont.MeasureString(segment.Objective).Y * 1.45f));
+            string objectiveText = TextManager.ParseInputTypes(segment.Objective);
+            Point replayButtonSize = new Point((int)(GUI.LargeFont.MeasureString(objectiveText).X), (int)(GUI.LargeFont.MeasureString(objectiveText).Y * 1.45f));
 
-            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopRight, Pivot.TopRight) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
+            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
             segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 if (type == TutorialContentTypes.Video)
@@ -389,13 +390,15 @@ namespace Barotrauma.Tutorials
             };
 
             string objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
-            int yOffset = (int)((GUI.ObjectiveNameFont.MeasureString(objectiveTitleText).Y / 2f + 5));
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveTitleFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.BottomRight) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
-                objectiveTitleText, textColor: Color.White, font: GUI.ObjectiveTitleFont, textAlignment: Alignment.CenterRight);
+            int yOffset = (int)((GUI.SubHeadingFont.MeasureString(objectiveTitleText).Y + 5));
+            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUI.SubHeadingFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.BottomLeft) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
+                objectiveTitleText, textColor: Color.White, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+            {
+                ForceUpperCase = true
+            };
 
-            string objectiveText = TextManager.ParseInputTypes(segment.Objective);
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUI.ObjectiveNameFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterRight, Pivot.TopRight) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
-                objectiveText, textColor: new Color(4, 180, 108), font: GUI.ObjectiveNameFont, textAlignment: Alignment.CenterRight);
+            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUI.LargeFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.TopLeft) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
+                objectiveText, textColor: new Color(4, 180, 108), font: GUI.LargeFont, textAlignment: Alignment.CenterLeft);
             
             segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
             segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
@@ -449,19 +452,19 @@ namespace Barotrauma.Tutorials
             RectTransform rectTA;
             if (objectiveTextWidth > objectiveTitleWidth)
             {
-                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale), 0);
+                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomRight, Pivot.BottomRight);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(25 * GUI.Scale), 0);
             }
             else
             {
-                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(10 * GUI.Scale) - (objectiveTitleWidth - objectiveTextWidth), 0);
+                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomRight, Pivot.BottomRight);
+                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(25 * GUI.Scale) - (objectiveTitleWidth - objectiveTextWidth), 0);
             }
 
             GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
             checkmark.Color = checkmark.SelectedColor = checkmark.HoverColor = checkmark.PressedColor = color;  
 
-            RectTransform rectTB = new RectTransform(new Vector2(1.1f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
+            RectTransform rectTB = new RectTransform(new Vector2(1.0f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
             GUIImage stroke = new GUIImage(rectTB, "Stroke");
             stroke.Color = stroke.SelectedColor = stroke.HoverColor = stroke.PressedColor = color;
 
@@ -493,14 +496,6 @@ namespace Barotrauma.Tutorials
         protected GUIComponent CreateInfoFrame(string title, string text, int width = 300, int height = 80, string anchorStr = "", bool hasButton = false, Action callback = null, Action showVideo = null)
         {
             if (hasButton) height += 60;
-            
-            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);          
-
-            height += (int)(GUI.Font.MeasureString(wrappedText).Y + 50);
-            if (title.Length > 0)
-            {
-                height += 35;
-            }
 
             Anchor anchor = Anchor.TopRight;
 
@@ -509,12 +504,23 @@ namespace Barotrauma.Tutorials
                 Enum.TryParse(anchorStr, out anchor);
             }
 
-            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), "InnerFrame", new Color(0, 0, 0, 1f));
+            width = (int)(width * GUI.Scale);
+            height = (int)(height * GUI.Scale);
 
-            var infoBlock = new GUIFrame(new RectTransform(new Point((int)(width * GUI.Scale), (int)(height * GUI.Scale)), background.RectTransform, anchor) { AbsoluteOffset = new Point(20) });
-            infoBlock.Flash(Color.Green);
+            string wrappedText = ToolBox.WrapText(text, width, GUI.Font);
+            height += (int)GUI.Font.MeasureString(wrappedText).Y;
 
-            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), infoBlock.RectTransform, Anchor.Center))
+            if (title.Length > 0)
+            {
+                height += (int)GUI.Font.MeasureString(title).Y + (int)(150 * GUI.Scale);
+            }
+
+            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: null, Color.Black * 0.5f);
+
+            var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), background.RectTransform, anchor));
+            infoBlock.Flash(GUI.Style.Green);
+
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), infoBlock.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 AbsoluteSpacing = 5
@@ -523,7 +529,7 @@ namespace Barotrauma.Tutorials
             if (title.Length > 0)
             {
                 var titleBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), 
-                    title, font: GUI.VideoTitleFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
+                    title, font: GUI.LargeFont, textAlignment: Alignment.Center, textColor: new Color(253, 174, 0));
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
@@ -543,15 +549,15 @@ namespace Barotrauma.Tutorials
 
             if (hasButton)
             {
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), infoContent.RectTransform) { MinSize = new Point(0, 30), MaxSize = new Point((int) infoContent.Rect.X, 60) }, isHorizontal: true)
+                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), infoContent.RectTransform), isHorizontal: true)
                 {
-                    Stretch = true,
                     RelativeSpacing = 0.1f
                 };
                 buttonContainer.RectTransform.IsFixedSize = true;
 
                 if (showVideo != null)
                 {
+                    buttonContainer.Stretch = true;
                     var videoButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform),
                         TextManager.Get("Video"), style: "GUIButtonLarge")
                     {
@@ -562,8 +568,13 @@ namespace Barotrauma.Tutorials
                         }
                     };
                 }
+                else
+                {
+                    buttonContainer.Stretch = false;
+                    buttonContainer.ChildAnchor = Anchor.Center;
+                }
 
-                var okButton = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform),
+                var okButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform),
                     TextManager.Get("OK"), style: "GUIButtonLarge")
                 {
                     OnClicked = CloseInfoFrame

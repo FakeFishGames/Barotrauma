@@ -21,6 +21,7 @@ namespace Barotrauma
 
         private readonly GUIFrame frame;
         private readonly GUITextBlock textBlock;
+        private readonly GUIImage icon;
 
         public Func<string, string> textFilterFunction;
 
@@ -74,6 +75,7 @@ namespace Barotrauma
             set { textBlock.TextGetter = value; }
         }
 
+        // TODO: fix implicit hiding
         private bool selected;
         public bool Selected
         {
@@ -101,6 +103,11 @@ namespace Barotrauma
             {
                 textBlock.Wrap = value;
             }
+        }
+
+        public GUITextBlock TextBlock
+        {
+            get { return textBlock; }
         }
 
         //should the text be limited to the size of the box
@@ -132,7 +139,8 @@ namespace Barotrauma
             get { return enabled; }
             set
             {
-                enabled = value;
+                enabled = frame.Enabled = textBlock.Enabled = value;
+                if (icon != null) { icon.Enabled = value; }
                 if (!enabled && Selected)
                 {
                     Deselect();
@@ -228,25 +236,58 @@ namespace Barotrauma
         }
         
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false)
             : base(style, rectT)
         {
             HoverCursor = CursorState.IBeam;
             CanBeFocused = true;
 
-            Enabled = true;
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUI.Style.Apply(frame, style == "" ? "GUITextBox" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.Center), text, textColor, font, textAlignment, wrap, playerInput: true);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text, textColor, font, textAlignment, wrap, playerInput: true);
             GUI.Style.Apply(textBlock, "", this);
             CaretEnabled = true;
             caretPosDirty = true;
 
+            new GUICustomComponent(new RectTransform(Vector2.One, frame.RectTransform), onDraw: DrawCaretAndSelection);
+
+            int clearButtonWidth = 0;
+            if (createClearButton)
+            {
+                var clearButton = new GUIButton(new RectTransform(new Vector2(0.6f, 0.6f), frame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) }, style: "GUICancelButton")
+                {
+                    OnClicked = (bt, userdata) =>
+                    {
+                        Text = "";
+                        frame.Flash(Color.White);
+                        return true;
+                    }
+                };
+                textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - clearButton.Rect.Height - clearButton.RectTransform.AbsoluteOffset.X * 2, int.MaxValue);
+                clearButtonWidth = (int)(clearButton.Rect.Width * 1.2f);
+            }
+
+            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon"))
+            {
+                icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), frame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5 + clearButtonWidth, 0) }, null, scaleToFit: true);
+                icon.ApplyStyle(this.style.ChildStyles["textboxicon"]);
+                textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - clearButtonWidth - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue);
+            }
             Font = textBlock.Font;
             
-            rectT.SizeChanged += () => { caretPosDirty = true; };
-            rectT.ScaleChanged += () => { caretPosDirty = true; };
+            Enabled = true;
+
+            rectT.SizeChanged += () => 
+            {
+                if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
+                caretPosDirty = true; 
+            };
+            rectT.ScaleChanged += () =>
+            {
+                if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
+                caretPosDirty = true; 
+            };
         }
 
         private bool SetText(string text, bool store = true)
@@ -441,9 +482,9 @@ namespace Barotrauma
             OnDeselected?.Invoke(this, Keys.None);
         }
 
-        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectOffset = null)
+        public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectOffset = null)
         {
-            textBlock.Flash(color, flashDuration, useRectangleFlash, flashRectOffset);
+            frame.Flash(color, flashDuration, useRectangleFlash, useCircularFlash, flashRectOffset);
         }
         
         protected override void Update(float deltaTime)
@@ -451,10 +492,10 @@ namespace Barotrauma
             if (!Visible) return;
 
             if (flashTimer > 0.0f) flashTimer -= deltaTime;
-            if (!Enabled) return;
-            if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || GUI.IsMouseOn(this)))
+            if (!Enabled) { return; }
+            if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this))))
             {
-                state = ComponentState.Hover;
+                State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
                 {
                     Select();
@@ -481,7 +522,7 @@ namespace Barotrauma
             {
                 if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) Deselect();
                 isSelecting = false;
-                state = ComponentState.None;
+                State = ComponentState.None;
             }
             if (!isSelecting)
             {
@@ -492,14 +533,14 @@ namespace Barotrauma
             {
                 if (textBlock.OverflowClipActive)
                 {
-                    if (CaretScreenPos.X < Rect.X + textBlock.Padding.X)
+                    if (CaretScreenPos.X < textBlock.Rect.X + textBlock.Padding.X)
                     {
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X + ((Rect.X + textBlock.Padding.X) - CaretScreenPos.X), textBlock.TextPos.Y);
+                        textBlock.TextPos = new Vector2(textBlock.TextPos.X + ((textBlock.Rect.X + textBlock.Padding.X) - CaretScreenPos.X), textBlock.TextPos.Y);
                         CalculateCaretPos();
                     }
-                    else if (CaretScreenPos.X > Rect.Right - textBlock.Padding.Z)
+                    else if (CaretScreenPos.X > textBlock.Rect.Right - textBlock.Padding.Z)
                     {
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X - (CaretScreenPos.X - (Rect.Right - textBlock.Padding.Z)), textBlock.TextPos.Y);
+                        textBlock.TextPos = new Vector2(textBlock.TextPos.X - (CaretScreenPos.X - (textBlock.Rect.Right - textBlock.Padding.Z)), textBlock.TextPos.Y);
                         CalculateCaretPos();
                     }
                 }
@@ -513,7 +554,7 @@ namespace Barotrauma
 
             if (GUI.KeyboardDispatcher.Subscriber == this)
             {
-                state = ComponentState.Selected;
+                State = ComponentState.Selected;
                 Character.DisableControls = true;
                 if (OnEnterPressed != null &&  PlayerInput.KeyHit(Keys.Enter))
                 {
@@ -525,16 +566,12 @@ namespace Barotrauma
                 Deselect();
             }
 
-            textBlock.State = state;
+            textBlock.State = State;
         }
 
-        protected override void Draw(SpriteBatch spriteBatch)
+        private void DrawCaretAndSelection(SpriteBatch spriteBatch, GUICustomComponent customComponent)
         {
-            if (!Visible) return;
-            base.Draw(spriteBatch);
-            // Frame is not used in the old system.
-            frame?.DrawManually(spriteBatch);
-            textBlock.DrawManually(spriteBatch);
+            if (!Visible) { return; }
             if (Selected)
             {
                 if (caretVisible )
@@ -552,9 +589,9 @@ namespace Barotrauma
                 //GUI.DrawString(spriteBatch, new Vector2(100, 20), selectionStartIndex.ToString(), Color.White, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(140, 20), selectionEndIndex.ToString(), Color.White, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 40), selectedText.ToString(), Color.Yellow, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 60), $"caret index: {CaretIndex.ToString()}", Color.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", Color.Red, Color.Black);
-                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"caret screen pos: {CaretScreenPos.ToString()}", Color.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 60), $"caret index: {CaretIndex.ToString()}", GUI.Style.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 80), $"caret pos: {caretPos.ToString()}", GUI.Style.Red, Color.Black);
+                //GUI.DrawString(spriteBatch, new Vector2(100, 100), $"caret screen pos: {CaretScreenPos.ToString()}", GUI.Style.Red, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 120), $"text start pos: {(textBlock.TextPos - textBlock.Origin).ToString()}", Color.White, Color.Black);
                 //GUI.DrawString(spriteBatch, new Vector2(100, 140), $"cursor pos: {PlayerInput.MousePosition.ToString()}", Color.White, Color.Black);
             }
@@ -805,7 +842,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren().Select(c => c as GUITextBox).Where(t => t != null).OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
+                    IEnumerable<GUITextBox> GetAndSortTextBoxes(GUIComponent parent) => parent.GetAllChildren<GUITextBox>().OrderBy(t => t.Rect.Y).ThenBy(t => t.Rect.X);
                     GUITextBox SelectNextTextBox(GUIListBox listBox)
                     {
                         var textBoxes = GetAndSortTextBoxes(listBox.SelectedComponent);

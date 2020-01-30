@@ -116,8 +116,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 #if CLIENT
-                if (activeTickBox != null) activeTickBox.Selected = value == Mode.Active;
-                if (passiveTickBox != null) passiveTickBox.Selected = value == Mode.Passive;
+                UpdateGUIElements();
 #endif
             }
         }
@@ -126,10 +125,9 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             connectedTransducers = new List<ConnectedTransducer>();
-
-            CurrentMode = Mode.Passive;
             IsActive = true;
             InitProjSpecific(element);
+            CurrentMode = Mode.Passive;
         }
 
         partial void InitProjSpecific(XElement element);
@@ -344,14 +342,10 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (!item.CanClientAccess(c)) return;
+            if (!item.CanClientAccess(c)) { return; }
 
             CurrentMode = isActive ? Mode.Active : Mode.Passive;
 
-            //TODO: cleanup
-#if CLIENT
-            activeTickBox.Selected = currentMode == Mode.Active;
-#endif
             if (isActive)
             {
                 zoom = MathHelper.Lerp(MinZoom, MaxZoom, zoomT);
@@ -363,8 +357,7 @@ namespace Barotrauma.Items.Components
                 }
 #if CLIENT
                 zoomSlider.BarScroll = zoomT;
-                directionalTickBox.Selected = useDirectionalPing;
-                directionalSlider.BarScroll = pingDirectionT;
+                directionalModeSwitch.Selected = useDirectionalPing;
 #endif
             }
 #if SERVER

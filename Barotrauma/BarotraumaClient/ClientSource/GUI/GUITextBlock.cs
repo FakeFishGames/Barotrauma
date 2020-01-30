@@ -16,8 +16,8 @@ namespace Barotrauma
 
         protected Vector2 textPos;
         protected Vector2 origin;
-        
-        protected Color textColor;
+
+        protected Color textColor, disabledTextColor, selectedTextColor;
 
         private string wrappedText;
         private string censoredText;
@@ -63,8 +63,12 @@ namespace Barotrauma
             }
             set
             {
-                if (base.Font == value) return;
+                if (base.Font == value) { return; }
                 base.Font = originalFont = value;
+                if (text != null && GUI.Style.ForceFontUpperCase.ContainsKey(Font) && GUI.Style.ForceFontUpperCase[Font])
+                {
+                    Text = text.ToUpper();
+                }
                 SetTextPos();
             }
         }
@@ -74,10 +78,11 @@ namespace Barotrauma
             get { return text; }
             set
             {
-                string newText = forceUpperCase ? value?.ToUpper() : value;
+                string newText = forceUpperCase || (GUI.Style.ForceFontUpperCase.ContainsKey(Font) && GUI.Style.ForceFontUpperCase[Font]) || (style != null && style.ForceUpperCase) ? 
+                    value?.ToUpper() : 
+                    value;
 
                 if (Text == newText) { return; }
-
 
                 //reset scale, it gets recalculated in SetTextPos
                 if (autoScale) { textScale = 1.0f; }
@@ -155,7 +160,9 @@ namespace Barotrauma
                 if (forceUpperCase == value) { return; }
 
                 forceUpperCase = value;
-                if (forceUpperCase)
+                if (forceUpperCase || 
+                    (style != null && style.ForceUpperCase) || 
+                    (GUI.Style.ForceFontUpperCase.ContainsKey(Font) && GUI.Style.ForceFontUpperCase[Font]))
                 {
                     Text = text?.ToUpper();
                 }
@@ -177,6 +184,19 @@ namespace Barotrauma
         {
             get { return textColor; }
             set { textColor = value; }
+        }
+
+        private Color? hoverTextColor;
+        public Color HoverTextColor
+        {
+            get { return hoverTextColor ?? textColor; }
+            set { hoverTextColor = value; }
+        }
+
+        public Color SelectedTextColor
+        {
+            get { return selectedTextColor; }
+            set { selectedTextColor = value; }
         }
 
         public Alignment TextAlignment
@@ -218,7 +238,7 @@ namespace Barotrauma
             }
             if (textColor.HasValue)
             {
-                this.textColor = textColor.Value;
+                OverrideTextColor(textColor.Value);
             }            
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
@@ -242,6 +262,7 @@ namespace Barotrauma
             RectTransform.ScaleChanged += SetTextPos;
             RectTransform.SizeChanged += SetTextPos;
 
+            Enabled = true;
             Censor = false;
         }
         public GUITextBlock(RectTransform rectT, List<ColorData> colorData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
@@ -257,13 +278,33 @@ namespace Barotrauma
             RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y + padding));
         }
         
-        public override void ApplyStyle(GUIComponentStyle style)
+        public override void ApplyStyle(GUIComponentStyle componentStyle)
         {
-            if (style == null) return;
-            base.ApplyStyle(style);
-            padding = style.Padding;
+            if (componentStyle == null) { return; }
+            base.ApplyStyle(componentStyle);
+            padding = componentStyle.Padding;
 
-            textColor = style.textColor;
+            textColor = componentStyle.TextColor;
+            hoverTextColor = componentStyle.HoverTextColor;
+            disabledTextColor = componentStyle.DisabledTextColor;
+            selectedTextColor = componentStyle.SelectedTextColor;
+
+            switch (componentStyle.Font)
+            {
+                case "font":
+                    Font = componentStyle.Style.Font;
+                    break;
+                case "smallfont":
+                    Font = componentStyle.Style.SmallFont;
+                    break;
+                case "largefont":
+                    Font = componentStyle.Style.LargeFont;
+                    break;
+                case "objectivetitle":
+                case "subheading":
+                    Font = componentStyle.Style.SubHeadingFont;
+                    break;
+            }
         }
         
         public void SetTextPos()
@@ -293,11 +334,14 @@ namespace Barotrauma
                 overflowClipActive = TextSize.X > rect.Width - padding.X - padding.Z;
             }
 
+            Vector2 minSize = new Vector2(
+                Math.Max(rect.Width - padding.X - padding.Z, 5.0f),
+                Math.Max(rect.Height - padding.Y - padding.W, 5.0f));
             if (autoScale && textScale > 0.1f &&
-                (TextSize.X * textScale > rect.Width - padding.X - padding.Z || TextSize.Y * textScale > rect.Height - padding.Y - padding.W))
+                (TextSize.X * textScale > minSize.X || TextSize.Y * textScale > minSize.Y))
             {
                 TextScale = Math.Max(0.1f, Math.Min(
-                    (rect.Width - padding.X - padding.Z) / TextSize.X, 
+                    (rect.Width - padding.X - padding.Z) / TextSize.X,
                     (rect.Height - padding.Y - padding.W) / TextSize.Y)) - 0.01f;
                 return;
             }
@@ -358,17 +402,28 @@ namespace Barotrauma
             textColor = new Color(textColor.R, textColor.G, textColor.B, a);
         }
 
+        /// <summary>
+        /// Overrides the color for all the states.
+        /// </summary>
+        public void OverrideTextColor(Color color)
+        {
+            textColor = color;
+            hoverTextColor = color;
+            selectedTextColor = color;
+            disabledTextColor = color;
+        }
+
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
-            Color currColor = GetCurrentColor(state);
+            Color currColor = GetColor(State);
 
             var rect = Rect;
 
             base.Draw(spriteBatch);
 
-            if (TextGetter != null) Text = TextGetter();
+            if (TextGetter != null) { Text = TextGetter(); }
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
@@ -388,19 +443,29 @@ namespace Barotrauma
                     pos.Y = (int)pos.Y;
                 }
 
+                Color currentTextColor = State == ComponentState.Hover || State == ComponentState.HoverSelected ? HoverTextColor : TextColor;
+                if (!enabled)
+                {
+                    currentTextColor = disabledTextColor;
+                }
+                else if (State == ComponentState.Selected)
+                {
+                    currentTextColor = selectedTextColor;
+                }
+
                 if (!hasColorHighlight)
                 {
                     Font.DrawString(spriteBatch,
                         Censor ? censoredText : (Wrap ? wrappedText : text),
                         pos,
-                        textColor * (textColor.A / 255.0f),
+                        currentTextColor * (currentTextColor.A / 255.0f),
                         0.0f, origin, TextScale,
                         SpriteEffects.None, textDepth);
                 }
                 else
                 {
-                    Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos, 
-                        textColor * (textColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, colorData);
+                    Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, colorData);
                 }
             }
 

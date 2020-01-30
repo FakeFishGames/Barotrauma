@@ -195,7 +195,7 @@ namespace Barotrauma.Networking
                             DebugConsole.NewMessage(
                                 "Received msg " + thisEventID + " (waiting for " + (lastReceivedID + 1) + ")",
                                 NetIdUtils.IdMoreRecent(thisEventID, (UInt16)(lastReceivedID + 1))
-                                    ? Microsoft.Xna.Framework.Color.Red
+                                    ? GUI.Style.Red
                                     : Microsoft.Xna.Framework.Color.Yellow);
                         }
                     }
@@ -203,7 +203,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
-                            Microsoft.Xna.Framework.Color.Red);
+                            GUI.Style.Red);
                         GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
                         return false;
                     }

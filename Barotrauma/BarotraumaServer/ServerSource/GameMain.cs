@@ -347,6 +347,7 @@ namespace Barotrauma
                     Timing.Accumulator -= Timing.Step;
                 }
 
+#if !DEBUG
                 if (Server?.OwnerConnection == null && !Console.IsOutputRedirected)
                 {
                     DebugConsole.UpdateCommandLine((int)(Timing.Accumulator * 800));
@@ -355,6 +356,9 @@ namespace Barotrauma
                 {
                     DebugConsole.Clear();
                 }
+#else
+                DebugConsole.UpdateCommandLine((int)(Timing.Accumulator * 800));
+#endif
 
                 int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
                 frameTime = Math.Max(0, frameTime);

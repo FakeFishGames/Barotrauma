@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.IO;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -13,8 +14,8 @@ namespace Barotrauma
         {
             if (!editing || wallVertices == null) return;
 
-            Color color = (IsHighlighted) ? Color.Orange : Color.Green;
-            if (IsSelected) color = Color.Red;
+            Color color = (IsHighlighted) ? GUI.Style.Orange : GUI.Style.Green;
+            if (IsSelected) color = GUI.Style.Red;
 
             Vector2 pos = Position;
 
@@ -38,7 +39,7 @@ namespace Barotrauma
 
             Rectangle drawRect = rect;
             drawRect.Y = -rect.Y;
-            GUI.DrawRectangle(spriteBatch, drawRect, Color.Red, true);
+            GUI.DrawRectangle(spriteBatch, drawRect, GUI.Style.Red, true);
 
             if (!Item.ShowLinks) return;
 
@@ -49,7 +50,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     new Vector2(WorldPosition.X, -WorldPosition.Y),
                      new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                    isLinkAllowed ? Color.LightGreen * 0.5f : Color.Red * 0.5f, width: 3);
+                    isLinkAllowed ? GUI.Style.Green * 0.5f : GUI.Style.Red * 0.5f, width: 3);
             }
         }
 
@@ -83,18 +84,14 @@ namespace Barotrauma
 
         private GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            int width = 450, height = 120;
-            int x = GameMain.GraphicsWidth / 2 - width / 2, y = 30;
-
-            editingHUD = new GUIFrame(new RectTransform(new Point(width, height), GUI.Canvas) { ScreenSpaceOffset = new Point(x, y) })
+            editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) 
             {
-                UserData = this
+                UserData = this 
             };
-
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), editingHUD.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                AbsoluteSpacing = (int)(GUI.Scale * 5)
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
@@ -103,18 +100,23 @@ namespace Barotrauma
             if (!inGame)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
-                    TextManager.Get("LinkLinkedSub"), textColor: Color.Yellow, font: GUI.SmallFont);
+                    TextManager.Get("LinkLinkedSub"), textColor: GUI.Style.Orange, font: GUI.SmallFont);
             }
 
             var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
 
-            var pathBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), pathContainer.RectTransform), filePath, font: GUI.SmallFont);
-            var reloadButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), pathContainer.RectTransform), TextManager.Get("ReloadLinkedSub"))
+            var pathBox = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), pathContainer.RectTransform), filePath, font: GUI.SmallFont);
+            var reloadButton = new GUIButton(new RectTransform(new Vector2(0.25f / pathBox.RectTransform.RelativeSize.X, 1.0f), pathBox.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), 
+                TextManager.Get("ReloadLinkedSub"), style: "GUIButtonSmall")
             {
                 OnClicked = Reload,
                 UserData = pathBox,
                 ToolTip = TextManager.Get("ReloadLinkedSubTooltip")
             };
+
+            editingHUD.RectTransform.Resize(new Point(
+                editingHUD.Rect.Width, 
+                (int)(paddedFrame.Children.Sum(c => c.Rect.Height + paddedFrame.AbsoluteSpacing) / paddedFrame.RectTransform.RelativeSize.Y)));
 
             PositionEditingHUD();
 
@@ -128,7 +130,7 @@ namespace Barotrauma
             if (!File.Exists(pathBox.Text))
             {
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariable("ReloadLinkedSubError", "[file]", pathBox.Text));
-                pathBox.Flash(Color.Red);
+                pathBox.Flash(GUI.Style.Red);
                 pathBox.Text = filePath;
                 return false;
             }
@@ -136,7 +138,7 @@ namespace Barotrauma
             XDocument doc = Submarine.OpenFile(pathBox.Text);
             if (doc == null || doc.Root == null) return false;
 
-            pathBox.Flash(Color.Green);
+            pathBox.Flash(GUI.Style.Green);
 
             GenerateWallVertices(doc.Root);
             saveElement = doc.Root;

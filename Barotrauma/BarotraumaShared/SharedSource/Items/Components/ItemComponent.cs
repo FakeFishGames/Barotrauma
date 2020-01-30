@@ -504,11 +504,12 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel = null;
             }
 
-            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            //no need to Dispose these - SoundManager will do it when it when it needs a free channel and the sound has stopped playing 
+            //disposing immediately on Remove will for example prevent explosives from playing a sound if the explosion removes the item
+            /*foreach (SoundChannel channel in playingOneshotSoundChannels)
             {
                 channel.Dispose();
-                loopingSoundChannel = null;
-            }
+            }*/
 
             if (GuiFrame != null) { GUI.RemoveFromUpdateList(GuiFrame, true); }
 #endif

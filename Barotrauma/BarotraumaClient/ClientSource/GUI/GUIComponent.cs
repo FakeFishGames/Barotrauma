@@ -15,11 +15,11 @@ namespace Barotrauma
     {
         #region Hierarchy
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
-        
+
         public CursorState HoverCursor = CursorState.Default;
         
         public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
-        
+
         public T GetChild<T>() where T : GUIComponent
         {
             return Children.FirstOrDefault(c => c is T) as T;
@@ -28,6 +28,19 @@ namespace Barotrauma
         public T GetAnyChild<T>() where T : GUIComponent
         {
             return GetAllChildren().FirstOrDefault(c => c is T) as T;
+        }
+
+        public IEnumerable<T> GetAllChildren<T>() where T : GUIComponent
+        {
+            return GetAllChildren().Where(c => c is T).Select(c => c as T);
+        }
+
+        /// <summary>
+        /// Returns all child elements in the hierarchy.
+        /// </summary>
+        public IEnumerable<GUIComponent> GetAllChildren()
+        {
+            return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
         public GUIComponent GetChild(int index)
@@ -49,15 +62,6 @@ namespace Barotrauma
                 if (child.UserData == obj || (child.userData != null && child.userData.Equals(obj))) return child;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Returns all child elements in the hierarchy.
-        /// If the component has RectTransform, it's more efficient to use RectTransform.GetChildren and access the GUIComponent property directly.
-        /// </summary>
-        public IEnumerable<GUIComponent> GetAllChildren()
-        {
-            return RectTransform.GetAllChildren().Select(c => c.GUIComponent);
         }
 
         public bool IsParentOf(GUIComponent component, bool recursive = true)
@@ -134,31 +138,30 @@ namespace Barotrauma
         public int UpdateOrder { get; set; }
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
-        /// <summary>
-        /// Launched at the beginning of the Draw method. Note: if the method is overridden, the event might not be called!
-        
-        public enum ComponentState { None, Hover, Pressed, Selected };
+
+        public enum ComponentState { None, Hover, Pressed, Selected, HoverSelected };
 
         protected Alignment alignment;
 
         protected GUIComponentStyle style;
 
         protected object userData;
-        
+
         public bool CanBeFocused;
-        
+
         protected Color color;
         protected Color hoverColor;
         protected Color selectedColor;
+        protected Color disabledColor;
         protected Color pressedColor;
 
         private CoroutineHandle pulsateCoroutine;
 
-        protected ComponentState state;
-
         protected Color flashColor;
         protected float flashDuration = 1.5f;
+        // TODO: We should use an enum for the flash modes, but it would require a bit of refactoring, because Flash method is use in so many places.
         private bool useRectangleFlash;
+        private bool useCircularFlash;
         public virtual float FlashTimer
         {
             get { return flashTimer; }
@@ -166,7 +169,20 @@ namespace Barotrauma
         protected float flashTimer;
         private Vector2 flashRectInflate;
 
-        public bool IgnoreLayoutGroups;
+        private bool ignoreLayoutGroups;
+        public bool IgnoreLayoutGroups
+        {
+            get { return ignoreLayoutGroups; }
+            set 
+            {
+                if (ignoreLayoutGroups == value) { return; }
+                ignoreLayoutGroups = value;
+                if (Parent is GUILayoutGroup layoutGroup)
+                {
+                    layoutGroup.NeedsToRecalculate = true;
+                }
+            }
+        }
 
         public virtual ScalableFont Font
         {
@@ -210,7 +226,7 @@ namespace Barotrauma
             get { return enabled; }
             set { enabled = value; }
         }
-        
+
         private static GUITextBlock toolTipBlock;
 
         public Vector2 Center
@@ -270,10 +286,31 @@ namespace Barotrauma
 
         public virtual Color OutlineColor { get; set; }
 
-        public ComponentState State
+        protected ComponentState _state;
+        protected ComponentState _previousState;
+        protected bool selected;
+        public virtual bool Selected
         {
-            get { return state; }
-            set { state = value; }
+            get { return selected; }
+            set
+            {
+                selected = value;
+                Children.ForEach(c => c.Selected = value);
+            }
+        }
+        public virtual ComponentState State
+        {
+            get { return _state; }
+            set
+            {
+                if (_state != value)
+                {
+                    spriteFadeTimer = SpriteCrossFadeTime;
+                    colorFadeTimer = ColorCrossFadeTime;
+                    _previousState = _state;
+                }
+                _state = value;
+            }
         }
 
         public object UserData
@@ -304,12 +341,25 @@ namespace Barotrauma
             get { return selectedColor; }
             set { selectedColor = value; }
         }
+        public virtual Color DisabledColor
+        {
+            get { return disabledColor; }
+            set { disabledColor = value; }
+        }
 
         public virtual Color PressedColor
         {
             get { return pressedColor; }
             set { pressedColor = value; }
         }
+
+        public TransitionMode ColorTransition { get; private set; }
+        public SpriteFallBackState FallBackState { get; private set; } 
+        public float SpriteCrossFadeTime { get; private set; }
+        public float ColorCrossFadeTime { get; private set; }
+
+        private float spriteFadeTimer;
+        private float colorFadeTimer;
 
         public bool ExternalHighlight = false;
 
@@ -331,23 +381,26 @@ namespace Barotrauma
         /// <summary>
         /// This is the new constructor.
         /// </summary>
-        protected GUIComponent(string style, RectTransform rectT) : this(style)
+        protected GUIComponent(string style, RectTransform rectT)
         {
             RectTransform = rectT;
+
+            Visible = true;
+            OutlineColor = Color.Transparent;
+            Font = GUI.Font;
+            CanBeFocused = true;
+
+            if (style != null) { GUI.Style.Apply(this, style); }
         }
 
         protected GUIComponent(string style)
         {
             Visible = true;
-
             OutlineColor = Color.Transparent;
-
             Font = GUI.Font;
+            CanBeFocused = true;
 
-            CanBeFocused = true; //TODO: change default to false?
-
-            if (style != null)
-                GUI.Style.Apply(this, style);
+            if (style != null) { GUI.Style.Apply(this, style); }
         }
 
         #region Updating
@@ -402,6 +455,14 @@ namespace Barotrauma
             {
                 flashTimer -= deltaTime;
             }
+            if (spriteFadeTimer > 0)
+            {
+                spriteFadeTimer -= deltaTime;
+            }
+            if (colorFadeTimer > 0)
+            {
+                colorFadeTimer -= deltaTime;
+            }
         }
 
         /// <summary>
@@ -448,34 +509,114 @@ namespace Barotrauma
             RectTransform.Children.ForEach(c => c.GUIComponent.DrawManually(spriteBatch, recursive, recursive));
         }
 
-        protected virtual Color GetCurrentColor(ComponentState state)
+        protected Color _currentColor;
+
+        protected virtual Color GetColor(ComponentState state)
         {
-            switch (state)
+            if (!Enabled) { return DisabledColor; }
+            return state switch
             {
-                case ComponentState.Hover:
-                    return HoverColor;
-                case ComponentState.Pressed:
-                    return PressedColor;
-                case ComponentState.Selected:
-                    return SelectedColor;
-                default:
-                    return Color;
-            }
+                ComponentState.Hover => HoverColor,
+                ComponentState.Pressed => PressedColor,
+                ComponentState.Selected => SelectedColor,
+                _ => Color,
+            };
+        }
+
+        private float GetEasing(TransitionMode easing, float t)
+        {
+            return easing switch
+            {
+                TransitionMode.Smooth => MathUtils.SmoothStep(t),
+                TransitionMode.Smoother => MathUtils.SmootherStep(t),
+                TransitionMode.EaseIn => MathUtils.EaseIn(t),
+                TransitionMode.EaseOut => MathUtils.EaseOut(t),
+                TransitionMode.Exponential => t * t,
+                TransitionMode.Linear => t,
+                _ => t,
+            };
+        }
+
+        protected Color GetBlendedColor(Color targetColor, ref Color blendedColor)
+        {
+            blendedColor = ColorCrossFadeTime > 0 ? Color.Lerp(blendedColor, targetColor, MathUtils.InverseLerp(ColorCrossFadeTime, 0, GetEasing(ColorTransition, colorFadeTimer))) : targetColor;
+            return blendedColor;
         }
 
         protected virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
             var rect = Rect;
-            
-            Color currColor = GetCurrentColor(state);
-            if (currColor.A > 0.0f && (sprites == null || !sprites.Any())) GUI.DrawRectangle(spriteBatch, rect, currColor * (currColor.A / 255.0f), true);
 
-            if (sprites != null && sprites[state] != null && currColor.A > 0.0f)
+            GetBlendedColor(GetColor(State), ref _currentColor);
+
+            if (_currentColor.A > 0.0f && (sprites == null || !sprites.Any()))
             {
-                foreach (UISprite uiSprite in sprites[state])
+                GUI.DrawRectangle(spriteBatch, rect, _currentColor * (_currentColor.A / 255.0f), true);
+            }
+
+            if (sprites != null && _currentColor.A > 0)
+            {
+                if (!sprites.TryGetValue(_previousState, out List<UISprite> previousSprites) || previousSprites.None())
                 {
-                    uiSprite.Draw(spriteBatch, rect, currColor * (currColor.A / 255.0f), SpriteEffects);
+                    switch (FallBackState)
+                    {
+                        case SpriteFallBackState.Toggle:
+                            sprites.TryGetValue(Selected ? ComponentState.Selected : ComponentState.None, out previousSprites);
+                            break;
+                        default:
+                            if (Enum.TryParse(FallBackState.ToString(), ignoreCase: true, out ComponentState fallBackState))
+                            {
+                                sprites.TryGetValue(fallBackState, out previousSprites);
+                            }
+                            break;
+                    }
+                }
+                // Handle fallbacks when some of the sprites are not defined
+                if (!sprites.TryGetValue(State, out List<UISprite> currentSprites) || currentSprites.None())
+                {
+                    switch (FallBackState)
+                    {
+                        case SpriteFallBackState.Toggle:
+                            sprites.TryGetValue(Selected ? ComponentState.Selected : ComponentState.None, out currentSprites);
+                            break;
+                        default:
+                            if (Enum.TryParse(FallBackState.ToString(), ignoreCase: true, out ComponentState fallBackState))
+                            {
+                                sprites.TryGetValue(fallBackState, out currentSprites);
+                            }
+                            break;
+                    }
+                }
+                if (_previousState != State && currentSprites != previousSprites)
+                {
+                    if (previousSprites != null && previousSprites.Any())
+                    {
+                        // Draw the previous sprites(s) only while cross fading out
+                        Color previousColor = GetColor(_previousState);
+                        foreach (UISprite uiSprite in previousSprites)
+                        {
+                            float alphaMultiplier = SpriteCrossFadeTime > 0 && (uiSprite.CrossFadeOut || currentSprites != null && currentSprites.Any(s => s.CrossFadeIn))
+                                ? MathUtils.InverseLerp(0, SpriteCrossFadeTime, GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : 0;
+                            if (alphaMultiplier > 0)
+                            {
+                                uiSprite.Draw(spriteBatch, rect, previousColor * alphaMultiplier, SpriteEffects);
+                            }
+                        }
+                    }
+                }
+                if (currentSprites != null && currentSprites.Any())
+                {
+                    // Draw the current sprite(s)
+                    foreach (UISprite uiSprite in currentSprites)
+                    {
+                        float alphaMultiplier = SpriteCrossFadeTime > 0 && (uiSprite.CrossFadeIn || previousSprites != null && previousSprites.Any(s => s.CrossFadeOut))
+                            ? MathUtils.InverseLerp(SpriteCrossFadeTime, 0, GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : (_currentColor.A / 255.0f);
+                        if (alphaMultiplier > 0)
+                        {
+                            uiSprite.Draw(spriteBatch, rect, _currentColor * alphaMultiplier, SpriteEffects);
+                        }
+                    }
                 }
             }
 
@@ -490,15 +631,16 @@ namespace Barotrauma
 
                 //MathHelper.Pi * 0.8f -> the curve goes from 144 deg to 0, 
                 //i.e. quickly bumps up from almost full brightness to full and then fades out
-                if (!useRectangleFlash)
+                if (useRectangleFlash)
                 {
-                    GUI.UIGlow.Draw(spriteBatch,
-                        flashRect,
-                        flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
+                    GUI.DrawRectangle(spriteBatch, flashRect, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), true);
                 }
                 else
                 {
-                    GUI.DrawRectangle(spriteBatch, flashRect, flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), true);
+                    var glow = useCircularFlash ? GUI.UIGlowCircular : GUI.UIGlow;
+                    glow.Draw(spriteBatch,
+                        flashRect,
+                        flashColor * (float)Math.Sin(flashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f));
                 }
             }
         }
@@ -551,13 +693,14 @@ namespace Barotrauma
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
         }
 
-        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, Vector2? flashRectInflate = null)
+        public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectInflate = null)
         {
             flashTimer = flashDuration;
             this.flashRectInflate = flashRectInflate ?? Vector2.Zero;            
             this.useRectangleFlash = useRectangleFlash;
+            this.useCircularFlash = useCircularFlash;
             this.flashDuration = flashDuration;
-            flashColor = (color == null) ? Color.Red : (Color)color;
+            flashColor = (color == null) ? GUI.Style.Red : (Color)color;
         }
 
         public void FadeOut(float duration, bool removeAfter)
@@ -611,16 +754,37 @@ namespace Barotrauma
 
         public virtual void ApplyStyle(GUIComponentStyle style)
         {
-            if (style == null) return;
+            if (style == null) { return; }
 
             color = style.Color;
+            _currentColor = color;
             hoverColor = style.HoverColor;
             selectedColor = style.SelectedColor;
             pressedColor = style.PressedColor;
-            
+            disabledColor = style.DisabledColor;
             sprites = style.Sprites;
-
             OutlineColor = style.OutlineColor;
+            SpriteCrossFadeTime = style.SpriteCrossFadeTime;
+            ColorCrossFadeTime = style.ColorCrossFadeTime;
+            ColorTransition = style.TransitionMode;
+            FallBackState = style.FallBackState;
+
+            if (rectTransform != null)
+            {
+                if (style.Width.HasValue) 
+                { 
+                    RectTransform.MinSize = new Point(style.Width.Value, RectTransform.MinSize.Y);
+                    RectTransform.MaxSize = new Point(style.Width.Value, RectTransform.MaxSize.Y);
+                    if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(style.Width.Value, rectTransform.NonScaledSize.Y)); }
+                }
+                if (style.Height.HasValue)
+                {
+                    RectTransform.MinSize = new Point(RectTransform.MinSize.X, style.Height.Value);
+                    RectTransform.MaxSize = new Point(RectTransform.MaxSize.X, style.Height.Value);
+                    if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(rectTransform.NonScaledSize.X, style.Height.Value)); }
+                }
+            }
+
 
             this.style = style;
         }
@@ -779,14 +943,8 @@ namespace Barotrauma
                 case "largefont":
                     font = GUI.LargeFont;
                     break;
-                case "videotitlefont":
-                    font = GUI.VideoTitleFont;
-                    break;
-                case "objectivetitlefont":
-                    font = GUI.ObjectiveTitleFont;
-                    break;
-                case "objectivenamefont":
-                    font = GUI.ObjectiveNameFont;
+                case "subheading":
+                    font = GUI.SubHeadingFont;
                     break;
             }
 

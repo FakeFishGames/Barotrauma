@@ -259,7 +259,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
                             new Vector2(nodeList[i].X, -nodeList[i].Y),
-                            Color.Lerp(Color.Yellow, Color.Red, i / (float)nodeList.Count), 0, 10);
+                            Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }
 

@@ -21,16 +21,50 @@ namespace Barotrauma
         public ScalableFont UnscaledSmallFont { get; private set; }
         public ScalableFont SmallFont { get; private set; }
         public ScalableFont LargeFont { get; private set; }
-        public ScalableFont VideoTitleFont { get; private set; }
-        public ScalableFont ObjectiveTitleFont { get; private set; }
-        public ScalableFont ObjectiveNameFont { get; private set; }
+        public ScalableFont SubHeadingFont { get; private set; }
+        public ScalableFont DigitalFont { get; private set; }
+
+        public Dictionary<ScalableFont, bool> ForceFontUpperCase
+        {
+            get;
+            private set;
+        } = new Dictionary<ScalableFont, bool>();
 
         public readonly Sprite[] CursorSprite = new Sprite[7];
 
         public UISprite UIGlow { get; private set; }
+        public UISprite UIGlowCircular { get; private set; }
 
         public SpriteSheet FocusIndicator { get; private set; }
-            
+
+        /// <summary>
+        /// General green color used for elements whose colors are set from code
+        /// </summary>
+        public Color Green { get; private set; } = Color.LightGreen;
+
+        /// <summary>
+        /// General red color used for elements whose colors are set from code
+        /// </summary>
+        public Color Orange { get; private set; } = Color.Orange;
+
+        /// <summary>
+        /// General red color used for elements whose colors are set from code
+        /// </summary>
+        public Color Red { get; private set; } = Color.Red;
+
+        /// <summary>
+        /// General blue color used for elements whose colors are set from code
+        /// </summary>
+        public Color Blue { get; private set; } = Color.Blue;
+
+        public Color TextColor { get; private set; } = Color.White * 0.8f;
+        public Color TextColorBright { get; private set; } = Color.White * 0.9f;
+        public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
+        public Color TextColorDim { get; private set; } = Color.White * 0.6f;
+
+        public static Point ItemFrameMargin = new Point(50, 56);
+        public static Point ItemFrameOffset = new Point(0, 3);
+
         public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
             this.graphicsDevice = graphicsDevice;
@@ -48,38 +82,71 @@ namespace Barotrauma
                             CursorSprite[index] = new Sprite(children);
                         }
                         break;
+                    case "green":
+                        Green = subElement.GetAttributeColor("color", Green);
+                        break;
+                    case "orange":
+                        Orange = subElement.GetAttributeColor("color", Orange);
+                        break;
+                    case "red":
+                        Red = subElement.GetAttributeColor("color", Red);
+                        break;
+                    case "blue":
+                        Blue = subElement.GetAttributeColor("color", Blue);
+                        break;
+                    case "textcolordark":
+                        TextColorDark = subElement.GetAttributeColor("color", TextColorDark);
+                        break;
+                    case "TextColorBright":
+                        TextColorBright = subElement.GetAttributeColor("color", TextColorBright);
+                        break;
+                    case "textcolordim":
+                        TextColorDim = subElement.GetAttributeColor("color", TextColorDim);
+                        break;
+                    case "textcolornormal":
+                    case "textcolor":
+                        TextColor = subElement.GetAttributeColor("color", TextColor);
+                        break;
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
+                        break;
+                    case "uiglowcircular":
+                        UIGlowCircular = new UISprite(subElement);
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
                         break;
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[Font] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "globalfont":
                         GlobalFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[GlobalFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "unscaledsmallfont":
                         UnscaledSmallFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[UnscaledSmallFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "smallfont":
                         SmallFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[SmallFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "largefont":
                         LargeFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[LargeFont] = subElement.GetAttributeBool("forceuppercase", false);
+                        break;
+                    case "digitalfont":
+                        DigitalFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[DigitalFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "objectivetitle":
-                        ObjectiveTitleFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "objectivename":
-                        ObjectiveNameFont = LoadFont(subElement, graphicsDevice);
-                        break;
-                    case "videotitle":
-                        VideoTitleFont = LoadFont(subElement, graphicsDevice);
+                    case "subheading":
+                        SubHeadingFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[SubHeadingFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     default:
-                        GUIComponentStyle componentStyle = new GUIComponentStyle(subElement);
+                        GUIComponentStyle componentStyle = new GUIComponentStyle(subElement, this);
                         componentStyles.Add(subElement.Name.ToString().ToLowerInvariant(), componentStyle);
                         break;
                 }
@@ -91,7 +158,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Global font not defined in the current UI style file. The global font is used to render western symbols when using Chinese/Japanese/Korean localization. Using default font instead...", Color.Orange);
             }
 
-            GameMain.Instance.OnResolutionChanged += () => { RescaleFonts(); };
+            GameMain.Instance.OnResolutionChanged += () => { RescaleElements(); };
         }
 
         /// <summary>
@@ -114,7 +181,7 @@ namespace Barotrauma
         }
 
 
-        private void RescaleFonts()
+        private void RescaleElements()
         {
             if (configElement == null) { return; }
             if (configElement.Elements() == null) { return; }
@@ -135,17 +202,19 @@ namespace Barotrauma
                         LargeFont.Size = GetFontSize(subElement);
                         break;
                     case "objectivetitle":
-                        if (ObjectiveTitleFont == null) { continue; }
-                        ObjectiveTitleFont.Size = GetFontSize(subElement);
+                    case "subheading":
+                        if (SubHeadingFont == null) { continue; }
+                        SubHeadingFont.Size = GetFontSize(subElement);
                         break;
-                    case "objectivename":
-                        if (ObjectiveNameFont == null) { continue; }
-                        ObjectiveNameFont.Size = GetFontSize(subElement);
-                        break;
-                    case "videotitle":
-                        if (VideoTitleFont == null) { continue; }
-                        VideoTitleFont.Size = GetFontSize(subElement);
-                        break;
+                }
+            }
+
+            foreach (var componentStyle in componentStyles.Values)
+            {
+                componentStyle.GetSize(componentStyle.Element);
+                foreach (var childStyle in componentStyle.ChildStyles.Values)
+                {
+                    childStyle.GetSize(childStyle.Element);
                 }
             }
         }

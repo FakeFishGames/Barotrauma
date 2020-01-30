@@ -84,7 +84,7 @@ namespace Barotrauma.Items.Components
                 targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
                 progressBarPos,
                 1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
-                Color.Red, Color.Green);
+                GUI.Style.Red, GUI.Style.Green);
 
             if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                         targetItem,
                         progressBarPos,
                         progressBarState,
-                        Color.Red, Color.Green);
+                        GUI.Style.Red, GUI.Style.Green);
                     if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                 }
                 prevProgressBarState = progressBarState;

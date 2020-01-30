@@ -19,6 +19,11 @@ namespace Barotrauma.Items.Components
         private SoundChannel rewireSoundChannel;
         private float rewireSoundTimer;
 
+        public float Scale
+        {
+            get { return GuiFrame.Rect.Width / 400.0f; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             if (GuiFrame == null) { return; }
@@ -106,7 +111,6 @@ namespace Barotrauma.Items.Components
                 sprite.Draw(spriteBatch, GuiFrame.Rect, Color.White, SpriteEffects.None);
             }
         }
-
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {

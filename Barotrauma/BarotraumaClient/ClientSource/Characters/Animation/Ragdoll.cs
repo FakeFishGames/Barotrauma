@@ -439,7 +439,7 @@ namespace Barotrauma
             Color? color = null;
             if (character.ExternalHighlight)
             {
-                color = Color.Lerp(Color.White, Color.OrangeRed, (float)Math.Sin(Timing.TotalTime * 3.5f));
+                color = Color.Lerp(Color.White, GUI.Style.Orange, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
             float depthOffset = GetDepthOffset();
@@ -498,13 +498,13 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
                     if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Red, true, 0.01f);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), GUI.Style.Red, true, 0.01f);
                 }
 
                 limb.body.DebugDraw(spriteBatch, inWater ? (currentHull == null ? Color.Blue : Color.Cyan) : Color.White);
             }
 
-            Collider.DebugDraw(spriteBatch, frozen ? Color.Red : (inWater ? Color.SkyBlue : Color.Gray));
+            Collider.DebugDraw(spriteBatch, frozen ? GUI.Style.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.FormatSingleDecimal(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 
             foreach (RevoluteJoint joint in LimbJoints)
@@ -532,9 +532,9 @@ namespace Barotrauma
             if (this is HumanoidAnimController humanoid)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), Color.Green, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
             }
 
             if (character.MemState.Count > 1)

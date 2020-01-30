@@ -41,7 +41,7 @@ namespace Barotrauma
         private Submarine parentSub;
 
         public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine = null)
-            : this(worldPosition, parentSubmarine, Color.Red, Color.Green)
+            : this(worldPosition, parentSubmarine, GUI.Style.Red, GUI.Style.Green)
         {
         }
 

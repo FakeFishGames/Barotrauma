@@ -131,6 +131,8 @@ namespace Barotrauma
             }
             coroutine = CoroutineManager.InvokeAfter(() =>
             {
+                //round ended before the coroutine finished
+                if (GameMain.GameSession == null || Level.Loaded == null) { return; }
                 DelayedObjectives.Remove(objective);
                 AddObjective(objective);
                 callback?.Invoke();

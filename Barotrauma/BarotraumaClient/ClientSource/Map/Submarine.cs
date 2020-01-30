@@ -342,22 +342,24 @@ namespace Barotrauma
 
         public void CreatePreviewWindow(GUIComponent parent)
         {
-            var upperPart = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.5f), parent.RectTransform, Anchor.Center, Pivot.BottomCenter));
-            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.5f), parent.RectTransform, Anchor.Center, Pivot.TopCenter))
-            {
-                ScrollBarVisible = true,
-                Spacing = 5
-            };
+            var content = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform), style: null);
 
             if (PreviewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1), upperPart.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
             }
             else
             {
-                var submarinePreviewBackground = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), upperPart.RectTransform)) { Color = Color.Black };
-                new GUIImage(new RectTransform(new Vector2(1.0f, 1.0f), submarinePreviewBackground.RectTransform), PreviewImage, scaleToFit: true);
+                var submarinePreviewBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), style: null) { Color = Color.Black };
+                new GUIImage(new RectTransform(new Vector2(0.98f), submarinePreviewBackground.RectTransform, Anchor.Center), PreviewImage, scaleToFit: true);
+                new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black);
             }
+            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.5f), content.RectTransform, Anchor.BottomCenter))
+            {
+                UserData = "descriptionbox",
+                ScrollBarVisible = true,
+                Spacing = 5
+            };
 
             //space
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), descriptionBox.Content.RectTransform), style: null);

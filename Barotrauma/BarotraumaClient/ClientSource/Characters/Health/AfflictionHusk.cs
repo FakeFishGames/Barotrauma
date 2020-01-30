@@ -14,20 +14,20 @@ namespace Barotrauma
             {
                 if (prevStrength % 10.0f > 0.05f && Strength % 10.0f < 0.05f)
                 {
-                    GUI.AddMessage(TextManager.Get("HuskDormant"), Color.Red);
+                    GUI.AddMessage(TextManager.Get("HuskDormant"), GUI.Style.Red);
                 }
             }
             else if (Strength < Prefab.MaxStrength)
             {
                 if (state == InfectionState.Dormant && Character.Controlled == character)
                 {
-                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), Color.Red);
+                    GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUI.Style.Red);
                 }
             }
             else if (state != InfectionState.Active && Character.Controlled == character)
             {
                 GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameMain.Config.KeyBindText(InputType.Attack)),
-                    Color.Red);
+                    GUI.Style.Red);
             }
         }
     }

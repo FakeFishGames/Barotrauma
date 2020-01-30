@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
                 item.SpriteColor * 0.5f,
                 0.0f, item.Scale, SpriteEffects.None, 0.0f);
 
-            GUI.DrawRectangle(spriteBatch, new Vector2(attachPos.X - 2, -attachPos.Y - 2), Vector2.One * 5, Color.Red, thickness: 3);
+            GUI.DrawRectangle(spriteBatch, new Vector2(attachPos.X - 2, -attachPos.Y - 2), Vector2.One * 5, GUI.Style.Red, thickness: 3);
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

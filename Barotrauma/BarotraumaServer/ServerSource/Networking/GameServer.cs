@@ -765,6 +765,11 @@ namespace Barotrauma.Networking
 
         private void WriteEventErrorData(Client client, string errorStr)
         {
+            if (!Directory.Exists(ServerLog.SavePath))
+            {
+                Directory.CreateDirectory(ServerLog.SavePath);
+            }
+
             string filePath = "event_error_log_server_" + client.Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
             filePath = Path.Combine(ServerLog.SavePath, filePath);
             if (File.Exists(filePath)) { return; }
@@ -773,6 +778,19 @@ namespace Barotrauma.Networking
             {
                 errorStr, ""
             };
+
+            if (GameMain.GameSession?.GameMode != null)
+            {
+                errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+            }
+            if (GameMain.GameSession?.Submarine != null)
+            {
+                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Name);
+            }
+            if (Level.Loaded != null)
+            {
+                errorLines.Add("Level: " + Level.Loaded.Seed + ", " + Level.Loaded.EqualityCheckVal);
+            }
 
             errorLines.Add("Entity IDs:");
             List<Entity> sortedEntities = Entity.GetEntityList();
@@ -795,6 +813,13 @@ namespace Barotrauma.Networking
                         spawnData.Entity.ToString() + 
                         " (" + spawnData.OriginalID + ", " + spawnData.Entity.ID + ")");
                 }
+            }
+
+            errorLines.Add("");
+            errorLines.Add("Last debug messages:");
+            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
+            {
+                errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
             File.WriteAllLines(filePath, errorLines);

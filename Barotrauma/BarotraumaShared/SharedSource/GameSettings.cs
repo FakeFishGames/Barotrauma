@@ -234,6 +234,9 @@ namespace Barotrauma
 
         public volatile bool SuppressModFolderWatcher;
 
+#if DEBUG
+        public bool AutomaticQuickStartEnabled { get; set; }
+#endif
 
         private FileSystemWatcher modsFolderWatcher;
 
@@ -1196,7 +1199,11 @@ namespace Barotrauma
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
                 new XAttribute("editordisclaimershown", EditorDisclaimerShown),
-                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning));
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning)
+#if DEBUG
+                , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
+#endif
+                );
 
             if (!string.IsNullOrEmpty(overrideSaveFolder))
             {
@@ -1378,6 +1385,9 @@ namespace Barotrauma
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
+#if DEBUG
+            AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
+#endif
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
             if (gameplayElement != null)

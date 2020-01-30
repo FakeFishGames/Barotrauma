@@ -958,8 +958,8 @@ namespace Barotrauma
                 else
                 {
                     if (character.Position.X < gap.Rect.X || character.Position.X > gap.Rect.Right) continue;
-                    if (Math.Sign((gap.Rect.Y - gap.Rect.Height / 2) - (currentHull.Rect.Center.X - currentHull.Rect.Height / 2)) !=
-                        Math.Sign(character.Position.X - (currentHull.Rect.Center.X - currentHull.Rect.Height / 2)))
+                    if (Math.Sign((gap.Rect.Y - gap.Rect.Height / 2) - (currentHull.Rect.Center.Y - currentHull.Rect.Height / 2)) !=
+                        Math.Sign(character.Position.Y - (currentHull.Rect.Center.Y - currentHull.Rect.Height / 2)))
                     {
                         continue;
                     }

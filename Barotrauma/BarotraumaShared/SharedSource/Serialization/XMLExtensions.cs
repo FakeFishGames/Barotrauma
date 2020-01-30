@@ -399,6 +399,31 @@ namespace Barotrauma
             return ParseColor(element.Attribute(name).Value);
         }
 
+        public static Color[] GetAttributeColorArray(this XElement element, string name, Color[] defaultValue)
+        {
+                if (element?.Attribute(name) == null) return defaultValue;
+
+                string stringValue = element.Attribute(name).Value;
+                if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+
+                string[] splitValue = stringValue.Split(';');
+                Color[] colorValue = new Color[splitValue.Length];
+                for (int i = 0; i < splitValue.Length; i++)
+                {
+                    try
+                    {
+                        Color val = ParseColor(splitValue[i], true);
+                        colorValue[i] = val;
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    }
+                }
+
+                return colorValue;
+        }
+
         public static Rectangle GetAttributeRect(this XElement element, string name, Rectangle defaultValue)
         {
             if (element == null || element.Attribute(name) == null) return defaultValue;

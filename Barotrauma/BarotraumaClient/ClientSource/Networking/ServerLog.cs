@@ -25,27 +25,11 @@ namespace Barotrauma.Networking
             };
 
             GUIFrame innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.5f), LogFrame.RectTransform, Anchor.Center) { MinSize = new Point(700, 500) });
-            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.85f), innerFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, -0.03f) }, style: null);
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), TextManager.Get("ServerLog.Filter"), font: GUI.SmallFont);            
-            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), font: GUI.SmallFont);
-            searchBox.OnTextChanged += (textBox, text) =>
-            {
-                msgFilter = text;
-                FilterMessages();
-                return true;
-            };
-            GUI.KeyboardDispatcher.Subscriber = searchBox;
+            // left column ----------------
 
-            var clearButton = new GUIButton(new RectTransform(new Vector2(0.05f, 0.05f), paddedFrame.RectTransform, Anchor.TopRight), "x")
-            {
-                OnClicked = ClearFilter,
-                UserData = searchBox
-            };
-
-            listBox = new GUIListBox(new RectTransform(new Vector2(0.75f, 0.95f), paddedFrame.RectTransform, Anchor.BottomRight));
-
-            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 0.95f), paddedFrame.RectTransform, Anchor.BottomLeft));
+            var tickBoxContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.25f, 1.0f), paddedFrame.RectTransform, Anchor.BottomLeft));
             int y = 30;
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
@@ -61,6 +45,7 @@ namespace Barotrauma.Networking
                         return true;
                     }
                 };
+                tickBox.TextBlock.SelectedTextColor = tickBox.TextBlock.TextColor;
                 tickBox.Selected = !msgTypeHidden[(int)msgType];
                 tickBoxes.Add(tickBox);
 
@@ -72,19 +57,32 @@ namespace Barotrauma.Networking
                 GUITextBlock.AutoScaleAndNormalize(tickBoxes.Select(t => t.TextBlock), defaultScale: 1.0f);
             };
 
-            var currLines = lines.ToList();
+            // right column ----------------
 
-            foreach (LogMessage line in currLines)
+            var rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), paddedFrame.RectTransform, Anchor.CenterRight), childAnchor: Anchor.TopRight)
             {
-                AddLine(line);
-            }
-            FilterMessages();
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
-            listBox.UpdateScrollBarSize();
+            GUILayoutGroup filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform, Anchor.TopRight),
+                isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) listBox.BarScroll = 1.0f;
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), filterArea.RectTransform), TextManager.Get("ServerLog.Filter"), 
+                font: GUI.SubHeadingFont);            
+            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont, createClearButton: true);
+            searchBox.OnTextChanged += (textBox, text) =>
+            {
+                msgFilter = text;
+                FilterMessages();
+                return true;
+            };
+            GUI.KeyboardDispatcher.Subscriber = searchBox;
+            filterArea.RectTransform.MinSize = new Point(0, filterArea.RectTransform.Children.Max(c => c.MinSize.Y));
 
-            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), innerFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.02f, 0.03f) }, TextManager.Get("Close"))
+            listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), rightColumn.RectTransform));
+
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), rightColumn.RectTransform), TextManager.Get("Close"))
             {
                 OnClicked = (button, userData) =>
                 {
@@ -93,6 +91,19 @@ namespace Barotrauma.Networking
                 }
             };
 
+            rightColumn.Recalculate();
+
+            var currLines = lines.ToList();
+            foreach (LogMessage line in currLines)
+            {
+                AddLine(line);
+            }
+            FilterMessages();
+
+            listBox.UpdateScrollBarSize();
+
+            if (listBox.BarScroll == 0.0f || listBox.BarScroll == 1.0f) { listBox.BarScroll = 1.0f; }
+            
             msgFilter = "";
         }
 
@@ -110,7 +121,7 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 16), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],
@@ -121,6 +132,7 @@ namespace Barotrauma.Networking
                         return true;
                     }
                 };
+                tickBox.TextBlock.SelectedTextColor = tickBox.TextBlock.TextColor;
                 tickBox.Selected = !msgTypeHidden[(int)msgType];
                 tickBoxes.Add(tickBox);
             }

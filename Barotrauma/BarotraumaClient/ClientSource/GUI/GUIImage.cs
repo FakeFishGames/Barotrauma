@@ -87,7 +87,7 @@ namespace Barotrauma
             }
             if (style == null)
             {
-                color = hoverColor = selectedColor = pressedColor = Color.White;                
+                color = hoverColor = selectedColor = pressedColor = disabledColor = Color.White;                
             }
             if (!scaleToFit)
             {
@@ -97,15 +97,17 @@ namespace Barotrauma
             {
                 rectT.SizeChanged += RecalculateScale;
             }
+            Enabled = true;
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
 
-            if (Parent != null) { state = Parent.State; }
-            if (OverrideState != null) { state = OverrideState.Value; }
-            Color currColor = GetCurrentColor(state);
+            if (Parent != null) { State = Parent.State; }
+            if (OverrideState != null) { State = OverrideState.Value; }
+
+            Color currentColor = GetColor(State);
 
             if (BlendState != null)
             {
@@ -115,23 +117,23 @@ namespace Barotrauma
 
             if (style != null)
             {
-                foreach (UISprite uiSprite in style.Sprites[state])
+                foreach (UISprite uiSprite in style.Sprites[State])
                 {
                     if (Math.Abs(Rotation) > float.Epsilon)
                     {
                         float scale = Math.Min(Rect.Width / uiSprite.Sprite.size.X, Rect.Height / uiSprite.Sprite.size.Y);
-                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currColor * (currColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
+                        spriteBatch.Draw(uiSprite.Sprite.Texture, Rect.Center.ToVector2(), uiSprite.Sprite.SourceRect, currentColor * (currentColor.A / 255.0f), Rotation, uiSprite.Sprite.size / 2,
                             Scale * scale, SpriteEffects, 0.0f);
                     }
                     else
                     {
-                        uiSprite.Draw(spriteBatch, Rect, currColor * (currColor.A / 255.0f), SpriteEffects);
+                        uiSprite.Draw(spriteBatch, Rect, currentColor * (currentColor.A / 255.0f), SpriteEffects);
                     }
                 }
             }
             else if (sprite?.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currColor * (currColor.A / 255.0f), Rotation, sprite.size / 2,
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, sprite.size / 2,
                     Scale, SpriteEffects, 0.0f);
             }
 

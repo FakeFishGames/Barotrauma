@@ -55,6 +55,22 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             doctor = Character.Controlled;
 
+            var bandages = FindOrGiveItem(doctor, "antibleeding1");
+            bandages.Unequip(doctor);
+            doctor.Inventory.RemoveItem(bandages);
+
+            var syringegun = FindOrGiveItem(doctor, "syringegun");
+            syringegun.Unequip(doctor);
+            doctor.Inventory.RemoveItem(syringegun);
+
+            var antibiotics = FindOrGiveItem(doctor, "antibiotics");
+            antibiotics.Unequip(doctor);
+            doctor.Inventory.RemoveItem(antibiotics);
+
+            var morphine = FindOrGiveItem(doctor, "antidama1");
+            morphine.Unequip(doctor);
+            doctor.Inventory.RemoveItem(morphine);
+
             doctor_suppliesCabinet = Item.ItemList.Find(i => i.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
             doctor_medBayCabinet = Item.ItemList.Find(i => i.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
 
@@ -175,7 +191,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }*/
 
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect)); // Medical supplies objective
+            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Medical supplies objective
 
             do
             {
@@ -254,17 +270,18 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
             GameMain.GameSession.CrewManager.AddCharacter(doctor);
             GameMain.GameSession.CrewManager.AddCharacter(patient1);
-            GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
+            GameMain.GameSession.CrewManager.ToggleCrewListOpen = true;
             patient1.CharacterHealth.UseHealthWindow = false;
 
             yield return new WaitForSeconds(3.0f, false);
             patient1.AIController.Enabled = true;
             doctor.RemoveActiveObjectiveEntity(patient1);
-            TriggerTutorialSegment(3); // Get the patient to medbay
+            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command)); // Get the patient to medbay
 
             while (patient1.CurrentOrder == null || patient1.CurrentOrder.Identifier != "follow")
             {
-                GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
+                // TODO: Rework order highlighting for new command UI
+                // GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));
                 yield return null;
             }
 

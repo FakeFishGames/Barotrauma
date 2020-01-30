@@ -54,8 +54,9 @@ namespace Barotrauma
             }
         }
 
-        private int? selected;
-        public int? Selected
+        // intentional hiding?
+        private new int? selected;
+        public new int? Selected
         {
             get
             {
@@ -64,7 +65,7 @@ namespace Barotrauma
             set
             {
                 OnSelect?.Invoke(this, value);
-                if (selected != null && selected.Equals(value)) return;
+                if (selected != null && selected.Equals(value)) { return; }
                 selected = value;
                 foreach (KeyValuePair<int, GUITickBox> radioButton in radioButtons)
                 {
@@ -72,7 +73,10 @@ namespace Barotrauma
                     {
                         radioButton.Value.Selected = true;
                     }
-                    else if (radioButton.Value.Selected) radioButton.Value.Selected = false;
+                    else if (radioButton.Value.Selected)
+                    {
+                        radioButton.Value.Selected = false;
+                    }
                 }
             }
         }

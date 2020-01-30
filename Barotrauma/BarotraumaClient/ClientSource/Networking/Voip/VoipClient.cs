@@ -80,7 +80,7 @@ namespace Barotrauma.Networking
             if (queue == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage("Couldn't find VoipQueue with id " + queueId.ToString() + "!", Color.Red);
+                DebugConsole.NewMessage("Couldn't find VoipQueue with id " + queueId.ToString() + "!", GUI.Style.Red);
 #endif
                 return;
             }
@@ -144,13 +144,13 @@ namespace Barotrauma.Networking
             if (voiceIconSheetRects == null)
             {
                 var soundIconStyle = GUI.Style.GetComponentStyle("GUISoundIcon");
-                Point sourceRectSize = soundIconStyle.Sprites.First().Value.First().Sprite.SourceRect.Size;
+                Rectangle sourceRect = soundIconStyle.Sprites.First().Value.First().Sprite.SourceRect;
                 var indexPieces = soundIconStyle.Element.Attribute("sheetindices").Value.Split(';');
                 voiceIconSheetRects = new Rectangle[indexPieces.Length];
                 for (int i = 0; i < indexPieces.Length; i++)
                 {
-                    Point location = XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRectSize;
-                    voiceIconSheetRects[i] = new Rectangle(location, sourceRectSize);
+                    Point location = sourceRect.Location + XMLExtensions.ParsePoint(indexPieces[i].Trim()) * sourceRect.Size;
+                    voiceIconSheetRects[i] = new Rectangle(location, sourceRect.Size);
                 }
             }
 
@@ -164,8 +164,7 @@ namespace Barotrauma.Networking
             else
             {
                 soundIcon.Visible = true;
-                int sheetIndex = 0;
-                sheetIndex = (int)Math.Floor(userdata.Second * voiceIconSheetRects.Length);
+                int sheetIndex = (int)Math.Floor(userdata.Second * voiceIconSheetRects.Length);
                 sheetIndex = MathHelper.Clamp(sheetIndex, 0, voiceIconSheetRects.Length - 1);
                 soundIcon.SourceRect = voiceIconSheetRects[sheetIndex];
                 soundIcon.OverrideState = GUIComponent.ComponentState.None;

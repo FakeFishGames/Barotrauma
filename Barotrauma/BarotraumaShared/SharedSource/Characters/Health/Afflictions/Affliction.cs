@@ -145,7 +145,7 @@ namespace Barotrauma
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
             if (currentEffect == null) return 0.0f;
             if (currentEffect.MaxResistance - currentEffect.MinResistance <= 0.0f) return 0.0f;
-            if (afflictionId != currentEffect.ResistanceFor) return 0.0f;
+            if (afflictionId != null && afflictionId != currentEffect.ResistanceFor) return 0.0f;
 
             return MathHelper.Lerp(
                 currentEffect.MinResistance,

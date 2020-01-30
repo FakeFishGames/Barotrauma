@@ -66,7 +66,7 @@ namespace Barotrauma
 
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(pos.X - 5, -(pos.Y + 5)),
-                    Vector2.One * 10.0f, Color.Red, false, 0, 3);
+                    Vector2.One * 10.0f, GUI.Style.Red, false, 0, 3);
             }
 
             if (drawOffset != Vector2.Zero)

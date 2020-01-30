@@ -300,7 +300,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 else if (hasRequiredItems && character != null && character == Character.Controlled)
                 {
-                    GUI.AddMessage(accessDeniedTxt, Color.Red);
+                    GUI.AddMessage(accessDeniedTxt, GUI.Style.Red);
 
                 }
 #endif

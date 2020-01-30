@@ -24,6 +24,12 @@ namespace Barotrauma
         public Action<Submarine, string, string> StartNewGame;
         public Action<string> LoadGame;
 
+        public GUIButton StartButton
+        {
+            get;
+            private set;
+        }
+
         private readonly bool isMultiplayer;
 
         public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles = null)
@@ -35,7 +41,7 @@ namespace Barotrauma
             var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
-                RelativeSpacing = isMultiplayer ? 0.0f : 0.05f
+                RelativeSpacing = isMultiplayer ? 0.0f : 0.02f
             };
 
             var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
@@ -53,18 +59,18 @@ namespace Barotrauma
             columnContainer.Recalculate();
 
             // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUI.SubHeadingFont);
             saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
             {
                 textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUI.SubHeadingFont);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
 
             if (!isMultiplayer)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUI.SubHeadingFont);
 
                 var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
                 {
@@ -74,15 +80,10 @@ namespace Barotrauma
                 subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
 
                 var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-                var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font);
+                var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
                 searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
                 searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
-
                 searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
-                var clearButton = new GUIButton(new RectTransform(new Vector2(0.075f, 1.0f), filterContainer.RectTransform), "x")
-                {
-                    OnClicked = (btn, userdata) => { searchBox.Text = ""; FilterSubs(subList, ""); searchBox.Flash(Color.White); return true; }
-                };
 
                 subList.OnSelected = OnSubSelected;
             }
@@ -93,15 +94,16 @@ namespace Barotrauma
             }
 
             // New game right side
-            subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform))
+            subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform))
             {
                 Stretch = true
             };
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.13f), 
                 (isMultiplayer ? leftColumn : rightColumn).RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.TopRight);
+            if (!isMultiplayer) { buttonContainer.IgnoreLayoutGroups = true; }
 
-            var startButton = new GUIButton(new RectTransform(isMultiplayer ? new Vector2(0.5f, 1.0f) : Vector2.One,
+            StartButton = new GUIButton(new RectTransform(isMultiplayer ? new Vector2(0.5f, 1.0f) : Vector2.One,
                 buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, 
                 TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
             {
@@ -109,7 +111,7 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrWhiteSpace(saveNameBox.Text))
                     {
-                        saveNameBox.Flash(Color.Red);
+                        saveNameBox.Flash(GUI.Style.Red);
                         return false;
                     }
 
@@ -207,6 +209,7 @@ namespace Barotrauma
                 disclaimerBtn.RectTransform.MaxSize = new Point((int)(30 * GUI.Scale));
             }
 
+            columnContainer.Recalculate();
             leftColumn.Recalculate();
             rightColumn.Recalculate();
 
@@ -232,7 +235,7 @@ namespace Barotrauma
         private bool OnSubSelected(GUIComponent component, object obj)
         {
             if (subPreviewContainer == null) { return false; }
-
+            (subPreviewContainer.Parent as GUILayoutGroup)?.Recalculate();
             subPreviewContainer.ClearChildren();
 
             Submarine sub = obj as Submarine;
@@ -389,10 +392,16 @@ namespace Barotrauma
                 {
                     nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
                     XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
+                    if (doc.Root.GetChildElement("multiplayercampaign") != null)
+                    {
+                        //multiplayer campaign save in the wrong folder -> don't show the save
+                        saveList.Content.RemoveChild(saveFrame);
+                        continue;
+                    }
                     if (doc?.Root == null)
                     {
                         DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
-                        nameText.TextColor = Color.Red;
+                        nameText.TextColor = GUI.Style.Red;
                         continue;
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");
@@ -421,7 +430,7 @@ namespace Barotrauma
                     List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
                     if (!GameSession.IsCompatibleWithSelectedContentPackages(contentPackagePaths, out string errorMsg))
                     {
-                        nameText.TextColor = Color.Red;
+                        nameText.TextColor = GUI.Style.Red;
                         saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
                     }
                 }
@@ -466,7 +475,7 @@ namespace Barotrauma
                 return file2WriteTime.CompareTo(file1WriteTime);
             });
 
-            loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"), style: "GUIButtonLarge")
+            loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -480,7 +489,8 @@ namespace Barotrauma
                 },
                 Enabled = false
             };
-            deleteMpSaveButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomLeft), TextManager.Get("Delete"), style: "GUIButtonLarge")
+            deleteMpSaveButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomLeft), 
+                TextManager.Get("Delete"), style: "GUIButtonSmall")
             {
                 OnClicked = DeleteSave,
                 Visible = false
@@ -550,7 +560,7 @@ namespace Barotrauma
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
-            }, TextManager.Get("Delete"))
+            }, TextManager.Get("Delete"), style: "GUIButtonSmall")
             {
                 UserData = fileName,
                 OnClicked = DeleteSave

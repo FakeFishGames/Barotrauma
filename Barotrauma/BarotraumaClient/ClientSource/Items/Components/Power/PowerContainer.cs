@@ -18,13 +18,20 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            if (GuiFrame == null) return;
+            if (GuiFrame == null) { return; }
 
-            GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.7f), GuiFrame.RectTransform, Anchor.Center))
-                { RelativeSpacing = 0.1f, Stretch = true };
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.75f), GuiFrame.RectTransform, Anchor.Center)
+            {
+                //RelativeOffset = new Vector2(0, 0.05f)
+            }, style: null);
+
+            var upperArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedFrame.RectTransform, Anchor.TopCenter), style: null);
+            var lowerArea = new GUIFrame(new RectTransform(new Vector2(1, 0.6f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
+
 
             string rechargeStr = TextManager.Get("PowerContainerRechargeRate");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), "RechargeRate", textAlignment: Alignment.Center)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), upperArea.RectTransform, Anchor.TopCenter),
+                "RechargeRate", textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 TextGetter = () =>
                 {
@@ -32,21 +39,14 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            var sliderArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform),
-                "0 %", textAlignment: Alignment.Center);
-            rechargeSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.8f, 1.0f), sliderArea.RectTransform), barSize: 0.25f, style: "GUISlider")
+            rechargeSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 0.4f), upperArea.RectTransform, Anchor.BottomCenter), 
+                barSize: 0.15f, style: "DeviceSlider")
             {
                 Step = 0.1f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
                     float newRechargeSpeed = maxRechargeSpeed * barScroll;
-                    if (Math.Abs(newRechargeSpeed - rechargeSpeed) < 0.1f) return false;
+                    if (Math.Abs(newRechargeSpeed - rechargeSpeed) < 0.1f) { return false; }
 
                     RechargeSpeed = newRechargeSpeed;
                     if (GameMain.Client != null)
@@ -57,21 +57,30 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sliderArea.RectTransform),
-                "100 %", textAlignment: Alignment.Center);
+            rechargeSpeedSlider.Bar.RectTransform.MaxSize = new Point(rechargeSpeedSlider.Bar.Rect.Height);
+            
+            // lower area --------------------------
 
-            string chargeStr = TextManager.Get("PowerContainerCharge");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform), "Charge", textAlignment: Alignment.Center)
+            var textArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), lowerArea.RectTransform), style: null);
+            var chargeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), textArea.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("charge"), textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
-                TextGetter = () =>
-                {
-                    return chargeStr.Replace("[charge]", (int)charge + "/" + (int)capacity).Replace("[percentage]", ((int)((charge / capacity) * 100.0f)).ToString());
-                }
+                ToolTip = TextManager.Get("PowerTransferTipPower")
             };
-
-            chargeIndicator = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), barSize: 0.0f)
+            string kWmin = TextManager.Get("kilowattminute");
+            var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), textArea.RectTransform, Anchor.CenterRight), 
+                "", textColor: GUI.Style.TextColor, font: GUI.Font, textAlignment: Alignment.CenterRight)
             {
-                ProgressGetter = () => 
+                TextGetter = () => $"{(int)charge}/{(int)capacity} {kWmin} ({((int)MathUtils.Percentage(charge, capacity)).ToString()} %)"
+            };
+            if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUI.SmallFont; }
+
+            chargeIndicator = new GUIProgressBar(new RectTransform(new Vector2(1.1f, 0.5f), lowerArea.RectTransform, Anchor.BottomCenter)
+            {
+                RelativeOffset = new Vector2(0, 0.1f)
+            }, barSize: 0.0f, style: "DeviceProgressBar")
+            {
+                ProgressGetter = () =>
                 {
                     return capacity <= 0.0f ? 1.0f : charge / capacity;
                 }
@@ -95,7 +104,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) return;
+            if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) { return; }
 
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(

@@ -41,7 +41,7 @@ namespace Barotrauma
             {
                 clr = Color.Black;
             }
-            if (IsSelected) clr = Color.Red;
+            if (IsSelected) clr = GUI.Style.Red;
             if (IsHighlighted) clr = Color.DarkRed;
 
             int iconX = iconIndices[(int)spawnType] * IconSize % iconTexture.Width;
@@ -74,7 +74,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    isObstructed ? Color.Gray : Color.Green, width: 5);
+                    isObstructed ? Color.Gray : GUI.Style.Green, width: 5);
             }
 
             GUI.SmallFont.DrawString(spriteBatch,
@@ -193,7 +193,7 @@ namespace Barotrauma
         {
             IdCardDesc = text;
             textBox.Text = text;
-            textBox.Color = Color.Green;
+            textBox.Color = GUI.Style.Green;
 
             textBox.Deselect();
 
@@ -203,14 +203,14 @@ namespace Barotrauma
         {
             IdCardTags = text.Split(',');
             textBox.Text = string.Join(",", IdCardTags);
-            textBox.Flash(Color.Green);
+            textBox.Flash(GUI.Style.Green);
             textBox.Deselect();
             return true;
         }
         
         private bool TextBoxChanged(GUITextBox textBox, string text)
         {
-            textBox.Color = Color.Red;
+            textBox.Color = GUI.Style.Red;
 
             return true;
         }
@@ -234,12 +234,12 @@ namespace Barotrauma
 
             if (spawnType == SpawnType.Path)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Waypoint"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Waypoint"), font: GUI.LargeFont);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("LinkWaypoint"));
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Editing") + " " + TextManager.Get("Spawnpoint"));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), TextManager.Get("Spawnpoint"), font: GUI.LargeFont);
                 
                 var spawnTypeContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
                 {
@@ -248,7 +248,7 @@ namespace Barotrauma
                 };
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), spawnTypeContainer.RectTransform), TextManager.Get("SpawnType"));
 
-                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "-")
+                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     UserData = -1,
                     OnClicked = ChangeSpawnType
@@ -257,12 +257,11 @@ namespace Barotrauma
                 {
                     UserData = "spawntypetext"
                 };
-                button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform), "+")
+                button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
                 {
                     UserData = 1,
                     OnClicked = ChangeSpawnType
                 };
-
 
                 var descText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
                     TextManager.Get("IDCardDescription"), font: GUI.SmallFont);
@@ -273,7 +272,6 @@ namespace Barotrauma
                     ToolTip = TextManager.Get("IDCardDescriptionTooltip")
                 };
                 propertyBox.OnTextChanged += TextBoxChanged;
-
 
                 var tagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
                     TextManager.Get("IDCardTags"), font: GUI.SmallFont);

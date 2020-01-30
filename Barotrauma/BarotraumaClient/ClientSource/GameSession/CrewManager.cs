@@ -13,8 +13,6 @@ namespace Barotrauma
 {
     partial class CrewManager
     {
-        const float ChatMessageFadeTime = 10.0f;
-
         /// <summary>
         /// How long the previously selected character waits doing nothing when switching to another character. Only affects idling.
         /// </summary>
@@ -27,18 +25,15 @@ namespace Barotrauma
 
         #region UI
 
+        public GUIComponent ReportButtonFrame { get; set; }
+
         private GUIFrame guiFrame;
         private GUIFrame crewArea;
-        private GUIListBox characterListBox;
-
-        private GUIComponent reportButtonFrame;
-
-        private GUIButton scrollButtonUp, scrollButtonDown;
-
+        private GUILayoutGroup activeCrew;
+        private GUIFrame crewList;
         private GUIButton toggleCrewButton;
-        private float crewAreaOpenState;
-        private bool toggleCrewAreaOpen = true;
-        private int characterInfoWidth;
+        private float crewListOpenState;
+        private bool toggleCrewListOpen = true;
 
         /// <summary>
         /// Present only in single player games. In multiplayer. The chatbox is found from GameSession.Client.
@@ -47,25 +42,21 @@ namespace Barotrauma
 
         private float prevUIScale;
 
-        private GUIComponent orderTargetFrame, orderTargetFrameShadow;
-
         public bool AllowCharacterSwitch = true;
 
-        public bool ToggleCrewAreaOpen
+        public bool ToggleCrewListOpen
         {
-            get { return toggleCrewAreaOpen; }
+            get { return toggleCrewListOpen; }
             set
             {
-                if (toggleCrewAreaOpen == value) { return; }
-                toggleCrewAreaOpen = GameMain.Config.CrewMenuOpen = value;
-                foreach (GUIComponent child in toggleCrewButton.Children)
-                {
-                    child.SpriteEffects = toggleCrewAreaOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
-                }
+                if (toggleCrewListOpen == value) { return; }
+                toggleCrewListOpen = GameMain.Config.CrewMenuOpen = value;
             }
         }
 
         public List<GUIButton> OrderOptionButtons = new List<GUIButton>();
+
+        private Sprite jobIndicatorBackground;
 
         #endregion
 
@@ -96,45 +87,104 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            Point scrollButtonSize = new Point((int)(200 * GUI.Scale), (int)(30 * GUI.Scale));
-
             crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), "", Color.Transparent)
             {
                 CanBeFocused = false
             };
-            toggleCrewButton = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform)
-            { AbsoluteOffset = HUDLayoutSettings.CrewArea.Location },
-                "", style: "UIToggleButton");
-            toggleCrewButton.OnClicked += (GUIButton btn, object userdata) =>
+
+            // Based on the sprite dimensions
+            var buttonSize = new Point((int)(79.0f / 126.0f * crewArea.Rect.Height), crewArea.Rect.Height);
+
+            var commandButton = new GUIButton(
+                new RectTransform(buttonSize, parent: crewArea.RectTransform, anchor: Anchor.CenterRight),
+                style: null)
             {
-                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                OnClicked = (button, userData) =>
+                {
+                    ToggleCommandUI();
+                    return true;
+                }
+            };
+
+            new GUIImage(
+                new RectTransform(Vector2.One, parent: commandButton.RectTransform),
+                new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(551, 1, 79, 126)),
+                scaleToFit: true)
+            {
+                Color = GUIColorSettings.InventorySlotColor * 0.8f,
+                HoverColor = GUIColorSettings.InventorySlotColor,
+                PressedColor = GUIColorSettings.InventorySlotColor,
+                SelectedColor = GUIColorSettings.InventorySlotColor * 0.8f,
+                ToolTip = TextManager.Get("inputtype.command")
+            };
+
+            activeCrew = new GUILayoutGroup(
+                new RectTransform(
+                    new Point(crewArea.Rect.Width - commandButton.Rect.Width - HUDLayoutSettings.Padding, crewArea.Rect.Height),
+                    parent: crewArea.RectTransform,
+                    anchor: Anchor.CenterLeft),
+                isHorizontal: true,
+                childAnchor: Anchor.CenterRight)
+            {
+                AbsoluteSpacing = (int)(GUI.Scale * 5)
+            };
+
+            // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
+            crewList = new GUIFrame(
+                new RectTransform(
+                    new Point(
+                        Math.Min(crewArea.Rect.Height * 10, 500),
+                        Math.Min(crewArea.Rect.Height * 8, 400)),
+                    parent: crewArea.RectTransform,
+                    anchor: Anchor.BottomRight,
+                    pivot: Pivot.TopCenter));
+
+            var listBox = new GUIListBox(
+                new RectTransform(
+                    new Point((int)(crewList.Rect.Width / 2.0f - HUDLayoutSettings.Padding * 2), crewList.Rect.Height - HUDLayoutSettings.Padding * 4),
+                    parent: crewList.RectTransform,
+                    anchor: Anchor.CenterLeft)
+                {
+                    AbsoluteOffset = new Point(HUDLayoutSettings.Padding * 2, 0),
+                },
+                style: null)
+            {
+                AutoHideScrollBar = false,
+                Spacing = (int)(GUI.Scale * 10)
+            };
+
+            // Based on the sprite dimensions
+            buttonSize = new Point((int)(78.0f / 126.0f * crewArea.Rect.Height), crewArea.Rect.Height);
+
+            toggleCrewButton = new GUIButton(
+                new RectTransform(buttonSize, parent: crewList.RectTransform, pivot: Pivot.TopRight)
+                {
+                    AbsoluteOffset = new Point(-HUDLayoutSettings.Padding, 0)
+                },
+                style: null);
+            toggleCrewButton.OnClicked = (GUIButton btn, object userdata) =>
+            {
+                ToggleCrewListOpen = !ToggleCrewListOpen;
                 return true;
             };
 
-            characterListBox = new GUIListBox(new RectTransform(new Point(100, (int)(crewArea.Rect.Height - scrollButtonSize.Y * 1.6f)), crewArea.RectTransform, Anchor.CenterLeft), false, Color.Transparent, null)
+            new GUIImage(
+                new RectTransform(Vector2.One, parent: toggleCrewButton.RectTransform),
+                new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(891, 135, 78, 126)),
+                scaleToFit: true)
             {
-                //Spacing = (int)(3 * GUI.Scale),
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                CanBeFocused = true,
-                OnSelected = (component, userdata) => false
+                Color = GUIColorSettings.InventorySlotColor * 0.8f,
+                HoverColor = GUIColorSettings.InventorySlotColor,
+                PressedColor = GUIColorSettings.InventorySlotColor,
+                SelectedColor = GUIColorSettings.InventorySlotColor * 0.8f,
+                ToolTip = TextManager.Get("crew")
             };
 
-            scrollButtonUp = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.TopLeft, Pivot.TopLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = -1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown = new GUIButton(new RectTransform(scrollButtonSize, crewArea.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), "", Alignment.Center, "GUIButtonVerticalArrow")
-            {
-                Visible = false,
-                UserData = 1,
-                OnClicked = ScrollCharacterList
-            };
-            scrollButtonDown.Children.ForEach(c => c.SpriteEffects = SpriteEffects.FlipVertically);
+            jobIndicatorBackground = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(0, 512, 128, 128));
 
-            if (isSinglePlayer)
+            #region Chatbox
+
+            if (IsSinglePlayer)
             {
                 ChatBox = new ChatBox(guiFrame, isSinglePlayer: true)
                 {
@@ -174,14 +224,18 @@ namespace Barotrauma
                 ChatBox.InputBox.OnTextChanged += ChatBox.TypingChatMessage;
             }
 
+            #endregion
+
+            #region Reports
+
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
             if (reports.None())
             {
                 DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
                 return;
             }
-            reportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.CrewArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.CrewArea.Height), guiFrame.RectTransform))
+            ReportButtonFrame = new GUILayoutGroup(new RectTransform(
+                new Point((HUDLayoutSettings.ChatBoxArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.ChatBoxArea.Height), guiFrame.RectTransform))
             {
                 AbsoluteSpacing = (int)(5 * GUI.Scale),
                 UserData = "reportbuttons",
@@ -191,8 +245,8 @@ namespace Barotrauma
             //report buttons
             foreach (Order order in reports)
             {
-                if (!order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                var btn = new GUIButton(new RectTransform(new Point(reportButtonFrame.Rect.Width), reportButtonFrame.RectTransform), style: null)
+                if (!order.TargetAllCharacters || order.SymbolSprite == null) { continue; }
+                var btn = new GUIButton(new RectTransform(new Point(ReportButtonFrame.Rect.Width), ReportButtonFrame.RectTransform), style: null)
                 {
                     OnClicked = (GUIButton button, object userData) =>
                     {
@@ -212,9 +266,9 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
                 {
-                    Color = Color.Red * 0.8f,
-                    HoverColor = Color.Red * 1.0f,
-                    PressedColor = Color.Red * 0.6f,
+                    Color = GUI.Style.Red * 0.8f,
+                    HoverColor = GUI.Style.Red * 1.0f,
+                    PressedColor = GUI.Style.Red * 0.6f,
                     UserData = "highlighted",
                     CanBeFocused = false,
                     Visible = false
@@ -224,25 +278,25 @@ namespace Barotrauma
                 {
                     Color = order.Color,
                     HoverColor = Color.Lerp(order.Color, Color.White, 0.5f),
-                    ToolTip = order.Name
+                    ToolTip = order.Name,
+                    SpriteEffects = SpriteEffects.FlipHorizontally
                 };
             }
 
+            #endregion
+
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-
             prevUIScale = GUI.Scale;
-
-            ToggleCrewAreaOpen = GameMain.Config.CrewMenuOpen;
+            ToggleCrewListOpen = GameMain.Config.CrewMenuOpen;
         }
-
 
         #endregion
 
         #region Character list management
 
-        public Rectangle GetCharacterListArea()
+        public Rectangle GetActiveCrewArea()
         {
-            return characterListBox.Rect;
+            return crewArea.Rect;
         }
 
         public IEnumerable<Character> GetCharacters()
@@ -268,14 +322,16 @@ namespace Barotrauma
                 return;
             }
 
-            if (!characters.Contains(character)) characters.Add(character);
+            if (!characters.Contains(character))
+            {
+                characters.Add(character);
+            }
             if (!characterInfos.Contains(character.Info))
             {
                 characterInfos.Add(character.Info);
             }
 
-            CreateCharacterFrame(character, characterListBox.Content);
-            characterListBox.Content.RectTransform.SortChildren((c1, c2) => { return c2.NonScaledSize.X - c1.NonScaledSize.X; });
+            AddCharacterToCrewList(character);
 
             if (character is AICharacter)
             {
@@ -313,7 +369,7 @@ namespace Barotrauma
                 return;
             }
             characters.Remove(character);
-            if (removeInfo) characterInfos.Remove(character.Info);
+            if (removeInfo) { characterInfos.Remove(character.Info); }
         }
 
         /// <summary>
@@ -325,100 +381,45 @@ namespace Barotrauma
             characterInfos.Remove(characterInfo);
         }
 
-        /// <summary>
-        /// Create the UI component that holds the character's portrait and order/report buttons for the character
-        /// </summary>
-        private GUIComponent CreateCharacterFrame(Character character, GUIComponent parent)
+        private GUIComponent AddCharacterToActiveCrew(Character character)
         {
-            int genericOrderCount = 0, correctOrderCount = 0, wrongOrderCount = 0;
-            //sort the orders
-            //  1. generic orders (follow, wait, etc)
-            //  2. orders appropriate for the character's job (captain -> steer, etc)
-            //  3. orders inappropriate for the job (captain -> operate reactor, etc)
-            List<Order> orders = new List<Order>();
-            foreach (Order order in Order.PrefabList)
-            {
-                if (order.TargetAllCharacters || order.SymbolSprite == null) continue;
-                if (!JobPrefab.Prefabs.Any(jp => jp.AppropriateOrders.Contains(order.Identifier)) &&
-                    (order.AppropriateJobs == null || !order.AppropriateJobs.Any()))
-                {
-                    orders.Insert(0, order);
-                    genericOrderCount++;
-                }
-                else if (order.HasAppropriateJob(character))
-                {
-                    orders.Add(order);
-                    correctOrderCount++;
-                }
-            }
-            foreach (Order order in Order.PrefabList)
-            {
-                if (order.SymbolSprite == null) continue;
-                if (!order.TargetAllCharacters && !orders.Contains(order))
-                {
-                    orders.Add(order);
-                    wrongOrderCount++;
-                }
-            }
+            int size = HUDLayoutSettings.CrewArea.Height;
+            int iconSize = (int)(size * 0.9f);
 
-            int spacing = (int)(10 * GUI.Scale);
-            int height = (int)(45 * GUI.Scale);
-            characterInfoWidth = (int)(200 * GUI.Scale);
-
-            float charactersPerView = characterListBox.Rect.Height / (float)(height + characterListBox.Spacing);
-
-            //if we can fit less than 25% of the last character or more than 75%,
-            //change the size of the character frame slightly to fit them more nicely in the list box
-            if (charactersPerView % 1.0f < 0.25f || charactersPerView % 1.0f > 0.75f)
-            {
-                height = (int)(characterListBox.Rect.Height / (float)Math.Round(charactersPerView)) - characterListBox.Spacing;
-            }
-
-            int iconSize = (int)(height * 0.8f);
-
-
-            var frame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, height), parent.RectTransform), style: "InnerFrame")
+            var characterFrame = new GUIFrame(new RectTransform(new Point(size), activeCrew.RectTransform, Anchor.Center), style: null)
             {
                 UserData = character,
                 CanBeFocused = false
             };
-            frame.Color = character.Info.Job.Prefab.UIColor;
-            frame.SelectedColor = Color.Lerp(frame.Color, Color.White, 0.5f);
-            frame.HoverColor = Color.Lerp(frame.Color, Color.White, 0.9f);
 
-            new GUIFrame(new RectTransform(new Point(characterInfoWidth, (int)(frame.Rect.Height * 1.3f)), frame.RectTransform, Anchor.CenterLeft), style: "OuterGlow")
+            var characterToolTip = character.Info?.Name;
+            if (character.Info?.Job != null)
             {
-                UserData = "highlight",
-                Color = frame.SelectedColor,
-                HoverColor = frame.SelectedColor,
-                PressedColor = frame.SelectedColor,
-                SelectedColor = frame.SelectedColor,
-                CanBeFocused = false
-            };
-            //---------------- character area ----------------
-
-            string characterToolTip = character.Info.Name;
-            if (character.Info.Job != null)
-            {
-                characterToolTip += " (" + character.Info.Job.Name + ")";
+                characterToolTip += " (" + character.Info.Job?.Name + ")";
             }
-            var characterArea = new GUIButton(new RectTransform(new Point(characterInfoWidth, frame.Rect.Height), frame.RectTransform, Anchor.CenterLeft), style: "GUITextBox")
+            var tooltipColor = character.Info?.Job.Prefab?.UIColor;
+            var tooltipColorData = tooltipColor != null ? new List<ColorData>() { new ColorData() { Color = (Color)tooltipColor, EndIndex = characterToolTip.Length } } : null;
+
+            var characterButton = new GUIButton(new RectTransform(Vector2.One, characterFrame.RectTransform, Anchor.Center), style: null)
             {
                 UserData = character,
-                Color = frame.Color,
-                SelectedColor = frame.SelectedColor,
-                HoverColor = frame.HoverColor,
-                ToolTip = characterToolTip
+                ToolTip = characterToolTip,
+                TooltipColorData = tooltipColorData
             };
 
-            var soundIcon = new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
-                sprite: GUI.Style.GetComponentStyle("GUISoundIcon").Sprites[GUIComponent.ComponentState.None].FirstOrDefault().Sprite, scaleToFit: true)
+            #region Sound Icon
+
+            new GUIImage(
+                new RectTransform(new Vector2(0.4f), characterFrame.RectTransform, anchor: Anchor.TopRight),
+                sprite: GUI.Style.GetComponentStyle("GUISoundIcon").Sprites[GUIComponent.ComponentState.None].FirstOrDefault().Sprite,
+                scaleToFit: true)
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
                 CanBeFocused = false,
                 Visible = true
             };
-            new GUIImage(new RectTransform(new Point((int)(characterArea.Rect.Height * 0.5f)), characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+            new GUIImage(
+                new RectTransform(new Vector2(0.5f), characterFrame.RectTransform, anchor: Anchor.TopRight),
                 "GUISoundIconDisabled")
             {
                 UserData = "soundicondisabled",
@@ -426,172 +427,118 @@ namespace Barotrauma
                 Visible = false
             };
 
-            if (isSinglePlayer)
+            #endregion
+
+            if (IsSinglePlayer)
             {
-                characterArea.OnClicked = CharacterClicked;
+                characterButton.OnClicked = CharacterClicked;
             }
             else
             {
-                characterArea.CanBeFocused = false;
-                characterArea.CanBeSelected = false;
+                characterButton.CanBeSelected = false;
             }
 
-            var characterImage = new GUICustomComponent(new RectTransform(new Point(characterArea.Rect.Height), characterArea.RectTransform, Anchor.CenterLeft),
+            new GUICustomComponent(
+                new RectTransform(new Point(iconSize), parent: characterFrame.RectTransform, anchor: Anchor.Center),
                 onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false,
                 HoverColor = Color.White,
                 SelectedColor = Color.White,
-                ToolTip = characterToolTip
+                ToolTip = characterToolTip,
+                TooltipColorData = tooltipColorData
             };
 
+            if (character?.Info?.Job.Prefab?.Icon != null)
+            {
+                new GUIImage(
+                    new RectTransform(new Vector2(0.5f), characterFrame.RectTransform, anchor: Anchor.BottomLeft),
+                    jobIndicatorBackground,
+                    scaleToFit: true)
+                {
+                    CanBeFocused = false
+                };
+                new GUIImage(
+                    new RectTransform(new Vector2(0.5f), characterFrame.RectTransform, anchor: Anchor.BottomLeft),
+                    character.Info.Job.Prefab.Icon,
+                    scaleToFit: true)
+                {
+                    CanBeFocused = false,
+                    Color = character.Info.Job.Prefab.UIColor,
+                    ToolTip = characterToolTip,
+                    TooltipColorData = tooltipColorData
+                };
+            }
 
-            if (GameMain.GameSession?.GameMode?.Mission is CombatMission combatMission)
+            #region Combat Mission
+            /*if (GameMain.GameSession?.GameMode?.Mission is CombatMission combatMission)
             {
                 new GUIFrame(new RectTransform(Vector2.One, characterArea.RectTransform), style: "InnerGlow",
                     color: character.TeamID == Character.TeamType.Team1 ? Color.SteelBlue : Color.OrangeRed);
+            }*/
+            #endregion
+
+            return characterFrame;
+        }
+
+        private void AddCharacterToCrewList(Character character)
+        {
+            GUIListBox listBox = (GUIListBox)crewList.FindChild(c => c is GUIListBox);
+            int height = Math.Min(crewArea.Rect.Height, (int)(listBox.Content.Rect.Width * 0.3f));
+            var characterButton = new GUIButton(new RectTransform(new Point(listBox.Content.Rect.Width, height), parent: listBox.Content.RectTransform), style: null)
+            {
+                UserData = character
+            };
+
+            if (IsSinglePlayer)
+            {
+                characterButton.OnClicked = CharacterClicked;
+            }
+            else
+            {
+                characterButton.CanBeSelected = false;
             }
 
-            var characterName = new GUITextBlock(new RectTransform(new Point(characterArea.Rect.Width - characterImage.Rect.Width - soundIcon.Rect.Width - 10, characterArea.Rect.Height),
-                characterArea.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(soundIcon.Rect.Width + 10, 0) },
-                character.Name, textColor: frame.Color, font: GUI.SmallFont, wrap: true)
+            var characterIcon = new GUICustomComponent(
+                new RectTransform(
+                    new Point(height),
+                    parent: characterButton.RectTransform,
+                    anchor: Anchor.CenterLeft),
+                onDraw: (sb, component) => character.Info.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
-                Color = frame.Color,
-                HoverColor = Color.Transparent,
-                SelectedColor = Color.Transparent,
                 CanBeFocused = false,
-                ToolTip = characterToolTip,
-                AutoScale = true
+                HoverColor = Color.White,
+                SelectedColor = Color.White
             };
 
-            //---------------- order buttons ----------------
-
-            var orderButtonFrame = new GUILayoutGroup(new RectTransform(new Point(100, frame.Rect.Height), frame.RectTransform)
-            { AbsoluteOffset = new Point(characterInfoWidth + spacing, 0) },
-                isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            if (character?.Info?.Job.Prefab?.Icon != null)
             {
-                AbsoluteSpacing = (int)(10 * GUI.Scale),
-                UserData = "orderbuttons"
-            };
-
-            var spacer = new GUIFrame(new RectTransform(new Point(spacing, orderButtonFrame.Rect.Height), frame.RectTransform)
-            {
-                AbsoluteOffset = new Point(characterInfoWidth, 0)
-            });
-
-            //listbox for holding the orders inappropriate for this character
-            //(so we can easily toggle their visibility)
-            var wrongOrderList = new GUIListBox(new RectTransform(new Point(50, orderButtonFrame.Rect.Height), orderButtonFrame.RectTransform), isHorizontal: true, style: null)
-            {
-                ScrollBarEnabled = false,
-                ScrollBarVisible = false,
-                Enabled = false,
-                Spacing = spacing,
-                ClampMouseRectToParent = false
-            };
-            wrongOrderList.Content.ClampMouseRectToParent = false;
-
-            for (int i = 0; i < orders.Count; i++)
-            {
-                var order = orders[i];
-                if (order.TargetAllCharacters) continue;
-
-                RectTransform btnParent = (i >= genericOrderCount + correctOrderCount) ?
-                    wrongOrderList.Content.RectTransform :
-                    orderButtonFrame.RectTransform;
-
-                var btn = new GUIButton(new RectTransform(new Point(iconSize, iconSize), btnParent, Anchor.CenterLeft),
-                    style: null)
+                new GUIImage(
+                    new RectTransform(new Vector2(0.5f), characterIcon.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft),
+                    jobIndicatorBackground,
+                    scaleToFit: true)
                 {
-                    UserData = order
+                    CanBeFocused = false
                 };
-
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlow")
+                new GUIImage(
+                    new RectTransform(new Vector2(0.5f), characterIcon.RectTransform, anchor: Anchor.BottomLeft, pivot: Pivot.BottomLeft),
+                    character.Info.Job.Prefab.Icon,
+                    scaleToFit: true)
                 {
-                    Color = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.8f,
-                    HoverColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 1.0f,
-                    PressedColor = Color.Lerp(order.Color, frame.Color, 0.5f) * 0.6f,
-                    UserData = "selected",
                     CanBeFocused = false,
-                    Visible = false
+                    Color = character.Info.Job.Prefab.UIColor
                 };
-
-                var img = new GUIImage(new RectTransform(Vector2.One, btn.RectTransform), order.Prefab.SymbolSprite);
-                img.Scale = iconSize / (float)img.SourceRect.Width;
-                img.Color = Color.Lerp(order.Color, frame.Color, 0.5f);
-                img.ToolTip = order.Name;
-                img.HoverColor = Color.Lerp(img.Color, Color.White, 0.5f);
-
-                btn.OnClicked += (GUIButton button, object userData) =>
-                {
-#if CLIENT
-                    if (GameMain.Client != null && Character.Controlled == null) { return false; }
-#endif
-                    if (Character.Controlled != null && Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
-
-                    if (btn.GetChildByUserData("selected").Visible)
-                    {
-                        SetCharacterOrder(character, Order.GetPrefab("dismissed"), null, Character.Controlled);
-                    }
-                    else
-                    {
-                        if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1)
-                        {
-                            CreateOrderTargetFrame(button, character, order);
-                        }
-                        else
-                        {
-                            SetCharacterOrder(character, order, null, Character.Controlled);
-                        }
-                    }
-                    return true;
-                };
-                btn.UserData = order;
-                btn.ToolTip = order.Name;
-
-                //divider between different groups of orders
-                if (i == genericOrderCount - 1 || i == genericOrderCount + correctOrderCount - 1)
-                {
-                    //TODO: divider sprite
-                    new GUIFrame(new RectTransform(new Point(8, iconSize), orderButtonFrame.RectTransform), style: "GUIButton");
-                }
             }
 
-            var toggleWrongOrderBtn = new GUIButton(new RectTransform(new Point((int)(30 * GUI.Scale), wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                "", style: "UIToggleButton")
-            {
-                UserData = "togglewrongorder",
-                CanBeFocused = false
-            };
+            new GUITextBlock(
+                new RectTransform(new Point(characterButton.Rect.Width - characterIcon.Rect.Width, height), characterButton.RectTransform, anchor: Anchor.CenterRight)
+                {
+                    AbsoluteOffset = new Point(HUDLayoutSettings.Padding, 0)
+                },
+                character.Name + "\n" + character.Info?.Job?.Name,
+                textColor: character.Info?.Job?.Prefab?.UIColor);
 
-            wrongOrderList.RectTransform.NonScaledSize = new Point(
-                wrongOrderList.Content.Children.Sum(c => c.Rect.Width + wrongOrderList.Spacing),
-                wrongOrderList.RectTransform.NonScaledSize.Y);
-            wrongOrderList.RectTransform.SetAsLastChild();
-
-            new GUIFrame(new RectTransform(new Point(
-                wrongOrderList.Rect.Width - toggleWrongOrderBtn.Rect.Width - wrongOrderList.Spacing * 2,
-                wrongOrderList.Rect.Height), wrongOrderList.Content.RectTransform),
-                style: null)
-            {
-                CanBeFocused = false
-            };
-
-            //scale to fit the content
-            orderButtonFrame.RectTransform.NonScaledSize = new Point(
-                orderButtonFrame.Children.Sum(c => c.Rect.Width + orderButtonFrame.AbsoluteSpacing),
-                orderButtonFrame.RectTransform.NonScaledSize.Y);
-
-            frame.RectTransform.NonScaledSize = new Point(
-                characterInfoWidth + spacing + (orderButtonFrame.Rect.Width - wrongOrderList.Rect.Width),
-                frame.RectTransform.NonScaledSize.Y);
-
-            characterListBox.RectTransform.NonScaledSize = new Point(
-                characterListBox.Content.Children.Max(c => c.Rect.Width) + wrongOrderList.Rect.Width,
-                characterListBox.RectTransform.NonScaledSize.Y);
-            characterListBox.Content.RectTransform.NonScaledSize = characterListBox.RectTransform.NonScaledSize;
-            characterListBox.UpdateScrollBarSize();
-            return frame;
+            GUITextBlock.AutoScaleAndNormalize(listBox.Content.GetAllChildren<GUITextBlock>(), defaultScale: 1.0f);
         }
 
         /// <summary>
@@ -608,7 +555,7 @@ namespace Barotrauma
 
         public void ReviveCharacter(Character revivedCharacter)
         {
-            if (characterListBox.Content.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
+            if (activeCrew.GetChildByUserData(revivedCharacter) is GUIComponent characterBlock)
             {
                 characterBlock.Parent.RemoveChild(characterBlock);
             }
@@ -617,31 +564,18 @@ namespace Barotrauma
 
         public void KillCharacter(Character killedCharacter)
         {
-            if (characterListBox.Content.GetChildByUserData(killedCharacter) is GUIComponent characterBlock)
+            if (activeCrew.GetChildByUserData(killedCharacter) is GUIComponent characterBlock)
             {
                 CoroutineManager.StartCoroutine(KillCharacterAnim(characterBlock));
             }
-            RemoveCharacter(killedCharacter);
-        }
-
-        private bool ScrollCharacterList(GUIButton button, object obj)
-        {
-            if (characterListBox.Content.CountChildren == 0) return false;
-            int dir = (int)obj;
-
-            float step =
-                (characterListBox.Content.Children.First().Rect.Height + characterListBox.Spacing) /
-                (characterListBox.TotalSize - characterListBox.Rect.Height);
-            characterListBox.BarScroll += dir * step;
-            
-            //round the scroll so that we're not displaying partial character frames
-            float roundedPos = MathUtils.RoundTowardsClosest(characterListBox.BarScroll, step);
-            if (Math.Abs(roundedPos - characterListBox.BarScroll) < step / 2)
+            else if (crewList.FindChild(c => c is GUIListBox) is GUIListBox listBox &&
+                     listBox.Content.GetChildByUserData(killedCharacter) is GUIComponent characterComponent)
             {
-                characterListBox.BarScroll = roundedPos;
+                listBox.Content.RemoveChild(characterComponent);
+                GUITextBlock.AutoScaleAndNormalize(listBox.Content.GetAllChildren<GUITextBlock>(), defaultScale: 1.0f);
+                listBox.UpdateScrollBarSize();
             }
-
-            return false;
+            RemoveCharacter(killedCharacter);
         }
 
         private IEnumerable<object> KillCharacterAnim(GUIComponent component)
@@ -650,12 +584,10 @@ namespace Barotrauma
             components.Add(component);
             components.RemoveAll(c => 
                 c.UserData is Pair<string, float> pair && pair.First == "soundicon" || 
-                c.UserData as string == "soundicondisabled");
+                c.UserData as string == "soundicondisabled" ||
+                c is GUIButton || c is GUIFrame);
 
-            foreach (GUIComponent comp in components)
-            {
-                comp.Color = Color.DarkRed;
-            }
+            components.ForEach(c => c.Color = Color.DarkRed);
 
             yield return new WaitForSeconds(1.0f);
 
@@ -666,25 +598,33 @@ namespace Barotrauma
                 foreach (GUIComponent comp in components)
                 {
                     comp.Color = Color.Lerp(Color.DarkRed, Color.Transparent, timer / hideDuration);
-                    comp.RectTransform.LocalScale = new Vector2(comp.RectTransform.LocalScale.X, 1.0f - (timer / hideDuration));
+                    comp.RectTransform.LocalScale = new Vector2(1.0f - (timer / hideDuration), comp.RectTransform.LocalScale.Y);
                 }
                 timer += CoroutineManager.DeltaTime;
                 yield return CoroutineStatus.Running;
             }
-            component.Parent?.RemoveChild(component);
-            characterListBox.UpdateScrollBarSize();
+            activeCrew.RemoveChild(component);
+            activeCrew.Recalculate();
+
+            var list = (GUIListBox)crewList.FindChild(c => c is GUIListBox);
+            var crewListComponent = list.Content.GetChildByUserData(component.UserData);
+            list.Content.RemoveChild(crewListComponent);
+            GUITextBlock.AutoScaleAndNormalize(list.Content.GetAllChildren<GUITextBlock>(), defaultScale: 1.0f);
+            list.UpdateScrollBarSize();
+
             yield return CoroutineStatus.Success;
         }
 
         #endregion
 
         #region Dialog
+
         /// <summary>
         /// Adds the message to the single player chatbox.
         /// </summary>
         public void AddSinglePlayerChatMessage(string senderName, string text, ChatMessageType messageType, Character sender)
         {
-            if (!isSinglePlayer)
+            if (!IsSinglePlayer)
             {
                 DebugConsole.ThrowError("Cannot add messages to single player chat box in multiplayer mode!\n" + Environment.StackTrace);
                 return;
@@ -725,15 +665,16 @@ namespace Barotrauma
 
         #endregion
 
-
         #region Voice chat
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
         {
             if (client?.Character == null) { return; }
 
-            var playerFrame = characterListBox.Content.FindChild(client.Character)?.FindChild(client.Character);
+            var playerFrame = activeCrew.GetChildByUserData(client.Character) ?? AddCharacterToActiveCrew(client.Character);
+
             if (playerFrame == null) { return; }
+
             var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
             var soundIconDisabled = playerFrame.FindChild("soundicondisabled");
             soundIcon.Visible = !muted && !mutedLocally;
@@ -748,13 +689,18 @@ namespace Barotrauma
 
         public void SetCharacterSpeaking(Character character)
         {
-            var playerFrame = characterListBox.Content.FindChild(character)?.FindChild(character);
+            var playerFrame = activeCrew.GetChildByUserData(character);
+            if (playerFrame == null && character != Character.Controlled)
+            {
+                 playerFrame = AddCharacterToActiveCrew(character);
+            }
+
             if (playerFrame == null) { return; }
+
             var soundIcon = playerFrame.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon");
+            soundIcon.Color = Color.White;
             Pair<string, float> userdata = soundIcon.UserData as Pair<string, float>;
             userdata.Second = 1.0f;
-
-            soundIcon.Color = Color.White;
         }
 
         #endregion
@@ -809,231 +755,46 @@ namespace Barotrauma
         /// </summary>
         public void DisplayCharacterOrder(Character character, Order order)
         {
-            foreach (GUIComponent characterListElement in characterListBox.Content.Children)
+            if (character == null) { return; }
+
+            var characterFrame = activeCrew.GetChildByUserData(character);
+            if (characterFrame != null && characterFrame.GetChildByUserData("order") is GUIComponent existingOrderFrame)
             {
-                var characterFrame = characterListElement.FindChild(character);
-                if (characterFrame == null) continue;
-
-                var orderButtonFrame = characterListElement.GetChildByUserData("orderbuttons");
-
-                //get all order buttons from the frame
-                List<GUIButton> orderButtons = new List<GUIButton>();
-                foreach (GUIComponent child in orderButtonFrame.Children)
-                {
-                    if (child is GUIButton orderBtn)
-                    {
-                        orderButtons.Add(orderBtn);
-                    }
-                    //the non-character-appropriate orders are in a hideable listbox, we need to go deeper!
-                    else if (child is GUIListBox listBox)
-                    {
-                        foreach (GUIComponent listBoxElement in listBox.Content.Children)
-                        {
-                            if (listBoxElement is GUIButton orderBtn2 && listBoxElement.UserData is Order) orderButtons.Add(orderBtn2);
-                        }
-                    }
-                }
-
-                foreach (GUIButton button in orderButtons)
-                {
-                    var selectedIndicator = button.GetChildByUserData("selected");
-                    if (selectedIndicator != null)
-                    {
-                        selectedIndicator.Visible = (order != null && ((Order)button.UserData).Prefab == order.Prefab);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Create the UI panel that's used to select the target and options for a given order
-        /// (which railgun to use, whether to power up the reactor or shut it down...)
-        /// </summary>
-        private void CreateOrderTargetFrame(GUIComponent orderButton, Character character, Order order)
-        {
-            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
-                Submarine.MainSubs[1] :
-                Submarine.MainSub;
-
-            List<Item> matchingItems = new List<Item>();
-            if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0)
-            {
-                matchingItems = order.ItemIdentifiers.Length > 0 ?
-                    Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
-                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == order.ItemComponentType));
-
-                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
-                matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
+                characterFrame.RemoveChild(existingOrderFrame);
             }
 
-            //more than one target item -> create a minimap-like selection with a pic of the sub
-            if (matchingItems.Count > 1)
+            if (order == null || order == dismissedOrder)
             {
-                Rectangle subBorders = submarine.GetDockedBorders();
-
-                Point frameSize;
-                if (subBorders.Width > subBorders.Height)
+                if (characterFrame != null)
                 {
-                    //make sure the right side doesn't go over the right side of the screen
-                    frameSize.X = Math.Min(GameMain.GraphicsWidth / 2, GameMain.GraphicsWidth - orderButton.Rect.Center.X - 50);
-                    //height depends on the dimensions of the sub
-                    frameSize.Y = (int)(frameSize.X * (subBorders.Height / (float)subBorders.Width));
+                    // Remove dismissed characters from active crew
+                    activeCrew.RemoveChild(characterFrame);
+                    activeCrew.Recalculate();
                 }
-                else
-                {
-                    //make sure the bottom side doesn't go over the bottom of the screen
-                    frameSize.Y = Math.Min((int)(GameMain.GraphicsHeight * 0.6f), GameMain.GraphicsHeight - orderButton.Rect.Center.Y - 50);
-                    //width depends on the dimensions of the sub
-                    frameSize.X = (int)(frameSize.Y * (subBorders.Width / (float)subBorders.Height));
-                }
-                orderTargetFrame = new GUIFrame(new RectTransform(frameSize, GUI.Canvas)
-                    { AbsoluteOffset = new Point(orderButton.Rect.Center.X, orderButton.Rect.Bottom) },
-                    style: "InnerFrame")
-                {
-                    UserData = character
-                };
-                submarine.CreateMiniMap(orderTargetFrame, matchingItems);
-
-                new GUICustomComponent(new RectTransform(Vector2.One, orderTargetFrame.RectTransform), DrawMiniMapOverlay)
-                {
-                    CanBeFocused = false,
-                    UserData = submarine
-                };
-
-                List<GUIComponent> optionFrames = new List<GUIComponent>();
-                foreach (Item item in matchingItems)
-                {
-                    var itemTargetFrame = orderTargetFrame.Children.First().FindChild(item);
-                    if (itemTargetFrame == null) continue;
-
-                    Anchor anchor = Anchor.TopLeft;
-                    if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
-                        anchor = Anchor.BottomRight;
-                    else if (itemTargetFrame.RectTransform.RelativeOffset.X > 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
-                        anchor = Anchor.BottomLeft;
-                    else if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y > 0.5f)
-                        anchor = Anchor.TopRight;
-
-                    var optionFrame = new GUIFrame(new RectTransform(new Point((int)(250 * GUI.Scale), (int)((40 + order.Options.Length * 40) * GUI.Scale)), itemTargetFrame.RectTransform, anchor),
-                        style: "InnerFrame");
-                    optionFrames.Add(optionFrame);
-
-                    new GUIFrame(new RectTransform(Vector2.One, optionFrame.RectTransform, Anchor.Center),
-                        style: "OuterGlow")
-                    {
-                        Color = Color.Black * 0.7f
-                    };
-
-                    var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, Anchor.Center))
-                    {
-                        Stretch = true,
-                        RelativeSpacing = 0.05f
-                    };
-
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f,0.3f), optionContainer.RectTransform), item != null ? item.Name : order.Name);
-                    for (int i = 0; i < order.Options.Length; i++)
-                    {
-                        string option = order.Options[i];
-                        var optionButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), optionContainer.RectTransform),
-                            order.OptionNames[i], style: "GUITextBox")
-                        {
-                            UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
-                            Font = GUI.SmallFont,
-                            OnClicked = (btn, userData) =>
-                            {
-#if CLIENT
-                                if (GameMain.Client != null && Character.Controlled == null) { return false; }
-#endif
-                                SetCharacterOrder(character, userData as Order, option, Character.Controlled);
-                                orderTargetFrame = null;
-                                OrderOptionButtons.Clear();
-                                return true;
-                            }
-                        };
-
-                        OrderOptionButtons.Add(optionButton);
-                    }
-                }
-
-                GUI.PreventElementOverlap(optionFrames, null, new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
-            }
-            //only one target (or an order with no particular targets), just show options
-            else
-            {
-                orderTargetFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f + order.Options.Length * 0.1f, 0.18f), GUI.Canvas)
-                    { AbsoluteOffset = new Point((int)(200 * GUI.Scale), orderButton.Rect.Bottom) },
-                    isHorizontal: true, childAnchor: Anchor.BottomLeft)
-                {
-                    UserData = character,
-                    Stretch = true
-                };
-                //line connecting the order button to the option buttons
-                //TODO: sprite
-                new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), orderTargetFrame.RectTransform), style: null);
-
-                for (int i = 0; i < order.Options.Length; i++)
-                {
-                    Item item = matchingItems.Count > 0 ? matchingItems[0] : null;
-                    string option = order.Options[i];
-                    var optionButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), orderTargetFrame.RectTransform),
-                        order.OptionNames[i], style: "GUITextBox")
-                    {
-                        UserData = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
-                        OnClicked = (btn, userData) =>
-                        {
-#if CLIENT
-                            if (GameMain.Client != null && Character.Controlled == null) { return false; }
-#endif
-                            SetCharacterOrder(character, userData as Order, option, Character.Controlled);
-                            orderTargetFrame = null;
-                            OrderOptionButtons.Clear();
-                            return true;
-                        }
-                    };
-                    new GUIFrame(new RectTransform(Vector2.One * 1.5f, optionButton.RectTransform, Anchor.Center), style: "OuterGlow")
-                    {
-                        Color = Color.Black,
-                        HoverColor = Color.CadetBlue,
-                        PressedColor = Color.Black
-                    }.RectTransform.SetAsFirstChild();
-
-                    OrderOptionButtons.Add(optionButton);
-
-                    //lines between the order buttons
-                    if (i < order.Options.Length - 1)
-                    {
-                        //TODO: sprite
-                        new GUIFrame(new RectTransform(new Vector2(0.1f, 1.0f), orderTargetFrame.RectTransform), style: null);
-                    }
-                }
-            }
-            int shadowSize = (int)(200 * GUI.Scale);
-            orderTargetFrameShadow = new GUIFrame(new RectTransform(orderTargetFrame.Rect.Size + new Point(shadowSize * 2), GUI.Canvas)
-                { AbsoluteOffset = orderTargetFrame.Rect.Location - new Point(shadowSize) },
-                style: "OuterGlow",
-                color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
-        }
-
-        public void HighlightOrderButton(Character character, string orderIdentifier, Color color, Vector2? flashRectInflate = null)
-        {
-            var order = Order.GetPrefab(orderIdentifier);
-            if (order == null)
-            {
-                DebugConsole.ThrowError("Could not find an order with the AI tag \"" + orderIdentifier + "\".\n" + Environment.StackTrace);
                 return;
             }
-            ToggleCrewAreaOpen = true;
-            var characterElement = characterListBox.Content.FindChild(character);
-            GUIButton orderBtn = characterElement.FindChild(order, recursive: true) as GUIButton;
-            if (orderBtn.FlashTimer <= 0)
-            {
-                orderBtn.Flash(color, 1.5f, false, flashRectInflate);
-            }
 
-            //orderBtn.Pulsate(Vector2.One, Vector2.One * 2.0f, 1.5f);
+            characterFrame ??= AddCharacterToActiveCrew(character);
+
+            var orderFrame = new GUIButton(
+                new RectTransform(new Vector2(0.5f), characterFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter)
+                {
+                    AbsoluteOffset = new Point(0, -HUDLayoutSettings.Padding)
+                },
+                style: null)
+            {
+                UserData = "order",
+                OnClicked = (button, userData) =>
+                {
+                    SetCharacterOrder(character, dismissedOrder, null, Character.Controlled);
+                    character.SetOrder(null, null, Character.Controlled);
+                    return true;
+                }
+            };
+            CreateNodeIcon(orderFrame.RectTransform, order.SymbolSprite, order.Color, order.Color, tooltip: order.Name);
         }
 
-#region Updating and drawing the UI
+        #region Updating and drawing the UI
 
         private void DrawMiniMapOverlay(SpriteBatch spriteBatch, GUICustomComponent container)
         {
@@ -1064,28 +825,26 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y ||
-                prevUIScale != GUI.Scale)
+            if (GUI.DisableHUD) { return; }
+
+            commandFrame?.AddToGUIUpdateList();
+
+            if (GUI.DisableUpperHUD) { return; }
+
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
             {
-                var prevCharacterListBox = characterListBox;
+                var previousCrewList = (GUIListBox)crewList.FindChild(c => c is GUIListBox);
                 InitProjectSpecific();
 
-                foreach (GUIComponent c in prevCharacterListBox.Content.Children)
+                foreach (GUIComponent c in previousCrewList.Content.Children)
                 {
-                    Character character = c.UserData as Character;
-                    if (character == null || character.IsDead || character.Removed) continue;
+                    if (!(c.UserData is Character character) || character.IsDead || character.Removed) { continue; }
                     AddCharacter(character);
                     DisplayCharacterOrder(character, character.CurrentOrder);
                 }
             }
 
             guiFrame.AddToGUIUpdateList();
-            if (orderTargetFrame != null)
-            {
-                orderTargetFrameShadow?.AddToGUIUpdateList();
-                orderTargetFrame?.AddToGUIUpdateList();
-            }
         }
 
         public void SelectNextCharacter()
@@ -1146,7 +905,150 @@ namespace Barotrauma
                 }
             }
 
-            if (GUI.DisableHUD || GUI.DisableUpperHUD) return;
+            if (GUI.DisableHUD) { return; }
+
+            #region Command UI
+
+            if (PlayerInput.KeyDown(InputType.Command) && GUI.KeyboardDispatcher.Subscriber == null &&
+                (!GameMain.IsMultiplayer || (GameMain.IsMultiplayer && DebugConsole.CheatsEnabled)) &&
+                commandFrame == null && !clicklessSelectionActive)
+            {
+                bool canIssueOrders = false;
+                if (Character.Controlled != null && Character.Controlled.SpeechImpediment < 100.0f)
+                {
+                    WifiComponent radio = GetHeadset(Character.Controlled, true);
+                    canIssueOrders = radio != null && radio.CanTransmit();
+                }
+
+                if (canIssueOrders)
+                {
+                    CreateCommandUI();
+                    clicklessSelectionActive = isOpeningClick = true;
+                }
+            }
+
+            if (commandFrame != null)
+            {
+                if ((GameMain.IsMultiplayer && !DebugConsole.CheatsEnabled && Character.Controlled == null))
+                {
+                    DisableCommandUI();
+                }
+                else if (PlayerInput.RightButtonClicked() &&
+                         (optionNodes.Any(n => GUI.IsMouseOn(n)) || shortcutNodes.Any(n => GUI.IsMouseOn(n))))
+                {
+                    var node = optionNodes.Find(n => GUI.IsMouseOn(n));
+                    if (node == null)
+                    {
+                        node = shortcutNodes.Find(n => GUI.IsMouseOn(n));
+                    }
+                    // Make sure the node is for an option-less order...
+                    if (node.UserData is Order order &&
+                        !(order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1))
+                    {
+                        CreateAssignmentNodes(node);
+                    }
+                    // ...or an order option
+                    else if (node.UserData is Tuple<Order, string>)
+                    {
+                        CreateAssignmentNodes(node);
+                    }
+                }
+                // TODO: Consider using HUD.CloseHUD() instead of KeyHit(Escape), the former method is also used for health UI
+                else if ((PlayerInput.KeyHit(InputType.Command) && selectedNode == null && !clicklessSelectionActive) ||
+                         PlayerInput.KeyHit(InputType.Deselect) || PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
+                {
+                    DisableCommandUI();
+                }
+                else if (PlayerInput.KeyUp(InputType.Command))
+                {
+                    if (!isOpeningClick && clicklessSelectionActive && timeSelected < 0.15f)
+                    {
+                        DisableCommandUI();
+                    }
+                    else
+                    {
+                        clicklessSelectionActive = isOpeningClick = false;
+                        if (selectedNode != null)
+                        {
+                            selectedNode.Children.ForEach(c => c.Color = c.HoverColor * nodeColorMultiplier);
+                            selectedNode = null;
+                            timeSelected = 0;
+                        }
+                    }
+                }
+                else if (PlayerInput.KeyDown(InputType.Command) && (targetFrame == null || !targetFrame.Visible))
+                {
+                    if (!GUI.IsMouseOn(centerNode))
+                    {
+                        clicklessSelectionActive = true;
+
+                        var mouseBearing = GetBearing(centerNode.Center, PlayerInput.MousePosition, flipY: true);
+
+                        GUIComponent closestNode = null;
+                        float closestBearing = 0;
+
+                        optionNodes.ForEach(n => CheckIfClosest(n));
+                        CheckIfClosest(returnNode);
+
+                        void CheckIfClosest(GUIComponent comp)
+                        {
+                            if (comp == null) { return; }
+                            var offset = comp.RectTransform.AbsoluteOffset;
+                            var nodeBearing = GetBearing(centerNode.RectTransform.AbsoluteOffset.ToVector2(), offset.ToVector2(), flipY: true);
+                            if (closestNode == null)
+                            {
+                                closestNode = comp;
+                                closestBearing = Math.Abs(nodeBearing - mouseBearing);
+                            }
+                            else
+                            {
+                                var difference = Math.Abs(nodeBearing - mouseBearing);
+                                if (difference < closestBearing)
+                                {
+                                    closestNode = comp;
+                                    closestBearing = difference;
+                                }
+                            }
+                        }
+
+                        if (closestNode == selectedNode)
+                        {
+                            timeSelected += deltaTime;
+                            if (timeSelected >= selectionTime)
+                            {
+                                selectedNode.OnClicked.Invoke(selectedNode, selectedNode.UserData);
+                                selectedNode = null;
+                                timeSelected = 0;
+                            }
+                        }
+                        else
+                        {
+                            if (selectedNode != null)
+                            {
+                                selectedNode.Children.ForEach(c => c.Color = c.HoverColor * nodeColorMultiplier);
+                            }
+                            selectedNode = closestNode as GUIButton;
+                            selectedNode.Children.ForEach(c => c.Color = c.HoverColor);
+                            timeSelected = 0;
+                        }
+                    }
+                    else if (selectedNode != null)
+                    {
+                        selectedNode.Children.ForEach(c => c.Color = c.HoverColor * nodeColorMultiplier);
+                        selectedNode = null;
+                        timeSelected = 0;
+                    }
+                }
+            }
+            else if (PlayerInput.KeyUp(InputType.Command))
+            {
+                clicklessSelectionActive = false;
+            }
+
+            #endregion
+
+            if (GUI.DisableUpperHUD) { return; }
+
             if (ChatBox != null)
             {
                 ChatBox.Update(deltaTime);
@@ -1170,69 +1072,41 @@ namespace Barotrauma
             }
 
             crewArea.Visible = characters.Count > 0 && CharacterHealth.OpenHealthWindow == null;
-            if (orderTargetFrame != null) orderTargetFrame.Visible = characterListBox.Visible;
 
-            scrollButtonUp.Visible = characterListBox.BarScroll > 0.01f && characterListBox.BarSize < 1.0f;
-            scrollButtonDown.Visible = characterListBox.BarScroll < 0.99 && characterListBox.BarSize < 1.0f;
-
-            foreach (GUIComponent child in characterListBox.Content.Children)
+            var shouldBeRemoved = new List<GUIComponent>();
+            foreach (GUIComponent child in activeCrew.Children)
             {
                 Character character = (Character)child.UserData;
+                if (character == null) { continue; }
                 child.Visible =
                     Character.Controlled == null ||
                     (Character.Controlled.TeamID == character.TeamID);
 
                 if (child.Visible)
                 {
-                    child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
-
-                    var soundIcon = child.FindChild(character)?.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") as GUIImage;
+                    //child.GetChildByUserData("highlight").Visible = character == Character.Controlled;
+                    var soundIcon = child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") as GUIImage;
                     VoipClient.UpdateVoiceIndicator(soundIcon, 0.0f, deltaTime);
-
-                    GUIListBox wrongOrderList = child.GetChildByUserData("orderbuttons")?.GetChild<GUIListBox>();
-                    if (wrongOrderList != null)
+                    if (soundIcon.UserData is Pair<string, float> soundStatus &&
+                        soundStatus.Second < 0.1f && child.FindChild("order") == null)
                     {
-                        Rectangle hoverRect = wrongOrderList.Rect;
-                        if (wrongOrderList.BarScroll < 0.5f)
-                        {
-                            //higher tolerance when the orderlist is open (mouse needs to be moved further before it closes)
-                            hoverRect.Inflate((int)(50 * GUI.Scale), (int)(50 * GUI.Scale));
-                        }
-                        else
-                        {
-                            hoverRect.Inflate((int)(30 * GUI.Scale), (int)(0 * GUI.Scale));
-                        }
-
-                        bool toggleOpen =
-                            characterListBox.Content.Rect.Contains(PlayerInput.MousePosition) &&
-                            hoverRect.Contains(PlayerInput.MousePosition);
-                        wrongOrderList.CanBeFocused = toggleOpen;
-                        wrongOrderList.Content.CanBeFocused = toggleOpen;
-                        var wrongOrderBtn = wrongOrderList.GetChildByUserData("togglewrongorderbtn");
-                        if (wrongOrderBtn != null)
-                        {
-                            wrongOrderBtn.CanBeFocused = toggleOpen;
-                        }
-
-                        //order target frame open on this character, check if we're giving any of the orders in wrongOrderList
-                        if (!toggleOpen && orderTargetFrame != null && orderTargetFrame.UserData == child.UserData)
-                        {
-                            toggleOpen = wrongOrderList.Content.Children.Any(c =>
-                                c.UserData is Order order &&
-                                orderTargetFrame.Children.Any(c2 => c2.UserData == c.UserData));
-                        }
-
-                        float scroll = MathHelper.Clamp(wrongOrderList.BarScroll + (toggleOpen ? -deltaTime * 5.0f : deltaTime * 5.0f), 0.0f, 1.0f);
-                        if (Math.Abs(wrongOrderList.BarScroll - scroll) > 0.01f) { wrongOrderList.BarScroll = scroll; }
+                        shouldBeRemoved.Add(child);
                     }
                 }
             }
+            if (shouldBeRemoved.Any())
+            {
+                shouldBeRemoved.ForEach(c => activeCrew.RemoveChild(c));
+                activeCrew.Recalculate();
+            }
 
-            crewArea.RectTransform.AbsoluteOffset =
-                Vector2.SmoothStep(new Vector2(-crewArea.Rect.Width, 0), new Vector2(toggleCrewButton.Rect.Width, 0), crewAreaOpenState).ToPoint();
-            crewAreaOpenState = ToggleCrewAreaOpen ?
-                Math.Min(crewAreaOpenState + deltaTime * 2.0f, 1.0f) :
-                Math.Max(crewAreaOpenState - deltaTime * 2.0f, 0.0f);
+            crewList.RectTransform.AbsoluteOffset = Vector2.SmoothStep(
+                    new Vector2(-HUDLayoutSettings.Padding - crewList.Rect.Width / 2.0f, -HUDLayoutSettings.Padding * 6),
+                    new Vector2(0.0f, -HUDLayoutSettings.Padding * 6),
+                    crewListOpenState).ToPoint();
+            crewListOpenState = ToggleCrewListOpen ?
+                Math.Min(crewListOpenState + deltaTime * 2.0f, 1.0f) :
+                Math.Max(crewListOpenState - deltaTime * 2.0f, 0.0f);
 
             if (GUI.KeyboardDispatcher.Subscriber == null &&
                 PlayerInput.KeyHit(InputType.CrewOrders) &&
@@ -1243,33 +1117,887 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-                ToggleCrewAreaOpen = !ToggleCrewAreaOpen;
+                ToggleCrewListOpen = !ToggleCrewListOpen;
             }
 
-            UpdateReports(deltaTime);
+            UpdateReports();
+        }
 
-            if (orderTargetFrame != null)
+        #endregion
+
+        #region Command UI
+
+        public static bool IsCommandInterfaceOpen
+        {
+            get
             {
-                Rectangle hoverArea = orderTargetFrame.Rect;
-                foreach (GUIComponent child in orderTargetFrame.Children.First().Children)
-                {
-                    if (!(child.UserData is Item)) continue;
-                    foreach (GUIComponent grandChild in child.Children)
-                    {
-                        hoverArea = Rectangle.Union(hoverArea, grandChild.Rect);
-                    }
-                }
-                hoverArea.Inflate(100, 100);
+                return commandFrame != null;
+            }
+        }
+        private static GUIFrame commandFrame, targetFrame;
+        private static GUIButton centerNode, returnNode, expandNode, shortcutCenterNode;
+        private static List<GUIComponent> optionNodes = new List<GUIComponent>();
+        private static List<GUIComponent> shortcutNodes = new List<GUIComponent>();
+        private static List<GUIComponent> extraOptionNodes = new List<GUIComponent>();
+        private static GUICustomComponent nodeConnectors;
+        private static GUIImage background;
 
-                if (!hoverArea.Contains(PlayerInput.MousePosition) || PlayerInput.SecondaryMouseButtonClicked())
+        private static GUIButton selectedNode;
+        private static float selectionTime = 0.75f, timeSelected = 0.0f;
+        private static bool clicklessSelectionActive, isOpeningClick;
+
+        private Point centerNodeSize, nodeSize, shortcutCenterNodeSize, shortcutNodeSize, returnNodeSize;
+        private float centerNodeMargin, optionNodeMargin, shortcutCenterNodeMargin, shortcutNodeMargin, returnNodeMargin;
+
+        private List<OrderCategory> availableCategories;
+        private static Stack<GUIButton> historyNodes = new Stack<GUIButton>();
+        private static List<Character> extraOptionCharacters = new List<Character>();
+
+        /// <summary>
+        /// node.Color = node.HighlightColor * nodeColorMultiplier
+        /// </summary>
+        private const float nodeColorMultiplier = 0.75f;
+        private const int assignmentNodeMaxCount = 5;
+        private int nodeDistance = 150;
+        private float returnNodeDistanceModifier = 0.75f;
+        private Order dismissedOrder;
+
+        private void CreateCommandUI()
+        {
+            ScaleCommandUI();
+            commandFrame = new GUIFrame(
+                new RectTransform(Vector2.Zero, GUICanvas.Instance, anchor: Anchor.Center),
+                style: null,
+                color: Color.Transparent);
+            background = new GUIImage(
+                new RectTransform(Vector2.One, commandFrame.RectTransform, anchor: Anchor.Center),
+                Order.CommandBackground);
+            background.Color = background.Color * 0.8f;
+            var startNode = new GUIButton(
+                new RectTransform(centerNodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center),
+                style: null);
+            CreateNodeIcon(startNode.RectTransform, Order.StartNode, Color.White, Color.White);
+            SetCenterNode(startNode);
+
+            if (availableCategories == null)
+            {
+                GetAvailableCategories();
+            }
+            if (dismissedOrder == null)
+            {
+                dismissedOrder = Order.GetPrefab("dismissed");
+            }
+
+            CreateShortcutNodes();
+            CreateOrderCategoryNodes();
+            CreateNodeConnectors();
+        }
+
+        private void ToggleCommandUI()
+        {
+            if (commandFrame == null)
+            {
+                CreateCommandUI();
+            }
+            else
+            {
+                DisableCommandUI();
+            }
+        }
+
+        private void ScaleCommandUI()
+        {
+            centerNodeSize = new Point((int)(80 * GUI.Scale));
+            nodeSize = new Point((int)(80 * GUI.Scale));
+            shortcutCenterNodeSize = new Point((int)(48 * GUI.Scale));
+            shortcutNodeSize = new Point((int)(64 * GUI.Scale));
+            returnNodeSize = new Point((int)(48 * GUI.Scale));
+            centerNodeMargin = centerNodeSize.X * 0.6f;
+            optionNodeMargin = nodeSize.X * 0.6f;
+            shortcutCenterNodeMargin = shortcutCenterNodeSize.X * 0.45f;
+            shortcutNodeMargin = shortcutNodeSize.X * 0.6f;
+            returnNodeMargin = returnNodeSize.X * 0.6f;
+            nodeDistance = (int)(150 * GUI.Scale);
+        }
+
+        private void GetAvailableCategories()
+        {
+            availableCategories = new List<OrderCategory>();
+            foreach (OrderCategory category in Enum.GetValues(typeof(OrderCategory)))
+            {
+                if (category == OrderCategory.Undefined) { continue; }
+                if (Order.PrefabList.Any(o => o.Category == category && !o.TargetAllCharacters))
                 {
-                    orderTargetFrame = null;
-                    OrderOptionButtons.Clear();
+                    availableCategories.Add(category);
                 }
             }
         }
 
-#endregion
+        private void CreateNodeConnectors()
+        {
+            nodeConnectors = new GUICustomComponent(
+                new RectTransform(Vector2.One, commandFrame.RectTransform),
+                onDraw: DrawNodeConnectors);
+            nodeConnectors.SetAsFirstChild();
+            background.SetAsFirstChild();
+        }
+
+        private void DrawNodeConnectors(SpriteBatch spriteBatch, GUIComponent container)
+        {
+            if (centerNode == null || optionNodes == null) { return; }
+            var startNodePos = centerNode.Rect.Center.ToVector2();
+            if (targetFrame == null || !targetFrame.Visible)
+            {
+                optionNodes.ForEach(n => DrawNodeConnector(startNodePos, centerNodeMargin, n, optionNodeMargin, spriteBatch));
+            }
+            DrawNodeConnector(startNodePos, centerNodeMargin, returnNode, returnNodeMargin, spriteBatch);
+            DrawNodeConnector(startNodePos, centerNodeMargin, expandNode, optionNodeMargin, spriteBatch);
+            if (shortcutCenterNode == null || !shortcutCenterNode.Visible) { return; }
+            DrawNodeConnector(startNodePos, centerNodeMargin, shortcutCenterNode, shortcutCenterNodeMargin, spriteBatch);
+            startNodePos = shortcutCenterNode.Rect.Center.ToVector2();
+            shortcutNodes.ForEach(n => DrawNodeConnector(startNodePos, shortcutCenterNodeMargin, n, shortcutNodeMargin, spriteBatch));
+        }
+
+        private void DrawNodeConnector(Vector2 startNodePos, float startNodeMargin, GUIComponent endNode, float endNodeMargin, SpriteBatch spriteBatch)
+        {
+            if (endNode == null || !endNode.Visible) { return; }
+            var endNodePos = endNode.Rect.Center.ToVector2();
+            var direction = (endNodePos - startNodePos) / Vector2.Distance(startNodePos, endNodePos);
+            var start = startNodePos + direction * startNodeMargin;
+            var end = endNodePos - direction * endNodeMargin;
+            var colorSource = endNode.GetChildByUserData("container");
+            if (colorSource == null) { colorSource = endNode.GetChildByUserData("icon"); }
+            if ((selectedNode == null && endNode != shortcutCenterNode && GUI.IsMouseOn(endNode)) ||
+                endNode == selectedNode || endNode == shortcutCenterNode && shortcutNodes.Any(n => GUI.IsMouseOn(n)))
+            {
+                GUI.DrawLine(spriteBatch, start, end, colorSource != null ? colorSource.HoverColor : Color.White, width: 4);
+            }
+            else
+            {
+                GUI.DrawLine(spriteBatch, start, end, colorSource != null ? colorSource.Color : Color.White * nodeColorMultiplier, width: 2);
+            }
+        }
+
+        public static void DisableCommandUI()
+        {
+            if (commandFrame == null) { return; }
+            RemoveOptionNodes();
+            historyNodes.Clear();
+            nodeConnectors = null;
+            centerNode = null;
+            returnNode = null;
+            expandNode = null;
+            shortcutCenterNode = null;
+            targetFrame = null;
+            selectedNode = null;
+            timeSelected = 0;
+            background = null;
+            commandFrame = null;
+            extraOptionCharacters.Clear();
+            clicklessSelectionActive = isOpeningClick = false;
+        }
+
+        private bool NavigateForward(GUIButton node, object userData)
+        {
+            if (!optionNodes.Remove(node)) { shortcutNodes.Remove(node); };
+            RemoveOptionNodes();
+            if (returnNode != null)
+            {
+                returnNode.Children.ForEach(child => child.Visible = false);
+                returnNode.Visible = false;
+                historyNodes.Push(returnNode);
+            }
+            SetReturnNode(centerNode, new Point(
+                (int)(node.RectTransform.AbsoluteOffset.X * -returnNodeDistanceModifier),
+                (int)(node.RectTransform.AbsoluteOffset.Y * -returnNodeDistanceModifier)));
+            SetCenterNode(node);
+            if (shortcutCenterNode != null)
+            {
+                commandFrame.RemoveChild(shortcutCenterNode);
+                shortcutCenterNode = null;
+            }
+            CreateNodes(userData);
+            return true;
+        }
+
+        private bool NavigateBackward(GUIButton node, object userData)
+        {
+            RemoveOptionNodes();
+            if (targetFrame != null) { targetFrame.Visible = false; }
+            // TODO: Center node could move to option node instead of being removed
+            commandFrame.RemoveChild(centerNode);
+            SetCenterNode(node);
+            if (historyNodes.Count > 0)
+            {
+                var historyNode = historyNodes.Pop();
+                SetReturnNode(historyNode, historyNode.RectTransform.AbsoluteOffset);
+                historyNode.Visible = true;
+                historyNode.Children.ForEach(child => child.Visible = true);
+            }
+            else
+            {
+                returnNode = null;
+            }
+            CreateNodes(userData);
+            return true;
+        }
+
+        private void SetCenterNode(GUIButton node)
+        {
+            node.RectTransform.Parent = commandFrame.RectTransform;
+            node.RectTransform.NonScaledSize = centerNodeSize;
+            node.RectTransform.AbsoluteOffset = Point.Zero;
+            foreach (GUIComponent c in node.Children)
+            {
+                c.Color = c.HoverColor * nodeColorMultiplier;
+                c.HoverColor = c.Color;
+                c.PressedColor = c.Color;
+                c.SelectedColor = c.Color;
+                c.ToolTip = null;
+            }
+            node.OnClicked = null;
+            centerNode = node;
+        }
+
+        private void SetReturnNode(GUIButton node, Point offset)
+        {
+            node.RectTransform.NonScaledSize = returnNodeSize;
+            node.RectTransform.AbsoluteOffset = offset;
+            foreach (GUIComponent c in node.Children)
+            {
+                c.HoverColor = c.Color * (1 / nodeColorMultiplier);
+                c.PressedColor = c.HoverColor;
+                c.SelectedColor = c.HoverColor;
+                c.ToolTip = TextManager.Get("commandui.return");
+            }
+            node.OnClicked = NavigateBackward;
+            returnNode = node;
+        }
+
+        private bool CreateNodes(object userData)
+        {
+            if (userData == null)
+            {
+                CreateShortcutNodes();
+                CreateOrderCategoryNodes();
+            }
+            else if (userData is OrderCategory category)
+            {
+                CreateOrderNodes(category);
+            }
+            else if (userData is Order order)
+            {
+                CreateOrderOptions(order);
+            }
+            return true;
+        }
+
+        private static void RemoveOptionNodes()
+        {
+            optionNodes.ForEach(node => commandFrame.RemoveChild(node));
+            optionNodes.Clear();
+            shortcutNodes.ForEach(node => commandFrame.RemoveChild(node));
+            shortcutNodes.Clear();
+            commandFrame.RemoveChild(expandNode);
+            RemoveExtraOptionNodes();
+        }
+
+        private static void RemoveExtraOptionNodes()
+        {
+            extraOptionNodes.ForEach(node => commandFrame.RemoveChild(node));
+            extraOptionNodes.Clear();
+        }
+
+        private void CreateOrderCategoryNodes()
+        {
+            var points = shortcutCenterNode != null ?
+                GetCircumferencePointCount(availableCategories.Count) :
+                availableCategories.Count;
+            var firstAngle = shortcutCenterNode != null ?
+                GetFirstNodeAngle(availableCategories.Count) :
+                0.0f;
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, points, firstAngle);
+            var offsetIndex = 0;
+            availableCategories.ForEach(oc => CreateOrderCategoryNode(oc, offsets[offsetIndex++].ToPoint()));
+        }
+
+        private void CreateOrderCategoryNode(OrderCategory category, Point offset)
+        {
+            var node = new GUIButton(
+                new RectTransform(nodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = offset
+                },
+                style: null)
+            {
+                UserData = category,
+                OnClicked = NavigateForward
+            };
+            if (Order.OrderCategoryIcons.TryGetValue(category, out Sprite sprite))
+            {
+                var tooltip = TextManager.Get("ordercategorytitle." + category.ToString().ToLower());
+                var categoryDescription = TextManager.Get("ordercategorydescription." + category.ToString(), true);
+                if (!string.IsNullOrWhiteSpace(categoryDescription)) { tooltip += "\n" + categoryDescription; }
+                CreateNodeIcon(node.RectTransform, sprite, Color.White, Color.White, tooltip: tooltip);
+            }
+            optionNodes.Add(node);
+        }
+
+        private void CreateShortcutNodes()
+        {
+            shortcutNodes.Clear();
+
+            var sub = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] : Submarine.MainSub;
+            var reactor = sub.GetItems(false).Find(i => i.HasTag("reactor")).GetComponent<Reactor>();
+            var reactorOutput = -reactor.CurrPowerConsumption;
+
+            // If player is not an engineer AND the reactor is not powered up AND nobody is using the reactor
+            // ---> Create shortcut node for "Operate Reactor" order's "Power Up" option
+            if ((Character.Controlled == null || Character.Controlled.Info.Job.Prefab != JobPrefab.Get("engineer")) &&
+                reactorOutput < float.Epsilon && characters.None(c => c.SelectedConstruction == reactor.Item))
+            {
+                var order = new Order(Order.GetPrefab("operatereactor"), reactor.Item, reactor, Character.Controlled);
+                shortcutNodes.Add(
+                    CreateOrderOptionNode(shortcutNodeSize, null, Point.Zero, order, order.Prefab.Options[0], order.Prefab.OptionNames[0]));
+            }
+
+            // TODO: Reconsider the conditions as bot captain can have the nav term selected without operating it
+            // If player is not a captain AND nobody is using the nav terminal AND the nav terminal is powered up
+            // --> Create shortcut node for Steer order
+            if ((Character.Controlled == null || Character.Controlled.Info.Job.Prefab != JobPrefab.Get("captain")) &&
+                sub.GetItems(false).Find(i => i.HasTag("navterminal")) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
+                nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
+            {
+                shortcutNodes.Add(
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, Order.GetPrefab("steer")));
+            }
+
+            // If player is not a security officer AND invaders are reported
+            // --> Create shorcut node for Fight Intruders order
+            if ((Character.Controlled == null || Character.Controlled.Info.Job.Prefab != JobPrefab.Get("securityofficer")) &&
+                (Order.GetPrefab("reportintruders") is Order reportIntruders && ActiveOrders.Any(o => o.First.Prefab == reportIntruders)))
+            {
+                shortcutNodes.Add(
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, Order.GetPrefab("fightintruders")));
+            }
+
+            // If player is not a mechanic AND a breach has been reported
+            // --> Create shorcut node for Fix Leaks order
+            if ((Character.Controlled == null || Character.Controlled.Info.Job.Prefab != JobPrefab.Get("mechanic")) &&
+                (Order.GetPrefab("reportbreach") is Order reportBreach && ActiveOrders.Any(o => o.First.Prefab == reportBreach)))
+            {
+                shortcutNodes.Add(
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, Order.GetPrefab("fixleaks")));
+            }
+
+            // If player is not an engineer AND broken devices have been reported
+            // --> Create shortcut node for Repair Damaged Systems order
+            if ((Character.Controlled == null || Character.Controlled.Info.Job.Prefab != JobPrefab.Get("engineer")) &&
+                (Order.GetPrefab("reportbrokendevices") is Order reportBrokenDevices && ActiveOrders.Any(o => o.First.Prefab == reportBrokenDevices)))
+            {
+                shortcutNodes.Add(
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, Order.GetPrefab("repairsystems")));
+            }
+
+            // If fire is reported
+            // --> Create shortcut node for Extinguish Fires order
+            if (ActiveOrders.Any(o=> o.First.Prefab == Order.GetPrefab("reportfire")))
+            {
+                shortcutNodes.Add(
+                    CreateOrderNode(shortcutNodeSize, null, Point.Zero, Order.GetPrefab("extinguishfires")));
+            }
+
+            if (shortcutNodes.Count < 1) { return; }
+
+            shortcutCenterNode = new GUIButton(
+                new RectTransform(shortcutCenterNodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = new Point(0, (int)(1.25f * nodeDistance))
+                },
+                style: null);
+            CreateNodeIcon(shortcutCenterNode.RectTransform, Order.ShortcutNode, Color.Red, Color.Red, createContainer: false);
+            foreach (GUIComponent c in shortcutCenterNode.Children)
+            {
+                c.HoverColor = c.Color;
+                c.PressedColor = c.Color;
+                c.SelectedColor = c.Color;
+            }
+
+            var nodeCountForCalculations = shortcutNodes.Count * 2 + 2;
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, 0.75f * nodeDistance, nodeCountForCalculations);
+            for (int i = 0; i < shortcutNodes.Count; i++)
+            {
+                shortcutNodes[i].RectTransform.Parent = commandFrame.RectTransform;
+                shortcutNodes[i].RectTransform.AbsoluteOffset = shortcutCenterNode.RectTransform.AbsoluteOffset + offsets[i + 1].ToPoint();
+            }
+        }
+
+        private void CreateOrderNodes(OrderCategory orderCategory)
+        {
+            var orders = Order.PrefabList.FindAll(o => o.Category == orderCategory && !o.TargetAllCharacters);
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
+                GetCircumferencePointCount(orders.Count), GetFirstNodeAngle(orders.Count));
+            for(int i = 0; i < orders.Count; i++)
+            {
+                optionNodes.Add(CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), orders[i]));
+            }
+        }
+
+        private GUIButton CreateOrderNode(Point size, RectTransform parent, Point offset, Order order)
+        {
+            var node = new GUIButton(
+                new RectTransform(size, parent: parent, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = offset
+                },
+                style: null)
+            {
+                UserData = order
+            };
+            var hasOptions = order.ItemComponentType != null || order.ItemIdentifiers.Length > 0 || order.Options.Length > 1;
+            node.OnClicked = (button, userData) =>
+            {
+                if (Character.Controlled != null && Character.Controlled.SpeechImpediment >= 100.0f) { return false; }
+                var o = userData as Order;
+                // TODO: Consider defining orders' or order categories' quick-assignment possibility in the XML
+                if (o.Category == OrderCategory.Movement)
+                {
+                    CreateAssignmentNodes(node);
+                }
+                else if (hasOptions)
+                {
+                    NavigateForward(button, userData);
+                }
+                else
+                {
+                    SetCharacterOrder(GetBestCharacterForOrder(o), o, null, Character.Controlled);
+                    DisableCommandUI();
+                }
+                return true;
+            };
+            CreateNodeIcon(node.RectTransform, order.SymbolSprite, order.Color, order.Color,
+                tooltip: hasOptions ? order.Name :
+                    order.Name + "\nLMB: " + TextManager.Get("commandui.quickassigntooltip") + "\nRMB: " + TextManager.Get("commandui.manualassigntooltip"));
+            return node;
+        }
+
+        private void CreateOrderOptions(Order order)
+        {
+            // This is largely based on the CreateOrderTargetFrame() method
+
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] :
+                Submarine.MainSub;
+
+            List<Item> matchingItems = new List<Item>();
+            if (order.ItemComponentType != null || order.ItemIdentifiers.Length > 0)
+            {
+                matchingItems = order.ItemIdentifiers.Length > 0 ?
+                    Item.ItemList.FindAll(it => order.ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(order.ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == order.ItemComponentType));
+
+                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                matchingItems.RemoveAll(it => it.Submarine != null && it.Submarine.IsOutpost);
+            }
+
+            //more than one target item -> create a minimap-like selection with a pic of the sub
+            if (matchingItems.Count > 1)
+            {
+                // TODO: Further adjustments to frameSize calculations
+                // I just divided the existing sizes by 2 to get it working quickly without it overlapping too much
+                Point frameSize;
+                Rectangle subBorders = submarine.GetDockedBorders();
+                if (subBorders.Width > subBorders.Height)
+                {
+                    frameSize.X = Math.Min(GameMain.GraphicsWidth / 2, GameMain.GraphicsWidth - 50) / 2;
+                    //height depends on the dimensions of the sub
+                    frameSize.Y = (int)(frameSize.X * (subBorders.Height / (float)subBorders.Width));
+                }
+                else
+                {
+                    frameSize.Y = Math.Min((int)(GameMain.GraphicsHeight * 0.6f), GameMain.GraphicsHeight - 50) / 2;
+                    //width depends on the dimensions of the sub
+                    frameSize.X = (int)(frameSize.Y * (subBorders.Width / (float)subBorders.Height));
+                }
+
+                // TODO: Use the old targetFrame if possible
+                targetFrame = new GUIFrame(
+                    new RectTransform(frameSize, parent: commandFrame.RectTransform, anchor: Anchor.Center)
+                    {
+                        AbsoluteOffset = new Point(0, -150),
+                        Pivot = Pivot.BottomCenter
+                    },
+                    style: "InnerFrame");
+
+                submarine.CreateMiniMap(targetFrame, pointsOfInterest: matchingItems);
+
+                new GUICustomComponent(new RectTransform(Vector2.One, targetFrame.RectTransform), onDraw: DrawMiniMapOverlay)
+                {
+                    CanBeFocused = false,
+                    UserData = submarine
+                };
+
+                List<GUIComponent> optionFrames = new List<GUIComponent>();
+                foreach (Item item in matchingItems)
+                {
+                    var itemTargetFrame = targetFrame.Children.First().FindChild(item);
+                    if (itemTargetFrame == null) { continue; }
+
+                    var anchor = Anchor.TopLeft;
+                    if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                    {
+                        anchor = Anchor.BottomRight;
+                    }
+                    else if (itemTargetFrame.RectTransform.RelativeOffset.X > 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                    {
+                        anchor = Anchor.BottomLeft;
+                    }
+
+                    else if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y > 0.5f)
+                    {
+                        anchor = Anchor.TopRight;
+                    }
+
+                    var optionFrame = new GUIFrame(
+                        new RectTransform(
+                            new Point((int)(250 * GUI.Scale), (int)((40 + order.Options.Length * 40) * GUI.Scale)),
+                            parent: itemTargetFrame.RectTransform,
+                            anchor: anchor),
+                        style: "InnerFrame");
+
+                    new GUIFrame(
+                        new RectTransform(Vector2.One, optionFrame.RectTransform, anchor: Anchor.Center),
+                        style: "OuterGlow",
+                        color: Color.Black * 0.7f);
+
+                    var optionContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), optionFrame.RectTransform, anchor: Anchor.Center))
+                    {
+                        RelativeSpacing = 0.05f,
+                        Stretch = true
+                    };
+
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), optionContainer.RectTransform), item != null ? item.Name : order.Name);
+
+                    for (int i = 0; i < order.Options.Length; i++)
+                    {
+                        optionNodes.Add(new GUIButton(
+                            new RectTransform(new Vector2(1.0f, 0.2f), optionContainer.RectTransform),
+                            text: order.OptionNames[i],
+                            style: "GUITextBox")
+                        {
+                            UserData = new Tuple<Order, string>(
+                                item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType)),
+                                order.Options[i]),
+                            Font = GUI.SmallFont,
+                            OnClicked = (_, userData) =>
+                            {
+                                if (GameMain.Client != null && Character.Controlled == null) { return false; }
+                                var o = userData as Tuple<Order, string>;
+                                SetCharacterOrder(GetBestCharacterForOrder(o.Item1), o.Item1, o.Item2, Character.Controlled);
+                                DisableCommandUI();
+                                return true;
+                            }
+                        });
+                    }
+                    optionFrames.Add(optionFrame);
+                }
+                GUI.PreventElementOverlap(optionFrames, clampArea: new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
+
+                var shadow = new GUIFrame(
+                    new RectTransform(targetFrame.Rect.Size + new Point((int)(200 * GUI.Scale)), targetFrame.RectTransform, anchor: Anchor.Center),
+                    style: "OuterGlow",
+                    color: matchingItems.Count > 1 ? Color.Black * 0.9f : Color.Black * 0.7f);
+                shadow.SetAsFirstChild();
+            }
+            //only one target (or an order with no particular targets), just show options
+            else
+            {
+                var item = matchingItems.Count > 0 ? matchingItems[0] : null;
+                var o = item == null ? order : new Order(order, item, item.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType));
+                var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
+                    GetCircumferencePointCount(order.Options.Length),
+                    GetFirstNodeAngle(order.Options.Length));
+                var offsetIndex = 0;
+                for (int i = 0; i < order.Options.Length; i++)
+                {
+                    optionNodes.Add(
+                        CreateOrderOptionNode(nodeSize, commandFrame.RectTransform, offsets[offsetIndex++].ToPoint(), o, order.Options[i], order.OptionNames[i]));
+                }
+            }
+        }
+
+        private GUIButton CreateOrderOptionNode(Point size, RectTransform parent, Point offset, Order order, string option, string optionName)
+        {
+            var node = new GUIButton(
+                new RectTransform(size, parent: parent, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = offset
+                },
+                style: null)
+            {
+                UserData = new Tuple<Order, string>(order, option),
+                OnClicked = (_, userData) =>
+                {
+                    if (GameMain.Client != null && Character.Controlled == null) { return false; }
+                    var o = userData as Tuple<Order, string>;
+                    SetCharacterOrder(GetBestCharacterForOrder(o.Item1), o.Item1, o.Item2, Character.Controlled);
+                    DisableCommandUI();
+                    return true;
+                }
+            };
+            if (order.Prefab.OptionSprites.TryGetValue(option, out Sprite sprite))
+            {
+                CreateNodeIcon(node.RectTransform, sprite, order.Color, order.Color,
+                    tooltip: optionName + "\nLMB: " + TextManager.Get("commandui.quickassigntooltip") + "\nRMB: " + TextManager.Get("commandui.manualassigntooltip"));
+            }
+            return node;
+        }
+
+        private void CreateAssignmentNodes(GUIComponent node)
+        {
+            var order = (node.UserData is Order) ?
+                new Tuple<Order, string>(node.UserData as Order, null) :
+                node.UserData as Tuple<Order, string>;
+            var characters = GetCharactersSortedForOrder(order.Item1);
+            if (characters.Count < 1) { return; }
+
+            if (!optionNodes.Remove(node)) { shortcutNodes.Remove(node); };
+            RemoveOptionNodes();
+            if (returnNode != null)
+            {
+                returnNode.Children.ForEach(child => child.Visible = false);
+                returnNode.Visible = false;
+                historyNodes.Push(returnNode);
+            }
+            SetReturnNode(centerNode, new Point(
+                (int)(node.RectTransform.AbsoluteOffset.X * -returnNodeDistanceModifier),
+                (int)(node.RectTransform.AbsoluteOffset.Y * -returnNodeDistanceModifier)));
+            if (targetFrame == null || !targetFrame.Visible)
+            {
+                SetCenterNode(node as GUIButton);
+            }
+            else
+            {
+                var optionNode = new GUIButton(
+                    new RectTransform(centerNodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center),
+                    style: null)
+                {
+                    UserData = node.UserData
+                };
+                if (order.Item1.Prefab.OptionSprites.TryGetValue(order.Item2, out Sprite sprite))
+                {
+                    CreateNodeIcon(optionNode.RectTransform, sprite, order.Item1.Color, order.Item1.Color, tooltip: order.Item2);
+                }
+                SetCenterNode(optionNode);
+                node = null;
+                targetFrame.Visible = false;
+            }
+            if (shortcutCenterNode != null)
+            {
+                commandFrame.RemoveChild(shortcutCenterNode);
+                shortcutCenterNode = null;
+            }
+
+            var needToExpand = characters.Count > assignmentNodeMaxCount + 1;
+            var nodeCount = needToExpand ? assignmentNodeMaxCount + 1 : characters.Count;
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
+                GetCircumferencePointCount(nodeCount),
+                GetFirstNodeAngle(nodeCount));
+
+            var i = 0;
+            var assignmentNodeCount = (needToExpand ? nodeCount - 1 : nodeCount);
+            for (; i < assignmentNodeCount; i++)
+            {
+                CreateAssignmentNode(order, characters[i], offsets[i].ToPoint());
+            }
+
+            if (!needToExpand) { return; }
+
+            extraOptionCharacters.Clear();
+            extraOptionCharacters.AddRange(characters.GetRange(i, characters.Count - i));
+
+            expandNode = new GUIButton(
+                new RectTransform(nodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = offsets[i].ToPoint()
+                },
+                style: null)
+            {
+                UserData = order,
+                OnClicked = ExpandAssignmentNodes
+            };
+            CreateNodeIcon(expandNode.RectTransform, Order.ExpandNode, order.Item1.Color, order.Item1.Color, tooltip: TextManager.Get("commandui.expand"));
+        }
+
+        private bool ExpandAssignmentNodes(GUIButton node, object userData)
+        {
+            node.OnClicked = (button, _) =>
+            {
+                RemoveExtraOptionNodes();
+                button.OnClicked = ExpandAssignmentNodes;
+                return true;
+            };
+
+            var order = userData as Tuple<Order, string>;
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance * 2,
+                GetCircumferencePointCount(extraOptionCharacters.Count),
+                GetFirstNodeAngle(extraOptionCharacters.Count));
+            for (int i = 0; i < extraOptionCharacters.Count; i++)
+            {
+                CreateAssignmentNode(order, extraOptionCharacters[i], offsets[i].ToPoint(), extraOption: true);
+            }
+            return true;
+        }
+
+        private void CreateAssignmentNode(Tuple<Order, string> order, Character character, Point offset, bool extraOption = false)
+        {
+            // Button
+            var node = new GUIButton(
+                new RectTransform(nodeSize, parent: commandFrame.RectTransform, anchor: Anchor.Center)
+                {
+                    AbsoluteOffset = offset
+                },
+                style: null)
+            {
+                OnClicked = (button, userData) =>
+                {
+                    SetCharacterOrder(character, order.Item1, order.Item2, Character.Controlled);
+                    DisableCommandUI();
+                    return true;
+                }
+            };
+            // Character icon
+            new GUICustomComponent(
+                new RectTransform(Vector2.One, node.RectTransform),
+                (spriteBatch, _) =>
+                {
+                    character.Info.DrawIcon(spriteBatch, node.Center, node.Rect.Size.ToVector2() * 0.75f);
+                });
+            // Smaller container
+            new GUIImage(
+                new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center),
+                Order.NodeContainer,
+                scaleToFit: true)
+            {
+                Color = character.Info.Job.Prefab.UIColor * nodeColorMultiplier,
+                HoverColor = character.Info.Job.Prefab.UIColor,
+                PressedColor = character.Info.Job.Prefab.UIColor,
+                SelectedColor = character.Info.Job.Prefab.UIColor,
+                UserData = "container"
+            };
+            // Bigger container
+            new GUIImage(
+                new RectTransform(new Vector2(1.4f), node.RectTransform, anchor: Anchor.Center),
+                Order.NodeContainer,
+                scaleToFit: true)
+            {
+                Color = character.Info.Job.Prefab.UIColor * nodeColorMultiplier,
+                HoverColor = character.Info.Job.Prefab.UIColor,
+                PressedColor = character.Info.Job.Prefab.UIColor,
+                SelectedColor = character.Info.Job.Prefab.UIColor,
+                UserData = "container",
+                ToolTip = character.Info.DisplayName + " (" + character.Info.Job.Name + ")"
+            };
+            (extraOption ? extraOptionNodes : optionNodes).Add(node);
+        }
+
+        private void CreateNodeIcon(RectTransform parent, Sprite sprite, Color iconColor, Color containerColor, string tooltip = null, bool createContainer = true)
+        {
+            if (createContainer)
+            {
+                // Container
+                new GUIImage(
+                    new RectTransform(new Vector2(1.2f), parent, anchor: Anchor.Center),
+                    Order.NodeContainer,
+                    scaleToFit: true)
+                {
+                    Color = containerColor * nodeColorMultiplier,
+                    HoverColor = containerColor,
+                    PressedColor = containerColor,
+                    SelectedColor = containerColor,
+                    UserData = "container"
+                };
+            }
+            // Icon
+            new GUIImage(
+                new RectTransform(Vector2.One, parent),
+                sprite,
+                scaleToFit: true)
+            {
+                Color = iconColor * nodeColorMultiplier,
+                HoverColor = iconColor,
+                PressedColor = iconColor,
+                SelectedColor = iconColor,
+                ToolTip = tooltip,
+                UserData = "icon"
+            };
+        }
+
+        private int GetCircumferencePointCount(int nodes)
+        {
+            return nodes % 2 > 0 ? nodes : nodes + 1;
+        }
+
+        private float GetFirstNodeAngle(int nodeCount)
+        {
+            var bearing = 90.0f;
+            if (returnNode != null)
+            {
+                bearing = GetBearing(
+                    centerNode.RectTransform.AbsoluteOffset.ToVector2(),
+                    returnNode.RectTransform.AbsoluteOffset.ToVector2());
+            }
+            else if (shortcutCenterNode != null)
+            {
+                bearing = GetBearing(
+                    centerNode.RectTransform.AbsoluteOffset.ToVector2(),
+                    shortcutCenterNode.RectTransform.AbsoluteOffset.ToVector2());
+            }
+            return nodeCount % 2 > 0 ?
+                MathHelper.ToRadians(bearing + 360.0f / nodeCount / 2) :
+                MathHelper.ToRadians(bearing + 360.0f / (nodeCount + 1));
+        }
+
+        private float GetBearing(Vector2 startPoint, Vector2 endPoint, bool flipY = false, bool flipX = false)
+        {
+            var radians = Math.Atan2(
+                !flipY ? endPoint.Y - startPoint.Y : startPoint.Y - endPoint.Y,
+                !flipX ? endPoint.X - startPoint.X : startPoint.X - endPoint.X);
+            var degrees = MathHelper.ToDegrees((float)radians);
+            return (degrees < 0) ? (degrees + 360) : degrees;
+        }
+
+        #region Crew Member Assignment Logic
+
+        private Character GetBestCharacterForOrder(Order order)
+        {
+            return characters.FindAll(c => c != Character.Controlled)
+                .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder == dismissedOrder)
+                .ThenByDescending(c => order.HasAppropriateJob(c))
+                .FirstOrDefault();
+        }
+
+        private List<Character> GetCharactersSortedForOrder(Order order)
+        {
+            if (order.Identifier == "follow")
+            {
+                return characters.FindAll(c => c != Character.Controlled)
+                    .OrderBy(c => c.CurrentOrder == null || c.CurrentOrder == dismissedOrder)
+                    .ThenBy(c => order.HasAppropriateJob(c))
+                    .ToList();
+            }
+            else
+            {
+                return characters.OrderBy(c => c.CurrentOrder == null || c.CurrentOrder == dismissedOrder)
+                       .ThenBy(c => order.HasAppropriateJob(c))
+                       .ToList();
+            }
+        }
+
+        #endregion
+
+        #endregion
 
         /// <summary>
         /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
@@ -1338,31 +2066,30 @@ namespace Barotrauma
         /// </summary>
         protected bool SelectCrewCharacter(Character character, GUIComponent crewList)
         {
-            if (character == null) return false;
+            if (character == null) { return false; }
 
             GUIComponent crewFrame = (GUIComponent)crewList.UserData;
-
             GUIComponent existingPreview = crewFrame.FindChild("SelectedCharacter");
-            if (existingPreview != null) crewFrame.RemoveChild(existingPreview);
+            if (existingPreview != null) { crewFrame.RemoveChild(existingPreview); }
 
-            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.9f), crewFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.05f, 0.0f) }, style: "InnerFrame")
+            var previewPlayer = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.7f), crewFrame.RectTransform, Anchor.TopRight), style: null)
             {
                 UserData = "SelectedCharacter"
             };
 
             character.Info.CreateInfoFrame(previewPlayer);
 
-            if (GameMain.NetworkMember != null) GameMain.Client.SelectCrewCharacter(character, previewPlayer);
+            if (GameMain.NetworkMember != null) { GameMain.Client.SelectCrewCharacter(character, previewPlayer); }
 
             return true;
         }
 
-#region Reports
+        #region Reports
 
         /// <summary>
         /// Enables/disables report buttons when needed
         /// </summary>
-        public void UpdateReports(float deltaTime)
+        public void UpdateReports()
         {
             bool canIssueOrders = false;
             if (Character.Controlled?.CurrentHull?.Submarine != null && Character.Controlled.SpeechImpediment < 100.0f)
@@ -1373,14 +2100,16 @@ namespace Barotrauma
 
             if (canIssueOrders)
             {
-                reportButtonFrame.Visible = true;
+                ReportButtonFrame.Visible = true;
 
                 var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
                 if (reportButtonParent == null) { return; }
 
-                reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
+                /*reportButtonFrame.RectTransform.AbsoluteOffset = new Point(
                     Math.Min(reportButtonParent.GUIFrame.Rect.X, reportButtonParent.ToggleButton.Rect.X) - reportButtonFrame.Rect.Width - (int)(10 * GUI.Scale),
-                    reportButtonParent.GUIFrame.Rect.Y);
+                    reportButtonParent.GUIFrame.Rect.Y);*/
+
+                ReportButtonFrame.RectTransform.AbsoluteOffset = new Point(reportButtonParent.GUIFrame.Rect.Right + (int)(10 * GUI.Scale), reportButtonParent.GUIFrame.Rect.Y);
 
                 bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
                 ToggleReportButton("reportfire", hasFires);
@@ -1391,7 +2120,7 @@ namespace Barotrauma
                 bool hasIntruders = Character.CharacterList.Any(c => c.CurrentHull == Character.Controlled.CurrentHull && AIObjectiveFightIntruders.IsValidTarget(c, Character.Controlled));
                 ToggleReportButton("reportintruders", hasIntruders);
 
-                foreach (GUIComponent reportButton in reportButtonFrame.Children)
+                foreach (GUIComponent reportButton in ReportButtonFrame.Children)
                 {
                     var highlight = reportButton.GetChildByUserData("highlighted");
                     if (highlight.Visible)
@@ -1402,34 +2131,25 @@ namespace Barotrauma
             }
             else
             {
-                reportButtonFrame.Visible = false;
+                ReportButtonFrame.Visible = false;
             }
-        }
-
-        /// <summary>
-        /// Should report buttons be visible on the screen atm?
-        /// </summary>
-        private bool ReportButtonsVisible()
-        {
-            return CharacterHealth.OpenHealthWindow == null;
         }
         
         private void ToggleReportButton(string orderIdentifier, bool enabled)
         {
             Order order = Order.GetPrefab(orderIdentifier);
-            
-            var reportButton = reportButtonFrame.GetChildByUserData(order);
+            var reportButton = ReportButtonFrame.GetChildByUserData(order);
             if (reportButton != null)
             {
                 reportButton.GetChildByUserData("highlighted").Visible = enabled;
             }
         }
 
-#endregion
+        #endregion
 
         public void InitSinglePlayerRound()
         {
-            characterListBox.ClearChildren();
+            activeCrew.ClearChildren();
             characters.Clear();
 
             WayPoint[] waypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
@@ -1456,8 +2176,6 @@ namespace Barotrauma
                 }
             }
 
-            if (characters.Any()) characterListBox.Select(0);
-
             conversationTimer = Rand.Range(5.0f, 10.0f);
         }
 
@@ -1467,14 +2185,14 @@ namespace Barotrauma
             characterInfos.RemoveAll(c => c.Character == null || c.Character.Removed || c.CauseOfDeath != null);
 
             characters.Clear();
-            characterListBox.ClearChildren();
+            activeCrew.ClearChildren();
         }
 
         public void Reset()
         {
             characters.Clear();
             characterInfos.Clear();
-            characterListBox.ClearChildren();
+            activeCrew.ClearChildren();
         }
 
         public void Save(XElement parentElement)

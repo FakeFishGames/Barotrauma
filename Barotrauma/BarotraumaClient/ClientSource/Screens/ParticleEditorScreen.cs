@@ -61,16 +61,14 @@ namespace Barotrauma
             }
         }
 
-        private readonly GUIComponent rightPanel,  leftPanel;
-        private readonly GUIListBox prefabList;
-        private readonly GUITextBox filterBox;
-        private readonly GUITextBlock filterLabel;
+        private GUIComponent rightPanel, leftPanel;
+        private GUIListBox prefabList;
+        private GUITextBox filterBox;
+        private GUITextBlock filterLabel;
 
         private ParticlePrefab selectedPrefab;
 
-        private SerializableEntityEditor particlePrefabEditor;
-
-        private readonly Emitter emitter;
+        private Emitter emitter;
 
         private readonly Camera cam;
 
@@ -85,6 +83,14 @@ namespace Barotrauma
         public ParticleEditorScreen()
         {
             cam = new Camera();
+            GameMain.Instance.OnResolutionChanged += CreateUI;
+            CreateUI();
+
+        }
+
+        private void CreateUI()
+        {
+            Frame.ClearChildren();
 
             leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 1.0f), Frame.RectTransform) { MinSize = new Point(150, 0) },
                 style: "GUIFrameLeft");
@@ -94,9 +100,9 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), Frame.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) },
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), Frame.RectTransform, Anchor.TopRight) { MinSize = new Point(350, 0) },
                 style: "GUIFrameRight");
-            var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) {RelativeOffset = new Vector2(0.02f, 0.0f) })
+            var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
                 RelativeSpacing = 0.01f,
                 Stretch = true
@@ -124,7 +130,7 @@ namespace Barotrauma
 
             emitter = new Emitter();
             var emitterEditorContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), paddedRightPanel.RectTransform), style: null);
-            var emitterEditor = new SerializableEntityEditor(emitterEditorContainer.RectTransform, emitter, false, true, elementHeight: 20);
+            var emitterEditor = new SerializableEntityEditor(emitterEditorContainer.RectTransform, emitter, false, true, elementHeight: 20, titleFont: GUI.SubHeadingFont);
             emitterEditor.RectTransform.RelativeSize = Vector2.One;
             emitterEditorContainer.RectTransform.Resize(new Point(emitterEditorContainer.RectTransform.NonScaledSize.X, emitterEditor.ContentHeight), false);
 
@@ -139,7 +145,7 @@ namespace Barotrauma
             filterLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true };
             filterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font);
             filterBox.OnTextChanged += (textBox, text) => { FilterEmitters(text); return true; };
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform) { MinSize = new Point(20, 0) }, "x")
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), filterArea.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton")
             {
                 OnClicked = (btn, userdata) => { FilterEmitters(""); filterBox.Text = ""; filterBox.Flash(Color.White); return true; }
             };
@@ -149,11 +155,13 @@ namespace Barotrauma
             {
                 selectedPrefab = obj as ParticlePrefab;
                 listBox.ClearChildren();
-                particlePrefabEditor = new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20);
+                new SerializableEntityEditor(listBox.Content.RectTransform, selectedPrefab, false, true, elementHeight: 20, titleFont: GUI.SubHeadingFont);
                 //listBox.Content.RectTransform.NonScaledSize = particlePrefabEditor.RectTransform.NonScaledSize;
                 //listBox.UpdateScrollBarSize();
                 return true;
             };
+
+            if (GameMain.ParticleManager != null) { RefreshPrefabList(); }
         }
 
         public override void Select()

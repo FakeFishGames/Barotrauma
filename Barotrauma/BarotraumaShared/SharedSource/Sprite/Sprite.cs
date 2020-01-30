@@ -102,6 +102,8 @@ namespace Barotrauma
             }
         }
 
+        public Vector2 RelativeSize { get; private set; }
+
         public string FilePath { get; private set; }
 
         public string FullPath { get; private set; }
@@ -132,6 +134,7 @@ namespace Barotrauma
 
         public Sprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
         {
+            if (element == null) { return; }
             this.lazyLoad = lazyLoad;
             SourceElement = element;
             if (!ParseTexturePath(path, file)) { return; }
@@ -150,6 +153,7 @@ namespace Barotrauma
             if (shouldReturn) { return; }
             sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
             size = SourceElement.GetAttributeVector2("size", Vector2.One);
+            RelativeSize = size;
             size.X *= sourceRect.Width;
             size.Y *= sourceRect.Height;
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));

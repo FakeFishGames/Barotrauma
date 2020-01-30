@@ -916,7 +916,7 @@ namespace Barotrauma
             contained.Container = null;            
         }
 
-        public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true)
+        public void SetTransform(Vector2 simPosition, float rotation, bool findNewHull = true, bool setPrevTransform = true)
         {
             if (!MathUtils.IsValid(simPosition))
             {
@@ -938,13 +938,13 @@ namespace Barotrauma
                 try
                 {
 #endif
-                    if (body.Enabled)
+                    if (body.PhysEnabled)
                     {
-                        body.SetTransform(simPosition, rotation);
+                        body.SetTransform(simPosition, rotation, setPrevTransform);
                     }
                     else
                     {
-                        body.SetTransformIgnoreContacts(simPosition, rotation);
+                        body.SetTransformIgnoreContacts(simPosition, rotation, setPrevTransform);
                     }
 #if DEBUG
                 }
@@ -1270,10 +1270,6 @@ namespace Barotrauma
                 HandleCollision(impact);
             }
 
-            if (!isActive) { return; }
-
-            aiTarget?.Update(deltaTime);
-
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 sendConditionUpdateTimer -= deltaTime;
@@ -1282,6 +1278,10 @@ namespace Barotrauma
                     SendPendingNetworkUpdates();
                 }
             }
+
+            if (!isActive) { return; }
+
+            aiTarget?.Update(deltaTime);
 
             ApplyStatusEffects(ActionType.Always, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
@@ -1376,7 +1376,7 @@ namespace Barotrauma
             }
             else
             {
-                if (updateableComponents.Count == 0 && aiTarget == null && !conditionUpdatePending && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
+                if (updateableComponents.Count == 0 && aiTarget == null && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
                 {
 #if CLIENT
                     positionBuffer.Clear();
@@ -1814,6 +1814,12 @@ namespace Barotrauma
                 else if (selected)
                 {
                     picker.SelectedConstruction = this;
+#if CLIENT
+                    if (GameMain.GameSession?.CrewManager != null && picker == Character.Controlled && GetComponent<Ladder>() == null)
+                    {
+                        GameMain.GameSession.CrewManager.ToggleCrewListOpen = false;
+                    }
+#endif
                 }
             }
 
@@ -1823,7 +1829,7 @@ namespace Barotrauma
                 if (requiredSkill != null)
                 {
                     GUI.AddMessage(TextManager.GetWithVariables("InsufficientSkills", new string[2] { "[requiredskill]", "[requiredlevel]" },
-                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)requiredSkill.Level).ToString() }, new bool[2] { true, false }), Color.Red);
+                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)requiredSkill.Level).ToString() }, new bool[2] { true, false }), GUI.Style.Red);
                 }
             }
 #endif

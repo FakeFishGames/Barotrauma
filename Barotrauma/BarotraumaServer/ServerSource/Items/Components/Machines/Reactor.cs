@@ -24,10 +24,10 @@ namespace Barotrauma.Items.Components
             if (!autoTemp && AutoTemp) blameOnBroken = c;
             if (turbineOutput < targetTurbineOutput) blameOnBroken = c;
             if (fissionRate > targetFissionRate) blameOnBroken = c;
-            if (!this.shutDown && shutDown) blameOnBroken = c;
+            if (!this._powerOn && shutDown) blameOnBroken = c;
 
             AutoTemp = autoTemp;
-            this.shutDown = shutDown;
+            this._powerOn = shutDown;
             targetFissionRate = fissionRate;
             targetTurbineOutput = turbineOutput;
 
@@ -44,7 +44,7 @@ namespace Barotrauma.Items.Components
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             msg.Write(autoTemp);
-            msg.Write(shutDown);
+            msg.Write(_powerOn);
             msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(targetTurbineOutput, 0.0f, 100.0f, 8);

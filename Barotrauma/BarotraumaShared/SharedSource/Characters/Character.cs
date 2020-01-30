@@ -311,6 +311,21 @@ namespace Barotrauma
                 selectedCharacter = value;
                 if (selectedCharacter != null)
                     selectedCharacter.selectedBy = this;
+
+#if CLIENT
+                if (GameMain.GameSession == null) return;
+                // Quick & dirty hiding of the chat whenever a character with an accessible inventory is selected to prevent overlaps
+                if (GameMain.GameSession.CrewManager.IsSinglePlayer)
+                {
+                    if (GameMain.GameSession.CrewManager.ChatBox == null) return;
+                    GameMain.GameSession.CrewManager.ChatBox.SetVisibility(!(IsHumanoid && value != null && value.Inventory != null && value.CanInventoryBeAccessed));
+                }
+                else
+                {
+                    if (GameMain.Client?.ChatBox == null) return;
+                    GameMain.Client.ChatBox.SetVisibility(!(IsHumanoid && value != null && value.Inventory != null && value.CanInventoryBeAccessed));
+                }
+#endif
             }
         }
 

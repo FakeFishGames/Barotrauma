@@ -171,6 +171,10 @@ namespace Barotrauma
 
         private const GraphicsProfile GfxProfile = GraphicsProfile.Reach;
 
+#if DEBUG
+        public static bool FirstLoad = true;
+#endif
+
         public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
@@ -391,7 +395,7 @@ namespace Barotrauma
                 float baseVolume = MathHelper.Clamp(Config.SoundVolume * 2.0f, 0.0f, 1.0f);
                 pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_UTG.webm", baseVolume * 0.5f));
                 pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_FF.webm", baseVolume));
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.15f));
+                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.1f));
             }
 
             //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
@@ -702,6 +706,15 @@ namespace Barotrauma
                         loadingScreenOpen = false;
                     }
 
+#if DEBUG
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && Config.AutomaticQuickStartEnabled && FirstLoad)
+                    {
+                        loadingScreenOpen = false;
+                        FirstLoad = false;
+                        MainMenuScreen.QuickStart();
+                    }
+#endif
+
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
                         string errMsg = "Loading was interrupted due to an error";
@@ -778,7 +791,8 @@ namespace Barotrauma
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
                         else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
-                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null)
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
+                            && !CrewManager.IsCommandInterfaceOpen)
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();

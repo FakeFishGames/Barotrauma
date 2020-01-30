@@ -1,3 +1,4 @@
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
@@ -58,7 +59,7 @@ namespace Barotrauma
                 CharacterHealth.OpenHealthWindow = null;                
             }
         }
-        
+
         private Dictionary<object, HUDProgressBar> hudProgressBars;
         private readonly List<KeyValuePair<object, HUDProgressBar>> progressBarRemovals = new List<KeyValuePair<object, HUDProgressBar>>();
 
@@ -650,6 +651,34 @@ namespace Barotrauma
             
             if (GUI.DisableHUD) return;
 
+            if (Controlled != null &&
+                Controlled != this &&
+                Submarine != null &&
+                Controlled.Submarine == Submarine &&
+                GameMain.Config.LosMode != LosMode.None)
+            {
+                float yPos = Controlled.AnimController.FloorY - 1.5f;
+
+                if (Controlled.AnimController.Stairs != null)
+                {
+                    yPos = Controlled.AnimController.Stairs.SimPosition.Y - Controlled.AnimController.Stairs.RectHeight * 0.5f;
+                }
+
+                foreach (var ladder in Ladder.List)
+                {
+                    if (CanInteractWith(ladder.Item) && Controlled.CanInteractWith(ladder.Item))
+                    {
+                        float xPos = ladder.Item.SimPosition.X;
+                        if (Math.Abs(xPos - SimPosition.X) < 3.0)
+                        {
+                            yPos = ladder.Item.SimPosition.Y - ladder.Item.RectHeight * 0.5f;
+                        }
+                        break;
+                    }
+                }
+                if (AnimController.FloorY < yPos) { return; }
+            }
+
             Vector2 pos = DrawPosition;
             pos.Y += hudInfoHeight;
 
@@ -694,7 +723,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             cursorPos,
                             new Vector2(item.First.DrawPosition.X, -item.First.DrawPosition.Y),
-                            ToolBox.GradientLerp(item.Second, Color.Red, Color.Orange, Color.Green), width: 2);
+                            ToolBox.GradientLerp(item.Second, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green), width: 2);
                     }
                 }
                 return;
@@ -724,7 +753,7 @@ namespace Barotrauma
                 Color nameColor = Color.White;
                 if (Controlled != null && TeamID != Controlled.TeamID)
                 {
-                    nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : Color.Red;
+                    nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
                 }
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
@@ -744,7 +773,7 @@ namespace Barotrauma
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
                     CharacterHealth.DisplayedVitality / MaxVitality, 
-                    Color.Lerp(Color.Red, Color.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
+                    Color.Lerp(GUI.Style.Red, GUI.Style.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }
         }

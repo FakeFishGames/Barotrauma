@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -47,12 +48,21 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        private List<Character> visibleCharacters = new List<Character>();
+        private readonly List<Character> visibleCharacters = new List<Character>();
 
         private const float UpdateInterval = 0.5f;
         private float updateTimer;
 
         private Character equipper;
+
+        public IEnumerable<Character> VisibleCharacters
+        {
+            get 
+            {
+                if (equipper == null || equipper.Removed) { return Enumerable.Empty<Character>(); }
+                return visibleCharacters; 
+            }
+        }
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -104,10 +114,10 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (character == null) return;
-            
-            GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                Color.Green * 0.1f, true);
+            if (character == null) { return; }
+
+            GUI.UIGlow.Draw(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                Color.LightGreen * 0.5f);
 
             Character closestCharacter = null;
             float closestDist = float.PositiveInfinity;
@@ -141,40 +151,40 @@ namespace Barotrauma.Items.Components
             if (target.Info != null)
             {
                 texts.Add(target.Name);
-                textColors.Add(Color.White);
+                textColors.Add(GUI.Style.TextColor);
             }
             
             if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
-                textColors.Add(Color.Red);
+                textColors.Add(GUI.Style.Red);
                 texts.Add(
                     target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
                     TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
-                textColors.Add(Color.Red);
+                textColors.Add(GUI.Style.Red);
             }
             else
             {
                 if (target.IsUnconscious)
                 {
                     texts.Add(TextManager.Get("Unconscious"));
-                    textColors.Add(Color.Orange);
+                    textColors.Add(GUI.Style.Orange);
                 }
                 if (target.Stun > 0.01f)
                 {
                     texts.Add(TextManager.Get("Stunned"));
-                    textColors.Add(Color.Orange);
+                    textColors.Add(GUI.Style.Orange);
                 }
                 
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
-                textColors.Add(Color.Lerp(Color.Red, Color.Green, target.Oxygen / 100.0f));
+                textColors.Add(Color.Lerp(GUI.Style.Red, GUI.Style.Green, target.Oxygen / 100.0f));
 
                 if (target.Bleeding > 0.0f)
                 {
                     int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
-                    textColors.Add(Color.Lerp(Color.Orange, Color.Red, target.Bleeding / 100.0f));
+                    textColors.Add(Color.Lerp(GUI.Style.Orange, GUI.Style.Red, target.Bleeding / 100.0f));
                 }
 
                 var allAfflictions = target.CharacterHealth.GetAllAfflictions();
@@ -195,11 +205,11 @@ namespace Barotrauma.Items.Components
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
                     texts.Add(TextManager.AddPunctuation(':', affliction.Name, ((int)combinedAfflictionStrengths[affliction]).ToString() + " %"));
-                    textColors.Add(Color.Lerp(Color.Orange, Color.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
+                    textColors.Add(Color.Lerp(GUI.Style.Orange, GUI.Style.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }
 
-            GUI.DrawString(spriteBatch, hudPos, texts[0], textColors[0] * alpha, Color.Black * 0.7f * alpha, 2);
+            GUI.DrawString(spriteBatch, hudPos, texts[0], textColors[0] * alpha, Color.Black * 0.7f * alpha, 2, GUI.SubHeadingFont);
             hudPos.X += 5.0f;
             hudPos.Y += 24.0f;
 

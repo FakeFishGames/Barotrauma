@@ -44,8 +44,7 @@ namespace Barotrauma
                 MaxZoom = 1.0f
             };
 
-            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) },
-                style: "GUIFrameLeft");
+            leftPanel = new GUIFrame(new RectTransform(new Vector2(0.125f, 0.8f), Frame.RectTransform) { MinSize = new Point(150, 0) });
             var paddedLeftPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), leftPanel.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
                 Stretch = true,
@@ -107,8 +106,7 @@ namespace Barotrauma
                 }
             };
 
-            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), Frame.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) },
-                style: "GUIFrameRight");
+            rightPanel = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), Frame.RectTransform, Anchor.TopRight) { MinSize = new Point(450, 0) });
             var paddedRightPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), rightPanel.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.02f, 0.0f) })
             {
                 Stretch = true,
@@ -133,14 +131,14 @@ namespace Barotrauma
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
                     foreach (GUITextBlock param in paramsList.Content.Children)
                     {
-                        param.TextColor = param.UserData == selectedParams ? Color.LightGreen : param.Style.textColor;
+                        param.TextColor = param.UserData == selectedParams ? GUI.Style.Green : param.Style.TextColor;
                     }
                     seedBox.Deselect();
                     return true;
                 }
             };
 
-            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.2f), Frame.RectTransform, Anchor.BottomLeft)
+            bottomPanel = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.22f), Frame.RectTransform, Anchor.BottomLeft)
             { MaxSize = new Point(GameMain.GraphicsWidth - rightPanel.Rect.Width, 1000) }, style: "GUIFrameBottom");
 
             levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), bottomPanel.RectTransform, Anchor.Center))
@@ -235,14 +233,14 @@ namespace Barotrauma
             editorContainer.ClearChildren();
             levelObjectList.Content.ClearChildren();
 
-            int objectsPerRow = (int)Math.Ceiling(levelObjectList.Content.Rect.Width / Math.Max(150 * GUI.Scale, 100));
+            int objectsPerRow = (int)Math.Ceiling(levelObjectList.Content.Rect.Width / Math.Max(100 * GUI.Scale, 100));
             float relWidth = 1.0f / objectsPerRow;
 
             foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
             {
                 var frame = new GUIFrame(new RectTransform(
                     new Vector2(relWidth, relWidth * ((float)levelObjectList.Content.Rect.Width / levelObjectList.Content.Rect.Height)), 
-                    levelObjectList.Content.RectTransform) { MinSize = new Point(0, 60) }, style: "GUITextBox")
+                    levelObjectList.Content.RectTransform) { MinSize = new Point(0, 60) }, style: "ListBoxElementSquare")
                 {
                     UserData = levelObjPrefab
                 };
@@ -267,7 +265,7 @@ namespace Barotrauma
         {
             editorContainer.ClearChildren();
 
-            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, levelObjectPrefab, false, true, elementHeight: 20);
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, levelObjectPrefab, false, true, elementHeight: 20, titleFont: GUI.LargeFont);
 
             if (selectedParams != null)
             {
@@ -319,7 +317,7 @@ namespace Barotrauma
             }
             //child object editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
-                TextManager.Get("leveleditor.childobjects"), textAlignment: Alignment.BottomCenter);
+                TextManager.Get("leveleditor.childobjects"), font: GUI.SubHeadingFont, textAlignment: Alignment.BottomCenter);
             foreach (LevelObjectPrefab.ChildObject childObj in levelObjectPrefab.ChildObjects)
             {
                 var childObjFrame = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30)));
@@ -361,7 +359,7 @@ namespace Barotrauma
                     }
                 }.IntValue = childObj.MaxCount;
 
-                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform), "X")
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedFrame.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton")
                 {
                     OnClicked = (btn, userdata) =>
                     {
@@ -374,7 +372,8 @@ namespace Barotrauma
                 childObjFrame.RectTransform.Parent = editorContainer.Content.RectTransform;
             }
 
-            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform),
+            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), editorContainer.Content.RectTransform), style: null);
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), buttonContainer.RectTransform, Anchor.Center),
                 TextManager.Get("leveleditor.addchildobject"))
             {
                 OnClicked = (btn, userdata) =>
@@ -384,15 +383,17 @@ namespace Barotrauma
                     return true;
                 }
             };
+            buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.Children.First().MinSize;
 
             //light editing
             new GUITextBlock(new RectTransform(new Point(editor.Rect.Width, 40), editorContainer.Content.RectTransform),
-                TextManager.Get("leveleditor.lightsources"), textAlignment: Alignment.BottomCenter);
+                TextManager.Get("leveleditor.lightsources"), textAlignment: Alignment.BottomCenter, font: GUI.SubHeadingFont);
             foreach (LightSourceParams lightSourceParams in selectedLevelObject.LightSourceParams)
             {
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, lightSourceParams, inGame: false, showName: true);
             }
-            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), editorContainer.Content.RectTransform), 
+            buttonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), editorContainer.Content.RectTransform), style: null);
+            new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20), buttonContainer.RectTransform, Anchor.Center), 
                 TextManager.Get("leveleditor.addlightsource"))
             {
                 OnClicked = (btn, userdata) =>
@@ -403,6 +404,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.Children.First().MinSize;
         }
 
         private void SortLevelObjectsList(LevelGenerationParams selectedParams)
@@ -411,9 +413,16 @@ namespace Barotrauma
             foreach (GUIComponent levelObjFrame in levelObjectList.Content.Children)
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
-                Color color = levelObj.GetCommonness(selectedParams.Name) > 0.0f ? Color.White : Color.White * 0.3f;
-                levelObjFrame.Color = color;
-                levelObjFrame.GetAnyChild<GUIImage>().Color = color;
+                float commonness = levelObj.GetCommonness(selectedParams.Name);
+                levelObjFrame.Color = commonness > 0.0f ? GUI.Style.Green * 0.4f : Color.Transparent;
+                levelObjFrame.SelectedColor = commonness > 0.0f ? GUI.Style.Green * 0.6f : Color.White * 0.5f;
+                levelObjFrame.HoverColor = commonness > 0.0f ? GUI.Style.Green * 0.7f : Color.White * 0.6f;
+
+                levelObjFrame.GetAnyChild<GUIImage>().Color = commonness > 0.0f ? Color.White : Color.DarkGray;
+                if (commonness <= 0.0f)
+                {
+                    levelObjFrame.GetAnyChild<GUITextBlock>().TextColor = Color.DarkGray;
+                }
             }
 
             //sort the levelobjects according to commonness in this level
@@ -639,22 +648,22 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrEmpty(nameBox.Text))
                     {
-                        nameBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnameempty"), Color.Red);
+                        nameBox.Flash(GUI.Style.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnameempty"), GUI.Style.Red);
                         return false;
                     }
                     
                     if (LevelObjectPrefab.List.Any(obj => obj.Name.ToLower() == nameBox.Text.ToLower()))
                     {
-                        nameBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnametaken"), Color.Red);
+                        nameBox.Flash(GUI.Style.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjnametaken"), GUI.Style.Red);
                         return false;
                     }
 
                     if (!File.Exists(texturePathBox.Text))
                     {
-                        texturePathBox.Flash(Color.Red);
-                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjtexturenotfound"), Color.Red);
+                        texturePathBox.Flash(GUI.Style.Red);
+                        GUI.AddMessage(TextManager.Get("leveleditor.levelobjtexturenotfound"), GUI.Style.Red);
                         return false;
                     }
 

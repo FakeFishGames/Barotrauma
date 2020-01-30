@@ -648,17 +648,14 @@ namespace Barotrauma
 
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
             Vector2 newVelocity = body.LinearVelocity + velocityAddition;
-            
+
             float newSpeedSqr = newVelocity.LengthSquared();
-            if (newSpeedSqr > maxVelocity * maxVelocity)
+            if (newSpeedSqr > maxVelocity * maxVelocity && Vector2.Dot(body.LinearVelocity, force) > 0.0f)
             {
-                float velSqr = body.LinearVelocity.LengthSquared();
-                if (newSpeedSqr > velSqr) 
-                {
-                    if (velSqr > maxVelocity * maxVelocity) { return; }
-                    newVelocity = newVelocity.ClampLength(maxVelocity);
-                    force = (newVelocity - body.LinearVelocity) * Mass / (float)Timing.Step;
-                }
+                float newSpeed = (float)Math.Sqrt(newSpeedSqr);
+                float maxVelAddition = maxVelocity - newSpeed;
+                if (maxVelAddition <= 0.0f) { return; }
+                force = velocityAddition.ClampLength(maxVelAddition) * Mass / (float)Timing.Step;
             }
 
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
@@ -678,7 +675,7 @@ namespace Barotrauma
             body.ApplyTorque(torque);
         }
 
-        public bool SetTransform(Vector2 simPosition, float rotation)
+        public bool SetTransform(Vector2 simPosition, float rotation, bool setPrevTransform = true)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
@@ -688,11 +685,11 @@ namespace Barotrauma
             if (!IsValidValue(rotation, "rotation")) return false;
 
             body.SetTransform(simPosition, rotation);
-            SetPrevTransform(simPosition, rotation);
+            if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
             return true;
         }
 
-        public bool SetTransformIgnoreContacts(Vector2 simPosition, float rotation)
+        public bool SetTransformIgnoreContacts(Vector2 simPosition, float rotation, bool setPrevTransform = true)
         {
             System.Diagnostics.Debug.Assert(MathUtils.IsValid(simPosition));
             System.Diagnostics.Debug.Assert(Math.Abs(simPosition.X) < 1000000.0f);
@@ -702,7 +699,7 @@ namespace Barotrauma
             if (!IsValidValue(rotation, "rotation")) return false;
 
             body.SetTransformIgnoreContacts(ref simPosition, rotation);
-            SetPrevTransform(simPosition, rotation);
+            if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
             return true;
         }
 

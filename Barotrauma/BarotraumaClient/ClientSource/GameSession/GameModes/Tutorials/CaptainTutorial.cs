@@ -156,13 +156,14 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!captain_medicObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(captain_medic.Info.DisplayName, TextManager.Get("Captain.Radio.Medic"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            GameMain.GameSession.CrewManager.ToggleCrewAreaOpen = true;
+            GameMain.GameSession.CrewManager.ToggleCrewListOpen = true;
             GameMain.GameSession.CrewManager.AddCharacter(captain_medic);
-            TriggerTutorialSegment(0);
+            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Command));
             do
             {
                 yield return null;
-                GameMain.GameSession.CrewManager.HighlightOrderButton(captain_medic, "follow", highlightColor, new Vector2(5, 5));
+                // TODO: Rework order highlighting for new command UI
+                // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_medic, "follow", highlightColor, new Vector2(5, 5));
             }
             while (!HasOrder(captain_medic, "follow"));
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
@@ -172,34 +173,37 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!captain_enteredSubmarineSensor.MotionDetected);
             yield return new WaitForSeconds(3f, false);
             captain_mechanic.AIController.Enabled = captain_security.AIController.Enabled = captain_engineer.AIController.Enabled = true;
-            TriggerTutorialSegment(1);
+            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_mechanic);
             do
             {
                 yield return null;
-                GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
+                // TODO: Rework order highlighting for new command UI
+                // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
                 //HighlightOrderOption("jobspecific");
             }
             while (!HasOrder(captain_mechanic, "repairsystems"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(2);
+            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_security);
             do
             {
                 yield return null;
-                GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
+                // TODO: Rework order highlighting for new command UI
+                // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("fireatwill");
             }
             while (!HasOrder(captain_security, "operateweapons", "fireatwill"));
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(4f, false);
-            TriggerTutorialSegment(3);
+            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
             do
             {
                 yield return null;
-                GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor, new Vector2(5, 5));
+                // TODO: Rework order highlighting for new command UI
+                // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_engineer, "operatereactor", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("powerup");
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
@@ -225,10 +229,9 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(captain_navConsole.Item))
                 {
-                    if (captain_sonar.ActiveTickBox.Box.FlashTimer <= 0)
+                    if (captain_sonar.SonarModeSwitch.Frame.FlashTimer <= 0)
                     {
-                        captain_sonar.ActiveTickBox.Box.Flash(highlightColor, 1.5f, false, new Vector2(2.5f, 2.5f));
-                        //captain_sonar.ActiveTickBox.Box.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.5f);
+                        captain_sonar.SonarModeSwitch.Frame.Flash(highlightColor, 1.5f, false, false, new Vector2(2.5f, 2.5f));
                     }
                 }
                 yield return null;

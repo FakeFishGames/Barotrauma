@@ -48,10 +48,11 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.75f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true,
-                RelativeSpacing = 0.05f
+                RelativeSpacing = 0.05f,
+                CanBeFocused = true
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
@@ -60,11 +61,11 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 Description, font: GUI.SmallFont, wrap: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                TextManager.Get("RequiredRepairSkills"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                TextManager.Get("RequiredRepairSkills"), font: GUI.SubHeadingFont);
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
+                var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                     "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) requiredSkills[i].Level).ToString()),
                     font: GUI.SmallFont)
                 {
@@ -72,12 +73,17 @@ namespace Barotrauma.Items.Components
                 };
             }
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.15f), paddedFrame.RectTransform),
-                color: Color.Green, barSize: 0.0f);
+            var progressBarHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.02f
+            };
 
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.7f, 1.0f), progressBarHolder.RectTransform),
+                color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
-            RepairButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.TopCenter), repairButtonText)
+            RepairButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -86,10 +92,15 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+            progressBarHolder.RectTransform.MinSize = RepairButton.RectTransform.MinSize;
+            RepairButton.RectTransform.MinSize = new Point((int)(RepairButton.TextBlock.TextSize.X * 1.2f), RepairButton.RectTransform.MinSize.Y);
+
             sabotageButtonText = TextManager.Get("SabotageButton");
             sabotagingText = TextManager.Get("Sabotaging");
-            SabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText)
+            SabotageButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), sabotageButtonText, style: "GUIButtonSmall")
             {
+                IgnoreLayoutGroups = true,
+                Visible = false,
                 OnClicked = (btn, obj) =>
                 {
                     requestStartFixAction = FixActions.Sabotage;
@@ -157,7 +168,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             progressBar.BarSize = item.Condition / item.MaxCondition;
-            progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, Color.Red, Color.Orange, Color.Green);
+            progressBar.Color = ToolBox.GradientLerp(progressBar.BarSize, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
 
             RepairButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Repair)) && !item.IsFullCondition;
             RepairButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Repair) ? 
@@ -165,6 +176,7 @@ namespace Barotrauma.Items.Components
                 repairingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             SabotageButton.Visible = character.IsTraitor;
+            SabotageButton.IgnoreLayoutGroups = !SabotageButton.Visible;
             SabotageButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Sabotage)) && character.IsTraitor && item.ConditionPercentage > MinSabotageCondition;
             SabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
@@ -178,7 +190,7 @@ namespace Barotrauma.Items.Components
                 GUITextBlock textBlock = (GUITextBlock)c;
                 if (character.GetSkillLevel(skill.Identifier) < skill.Level)
                 {
-                    textBlock.TextColor = Color.Red;
+                    textBlock.TextColor = GUI.Style.Red;
                 }
                 else
                 {
@@ -202,11 +214,11 @@ namespace Barotrauma.Items.Components
                 {
                     GUI.DrawString(spriteBatch,
                         new Vector2(item.WorldPosition.X, -item.WorldPosition.Y), "Deteriorating at " + (int)(DeteriorationSpeed * 60.0f) + " units/min" + (paused ? " [PAUSED]" : ""),
-                        paused ? Color.Cyan : Color.Red, Color.Black * 0.5f);
+                        paused ? Color.Cyan : GUI.Style.Red, Color.Black * 0.5f);
                 }
                 GUI.DrawString(spriteBatch,
                     new Vector2(item.WorldPosition.X, -item.WorldPosition.Y + 20), "Condition: " + (int)item.Condition + "/" + (int)item.MaxCondition,
-                    Color.Orange);
+                    GUI.Style.Orange);
             }
         }
 

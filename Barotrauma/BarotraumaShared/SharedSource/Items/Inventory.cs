@@ -37,13 +37,17 @@ namespace Barotrauma
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
 
-            if (slotSpriteSmall == null)
+            if (SlotSpriteSmall == null)
             {
                 //TODO: define these in xml
-                slotSpriteSmall = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(532, 395, 75, 71), null, 0);
+                SlotSpriteSmall = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(0, 0, 128, 128), null, 0);
+                // Adjustment to match the old size of 75,71
+                SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * 0.5859375f, SlotSpriteSmall.SourceRect.Height * 0.5546875f);
+
                 slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
                 slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
                 slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
+                slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(128, 0, 128, 128), null, 0);
 
                 EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), new Vector2(0.5f, 0.5f), 0);
                 EquipIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), new Vector2(0.5f, 0.5f), 0);
@@ -154,7 +158,7 @@ namespace Barotrauma
             else
             {
 #if CLIENT
-                if (slots != null && createNetworkEvent) slots[i].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                if (slots != null && createNetworkEvent) slots[i].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
 #endif
                 return false;
             }
@@ -280,11 +284,11 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (Items[j] == item) slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                        if (Items[j] == item) slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f);                            
                     }
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(Color.Green, 0.1f, 0.9f);                            
+                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f);                            
                     }
                 }
 #endif
@@ -322,7 +326,7 @@ namespace Barotrauma
                     {
                         if (Items[j] == existingItem)
                         {
-                            slots[j].ShowBorderHighlight(Color.Red, 0.1f, 0.9f);
+                            slots[j].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
                         }
                     }
                 }

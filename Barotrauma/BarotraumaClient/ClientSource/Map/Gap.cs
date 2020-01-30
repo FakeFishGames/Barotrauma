@@ -27,8 +27,8 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height / 2.0f));
-                GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y) / 10.0f, Color.Red);
-                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + new Vector2(lerpedFlowForce.X, -lerpedFlowForce.Y) / 10.0f + Vector2.One * 5.0f, Color.Orange);
+                GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y) / 10.0f, GUI.Style.Red);
+                GUI.DrawLine(sb, center + Vector2.One * 5.0f, center + new Vector2(lerpedFlowForce.X, -lerpedFlowForce.Y) / 10.0f + Vector2.One * 5.0f, GUI.Style.Orange);
 
                 if (outsideCollisionBlocker.Enabled && Submarine != null)
                 {
@@ -43,7 +43,7 @@ namespace Barotrauma
 
             if (!editing || !ShowGaps) return;
 
-            Color clr = (open == 0.0f) ? Color.Red : Color.Cyan;
+            Color clr = (open == 0.0f) ? GUI.Style.Red : Color.Cyan;
             if (IsHighlighted) clr = Color.Gold;
 
             float depth = (ID % 255) * 0.000001f;
@@ -109,7 +109,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(sb,
                     new Vector2(WorldRect.X - 5, -WorldRect.Y - 5),
                     new Vector2(rect.Width + 10, rect.Height + 10),
-                    Color.Red,
+                    GUI.Style.Red,
                     false,
                     depth,
                     (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));

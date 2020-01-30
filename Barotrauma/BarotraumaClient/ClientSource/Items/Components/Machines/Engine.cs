@@ -30,37 +30,45 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center))
+            var paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.85f, 0.65f), GuiFrame.RectTransform, Anchor.Center)
             {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
+                RelativeOffset = new Vector2(0, 0.04f)
+            }, style: null);
 
-            float indicatorSize = 0.3f;
-            powerIndicator = new GUITickBox(new RectTransform(new Vector2(indicatorSize), content.RectTransform), 
-                TextManager.Get("EnginePowered"), style: "IndicatorLightGreen")
+            var lightsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.38f), paddedFrame.RectTransform, Anchor.TopLeft), style: null);
+            powerIndicator = new GUITickBox(new RectTransform(new Vector2(0.45f, 0.8f), lightsArea.RectTransform, Anchor.Center, Pivot.CenterRight)
             {
-                CanBeFocused = false
-            };
-
-            autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(indicatorSize), content.RectTransform), TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), style: "IndicatorLightRed")
+                RelativeOffset = new Vector2(-0.05f, 0)
+            }, TextManager.Get("EnginePowered"), font: GUI.SubHeadingFont, style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
+            autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(0.45f, 0.8f), lightsArea.RectTransform, Anchor.Center, Pivot.CenterLeft)
+            {
+                RelativeOffset = new Vector2(0.05f, 0)
+            }, TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
+            {
+                CanBeFocused = false
+            };
+            powerIndicator.TextBlock.Wrap = autoControlIndicator.TextBlock.Wrap = true;
+            powerIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            autoControlIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            GUITextBlock.AutoScaleAndNormalize(powerIndicator.TextBlock, autoControlIndicator.TextBlock);
 
+            var sliderArea = new GUIFrame(new RectTransform(new Vector2(1, 0.6f), paddedFrame.RectTransform, Anchor.BottomLeft), style: null);
             string powerLabel = TextManager.Get("EngineForce");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), content.RectTransform), "", textAlignment: Alignment.Center)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), sliderArea.RectTransform, Anchor.TopCenter), "", textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
             {
+                AutoScale = true,
                 TextGetter = () => { return TextManager.AddPunctuation(':', powerLabel, (int)(targetForce) + " %"); }
             };
-
-            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform), barSize: 0.15f, style: "GUISlider")
+            forceSlider = new GUIScrollBar(new RectTransform(new Vector2(0.95f, 0.45f), sliderArea.RectTransform, Anchor.Center), barSize: 0.1f, style: "DeviceSlider")
             {
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
                     float newTargetForce = barScroll * 200.0f - 100.0f;
-                    if (Math.Abs(newTargetForce - targetForce) < 0.01) return false;
+                    if (Math.Abs(newTargetForce - targetForce) < 0.01) { return false; }
 
                     targetForce = newTargetForce;
 
@@ -73,16 +81,13 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            var textArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), content.RectTransform), isHorizontal: true)
-            {
-                Stretch = true
-            };
+            var textsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), sliderArea.RectTransform, Anchor.BottomCenter), style: null);
+            var backwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get("EngineBackwards"),
+                textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+            var forwardsLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), textsArea.RectTransform, Anchor.CenterRight), TextManager.Get("EngineForwards"),
+                textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
+            GUITextBlock.AutoScaleAndNormalize(backwardsLabel, forwardsLabel);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textArea.RectTransform), TextManager.Get("EngineBackwards"), 
-                font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textArea.RectTransform), TextManager.Get("EngineForwards"),
-                font: GUI.SmallFont, textAlignment: Alignment.CenterRight);
-            
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -113,11 +118,16 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateAnimation(float deltaTime)
         {
-            if (propellerSprite == null) return;
-
+            if (propellerSprite == null) { return; }
             spriteIndex += (force / 100.0f) * AnimSpeed * deltaTime;
-            if (spriteIndex < 0) spriteIndex = propellerSprite.FrameCount;
-            if (spriteIndex >= propellerSprite.FrameCount) spriteIndex = 0.0f;
+            if (spriteIndex < 0)
+            {
+                spriteIndex = propellerSprite.FrameCount;
+            }
+            if (spriteIndex >= propellerSprite.FrameCount)
+            {
+                spriteIndex = 0.0f;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
@@ -136,7 +146,7 @@ namespace Barotrauma.Items.Components
                 Vector2 drawPos = item.DrawPosition;
                 drawPos += PropellerPos;
                 drawPos.Y = -drawPos.Y;
-                GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, Color.Red);
+                GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUI.Style.Red);
             }
         }
 

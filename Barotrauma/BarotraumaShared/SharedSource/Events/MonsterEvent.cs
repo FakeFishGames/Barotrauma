@@ -258,6 +258,9 @@ namespace Barotrauma
                 {
                     CoroutineManager.InvokeAfter(() =>
                     {
+                        //round ended before the coroutine finished
+                        if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
                         monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));

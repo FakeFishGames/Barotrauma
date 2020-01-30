@@ -31,6 +31,12 @@
 /processorParam:DebugMode=Auto
 /build:deformshader.fx
 
+#begin gradientshader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:gradientshader.fx
+
 #begin losshader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
@@ -43,15 +49,15 @@
 /processorParam:DebugMode=Auto
 /build:postprocess.fx
 
-#begin watershader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:watershader.fx
-
 #begin solidcolor.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:solidcolor.fx
+
+#begin watershader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:watershader.fx
 

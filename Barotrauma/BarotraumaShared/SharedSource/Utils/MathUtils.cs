@@ -55,6 +55,26 @@ namespace Barotrauma
                  MathHelper.SmoothStep(v1.Y, v2.Y, amount));
         }
 
+        public static float SmoothStep(float t)
+        {
+            return t * t * (3f - 2f * t);
+        }
+
+        public static float SmootherStep(float t)
+        {
+            return t * t * t * (t * (6f * t - 15f) + 10f);
+        }
+
+        public static float EaseIn(float t)
+        {
+            return 1f - (float)Math.Cos(t * MathHelper.PiOver2);
+        }
+
+        public static float EaseOut(float t)
+        {
+            return (float)Math.Sin(t * MathHelper.PiOver2);
+        }
+
         public static Vector2 ClampLength(this Vector2 v, float length)
         {
             float currLength = v.Length();
@@ -528,6 +548,42 @@ namespace Barotrauma
             float distSqY = yDist - halfHeight;
 
             return distSqX * distSqX + distSqY * distSqY <= radius * radius;
+        }
+
+        /// <summary>
+        /// Get a point on a circle's circumference
+        /// </summary>
+        /// <param name="center">Center of the circle</param>
+        /// <param name="radius">Radius of the circle</param>
+        /// <param name="angle">Angle (in radians) from the center</param>
+        /// <returns></returns>
+        public static Vector2 GetPointOnCircumference(Vector2 center, float radius, float angle)
+        {
+            return new Vector2(
+                center.X + radius * (float)Math.Cos(angle),
+                center.Y + radius * (float)Math.Sin(angle));
+        }
+
+        /// <summary>
+        /// Get a specific number of evenly distributed points on a circle's circumference
+        /// </summary>
+        /// <param name="center">Center of the circle</param>
+        /// <param name="radius">Radius of the circle</param>
+        /// <param name="points">Number of points to calculate</param>
+        /// <param name="firstAngle">Angle (in radians) of the first point from the center</param>
+        /// <returns></returns>
+        public static Vector2[] GetPointsOnCircumference(Vector2 center, float radius, int points, float firstAngle = 0.0f)
+        {
+            var maxAngle = (float)(2 * Math.PI);
+            var angleStep = maxAngle / points;
+            var coordinates = new Vector2[points];
+            for (int i = 0; i < points; i++)
+            {
+                var angle = firstAngle + (i * angleStep);
+                if (angle > maxAngle) { angle -= maxAngle; }
+                coordinates[i] = GetPointOnCircumference(center, radius, angle);
+            }
+            return coordinates;
         }
 
         /// <summary>

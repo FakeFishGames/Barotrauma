@@ -14,6 +14,8 @@ namespace Barotrauma
         SelectPreviousCharacter,
         Voice,
         Deselect,
-        Shoot
+        Shoot,
+        Command,
+        ToggleInventory
     }
 }

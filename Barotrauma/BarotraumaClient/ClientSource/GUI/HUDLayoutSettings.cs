@@ -45,11 +45,6 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Alignment ChatBoxAlignment
-        {
-            get; private set;
-        }
-
         public static Rectangle ObjectiveAnchor
         {
             get; private set;
@@ -60,6 +55,10 @@ namespace Barotrauma
             get; private set;
         }
 
+        /*public static Rectangle HealthBarAreaRight
+        {
+            get; private set;
+        }*/
         public static Rectangle HealthBarAreaLeft
         {
             get; private set;
@@ -69,26 +68,17 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle HealthBarAreaRight
-        {
-            get; private set;
-        }
-        public static Rectangle AfflictionAreaRight
-        {
-            get; private set;
-        }
-
         public static Rectangle HealthWindowAreaLeft
         {
             get; private set;
         }
 
-        public static Rectangle HealthWindowAreaRight
+        public static Rectangle PortraitArea
         {
             get; private set;
         }
 
-        public static Rectangle PortraitArea
+        public static Rectangle PortraitTooltipArea
         {
             get; private set;
         }
@@ -125,74 +115,66 @@ namespace Barotrauma
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
 
-            int crewAreaHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
-            CrewArea = new Rectangle(Padding, ButtonAreaTop.Bottom + Padding, GameMain.GraphicsWidth - InventoryAreaUpper.Width - Padding * 3, crewAreaHeight);
+            int portraitSize = (int)(125 * GUI.Scale);
+            PortraitArea = new Rectangle(Padding * 2, Padding * 2, portraitSize, portraitSize);
+            PortraitTooltipArea = new Rectangle(PortraitArea.X + portraitSize / 2 + Padding, PortraitArea.Top - portraitSize, portraitSize, portraitSize);
 
-            int portraitSize = (int)(100 * GUI.Scale);
-            PortraitArea = new Rectangle(GameMain.GraphicsWidth - portraitSize - Padding, GameMain.GraphicsHeight - portraitSize - Padding, portraitSize, portraitSize);
-            
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int healthBarWidth = (int)Math.Max(250 * GUI.Scale, 150);
-            int healthBarHeight = (int)Math.Max(20 * GUI.Scale, 15);
-            int afflictionAreaHeight = (int)(60 * GUI.Scale);
-            HealthBarAreaLeft = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
+            int healthBarHeight = (int)Math.Max(15f * GUI.Scale, 12.5f);
+            int afflictionAreaHeight = (int)(50 * GUI.Scale);
+            HealthBarAreaLeft = new Rectangle(PortraitArea.X, PortraitArea.Y + Padding / 2 + portraitSize, healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
             
-            HealthBarAreaRight = new Rectangle(PortraitArea.X - Padding - healthBarWidth, Math.Min(PortraitArea.Y + Padding * 3, inventoryTopY - healthBarHeight), healthBarWidth, HealthBarAreaLeft.Height);
-            if (HealthBarAreaRight.Y + healthBarHeight * 0.75f < PortraitArea.Y)
+            //HealthBarAreaRight = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
+            /*if (HealthBarAreaRight.Y + healthBarHeight * 0.75f < PortraitArea.Y)
             {
                 HealthBarAreaRight = new Rectangle(GameMain.GraphicsWidth - Padding - healthBarWidth, HealthBarAreaRight.Y, HealthBarAreaRight.Width, HealthBarAreaRight.Height);
-            }
-            AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, HealthBarAreaRight.Y - Padding - afflictionAreaHeight, healthBarWidth, afflictionAreaHeight);
+            }*/
+            //AfflictionAreaRight = new Rectangle(HealthBarAreaRight.X, HealthBarAreaRight.Y + healthBarHeight + Padding, healthBarWidth, afflictionAreaHeight);
 
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
             MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom, messageAreaWidth, ButtonAreaTop.Height);
+
+            CrewArea = new Rectangle(HealthBarAreaLeft.Right + Padding, MessageAreaTop.Bottom + Padding,
+                GameMain.GraphicsWidth - HealthBarAreaLeft.Right - 2 * Padding, (int)(0.6f * portraitSize));
 
             //slice for the upper slots of the inventory (clothes, id card, headset)
             int inventoryAreaUpperWidth = (int)(GameMain.GraphicsWidth * 0.2f);
             int inventoryAreaUpperHeight = (int)(GameMain.GraphicsHeight * 0.2f);
             InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, CrewArea.Y, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
 
-            //chatbox between upper and lower inventory areas, can be on either side depending on the alignment
-            ChatBoxAlignment = Alignment.Right;
-            int chatBoxWidth = (int)(500 * GUI.Scale);
-            int chatBoxHeight = crewAreaHeight;
-            ChatBoxArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(Padding, CrewArea.Y, chatBoxWidth, chatBoxHeight) :
-                new Rectangle(GameMain.GraphicsWidth - Padding - chatBoxWidth, CrewArea.Y, chatBoxWidth, chatBoxHeight);
+            int toggleButtonWidth = (int)(ChatBox.ToggleButtonWidthRaw * GUI.Scale);
+            int chatBoxWidth = (int)(475 * GUI.Scale);
+            int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
+            ChatBoxArea = new Rectangle(Padding + toggleButtonWidth, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
 
             int objectiveAnchorWidth = (int)(250 * GUI.Scale);
-            int objectiveAnchorOffsetY = (int)(100 * GUI.Scale);
-            ObjectiveAnchor = new Rectangle(GameMain.GraphicsWidth - Padding - objectiveAnchorWidth, CrewArea.Y + crewAreaHeight + objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
+            int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
+            ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
             int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.25f, 280);
             InventoryAreaLower = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2, lowerAreaHeight);
 
-            int healthWindowY = CrewArea.Bottom + Padding;
-            Rectangle healthWindowArea = ChatBoxAlignment == Alignment.Left ?
-                new Rectangle(ChatBoxArea.Right + Padding, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2) :
-                new Rectangle(Padding - ChatBoxArea.Width, healthWindowY, GameMain.GraphicsWidth - ChatBoxArea.Width - inventoryAreaUpperWidth, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight / 2);
+            int healthWindowWidth = (int)(GameMain.GraphicsWidth * 0.5f);
+            int healthWindowHeight = (int)(GameMain.GraphicsWidth * 0.5f * 0.65f);
+            int healthWindowX = GameMain.GraphicsWidth / 2 - healthWindowWidth / 2;
+            int healthWindowY = GameMain.GraphicsHeight / 2 - healthWindowHeight / 2;
 
-            int healthWindowPadding = Padding * 3;
-            HealthWindowAreaLeft = new Rectangle(healthWindowPadding, healthWindowY, GameMain.GraphicsWidth / 2 - healthWindowPadding, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight);
-            HealthWindowAreaRight = new Rectangle(GameMain.GraphicsWidth / 2, healthWindowY, GameMain.GraphicsWidth / 2 - healthWindowPadding, GameMain.GraphicsHeight - healthWindowY - lowerAreaHeight);
-            
+            HealthWindowAreaLeft = new Rectangle(healthWindowX, healthWindowY, healthWindowWidth, healthWindowHeight);
         }
 
         public static void Draw(SpriteBatch spriteBatch)
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
-            GUI.DrawRectangle(spriteBatch, MessageAreaTop, Color.Orange * 0.5f);
+            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUI.Style.Orange * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaUpper, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarAreaRight, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, AfflictionAreaRight, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthWindowAreaRight, Color.Red * 0.5f);
         }
     }
 

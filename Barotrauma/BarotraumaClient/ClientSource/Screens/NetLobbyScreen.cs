@@ -13,9 +13,10 @@ namespace Barotrauma
     partial class NetLobbyScreen : Screen
     {
         private readonly List<Sprite> characterSprites = new List<Sprite>();
-        private readonly List<Sprite> jobPreferenceSprites = new List<Sprite>();
+        //private readonly List<Sprite> jobPreferenceSprites = new List<Sprite>();
 
         private GUIFrame infoFrame, modeFrame;
+        private GUILayoutGroup infoFrameContent;
         private GUIFrame myCharacterFrame;
 
         private GUIListBox subList, modeList;
@@ -120,7 +121,7 @@ namespace Barotrauma
                     (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             }
         }
-        
+
         public GUITextBox ServerName
         {
             get;
@@ -334,25 +335,25 @@ namespace Barotrauma
                 RelativeSpacing = panelSpacing
             };
 
-            GUILayoutGroup bottomBar = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerFrame.RectTransform))
+            GUILayoutGroup bottomBar = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerFrame.RectTransform), childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
-            GUILayoutGroup bottomBarLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
+            GUILayoutGroup bottomBarLeft = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform), childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
-            GUILayoutGroup bottomBarMid = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), bottomBar.RectTransform))
+            GUILayoutGroup bottomBarMid = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), bottomBar.RectTransform), childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 IsHorizontal = true,
                 RelativeSpacing = panelSpacing
             };
-            GUILayoutGroup bottomBarRight = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform))
+            GUILayoutGroup bottomBarRight = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), bottomBar.RectTransform), childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 IsHorizontal = true,
@@ -362,7 +363,7 @@ namespace Barotrauma
             //server info panel ------------------------------------------------------------
 
             infoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), panelHolder.RectTransform));
-            var infoFrameContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center))
+            infoFrameContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoFrame.RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.025f
@@ -383,7 +384,7 @@ namespace Barotrauma
             campaignViewButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.4f), gameModeTabButtonContainer.RectTransform),
                 TextManager.Get("CampaignLabel"), style: "GUITabButton")
             {
-                Visible = false,
+                Enabled = false,
                 OnClicked = (bt, userData) => { ToggleCampaignView(true); return true; }
             };
 
@@ -396,7 +397,7 @@ namespace Barotrauma
 
             gameModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), modeFrame.RectTransform, Anchor.Center))
             {
-                RelativeSpacing = panelSpacing * 2.0f,
+                RelativeSpacing = panelSpacing * 4.0f,
                 Stretch = true
             };
 
@@ -405,7 +406,7 @@ namespace Barotrauma
                 Visible = false
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"), style: "GUIButtonLarge")
+            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"))
             {
                 OnClicked = (bt, userdata) => { GameMain.QuitToMainMenu(save: false, showVerificationPrompt: true); return true; }
             };
@@ -440,6 +441,7 @@ namespace Barotrauma
 
             GUILayoutGroup sideBar = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1.0f), panelContainer.RectTransform, maxSize: new Point(650, panelContainer.RectTransform.Rect.Height)))
             {
+                RelativeSpacing = panelSpacing,
                 Stretch = true
             };
 
@@ -456,13 +458,16 @@ namespace Barotrauma
             myCharacterFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), sideBar.RectTransform));
             playerInfoContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), myCharacterFrame.RectTransform, Anchor.Center), style: null);
 
-            spectateBox = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f,0.05f) },
+            spectateBox = new GUITickBox(new RectTransform(new Vector2(0.06f, 0.06f), myCharacterFrame.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.05f) },
                 TextManager.Get("spectatebutton"))
             {
                 Selected = false,
                 OnSelected = ToggleSpectate,
                 UserData = "spectate"
             };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(1.0f, gameModeTabButtonContainer.RectTransform.RelativeSize.Y), sideBar.RectTransform), style: null);
 
             // Social area
 
@@ -645,6 +650,9 @@ namespace Barotrauma
             };
             clientHiddenElements.Add(StartButton);
 
+            bottomBar.RectTransform.MinSize =
+                new Point(0, (int)Math.Max(ReadyToStartBox.RectTransform.MinSize.Y / 0.75f, StartButton.RectTransform.MinSize.Y));
+
             //autorestart ------------------------------------------------------------------
 
             autoRestartText = new GUITextBlock(new RectTransform(Vector2.One, bottomBarMid.RectTransform), "", font: GUI.SmallFont, style: "TextFrame", textAlignment: Alignment.Center);
@@ -666,8 +674,10 @@ namespace Barotrauma
             //server info ------------------------------------------------------------------
 
             // Server Info Header
-            GUILayoutGroup lobbyHeader = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), infoFrameContent.RectTransform), isHorizontal: true)
+            GUILayoutGroup lobbyHeader = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), infoFrameContent.RectTransform), 
+                isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
+                RelativeSpacing = 0.05f,
                 Stretch = true
             };
 
@@ -683,10 +693,12 @@ namespace Barotrauma
             clientDisabledElements.Add(ServerName);
 
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), lobbyHeader.RectTransform, Anchor.TopRight),
-                TextManager.Get("ServerSettingsButton"), style: "GUIButtonLarge");
+                TextManager.Get("ServerSettingsButton"));
             clientHiddenElements.Add(SettingsButton);
 
-            GUILayoutGroup lobbyContent = new GUILayoutGroup(new RectTransform(Vector2.One, infoFrameContent.RectTransform), isHorizontal: true)
+            lobbyHeader.RectTransform.MinSize = new Point(0, Math.Max(ServerName.Rect.Height, SettingsButton.Rect.Height));
+
+            GUILayoutGroup lobbyContent = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), infoFrameContent.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.025f
@@ -709,14 +721,14 @@ namespace Barotrauma
             };
 
             var serverMessageContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.75f), serverInfoHolder.RectTransform));
-            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform))
+            ServerMessage = new GUITextBox(new RectTransform(Vector2.One, serverMessageContainer.Content.RectTransform), style: "GUITextBoxNoBorder")
             {
                 Wrap = true
             };
             ServerMessage.OnTextChanged += (textBox, text) =>
             {
                 Vector2 textSize = textBox.Font.MeasureString(textBox.WrappedText);
-                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Rect.Height, (int)textSize.Y + 10));
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(serverMessageContainer.Content.Rect.Height, (int)textSize.Y + 10));
                 serverMessageContainer.UpdateScrollBarSize();
                 serverMessageContainer.BarScroll = 1.0f;
                 return true;
@@ -735,7 +747,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("Submarine"));
+            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("Submarine"), font: GUI.SubHeadingFont);
             subList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform))
             {
                 OnSelected = VotableClicked
@@ -756,7 +768,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform) { MinSize = new Point(0, 25) }, isHorizontal: true)
+            GUILayoutGroup shuttleHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
@@ -790,26 +802,26 @@ namespace Barotrauma
                 }
             };
             shuttleList.ListBox.RectTransform.MinSize = new Point(250, 0);
+            shuttleHolder.RectTransform.MinSize = new Point(0, shuttleList.RectTransform.Children.Max(c => c.MinSize.Y));
 
             subPreviewContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), rightColumn.RectTransform), style: null);
             subPreviewContainer.RectTransform.SizeChanged += () =>
             {
-                if (SelectedSub != null)
-                {
-                    subPreviewContainer.ClearChildren();
-                    SelectedSub.CreatePreviewWindow(subPreviewContainer);
-                }
+                if (SelectedSub != null) { CreateSubPreview(SelectedSub); }
             };
 
             //------------------------------------------------------------------------------------------------------------------
             //   Gamemode panel
             //------------------------------------------------------------------------------------------------------------------
 
-            GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), gameModeContainer.RectTransform), isHorizontal: true)
+            GUILayoutGroup miscSettingsHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), gameModeContainer.RectTransform), 
+                isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
+
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), gameModeContainer.RectTransform), style: "HorizontalLine");
             
             miscSettingsHolder.RectTransform.SizeChanged += () =>
             {
@@ -833,7 +845,7 @@ namespace Barotrauma
 
             //seed ------------------------------------------------------------------
 
-            var seedLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"));
+            var seedLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelSeed"), font: GUI.SubHeadingFont);
             seedLabel.RectTransform.MaxSize = new Point((int)(seedLabel.TextSize.X + 30 * GUI.Scale), int.MaxValue);
             SeedBox = new GUITextBox(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform));
             SeedBox.OnDeselected += (textBox, key) =>
@@ -845,11 +857,11 @@ namespace Barotrauma
 
             //level difficulty ------------------------------------------------------------------
 
-            var difficultyLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"))
+            var difficultyLabel = new GUITextBlock(new RectTransform(Vector2.One, miscSettingsHolder.RectTransform), TextManager.Get("LevelDifficulty"), font: GUI.SubHeadingFont)
             {
                 ToolTip = TextManager.Get("leveldifficultyexplanation")
             };
-            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform), barSize: 0.2f)
+            levelDifficultyScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.25f, 1.0f), miscSettingsHolder.RectTransform), style: "GUISlider", barSize: 0.2f)
             {
                 Step = 0.05f,
                 Range = new Vector2(0.0f, 100.0f),
@@ -869,7 +881,7 @@ namespace Barotrauma
             {
                 if (EventManagerSettings.List.Count == 0) { return true; }
                 difficultyName.Text = EventManagerSettings.List[Math.Min((int)Math.Floor(value * EventManagerSettings.List.Count), EventManagerSettings.List.Count - 1)].Name;
-                difficultyName.TextColor = Color.Lerp(ToolBox.GradientLerp(scrollbar.BarScroll, Color.LightGreen, Color.Orange, Color.Red), difficultyLabel.TextColor, 0.5f);
+                difficultyName.TextColor = ToolBox.GradientLerp(scrollbar.BarScroll, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
                 return true;
             };
 
@@ -888,7 +900,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), gameModeHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("GameMode"));
+            var modeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), gameModeHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("GameMode"), font: GUI.SubHeadingFont);
             voteText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), modeLabel.RectTransform, Anchor.TopRight),
                 TextManager.Get("Votes"), textAlignment: Alignment.CenterRight)
             {
@@ -904,12 +916,31 @@ namespace Barotrauma
             {
                 if (mode.IsSinglePlayer) { continue; }
 
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), modeList.Content.RectTransform) { MinSize = new Point(0, (int)(30 * GUI.Scale)) },
-                    mode.Name, style: "ListBoxElement", textAlignment: Alignment.CenterLeft)
+                var modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), modeList.Content.RectTransform), style: null)
                 {
-                    UserData = mode,
+                    UserData = mode
+                };                
+
+                var modeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.9f), modeFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.02f, 0.0f) })
+                {
+                    AbsoluteSpacing = (int)(5 * GUI.Scale),
+                    Stretch = true
                 };
-                textBlock.ToolTip = mode.Description;                
+
+                var modeTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Name, font: GUI.SubHeadingFont);
+                var modeDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), modeContent.RectTransform), mode.Description, font: GUI.SmallFont, wrap: true);
+                modeTitle.HoverColor = modeDescription.HoverColor = modeTitle.SelectedColor = modeDescription.SelectedColor = Color.Transparent;
+                modeTitle.HoverTextColor = modeDescription.HoverTextColor = modeTitle.TextColor;
+                modeTitle.TextColor = modeDescription.TextColor = modeTitle.TextColor * 0.5f;
+                modeFrame.OnAddedToGUIUpdateList = (c) =>
+                {
+                    modeTitle.State = modeDescription.State = c.State;
+                };
+
+                new GUIImage(new RectTransform(new Vector2(0.2f, 0.8f), modeFrame.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.02f, 0.0f) }, 
+                    style: "GameModeIcon." + mode.Identifier, scaleToFit: true);
+
+                modeFrame.RectTransform.MinSize = new Point(0, (int)(modeContent.Children.Sum(c => c.Rect.Height + modeContent.AbsoluteSpacing) / modeContent.RectTransform.RelativeSize.Y));
             }
 
             var gameModeSpecificFrame = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), gameModeBackground.RectTransform), style: null);
@@ -926,7 +957,8 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("MissionType"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), missionHolder.RectTransform) { MinSize = new Point(0, 25) }, 
+                TextManager.Get("MissionType"), font: GUI.SubHeadingFont);
             missionTypeList = new GUIListBox(new RectTransform(Vector2.One, missionHolder.RectTransform))
             {
                 OnSelected = (component, obj) =>
@@ -958,6 +990,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                frame.RectTransform.MinSize = missionTypeTickBoxes[index].RectTransform.MinSize;
 
                 index++;
             }
@@ -972,22 +1005,19 @@ namespace Barotrauma
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.055f), settingsHolder.RectTransform) { MinSize = new Point(0, 25) }, style: null);
-            var settingsContent = new GUILayoutGroup(new RectTransform(Vector2.One, settingsHolder.RectTransform))
+            var settingsFrame = new GUIFrame(new RectTransform(Vector2.One, settingsHolder.RectTransform), style: "InnerFrame");
+            var settingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsFrame.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.025f
-            };
-            new GUIFrame(new RectTransform(Vector2.One, settingsContent.RectTransform), style: "InnerFrame")
-            {
-                IgnoreLayoutGroups = true
             };
 
             var traitorsSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorsSettingHolder.RectTransform), TextManager.Get("Traitors"));
 
-            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorsSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
+            var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorsSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             traitorProbabilityButtons = new GUIButton[2];
-            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), "<")
+            traitorProbabilityButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), style: "GUIButtonToggleLeft")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -997,8 +1027,9 @@ namespace Barotrauma
                 }
             };
 
-            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), textAlignment: Alignment.Center);
-            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), ">")
+            traitorProbabilityText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorProbContainer.RectTransform), TextManager.Get("No"), 
+                textAlignment: Alignment.Center, style: "GUITextBox");
+            traitorProbabilityButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), traitorProbContainer.RectTransform), style: "GUIButtonToggleRight")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1015,9 +1046,9 @@ namespace Barotrauma
             var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
 
             new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountSettingHolder.RectTransform), TextManager.Get("BotCount"));
-            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botCountSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
+            var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             botCountButtons = new GUIButton[2];
-            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), "<")
+            botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), style: "GUIButtonToggleLeft")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1026,8 +1057,8 @@ namespace Barotrauma
                 }
             };
 
-            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center);
-            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), ">")
+            botCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountContainer.RectTransform), "0", textAlignment: Alignment.Center, style: "GUITextBox");
+            botCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), style: "GUIButtonToggleRight")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1040,10 +1071,10 @@ namespace Barotrauma
 
             var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"));
-            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeSettingHolder.RectTransform), isHorizontal: true) { Stretch = true };
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"), wrap: true);
+            var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             botSpawnModeButtons = new GUIButton[2];
-            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), "<")
+            botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), style: "GUIButtonToggleLeft")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1052,8 +1083,8 @@ namespace Barotrauma
                 }
             };
 
-            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center);
-            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), ">")
+            botSpawnModeText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeContainer.RectTransform), "", textAlignment: Alignment.Center, style: "GUITextBox");
+            botSpawnModeButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), style: "GUIButtonToggleRight")
             {
                 OnClicked = (button, obj) =>
                 {
@@ -1129,8 +1160,8 @@ namespace Barotrauma
             foreach (Sprite sprite in characterSprites) { sprite.Remove(); }
             characterSprites.Clear();
 
-            foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
-            jobPreferenceSprites.Clear();
+            /*foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
+            jobPreferenceSprites.Clear();*/
         }
 
         public override void Select()
@@ -1139,6 +1170,8 @@ namespace Barotrauma
 
             if (HeadSelectionList != null) { HeadSelectionList.Visible = false; }
             if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
+
+            infoFrameContent.Recalculate();
 
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
@@ -1387,7 +1420,7 @@ namespace Barotrauma
                         break;
                     }
 
-                    var slot = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), JobList.Content.RectTransform), style: "ListBoxElement")
+                    var slot = new GUIFrame(new RectTransform(new Vector2(0.333f, 1.0f), JobList.Content.RectTransform), style: "ListBoxElementSquare")
                     {
                         CanBeFocused = true,
                         UserData = jobPrefab
@@ -1404,7 +1437,11 @@ namespace Barotrauma
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, wrap: true);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), infoContainer.RectTransform), characterInfo.Job.Name, textAlignment: Alignment.Center, wrap: true)
+                {
+                    HoverColor = Color.Transparent,
+                    SelectedColor = Color.Transparent
+                };
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), infoContainer.RectTransform), TextManager.Get("Skills"));
                 foreach (Skill skill in characterInfo.Job.Skills)
@@ -1546,16 +1583,6 @@ namespace Barotrauma
                 {
                     subTextBlock.TextColor = new Color(subTextBlock.TextColor, sub.HasTag(SubmarineTag.Shuttle) ? 1.0f : 0.6f);
                 }
-
-                /*GUIButton infoButton = new GUIButton(new RectTransform(new Point(buttonSize, buttonSize), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(buttonSize * 0.2f), 0) }, "?")
-                {
-                    UserData = sub
-                };
-                infoButton.OnClicked += (component, userdata) =>
-                {
-                    ((Submarine)userdata).CreatePreviewWindow(new GUIMessageBox("", "", new Vector2(0.25f, 0.25f), new Point(500, 400)));
-                    return true;
-                };*/
             }
 
             if (!sub.RequiredContentPackagesInstalled)
@@ -1622,8 +1649,7 @@ namespace Barotrauma
                 }
                 if (component.UserData is Submarine sub)
                 {
-                    subPreviewContainer.ClearChildren();
-                    sub.CreatePreviewWindow(subPreviewContainer);
+                    CreateSubPreview(sub);
                 }
                 voteType = VoteType.Sub;
             }
@@ -1814,7 +1840,7 @@ namespace Barotrauma
                 playerFrame.UserData = selectedClient;
                 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), 
-                    TextManager.Get("Rank"));
+                    TextManager.Get("Rank"), font: GUI.SubHeadingFont);
                 var rankDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("Rank"))
                 {
@@ -1847,13 +1873,14 @@ namespace Barotrauma
                     return true;
                 };
 
-                var permissionLabels = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), paddedPlayerFrame.RectTransform), isHorizontal: true)
+                var permissionLabels = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedPlayerFrame.RectTransform), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
-                var permissionLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"));
-                var consoleCommandLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("PermittedConsoleCommands"));
+                var permissionLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), TextManager.Get("Permissions"), font: GUI.SubHeadingFont);
+                var consoleCommandLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), permissionLabels.RectTransform), 
+                    TextManager.Get("PermittedConsoleCommands"), wrap: true, font: GUI.SubHeadingFont);
                 GUITextBlock.AutoScaleAndNormalize(permissionLabel, consoleCommandLabel);
 
                 var permissionContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedPlayerFrame.RectTransform), isHorizontal: true)
@@ -1909,8 +1936,7 @@ namespace Barotrauma
                             //reset rank to custom
                             rankDropDown.SelectItem(null);
 
-                            var client = playerFrame.UserData as Client;
-                            if (client == null) { return false; }
+                            if (!(playerFrame.UserData is Client client)) { return false; }
 
                             var thisPermission = (ClientPermissions)tickBox.UserData;
                             if (tickBox.Selected)
@@ -1944,8 +1970,7 @@ namespace Barotrauma
                         //reset rank to custom
                         rankDropDown.SelectItem(null);
 
-                        var client = playerFrame.UserData as Client;
-                        if (client == null) { return false; }
+                        if (!(playerFrame.UserData is Client client)) { return false; }
 
                         foreach (GUIComponent child in tickbox.Parent.GetChild<GUIListBox>().Content.Children)
                         {
@@ -1977,9 +2002,8 @@ namespace Barotrauma
                         //reset rank to custom
                         rankDropDown.SelectItem(null);
 
-                        Client client = playerFrame.UserData as Client;
                         DebugConsole.Command selectedCommand = tickBox.UserData as DebugConsole.Command;
-                        if (client == null) return false;
+                        if (!(playerFrame.UserData is Client client)) { return false; }
 
                         if (!tickBox.Selected)
                         {
@@ -2057,11 +2081,19 @@ namespace Barotrauma
             }
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
-                TextManager.Get("Close"), style: "GUIButtonLarge")
+                TextManager.Get("Close"))
             {
                 IgnoreLayoutGroups = true,
                 OnClicked = ClosePlayerFrame
             };
+
+            buttonAreaLower.RectTransform.MinSize = new Point(0, buttonAreaLower.RectTransform.Children.Max(c => c.MinSize.Y));
+
+            if (buttonAreaTop != null)
+            {
+                buttonAreaTop.RectTransform.MinSize = buttonAreaLower.RectTransform.MinSize =
+                    new Point(0, Math.Max(buttonAreaLower.RectTransform.MinSize.Y, buttonAreaTop.RectTransform.Children.Max(c => c.MinSize.Y)));
+            }
 
             return false;
         }
@@ -2198,12 +2230,12 @@ namespace Barotrauma
 
             PlayStyle playStyle = GameMain.NetworkMember.ServerSettings.PlayStyle;
             if ((int)playStyle < 0 || 
-                (int)playStyle >= GameMain.ServerListScreen.PlayStyleBanners.Length)
+                (int)playStyle >= ServerListScreen.PlayStyleBanners.Length)
             {
                 return;
             }
 
-            Sprite sprite = GameMain.ServerListScreen.PlayStyleBanners[(int)playStyle];
+            Sprite sprite = ServerListScreen.PlayStyleBanners[(int)playStyle];
             float scale = component.Rect.Width / sprite.size.X;
             sprite.Draw(spriteBatch, component.Center, scale: scale);
 
@@ -2211,7 +2243,7 @@ namespace Barotrauma
             {
                 var nameText = component.GetChild<GUITextBlock>();
                 nameText.Text = TextManager.Get("servertag." + playStyle);
-                nameText.Color = GameMain.ServerListScreen.PlayStyleColors[(int)playStyle];
+                nameText.Color = ServerListScreen.PlayStyleColors[(int)playStyle];
                 nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
                 prevPlayStyle = playStyle;
 
@@ -2278,24 +2310,19 @@ namespace Barotrauma
 
             var info = GameMain.Client.CharacterInfo;
 
-            GUILayoutGroup columnLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), appearanceFrame.RectTransform, Anchor.Center), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.05f
-            };
-            
-            //left column
-            GUILayoutGroup leftColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), columnLayout.RectTransform))
+            GUILayoutGroup content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), appearanceFrame.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.05f
             };
 
-            GUILayoutGroup genderContainer = new GUILayoutGroup(new RectTransform(new Vector2(2.0f, 0.2f), leftColumn.RectTransform), isHorizontal: true)
+            Vector2 elementSize = new Vector2(1.0f, 0.18f);
+            
+            GUILayoutGroup genderContainer = new GUILayoutGroup(new RectTransform(elementSize, content.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), genderContainer.RectTransform), TextManager.Get("Gender"));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), genderContainer.RectTransform), TextManager.Get("Gender"), font: GUI.SubHeadingFont);
             maleButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), genderContainer.RectTransform),
                 TextManager.Get("Male"), style: "ListBoxElement")
             {
@@ -2314,8 +2341,8 @@ namespace Barotrauma
             int hairCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Hair).Count();
             if (hairCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Hair"));
-                var hairSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform))
+                var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Hair"), font: GUI.SubHeadingFont);
+                var hairSlider = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1.0f), label.RectTransform, Anchor.CenterRight), style: "GUISlider")
                 {
                     Range = new Vector2(0, hairCount),
                     StepValue = 1,
@@ -2328,8 +2355,8 @@ namespace Barotrauma
             int beardCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Beard).Count();
             if (beardCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform), TextManager.Get("FaceAttachment.Beard"));
-                var beardSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), leftColumn.RectTransform))
+                var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Beard"), font: GUI.SubHeadingFont);
+                var beardSlider = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1.0f), label.RectTransform, Anchor.CenterRight), style: "GUISlider")
                 {
                     Range = new Vector2(0, beardCount),
                     StepValue = 1,
@@ -2339,23 +2366,11 @@ namespace Barotrauma
                 };
             }
 
-            //right column
-            GUILayoutGroup rightColumn = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), columnLayout.RectTransform))
-            {
-                RelativeSpacing = 0.05f
-            };
-
-            //spacing to account for the gender selection in the left column
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), rightColumn.RectTransform), style: null)
-            {
-                CanBeFocused = false
-            };
-
             int moustacheCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Moustache).Count();
             if (moustacheCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Moustache"));
-                var moustacheSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform))
+                var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Moustache"), font: GUI.SubHeadingFont);
+                var moustacheSlider = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1.0f), label.RectTransform, Anchor.CenterRight), style: "GUISlider")
                 {
                     Range = new Vector2(0, moustacheCount),
                     StepValue = 1,
@@ -2368,8 +2383,8 @@ namespace Barotrauma
             int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.FaceAttachment).Count();
             if (faceAttachmentCount > 0)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform), TextManager.Get("FaceAttachment.Accessories"));
-                var faceAttachmentSlider = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.15f), rightColumn.RectTransform))
+                var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Accessories"), font: GUI.SubHeadingFont);
+                var faceAttachmentSlider = new GUIScrollBar(new RectTransform(new Vector2(0.4f, 1.0f), label.RectTransform, Anchor.CenterRight), style: "GUISlider")
                 {
                     Range = new Vector2(0, faceAttachmentCount),
                     StepValue = 1,
@@ -2409,6 +2424,7 @@ namespace Barotrauma
                 if (characterInfoFrame == null || HeadSelectionList?.RectTransform == null || button == null) { return; }
                 HeadSelectionList.RectTransform.Resize(new Point(characterInfoFrame.Rect.Width, (characterInfoFrame.Rect.Bottom - button.Rect.Bottom) + characterInfoFrame.Rect.Height * 2));
                 HeadSelectionList.RectTransform.AbsoluteOffset = new Point(characterInfoFrame.Rect.Right - characterInfoFrame.Rect.Width, button.Rect.Bottom);
+                if (SelectedSub != null) { CreateSubPreview(SelectedSub); }
             };
 
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), HeadSelectionList.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black)
@@ -2458,7 +2474,7 @@ namespace Barotrauma
                         itemsInRow = 0;
                     }
 
-                    var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), row.RectTransform), style: "ListBoxElementSquare")
                     {
                         OutlineColor = Color.White * 0.5f,
                         PressedColor = Color.White * 0.5f,
@@ -2578,10 +2594,8 @@ namespace Barotrauma
                     itemsInRow = 0;
                 }
 
-                jobButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), row.RectTransform), style: "ListBoxElement")
+                jobButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), row.RectTransform), style: "ListBoxElementSquare")
                 {
-                    PressedColor = Color.White,
-                    OutlineColor = Color.White * 0.5f,
                     UserData = jobPrefab,
                     OnClicked = (btn, usdt) =>
                     {
@@ -2591,15 +2605,7 @@ namespace Barotrauma
                 };
                 itemsInRow++;
 
-                var images = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First);
-                for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
-                {
-                    foreach (GUIImage image in images[variantIndex])
-                    {
-                        characterSprites.Add(image.Sprite);
-                    }
-                }
-
+                var images = AddJobSpritesToGUIComponent(jobButton, jobPrefab.First, selectedByPlayer: false);
                 if (images != null && images.Length > 1)
                 {
                     jobPrefab.Second = Math.Min(jobPrefab.Second, images.Length);
@@ -2646,39 +2652,19 @@ namespace Barotrauma
             return true;
         }
 
-        private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab)
+        private GUIImage[][] AddJobSpritesToGUIComponent(GUIComponent parent, JobPrefab jobPrefab, bool selectedByPlayer)
         {
             GUIFrame innerFrame = null;
-            List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(Gender.Male, out var maxDimensions);
+            List<JobPrefab.OutfitPreview> outfitPreviews = jobPrefab.GetJobOutfitSprites(Gender.Male, useInventoryIcon: true, out var maxDimensions);
 
-            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(-0.07f, -0.06f) }, style: null)
+            innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.8f, parent.RectTransform, Anchor.Center), style: null)
             {
                 CanBeFocused = false
             };
 
-            void recalculateInnerFrame()
-            {
-                float buttonWidth = parent.Rect.Width;
-                float buttonHeight = parent.Rect.Height;
-
-                Vector2 innerFrameSize;
-                if (buttonWidth / maxDimensions.X > buttonHeight / maxDimensions.Y)
-                {
-                    innerFrameSize = new Vector2((maxDimensions.X / maxDimensions.Y) * (buttonHeight / buttonWidth), 1.0f);
-                }
-                else
-                {
-                    innerFrameSize = new Vector2(1.0f, (maxDimensions.Y / maxDimensions.X) * (buttonWidth / buttonHeight));
-                }
-
-                innerFrame.RectTransform.RelativeSize = innerFrameSize * 0.8f;
-            }
-
             GUIImage[][] retVal = new GUIImage[0][];
             if (outfitPreviews != null && outfitPreviews.Any())
             {
-                parent.RectTransform.SizeChanged += recalculateInnerFrame;
-
                 retVal = new GUIImage[outfitPreviews.Count][];
                 for (int i = 0; i < outfitPreviews.Count; i++)
                 {
@@ -2687,23 +2673,25 @@ namespace Barotrauma
                     for (int j = 0; j < outfitPreview.Sprites.Count; j++)
                     {
                         Pair<Sprite, Vector2> sprite = outfitPreview.Sprites[j];
-                        retVal[i][j] = new GUIImage(new RectTransform(sprite.First.SourceRect.Size.ToVector2() / outfitPreview.Dimensions, innerFrame.RectTransform, Anchor.Center) { RelativeOffset = sprite.Second / outfitPreview.Dimensions }, sprite.First, scaleToFit: true)
+                        float aspectRatio = outfitPreview.Dimensions.Y / outfitPreview.Dimensions.X;
+                        retVal[i][j] = new GUIImage(new RectTransform(new Vector2(0.7f / aspectRatio, 0.7f), innerFrame.RectTransform, Anchor.Center) 
+                            { RelativeOffset = sprite.Second / outfitPreview.Dimensions }, sprite.First, scaleToFit: true)
                         {
                             PressedColor = Color.White,
                             CanBeFocused = false
                         };
                     }
                 }
-
-                recalculateInnerFrame();
             }
 
             var textBlock = new GUITextBlock(
               innerFrame.CountChildren == 0 ?
                   new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center) :
-                  new RectTransform(new Vector2(1.0f, 0.2f), parent.RectTransform, Anchor.BottomCenter),
-              jobPrefab.Name, textAlignment: Alignment.Center)
+                  new RectTransform(new Vector2(selectedByPlayer ? 0.75f : 0.95f, 0.25f), parent.RectTransform, Anchor.TopCenter),
+              jobPrefab.Name, wrap: true, textAlignment: Alignment.Center)
             {
+                HoverColor = Color.Transparent,
+                SelectedColor = Color.Transparent,
                 TextColor = jobPrefab.UIColor,
                 CanBeFocused = false,
                 AutoScale = true
@@ -2829,7 +2817,7 @@ namespace Barotrauma
             shuttleList.Enabled = !enabled && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !enabled;
 
-            if (campaignViewButton != null) { campaignViewButton.Visible = enabled; }
+            if (campaignViewButton != null) { campaignViewButton.Enabled = enabled; }
             
             if (enabled)
             {
@@ -2876,8 +2864,7 @@ namespace Barotrauma
             subPreviewContainer.ClearChildren();
             foreach (GUIComponent child in subList.Content.Children)
             {
-                Submarine sub = child.UserData as Submarine;
-                if (sub == null) { continue; }
+                if (!(child.UserData is Submarine sub)) { continue; }
                 //just check the name, even though the campaign sub may not be the exact same version
                 //we're selecting the sub just for show, the selection is not actually used for anything
                 if (sub.Name == name)
@@ -2885,7 +2872,7 @@ namespace Barotrauma
                     subList.Select(sub);
                     if (Submarine.SavedSubmarines.Contains(sub))
                     {
-                        sub.CreatePreviewWindow(subPreviewContainer);
+                        CreateSubPreview(sub);
                         displayed = true;
                     }
                     break;
@@ -2894,7 +2881,7 @@ namespace Barotrauma
             subList.OnSelected += VotableClicked;
             if (!displayed)
             {
-                submarine.CreatePreviewWindow(subPreviewContainer);
+                CreateSubPreview(submarine);
             }
         }
 
@@ -2921,8 +2908,8 @@ namespace Barotrauma
 
         private void UpdateJobPreferences(GUIListBox listBox)
         {
-            foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
-            jobPreferenceSprites.Clear();
+            /*foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
+            jobPreferenceSprites.Clear();*/
 
             List<Pair<string, int>> jobNamePreferences = new List<Pair<string, int>>();
 
@@ -2931,22 +2918,17 @@ namespace Barotrauma
             {
                 GUIComponent slot = listBox.Content.GetChild(i);
 
-                slot.OutlineColor = Color.White * 0.4f;
-                slot.Color = Color.Gray;
-                slot.HoverColor = Color.White;
-                slot.SelectedColor = Color.White;
-                
                 slot.ClearChildren();
 
                 slot.CanBeFocused = !disableNext;
                 if (slot.UserData is Pair<JobPrefab, int> jobPrefab)
                 {
-                    var images = AddJobSpritesToGUIComponent(slot, jobPrefab.First);
+                    var images = AddJobSpritesToGUIComponent(slot, jobPrefab.First, selectedByPlayer: true);
                     for (int variantIndex = 0; variantIndex < images.Length; variantIndex++)
                     {
                         foreach (GUIImage image in images[variantIndex])
                         {
-                            jobPreferenceSprites.Add(image.Sprite);
+                            //jobPreferenceSprites.Add(image.Sprite);
                             int selectedVariantIndex = Math.Min(jobPrefab.Second, images.Length);
                             image.Visible = images.Length == 1 || selectedVariantIndex == variantIndex;
                         }
@@ -3023,16 +3005,12 @@ namespace Barotrauma
 
         private GUIButton CreateJobVariantButton(Pair<JobPrefab, int> jobPrefab, int variantIndex, int variantCount, GUIComponent slot)
         {
-            float relativeHeight = Math.Min(0.7f / variantCount, 0.2f);
+            float relativeSize = 0.2f;
 
-            var btn = new GUIButton(new RectTransform(new Vector2(relativeHeight), slot.RectTransform, scaleBasis: ScaleBasis.BothHeight)
-            { RelativeOffset = new Vector2(0.05f, 0.25f + relativeHeight * 1.05f * variantIndex) },
-            (variantIndex + 1).ToString(), style: null)
+            var btn = new GUIButton(new RectTransform(new Vector2(relativeSize), slot.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight)
+                { RelativeOffset = new Vector2(relativeSize * 1.05f * (variantIndex - (variantCount - 1) / 2.0f), 0.02f) },
+                (variantIndex + 1).ToString(), style: "JobVariantButton")
             {
-                Color = new Color(50, 50, 50, 200),
-                HoverColor = Color.Gray * 0.75f,
-                PressedColor = Color.Black * 0.75f,
-                SelectedColor = new Color(45, 70, 100, 200),
                 Selected = jobPrefab.Second == variantIndex,
                 UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
             };
@@ -3061,8 +3039,7 @@ namespace Barotrauma
             {
                 if (subList == this.subList)
                 {
-                    subPreviewContainer.ClearChildren();
-                    sub.CreatePreviewWindow(subPreviewContainer);
+                    CreateSubPreview(sub);
                 }
                 if (subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
                 {
@@ -3121,7 +3098,7 @@ namespace Barotrauma
             {
                 errorMsg = TextManager.GetWithVariable("SubLoadError", "[subname]", subName) + " ";
                 GUITextBlock textBlock = subList.Content.GetChildByUserData(sub)?.GetChild<GUITextBlock>();
-                if (textBlock != null) { textBlock.TextColor = Color.Red; }
+                if (textBlock != null) { textBlock.TextColor = GUI.Style.Red; }
             }
             else
             {
@@ -3153,6 +3130,18 @@ namespace Barotrauma
             requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
 
             return false;            
+        }
+
+        private void CreateSubPreview(Submarine sub)
+        {
+            subPreviewContainer.ClearChildren();
+            sub.CreatePreviewWindow(subPreviewContainer);
+            var descriptionBox = subPreviewContainer.FindChild("descriptionbox", recursive: true);
+            //if description box and character info box are roughly the same size, scale them to the same size
+            if (characterInfoFrame != null && Math.Abs(descriptionBox.Rect.Height - characterInfoFrame.Rect.Height) < 80 * GUI.Scale)
+            {
+                descriptionBox.RectTransform.MaxSize = new Point(descriptionBox.Rect.Width, characterInfoFrame.Rect.Height);
+            }
         }
     }
 }

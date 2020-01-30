@@ -14,6 +14,10 @@ namespace Barotrauma.Networking
         private static Stream writeStream;
         private static Stream readStream;
         private static volatile bool shutDown;
+        public static bool HasShutDown
+        {
+            get { return shutDown; }
+        }
         private static ManualResetEvent writeManualResetEvent;
 
         private static byte[] tempBytes;
@@ -52,8 +56,16 @@ namespace Barotrauma.Networking
 
             writeManualResetEvent = new ManualResetEvent(false);
 
-            readThread = new Thread(UpdateRead);
-            writeThread = new Thread(UpdateWrite);
+            readThread = new Thread(UpdateRead)
+            {
+                Name = "ChildServerRelay.ReadThread",
+                IsBackground = true
+            };
+            writeThread = new Thread(UpdateWrite)
+            {
+                Name = "ChildServerRelay.WriteThread",
+                IsBackground = true
+            };
             readThread.Start();
             writeThread.Start();
         }
@@ -61,7 +73,7 @@ namespace Barotrauma.Networking
         private static void PrivateShutDown()
         {
             shutDown = true;
-            writeManualResetEvent.Set();
+            writeManualResetEvent?.Set();
             readCancellationToken?.Cancel();
             readThread?.Join(); readThread = null;
             writeThread?.Join(); writeThread = null;
@@ -76,8 +88,23 @@ namespace Barotrauma.Networking
             while (!shutDown)
             {
                 Task<int> readTask = readStream?.ReadAsync(tempBytes, 0, tempBytes.Length, readCancellationToken.Token);
-                TimeSpan ts = TimeSpan.FromMilliseconds(15000);
-                if (readTask == null || !readTask.Wait(ts))
+                TimeSpan ts = TimeSpan.FromMilliseconds(100);
+                for (int i=0;i<150;i++)
+                {
+                    if (shutDown)
+                    {
+                        readCancellationToken?.Cancel();
+                        shutDown = true;
+                        return;
+                    }
+
+                    if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(ts) ?? true))
+                    {
+                        break;
+                    }
+                }
+
+                if (readTask == null || !readTask.IsCompleted)
                 {
                     readCancellationToken?.Cancel();
                     shutDown = true;
@@ -99,9 +126,12 @@ namespace Barotrauma.Networking
                     if (readState == ReadState.WaitingForPacketStart)
                     {
                         readIncTotal = tempBytes[procIndex] | (tempBytes[procIndex + 1] << 8);
+                        procIndex += 2;
+
+                        if (readIncTotal <= 0) { continue; }
+
                         readIncOffset = 0;
                         readIncBuf = new byte[readIncTotal];
-                        procIndex += 2;
                         readState = ReadState.WaitingForPacketEnd;
                     }
                     else if (readState == ReadState.WaitingForPacketEnd)
@@ -159,7 +189,14 @@ namespace Barotrauma.Networking
                 if (!shutDown)
                 {
                     writeManualResetEvent.Reset();
-                    writeManualResetEvent.WaitOne();
+                    if (!writeManualResetEvent.WaitOne(1000))
+                    {
+                        //heartbeat to keep the other end alive
+                        byte[] lengthBytes = new byte[2];
+                        lengthBytes[0] = (byte)0;
+                        lengthBytes[1] = (byte)0;
+                        writeStream?.Write(lengthBytes, 0, 2);
+                    }
                 }
             }
         }

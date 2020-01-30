@@ -7,17 +7,14 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
-        enum Mode
-        {
-            AutoPilot,
-            Manual
-        };
-        private GUITickBox autopilotTickBox, manualTickBox;
+        private GUIButton steeringModeSwitch;
+        private GUITickBox autopilotIndicator, manualPilotIndicator;
 
         enum Destination
         {
@@ -33,8 +30,6 @@ namespace Barotrauma.Items.Components
 
         private GUIButton dockingButton;
         private string dockText, undockText;
-
-        private GUIFrame autoPilotControlsDisabler;
 
         private GUIComponent steerArea;
 
@@ -92,67 +87,84 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.35f), GuiFrame.RectTransform, Anchor.CenterLeft)
-                { MinSize = new Point(150, 0) }, "SonarFrame");
-            var paddedControlContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), controlContainer.RectTransform, Anchor.Center))
+            foreach (XElement subElement in element.Elements())
             {
-                RelativeSpacing = 0.03f,
-                Stretch = true
-            };
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "steeringindicator":
+                        steeringIndicator = new Sprite(subElement);
+                        break;
+                    case "maintainposindicator":
+                        maintainPosIndicator = new Sprite(subElement);
+                        break;
+                    case "maintainposoriginindicator":
+                        maintainPosOriginIndicator = new Sprite(subElement);
+                        break;
+                }
+            }
+            CreateGUI();
+            GameMain.Instance.OnResolutionChanged += ResetGUI;
+            // TODO: do we need to react on this?
+            GameMain.Config.OnHUDScaleChanged += ResetGUI;
+        }
 
-            statusContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-                { MinSize = new Point(150, 0) }, "SonarFrame");
-            var paddedStatusContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), statusContainer.RectTransform, Anchor.Center))
+        private void CreateGUI()
+        {
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.36f), GuiFrame.RectTransform, Anchor.CenterRight)
             {
-                RelativeSpacing = 0.03f,
-                Stretch = true
-            };
+                RelativeOffset = new Vector2(Sonar.controlContainerRelativeOffset / 2, 0.01f) // Based on the relative size differende of the steering and the status windows
+            }, "ItemUI");
+            var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
+            {
+                AbsoluteOffset = GUIStyle.ItemFrameOffset
+            }, style: null);
 
-            manualTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
-                TextManager.Get("SteeringManual"), style: "GUIRadioButton")
+            var steeringModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedControlContainer.RectTransform, Anchor.TopLeft), style: null);
+            steeringModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), steeringModeArea.RectTransform), string.Empty, style: "SwitchVertical")
+            {
+                Selected = false,
+                Enabled = true,
+                OnClicked = (button, data) =>
+                {
+                    button.Selected = !button.Selected;
+                    AutoPilot = button.Selected;
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        user = Character.Controlled;
+                    }
+                    return true;
+                }
+            };
+            var steeringModeRightSide = new GUIFrame(new RectTransform(new Vector2(1.0f - steeringModeSwitch.RectTransform.RelativeSize.X, 0.8f), steeringModeArea.RectTransform, Anchor.CenterLeft)
+            {
+                RelativeOffset = new Vector2(steeringModeSwitch.RectTransform.RelativeSize.X, 0)
+            }, style: null);
+            manualPilotIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), steeringModeRightSide.RectTransform, Anchor.TopLeft),
+                TextManager.Get("SteeringManual"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
                 Selected = true,
-                OnSelected = (GUITickBox box) =>
-                {
-                    AutoPilot = !box.Selected;
-                    unsentChanges = true;
-                    user = Character.Controlled;
-
-                    return true;
-                }
+                Enabled = false
             };
-            autopilotTickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), paddedControlContainer.RectTransform),
-                TextManager.Get("SteeringAutoPilot"), style: "GUIRadioButton")
+            autopilotIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), steeringModeRightSide.RectTransform, Anchor.BottomLeft),
+                TextManager.Get("SteeringAutoPilot"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
-                OnSelected = (GUITickBox box) =>
-                {
-                    AutoPilot = box.Selected;
-                    if (AutoPilot && MaintainPos)
-                    {
-                        posToMaintain = controlledSub != null ?
-                            controlledSub.WorldPosition :
-                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
-                    }
-                    unsentChanges = true;
-                    user = Character.Controlled;
-
-                    return true;
-                }
+                Selected = false,
+                Enabled = false
             };
+            manualPilotIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            autopilotIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            GUITextBlock.AutoScaleAndNormalize(manualPilotIndicator.TextBlock, autopilotIndicator.TextBlock);
 
-            GUIRadioButtonGroup modes = new GUIRadioButtonGroup();
-            modes.AddRadioButton((int)Mode.AutoPilot, autopilotTickBox);
-            modes.AddRadioButton((int)Mode.Manual, manualTickBox);
-            modes.Selected = (int)Mode.Manual;
-            
-            var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), paddedControlContainer.RectTransform), "InnerFrame");
-            var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.8f), autoPilotControls.RectTransform, Anchor.Center))
+            var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.6f), paddedControlContainer.RectTransform, Anchor.BottomRight), "OutlineFrame");
+            var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.9f), autoPilotControls.RectTransform, Anchor.Center))
             {
                 Stretch = true,
-                RelativeSpacing = 0.03f
+                RelativeSpacing = 0.03f,
+                ChildAnchor = Anchor.TopCenter
             };
 
-            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
+            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.2f), paddedAutoPilotControls.RectTransform),
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = false,
@@ -188,7 +200,7 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
+            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 20),
                 font: GUI.SmallFont, style: "GUIRadioButton")
             {
@@ -215,7 +227,7 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), paddedAutoPilotControls.RectTransform),
+            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.2f), paddedAutoPilotControls.RectTransform),
                 GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 20),
                 font: GUI.SmallFont, style: "GUIRadioButton")
             {
@@ -242,53 +254,103 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            autoPilotControlsDisabler = new GUIFrame(new RectTransform(Vector2.One, autoPilotControls.RectTransform), "InnerFrame");
+            GUITextBlock.AutoScaleAndNormalize(maintainPosTickBox.TextBlock, levelStartTickBox.TextBlock, levelEndTickBox.TextBlock);
+            maintainPosTickBox.RectTransform.IsFixedSize = levelStartTickBox.RectTransform.IsFixedSize = levelEndTickBox.RectTransform.IsFixedSize = false;
+            maintainPosTickBox.RectTransform.MaxSize = levelStartTickBox.RectTransform.MaxSize = levelEndTickBox.RectTransform.MaxSize = 
+                new Point(int.MaxValue, paddedAutoPilotControls.Rect.Height / 3);
+            maintainPosTickBox.RectTransform.MinSize = levelStartTickBox.RectTransform.MinSize = levelEndTickBox.RectTransform.MinSize =
+                Point.Zero;
 
             GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
             destinations.AddRadioButton((int)Destination.MaintainPos, maintainPosTickBox);
             destinations.AddRadioButton((int)Destination.LevelStart, levelStartTickBox);
             destinations.AddRadioButton((int)Destination.LevelEnd, levelEndTickBox);
-            destinations.Selected = (int)(maintainPos        ? Destination.MaintainPos :
-                                          levelStartSelected ? Destination.LevelStart  : Destination.LevelEnd);
-            
-            string steeringVelX = TextManager.Get("SteeringVelocityX");
-            string steeringVelY = TextManager.Get("SteeringVelocityY");
-            string steeringDepth = TextManager.Get("SteeringDepth");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
-            {
-                TextGetter = () =>
-                {
-                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
-                    return steeringVelY.Replace("[kph]", ((int)-realWorldVel).ToString());
-                }
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
-            {
-                TextGetter = () =>
-                {
-                    Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
-                    var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
-                    return steeringVelX.Replace("[kph]", ((int)realWorldVel).ToString());
-                }
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), "")
-            {
-                TextGetter = () =>
-                {
-                    Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
-                    float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
-                    return steeringDepth.Replace("[m]", ((int)realWorldDepth).ToString());
-                }
-            };
+            destinations.Selected = (int)(maintainPos ? Destination.MaintainPos :
+                                          levelStartSelected ? Destination.LevelStart : Destination.LevelEnd);
 
-            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), Color.Red)
+            // Status ->
+            statusContainer = new GUIFrame(new RectTransform(new Vector2(0.33f, 0.3f), GuiFrame.RectTransform, Anchor.BottomRight)
+            {
+                RelativeOffset = new Vector2(Sonar.controlContainerRelativeOffset, 0)
+            }, "ItemUI");
+            var paddedStatusContainer = new GUIFrame(new RectTransform(statusContainer.Rect.Size - GUIStyle.ItemFrameMargin, statusContainer.RectTransform, Anchor.Center)
+            {
+                AbsoluteOffset = GUIStyle.ItemFrameOffset
+            }, style: null);
+
+            var elements = GUI.CreateElements(3, new Vector2(1f, 0.323f), paddedStatusContainer.RectTransform, rt => new GUIFrame(rt, style: null), Anchor.TopCenter, relativeSpacing: 0.01f);
+            List<GUIComponent> leftElements = new List<GUIComponent>(), centerElements = new List<GUIComponent>(), rightElements = new List<GUIComponent>();
+            for (int i = 0; i < elements.Count; i++)
+            {
+                var e = elements[i];
+                var group = new GUILayoutGroup(new RectTransform(Vector2.One, e.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    RelativeSpacing = 0.01f,
+                    Stretch = true
+                };
+                var left = new GUIFrame(new RectTransform(new Vector2(0.5f, 1), group.RectTransform), style: null);
+                var center = new GUIFrame(new RectTransform(new Vector2(0.175f, 1), group.RectTransform), style: null);
+                var right = new GUIFrame(new RectTransform(new Vector2(0.325f, 0.8f), group.RectTransform), style: null);
+                leftElements.Add(left);
+                centerElements.Add(center);
+                rightElements.Add(right);
+                string leftText = string.Empty, centerText = string.Empty;
+                GUITextBlock.TextGetterHandler rightTextGetter = null;
+                switch (i)
+                {
+                    case 0:
+                        leftText = TextManager.Get("DescentVelocity");
+                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        rightTextGetter = () =>
+                        {
+                            Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                            var realWorldVel = ConvertUnits.ToDisplayUnits(vel.Y * Physics.DisplayToRealWorldRatio) * 3.6f;
+                            return ((int)(-realWorldVel)).ToString();
+                        };
+                        break;
+                    case 1:
+                        leftText = TextManager.Get("Velocity");
+                        centerText = $"({TextManager.Get("KilometersPerHour")})";
+                        rightTextGetter = () =>
+                        {
+                            Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
+                            var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
+                            return ((int)realWorldVel).ToString();
+                        };
+                        break;
+                    case 2:
+                        leftText = TextManager.Get("Depth");
+                        centerText = $"({TextManager.Get("Meter")})";
+                        rightTextGetter = () =>
+                        {
+                            Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
+                            float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                            return ((int)realWorldDepth).ToString();
+                        };
+                        break;
+                }
+                new GUITextBlock(new RectTransform(Vector2.One, left.RectTransform), leftText, font: GUI.SubHeadingFont, wrap: true, textAlignment: Alignment.CenterRight);
+                new GUITextBlock(new RectTransform(Vector2.One, center.RectTransform), centerText, font: GUI.Font, textAlignment: Alignment.Center) { Padding = Vector4.Zero };
+                var digitalFrame = new GUIFrame(new RectTransform(Vector2.One, right.RectTransform), style: "DigitalFrameDark");
+                new GUITextBlock(new RectTransform(Vector2.One * 0.85f, digitalFrame.RectTransform, Anchor.Center), "12345", GUI.Style.TextColorDark, GUI.DigitalFont, Alignment.CenterRight)
+                {
+                    TextGetter = rightTextGetter
+                };
+            }
+            GUITextBlock.AutoScaleAndNormalize(leftElements.SelectMany(e => e.GetAllChildren<GUITextBlock>()));
+            // TODO: center texts are too small on low resolutions
+            GUITextBlock.AutoScaleAndNormalize(centerElements.SelectMany(e => e.GetAllChildren<GUITextBlock>()));
+            GUITextBlock.AutoScaleAndNormalize(rightElements.SelectMany(e => e.GetAllChildren<GUITextBlock>()));
+
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), GUI.Style.Red)
             {
                 Visible = false
             };
 
-            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.25f, 0.12f), GuiFrame.RectTransform, Anchor.BottomLeft)
-            { MinSize = new Point(150, 0), RelativeOffset = new Vector2(0.0f, -0.05f) }, "", wrap: true, style: "GUIToolTip")
+            tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.1f), GuiFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter)
+            {
+                RelativeOffset = new Vector2(-0.2f, 0.0f)
+            }, "", font: GUI.Font, wrap: true, style: "GUIToolTip", textAlignment: Alignment.Center)
             {
                 AutoScale = true
             };
@@ -300,17 +362,17 @@ namespace Barotrauma.Items.Components
             autoPilotLevelEndTip = TextManager.GetWithVariable("SteeringAutoPilotLocationTip", "[locationname]",
                 GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
 
-            steerArea = new GUICustomComponent(new RectTransform(Point.Zero, GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
-
             //docking interface ----------------------------------------------------
-            dockingContainer = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GuiFrame.RectTransform, Anchor.BottomLeft)
-            { MinSize = new Point(150, 0) }, style: null);
-            var paddedDockingContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), dockingContainer.RectTransform, Anchor.Center), style: null);
-            
+            float dockingButtonSize = 1.1f;
+            float elementScale = 0.6f;
+            dockingContainer = new GUIFrame(new RectTransform(new Point(160).Multiply(GUI.Scale * dockingButtonSize), GuiFrame.RectTransform, Anchor.BottomRight)
+            {
+                RelativeOffset = new Vector2(Sonar.controlContainerRelativeOffset + 0.05f, -0.05f)
+            }, style: null);
+
             dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
             undockText = TextManager.Get("label.navterminalundock", fallBackTag: "captain.undock");
-            dockingButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), paddedDockingContainer.RectTransform, Anchor.Center), dockText, style: "GUIButtonLarge")
+            dockingButton = new GUIButton(new RectTransform(new Vector2(elementScale), dockingContainer.RectTransform, Anchor.Center), dockText, style: "PowerButton")
             {
                 OnClicked = (btn, userdata) =>
                 {
@@ -326,65 +388,45 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-            dockingButton.Font = GUI.SmallFont;
+            dockingButton.Font = GUI.SubHeadingFont;
 
-            var leftButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), paddedDockingContainer.RectTransform, Anchor.CenterLeft), "")
+            var style = GUI.Style.GetComponentStyle("DockingButtonUp");
+            Sprite buttonSprite = style.Sprites.FirstOrDefault().Value.FirstOrDefault()?.Sprite;
+            Point buttonSize = buttonSprite != null ? buttonSprite.size.ToPoint() : new Point(149, 52);
+            Point horizontalButtonSize = buttonSize.Multiply(elementScale * GUI.Scale * dockingButtonSize);
+            Point verticalButtonSize = horizontalButtonSize.Flip();
+            var leftButton = new GUIButton(new RectTransform(verticalButtonSize, dockingContainer.RectTransform, Anchor.CenterLeft), "", style: "DockingButtonLeft")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = -Vector2.UnitX
             };
-            new GUIImage(new RectTransform(new Vector2(0.7f), leftButton.RectTransform, Anchor.Center), "GUIButtonHorizontalArrow").SpriteEffects = SpriteEffects.FlipHorizontally;
-            var rightButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.5f), paddedDockingContainer.RectTransform, Anchor.CenterRight), "")
+            var rightButton = new GUIButton(new RectTransform(verticalButtonSize, dockingContainer.RectTransform, Anchor.CenterRight), "", style: "DockingButtonRight")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = Vector2.UnitX
             };
-            new GUIImage(new RectTransform(new Vector2(0.7f), rightButton.RectTransform, Anchor.Center), "GUIButtonHorizontalArrow");
-            var upButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), paddedDockingContainer.RectTransform, Anchor.TopCenter), "")
+            var upButton = new GUIButton(new RectTransform(horizontalButtonSize, dockingContainer.RectTransform, Anchor.TopCenter), "", style: "DockingButtonUp")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = Vector2.UnitY
             };
-            new GUIImage(new RectTransform(new Vector2(0.7f), upButton.RectTransform, Anchor.Center), "GUIButtonVerticalArrow");
-            var downButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), paddedDockingContainer.RectTransform, Anchor.BottomCenter), "")
+            var downButton = new GUIButton(new RectTransform(horizontalButtonSize, dockingContainer.RectTransform, Anchor.BottomCenter), "", style: "DockingButtonDown")
             {
                 OnClicked = NudgeButtonClicked,
                 UserData = -Vector2.UnitY
             };
-            new GUIImage(new RectTransform(new Vector2(0.7f), downButton.RectTransform, Anchor.Center), "GUIButtonVerticalArrow").SpriteEffects = SpriteEffects.FlipVertically;
 
-            foreach (XElement subElement in element.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "steeringindicator":
-                        steeringIndicator = new Sprite(subElement);
-                        break;
-                    case "maintainposindicator":
-                        maintainPosIndicator = new Sprite(subElement);
-                        break;
-                    case "maintainposoriginindicator":
-                        maintainPosOriginIndicator = new Sprite(subElement);
-                        break;
-                }
-            }
-
-            SetUILayout();
-
-            GameMain.Instance.OnResolutionChanged += SetUILayout;
-            GameMain.Config.OnHUDScaleChanged += SetUILayout;
+            steerArea = new GUICustomComponent(new RectTransform(Sonar.SonarAreaSize, GuiFrame.RectTransform, Anchor.CenterLeft),
+                (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
+            steerArea.RectTransform.SetAsFirstChild();
+            steerRadius = steerArea.Rect.Width / 2;
         }
 
-        private void SetUILayout()
+
+        private void ResetGUI()
         {
-            int viewSize = (int)Math.Min(GuiFrame.Rect.Width - 150, GuiFrame.Rect.Height * 0.9f);
-
-            controlContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.99f), (int)(viewSize * 0.05f));
-            statusContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
-            steerArea.RectTransform.NonScaledSize = new Point(viewSize);
-            dockingContainer.RectTransform.AbsoluteOffset = new Point((int)(viewSize * 0.9f), 0);
-
-            steerRadius = steerArea.Rect.Width / 2;
+            GuiFrame.RectTransform.Children.ForEachMod(c => c.Parent = null);
+            CreateGUI();
         }
 
         /// <summary>
@@ -434,7 +476,7 @@ namespace Barotrauma.Items.Components
 
                 if (velRect.Contains(PlayerInput.MousePosition))
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 4, (int)steeringInputPos.Y - 4, 8, 8), Color.Red, thickness: 2);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 4, (int)steeringInputPos.Y - 4, 8, 8), GUI.Style.Red, thickness: 2);
                 }
             }
             else if (posToMaintain.HasValue && !LevelStartSelected && !LevelEndSelected)
@@ -447,7 +489,7 @@ namespace Barotrauma.Items.Components
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
                     displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
 
-                    Color crosshairColor = Color.Orange * (0.5f + ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 4.0f);
+                    Color crosshairColor = GUI.Style.Orange * (0.5f + ((float)Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 4.0f);
                     if (maintainPosIndicator != null)
                     {
                         maintainPosIndicator.Draw(spriteBatch, displayPosToMaintain, crosshairColor, scale: 0.5f * sonar.Zoom);
@@ -461,11 +503,11 @@ namespace Barotrauma.Items.Components
 
                     if (maintainPosOriginIndicator != null)
                     {
-                        maintainPosOriginIndicator.Draw(spriteBatch, displaySubPos, Color.Orange, scale: 0.5f * sonar.Zoom);
+                        maintainPosOriginIndicator.Draw(spriteBatch, displaySubPos, GUI.Style.Orange, scale: 0.5f * sonar.Zoom);
                     }
                     else
                     {
-                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)displaySubPos.X - 5, (int)displaySubPos.Y - 5, 10, 10), Color.Orange);
+                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)displaySubPos.X - 5, (int)displaySubPos.Y - 5, 10, 10), GUI.Style.Orange);
                     }
                 }
             }
@@ -507,11 +549,11 @@ namespace Barotrauma.Items.Components
                 pos.Y = -pos.Y;
                 pos += center;
 
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : Color.Green, false);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 3 / 2, (int)pos.Y - 3, 6, 6), (SteeringPath.CurrentNode == wp) ? Color.LightGreen : GUI.Style.Green, false);
 
                 if (prevPos != Vector2.Zero)
                 {
-                    GUI.DrawLine(spriteBatch, pos, prevPos, Color.Green);
+                    GUI.DrawLine(spriteBatch, pos, prevPos, GUI.Style.Green);
                 }
 
                 prevPos = pos;
@@ -529,14 +571,14 @@ namespace Barotrauma.Items.Components
                 GUI.DrawLine(spriteBatch, 
                     pos1, 
                     pos2,
-                    Color.Red * 0.6f, width: 3);
+                    GUI.Style.Red * 0.6f, width: 3);
 
                 if (obstacle.Intersection.HasValue)
                 {
                     Vector2 intersectionPos = (obstacle.Intersection.Value - transducerCenter) *displayScale;
                     intersectionPos.Y = -intersectionPos.Y;
                     intersectionPos += center;
-                    GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, Color.Red);
+                    GUI.DrawRectangle(spriteBatch, intersectionPos - Vector2.One * 2, Vector2.One * 4, GUI.Style.Red);
                 }
 
                 Vector2 obstacleCenter = (pos1 + pos2) / 2;
@@ -545,7 +587,7 @@ namespace Barotrauma.Items.Components
                     GUI.DrawLine(spriteBatch,
                         obstacleCenter,
                         obstacleCenter + new Vector2(obstacle.AvoidStrength.X, -obstacle.AvoidStrength.Y) * 100,
-                        Color.Lerp(Color.Green, Color.Orange, obstacle.Dot), width: 2);
+                        Color.Lerp(GUI.Style.Green, GUI.Style.Orange, obstacle.Dot), width: 2);
                 }
             }
         }
@@ -580,7 +622,7 @@ namespace Barotrauma.Items.Components
                     dockingButton.Text = dockText;
                     if (dockingButton.FlashTimer <= 0.0f)
                     {
-                        dockingButton.Flash(Color.LightGreen, 0.5f);
+                        dockingButton.Flash(GUI.Style.Blue, 0.5f, useCircularFlash: true);
                         dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                     }
                 }
@@ -592,7 +634,7 @@ namespace Barotrauma.Items.Components
                 statusContainer.Visible = false;
                 if (dockingButton.FlashTimer <= 0.0f)
                 {
-                    dockingButton.Flash(Color.OrangeRed);
+                    dockingButton.Flash(GUI.Style.Orange, useCircularFlash: true);
                     dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                 }
             }
@@ -600,8 +642,6 @@ namespace Barotrauma.Items.Components
             {
                 dockingButton.Text = dockText;
             }
-
-            autoPilotControlsDisabler.Visible = !AutoPilot;
 
             if (Voltage < MinVoltage)
             {
@@ -781,11 +821,11 @@ namespace Barotrauma.Items.Components
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
         {
-            msg.Write(autoPilot);
+            msg.Write(AutoPilot);
             msg.Write(dockingNetworkMessagePending);
             dockingNetworkMessagePending = false;
 
-            if (!autoPilot)
+            if (!AutoPilot)
             {
                 //no need to write steering info if autopilot is controlling
                 msg.Write(steeringInput.X);
@@ -878,6 +918,16 @@ namespace Barotrauma.Items.Components
                     LevelEndSelected = false;
                 }
             }
+        }
+
+        private void UpdateGUIElements()
+        {
+            steeringModeSwitch.Selected = AutoPilot;
+            autopilotIndicator.Selected = AutoPilot;
+            manualPilotIndicator.Selected = !AutoPilot;
+            maintainPosTickBox.Enabled = AutoPilot;
+            levelEndTickBox.Enabled = AutoPilot;
+            levelStartTickBox.Enabled = AutoPilot;
         }
     }
 }

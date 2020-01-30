@@ -9,10 +9,14 @@ namespace Barotrauma
     {
         public static List<AITarget> List = new List<AITarget>();
 
+        private Entity entity;
         public Entity Entity
         {
-            get;
-            private set;
+            get 
+            { 
+                if (entity != null && entity.Removed) { return null; }
+                return entity;
+            }
         }
         
         private float soundRange;
@@ -28,13 +32,29 @@ namespace Barotrauma
         public float SoundRange
         {
             get { return soundRange; }
-            set { soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange); }
+            set 
+            {
+                if (float.IsNaN(value))
+                {
+                    DebugConsole.ThrowError("Attempted to set the SoundRange of an AITarget to NaN.\n" + Environment.StackTrace);
+                    return;
+                }
+                soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange); 
+            }
         }
 
         public float SightRange
         {
             get { return sightRange; }
-            set { sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange); }
+            set
+            {
+                if (float.IsNaN(value))
+                {
+                    DebugConsole.ThrowError("Attempted to set the SightRange of an AITarget to NaN.\n" + Environment.StackTrace);
+                    return;
+                }
+                sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange); 
+            }
         }
 
         private float sectorRad = MathHelper.TwoPi;
@@ -54,7 +74,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace;
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + Entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
                 }
                 sectorDir = value;
@@ -88,7 +108,7 @@ namespace Barotrauma
         {
             get
             {
-                if (Entity == null || Entity.Removed)
+                if (entity == null || entity.Removed)
                 {
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
@@ -99,7 +119,7 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
-                return Entity.WorldPosition;
+                return entity.WorldPosition;
             }
         }
 
@@ -107,7 +127,7 @@ namespace Barotrauma
         {
             get
             {
-                if (Entity == null || Entity.Removed)
+                if (entity == null || entity.Removed)
                 {
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
@@ -118,7 +138,7 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
-                return Entity.SimPosition;
+                return entity.SimPosition;
             }
         }
 
@@ -156,7 +176,7 @@ namespace Barotrauma
 
         public AITarget(Entity e)
         {
-            Entity = e;
+            entity = e;
             List.Add(this);
         }
 
@@ -181,7 +201,7 @@ namespace Barotrauma
         public void Remove()
         {
             List.Remove(this);
-            Entity = null;
+            entity = null;
         }
     }
 }

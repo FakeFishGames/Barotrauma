@@ -10,6 +10,7 @@ namespace Barotrauma
 
         private GUIFrame frame, slider;
         private float barSize;
+        private bool showFrame;
                 
         public delegate float ProgressGetterHandler();
         public ProgressGetterHandler ProgressGetter;
@@ -38,7 +39,7 @@ namespace Barotrauma
             }
         }
         
-        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "") : base(style, rectT)
+        public GUIProgressBar(RectTransform rectT, float barSize, Color? color = null, string style = "", bool showFrame = true) : base(style, rectT)
         {
             if (color.HasValue)
             {
@@ -49,12 +50,14 @@ namespace Barotrauma
             GUI.Style.Apply(frame, "", this);
             slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
             GUI.Style.Apply(slider, "Slider", this);
+            this.showFrame = showFrame;
             this.barSize = barSize;
+            Enabled = true;
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible) { return; }
 
             if (ProgressGetter != null)
             {
@@ -73,20 +76,31 @@ namespace Barotrauma
             }
 
             Rectangle sliderRect = new Rectangle(
-                    frame.Rect.X,
-                    (int)(frame.Rect.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
-                    isHorizontal ? (int)((frame.Rect.Width) * barSize) : frame.Rect.Width,
-                    isHorizontal ? (int)(frame.Rect.Height) : (int)(frame.Rect.Height * barSize));
-            
-            frame.Visible = true;
+                    frame.Rect.X + (int)style.Padding.X,
+                    (int)(frame.Rect.Y + (int)style.Padding.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
+                    isHorizontal ? (int)((frame.Rect.Width - style.Padding.X - style.Padding.Z) * barSize) : frame.Rect.Width,
+                    isHorizontal ? (int)(frame.Rect.Height - style.Padding.Y - style.Padding.W) : (int)(frame.Rect.Height * barSize));
+
+            sliderRect.Width = Math.Max(sliderRect.Width, 1);
+            sliderRect.Height = Math.Max(sliderRect.Height, 1);
+
+            slider.RectTransform.AbsoluteOffset = new Point((int)style.Padding.X, (int)style.Padding.Y);
+            slider.RectTransform.MaxSize = new Point(
+                (int)(Rect.Width - style.Padding.X + style.Padding.Z), 
+                (int)(Rect.Height - style.Padding.Y + style.Padding.W));
+            frame.Visible = showFrame;
             slider.Visible = true;
-            if (AutoDraw)
+
+            if (showFrame)
             {
-                frame.DrawAuto(spriteBatch);
-            }
-            else
-            {
-                frame.DrawManually(spriteBatch);
+                if (AutoDraw)
+                {
+                    frame.DrawAuto(spriteBatch);
+                }
+                else
+                {
+                    frame.DrawManually(spriteBatch);
+                }
             }
 
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
@@ -97,7 +111,7 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
-            Color currColor = GetCurrentColor(state);
+            Color currColor = GetColor(State);
 
             slider.Color = currColor;
             if (AutoDraw)

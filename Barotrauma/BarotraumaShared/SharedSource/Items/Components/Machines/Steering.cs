@@ -58,19 +58,24 @@ namespace Barotrauma.Items.Components
             get { return autoPilot; }
             set
             {
-                if (value == autoPilot) return;
+                if (value == autoPilot) { return; }
                 autoPilot = value;
 #if CLIENT
-                autopilotTickBox.Selected = autoPilot;
-                manualTickBox.Selected = !autoPilot;
-                maintainPosTickBox.Enabled = autoPilot;
-                levelEndTickBox.Enabled = autoPilot;
-                levelStartTickBox.Enabled = autoPilot;
+                UpdateGUIElements();
 #endif
                 if (autoPilot)
                 {
-                    if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    if (pathFinder == null)
+                    {
+                        pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                    }
                     MaintainPos = true;
+                    if (posToMaintain == null)
+                    {
+                        posToMaintain = controlledSub != null ?
+                            controlledSub.WorldPosition :
+                            item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
+                    }
                 }
                 else
                 {
@@ -272,7 +277,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (autoPilot)
+            if (AutoPilot)
             {
                 UpdateAutoPilot(deltaTime);
                 float userSkill = 0.0f;
@@ -317,7 +322,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateAutoPilot(float deltaTime)
         {
-            if (controlledSub == null) return;
+            if (controlledSub == null) { return; }
             if (posToMaintain != null)
             {
                 Vector2 steeringVel = GetSteeringVelocity((Vector2)posToMaintain, 10.0f);

@@ -1,9 +1,6 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -14,22 +11,12 @@ namespace Barotrauma
         private float conversationTimer, conversationLineTimer;
         private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
-        //orders that have not been issued to a specific character
-        private List<Pair<Order, float>> activeOrders = new List<Pair<Order, float>>();
-        public List<Pair<Order, float>> ActiveOrders
-        {
-            get { return activeOrders; }
-        }
-        
-        private bool isSinglePlayer;
-        public bool IsSinglePlayer
-        {
-            get { return isSinglePlayer; }
-        }
+        public List<Pair<Order, float>> ActiveOrders { get; } = new List<Pair<Order, float>>();
+        public bool IsSinglePlayer { get; private set; }
 
         public CrewManager(bool isSinglePlayer)
         {
-            this.isSinglePlayer = isSinglePlayer;
+            IsSinglePlayer = isSinglePlayer;
             conversationTimer = 5.0f;
 
             InitProjectSpecific();
@@ -45,7 +32,7 @@ namespace Barotrauma
                 return false;
             }
 
-            Pair<Order, float> existingOrder = activeOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
+            Pair<Order, float> existingOrder = ActiveOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
             if (existingOrder != null)
             {
                 existingOrder.Second = fadeOutTime;
@@ -53,23 +40,23 @@ namespace Barotrauma
             }
             else
             {
-                activeOrders.Add(new Pair<Order, float>(order, fadeOutTime));
+                ActiveOrders.Add(new Pair<Order, float>(order, fadeOutTime));
                 return true;
             }
         }
 
         public void RemoveOrder(Order order)
         {
-            activeOrders.RemoveAll(o => o.First == order);
+            ActiveOrders.RemoveAll(o => o.First == order);
         }
 
         public void Update(float deltaTime)
         {
-            foreach (Pair<Order, float> order in activeOrders)
+            foreach (Pair<Order, float> order in ActiveOrders)
             {
                 order.Second -= deltaTime;
             }
-            activeOrders.RemoveAll(o => o.Second <= 0.0f);
+            ActiveOrders.RemoveAll(o => o.Second <= 0.0f);
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);

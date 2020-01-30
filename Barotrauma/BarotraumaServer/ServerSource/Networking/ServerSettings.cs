@@ -48,7 +48,7 @@ namespace Barotrauma.Networking
             outMsg.Write(ServerMessageText);
             outMsg.Write((byte)MaxPlayers);
             outMsg.Write(HasPassword);
-            outMsg.Write(isPublic);
+            outMsg.Write(IsPublic);
             outMsg.WritePadBits();
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
@@ -186,12 +186,11 @@ namespace Barotrauma.Networking
             SerializableProperty.SerializeProperties(this, doc.Root, true);
 
             doc.Root.SetAttributeValue("name", ServerName);
-            doc.Root.SetAttributeValue("public", isPublic);
+            doc.Root.SetAttributeValue("public", IsPublic);
             doc.Root.SetAttributeValue("port", Port);
 #if USE_STEAM
             doc.Root.SetAttributeValue("queryport", QueryPort);
 #endif
-            doc.Root.SetAttributeValue("maxplayers", maxPlayers);
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
 
             doc.Root.SetAttributeValue("autorestart", autoRestart);

@@ -30,8 +30,7 @@ namespace Barotrauma
                 _toggleOpen = GameMain.Config.ChatOpen = value;
                 foreach (GUIComponent child in ToggleButton.Children)
                 {
-                    child.SpriteEffects = _toggleOpen == (HUDLayoutSettings.ChatBoxAlignment == Alignment.Right) ?
-                      SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                    child.SpriteEffects = _toggleOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
                 }
             }
         }
@@ -58,6 +57,11 @@ namespace Barotrauma
 
         private GUIButton showNewMessagesButton;
 
+        private GUIFrame hideableElements;
+
+        public const int ToggleButtonWidthRaw = 30;
+        private int popupMessageOffset;
+
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
             this.IsSinglePlayer = isSinglePlayer;
@@ -69,9 +73,12 @@ namespace Barotrauma
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
-            int toggleButtonWidth = (int)(30 * GUI.Scale);
+            int toggleButtonWidth = (int)(ToggleButtonWidthRaw * GUI.Scale);
             GUIFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ChatBoxArea, parent.RectTransform), style: null);
-            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), GUIFrame.RectTransform), style: "ChatBox");
+
+            hideableElements = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: null);
+
+            var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), hideableElements.RectTransform), style: "ChatBox");
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
 
             ToggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
@@ -83,7 +90,7 @@ namespace Barotrauma
                 return true;
             };
 
-            InputBox = new GUITextBox(new RectTransform(new Vector2(0.925f, 0.125f), GUIFrame.RectTransform, Anchor.BottomLeft),
+            InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.125f), hideableElements.RectTransform, Anchor.BottomLeft),
                 style: "ChatTextBox")
             {
                 Font = GUI.SmallFont,
@@ -98,12 +105,14 @@ namespace Barotrauma
                 //gui.Text = "";
             };
 
-            var chatSendButton = new GUIButton(new RectTransform(new Vector2(0.075f, 0.125f), GUIFrame.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, -0.01f) }, ">");
+            var chatSendButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.7f), InputBox.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleRight");
             chatSendButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 InputBox.OnEnterPressed(InputBox, InputBox.Text);
                 return true;
             };
+            chatSendButton.RectTransform.AbsoluteOffset = new Point((int)(InputBox.Rect.Height * 0.15f), 0);
+            InputBox.TextBlock.RectTransform.MaxSize = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f), int.MaxValue);
 
             showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.125f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.125f) }, TextManager.Get("chat.shownewmessages"));
             showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -278,6 +287,11 @@ namespace Barotrauma
             GUI.PlayUISound(soundType);
         }
 
+        public void SetVisibility(bool visible)
+        {
+            GUIFrame.Parent.Visible = visible;
+        }
+
         private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)
         {
             float timer = 0.0f;
@@ -301,18 +315,14 @@ namespace Barotrauma
                 HUDLayoutSettings.ChatBoxArea.Y / (float)GameMain.GraphicsHeight);
             GUIFrame.RectTransform.NonScaledSize = HUDLayoutSettings.ChatBoxArea.Size;
 
-            int toggleButtonWidth = (int)(30 * GUI.Scale);
-            //make room for the toggle button
-            if (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left)
-            {
-                GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
-            }
+            int toggleButtonWidth = (int)(ToggleButtonWidthRaw * GUI.Scale);
             GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
+            GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
 
             ToggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
-            ToggleButton.RectTransform.AbsoluteOffset = HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ?
-                new Point(HUDLayoutSettings.ChatBoxArea.X, HUDLayoutSettings.ChatBoxArea.Y) :
-                new Point(HUDLayoutSettings.ChatBoxArea.Right - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
+            ToggleButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.ChatBoxArea.Left - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
+
+            popupMessageOffset = ToggleButton.Rect.Width + GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width;
         }
 
         public void Update(float deltaTime)
@@ -347,7 +357,6 @@ namespace Barotrauma
                 var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
                 if (popupMsg != null)
                 {
-                    int offset = -popupMsg.Rect.Width - ToggleButton.Rect.Width * 2 - (int)(50 * GUI.Scale) - (GUIFrame.Rect.X - GameMain.GraphicsWidth);
                     popupMsg.Visible = true;
                     //popup messages appear and disappear faster when there's more pending messages
                     popupMessageTimer += deltaTime * popupMessages.Count * popupMessages.Count;
@@ -355,7 +364,7 @@ namespace Barotrauma
                     {
                         //move the message out of the screen and delete it
                         popupMsg.RectTransform.ScreenSpaceOffset =
-                            new Point((int)MathHelper.SmoothStep(offset, 10, (popupMessageTimer - PopupMessageDuration) * 5.0f), 0);
+                            new Point((int)MathHelper.SmoothStep(popupMessageOffset, 10, (popupMessageTimer - PopupMessageDuration) * 5.0f), 0);
                         if (popupMessageTimer > PopupMessageDuration + 1.0f)
                         {
                             popupMessageTimer = 0.0f;
@@ -366,15 +375,16 @@ namespace Barotrauma
                     else
                     {
                         //move the message on the screen
-                        popupMsg.RectTransform.ScreenSpaceOffset = new Point(
-                            (int)MathHelper.SmoothStep(0, offset, popupMessageTimer * 5.0f), 0);
+                        popupMsg.RectTransform.ScreenSpaceOffset = new Point( 
+                            (int)MathHelper.SmoothStep(0, popupMessageOffset, popupMessageTimer * 5.0f), 0);
                     }
                 }
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
-            int hiddenBoxOffset = GUIFrame.Rect.Width + ToggleButton.Rect.Width;
+            int hiddenBoxOffset = -(GUIFrame.Rect.Width);
             GUIFrame.RectTransform.AbsoluteOffset =
-                new Point((int)MathHelper.SmoothStep(hiddenBoxOffset * (HUDLayoutSettings.ChatBoxAlignment == Alignment.Left ? -1 : 1), 0, openState), 0);
+                new Point((int)MathHelper.SmoothStep(hiddenBoxOffset, 0, openState), 0);
+            hideableElements.Visible = openState > 0.0f;
         }
     }
 }

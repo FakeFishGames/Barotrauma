@@ -1789,7 +1789,7 @@ namespace Barotrauma
                 }
             }
 
-            item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir);
+            item.SetTransform(currItemPos, itemAngle + itemAngleRelativeToHoldAngle * Dir, setPrevTransform: false);
 
             if (!isClimbing)
             {

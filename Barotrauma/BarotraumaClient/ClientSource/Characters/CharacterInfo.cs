@@ -12,7 +12,7 @@ namespace Barotrauma
     {
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.7f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
             {
                 Stretch = true,
                 RelativeSpacing = 0.03f
@@ -103,7 +103,7 @@ namespace Barotrauma
             {
                 GUI.AddMessage(
                     "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
-                    Color.Green,
+                    GUI.Style.Green,
                     textPopupPos,
                     Vector2.UnitY * 10.0f);
             }
@@ -111,7 +111,7 @@ namespace Barotrauma
             {
                 GUI.AddMessage(
                     "+10 XP",
-                    Color.Green,
+                    GUI.Style.Green,
                     textPopupPos,
                     Vector2.UnitY * 10.0f);
             }
@@ -121,7 +121,7 @@ namespace Barotrauma
                 GUI.AddMessage(
                     TextManager.GetWithVariables("SkillIncreased", new string[3] { "[name]", "[skillname]", "[newlevel]" },
                     new string[3] { Name, TextManager.Get("SkillName." + skillIdentifier), ((int)newLevel).ToString() },
-                    new bool[3] { false, true, false }), Color.Green);
+                    new bool[3] { false, true, false }), GUI.Style.Green);
             }
         }
 
@@ -160,7 +160,7 @@ namespace Barotrauma
             sprite.SourceRect = new Rectangle(location, sprite.SourceRect.Size);
         }
 
-        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth)
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth, bool flip = false)
         {
             float backgroundScale = 1;
             if (PortraitBackground != null)
@@ -177,13 +177,13 @@ namespace Barotrauma
                 {
                     Portrait.SourceRect = new Rectangle(CalculateOffset(Portrait, Head.SheetIndex.Value.ToPoint()), Portrait.SourceRect.Size);
                 }
-                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: SpriteEffects.FlipHorizontally);
+                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
                 if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
                     foreach (var attachment in AttachmentSprites)
                     {
-                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, SpriteEffects.FlipHorizontally);
+                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
                         depthStep += depthStep;
                     }
                 }
@@ -211,6 +211,12 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        public void DrawJobIcon(SpriteBatch spriteBatch)
+        {
+            if (jobIcon == null) return;
+            jobIcon.Draw(spriteBatch, jobIconPos, Job.Prefab.UIColor, scale: .5f * GUI.Scale);
         }
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)

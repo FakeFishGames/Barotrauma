@@ -2,15 +2,30 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Xml.Linq;
 using System.Linq;
 
 namespace Barotrauma
 {
+    public enum OrderCategory
+    {
+        Emergency,
+        Movement,
+        Power,
+        Maintenance,
+        Operate,
+        Undefined
+    }
+
     class Order
     {
         public static Dictionary<string, Order> Prefabs { get; private set; }
+        public static Dictionary<OrderCategory, Sprite> OrderCategoryIcons { get; private set; }
+        public static Sprite StartNode { get; private set; }
+        public static Sprite ShortcutNode { get; private set; }
+        public static Sprite ExpandNode { get; private set; }
+        public static Sprite NodeContainer { get; private set; }
+        public static Sprite CommandBackground { get; private set; }
         public static List<Order> PrefabList { get; private set; }
         public static Order GetPrefab(string identifier)
         {
@@ -49,15 +64,20 @@ namespace Barotrauma
         public Controller ConnectedController;
 
         public Character OrderGiver;
-        
+
+        public readonly OrderCategory Category;
+
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
         public readonly string[] OptionNames;
 
+        public readonly Dictionary<string, Sprite> OptionSprites;
+
         static Order()
         {
             Prefabs = new Dictionary<string, Order>();
+            OrderCategoryIcons = new Dictionary<OrderCategory, Sprite>();
 
             foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
             {
@@ -72,11 +92,11 @@ namespace Barotrauma
                 }
                 foreach (XElement sourceElement in mainElement.Elements())
                 {
-                    var orderElement = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
-                    string name = orderElement.Name.ToString();
+                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
+                    string name = element.Name.ToString();
                     if (name.Equals("order", StringComparison.OrdinalIgnoreCase))
                     {
-                        string identifier = orderElement.GetAttributeString("identifier", null);
+                        string identifier = element.GetAttributeString("identifier", null);
                         if (string.IsNullOrWhiteSpace(identifier))
                         {
                             DebugConsole.ThrowError($"Error in file {file.Path}: The order element '{name}' does not have an identifier! All orders must have a unique identifier.");
@@ -95,9 +115,57 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-                        var newOrder = new Order(orderElement);
+                        var newOrder = new Order(element);
                         newOrder.Prefab = newOrder;
                         Prefabs.Add(identifier, newOrder);
+                    }
+                    else if (name.Equals("ordercategory", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var category = (OrderCategory)Enum.Parse(typeof(OrderCategory), element.GetAttributeString("category", "undefined"), true);
+                        if (OrderCategoryIcons.TryGetValue(category, out Sprite duplicate))
+                        {
+                            if (allowOverriding || sourceElement.IsOverride())
+                            {
+                                DebugConsole.NewMessage($"Overriding an existing icon for the '{category}' order category with another one defined in '{file}'", Color.Yellow);
+                                OrderCategoryIcons.Remove(category);
+                            }
+                            else
+                            {
+                                DebugConsole.ThrowError($"Error in file {file}: Duplicate element for the '{category}' order category found in '{file}'! All order categories must be unique. Use <override></override> tags to override an order category.");
+                                continue;
+                            }
+                        }
+                        var spriteElement = element.GetChildElement("sprite");
+                        if (spriteElement != null)
+                        {
+                            var sprite = new Sprite(spriteElement, lazyLoad: true);
+                            OrderCategoryIcons.Add(category, sprite);
+                        }
+                    }
+                    else
+                    {
+                        var spriteElement = element.GetChildElement("sprite");
+                        if (spriteElement != null)
+                        {
+                            switch (name.ToLowerInvariant())
+                            {
+                                case "startnode":
+                                    StartNode = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                                case "shortcutnode":
+                                    ShortcutNode = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                                case "expandnode":
+                                    ExpandNode = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                                case "nodecontainer":
+                                    NodeContainer = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                                case "commandbackground":
+                                    CommandBackground = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                            }
+                        }
                     }
                 }
             }
@@ -130,6 +198,7 @@ namespace Barotrauma
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
+            Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), orderElement.GetAttributeString("category", "undefined"), true);
 
             string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
             if (translatedOptionNames == null)
@@ -152,13 +221,24 @@ namespace Barotrauma
                 OptionNames = Options;
             }
 
-            foreach (XElement subElement in orderElement.Elements())
+            var spriteElement = orderElement.GetChildElement("sprite");
+            if (spriteElement != null)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                SymbolSprite = new Sprite(spriteElement, lazyLoad: true);
+            }
+
+            OptionSprites = new Dictionary<string, Sprite>();
+            if (Options != null && Options.Length > 0)
+            {
+                var optionSpriteElements = orderElement.GetChildElement("optionsprites")?.GetChildElements("sprite");
+                if (optionSpriteElements != null && optionSpriteElements.Any())
                 {
-                    case "sprite":
-                        SymbolSprite = new Sprite(subElement, lazyLoad: true);
-                        break;
+                    for (int i = 0; i < Options.Length; i++)
+                    {
+                        if (i >= optionSpriteElements.Count()) { break; };
+                        var sprite = new Sprite(optionSpriteElements.ElementAt(i), lazyLoad: true);
+                        OptionSprites.Add(Options[i], sprite);
+                    }
                 }
             }
         }
@@ -226,5 +306,4 @@ namespace Barotrauma
             return msg;
         }
     }
-
 }

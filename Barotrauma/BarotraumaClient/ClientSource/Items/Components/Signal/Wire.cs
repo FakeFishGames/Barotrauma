@@ -11,6 +11,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
+        public static Color higlightColor = Color.LightGreen;
+        public static Color editorHighlightColor = Color.Yellow;
+        public static Color editorSelectedColor = Color.Red;
+
         partial class WireSection
         {
             public void Draw(SpriteBatch spriteBatch, Wire wire, Color color, Vector2 offset, float depth, float width = 0.3f)
@@ -105,14 +109,14 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, Color.Gold, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
             else if (item.IsSelected)
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, Color.Red, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, editorSelectedColor, drawOffset, depth + 0.00001f, 0.7f);
                 }
             }
 
@@ -183,7 +187,7 @@ namespace Barotrauma.Items.Components
 
                 if ((highlightedNodeIndex == i && item.IsHighlighted) || (selectedNodeIndex == i && item.IsSelected))
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-10, -10), new Vector2(20, 20), Color.Red, false, 0.0f);
+                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-10, -10), new Vector2(20, 20), editorHighlightColor, false, 0.0f);
                 }
 
                 if (item.IsSelected)
@@ -206,7 +210,7 @@ namespace Barotrauma.Items.Components
             WireSection.Draw(
                 spriteBatch, this,
                 start, endPos,
-                Color.Orange, depth + 0.00001f, 0.2f);
+                GUI.Style.Orange, depth + 0.00001f, 0.2f);
 
             WireSection.Draw(
                 spriteBatch, this,

@@ -510,7 +510,7 @@ namespace Barotrauma
                            MapGenerationParams.Instance.LargeLevelConnectionLength,
                            connection.Length);
 
-                        connectionColor = ToolBox.GradientLerp(sizeFactor, Color.LightGreen, Color.Orange, Color.Red);
+                        connectionColor = ToolBox.GradientLerp(sizeFactor, Color.LightGreen, GUI.Style.Orange, GUI.Style.Red);
                     }
                     else
                     {
@@ -667,10 +667,10 @@ namespace Barotrauma
                 pos.Y -= 5 * zoom;
                 Vector2 size = GUI.LargeFont.MeasureString(location.Name);
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)pos.X - 30, (int)pos.Y, (int)size.X + 60, (int)(size.Y + 25 * GUI.Scale)), Color.Black * hudOpenState * 0.7f);
+                    spriteBatch, new Rectangle((int)pos.X - 30, (int)(pos.Y - 10), (int)size.X + 60, (int)(size.Y + 50 * GUI.Scale)), Color.Black * hudOpenState * 0.7f);
                 GUI.DrawString(spriteBatch, pos,
                     location.Name, Color.White * hudOpenState * 1.5f, font: GUI.LargeFont);
-                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * 25 * GUI.Scale,
+                GUI.DrawString(spriteBatch, pos + Vector2.UnitY * size.Y * 0.8f,
                     location.Type.Name, Color.White * hudOpenState * 1.5f);
             }
 

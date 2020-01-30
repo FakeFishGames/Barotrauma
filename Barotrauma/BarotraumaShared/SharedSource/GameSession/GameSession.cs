@@ -288,7 +288,7 @@ namespace Barotrauma
 
 #if CLIENT
             if (GameMode is SinglePlayerCampaign) { SteamAchievementManager.OnBiomeDiscovered(level.Biome); }
-            roundSummary = new RoundSummary(this);
+            RoundSummary = new RoundSummary(this);
 
             GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
 
@@ -325,9 +325,9 @@ namespace Barotrauma
                 (Mission == null ? "None" : Mission.GetType().ToString()));
 
 #if CLIENT
-            if (roundSummary != null)
+            if (RoundSummary != null)
             {
-                GUIFrame summaryFrame = roundSummary.CreateSummaryFrame(endMessage);
+                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(endMessage);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
                 var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), summaryFrame.Children.First().Children.First().FindChild("buttonarea").RectTransform),
                     TextManager.Get("OK"))

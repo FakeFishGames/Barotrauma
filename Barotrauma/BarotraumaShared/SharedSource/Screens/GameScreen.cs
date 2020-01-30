@@ -178,11 +178,20 @@ namespace Barotrauma
                 Lights.LightManager.ViewTarget != null)
             {
                 Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
-                if (Lights.LightManager.ViewTarget == Character.Controlled && CharacterHealth.OpenHealthWindow != null)
+                if (Lights.LightManager.ViewTarget == Character.Controlled &&
+                    (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen))
                 {
-                    Vector2 screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?
-                        new Vector2(GameMain.GraphicsWidth * 0.75f, GameMain.GraphicsHeight * 0.5f) :
-                        new Vector2(GameMain.GraphicsWidth * 0.25f, GameMain.GraphicsHeight * 0.5f);
+                    Vector2 screenTargetPos = new Vector2(0.0f, GameMain.GraphicsHeight * 0.5f);
+                    if (CrewManager.IsCommandInterfaceOpen)
+                    {
+                        screenTargetPos.X = GameMain.GraphicsWidth * 0.5f;
+                    }
+                    else
+                    {
+                        screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?
+                            new Vector2(GameMain.GraphicsWidth * 0.75f, GameMain.GraphicsHeight * 0.5f) :
+                            new Vector2(GameMain.GraphicsWidth * 0.25f, GameMain.GraphicsHeight * 0.5f);
+                    }
                     Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
                     screenOffset.Y = -screenOffset.Y;
                     targetPos -= screenOffset / cam.Zoom;

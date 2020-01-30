@@ -41,7 +41,7 @@ namespace Barotrauma
         /// </summary>
         public bool isFilled;
         public int inputAreaMargin;
-        public Color color = Color.Red;
+        public Color color = GUI.Style.Red;
         public Color? secondaryColor;
         public Color textColor = Color.White;
         public Color textBackgroundColor = Color.Black * 0.5f;

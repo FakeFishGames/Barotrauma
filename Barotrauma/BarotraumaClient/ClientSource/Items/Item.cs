@@ -52,7 +52,7 @@ namespace Barotrauma
                 if (itemInUseWarning == null)
                 {
                     itemInUseWarning = new GUITextBlock(new RectTransform(new Point(10), GUI.Canvas), "", 
-                        textColor: Color.Orange, color: Color.Black, 
+                        textColor: GUI.Style.Orange, color: Color.Black, 
                         textAlignment: Alignment.Center, style: "OuterGlow");
                 }
                 return itemInUseWarning;
@@ -195,7 +195,7 @@ namespace Barotrauma
             if (!Visible || (!editing && HiddenInGame)) return;
             if (editing && !ShowItems) return;
             
-            Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? Color.Orange : GetSpriteColor();
+            Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUI.Style.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
             
             BrokenItemSprite fadeInBrokenSprite = null;
@@ -364,7 +364,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch,
                         rectWorldPos,
                         new Vector2(transformedTrigger.Width, transformedTrigger.Height),
-                        Color.Green,
+                        GUI.Style.Green,
                         false,
                         0,
                         (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
@@ -376,7 +376,7 @@ namespace Barotrauma
             foreach (MapEntity e in linkedTo)
             {
                 bool isLinkAllowed = prefab.IsLinkAllowed(e.prefab);
-                Color lineColor = Color.Red * 0.5f;
+                Color lineColor = GUI.Style.Red * 0.5f;
                 if (isLinkAllowed)
                 {
                     lineColor = e is Item i && (DisplaySideBySideWhenLinked || i.DisplaySideBySideWhenLinked) ? Color.Purple * 0.5f : Color.LightGreen * 0.5f;
@@ -525,32 +525,19 @@ namespace Barotrauma
                 {
                     var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
                     var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
-                    if (AllowedLinks.None())
-                    {
-                        itemsText.Text += TextManager.Get("None");
-                    }
-                    else
-                    {
-                        for (int i = 0; i < AllowedLinks.Count; i++)
-                        {
-                            itemsText.Text += AllowedLinks[i];
-                            if (i < AllowedLinks.Count - 1)
-                            {
-                                itemsText.Text += ", ";
-                            }
-                        }
-                    }
+                    string allowedItems = AllowedLinks.None() ?  TextManager.Get("None") :string.Join(", ", AllowedLinks);
+                    itemsText.Text = TextManager.AddPunctuation(':', itemsText.Text, allowedItems);
                     itemEditor.AddCustomContent(linkText, 1);
                     itemEditor.AddCustomContent(itemsText, 2);
-                    linkText.TextColor = Color.Yellow;
-                    itemsText.TextColor = Color.Yellow;
+                    linkText.TextColor = GUI.Style.Orange;
+                    itemsText.TextColor = GUI.Style.Orange;
                 }
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f
                 };
-                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                     OnClicked = (button, data) =>
@@ -559,7 +546,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                     OnClicked = (button, data) =>
@@ -570,7 +557,7 @@ namespace Barotrauma
                 };
                 if (Sprite != null)
                 {
-                    var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"));
+                    var reloadTextureButton = new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall");
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
                         Sprite.ReloadXML();
@@ -578,7 +565,7 @@ namespace Barotrauma
                         return true;
                     };
                 }
-                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ResetToPrefab"))
+                new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ResetToPrefab"), style: "GUIButtonSmall")
                 {
                     OnClicked = (button, data) =>
                     {
@@ -587,6 +574,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                buttonContainer.RectTransform.MinSize = new Point(0, buttonContainer.RectTransform.Children.Max(c => c.MinSize.Y));
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Select(b => ((GUIButton)b).TextBlock));
             }
@@ -595,15 +583,17 @@ namespace Barotrauma
             {
                 if (inGame)
                 {
-                    if (!ic.AllowInGameEditing) continue;
-                    if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) continue;
+                    if (!ic.AllowInGameEditing) { continue; }
+                    if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) { continue; }
                 }
                 else
                 {
-                    if (ic.requiredItems.Count == 0 && ic.DisabledRequiredItems.Count == 0 && SerializableProperty.GetProperties<Editable>(ic).Count == 0) continue;
+                    if (ic.requiredItems.Count == 0 && ic.DisabledRequiredItems.Count == 0 && SerializableProperty.GetProperties<Editable>(ic).Count == 0) { continue; }
                 }
 
-                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame);
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listBox.Content.RectTransform), style: "HorizontalLine");
+
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUI.SubHeadingFont);
                 componentEditor.Children.First().Color = Color.Black * 0.7f;
 
                 if (inGame)
@@ -625,7 +615,7 @@ namespace Barotrauma
 
                 foreach (RelatedItem relatedItem in requiredItems)
                 {
-                    var textBlock = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)),
+                    var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)),
                         relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
                     {
                         Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
@@ -637,6 +627,7 @@ namespace Barotrauma
                         Font = GUI.SmallFont,
                         Text = relatedItem.JoinedIdentifiers
                     };
+                    textBlock.RectTransform.Resize(new Point(textBlock.Rect.Width, namesBox.RectTransform.MinSize.Y));
 
                     namesBox.OnDeselected += (textBox, key) =>
                     {
@@ -713,17 +704,17 @@ namespace Barotrauma
             if (GameMain.GameSession?.CrewManager != null && Screen.Selected == GameMain.GameScreen)
             {
                 int disallowedPadding = (int)(50 * GUI.Scale);
-                disallowedAreas.Add(GameMain.GameSession.CrewManager.GetCharacterListArea());
+                disallowedAreas.Add(GameMain.GameSession.CrewManager.GetActiveCrewArea());
                 disallowedAreas.Add(new Rectangle(
                     HUDLayoutSettings.ChatBoxArea.X - disallowedPadding, HUDLayoutSettings.ChatBoxArea.Y, 
                     HUDLayoutSettings.ChatBoxArea.Width + disallowedPadding, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
-            GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-                new Rectangle(
-                    20, 20, 
-                    GameMain.GraphicsWidth - 40, 
-                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
+            //GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
+            //    new Rectangle(
+            //        0, 20, 
+            //        GameMain.GraphicsWidth, 
+            //        HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -1125,10 +1116,10 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Exception in PhysicsBody.Enabled = false (" + body.PhysEnabled + ")", e);
-                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), Color.Red);
-                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
-                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
-                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                    if (body.UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + body.UserData.GetType().ToString(), GUI.Style.Red);
+                    if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", GUI.Style.Red);
+                    else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", GUI.Style.Red);
+                    if (body.FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", GUI.Style.Red);
                 }
             }
 

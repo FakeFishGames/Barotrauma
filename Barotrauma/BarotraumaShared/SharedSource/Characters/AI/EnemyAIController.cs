@@ -89,6 +89,9 @@ namespace Barotrauma
         private readonly float memoryFadeTime = 0.5f;
         private readonly float avoidTime = 3;
 
+        //Has the character been attacked since the last Update.
+        private bool wasAttacked;
+
         private float avoidTimer;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
@@ -231,7 +234,15 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
+            if (wasAttacked)
+            {
+                LatchOntoAI?.DeattachFromBody();
+                Character.AnimController.ReleaseStuckLimbs();
+                wasAttacked = false;
+            }
+
             if (DisableEnemyAI) { return; }
+
             base.Update(deltaTime);
             bool ignorePlatforms = (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
 
@@ -630,7 +641,7 @@ namespace Barotrauma
                 if (pickable != null)
                 {
                     var target = pickable.Picker?.AiTarget;
-                    if (target != null)
+                    if (target?.Entity != null && !target.Entity.Removed)
                     {
                         SelectedAiTarget = target;
                     }
@@ -1224,14 +1235,13 @@ namespace Barotrauma
             }
             return isDisabled;
         }
-
+        
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float reactionTime = Rand.Range(0.1f, 0.3f);
             updateTargetsTimer = Math.Min(updateTargetsTimer, reactionTime);
-            
-            LatchOntoAI?.DeattachFromBody();
-            Character.AnimController.ReleaseStuckLimbs();
+
+            wasAttacked = true;
 
             if (attacker == null || attacker.AiTarget == null) { return; }
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -44,9 +45,9 @@ namespace Barotrauma.Networking
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
-                if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) continue;
+                if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) { continue; }
 
-                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), ((GUIListBox)banFrame).Content.RectTransform) { MinSize = new Point(0, 70) }, style: null)
+                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)banFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
                 {
                     UserData = banFrame
                 };
@@ -54,42 +55,56 @@ namespace Barotrauma.Networking
                 var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), playerFrame.RectTransform, Anchor.Center))
                 {
                     Stretch = true,
-                    RelativeSpacing = 0.05f
+                    RelativeSpacing = 0.05f,
+                    CanBeFocused = true
+                };
+
+                var topArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform), 
+                    isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.02f
                 };
 
                 string ip = bannedPlayer.IP;
                 if (localRangeBans.Contains(bannedPlayer.UniqueIdentifier)) ip = ToRange(ip);
-                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), paddedPlayerFrame.RectTransform),
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), topArea.RectTransform),
                     bannedPlayer.Name + " (" + ip + ")");
+                textBlock.RectTransform.MinSize = new Point(textBlock.Rect.Width, 0);
 
-                var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), paddedPlayerFrame.RectTransform, Anchor.TopRight), TextManager.Get("BanListRemove"))
-                {
-                    UserData = bannedPlayer,
-                    IgnoreLayoutGroups = true,
-                    OnClicked = RemoveBan
-                };
                 if (bannedPlayer.IP.IndexOf(".x") <= -1)
                 {
-                    var rangeBanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), paddedPlayerFrame.RectTransform, Anchor.TopRight) { RelativeOffset = new Vector2(0.22f, 0.0f) }, TextManager.Get("BanRange"))
+                    var rangeBanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), topArea.RectTransform), 
+                        TextManager.Get("BanRange"), style: "GUIButtonSmall")
                     {
                         UserData = bannedPlayer,
-                        IgnoreLayoutGroups = true,
                         OnClicked = RangeBan
                     };
                 }
+                var removeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.4f), topArea.RectTransform), 
+                    TextManager.Get("BanListRemove"), style: "GUIButtonSmall")
+                {
+                    UserData = bannedPlayer,
+                    OnClicked = RemoveBan
+                };
+                topArea.RectTransform.MinSize = new Point(0, (int)topArea.RectTransform.Children.Max(c => c.Rect.Height * 1.25f));
 
-                new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.0f), paddedPlayerFrame.RectTransform),
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     bannedPlayer.ExpirationTime == null ? 
                         TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
                     font: GUI.SmallFont);
 
-                var reasonText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 0.0f), paddedPlayerFrame.RectTransform),
+                var reasonText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("BanReason") + " " +
-                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : ToolBox.LimitString(bannedPlayer.Reason, GUI.SmallFont, 170)),
+                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : bannedPlayer.Reason),
                     font: GUI.SmallFont, wrap: true)
                 {
                     ToolTip = bannedPlayer.Reason
                 };
+
+                paddedPlayerFrame.Recalculate();
+
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), ((GUIListBox)banFrame).Content.RectTransform), style: "HorizontalLine");
             }
 
             return banFrame;
