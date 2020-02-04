@@ -2423,20 +2423,42 @@ namespace Barotrauma.Networking
             //because tab is used for autocompleting console commands
             if (msgBox != null)
             {
-                if ((PlayerInput.KeyHit(InputType.Chat) || PlayerInput.KeyHit(InputType.RadioChat)) &&
-                    GUI.KeyboardDispatcher.Subscriber == null)
+                if (GUI.KeyboardDispatcher.Subscriber == null)                
                 {
-                    if (msgBox.Selected)
+                    bool chatKeyHit = PlayerInput.KeyHit(InputType.Chat);
+                    bool radioKeyHit = PlayerInput.KeyHit(InputType.RadioChat);
+
+                    if (chatKeyHit || radioKeyHit)
                     {
-                        msgBox.Text = "";
-                        msgBox.Deselect();
-                    }
-                    else
-                    {
-                        msgBox.Select();
-                        if (Screen.Selected == GameMain.GameScreen && PlayerInput.KeyHit(InputType.RadioChat))
+                        if (msgBox.Selected)
                         {
-                            msgBox.Text = "r; ";
+                            msgBox.Text = "";
+                            msgBox.Deselect();
+                        }
+                        else
+                        {
+                            if (Screen.Selected == GameMain.GameScreen)
+                            {
+                                if (chatKeyHit)
+                                {
+                                    msgBox.AddToGUIUpdateList();
+                                    ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
+                                    ChatBox.ToggleOpen = true;
+                                }
+
+                                if (radioKeyHit)
+                                {
+                                    msgBox.AddToGUIUpdateList();
+                                    ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                                    ChatBox.ToggleOpen = true;
+                                    if (!msgBox.Text.StartsWith(ChatBox.RadioChatString))
+                                    {
+                                        msgBox.Text = ChatBox.RadioChatString;
+                                    }
+                                } 
+                            }
+
+                            msgBox.Select(msgBox.Text.Length);
                         }
                     }
                 }

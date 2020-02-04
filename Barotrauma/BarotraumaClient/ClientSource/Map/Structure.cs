@@ -122,8 +122,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
             buttonContainer.RectTransform.Resize(new Point(buttonContainer.Rect.Width, buttonContainer.RectTransform.Children.Max(c => c.MinSize.Y)));
+            buttonContainer.RectTransform.IsFixedSize = true;
+            GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
             editor.AddCustomContent(buttonContainer, editor.ContentCount);
             
             PositionEditingHUD();

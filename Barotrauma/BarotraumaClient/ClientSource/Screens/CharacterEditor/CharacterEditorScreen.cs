@@ -1897,7 +1897,7 @@ namespace Barotrauma.CharacterEditor
             }
 
             // Create the areas
-            rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.CenterRight), childAnchor: Anchor.BottomRight)
+            rightArea = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 1.0f), parent: Frame.RectTransform, anchor: Anchor.CenterRight), childAnchor: Anchor.BottomRight)
             {
                 RelativeSpacing = 0.02f
             };
@@ -1917,6 +1917,14 @@ namespace Barotrauma.CharacterEditor
             CreateFileEditPanel();
             CreateOptionsPanel(toggleSize);
             CreateCharacterSelectionPanel();
+            if (rightArea.RectTransform.Children.Sum(c => c.Rect.Height) > GameMain.GraphicsHeight)
+            {
+                fileEditPanel.GetAllChildren().Where(c => c is GUIButton).ForEach(b => b.RectTransform.MinSize = ((GUIButton)b).Frame.RectTransform.MinSize = b.RectTransform.MinSize.Multiply(new Vector2(1.0f, 0.75f)));
+                fileEditPanel.RectTransform.MinSize = new Point(0, (int)(fileEditPanel.GetChild<GUILayoutGroup>().RectTransform.Children.Sum(c => c.Rect.Height) / innerScale.Y));
+                optionsPanel.GetAllChildren().Where(c => c is GUITickBox).ForEach(t => t.RectTransform.MinSize = t.RectTransform.MinSize.Multiply(new Vector2(1.0f, 0.75f)));
+                optionsPanel.RectTransform.MinSize = new Point(0, (int)(optionsPanel.GetChild<GUILayoutGroup>().RectTransform.Children.Sum(c => c.Rect.Height) / innerScale.Y));
+                rightArea.Recalculate();
+            }
 
             CreateButtonsPanel();
             CreateModesPanel(toggleSize);
@@ -2686,14 +2694,14 @@ namespace Barotrauma.CharacterEditor
             }
             var charButtons = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), parent: content.RectTransform, anchor: Anchor.BottomLeft), style: null);
             var prevCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("PreviousCharacter"));
-            prevCharacterButton.TextBlock.AutoScale = true;
+            prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             prevCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetPreviousConfigFile());
                 return true;
             };
             var nextCharacterButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), charButtons.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("NextCharacter"));
-            prevCharacterButton.TextBlock.AutoScale = true;
+            prevCharacterButton.TextBlock.AutoScaleHorizontal = true;
             nextCharacterButton.OnClicked += (b, obj) =>
             {
                 SpawnCharacter(GetNextConfigFile());
@@ -3151,7 +3159,6 @@ namespace Barotrauma.CharacterEditor
 
             public ToggleButton(RectTransform rectT, Direction dir)
             {
-                rectT.MaxSize = new Point(int.MaxValue, (int)(100 * GUI.Scale));
                 toggleButton = new GUIButton(rectT, style: "UIToggleButton")
                 {
                     OnClicked = (button, data) =>

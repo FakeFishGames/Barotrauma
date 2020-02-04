@@ -94,8 +94,8 @@ namespace Barotrauma.Items.Components
             Submarine sub = item.Submarine;
             if (IsActive && sub == null) // currently being rewired, we need to get the sub from the connections in case the wire has been taken outside
             {
-                if (connections[0] != null && connections[0].Item.Submarine != null) sub = connections[0].Item.Submarine;
-                if (connections[1] != null && connections[1].Item.Submarine != null) sub = connections[1].Item.Submarine;
+                if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
+                if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
             }
 
             if (sub != null)
@@ -253,11 +253,15 @@ namespace Barotrauma.Items.Components
                 {
                     MapEntity.DisableSelect = true;
 
-                    Submarine sub = null;
+                    Submarine sub = draggingWire.item.Submarine;
                     if (draggingWire.connections[0] != null && draggingWire.connections[0].Item.Submarine != null) sub = draggingWire.connections[0].Item.Submarine;
                     if (draggingWire.connections[1] != null && draggingWire.connections[1].Item.Submarine != null) sub = draggingWire.connections[1].Item.Submarine;
 
-                    Vector2 nodeWorldPos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition) - sub.HiddenSubPosition - sub.Position;// Nodes[(int)selectedNodeIndex];
+                    Vector2 nodeWorldPos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (sub != null)
+                    {
+                        nodeWorldPos = nodeWorldPos - sub.HiddenSubPosition - sub.Position;
+                    }
 
                     if (selectedNodeIndex.HasValue)
                     {
@@ -352,7 +356,7 @@ namespace Barotrauma.Items.Components
                 foreach (Wire w in wires)
                 {
                     Vector2 mousePos = GameMain.SubEditorScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                    if (w.item.Submarine != null) mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition);
+                    if (w.item.Submarine != null) { mousePos -= (w.item.Submarine.Position + w.item.Submarine.HiddenSubPosition); }
 
                     int highlightedNode = w.GetClosestNodeIndex(mousePos, highlighted == null ? nodeSelectDist : closestDist, out float dist);
                     if (highlightedNode > -1)

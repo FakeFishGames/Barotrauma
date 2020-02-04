@@ -1,5 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.702 (Unstable)
+v0.9.703.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Numerous UI fixes (layout improvements, improved scaling on different resolutions, fixed item interface overlaps, text overflow fixes).
+- Added Korean translation.
+- Numerous fixes to random events to better pace new level dimensions.
+- Fixed non-host clients crashing when disconnecting from the server.
+- Made giveperm/giverank commands suck less by allowing names, endpoints and SteamIDs instead of clientlist id, and allowing users to skip question prompt by adding rank or perm as a second parameter.
+- Fixes to render order oddities (structures with a depth > 0.5 always rendering behind all items, inconsistent render order between sub editor and in-game). Now structures with a depth of >= 0.9 are always behind everything (and visible through the LOS effect), and item's sprite depth is capped to 0.9.
+- Fixed engines causing crashes if MinVoltage is set to 0.
+- Fixed multiplayer campaign saves appearing in the single player "load game" menu if they're placed in the singleplayer save folder (leading to a crash if a player starts to load the save).
+- Fixed fabricator cancellation failing to be communicated under certain circumstances.
+- Fixed fabricator an deconstructor operating faster when run on overvoltage, making it possible to fabricate/deconstruct things almost instantaneously by using relays.
+- Fixed campaign store filter doing nothing.
+- Potentially a fixed race condition when autoupdating Workshop items during loading screen.
+- Fixed subinventories not opening when trying to heal an unconscious character.
+- Fixed crashing when moving the nodes of a wire that's not connected to anything in the sub editor.
+- Fixed inability to drag wires out of the wiring interface (even if they're disconnected from both ends).
+- Another fix to inventory items occasionally getting messed up in multiplayer.
+- Removed oxygenite shards as a product of deconstructing liquid oxygenite to prevent production loops.
+- Fixed sonar showing everything around the sub when sending out a directional ping and switching to passive.
+- Fixed inability to drag characters from room to another in alien ruins.
+- Fixed excessively large tonic liquid collider.
+- Fixed reactor's on/off state not being saved.
+- Fixed crashing if a modded UI style contains multiple child styles with the same name.
+- Wifi components in the respawn shuttle can't communicate with components in other submarines/shuttles.
+- Fixed wire nodes getting misplaced when flipping wires in the sub editor.
+- Fixed groups of items that include wires sometimes not getting placed at the position of the cursor when pasting them in the sub editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.702.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 - UI overhaul
@@ -25,7 +55,7 @@ v0.9.702 (Unstable)
 - Added combat priorities to alien weapons to allow bots to use them.
 
 ---------------------------------------------------------------------------------------------------------
-v0.9.701 (Unstable)
+v0.9.701.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 - Fixed SteamP2P server hosting.
@@ -45,7 +75,7 @@ v0.9.701 (Unstable)
 - Fixed sub editor allowing vanilla subs to be deleted.
 
 ---------------------------------------------------------------------------------------------------------
-v0.9.700 (Unstable)
+v0.9.700.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 - Additional logging to diagnose event/entity ID errors: server and clients write a log file with a bunch of debug information the error happens. The files can be found in the ServerLogs folder after the error has occurred. If you get log files, please send them to us to help us diagnose these bugs!

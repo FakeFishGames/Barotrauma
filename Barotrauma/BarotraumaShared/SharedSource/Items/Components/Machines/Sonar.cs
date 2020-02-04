@@ -106,16 +106,18 @@ namespace Barotrauma.Items.Components
             get => currentMode;
             set
             {
+                bool changed = currentMode != value;
+
                 currentMode = value;
                 if (value == Mode.Passive)
                 {
-                    currentPingIndex = -1;
                     if (item.AiTarget != null)
                     {
                         item.AiTarget.SectorDegrees = 360.0f;
                     }
                 }
 #if CLIENT
+                if (changed) { prevPassivePingRadius = float.MaxValue; }
                 UpdateGUIElements();
 #endif
             }
@@ -263,7 +265,7 @@ namespace Barotrauma.Items.Components
 
                 character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" }, 
                     new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
-                    new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 30);
+                    new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
 
                 //prevent the character from reporting other targets in the group
                 for (int i = 1; i < targetGroup.Value.Count; i++)

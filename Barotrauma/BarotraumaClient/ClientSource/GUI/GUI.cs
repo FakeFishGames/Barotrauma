@@ -78,19 +78,26 @@ namespace Barotrauma
         public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
-        public static float Scale
-        {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.0f * GameSettings.HUDScale; }
-        }
+        public static Vector2 ReferenceResolution => new Vector2(1920f, 1080f);
+        public static float Scale => (GameMain.GraphicsWidth / ReferenceResolution.X + GameMain.GraphicsHeight / ReferenceResolution.Y) / 2.0f * GameSettings.HUDScale;
+        public static float xScale => GameMain.GraphicsWidth / ReferenceResolution.X * GameSettings.HUDScale;
+        public static float yScale => GameMain.GraphicsHeight / ReferenceResolution.Y * GameSettings.HUDScale;
+        public static float HorizontalAspectRatio => GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight;
+        public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
+        public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
+        public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
 
-        public static float xScale
+        public static float SlicedSpriteScale
         {
-            get { return GameMain.GraphicsWidth / 1920.0f * GameSettings.HUDScale; }
-        }
-
-        public static float yScale
-        {
-            get { return GameMain.GraphicsHeight / 1080.0f * GameSettings.HUDScale; }
+            get 
+            {
+                if (Math.Abs(1.0f - Scale) < 0.1f) 
+                { 
+                    //don't scale if very close to the "reference resolution"
+                    return 1.0f; 
+                }
+                return Scale; 
+            }
         }
 
         public static GUIStyle Style;
@@ -106,7 +113,7 @@ namespace Barotrauma
         private static Sound[] sounds;
         private static bool pauseMenuOpen, settingsMenuOpen;
         public static GUIFrame PauseMenu { get; private set; }
-        private static Sprite arrow, lockIcon, checkmarkIcon, timerIcon;
+        private static Sprite arrow;
 
         public static bool HideCursor;
 
@@ -154,21 +161,6 @@ namespace Barotrauma
         {
             get { return arrow; }
         }
-
-        public static Sprite CheckmarkIcon
-        {
-            get { return checkmarkIcon; }
-        }
-
-        public static Sprite LockIcon
-        {
-            get { return lockIcon; }
-        }
-
-		public static Sprite TimerIcon 
-		{
-			get { return timerIcon; }
-		}
 
         public static Sprite InfoAreaBackground;
 
@@ -263,13 +255,10 @@ namespace Barotrauma
                 t.SetData(new Color[] { Color.White });// fill the texture with white
             });
             
-            SubmarineIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
-            arrow = new Sprite("Content/UI/IconAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
-            SpeechBubbleIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
-            BrokenIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
-            lockIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(996, 677, 21, 25), new Vector2(0.5f, 0.5f));
-            checkmarkIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(932, 398, 33, 28), new Vector2(0.5f, 0.5f));
-            timerIcon = new Sprite("Content/UI/UI_Atlas.png", new Rectangle(997, 653, 18, 21), new Vector2(0.5f, 0.5f));
+            SubmarineIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(452, 385, 182, 81), new Vector2(0.5f, 0.5f));
+            arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
+            SpeechBubbleIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
+            BrokenIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
             InfoAreaBackground = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(290, 320, 400, 300), new Vector2(0.0f, 0.0f));
         }
 
@@ -300,17 +289,33 @@ namespace Barotrauma
             string line1 = "Barotrauma Unstable v" + GameMain.Version;
             string line2 = "(" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
 
+            Rectangle watermarkRect = new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100);
+            float alpha = 1.0f;
+
+            int yOffset = 0;
+
+            if (Screen.Selected == GameMain.GameScreen)
+            {
+                yOffset = -HUDLayoutSettings.ChatBoxArea.Height;
+                watermarkRect.Y += yOffset;
+            }
+
+            if (Screen.Selected == GameMain.GameScreen || Screen.Selected == GameMain.SubEditorScreen)
+            {
+                alpha = 0.2f;
+            }
+
             Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                spriteBatch, new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100), Color.Black * 0.8f);
+                spriteBatch, watermarkRect, Color.Black * 0.8f * alpha);
             LargeFont.DrawString(spriteBatch, line1,
-                new Vector2(10, GameMain.GraphicsHeight - 30 - LargeFont.MeasureString(line1).Y), Color.White * 0.6f);
+                new Vector2(10, GameMain.GraphicsHeight - 30 - LargeFont.MeasureString(line1).Y + yOffset), Color.White * 0.6f * alpha);
             Font.DrawString(spriteBatch, line2,
-                new Vector2(10, GameMain.GraphicsHeight - 30), Color.White * 0.6f);
+                new Vector2(10, GameMain.GraphicsHeight - 30 + yOffset), Color.White * 0.6f * alpha);
 
             if (Screen.Selected != GameMain.GameScreen)
             {
                 var buttonRect =
-                    new Rectangle(20 + (int)Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X), GameMain.GraphicsHeight - (int)(45 * Scale), (int)(150 * Scale), (int)(40 * Scale));
+                    new Rectangle(20 + (int)Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X), GameMain.GraphicsHeight - (int)(45 * Scale) + yOffset, (int)(150 * Scale), (int)(40 * Scale));
                 if (DrawButton(spriteBatch, buttonRect, "Report Bug", Style.GetComponentStyle("GUIBugButton").Color * 0.8f))
                 {
                     GameMain.Instance.ShowBugReporter();
@@ -521,7 +526,7 @@ namespace Barotrauma
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
                 
-                var sprite = MouseCursorSprites[(int) MouseCursor];
+                var sprite = MouseCursorSprites[(int) MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
                 sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
 
                 spriteBatch.End();
@@ -1760,6 +1765,18 @@ namespace Barotrauma
                         Point centerDiff = rect1.Center - rect2.Center;
                         //move the interfaces away from each other, in a random direction if they're at the same position
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
+
+                        //if the horizontal move amount is much larger than vertical, only move horizontally
+                        //(= attempt to place the elements side-by-side if they're more apart horizontally than vertically)
+                        if (Math.Abs(moveAmount.X) > Math.Abs(moveAmount.Y) * 5.0f)
+                        {
+                            moveAmount.Y = 0.0f;
+                        }
+                        //same for the y-axis
+                        else if (Math.Abs(moveAmount.Y) > Math.Abs(moveAmount.X) * 5.0f)
+                        {
+                            moveAmount.X = 0.0f;
+                        }
 
                         //make sure we don't move the interfaces out of the screen
                         Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));

@@ -43,13 +43,14 @@ namespace Barotrauma.Items.Components
         private float sendUpdateTimer;
 
         private float degreeOfSuccess;
-        
+
         private Vector2 optimalTemperature, allowedTemperature;
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
 
         private bool _powerOn;
 
+        [Serialize(defaultValue: false, isSaveable: true)]
         public bool PowerOn
         {
             get { return _powerOn; }

@@ -162,7 +162,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            resetBtn.TextBlock.AutoScale = true;
+            resetBtn.TextBlock.AutoScaleHorizontal = true;
 
             new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), topPanelContents.RectTransform, Anchor.BottomCenter, Pivot.CenterRight) { RelativeOffset = new Vector2(0, 0.3f) }, TextManager.Get("spriteeditor.showgrid"))
             {

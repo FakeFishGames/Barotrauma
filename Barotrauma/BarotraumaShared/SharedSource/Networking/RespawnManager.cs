@@ -74,6 +74,17 @@ namespace Barotrauma.Networking
                 RespawnShuttle.Load(false);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
 
+                //prevent wifi components from communicating between the respawn shuttle and other subs
+                List<WifiComponent> wifiComponents = new List<WifiComponent>();
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine == RespawnShuttle) { wifiComponents.AddRange(item.GetComponents<WifiComponent>()); }                   
+                }
+                foreach (WifiComponent wifiComponent in wifiComponents)
+                {
+                    wifiComponent.TeamID = Character.TeamType.FriendlyNPC;
+                }
+
                 ResetShuttle();
                 
                 shuttleDoors = new List<Door>();

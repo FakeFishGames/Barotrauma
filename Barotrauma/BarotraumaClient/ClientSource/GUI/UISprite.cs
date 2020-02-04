@@ -101,10 +101,9 @@ namespace Barotrauma
                 Vector2 scale = Vector2.One;
 
                 scale.Y = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[6].Height), 0, 1);
-
                 scale.X = MathHelper.Clamp((float)rect.Width / (Slices[0].Width + Slices[2].Width), 0, 1);
 
-                scale.X = scale.Y = Math.Min(scale.X, scale.Y);
+                scale.X = scale.Y = Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale);
                 int centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale.Y);
                 int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale.X);
 

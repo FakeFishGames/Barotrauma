@@ -107,19 +107,16 @@ namespace Barotrauma
            : this (rectangle, Submarine.MainSub)
         { }
 
-        public Gap(Rectangle newRect, Submarine submarine)
-            : this(newRect, newRect.Width < newRect.Height, submarine)
+        public Gap(Rectangle rect, Submarine submarine)
+            : this(rect, rect.Width < rect.Height, submarine)
         { }
 
-        public Gap(Rectangle newRect, bool isHorizontal, Submarine submarine)
+        public Gap(Rectangle rect, bool isHorizontal, Submarine submarine)
             : base(MapEntityPrefab.Find(null, "gap"), submarine)
         {
-            rect = newRect;
-
+            this.rect = rect;
             flowForce = Vector2.Zero;
-
-            this.IsHorizontal = isHorizontal;
-
+            IsHorizontal = isHorizontal;
             open = 1.0f;
 
             FindHulls();
@@ -131,6 +128,7 @@ namespace Barotrauma
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
             outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
             outsideCollisionBlocker.Enabled = false;
+            Resized += newRect => IsHorizontal = newRect.Width < newRect.Height;
 
             DebugConsole.Log("Created gap (" + ID + ")");
         }

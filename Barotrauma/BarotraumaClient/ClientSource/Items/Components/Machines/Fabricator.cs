@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 
 namespace Barotrauma.Items.Components
 {
@@ -25,7 +26,6 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent outputSlot;
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
-        private GUICustomComponent inputInventoryOverlay, outputInventoryOverlay;
 
         public FabricationRecipe SelectedItem
         {
@@ -41,95 +41,125 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific()
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            CreateGUI();
+            GameMain.Instance.OnResolutionChanged += () =>
+            {
+                GuiFrame.ClearChildren();
+                CreateGUI();
+                OnItemLoadedProjSpecific();
+            };
+        }
+
+        private void CreateGUI()
+        {
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+
+            // === LABEL === //
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.05f), paddedFrame.RectTransform), item.Name, font: GUI.SubHeadingFont)
+            {
+                TextAlignment = Alignment.Center,
+                AutoScaleVertical = true
+            };
+
+            var mainFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), paddedFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.02f
             };
             
-            var topFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.7f), paddedFrame.RectTransform), "InnerFrameDark");
+            // === TOP AREA ===
+            var topFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.65f), mainFrame.RectTransform), style: "InnerFrameDark");
 
-            var paddedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1.0f), topFrame.RectTransform), style: null);
-            var itemListFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), paddedItemFrame.RectTransform, Anchor.Center))
-            {
-                Stretch = true
-            };
-            
-            var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), itemListFrame.RectTransform), isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f,
-                UserData = "filterarea"
-            };
-            
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 0.5f), filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.SubHeadingFont)
-            {
-                Padding = Vector4.Zero,
-                AutoScale = true
-            };
-            itemFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), createClearButton: true);
-            itemFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
+                // === ITEM LIST ===
+                var itemListFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), topFrame.RectTransform), childAnchor: Anchor.Center);
+                    var paddedItemFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), itemListFrame.RectTransform))
+                    {
+                        Stretch = true, 
+                        RelativeSpacing = 0.03f
+                    };
+                        var filterArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), paddedItemFrame.RectTransform), isHorizontal: true)
+                        {
+                            Stretch = true, 
+                            RelativeSpacing = 0.03f, 
+                            UserData = "filterarea"
+                        };
+                            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.SubHeadingFont)
+                            {
+                                Padding = Vector4.Zero, 
+                                AutoScaleVertical = true
+                            };
+                            itemFilterBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), createClearButton: true);
+                            itemFilterBox.OnTextChanged += (textBox, text) =>
+                            {
+                                FilterEntities(text); 
+                                return true;
+                            };
+                            filterArea.RectTransform.MaxSize = new Point(int.MaxValue, itemFilterBox.Rect.Height);
 
-            itemList = new GUIListBox(new RectTransform(new Vector2(1f, 0.85f), itemListFrame.RectTransform), style: null)
-            {
-                OnSelected = (component, userdata) =>
+                        itemList = new GUIListBox(new RectTransform(new Vector2(1f, 0.9f), paddedItemFrame.RectTransform), style: null)
+                        {
+                            OnSelected = (component, userdata) =>
+                            {
+                                selectedItem = userdata as FabricationRecipe;
+                                if (selectedItem != null) SelectItem(Character.Controlled, selectedItem);
+                                return true;
+                            }
+                        };
+
+                // === SEPARATOR === //
+                new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), topFrame.RectTransform, Anchor.Center), style: "VerticalLine");
+
+                // === OUTPUT AREA === //
+                var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1f), topFrame.RectTransform, Anchor.TopRight), childAnchor: Anchor.Center);
+                    var paddedOutputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), outputArea.RectTransform));
+                        var outputTopArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5F), paddedOutputArea.RectTransform, Anchor.Center), isHorizontal: true);
+                            // === OUTPUT SLOT === //
+                            outputSlot = new GUIFrame(new RectTransform(new Vector2(0.4f, 1f), outputTopArea.RectTransform), style: null);
+                                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.2f), outputSlot.RectTransform, Anchor.BottomCenter), style: null);
+                                    new GUICustomComponent(new RectTransform(Vector2.One, outputInventoryHolder.RectTransform), DrawOutputOverLay) { CanBeFocused = false };
+                            // === DESCRIPTION === //
+                            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 1f), outputTopArea.RectTransform), style: null);
+                        // === REQUIREMENTS === //
+                        selectedItemReqsFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), paddedOutputArea.RectTransform), style: null);
+
+            // === BOTTOM AREA === //
+            var bottomFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.3f), mainFrame.RectTransform), style: null);
+
+                // === SEPARATOR === //
+                var separatorArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.15f), bottomFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
                 {
-                    selectedItem = userdata as FabricationRecipe;
-                    if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
-                    return true;
-                }
-            };
-            
-            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), topFrame.RectTransform, Anchor.Center), style: "VerticalLine");
+                    Stretch = true, 
+                    RelativeSpacing = 0.03f
+                };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
+                    new GUIFrame(new RectTransform(Vector2.One, separatorArea.RectTransform), style: "HorizontalLine");
 
-            var paddedOutputFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 1f), topFrame.RectTransform, Anchor.TopRight), style: null);
-            var outputArea = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), paddedOutputFrame.RectTransform, Anchor.Center), style: null);
-            
-            // TODO, take off the duct tape and figure out a proper way to do this \/
-            var scaledFrame =  new GUIFrame(new RectTransform(new Vector2(0.4f, 0.55f), outputArea.RectTransform), style: null);
-            outputSlot =  new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), outputArea.RectTransform), style: null);
+                // === INPUT AREA === //
+                var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1f), bottomFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomLeft);
+                    
+                    // === INPUT SLOTS === //
+                    inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), inputArea.RectTransform), style: null);
+                        new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
 
-            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1.1f, 1.5f), scaledFrame.RectTransform, Anchor.BottomCenter), style: null);
-            outputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, outputArea.RectTransform), DrawOutputOverLay) { CanBeFocused = false };
-            
-            selectedItemFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.5f), outputArea.RectTransform, Anchor.TopRight), style: null);
-            selectedItemReqsFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), outputArea.RectTransform, Anchor.BottomLeft), style: null);
-            
-            var bottomFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), paddedFrame.RectTransform), style: null);
-            
-            var paddedLine = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), bottomFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            var inputText = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), paddedLine.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
-            new GUIFrame(new RectTransform(new Vector2(1f, 1.0f), paddedLine.RectTransform), style: "HorizontalLine");
-            
-            // Resize GUITextBlock width according to the text length
-            inputText.RectTransform.Resize(new Point((int)inputText.Font.MeasureString(inputText.Text).X, inputText.RectTransform.Rect.Height));
-            
-            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1f), bottomFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomLeft);
-            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), inputArea.RectTransform), style: null);
-            inputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
-
+                    // === ACTIVATE BUTTON === //
+                    var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
+                        activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
+                            TextManager.Get("FabricatorCreate"), style: "DeviceButton")
+                        {
+                            OnClicked = StartButtonClicked,
+                            UserData = selectedItem,
+                            Enabled = false
+                        };
+                            // === POWER WARNING === //
+                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
+                                TextManager.Get("FabricatorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+                            {
+                                HoverColor = Color.Black,
+                                IgnoreLayoutGroups = true,
+                                Visible = false,
+                                CanBeFocused = false
+                            };
             CreateRecipes();
-
-            var buttonFrame = new GUIFrame(new RectTransform(new Vector2(0.2f, 0.8f), inputArea.RectTransform), style: null);
-            activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform, Anchor.CenterRight),
-                TextManager.Get("FabricatorCreate"), style: "DeviceButton")
-            {
-                OnClicked = StartButtonClicked,
-                UserData = selectedItem,
-                Enabled = false
-            };
-
-            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("FabricatorNoPower"),
-                textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
-            {
-                HoverColor = Color.Black,
-                IgnoreLayoutGroups = true,
-                Visible = false,
-                CanBeFocused = false
-            };
         }
 
         partial void CreateRecipes()
@@ -138,30 +168,34 @@ namespace Barotrauma.Items.Components
 
             foreach (FabricationRecipe fi in fabricationRecipes)
             {
-                GUIFrame frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, (int)(30 * GUI.yScale)), itemList.Content.RectTransform), style: null)
+                var frame = new GUIFrame(new RectTransform(new Point(itemList.Rect.Width, (int)(40 * GUI.yScale)), itemList.Content.RectTransform), style: null)
                 {
                     UserData = fi,
                     HoverColor = Color.Gold * 0.2f,
                     SelectedColor = Color.Gold * 0.5f,
                     ToolTip = fi.TargetItem.Description
                 };
+                
+                    var container = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform),
+                        childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.02f };
+                    
+                        var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
+                        if (itemIcon != null)
+                        {
+                            new GUIImage(new RectTransform(new Point(frame.Rect.Height,frame.Rect.Height), container.RectTransform),
+                                itemIcon, scaleToFit: true)
+                            {
+                                Color = fi.TargetItem.InventoryIconColor,
+                                ToolTip = fi.TargetItem.Description
+                            };
+                        }
 
-                new GUITextBlock(new RectTransform(Vector2.Zero, frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(50 * GUI.xScale), 0) },
-                    fi.DisplayName)
-                {
-                    ToolTip = fi.TargetItem.Description
-                };
-
-                var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
-                if (itemIcon != null)
-                {
-                    new GUIImage(new RectTransform(new Point((int)(30 * GUI.Scale)), frame.RectTransform, Anchor.CenterLeft) { AbsoluteOffset = new Point((int)(3 * GUI.xScale), 0) },
-                        itemIcon, scaleToFit: true)
-                    {
-                        Color = fi.TargetItem.InventoryIconColor,
-                        ToolTip = fi.TargetItem.Description
-                    };
-                }
+                        new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), container.RectTransform), fi.DisplayName)
+                        {
+                            Padding = Vector4.Zero,
+                            AutoScaleVertical = true,
+                            ToolTip = fi.TargetItem.Description
+                        };
             }
         }
 
@@ -175,6 +209,29 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
+            // TODO, This works fine as of now but if GUI.PreventElementOverlap ever gets fixed this block of code may become obsolete or detrimental.
+            // Only do this if there's only one linked component. If you link more containers then may
+            // GUI.PreventElementOverlap have mercy on your HUD layout
+            if (item.linkedTo.Count(entity => entity is Item item && item.DisplaySideBySideWhenLinked) == 1)
+            {
+                foreach (MapEntity linkedTo in item.linkedTo)
+                {
+                    if (!(linkedTo is Item linkedItem)) continue;
+                    if (!linkedItem.Components.Any()) continue;
+                
+                    var itemContainer = linkedItem.Components.First();
+                    if (itemContainer == null) { continue; }
+
+                    if (!itemContainer.Item.DisplaySideBySideWhenLinked) continue;
+
+                    // how much spacing do we want between the components
+                    var padding = (int) (8 * GUI.Scale);
+                    // Move the linked container to the right and move the fabricator to the left
+                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(GuiFrame.Rect.Width / -2 - padding, 0);
+                    GuiFrame.RectTransform.AbsoluteOffset = new Point(itemContainer.GuiFrame.Rect.Width / 2 + padding, 0);
+                }
+            }
+            
             var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricationRecipe)).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
@@ -197,7 +254,7 @@ namespace Barotrauma.Items.Components
             var sufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
                 TextManager.Get("fabricatorsufficientskills", returnNull: true) ?? "Sufficient skills to fabricate", textColor: GUI.Style.Green, font: GUI.SubHeadingFont)
             {
-                AutoScale = true,
+                AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
             sufficientSkillsText.RectTransform.SetAsFirstChild();
@@ -205,7 +262,7 @@ namespace Barotrauma.Items.Components
             var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
                 TextManager.Get("fabricatorinsufficientskills", returnNull: true) ?? "Insufficient skills to fabricate", textColor: Color.Orange, font: GUI.SubHeadingFont)
             {
-                AutoScale = true,
+                AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
             var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricationRecipe fabricableItem && DegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
@@ -361,7 +418,7 @@ namespace Barotrauma.Items.Components
             selectedItemReqsFrame.ClearChildren();
             
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
-            var paddedReqFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), selectedItemReqsFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
+            var paddedReqFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemReqsFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
 
             /*var itemIcon = selectedItem.TargetItem.InventoryIcon ?? selectedItem.TargetItem.sprite;
             if (itemIcon != null)
@@ -375,7 +432,7 @@ namespace Barotrauma.Items.Components
             var nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 selectedItem.TargetItem.Name, textAlignment: Alignment.CenterLeft, textColor: Color.Aqua, font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             
             nameBlock.Padding = new Vector4(0, nameBlock.Padding.Y, nameBlock.Padding.Z, nameBlock.Padding.W);
@@ -409,7 +466,7 @@ namespace Barotrauma.Items.Components
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
                     TextManager.Get("FabricatorRequiredSkills"), textColor: inadequateSkills.Any() ? GUI.Style.Red : GUI.Style.Green, font: GUI.SubHeadingFont)
                 {
-                    AutoScale = true,
+                    AutoScaleHorizontal = true,
                 };
                 foreach (Skill skill in selectedItem.RequiredSkills)
                 {
@@ -427,7 +484,7 @@ namespace Barotrauma.Items.Components
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
                 TextManager.Get("FabricatorRequiredTime") , textColor: ToolBox.GradientLerp(degreeOfSuccess, GUI.Style.Red, Color.Yellow, GUI.Style.Green), font: GUI.SubHeadingFont)
             {
-                AutoScale = true,
+                AutoScaleHorizontal = true,
             };
                 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), ToolBox.SecondsToReadableTime(requiredTime), 
@@ -506,8 +563,10 @@ namespace Barotrauma.Items.Components
                         activateButton.Enabled = canBeFabricated;
                     }
 
-                    child.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
-                    child.GetChild<GUIImage>().Color = itemPrefab.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
+                    var childContainer = child.GetChild<GUILayoutGroup>();
+
+                    childContainer.GetChild<GUITextBlock>().TextColor = Color.White * (canBeFabricated ? 1.0f : 0.5f);
+                    childContainer.GetChild<GUIImage>().Color = itemPrefab.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
                 }
             }
         }

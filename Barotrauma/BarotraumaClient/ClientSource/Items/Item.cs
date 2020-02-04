@@ -44,6 +44,11 @@ namespace Barotrauma
             get { return activeSprite; }
         }
 
+        public override bool DrawOverWater
+        {
+            get { return base.DrawOverWater || (GetComponent<Wire>() != null && IsSelected); }
+        }
+
         private GUITextBlock itemInUseWarning;
         private GUITextBlock ItemInUseWarning
         {
@@ -523,8 +528,8 @@ namespace Barotrauma
 
                 if (Linkable)
                 {
-                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
-                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled)), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
+                    var linkText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("HoldToLink"), font: GUI.SmallFont);
+                    var itemsText = new GUITextBlock(new RectTransform(new Point(editingHUD.Rect.Width, heightScaled), isFixedSize: true), TextManager.Get("AllowedLinks"), font: GUI.SmallFont);
                     string allowedItems = AllowedLinks.None() ?  TextManager.Get("None") :string.Join(", ", AllowedLinks);
                     itemsText.Text = TextManager.AddPunctuation(':', itemsText.Text, allowedItems);
                     itemEditor.AddCustomContent(linkText, 1);
@@ -535,7 +540,8 @@ namespace Barotrauma
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
                 {
                     Stretch = true,
-                    RelativeSpacing = 0.02f
+                    RelativeSpacing = 0.02f,
+                    CanBeFocused = true
                 };
                 new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
                 {
@@ -575,6 +581,7 @@ namespace Barotrauma
                     }
                 };
                 buttonContainer.RectTransform.MinSize = new Point(0, buttonContainer.RectTransform.Children.Max(c => c.MinSize.Y));
+                buttonContainer.RectTransform.IsFixedSize = true;
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Select(b => ((GUIButton)b).TextBlock));
             }
@@ -615,17 +622,20 @@ namespace Barotrauma
 
                 foreach (RelatedItem relatedItem in requiredItems)
                 {
+                    //TODO: add to localization
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)),
                         relatedItem.Type.ToString() + " required", font: GUI.SmallFont)
                     {
                         Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f)
                     };
+                    textBlock.RectTransform.IsFixedSize = true;
                     componentEditor.AddCustomContent(textBlock, 1);
 
                     GUITextBox namesBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight))
                     {
                         Font = GUI.SmallFont,
-                        Text = relatedItem.JoinedIdentifiers
+                        Text = relatedItem.JoinedIdentifiers,
+                        OverflowClip = true
                     };
                     textBlock.RectTransform.Resize(new Point(textBlock.Rect.Width, namesBox.RectTransform.MinSize.Y));
 
@@ -710,11 +720,11 @@ namespace Barotrauma
                     HUDLayoutSettings.ChatBoxArea.Width + disallowedPadding, HUDLayoutSettings.ChatBoxArea.Height));                
             }
 
-            //GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-            //    new Rectangle(
-            //        0, 20, 
-            //        GameMain.GraphicsWidth, 
-            //        HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
+            GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
+                new Rectangle(
+                    0, 20, 
+                    GameMain.GraphicsWidth, 
+                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
 
             foreach (ItemComponent ic in activeHUDs)
             {
@@ -761,7 +771,8 @@ namespace Barotrauma
             List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
             foreach (ItemComponent ic in activeComponents)
             {
-                if (ic.CanBeSelected && ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
+                if (ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
+                    (ic.CanBeSelected || character.HasEquippedItem(this)) &&
                     (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
                 {
                     if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) maxPriorityHUDs.Clear();
@@ -777,7 +788,10 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeComponents)
                 {
-                    if (ic.CanBeSelected && ic.ShouldDrawHUD(character)) activeHUDs.Add(ic);
+                    if ((ic.CanBeSelected || character.HasEquippedItem(this)) && ic.ShouldDrawHUD(character))
+                    {
+                        activeHUDs.Add(ic);
+                    }
                 }
             }
 
@@ -867,11 +881,6 @@ namespace Barotrauma
         }
 
         public override void AddToGUIUpdateList()
-        {
-            AddToGUIUpdateList(addLinkedHUDs: true);
-        }
-
-        private void AddToGUIUpdateList(bool addLinkedHUDs)
         {
             if (Screen.Selected is SubEditorScreen)
             {

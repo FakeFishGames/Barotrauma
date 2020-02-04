@@ -98,7 +98,7 @@ namespace Barotrauma.Tutorials
             var repairOrder = Order.GetPrefab("repairsystems");
             mechanic_repairIcon = repairOrder.SymbolSprite;
             mechanic_repairIconColor = repairOrder.Color;
-            mechanic_weldIcon = new Sprite("Content/UI/IconAtlas.png", new Rectangle(1, 256, 127, 127), new Vector2(0.5f, 0.5f));
+            mechanic_weldIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(1, 256, 127, 127), new Vector2(0.5f, 0.5f));
 
             // Other tutorial items
             tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();

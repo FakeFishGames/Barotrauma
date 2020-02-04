@@ -1383,6 +1383,7 @@ namespace Barotrauma.Steam
             if (!task.IsCompleted)
             {
                 cancelTokenSource.Cancel();
+                task.Wait();
             }
             
             return task.Status == TaskStatus.RanToCompletion;

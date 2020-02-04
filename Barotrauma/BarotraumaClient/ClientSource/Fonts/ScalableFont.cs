@@ -198,10 +198,6 @@ namespace Barotrauma
             this.texDims = texDims;
             this.baseChar = baseChar;
 
-            lock (mutex)
-            {
-                face.SetPixelSizes(0, size);
-            }
             textures.ForEach(t => t.Dispose());
             textures.Clear();
             texCoords.Clear();
@@ -223,17 +219,15 @@ namespace Barotrauma
 
             lock (mutex)
             {
+                face.SetPixelSizes(0, size);
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
                 baseHeight = face.Glyph.Metrics.Height.ToInt32();
-            }
-            //lineHeight = baseHeight;
-            for (int i = 0; i < charRanges.Length; i += 2)
-            {
-                uint start = charRanges[i];
-                uint end = charRanges[i + 1];
-                for (uint j = start; j <= end; j++)
+
+                for (int i = 0; i < charRanges.Length; i += 2)
                 {
-                    lock (mutex)
+                    uint start = charRanges[i];
+                    uint end = charRanges[i + 1];
+                    for (uint j = start; j <= end; j++)
                     {
                         uint glyphIndex = face.GetCharIndex(j);
                         if (glyphIndex == 0) continue;
@@ -307,107 +301,118 @@ namespace Barotrauma
 
                         currentCoords.X += glyphWidth + 2;
                     }
+                    CrossThread.RequestExecutionOnMainThread(() =>
+                    {
+                        textures[texIndex].SetData<uint>(pixelBuffer);
+                    });
                 }
-                CrossThread.RequestExecutionOnMainThread(() =>
-                {
-                    textures[texIndex].SetData<uint>(pixelBuffer);
-                });
             }
         }
 
         public void DynamicRenderAtlas(GraphicsDevice gd, uint character, int texDims = 1024, uint baseChar = 0x54)
         {
-            if (textures.Count == 0)
+            if (System.Threading.Thread.CurrentThread != GameMain.MainThread)
             {
-                this.texDims = texDims;
-                this.baseChar = baseChar;
-                lock (mutex) { face.SetPixelSizes(0, size); }
-                face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
-                baseHeight = face.Glyph.Metrics.Height.ToInt32();
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {
-                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                    DynamicRenderAtlas(gd, character, texDims, baseChar);
                 });
-            }
-
-            uint glyphIndex = face.GetCharIndex(character);
-            if (glyphIndex == 0) { return; }
-
-            lock (mutex) { face.SetPixelSizes(0, size); }
-            face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
-            if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
-            {
-                if (face.Glyph.Metrics.HorizontalAdvance > 0)
-                {
-                    //glyph is empty, but char still applies advance
-                    GlyphData blankData = new GlyphData();
-                    blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
-                    blankData.texIndex = -1; //indicates no texture because the glyph is empty
-                    texCoords.Add(character, blankData);
-                }
                 return;
             }
 
-            //stacktrace doesn't really work that well when RenderGlyph throws an exception
-            face.Glyph.RenderGlyph(RenderMode.Normal);
-            byte[] bitmap = face.Glyph.Bitmap.BufferData;
-            int glyphWidth = face.Glyph.Bitmap.Width;
-            int glyphHeight = bitmap.Length / glyphWidth;
+            byte[] bitmap;
+            int glyphWidth; int glyphHeight;
+            Fixed26Dot6 horizontalAdvance;
+            Vector2 drawOffset;
 
-            if (glyphWidth > texDims - 1 || glyphHeight > texDims - 1)
+            lock (mutex)
             {
-                throw new Exception(filename + ", " + size.ToString() + ", " + (char)character + "; Glyph dimensions exceed texture atlas dimensions");
-            }
-            
-            currentDynamicAtlasNextY = Math.Max(currentDynamicAtlasNextY, glyphHeight + 2);
-            if (currentDynamicAtlasCoords.X + glyphWidth + 2 > texDims - 1)
-            {
-                currentDynamicAtlasCoords.X = 0;
-                currentDynamicAtlasCoords.Y += currentDynamicAtlasNextY;
-                currentDynamicAtlasNextY = 0;
-            }            
-            //no more room in current texture atlas, create a new one
-            if (currentDynamicAtlasCoords.Y + glyphHeight + 2 > texDims - 1)
-            {
-                currentDynamicAtlasCoords.X = 0;
-                currentDynamicAtlasCoords.Y = 0;
-                currentDynamicAtlasNextY = 0;
-                CrossThread.RequestExecutionOnMainThread(() =>
+                if (texCoords.ContainsKey(character)) { return; }
+                if (textures.Count == 0)
                 {
+                    this.texDims = texDims;
+                    this.baseChar = baseChar;
+                    face.SetPixelSizes(0, size);
+                    face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
+                    baseHeight = face.Glyph.Metrics.Height.ToInt32();
                     textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
-                });
-                currentDynamicPixelBuffer = null;
-            }
-
-            GlyphData newData = new GlyphData
-            {
-                advance = (float)face.Glyph.Metrics.HorizontalAdvance,
-                texIndex = textures.Count - 1,
-                texCoords = new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
-                drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop)
-            };
-            texCoords.Add(character, newData);
-
-            if (currentDynamicPixelBuffer == null)
-            {
-                currentDynamicPixelBuffer = new uint[texDims * texDims];
-                textures[newData.texIndex].GetData<uint>(currentDynamicPixelBuffer, 0, texDims * texDims);
-            }
-            
-            for (int y = 0; y < glyphHeight; y++)
-            {
-                for (int x = 0; x < glyphWidth; x++)
-                {
-                    byte byteColor = bitmap[x + y * glyphWidth];
-                    currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | 0x00ffffff);
                 }
-            }
-            CrossThread.RequestExecutionOnMainThread(() =>
-            {
-                textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
-            });
 
-            currentDynamicAtlasCoords.X += glyphWidth + 2;
+                uint glyphIndex = face.GetCharIndex(character);
+                if (glyphIndex == 0) { return; }
+
+                face.SetPixelSizes(0, size);
+                face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
+                if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
+                {
+                    if (face.Glyph.Metrics.HorizontalAdvance > 0)
+                    {
+                        //glyph is empty, but char still applies advance
+                        GlyphData blankData = new GlyphData();
+                        blankData.advance = (float)face.Glyph.Metrics.HorizontalAdvance;
+                        blankData.texIndex = -1; //indicates no texture because the glyph is empty
+                        texCoords.Add(character, blankData);
+                    }
+                    return;
+                }
+
+                //stacktrace doesn't really work that well when RenderGlyph throws an exception
+                face.Glyph.RenderGlyph(RenderMode.Normal);
+                bitmap = (byte[])face.Glyph.Bitmap.BufferData.Clone();
+                glyphWidth = face.Glyph.Bitmap.Width;
+                glyphHeight = bitmap.Length / glyphWidth;
+                horizontalAdvance = face.Glyph.Metrics.HorizontalAdvance;
+                drawOffset = new Vector2(face.Glyph.BitmapLeft, baseHeight * 14 / 10 - face.Glyph.BitmapTop);
+            
+                if (glyphWidth > texDims - 1 || glyphHeight > texDims - 1)
+                {
+                    throw new Exception(filename + ", " + size.ToString() + ", " + (char)character + "; Glyph dimensions exceed texture atlas dimensions");
+                }
+            
+                currentDynamicAtlasNextY = Math.Max(currentDynamicAtlasNextY, glyphHeight + 2);
+                if (currentDynamicAtlasCoords.X + glyphWidth + 2 > texDims - 1)
+                {
+                    currentDynamicAtlasCoords.X = 0;
+                    currentDynamicAtlasCoords.Y += currentDynamicAtlasNextY;
+                    currentDynamicAtlasNextY = 0;
+                }            
+                //no more room in current texture atlas, create a new one
+                if (currentDynamicAtlasCoords.Y + glyphHeight + 2 > texDims - 1)
+                {
+                    currentDynamicAtlasCoords.X = 0;
+                    currentDynamicAtlasCoords.Y = 0;
+                    currentDynamicAtlasNextY = 0;
+                    textures.Add(new Texture2D(gd, texDims, texDims, false, SurfaceFormat.Color));
+                    currentDynamicPixelBuffer = null;
+                }
+
+                GlyphData newData = new GlyphData
+                {
+                    advance = (float)horizontalAdvance,
+                    texIndex = textures.Count - 1,
+                    texCoords = new Rectangle((int)currentDynamicAtlasCoords.X, (int)currentDynamicAtlasCoords.Y, glyphWidth, glyphHeight),
+                    drawOffset = drawOffset
+                };
+                texCoords.Add(character, newData);
+
+                if (currentDynamicPixelBuffer == null)
+                {
+                    currentDynamicPixelBuffer = new uint[texDims * texDims];
+                    textures[newData.texIndex].GetData<uint>(currentDynamicPixelBuffer, 0, texDims * texDims);
+                }
+            
+                for (int y = 0; y < glyphHeight; y++)
+                {
+                    for (int x = 0; x < glyphWidth; x++)
+                    {
+                        byte byteColor = bitmap[x + y * glyphWidth];
+                        currentDynamicPixelBuffer[((int)currentDynamicAtlasCoords.X + x) + ((int)currentDynamicAtlasCoords.Y + y) * texDims] = (uint)(byteColor << 24 | 0x00ffffff);
+                    }
+                }
+                textures[newData.texIndex].SetData<uint>(currentDynamicPixelBuffer);
+
+                currentDynamicAtlasCoords.X += glyphWidth + 2;
+            }
         }
 
         public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
@@ -429,7 +434,7 @@ namespace Barotrauma
                 }
 
                 uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                if (DynamicLoading)
                 {
                     DynamicRenderAtlas(graphicsDevice, charIndex);
                 }
@@ -470,7 +475,7 @@ namespace Barotrauma
                 }
 
                 uint charIndex = text[i];
-                if (DynamicLoading && !texCoords.ContainsKey(charIndex))
+                if (DynamicLoading)
                 {
                     DynamicRenderAtlas(graphicsDevice, charIndex);
                 }

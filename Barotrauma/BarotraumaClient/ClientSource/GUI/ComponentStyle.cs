@@ -133,7 +133,16 @@ namespace Barotrauma
                     case "size":
                         break;
                     default:
-                        ChildStyles.Add(subElement.Name.ToString().ToLowerInvariant(), new GUIComponentStyle(subElement, style));
+                        string styleName = subElement.Name.ToString().ToLowerInvariant();
+                        if (ChildStyles.ContainsKey(styleName))
+                        {
+                            DebugConsole.ThrowError("UI style \"" + element.Name.ToString() + "\" contains multiple child styles with the same name (\"" + styleName + "\")!");
+                            ChildStyles[styleName] = new GUIComponentStyle(subElement, style);
+                        }
+                        else
+                        {
+                            ChildStyles.Add(styleName, new GUIComponentStyle(subElement, style));
+                        }
                         break;
                 }
             }

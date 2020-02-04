@@ -10,8 +10,6 @@ namespace Barotrauma.Items.Components
 
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-        public const float SkillIncreaseMultiplier = 0.5f;
-
         private readonly List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
 
         private FabricationRecipe fabricatedItem;
@@ -130,13 +128,6 @@ namespace Barotrauma.Items.Components
             if (selectedItem == null) return;
             if (!outputContainer.Inventory.IsEmpty()) return;
 
-#if SERVER
-            if (user != null)
-            {
-                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
-            }
-#endif
-
 #if CLIENT
             itemList.Enabled = false;
             activateButton.Text = TextManager.Get("FabricatorCancel");
@@ -155,20 +146,19 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+
+#if SERVER
+            if (user != null)
+            {
+                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
+            item.CreateServerEvent(this);
+#endif
         }
 
         private void CancelFabricating(Character user = null)
         {
-#if SERVER
-            if (fabricatedItem != null)
-            {
-                if (user != null) 
-                {
-                    GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
-                }
-                item.CreateServerEvent(this);
-            }
-#endif
+            if (fabricatedItem == null) { return; }
 
             IsActive = false;
             fabricatedItem = null;
@@ -190,6 +180,13 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
 
+#if SERVER
+            if (user != null)
+            {
+                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
+            item.CreateServerEvent(this);
+#endif
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -215,7 +212,7 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime * Voltage;
+            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
 
             if (timeUntilReady > 0.0f) { return; }
 
@@ -254,14 +251,15 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (Skill skill in fabricatedItem.RequiredSkills)
                     {
-                        user.Info.IncreaseSkillLevel(skill.Identifier, skill.Level / 100.0f * SkillIncreaseMultiplier, user.WorldPosition + Vector2.UnitY * 150.0f);
+                        float userSkill = user.GetSkillLevel(skill.Identifier);
+                        user.Info.IncreaseSkillLevel(
+                            skill.Identifier,
+                            skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f),
+                            user.WorldPosition + Vector2.UnitY * 150.0f);
                     }
                 }
 
-                CancelFabricating(null);
-#if SERVER
-                item.CreateServerEvent(this);
-#endif
+                CancelFabricating();
             }
         }
 

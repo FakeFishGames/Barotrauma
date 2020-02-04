@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             graphLine = new Sprite(element.GetChildElement("graphline")?.GetChildElement("sprite"));
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(
-                    GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin.Multiply(new Vector2(1.4f, 1.2f)), GuiFrame.RectTransform, Anchor.Center) 
+                    GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
                     { AbsoluteOffset = GUIStyle.ItemFrameOffset }, 
                 isHorizontal: true)
             {
@@ -90,6 +90,7 @@ namespace Barotrauma.Items.Components
             };
             GUILayoutGroup columnRight = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), paddedFrame.RectTransform))
             {
+                CanBeFocused = true,
                 RelativeSpacing = 0.012f,
                 Stretch = true
             };
@@ -104,7 +105,7 @@ namespace Barotrauma.Items.Components
                 RelativeOffset = new Vector2(-0.02f, 0)
             }, style: "ItemUI");
 
-            GUILayoutGroup inventoryContent = new GUILayoutGroup(new RectTransform(inventoryWindow.Rect.Size - GUIStyle.ItemFrameMargin.Multiply(0.75f), inventoryWindow.RectTransform, Anchor.Center) 
+            GUILayoutGroup inventoryContent = new GUILayoutGroup(new RectTransform(inventoryWindow.Rect.Size - GUIStyle.ItemFrameMargin, inventoryWindow.RectTransform, Anchor.Center) 
                 { AbsoluteOffset = GUIStyle.ItemFrameOffset },
                 childAnchor: Anchor.TopCenter)
             {
@@ -126,6 +127,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.02f
             };
 
+
             Point maxIndicatorSize = new Point(int.MaxValue, (int)(50 * GUI.Scale));
             criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
@@ -142,16 +144,14 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-            criticalHeatWarning.TextBlock.OverrideTextColor(GUI.Style.TextColor);
-            lowTemperatureWarning.TextBlock.OverrideTextColor(GUI.Style.TextColor);
-            criticalOutputWarning.TextBlock.OverrideTextColor(GUI.Style.TextColor);
-            
+            List<GUITickBox> indicatorLights = new List<GUITickBox>() { criticalHeatWarning, lowTemperatureWarning, criticalOutputWarning };
+            indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUI.Style.TextColor));
             topLeftArea.Recalculate();
-            
+
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), columnLeft.RectTransform), style: "HorizontalLine");
 
             float relativeYMargin = 0.02f;
-            Vector2 relativeTextSize = new Vector2(0.8f, 0.1f);
+            Vector2 relativeTextSize = new Vector2(0.9f, 0.2f);
             Vector2 sliderSize = new Vector2(1.0f, 0.125f);
             Vector2 meterSize = new Vector2(1, 1 - relativeTextSize.Y - relativeYMargin - sliderSize.Y - 0.1f);
 
@@ -162,7 +162,7 @@ namespace Barotrauma.Items.Components
             var fissionRateTextBox = new GUITextBlock(new RectTransform(relativeTextSize, leftArea.RectTransform, Anchor.TopCenter),
                 TextManager.Get("ReactorFissionRate"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             var fissionMeter = new GUICustomComponent(new RectTransform(meterSize, leftArea.RectTransform, Anchor.TopCenter)
             {
@@ -176,7 +176,7 @@ namespace Barotrauma.Items.Components
             var turbineOutputTextBox = new GUITextBlock(new RectTransform(relativeTextSize, rightArea.RectTransform, Anchor.TopCenter), 
                 TextManager.Get("ReactorTurbineOutput"), textColor: GUI.Style.TextColor, textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             GUITextBlock.AutoScaleAndNormalize(turbineOutputTextBox, fissionRateTextBox);
 
@@ -248,11 +248,12 @@ namespace Barotrauma.Items.Components
                     Font = GUI.SubHeadingFont,
                     CanBeFocused = false
                 };
-                b.TextBlock.Wrap = false;
                 warningButtons.Add(text, b);
             }
             upperButtons.Recalculate();
             lowerButtons.Recalculate();
+            //only wrap texts that consist of multiple words and are way too big to fit otherwise
+            warningButtons.Values.ForEach(b => b.TextBlock.Wrap = b.Text.Contains(' ') && b.TextBlock.TextSize.X > b.TextBlock.Rect.Width * 1.5f);
             GUITextBlock.AutoScaleAndNormalize(warningButtons.Values.Select(b => b.TextBlock));
 
             //----------------------------------------------------------
@@ -266,6 +267,7 @@ namespace Barotrauma.Items.Components
                 Stretch = true,
                 RelativeSpacing = 0.02f
             };
+            topRightArea.RectTransform.MinSize = new Point(0, topLeftArea.Rect.Height);
             topRightArea.RectTransform.MaxSize = new Point(int.MaxValue, topLeftArea.Rect.Height);
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), topRightArea.RectTransform), style: "VerticalLine");
@@ -284,12 +286,12 @@ namespace Barotrauma.Items.Components
                 }
             };
             AutoTempSwitch.RectTransform.MaxSize = new Point((int)(AutoTempSwitch.Rect.Height * 0.4f), int.MaxValue);
-
+            
             autoTempLight = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform),
                 TextManager.Get("ReactorAutoTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
                 {
                     ToolTip = TextManager.Get("ReactorTipAutoTemp"),
-                    CanBeFocused = true,
+                    CanBeFocused = false,
                     Selected = AutoTemp
                 };
             autoTempLight.RectTransform.MaxSize = new Point(int.MaxValue, criticalHeatWarning.Rect.Height);
@@ -300,13 +302,14 @@ namespace Barotrauma.Items.Components
             // Power button
             var powerArea = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), topRightArea.RectTransform), style: null);
             var paddedPowerArea = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), powerArea.RectTransform, Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: "PowerButtonFrame");
-            powerLight = new GUITickBox(new RectTransform(new Vector2(0.87f, 0.2f), paddedPowerArea.RectTransform, Anchor.TopCenter, Pivot.Center), 
+            powerLight = new GUITickBox(new RectTransform(new Vector2(0.87f, 0.3f), paddedPowerArea.RectTransform, Anchor.TopCenter, Pivot.Center), 
                 TextManager.Get("PowerLabel"), font: GUI.SubHeadingFont, style: "IndicatorLightPower")
                 {
                     CanBeFocused = false,
                     Selected = _powerOn
                 };
-            powerLight.TextBlock.AutoScale = true;
+            powerLight.TextBlock.Padding = new Vector4(5.0f, 0.0f, 0.0f, 0.0f);
+            powerLight.TextBlock.AutoScaleHorizontal = true;
             powerLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             PowerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.75f), paddedPowerArea.RectTransform, Anchor.BottomCenter)
             {
@@ -324,16 +327,17 @@ namespace Barotrauma.Items.Components
 
             topRightArea.Recalculate();
             autoTempLight.TextBlock.Wrap = true;
-            GUITextBlock.AutoScaleAndNormalize(
-                criticalHeatWarning.TextBlock, lowTemperatureWarning.TextBlock, criticalOutputWarning.TextBlock, autoTempLight.TextBlock);
+            indicatorLights.Add(autoTempLight);
+            GUITextBlock.AutoScaleAndNormalize(indicatorLights.Select(l => l.TextBlock));
 
             // right bottom (graph area) -----------------------
 
             new GUIFrame(new RectTransform(new Vector2(0.95f, 0.01f), columnRight.RectTransform), style: "HorizontalLine");
 
-            var bottomRightArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), columnRight.RectTransform), isHorizontal: true)
+            var bottomRightArea = new GUILayoutGroup(new RectTransform(Vector2.One, columnRight.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
+                CanBeFocused = true,
                 RelativeSpacing = 0.02f
             };
 
@@ -347,7 +351,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.02f
             };
 
-            relativeTextSize = new Vector2(1.0f, 0.0f);
+            relativeTextSize = new Vector2(1.0f, 0.15f);
             var loadText = new GUITextBlock(new RectTransform(relativeTextSize, graphArea.RectTransform),
                 "Load", textColor: loadColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {

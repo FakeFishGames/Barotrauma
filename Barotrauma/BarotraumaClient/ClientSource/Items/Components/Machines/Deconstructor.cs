@@ -22,68 +22,99 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.8f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            CreateGUI();
+            GameMain.Instance.OnResolutionChanged += () =>
             {
-                Stretch = true,
+                GuiFrame.ClearChildren();
+                CreateGUI();
+                OnItemLoadedProjSpecific();
+            };
+        }
+
+        private void CreateGUI()
+        {
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.90f, 0.80f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            {
+                Stretch = true, 
                 RelativeSpacing = 0.02f
             };
 
             var topFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), paddedFrame.RectTransform), style: null);
-            var paddedLine = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), topFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            var inputText = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), paddedLine.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
-            new GUIFrame(new RectTransform(new Vector2(1f, 1.0f), paddedLine.RectTransform), style: "HorizontalLine");
-            
-            // Resize GUITextBlock width according to the text length
-            inputText.RectTransform.Resize(new Point((int)inputText.Font.MeasureString(inputText.Text).X, inputText.RectTransform.Rect.Height));
+                
+                // === INPUT LABEL === //
+                var inputLabelArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.15f), topFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
+                {
+                    Stretch = true, 
+                    RelativeSpacing = 0.05f
+                };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
+                    new GUIFrame(new RectTransform(Vector2.One, inputLabelArea.RectTransform), style: "HorizontalLine");
 
-            
-            var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1.2f), topFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.045f
-            };
-            inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
-            inputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawOverLay, null)
-            {
-                CanBeFocused = false
-            };
+                var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1.2f), topFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
+                    
+                    // === INPUT SLOTS === //
+                    inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
+                        inputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawOverLay, null) { CanBeFocused = false };
 
-            var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.75f), inputArea.RectTransform), style: null);
-            activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.65f), buttonContainer.RectTransform, Anchor.CenterLeft),
-                TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
-            {
-                TextBlock = { AutoScale = true },
-                OnClicked = ToggleActive
-            };
+                    // === ACTIVATE BUTTON === //
+                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.75f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
+                        activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.65f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
+                        {
+                            TextBlock = { AutoScaleHorizontal = true },
+                            OnClicked = ToggleActive
+                        };
+                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), 
+                                TextManager.Get("DeconstructorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+                            {
+                                HoverColor = Color.Black, 
+                                IgnoreLayoutGroups = true, 
+                                Visible = false, 
+                                CanBeFocused = false
+                            };
 
-
-            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), TextManager.Get("DeconstructorNoPower"),
-                textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
-            {
-                HoverColor = Color.Black,
-                IgnoreLayoutGroups = true,
-                Visible = false,
-                CanBeFocused = false
-            };
-            
+            // === OUTPUT AREA === //
             var bottomFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), paddedFrame.RectTransform), style: null);
-            var paddedBottomLine = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), bottomFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
-            var outputText = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), paddedBottomLine.RectTransform), TextManager.Get("uilabel.output"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
-            new GUIFrame(new RectTransform(new Vector2(1f, 1.0f), paddedBottomLine.RectTransform), style: "HorizontalLine");
-            
-            // Resize GUITextBlock width according to the text length
-            outputText.RectTransform.Resize(new Point((int)outputText.Font.MeasureString(outputText.Text).X, outputText.RectTransform.Rect.Height));
+                
+                // === OUTPUT LABEL === //
+                var outputLabelArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.15f), bottomFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
+                {
+                    Stretch = true, 
+                    RelativeSpacing = 0.05f
+                };
+                    var outputLabel = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), outputLabelArea.RectTransform), TextManager.Get("uilabel.output"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    outputLabel.RectTransform.Resize(new Point((int) outputLabel.Font.MeasureString(outputLabel.Text).X, outputLabel.RectTransform.Rect.Height));
+                    new GUIFrame(new RectTransform(Vector2.One, outputLabelArea.RectTransform), style: "HorizontalLine");
 
-            
-            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.2f), bottomFrame.RectTransform, Anchor.CenterLeft), style: null);
+                // === OUTPUT SLOTS === //
+                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.2f), bottomFrame.RectTransform, Anchor.CenterLeft), style: null);
+        }
+
+        public override bool Select(Character character)
+        {
+            // TODO, This works fine as of now but if GUI.PreventElementOverlap ever gets fixed this block of code may become obsolete or detrimental.
+            // Only do this if there's only one linked component. If you link more containers then may
+            // GUI.PreventElementOverlap have mercy on your HUD layout
+            if (item.linkedTo.Count(entity => entity is Item item && item.DisplaySideBySideWhenLinked) == 1)
+            {
+                foreach (MapEntity linkedTo in item.linkedTo)
+                {
+                    if (!(linkedTo is Item linkedItem)) continue;
+                    if (!linkedItem.Components.Any()) continue;
+                
+                    var itemContainer = linkedItem.Components.First();
+                    if (itemContainer == null) { continue; }
+
+                    if (!itemContainer.Item.DisplaySideBySideWhenLinked) continue;
+
+                    // how much spacing do we want between the components
+                    var padding = (int) (8 * GUI.Scale);
+                    // Move the linked container to the right and move the fabricator to the left
+                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(GuiFrame.Rect.Width / -2 - padding, 0);
+                    GuiFrame.RectTransform.AbsoluteOffset = new Point(itemContainer.GuiFrame.Rect.Width / 2 + padding, 0);
+                }
+            }
+            return base.Select(character);
         }
 
         partial void OnItemLoadedProjSpecific()

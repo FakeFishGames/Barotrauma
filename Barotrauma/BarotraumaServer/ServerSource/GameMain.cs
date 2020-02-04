@@ -107,6 +107,7 @@ namespace Barotrauma
             ScriptedEventSet.LoadPrefabs();
 
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
+            SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));

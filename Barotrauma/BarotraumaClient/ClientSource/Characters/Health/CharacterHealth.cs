@@ -150,6 +150,9 @@ namespace Barotrauma
         private SpriteSheet limbIndicatorOverlay;
         private float limbIndicatorOverlayAnimState;
 
+        private SpriteSheet medUIExtra;
+        private float medUIExtraAnimState;
+
         private GUIComponent draggingMed;
 
         private int highlightedLimbIndex = -1;
@@ -237,7 +240,7 @@ namespace Barotrauma
             get { return healthBarPulsateTimer; }
             set { healthBarPulsateTimer = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
-        
+
         partial void InitProjSpecific(XElement element, Character character)
         {
             DisplayedVitality = MaxVitality;
@@ -259,7 +262,7 @@ namespace Barotrauma
                 barSize: 1.0f, color: GUIColorSettings.HealthBarColorHigh, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical", false)
             {
                 Enabled = true,
-                HoverCursor =  CursorState.Hand,
+                HoverCursor = CursorState.Hand,
                 IsHorizontal = horizontal
             };
             healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
@@ -271,12 +274,14 @@ namespace Barotrauma
 
             healthInterfaceFrame = new GUIFrame(new RectTransform(new Vector2(0.85f * 1.1f, 0.66f * 0.85f * 1.1f), GUI.Canvas, anchor: Anchor.Center, scaleBasis: ScaleBasis.Smallest), style: "ItemUI");
 
-            var healthInterfaceLayout = new GUILayoutGroup(new RectTransform(Vector2.One / 1.1f, healthInterfaceFrame.RectTransform, anchor: Anchor.Center), true);
+            var healthInterfaceLayout = new GUILayoutGroup(new RectTransform(Vector2.One / 1.05f, healthInterfaceFrame.RectTransform, anchor: Anchor.Center), true);
+
+            var healthWindowContainer = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), healthInterfaceLayout.RectTransform), style: null);
 
             //limb selection frame
-            healthWindow = new GUIFrame(new RectTransform(new Vector2(0.45f, 1.0f), healthInterfaceLayout.RectTransform), style: null);
+            healthWindow = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), healthWindowContainer.RectTransform, Anchor.CenterRight, Pivot.CenterRight), style: "GUIFrameListBox");
 
-            var healthWindowVerticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, healthWindow.RectTransform, Anchor.Center));
+            var healthWindowVerticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.95f, healthWindow.RectTransform, Anchor.Center));
 
             var paddedHealthWindow = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f), healthWindowVerticalLayout.RectTransform), true)
             {
@@ -301,9 +306,34 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            GUILayoutGroup selectedLimbLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), paddedHealthWindow.RectTransform));
+            var rightSide = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), paddedHealthWindow.RectTransform), style: null);
+
+            new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.3f), rightSide.RectTransform, Anchor.BottomRight, Pivot.BottomRight),
+                (sb, component) =>
+                {
+                    if (medUIExtra == null) { return; }
+                    float overlayScale = Math.Min(
+                        component.Rect.Width / (float)medUIExtra.FrameSize.X,
+                        component.Rect.Height / (float)medUIExtra.FrameSize.Y);
+
+                    int frame = (int)medUIExtraAnimState;
+
+                    medUIExtra.Draw(sb, frame, component.Rect.Center.ToVector2(), Color.Gray, origin: medUIExtra.FrameSize.ToVector2() / 2, rotate: 0.0f,
+                        scale: Vector2.One * overlayScale);
+                },
+                (dt, component) =>
+                {
+                    medUIExtraAnimState += dt * 10.0f;
+                    while (medUIExtraAnimState >= 16.0f)
+                    {
+                        medUIExtraAnimState -= 16.0f;
+                    }
+                });
+
+            GUILayoutGroup selectedLimbLayout = new GUILayoutGroup(new RectTransform(Vector2.One, rightSide.RectTransform));
 
             selectedLimbText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.08f), selectedLimbLayout.RectTransform), "", font: GUI.LargeFont);
+            selectedLimbText.AutoScaleHorizontal = true;
 
             afflictionIconContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.92f), selectedLimbLayout.RectTransform), style: null);
             afflictionIconContainer.KeepSpaceForScrollBar = true;
@@ -327,9 +357,21 @@ namespace Barotrauma
             afflictionInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.55f, 1.0f), healthInterfaceLayout.RectTransform), style: null);
             var paddedInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.9f), afflictionInfoFrame.RectTransform, Anchor.Center), style: null);
 
-            var infoLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedInfoFrame.RectTransform));
+            var infoLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedInfoFrame.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
 
-            var nameContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), infoLayout.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), infoLayout.RectTransform), style: "GUIFrameListBox");
+
+            var textLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), textContainer.RectTransform, Anchor.Center, Pivot.Center))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.03f
+            };
+
+            var nameContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), textLayout.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
             {
                 Stretch = true
             };
@@ -338,25 +380,29 @@ namespace Barotrauma
                 onDraw: (spriteBatch, component) =>
                 {
                     character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), component.Rect.Width);
+                    character.Info.DrawJobIcon(spriteBatch, new Vector2(component.Rect.Right + component.Rect.Width, (float)component.Rect.Top + component.Rect.Height * 0.75f), 0.75f);
                 });
-            characterName = new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.CenterLeft, font: GUI.LargeFont)
+            characterName = new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.BottomLeft, font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
 
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), textLayout.RectTransform), style: "HorizontalLine");
 
-            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), infoLayout.RectTransform, Anchor.TopLeft));
+            afflictionInfoContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), textLayout.RectTransform, Anchor.TopLeft), style: null);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), infoLayout.RectTransform, Anchor.TopLeft), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopLeft);
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), textLayout.RectTransform), style: "HorizontalLine");
 
-            treatmentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), infoLayout.RectTransform), true)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textLayout.RectTransform, Anchor.TopLeft), TextManager.Get("SuitableTreatments"), textAlignment: Alignment.TopLeft);
+
+            treatmentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), textLayout.RectTransform), true)
             {
-                Stretch = true
+                Stretch = false
             };
 
-            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.9f, 1.0f), treatmentLayout.RectTransform, Anchor.TopLeft), isHorizontal: true, style: null)
+            recommendedTreatmentContainer = new GUIListBox(new RectTransform(new Vector2(0.9f, 1.0f), treatmentLayout.RectTransform, Anchor.Center, Pivot.Center), isHorizontal: true, style: null)
             {
-                KeepSpaceForScrollBar = true
+                KeepSpaceForScrollBar = false
             };
 
             lowSkillIndicator = new GUIImage(new RectTransform(new Vector2(0.1f, 1.0f), treatmentLayout.RectTransform, Anchor.TopLeft, Pivot.Center),
@@ -369,6 +415,8 @@ namespace Barotrauma
                 Visible = false
             };
             lowSkillIndicator.RectTransform.MaxSize = new Point(lowSkillIndicator.Rect.Height);
+
+            var tempFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), textLayout.RectTransform), style: null);
 
             cprLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), infoLayout.RectTransform), true)
             {
@@ -443,7 +491,11 @@ namespace Barotrauma
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "sprite":
+                        case "meduisilhouette":
                             limbIndicatorOverlay = new SpriteSheet(subElement);
+                            break;
+                        case "meduiextra":
+                            medUIExtra = new SpriteSheet(subElement);
                             break;
                     }
                 }
@@ -1062,9 +1114,9 @@ namespace Barotrauma
 
                 var button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.9f), child.RectTransform), style: null)
                 {
-                    Color = Color.Gray.Multiply(0.1f),
-                    HoverColor = Color.Gray.Multiply(0.4f),
-                    SelectedColor = Color.Gray.Multiply(0.25f),
+                    Color = Color.Gray.Multiply(0.1f).Opaque(),
+                    HoverColor = Color.Gray.Multiply(0.4f).Opaque(),
+                    SelectedColor = Color.Gray.Multiply(0.25f).Opaque(),
                     PressedColor = Color.Black,
                     UserData = "selectaffliction",
                     OnClicked = SelectAffliction
@@ -1100,22 +1152,27 @@ namespace Barotrauma
 
             List<KeyValuePair<string, float>> treatmentSuitabilities = treatmentSuitability.OrderByDescending(t => t.Value).ToList();
 
+            int count = 0;
             foreach (KeyValuePair<string, float> treatment in treatmentSuitabilities)
             {
+                count++;
+                if (count > 5) { break; }
                 ItemPrefab item = MapEntityPrefab.Find(name: null, identifier: treatment.Key, showErrorMessages: false) as ItemPrefab;
                 if (item == null) continue;
 
-                var itemSlot = new GUIFrame(new RectTransform(new Vector2(0.25f, 1.0f), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopLeft),
-                    style: "InnerGlow")
+                var itemSlot = new GUIFrame(new RectTransform(new Vector2(1.0f / 7.0f, 1.0f), recommendedTreatmentContainer.Content.RectTransform, Anchor.TopLeft),
+                    style: null)
                 {
                     UserData = item
                 };
-                itemSlot.Color = ToolBox.GradientLerp(treatment.Value, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green);
-                itemSlot.SelectedColor = itemSlot.HoverColor = itemSlot.Color;
 
+                var innerFrame = new GUIFrame(new RectTransform(Vector2.One, itemSlot.RectTransform, Anchor.Center, Pivot.Center, scaleBasis: ScaleBasis.Smallest), style: "GUIFrameListBox")
+                {
+                    CanBeFocused = false
+                };
                 Sprite itemSprite = item.InventoryIcon ?? item.sprite;
                 Color itemColor = itemSprite == item.sprite ? item.SpriteColor : item.InventoryIconColor;
-                var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), itemSlot.RectTransform, Anchor.Center),
+                var itemIcon = new GUIImage(new RectTransform(new Vector2(0.8f, 0.8f), innerFrame.RectTransform, Anchor.Center),
                     itemSprite, scaleToFit: true)
                 {
                     CanBeFocused = false,
@@ -1242,11 +1299,11 @@ namespace Barotrauma
 
         private void UpdateHeartrate(float deltaTime, GUICustomComponent component)
         {
-            heartbeatTimer -= deltaTime;
+            heartbeatTimer -= deltaTime * 0.75f;
 
             if (heartbeatTimer <= 0.0f)
             {
-                heartbeatTimer = 0.5f;
+                while (heartbeatTimer <= 0.0f) { heartbeatTimer += 0.5f; }
 
                 IEnumerable<HeartratePosition> newPositions;
                 if (Character == null || Character.IsDead || Character.IsUnconscious)
@@ -1278,7 +1335,7 @@ namespace Barotrauma
                 }
             }
 
-            currentHeartrateTime += deltaTime;
+            currentHeartrateTime += deltaTime * 0.75f;
             while (currentHeartrateTime >= 1.0f)
             {
                 currentHeartrateTime -= 1.0f;
@@ -1287,16 +1344,20 @@ namespace Barotrauma
 
         private void DrawHeartrate(SpriteBatch spriteBatch, GUICustomComponent component)
         {
-            GUI.DrawRectangle(spriteBatch, component.Rect, Color.Black, true);
+            Rectangle targetRect = component.Parent.Rect;
+            targetRect.Location += new Point(6, 6);
+            targetRect.Size -= new Point(12, 12);
+
+            //GUI.DrawRectangle(spriteBatch, targetRect, Color.Black, true);
 
             bool first = true;
             Vector2 prevPos = Vector2.Zero;
             foreach (var heartratePosition in heartratePositions.OrderBy(hp => hp.Time))
             {
-                Vector2 pos = new Vector2(heartratePosition.Time, -heartratePosition.Height * 0.5f + 0.5f) * component.Rect.Size.ToVector2() + component.Rect.Location.ToVector2();
+                Vector2 pos = new Vector2(heartratePosition.Time, -heartratePosition.Height * 0.5f + 0.5f) * targetRect.Size.ToVector2() + targetRect.Location.ToVector2();
 
-                if (pos.X < component.Rect.Left + 1) { pos.X = component.Rect.Left + 1; }
-                if (pos.X > component.Rect.Right - 1) { pos.X = component.Rect.Right - 1; }
+                if (pos.X < targetRect.Left + 1) { pos.X = targetRect.Left + 1; }
+                if (pos.X > targetRect.Right - 1) { pos.X = targetRect.Right - 1; }
 
                 if (first)
                 {
@@ -1317,17 +1378,17 @@ namespace Barotrauma
             Rectangle sourceRect = heartrateFade.Bounds;
 
             Rectangle destinationRectangle = new Rectangle();
-            destinationRectangle.Location = new Point((int)(currentHeartrateTime * component.Rect.Width) + component.Rect.Left - component.Rect.Height, component.Rect.Top);
-            destinationRectangle.Size = new Point((int)(component.Rect.Height * ((float)sourceRect.Width / (float)sourceRect.Height)), component.Rect.Height);
+            destinationRectangle.Location = new Point((int)(currentHeartrateTime * targetRect.Width) + targetRect.Left - targetRect.Height, targetRect.Top);
+            destinationRectangle.Size = new Point((int)(targetRect.Height * ((float)sourceRect.Width / (float)sourceRect.Height)), targetRect.Height);
 
-            if (destinationRectangle.Left < component.Rect.Left)
+            if (destinationRectangle.Left < targetRect.Left)
             {
                 Rectangle destinationRectangle2 = new Rectangle();
-                destinationRectangle2.Location = new Point(component.Rect.Right - (component.Rect.Left - destinationRectangle.Left), component.Rect.Top);
-                destinationRectangle2.Size = new Point(component.Rect.Right - destinationRectangle2.Left, component.Rect.Height);
+                destinationRectangle2.Location = new Point(targetRect.Right - (targetRect.Left - destinationRectangle.Left), targetRect.Top);
+                destinationRectangle2.Size = new Point(targetRect.Right - destinationRectangle2.Left, targetRect.Height);
 
                 int originalWidth = sourceRect.Width;
-                sourceRect.Width = (int)(sourceRect.Width * ((float)(destinationRectangle.Right - component.Rect.Left) / (float)component.Rect.Height));
+                sourceRect.Width = (int)(sourceRect.Width * ((float)(destinationRectangle.Right - targetRect.Left) / (float)targetRect.Height));
                 sourceRect.X += originalWidth - sourceRect.Width;
 
                 Rectangle sourceRect2 = heartrateFade.Bounds;
@@ -1335,9 +1396,9 @@ namespace Barotrauma
                 spriteBatch.Draw(heartrateFade, destinationRectangle2, sourceRect2, Color.White);
 
                 originalWidth = destinationRectangle.Width;
-                int newWidth = destinationRectangle.Right - component.Rect.Left;
+                int newWidth = destinationRectangle.Right - targetRect.Left;
 
-                destinationRectangle.Size = new Point(newWidth, component.Rect.Height);
+                destinationRectangle.Size = new Point(newWidth, targetRect.Height);
                 destinationRectangle.X += originalWidth - newWidth;
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(destinationRectangle.Right, destinationRectangle.Top,
@@ -1346,9 +1407,9 @@ namespace Barotrauma
             else
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle(destinationRectangle.Right, destinationRectangle.Top,
-                     component.Rect.Right - destinationRectangle.Right, destinationRectangle.Height), Color.Black, true);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(component.Rect.Left, destinationRectangle.Top,
-                     destinationRectangle.Left - component.Rect.Left, destinationRectangle.Height), Color.Black, true);
+                     targetRect.Right - destinationRectangle.Right, destinationRectangle.Height), Color.Black, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(targetRect.Left, destinationRectangle.Top,
+                     destinationRectangle.Left - targetRect.Left, destinationRectangle.Height), Color.Black, true);
             }
 
             spriteBatch.Draw(heartrateFade, destinationRectangle, sourceRect, Color.White);
@@ -1515,45 +1576,43 @@ namespace Barotrauma
 
                 float damageLerp = limbHealth.TotalDamage > 0.0f ? MathHelper.Lerp(0.2f, 1.0f, limbHealth.TotalDamage / 100.0f) : 0.0f;
 
-                var tempAfflictions = limbHealth.Afflictions.ToList();
-                foreach (var a in afflictions)
-                {
-                    Limb indicatorLimb = Character.AnimController.GetLimb(a.Prefab.IndicatorLimb);
-                    if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
-                    {
-                        tempAfflictions.Add(a);
-                    }
-                }
+                var tempAfflictions = GetMatchingAfflictions(limbHealth, a => true);
 
-                float negativeEffect = tempAfflictions.Where(a => !a.Prefab.IsBuff).Sum(a => a.Strength);
-                float positiveEffect = tempAfflictions.Where(a => a.Prefab.IsBuff).Sum(a => a.Strength);
+                float negativeEffect = tempAfflictions.Where(a => !a.Prefab.IsBuff && a.Strength >= a.Prefab.ShowIconThreshold).Sum(a => a.Strength);
+                //float negativeMaxEffect = tempAfflictions.Where(a => !a.Prefab.IsBuff).Sum(a => a.Prefab.MaxStrength);
+                float positiveEffect = tempAfflictions.Where(a => a.Prefab.IsBuff && a.Strength >= a.Prefab.ShowIconThreshold).Sum(a => a.Strength * 0.2f);
+                //float positiveMaxEffect = tempAfflictions.Where(a => a.Prefab.IsBuff).Sum(a => a.Prefab.MaxStrength);
 
                 float midPoint = (float)limbEffectiveArea.Center.Y / (float)limbHealth.IndicatorSprite.Texture.Height;
                 float fadeDist = 0.6f * (float)limbEffectiveArea.Height / (float)limbHealth.IndicatorSprite.Texture.Height;
 
+                if (negativeEffect > 0.0f && negativeEffect < 5.0f) { negativeEffect = 5.0f; }
+                if (positiveEffect > 0.0f && positiveEffect < 5.0f) { positiveEffect = 5.0f; }
+
+                Color positiveColor = Color.Lerp(Color.Orange, Color.Lime, Math.Min(positiveEffect / 15.0f, 1.0f));
+                Color negativeColor = Color.Lerp(Color.Orange, Color.Red, Math.Min(negativeEffect / 15.0f, 1.0f));
+
                 Color color1 = Color.Orange;
                 Color color2 = Color.Orange;
 
-                if (positiveEffect > 0.0f && negativeEffect > 0.0f)
+                if (negativeEffect+positiveEffect > 0.0f)
                 {
-                    color1 = Color.Lime;
-                    color2 = Color.Red;
-                }
-                else if (positiveEffect > 0.0f)
-                {
-                    color1 = Color.Lime;
-                    color2 = Color.Lime;
-                }
-                else if (negativeEffect > 0.0f)
-                {
-                    color1 = Color.Red;
-                    color2 = Color.Red;
+                    if (negativeEffect >= positiveEffect)
+                    {
+                        color1 = Color.Lerp(positiveColor, negativeColor, (negativeEffect - positiveEffect) / negativeEffect);
+                        color2 = negativeColor;
+                    }
+                    else
+                    {
+                        color1 = positiveColor;
+                        color2 = Color.Lerp(negativeColor, positiveColor, (positiveEffect - negativeEffect) / positiveEffect);
+                    }
                 }
 
                 if (Character.IsDead)
                 {
-                    color1 = Color.Lerp(color1, Color.Black, 0.5f);
-                    color2 = Color.Lerp(color2, Color.Black, 0.5f);
+                    color1 = Color.Lerp(color1, Color.Black, 0.75f);
+                    color2 = Color.Lerp(color2, Color.Black, 0.75f);
                 }
                 if (((i == highlightedLimbIndex || i == selectedLimbIndex) && allowHighlight) || highlightAll)
                 {
@@ -1610,22 +1669,20 @@ namespace Barotrauma
             spriteBatch.End();
             spriteBatch.Begin(SpriteSortMode.Deferred, blendState: BlendState.NonPremultiplied, rasterizerState: GameMain.ScissorTestEnable);
 
-            /*i = 0;
+            i = 0;
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 if (limbHealth.IndicatorSprite == null) continue;
 
                 Rectangle highlightArea = GetLimbHighlightArea(limbHealth, drawArea);
                 
-                var slot = GUI.Style.GetComponentStyle("AfflictionIconSlot");
-
                 float scale = Math.Min(drawArea.Width / (float)limbHealth.IndicatorSprite.SourceRect.Width, drawArea.Height / (float)limbHealth.IndicatorSprite.SourceRect.Height);
 
                 float iconScale = 0.3f * scale;
                 Vector2 iconPos = highlightArea.Center.ToVector2();
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
-                    DrawLimbAfflictionIcon(spriteBatch, affliction, slot, iconScale, ref iconPos);
+                    DrawLimbAfflictionIcon(spriteBatch, affliction, iconScale, ref iconPos);
                 }
 
                 foreach (Affliction affliction in afflictions)
@@ -1633,11 +1690,11 @@ namespace Barotrauma
                     Limb indicatorLimb = Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb);
                     if (indicatorLimb != null && indicatorLimb.HealthIndex == i)
                     {
-                        DrawLimbAfflictionIcon(spriteBatch, affliction, slot, iconScale, ref iconPos);
+                        DrawLimbAfflictionIcon(spriteBatch, affliction, iconScale, ref iconPos);
                     }
                 }
                 i++;
-            }*/
+            }
             
             if (draggingMed != null)
             {
@@ -1647,7 +1704,7 @@ namespace Barotrauma
             }
         }
 
-        private void DrawLimbAfflictionIcon(SpriteBatch spriteBatch, Affliction affliction, GUIComponentStyle slotStyle, float iconScale, ref Vector2 iconPos)
+        private void DrawLimbAfflictionIcon(SpriteBatch spriteBatch, Affliction affliction, float iconScale, ref Vector2 iconPos)
         {
             if (affliction.Strength < affliction.Prefab.ShowIconThreshold) return;
             Vector2 iconSize = (affliction.Prefab.Icon.size * iconScale);
@@ -1656,10 +1713,6 @@ namespace Barotrauma
             float alpha = MathHelper.Lerp(0.3f, 1.0f,
                 (affliction.Strength - affliction.Prefab.ShowIconThreshold) / Math.Min(affliction.Prefab.MaxStrength - affliction.Prefab.ShowIconThreshold, 10.0f));
 
-            slotStyle.Sprites[GUIComponent.ComponentState.None][0].Draw(
-                spriteBatch,
-                new Rectangle((iconPos - iconSize / 2.0f).ToPoint(), iconSize.ToPoint()),
-                slotStyle.Color * alpha);
             affliction.Prefab.Icon.Draw(spriteBatch, iconPos - iconSize / 2.0f, GetAfflictionIconColor(affliction.Prefab, affliction) * alpha, 0, iconScale);
             iconPos += new Vector2(10.0f, 20.0f) * iconScale;
         }

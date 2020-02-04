@@ -18,9 +18,10 @@ namespace Barotrauma
         private const string infoTextPath = "Content/Texts";
         private const string xmlHeader = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
-        private static string[,] translatedLanguageNames = new string[12, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
+        private static string[,] translatedLanguageNames = new string[13, 2] { { "English", "English" }, { "French", "Français" }, { "German", "Deutsch" }, 
             { "Russian", "Русский" }, { "Brazilian Portuguese", "Português brasileiro" }, { "Simplified Chinese", "中文(简体)" }, { "Traditional Chinese", "中文(繁體)" },
-            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" }, { "Japanese", "日本語" } };
+            { "Castilian Spanish", "Castellano" }, { "Latinamerican Spanish", "Español Latinoamericano" }, { "Polish", "Polski" }, { "Turkish", "Türkçe" },
+            { "Japanese", "日本語" }, { "Korean", "한국어" } };
 
         public static void Convert()
         {
@@ -81,7 +82,7 @@ namespace Barotrauma
                         continue;
                     }
                     string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/NpcConversations_{languageNoWhitespace}_NEW.xml";
-                    File.WriteAllLines(xmlFileFullPath, xmlContent);
+                    File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
                 }
 
@@ -94,7 +95,7 @@ namespace Barotrauma
                         continue;
                     }
                     string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/{languageNoWhitespace}Vanilla_NEW.xml";
-                    File.WriteAllLines(xmlFileFullPath, xmlContent);
+                    File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
                 }
 

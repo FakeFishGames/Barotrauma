@@ -12,7 +12,7 @@ namespace Steamworks.ServerList
 		{
 			var filters = GetFilters();
 
-			request = Internal.RequestInternetServerList( AppId.Value, ref filters, (uint)filters.Length, IntPtr.Zero );
+			request = Internal.RequestInternetServerList( AppId.Value, filters, (uint)filters.Length, IntPtr.Zero );
 		}
 	}
 }

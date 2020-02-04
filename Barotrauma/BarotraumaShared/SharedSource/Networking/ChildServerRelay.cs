@@ -176,8 +176,16 @@ namespace Barotrauma.Networking
                     byte[] lengthBytes = new byte[2];
                     lengthBytes[0] = (byte)(msg.Length & 0xFF);
                     lengthBytes[1] = (byte)((msg.Length >> 8) & 0xFF);
-                    writeStream?.Write(lengthBytes, 0, 2);
-                    writeStream?.Write(msg, 0, msg.Length);
+                    try
+                    {
+                        writeStream?.Write(lengthBytes, 0, 2);
+                        writeStream?.Write(msg, 0, msg.Length);
+                    }
+                    catch (IOException e)
+                    {
+                        shutDown = true;
+                        break;
+                    }
 
                     if (shutDown) { break; }
 

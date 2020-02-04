@@ -38,6 +38,8 @@ namespace Barotrauma
         private GUIComponent showEntitiesPanel, entityCountPanel;
         private List<GUITickBox> showEntitiesTickBoxes = new List<GUITickBox>();
 
+        private GUITextBlock subNameLabel;
+
         private bool entityMenuOpen = true;
         private float entityMenuOpenState = 1.0f;
         public GUIComponent EntityMenu;
@@ -45,11 +47,16 @@ namespace Barotrauma
         private GUIListBox entityList;
         private GUIButton toggleEntityMenuButton;
 
+        private GUITickBox defaultModeTickBox, wiringModeTickBox, characterModeTickBox;
+
         private GUIComponent loadFrame, saveFrame;
 
         private GUITextBox nameBox, descriptionBox;
 
+        private GUIButton selectedCategoryButton;
+        private GUITextBlock selectedCategoryText;
         private readonly List<GUIButton> entityCategoryButtons = new List<GUIButton>();
+        private MapEntityCategory? selectedCategory;
 
         private GUIFrame hullVolumeFrame;
 
@@ -60,8 +67,6 @@ namespace Barotrauma
         private GUIListBox previouslyUsedList;
 
         private GUIDropDown linkedSubBox;
-
-        private GUIRadioButtonGroup modeButtonGroup;
 
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
@@ -89,15 +94,10 @@ namespace Barotrauma
             get { return cam; }
         }
 
-        public string GetSubName()
-        {
-            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Name;
-        }
-
         public string GetSubDescription()
         {
-            string localizedDescription = TextManager.Get("submarine.description." + GetSubName(), true);
-            if (localizedDescription != null) return localizedDescription;
+            string localizedDescription = TextManager.Get("submarine.description." + (Submarine.MainSub?.Name ?? ""), true);
+            if (localizedDescription != null) { return localizedDescription; }
             return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Description;
         }
 
@@ -214,11 +214,8 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            var nameLabel = new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
-                "", font: GUI.LargeFont, textAlignment: Alignment.CenterLeft)
-            {
-                TextGetter = GetSubName
-            };
+            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("unspecifiedsubfilename"), font: GUI.LargeFont, textAlignment: Alignment.CenterLeft);
 
             linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
                 TextManager.Get("AddSubButton"), elementCount: 20)
@@ -238,51 +235,35 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            modeButtonGroup = new GUIRadioButtonGroup();
-
-            var defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
+            defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
             {
                 ToolTip = TextManager.Get("SubEditorEditingMode"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (tBox.Selected)
-                    {
-                        SetMode(Mode.Default);
-                    }
+                    if (tBox.Selected) { SetMode(Mode.Default); }
                     return true;
                 }
             };
 
-            var characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CharacterModeButton")
+            characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CharacterModeButton")
             {
                 ToolTip = TextManager.Get("CharacterModeButton") + '\n' + TextManager.Get("CharacterModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (tBox.Selected)
-                    {
-                        SetMode(Mode.Character);
-                    }
+                    SetMode(tBox.Selected ? Mode.Character : Mode.Default);
                     return true;
                 }
             };
 
-            var wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
+            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
             {
                 ToolTip = TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (tBox.Selected)
-                    {
-                        SetMode(Mode.Wiring);
-                    }
+                    SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
                     return true;
                 }
             };
-
-            modeButtonGroup.AddRadioButton((int)Mode.Default, defaultModeTickBox);
-            modeButtonGroup.AddRadioButton((int)Mode.Character, characterModeTickBox);
-            modeButtonGroup.AddRadioButton((int)Mode.Wiring, wiringModeTickBox);
-            modeButtonGroup.Selected = (int)Mode.Default;
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
@@ -294,7 +275,7 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            var visibilityButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
+            var visibilityButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
             {
                 ToolTip = TextManager.Get("SubEditorVisibilityButton") + '\n' + TextManager.Get("SubEditorVisibilityToolTip"),
                 OnClicked = (btn, userData) =>
@@ -306,7 +287,7 @@ namespace Barotrauma
                 }
             };
 
-            var previouslyUsedButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "RecentlyUsedButton")
+            var previouslyUsedButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "RecentlyUsedButton")
             {
                 ToolTip = TextManager.Get("PreviouslyUsedLabel"),
                 OnClicked = (btn, userData) =>
@@ -536,7 +517,7 @@ namespace Barotrauma
                 Visible = false
             };
             var saveAssemblyButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.8f), saveAssemblyFrame.RectTransform, Anchor.Center), TextManager.Get("SaveItemAssembly"));
-            saveAssemblyButton.TextBlock.AutoScale = true;
+            saveAssemblyButton.TextBlock.AutoScaleHorizontal = true;
             saveAssemblyButton.OnClicked += (btn, userdata) =>
             {
                 CreateSaveAssemblyScreen();
@@ -567,7 +548,7 @@ namespace Barotrauma
 
             var paddedTab = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.96f), EntityMenu.RectTransform, Anchor.BottomCenter), childAnchor: Anchor.TopCenter)
             {
-                RelativeSpacing = 0.05f,
+                RelativeSpacing = 0.04f,
                 Stretch = true
             };
 
@@ -576,22 +557,28 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var selectedCategoryButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CategoryButton.All")
+            selectedCategoryButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CategoryButton.All")
             {
                 CanBeFocused = false
             };
-            var selectedCategoryText = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), entityMenuTop.RectTransform), TextManager.Get("MapEntityCategory.All"), font: GUI.LargeFont);
+            selectedCategoryText = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), entityMenuTop.RectTransform), TextManager.Get("MapEntityCategory.All"), font: GUI.LargeFont);
+
+            var filterText = new GUITextBlock(new RectTransform(new Vector2(0.1f, 1.0f), entityMenuTop.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.SubHeadingFont);
+            filterText.RectTransform.MaxSize = new Point((int)(filterText.TextSize.X * 1.5f), int.MaxValue);
+            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.17f, 1.0f), entityMenuTop.RectTransform), font: GUI.Font, createClearButton: true);
+            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
+
+            //spacing
+            new GUIFrame(new RectTransform(new Vector2(0.075f, 1.0f), entityMenuTop.RectTransform), style: null);
 
             entityCategoryButtons.Clear();
             entityCategoryButtons.Add(
                 new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CategoryButton.All")
                 {
-                    OnClicked = (btn, userdata) => 
-                    { 
-                        entityCategoryButtons.ForEach(b => b.Selected = b == btn);
-                        selectedCategoryText.Text = TextManager.Get("MapEntityCategory.All");
-                        selectedCategoryButton.ApplyStyle(GUI.Style.GetComponentStyle("CategoryButton.All"));
-                        ClearFilter(); 
+                    OnClicked = (btn, userdata) =>
+                    {
+                        if (!string.IsNullOrEmpty(entityFilterBox.Text)) { ClearFilter(); }
+                        OpenEntityMenu(null);
                         return true; 
                     }
                 });
@@ -605,20 +592,14 @@ namespace Barotrauma
                     ToolTip = TextManager.Get("MapEntityCategory." + category.ToString()),
                     OnClicked = (btn, userdata) =>
                     {
-                        entityMenuOpen = true;
+                        if (!string.IsNullOrEmpty(entityFilterBox.Text)) { ClearFilter(); }
                         MapEntityCategory newCategory = (MapEntityCategory)userdata;
-                        selectedCategoryText.Text = TextManager.Get("MapEntityCategory." + newCategory.ToString());
-                        selectedCategoryButton.ApplyStyle(GUI.Style.GetComponentStyle("CategoryButton." + category.ToString()));
                         OpenEntityMenu(newCategory);
                         return true;
                     }
                 });
             }
-
-            var filterText = new GUITextBlock(new RectTransform(new Vector2(0.1f, 1.0f), entityMenuTop.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.SubHeadingFont);
-            filterText.RectTransform.MaxSize = new Point((int)(filterText.TextSize.X * 1.5f), int.MaxValue);
-            entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.2f, 1.0f), entityMenuTop.RectTransform), font: GUI.Font, createClearButton: true);
-            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
+            entityCategoryButtons.ForEach(b => b.RectTransform.MaxSize = new Point(b.Rect.Height));
 
             new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedTab.RectTransform), style: "HorizontalLine");
 
@@ -636,7 +617,7 @@ namespace Barotrauma
         {
             entityList.Content.ClearChildren();
 
-            int entitiesPerRow = (int)Math.Ceiling(entityList.Content.Rect.Width / Math.Max(125 * GUI.Scale, 100));
+            int entitiesPerRow = (int)Math.Ceiling(entityList.Content.Rect.Width / Math.Max(125 * GUI.Scale, 60));
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
@@ -761,6 +742,9 @@ namespace Barotrauma
             base.Select();
 
             UpdateEntityList();
+
+            string name = (Submarine.MainSub == null) ? TextManager.Get("unspecifiedsubfilename") : Submarine.MainSub.Name;
+            subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -1000,7 +984,6 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(nameBox.Text))
             {
                 GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), GUI.Style.Red);
-
                 nameBox.Flash();
                 return false;
             }
@@ -1069,6 +1052,8 @@ namespace Barotrauma
                 linkedSubBox.AddItem(sub.Name, sub);
             }
 
+            subNameLabel.Text = ToolBox.LimitString(Submarine.MainSub.Name, subNameLabel.Font, subNameLabel.Rect.Width);
+
             saveFrame = null;
             
             return false;
@@ -1102,8 +1087,7 @@ namespace Barotrauma
 
             nameBox = new GUITextBox(new RectTransform(new Vector2(.95f, 0.05f), leftColumn.RectTransform))
             {
-                OnEnterPressed = ChangeSubName,
-                Text = GetSubName()
+                OnEnterPressed = ChangeSubName
             };
             nameBox.OnTextChanged += (textBox, text) =>
             {
@@ -1627,6 +1611,9 @@ namespace Barotrauma
             Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
             Submarine.MainSub.UpdateTransform();
 
+            string name = Submarine.MainSub.Name;
+            subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
+
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
@@ -1700,22 +1687,25 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked += msgBox.Close;            
         }
 
-        private bool OpenEntityMenu(MapEntityCategory selectedCategory)
+        private bool OpenEntityMenu(MapEntityCategory? selectedCategory)
         {
-            entityFilterBox.Text = "";
+            foreach (GUIButton categoryButton in entityCategoryButtons)
+            {
+                categoryButton.Selected = selectedCategory.HasValue ?
+                    categoryButton.UserData is MapEntityCategory category && selectedCategory.Value == category :
+                    categoryButton.UserData == null;
+                string categoryName = selectedCategory.HasValue ? selectedCategory.Value.ToString() : "All";
+                selectedCategoryText.Text = TextManager.Get("MapEntityCategory." + categoryName);
+                selectedCategoryButton.ApplyStyle(GUI.Style.GetComponentStyle("CategoryButton." + categoryName));
+            }
+
+            this.selectedCategory = selectedCategory;
+            
             SetMode(Mode.Default);
 
             saveFrame = null;
             loadFrame = null;
-
-            ClearFilter();
-            foreach (GUIButton button in entityCategoryButtons)
-            {
-                button.Selected = 
-                    button.UserData != null &&
-                    (MapEntityCategory)button.UserData == selectedCategory;
-            }
-            
+                        
             foreach (GUIComponent child in toggleEntityMenuButton.Children)
             {
                 child.SpriteEffects = entityMenuOpen ? SpriteEffects.None : SpriteEffects.FlipVertically;
@@ -1723,7 +1713,7 @@ namespace Barotrauma
 
             foreach (GUIComponent child in entityList.Content.Children)
             {
-                child.Visible = ((MapEntityPrefab)child.UserData).Category == selectedCategory;
+                child.Visible = !selectedCategory.HasValue || ((MapEntityPrefab)child.UserData).Category == selectedCategory;
             }
             entityList.UpdateScrollBarSize();
             entityList.BarScroll = 0.0f;
@@ -1733,14 +1723,9 @@ namespace Barotrauma
 
         private bool FilterEntities(string filter)
         {
-            foreach (GUIButton button in entityCategoryButtons)
-            {
-                button.Selected = false;
-            }
-
             if (string.IsNullOrWhiteSpace(filter))
             {
-                entityList.Content.Children.ForEach(c => c.Visible = true);
+                entityList.Content.Children.ForEach(c => c.Visible = !selectedCategory.HasValue || selectedCategory == ((MapEntityPrefab)c.UserData).Category);
                 return true;
             }
 
@@ -1748,7 +1733,9 @@ namespace Barotrauma
             foreach (GUIComponent child in entityList.Content.Children)
             {
                 var textBlock = child.GetChild<GUITextBlock>();
-                child.Visible = ((MapEntityPrefab)child.UserData).Name.ToLower().Contains(filter);
+                child.Visible = 
+                    (!selectedCategory.HasValue || selectedCategory == ((MapEntityPrefab)child.UserData).Category) &&                    
+                    ((MapEntityPrefab)child.UserData).Name.ToLower().Contains(filter);
             }
             entityList.UpdateScrollBarSize();
             entityList.BarScroll = 0.0f;
@@ -1768,9 +1755,13 @@ namespace Barotrauma
         public void SetMode(Mode mode)
         {
             if (mode == this.mode) { return; }
-
             this.mode = mode;
-            modeButtonGroup.Selected = (int)mode;
+
+            defaultModeTickBox.Selected = mode == Mode.Default;
+            defaultModeTickBox.CanBeFocused = !defaultModeTickBox.Selected;
+
+            characterModeTickBox.Selected = mode == Mode.Character;
+            wiringModeTickBox.Selected = mode == Mode.Wiring;
 
             switch (mode)
             {
@@ -1855,10 +1846,11 @@ namespace Barotrauma
             {
                 if (!child.Enabled) { child.TextColor *= 0.5f; }
             }
-            
+
+            contextMenu.Content.Children.ForEach(c => c.RectTransform.MinSize = new Point(0, c.Rect.Height));            
             contextMenu.RectTransform.NonScaledSize = new Point(
                 contextMenu.Rect.Width, 
-                (int)((contextMenu.Content.CountChildren * 18) * GUI.Scale));
+                (int)((contextMenu.Content.CountChildren * 20) * GUI.Scale));
             
             contextMenu.OnSelected = (GUIComponent component, object obj) =>
             {
@@ -2411,6 +2403,11 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
+
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Tab))
+            {
+                entityFilterBox.Select();
+            }
             
             cam.MoveCamera((float)deltaTime, true);       
             if (PlayerInput.MidButtonHeld())
@@ -2615,9 +2612,11 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch, new Vector2(Submarine.MainSub.HiddenSubPosition.X, -cam.WorldView.Y), new Vector2(Submarine.MainSub.HiddenSubPosition.X, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
                 GUI.DrawLine(spriteBatch, new Vector2(cam.WorldView.X, -Submarine.MainSub.HiddenSubPosition.Y), new Vector2(cam.WorldView.Right, -Submarine.MainSub.HiddenSubPosition.Y), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
             }
-           
-            Submarine.DrawBack(spriteBatch, editing: true);
+            Submarine.DrawBack(spriteBatch, true, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
+            spriteBatch.End();
 
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
+            Submarine.DrawBack(spriteBatch, true, e => !(e is Structure) || e.SpriteDepth < 0.9f);
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);

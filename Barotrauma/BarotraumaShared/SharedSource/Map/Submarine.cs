@@ -949,6 +949,7 @@ namespace Barotrauma
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionWall)
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionRepair)) { return -1; }
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
+                if (fixture.Body.UserData as string == "ruinroom") { return -1; }
                 if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) { return -1; }

@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool autoTemp = msg.ReadBoolean();
-            bool shutDown = msg.ReadBoolean();
+            bool powerOn = msg.ReadBoolean();
             float fissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             float turbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
 
@@ -24,10 +24,10 @@ namespace Barotrauma.Items.Components
             if (!autoTemp && AutoTemp) blameOnBroken = c;
             if (turbineOutput < targetTurbineOutput) blameOnBroken = c;
             if (fissionRate > targetFissionRate) blameOnBroken = c;
-            if (!this._powerOn && shutDown) blameOnBroken = c;
+            if (!_powerOn && powerOn) blameOnBroken = c;
 
             AutoTemp = autoTemp;
-            this._powerOn = shutDown;
+            _powerOn = powerOn;
             targetFissionRate = fissionRate;
             targetTurbineOutput = turbineOutput;
 

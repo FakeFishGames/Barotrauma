@@ -784,12 +784,12 @@ namespace Barotrauma
             };
             shuttleTickBox.TextBlock.RectTransform.SizeChanged += () =>
             {
-                shuttleTickBox.TextBlock.AutoScale = true;
+                shuttleTickBox.TextBlock.AutoScaleHorizontal = true;
                 shuttleTickBox.TextBlock.TextScale = 1.0f;
                 if (shuttleTickBox.TextBlock.TextScale < 0.75f)
                 {
                     shuttleTickBox.TextBlock.Wrap = true;
-                    shuttleTickBox.TextBlock.AutoScale = true;
+                    shuttleTickBox.TextBlock.AutoScaleHorizontal = true;
                     shuttleTickBox.TextBlock.TextScale = 1.0f;
                 }
             };
@@ -831,13 +831,13 @@ namespace Barotrauma
                     if (child is GUITextBlock textBlock)
                     {
                         textBlock.TextScale = 1;
-                        textBlock.AutoScale = true;
+                        textBlock.AutoScaleHorizontal = true;
                         textBlock.SetTextPos();
                     }
                     else if (child is GUITickBox tickBox)
                     {
                         tickBox.TextBlock.TextScale = 1;
-                        tickBox.TextBlock.AutoScale = true;
+                        tickBox.TextBlock.AutoScaleHorizontal = true;
                         tickBox.TextBlock.SetTextPos();
                     }
                 }
@@ -1827,7 +1827,7 @@ namespace Barotrauma
                 {
                     UserData = selectedClient
                 };
-                viewSteamProfileButton.TextBlock.AutoScale = true;
+                viewSteamProfileButton.TextBlock.AutoScaleHorizontal = true;
                 viewSteamProfileButton.OnClicked = (bt, userdata) =>
                 {
                     Steamworks.SteamFriends.OpenWebOverlay("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
@@ -2694,7 +2694,7 @@ namespace Barotrauma
                 SelectedColor = Color.Transparent,
                 TextColor = jobPrefab.UIColor,
                 CanBeFocused = false,
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             textBlock.RectTransform.SizeChanged += () => { textBlock.TextScale = 1.0f; };
 

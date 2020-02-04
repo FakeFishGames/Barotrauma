@@ -327,6 +327,12 @@ namespace Barotrauma.Networking
 #endif
             if (!started) { return; }
 
+            if (OwnerConnection != null && ChildServerRelay.HasShutDown)
+            {
+                Disconnect();
+                return;
+            }
+
             base.Update(deltaTime);
 
             fileSender.Update(deltaTime);

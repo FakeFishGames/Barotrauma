@@ -30,10 +30,6 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle InventoryAreaUpper
-        {
-            get; private set;
-        }
 
         public static Rectangle CrewArea
         {
@@ -110,7 +106,7 @@ namespace Barotrauma
         {
             Padding = (int)(10 * GUI.Scale);
 
-            if (inventoryTopY == 0) inventoryTopY = GameMain.GraphicsHeight;
+            if (inventoryTopY == 0) { inventoryTopY = GameMain.GraphicsHeight - 30; }
 
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
@@ -124,7 +120,7 @@ namespace Barotrauma
             int healthBarHeight = (int)Math.Max(15f * GUI.Scale, 12.5f);
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
             HealthBarAreaLeft = new Rectangle(PortraitArea.X, PortraitArea.Y + Padding / 2 + portraitSize, healthBarWidth, healthBarHeight);
-            AfflictionAreaLeft = new Rectangle(Padding, HealthBarAreaLeft.Y - afflictionAreaHeight - Padding, healthBarWidth, afflictionAreaHeight);
+            AfflictionAreaLeft = new Rectangle(PortraitArea.X, HealthBarAreaLeft.Y + healthBarHeight + Padding, healthBarWidth, afflictionAreaHeight);
             
             //HealthBarAreaRight = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
             /*if (HealthBarAreaRight.Y + healthBarHeight * 0.75f < PortraitArea.Y)
@@ -136,14 +132,6 @@ namespace Barotrauma
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
             MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom, messageAreaWidth, ButtonAreaTop.Height);
 
-            CrewArea = new Rectangle(HealthBarAreaLeft.Right + Padding, MessageAreaTop.Bottom + Padding,
-                GameMain.GraphicsWidth - HealthBarAreaLeft.Right - 2 * Padding, (int)(0.6f * portraitSize));
-
-            //slice for the upper slots of the inventory (clothes, id card, headset)
-            int inventoryAreaUpperWidth = (int)(GameMain.GraphicsWidth * 0.2f);
-            int inventoryAreaUpperHeight = (int)(GameMain.GraphicsHeight * 0.2f);
-            InventoryAreaUpper = new Rectangle(GameMain.GraphicsWidth - inventoryAreaUpperWidth - Padding, CrewArea.Y, inventoryAreaUpperWidth, inventoryAreaUpperHeight);
-
             int toggleButtonWidth = (int)(ChatBox.ToggleButtonWidthRaw * GUI.Scale);
             int chatBoxWidth = (int)(475 * GUI.Scale);
             int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
@@ -153,8 +141,11 @@ namespace Barotrauma
             int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
             ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
-            int lowerAreaHeight = (int)Math.Min(GameMain.GraphicsHeight * 0.25f, 280);
-            InventoryAreaLower = new Rectangle(Padding, GameMain.GraphicsHeight - lowerAreaHeight, GameMain.GraphicsWidth - Padding * 2, lowerAreaHeight);
+            var crewAreaY = AfflictionAreaLeft.Bottom + Padding;
+            var crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 400), crewAreaHeight);
+
+            InventoryAreaLower = new Rectangle(Padding, inventoryTopY, GameMain.GraphicsWidth - Padding * 2, GameMain.GraphicsHeight - inventoryTopY);
 
             int healthWindowWidth = (int)(GameMain.GraphicsWidth * 0.5f);
             int healthWindowHeight = (int)(GameMain.GraphicsWidth * 0.5f * 0.65f);
@@ -168,7 +159,6 @@ namespace Barotrauma
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
             GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUI.Style.Orange * 0.5f);
-            GUI.DrawRectangle(spriteBatch, InventoryAreaUpper, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Red * 0.5f);

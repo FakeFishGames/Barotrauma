@@ -114,7 +114,7 @@ namespace Barotrauma
         public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f, bool playerInput = false) //TODO: could integrate this into the ScalableFont class directly
         {
             Vector2 textSize = font.MeasureString(text);
-            if (textSize.X < lineLength) { return text; }
+            if (textSize.X <= lineLength) { return text; }
 
             if (!playerInput)
             {

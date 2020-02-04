@@ -293,10 +293,15 @@ namespace Barotrauma
             }
         }
 
+        private ScaleBasis _scaleBasis;
         public ScaleBasis ScaleBasis 
         { 
-            get; 
-            private set; 
+            get { return _scaleBasis; }
+            set
+            {
+                _scaleBasis = value;
+                RecalculateAbsoluteSize();
+            }
         }
 
         public bool IsLastChild
@@ -336,7 +341,7 @@ namespace Barotrauma
         public RectTransform(Vector2 relativeSize, RectTransform parent, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null, ScaleBasis scaleBasis = ScaleBasis.Normal)
         {
             Init(parent, anchor, pivot);
-            this.ScaleBasis = scaleBasis;
+            _scaleBasis = scaleBasis;
             this.relativeSize = relativeSize;
             this.minSize = minSize;
             this.maxSize = maxSize;
@@ -348,19 +353,23 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// By default, elements defined with an absolute size (in pixels), will be treated as fixed sized.
-        /// This can be changed by setting IsFixedSize to false.
+        /// By default, elements defined with an absolute size (in pixels) will scale with the parent.
+        /// This can be changed by setting IsFixedSize to true.
         /// </summary>
-        public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null)
+        public RectTransform(Point absoluteSize, RectTransform parent = null, Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, ScaleBasis scaleBasis = ScaleBasis.Normal, bool isFixedSize = false)
         {
             Init(parent, anchor, pivot);
-            this.ScaleBasis = ScaleBasis.Normal;
+            _scaleBasis = scaleBasis;
             this.nonScaledSize = absoluteSize;
             RecalculateScale();
-            RecalculateRelativeSize();            
+            RecalculateRelativeSize();
+            if (scaleBasis != ScaleBasis.Normal)
+            {
+                RecalculateAbsoluteSize();
+            }
             RecalculateAnchorPoint();
             RecalculatePivotOffset();
-            IsFixedSize = true;
+            IsFixedSize = isFixedSize;
             parent?.ChildrenChanged?.Invoke(this);
         }
 
@@ -370,6 +379,7 @@ namespace Barotrauma
             Enum.TryParse(element.GetAttributeString("pivot", anchor.ToString()), out Pivot pivot);
 
             Point? minSize = null, maxSize = null;
+            ScaleBasis scaleBasis = ScaleBasis.Normal;
             if (element.Attribute("minsize") != null)
             {
                 minSize = element.GetAttributePoint("minsize", Point.Zero);
@@ -378,11 +388,15 @@ namespace Barotrauma
             {
                 maxSize = element.GetAttributePoint("maxsize", new Point(1000, 1000));
             }
-
+            string sb = element.GetAttributeString("scalebasis", null);
+            if (sb != null)
+            {
+                Enum.TryParse(sb, ignoreCase: true, out scaleBasis);
+            }
             RectTransform rectTransform;
             if (element.Attribute("absolutesize") != null)
             {
-                rectTransform = new RectTransform(element.GetAttributePoint("absolutesize", new Point(1000, 1000)), parent, anchor, pivot)
+                rectTransform = new RectTransform(element.GetAttributePoint("absolutesize", new Point(1000, 1000)), parent, anchor, pivot, scaleBasis)
                 {
                     minSize = minSize,
                     maxSize = maxSize
@@ -390,7 +404,7 @@ namespace Barotrauma
             }
             else
             {
-                rectTransform = new RectTransform(element.GetAttributeVector2("relativesize", Vector2.One), parent, anchor, pivot, minSize, maxSize);
+                rectTransform = new RectTransform(element.GetAttributeVector2("relativesize", Vector2.One), parent, anchor, pivot, minSize, maxSize, scaleBasis);
             }
             rectTransform.RelativeOffset = element.GetAttributeVector2("relativeoffset", Vector2.Zero);
             rectTransform.AbsoluteOffset = element.GetAttributePoint("absoluteoffset", Point.Zero);
@@ -438,37 +452,37 @@ namespace Barotrauma
         protected void RecalculateAbsoluteSize()
         {
             Point size = NonScaledParentRect.Size;
-            if (ScaleBasis == ScaleBasis.BothWidth)
+            switch (ScaleBasis)
             {
-                size.Y = size.X;
-            }
-            else if (ScaleBasis == ScaleBasis.BothHeight)
-            {
-                size.X = size.Y;
-            }
-            else if (ScaleBasis == ScaleBasis.Smallest)
-            {
-                if (size.X < size.Y)
-                {
+                case ScaleBasis.BothWidth:
                     size.Y = size.X;
-                }
-                else
-                {
+                    break;
+                case ScaleBasis.BothHeight:
                     size.X = size.Y;
-                }
+                    break;
+                case ScaleBasis.Smallest:
+                    if (size.X < size.Y)
+                    {
+                        size.Y = size.X;
+                    }
+                    else
+                    {
+                        size.X = size.Y;
+                    }
+                    break;
+                case ScaleBasis.Largest:
+                    if (size.X > size.Y)
+                    {
+                        size.Y = size.X;
+                    }
+                    else
+                    {
+                        size.X = size.Y;
+                    }
+                    break;
             }
-            else if (ScaleBasis == ScaleBasis.Largest)
-            {
-                if (size.X > size.Y)
-                {
-                    size.Y = size.X;
-                }
-                else
-                {
-                    size.X = size.Y;
-                }
-            }
-            nonScaledSize = size.Multiply(RelativeSize).Clamp(MinSize, MaxSize);
+            size = size.Multiply(RelativeSize);
+            nonScaledSize = size.Clamp(MinSize, MaxSize);
             recalculateRect = true;
             SizeChanged?.Invoke();
         }
@@ -683,6 +697,44 @@ namespace Barotrauma
             {
                 children[i].GUIComponent.AddToGUIUpdateList(ignoreChildren, order);
             }
+        }
+
+        public void MatchPivotToAnchor() => MatchPivotToAnchor(Anchor);
+
+        public void MoveOverTime(Point targetPos, float duration)
+        {
+            CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration));
+        }
+        public void ScaleOverTime(Point targetSize, float duration)
+        {
+            CoroutineManager.StartCoroutine(DoScaleAnimation(targetSize, duration));
+        }
+
+        private IEnumerable<object> DoMoveAnimation(Point targetPos, float duration)
+        {
+            Vector2 startPos = AbsoluteOffset.ToVector2();
+            float t = 0.0f;
+            while (t < duration && duration > 0.0f)
+            {
+                t += CoroutineManager.DeltaTime;
+                AbsoluteOffset = Vector2.SmoothStep(startPos, targetPos.ToVector2(), t / duration).ToPoint();
+                yield return CoroutineStatus.Running;
+            }
+            AbsoluteOffset = targetPos;
+            yield return CoroutineStatus.Success;
+        }
+        private IEnumerable<object> DoScaleAnimation(Point targetSize, float duration)
+        {
+            Vector2 startSize = NonScaledSize.ToVector2();
+            float t = 0.0f;
+            while (t < duration && duration > 0.0f)
+            {
+                t += CoroutineManager.DeltaTime;
+                NonScaledSize = Vector2.SmoothStep(startSize, targetSize.ToVector2(), t / duration).ToPoint();
+                yield return CoroutineStatus.Running;
+            }
+            NonScaledSize = targetSize;
+            yield return CoroutineStatus.Success;
         }
         #endregion
 

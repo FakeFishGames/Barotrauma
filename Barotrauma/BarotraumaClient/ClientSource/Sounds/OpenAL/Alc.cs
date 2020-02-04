@@ -120,6 +120,27 @@ namespace OpenAL
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcGetError")]
         public static extern int GetError(IntPtr device);
 
+        public static string GetErrorString(int errorCode)
+        {
+            switch (errorCode)
+            {
+                case NoError:
+                    return "No error";
+                case InvalidContext:
+                    return "Invalid context";
+                case InvalidDevice:
+                    return "Invalid device";
+                case InvalidEnum:
+                    return "Invalid enum";
+                case InvalidValue:
+                    return "Invalid value";
+                case OutOfMemory:
+                    return "Out of memory";
+                default:
+                    return "Unknown error";
+            }
+        }
+
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcIsExtensionPresent")]
         public static extern bool IsExtensionPresent(IntPtr device, string extname);
 

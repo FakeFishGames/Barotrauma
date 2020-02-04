@@ -157,7 +157,7 @@ namespace Barotrauma
             //(= the background texture that's revealed when a wall is destroyed) into the background render target
             //These will be visible through the LOS effect.
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, e => e is Structure s);
+            Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
@@ -201,7 +201,7 @@ namespace Barotrauma
             spriteBatch.End();
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            Submarine.DrawBack(spriteBatch, false, s => !(s is Structure));
+            Submarine.DrawBack(spriteBatch, false, e => !(e is Structure) || e.SpriteDepth < 0.9f);
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible) { continue; }

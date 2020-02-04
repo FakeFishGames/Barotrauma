@@ -117,31 +117,36 @@ namespace Barotrauma.Items.Components
             else
             {
                 //if a GUIFrame has been defined, draw the inventory inside it
-
-                var content = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset },
-                    style: null)
-                {
-                    CanBeFocused = false
-                };
-
-                string labelText = GetUILabel();
-                GUITextBlock label = null;
-                if (!string.IsNullOrEmpty(labelText))
-                {
-                    label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter), 
-                        labelText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
-                }
-
-                float minInventoryAreaSize = 0.5f;
-                guiCustomComponent = new GUICustomComponent(
-                    new RectTransform(new Vector2(1.0f, label == null ? 1.0f : Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)), content.RectTransform, Anchor.BottomCenter),
-                    onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
-                    onUpdate: null)
-                {
-                    CanBeFocused = false
-                };
-                Inventory.RectTransform = guiCustomComponent.RectTransform;
+                CreateGUI();
+                GameMain.Instance.OnResolutionChanged += () => { GuiFrame.ClearChildren(); CreateGUI(); };
             }
+        }
+
+        private void CreateGUI()
+        {
+            var content = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset },
+                style: null)
+            {
+                CanBeFocused = false
+            };
+
+            string labelText = GetUILabel();
+            GUITextBlock label = null;
+            if (!string.IsNullOrEmpty(labelText))
+            {
+                label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter), 
+                    labelText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+            }
+
+            float minInventoryAreaSize = 0.5f;
+            guiCustomComponent = new GUICustomComponent(
+                new RectTransform(new Vector2(1.0f, label == null ? 1.0f : Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)), content.RectTransform, Anchor.BottomCenter),
+                onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
+                onUpdate: null)
+            {
+                CanBeFocused = false
+            };
+            Inventory.RectTransform = guiCustomComponent.RectTransform;
         }
 
         public string GetUILabel()

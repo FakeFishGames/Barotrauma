@@ -35,6 +35,8 @@ public static class AssemblyInfo
 
 #if DEBUG
         retVal = "Debug" + retVal;
+#elif UNSTABLE
+        retVal = "Unstable" + retVal;
 #else
         retVal = "Release" + retVal;
 #endif

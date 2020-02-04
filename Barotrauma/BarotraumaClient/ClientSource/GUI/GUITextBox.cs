@@ -75,9 +75,8 @@ namespace Barotrauma
             set { textBlock.TextGetter = value; }
         }
 
-        // TODO: fix implicit hiding
-        private bool selected;
-        public bool Selected
+        private new bool selected;
+        public new bool Selected
         {
             get
             {
@@ -457,13 +456,13 @@ namespace Barotrauma
             return currPosition != null ? currPosition.Item2 : textBlock.Text.Length;
         }
 
-        public void Select()
+        public void Select(int forcedCaretIndex = -1)
         {
             if (memento.Current == null)
             {
                 memento.Store(Text);
             }
-            CaretIndex = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
+            CaretIndex = forcedCaretIndex == - 1 ? GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
             ClearSelection();
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;

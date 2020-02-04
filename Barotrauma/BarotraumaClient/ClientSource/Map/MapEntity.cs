@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -733,9 +734,10 @@ namespace Barotrauma
 
             var clones = mapEntityList.Except(prevEntities).ToList();
 
+            var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             Vector2 center = Vector2.Zero;
-            clones.ForEach(c => center += c.WorldPosition);
-            center = Submarine.VectorToWorldGrid(center / clones.Count);
+            nonWireClones.ForEach(c => center += c.WorldPosition);
+            center = Submarine.VectorToWorldGrid(center / nonWireClones.Count());
 
             Vector2 moveAmount = Submarine.VectorToWorldGrid(position - center);
 
@@ -785,8 +787,8 @@ namespace Barotrauma
             else
             {
                 editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.InventoryAreaUpper.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
-                maxHeight = HUDLayoutSettings.InventoryAreaLower.Bottom - HUDLayoutSettings.InventoryAreaLower.Y - 10;
+                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.CrewArea.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
+                maxHeight = HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
             }
 
             var listBox = editingHUD.GetChild<GUIListBox>();
@@ -883,6 +885,7 @@ namespace Barotrauma
                 {
                     rectMemento.Store(Rect);
                     resizing = false;
+                    Resized?.Invoke(rect);
                 }
             }
         }

@@ -36,6 +36,8 @@ namespace Barotrauma
         //is the mouse inside the rect
         private bool isHighlighted;
 
+        public event Action<Rectangle> Resized;
+
         public bool IsHighlighted
         {
             get { return isHighlighted || ExternalHighlight; }
@@ -578,6 +580,7 @@ namespace Barotrauma
                 if (!float.IsNaN(value))
                 {
                     _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    if (this is Item) { _spriteOverrideDepth = Math.Min(_spriteOverrideDepth, 0.9f); }
                     SpriteDepthOverrideIsSet = true;
                 }
             }

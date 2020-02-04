@@ -20,7 +20,7 @@ namespace Barotrauma
         private GUICustomComponent videoView;
         private GUIButton okButton;
 
-        private Color backgroundColor = new Color(0f, 0f, 0f, 1f);
+        private Color backgroundColor = new Color(0f, 0f, 0f, 0.8f);
         private Action callbackOnStop;
 
         private Point scaledVideoResolution;
@@ -62,8 +62,8 @@ namespace Barotrauma
             int width = scaledVideoResolution.X;
             int height = scaledVideoResolution.Y;
 
-            background = new GUIFrame(new RectTransform(Point.Zero, GUI.Canvas, Anchor.Center), "InnerFrame", backgroundColor);
-            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center), "SonarFrame");
+            background = new GUIFrame(new RectTransform(Point.Zero, GUI.Canvas, Anchor.Center), style: null, color: backgroundColor);
+            videoFrame = new GUIFrame(new RectTransform(Point.Zero, background.RectTransform, Anchor.Center, Pivot.Center), style: "InnerFrame");
 
             if (useTextOnRightSide)
             {

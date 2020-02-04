@@ -44,15 +44,9 @@ namespace Barotrauma
                 // Adjustment to match the old size of 75,71
                 SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * 0.5859375f, SlotSpriteSmall.SourceRect.Height * 0.5546875f);
 
-                slotSpriteVertical = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(672, 218, 75, 144), null, 0);
-                slotSpriteHorizontal = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(476, 186, 160, 75), null, 0);
-                slotSpriteRound = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(681, 373, 58, 64), null, 0);
                 slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(128, 0, 128, 128), null, 0);
-
                 EquipIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(673, 182, 73, 27), new Vector2(0.5f, 0.5f), 0);
                 EquipIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(679, 108, 67, 21), new Vector2(0.5f, 0.5f), 0);
-                DropIndicator = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(870, 55, 73, 66), new Vector2(0.5f, 0.75f), 0);
-                DropIndicatorHighlight = new Sprite("Content/UI/inventoryAtlas.png", new Rectangle(946, 54, 73, 66), new Vector2(0.5f, 0.75f), 0);
             }
 #endif
         }

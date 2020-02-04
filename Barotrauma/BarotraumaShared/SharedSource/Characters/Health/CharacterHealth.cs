@@ -619,7 +619,7 @@ namespace Barotrauma
                     {
                         UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
                     }
-                    Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
+                    Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }
             }
             
@@ -638,7 +638,7 @@ namespace Barotrauma
                 var affliction = afflictions[i];
                 affliction.Update(this, null, deltaTime);
                 affliction.DamagePerSecondTimer += deltaTime;
-                Character.SpeedMultiplier = affliction.GetSpeedMultiplier();
+                Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
             }
             
             UpdateLimbAfflictionOverlays();

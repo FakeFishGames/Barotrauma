@@ -56,13 +56,41 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[UnmanagedFunctionPointer( Platform.MemberConvention )]
-		private delegate HServerListRequest FRequestInternetServerList( IntPtr self, AppId iApp, [In,Out] ref MatchMakingKeyValuePair[]  ppchFilters, uint nFilters, IntPtr pRequestServersResponse );
+		private delegate HServerListRequest FRequestInternetServerList( IntPtr self, AppId iApp, IntPtr ppchFilters, uint nFilters, IntPtr pRequestServersResponse );
 		private FRequestInternetServerList _RequestInternetServerList;
 		
 		#endregion
-		internal HServerListRequest RequestInternetServerList( AppId iApp, [In,Out] ref MatchMakingKeyValuePair[]  ppchFilters, uint nFilters, IntPtr pRequestServersResponse )
+		internal HServerListRequest RequestInternetServerList( AppId iApp, MatchMakingKeyValuePair[] ppchFilters, uint nFilters, IntPtr pRequestServersResponse )
 		{
-			var returnValue = _RequestInternetServerList( Self, iApp, ref ppchFilters, nFilters, pRequestServersResponse );
+			int numPtrs = ppchFilters.Length;
+			if (numPtrs <= 0) { numPtrs = 1; }
+
+			IntPtr[] filterPtrs = new IntPtr[numPtrs];
+			GCHandle?[] filterHandles = new GCHandle?[numPtrs];
+			for (int i=0;i<numPtrs; i++)
+			{
+				if (i < ppchFilters.Length)
+				{
+					filterHandles[i] = GCHandle.Alloc(ppchFilters[i], GCHandleType.Pinned);
+					filterPtrs[i] = filterHandles[i]?.AddrOfPinnedObject() ?? IntPtr.Zero;
+				}
+				else
+				{
+					filterHandles[i] = null;
+					filterPtrs[i] = IntPtr.Zero;
+				}
+			}
+
+			GCHandle arrHandle = GCHandle.Alloc(filterPtrs, GCHandleType.Pinned);
+
+			var returnValue = _RequestInternetServerList( Self, iApp, arrHandle.AddrOfPinnedObject(), nFilters, pRequestServersResponse );
+
+			arrHandle.Free();
+			for (int i = 0; i < numPtrs; i++)
+			{
+				filterHandles[i]?.Free();
+			}
+
 			return returnValue;
 		}
 		

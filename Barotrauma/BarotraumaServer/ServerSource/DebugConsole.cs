@@ -248,6 +248,16 @@ namespace Barotrauma
             }
         }
         
+        private static Client FindClient(string arg)
+        {
+            int.TryParse(arg, out int id);
+            var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+            client ??= GameMain.Server.ConnectedClients.Find(c => c.EndpointMatches(arg));
+            client ??= GameMain.Server.ConnectedClients.Find(c => c.SteamID == Steam.SteamManager.SteamIDStringToUInt64(arg));
+            client ??= GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name, arg));
+            return client;
+        }
+
         private static void AssignOnClientRequestExecute(string names, Action<Client, Vector2, string[]> onClientRequestExecute)
         {
             var matchingCommand = commands.Find(c => c.names.Intersect(names.Split('|')).Count() > 0);
@@ -406,11 +416,10 @@ namespace Barotrauma
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -430,7 +439,7 @@ namespace Barotrauma
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
-                });
+                }, args, 2);
             });
 
             AssignOnExecute("revokeperm", (string[] args) =>
@@ -442,11 +451,10 @@ namespace Barotrauma
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -466,7 +474,7 @@ namespace Barotrauma
                     client.RemovePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
-                });
+                }, args, 2);
             });
 
             AssignOnExecute("giverank", (string[] args) =>
@@ -474,15 +482,14 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("giverank [id]: Assigns a specific rank(= a set of administrative permissions) to the player with the specified client ID.", Color.Cyan);
+                    NewMessage("giverank [id/steamid/endpoint/name] [rank]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", Color.Cyan);
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -504,7 +511,7 @@ namespace Barotrauma
                     client.SetPermissions(preset.Permissions, preset.PermittedCommands);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
-                });
+                }, args, 2);
             });
 
             AssignOnExecute("givecommandperm", (string[] args) =>
@@ -516,11 +523,10 @@ namespace Barotrauma
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -546,7 +552,7 @@ namespace Barotrauma
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
-                });
+                }, args, 2);
             });
 
             AssignOnExecute("revokecommandperm", (string[] args) =>
@@ -558,11 +564,10 @@ namespace Barotrauma
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -587,7 +592,7 @@ namespace Barotrauma
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
-                });
+                }, args, 2);
             });
 
             AssignOnExecute("showperm", (string[] args) =>
@@ -599,11 +604,10 @@ namespace Barotrauma
                     return;
                 }
 
-                int.TryParse(args[0], out int id);
-                var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                var client = FindClient(args[0]);
                 if (client == null)
                 {
-                    ThrowError("Client id \"" + id + "\" not found.");
+                    ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
 
@@ -1571,11 +1575,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 
@@ -1600,11 +1603,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 
@@ -1629,11 +1631,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 
@@ -1658,11 +1659,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 
@@ -1696,11 +1696,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 
@@ -1738,11 +1737,10 @@ namespace Barotrauma
                         return;
                     }
 
-                    int.TryParse(args[0], out int id);
-                    var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                    var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        GameMain.Server.SendConsoleMessage("Client id \"" + id + "\" not found.", senderClient);
+                        ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
 

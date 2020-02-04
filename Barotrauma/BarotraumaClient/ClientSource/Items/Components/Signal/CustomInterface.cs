@@ -10,33 +10,52 @@ namespace Barotrauma.Items.Components
 {
     partial class CustomInterface
     {
-        private List<GUIComponent> uiElements = new List<GUIComponent>();
+        private readonly List<GUIComponent> uiElements = new List<GUIComponent>();
         private GUILayoutGroup uiElementContainer;
+
+        private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(60 * GUI.yScale));
 
         partial void InitProjSpecific(XElement element)
         {
+            CreateGUI();
+            GameMain.Instance.OnResolutionChanged += RecreateGUI;
+        }
+
+        private void RecreateGUI()
+        {
+            GuiFrame.ClearChildren();
+            CreateGUI();
+        }
+
+        private void CreateGUI()
+        {
             uiElements.Clear();
-
             var visibleElements = customInterfaceElementList.Where(ciElement => !string.IsNullOrEmpty(ciElement.Label));
-
-            uiElementContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.65f), GuiFrame.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.0f, 0.025f) },
+            uiElementContainer = new GUILayoutGroup(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center)
+            {
+                AbsoluteOffset = GUIStyle.ItemFrameOffset
+            },
                 childAnchor: customInterfaceElementList.Count > 1 ? Anchor.TopCenter : Anchor.Center)
             {
                 RelativeSpacing = 0.05f,
-                Stretch = visibleElements.Count() > 2
+                Stretch = visibleElements.Count() > 2,
             };
 
-            float elementSize = Math.Min(1.0f / visibleElements.Count(), 0.5f);
+            float elementSize = Math.Min(1.0f / visibleElements.Count(), 1);
+            var textBlocks = new List<GUITextBlock>();
             foreach (CustomInterfaceElement ciElement in visibleElements)
             {
                 if (ciElement.ContinuousSignal)
                 {
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform)
+                    {
+                        MaxSize = ElementMaxSize
+                    },
                         TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
                     {
                         UserData = ciElement
                     };
-                    tickBox.TextBlock.AutoScale = true;
+                    textBlocks.Add(tickBox.TextBlock);
                     tickBox.OnSelected += (tBox) =>
                     {
                         if (GameMain.Client == null)
@@ -56,12 +75,12 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), 
+                    var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
                         TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "DeviceButton")
                     {
                         UserData = ciElement
                     };
-                    btn.TextBlock.AutoScale = true;
+                    textBlocks.Add(btn.TextBlock);
                     btn.OnClicked += (_, userdata) =>
                     {
                         if (GameMain.Client == null)
@@ -77,11 +96,12 @@ namespace Barotrauma.Items.Components
 
                     //reset size restrictions set by the Style to make sure the elements can fit the interface
                     btn.RectTransform.MinSize = btn.Frame.RectTransform.MinSize = new Point(0, 0);
-                    btn.RectTransform.MaxSize = btn.Frame.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                    btn.RectTransform.MaxSize = btn.Frame.RectTransform.MaxSize = ElementMaxSize;
                     btn.TextBlock.Wrap = true;
 
                     uiElements.Add(btn);
                 }
+                GUITextBlock.AutoScaleAndNormalize(textBlocks);
             }
         }
 
@@ -128,12 +148,8 @@ namespace Barotrauma.Items.Components
             int visibleElementCount = 0;
             foreach (var uiElement in uiElements)
             {
-                CustomInterfaceElement element = uiElement.UserData as CustomInterfaceElement;
-                if (element == null) { continue; }
-                bool visible =
-                    Screen.Selected == GameMain.SubEditorScreen ||
-                    element.StatusEffects.Any() ||
-                    (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
+                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
                 {
@@ -146,11 +162,12 @@ namespace Barotrauma.Items.Components
             {
                 uiElementContainer.Stretch = visibleElementCount > 2;
                 uiElementContainer.ChildAnchor = visibleElementCount > 1 ? Anchor.TopCenter : Anchor.Center;
-                float elementSize = Math.Min(1.0f / visibleElementCount, 0.5f);
+                float elementSize = Math.Min(1.0f / visibleElementCount, 1);
                 foreach (var uiElement in uiElements)
                 {
                     uiElement.RectTransform.RelativeSize = new Vector2(1.0f, elementSize);
                 }
+                GuiFrame.Visible = visibleElementCount > 0;
             }
         }
 

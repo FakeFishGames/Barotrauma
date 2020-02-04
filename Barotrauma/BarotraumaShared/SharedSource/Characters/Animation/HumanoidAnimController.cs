@@ -1407,7 +1407,7 @@ namespace Barotrauma
                 target.CharacterHealth.CalculateVitality();
                 if (wasCritical && target.Vitality > 0.0f && Timing.TotalTime > lastReviveTime + 10.0f)
                 {
-                    character.Info.IncreaseSkillLevel("medical", 0.5f, character.WorldPosition + Vector2.UnitY * 150.0f);
+                    character.Info.IncreaseSkillLevel("medical", SkillSettings.Current.SkillIncreasePerCprRevive, character.WorldPosition + Vector2.UnitY * 150.0f);
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER

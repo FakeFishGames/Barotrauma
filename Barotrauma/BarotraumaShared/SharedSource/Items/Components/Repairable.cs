@@ -9,9 +9,6 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public static float SkillIncreasePerRepair = 5.0f;
-        public static float SkillIncreasePerSabotage = 3.0f;
-
         private string header;
 
         private float deteriorationTimer;
@@ -282,7 +279,7 @@ namespace Barotrauma.Items.Components
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                                SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
+                                SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
                                 CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                         }
 
@@ -313,7 +310,7 @@ namespace Barotrauma.Items.Components
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
                             CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
-                                SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
+                                SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
                                 CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                         }
 

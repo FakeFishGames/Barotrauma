@@ -277,21 +277,25 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            float userSkill = 0.0f;
+            if (user != null && (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
+            {
+                userSkill = user.GetSkillLevel("helm") / 100.0f;
+            }
+
             if (AutoPilot)
             {
                 UpdateAutoPilot(deltaTime);
-                float userSkill = 0.0f;
-                if (user != null && (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
-                {
-                    userSkill = user.GetSkillLevel("helm") / 100.0f;
-                }
                 targetVelocity = targetVelocity.ClampLength(MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f);
             }
             else
             {
                 if (user != null && user.Info != null && user.SelectedConstruction == item)
                 {
-                    user.Info.IncreaseSkillLevel("helm", 0.005f * deltaTime, user.WorldPosition + Vector2.UnitY * 150.0f);
+                    user.Info.IncreaseSkillLevel(
+                        "helm", 
+                        SkillSettings.Current.SkillIncreasePerSecondWhenSteering / Math.Max(userSkill, 1.0f) * deltaTime, 
+                        user.WorldPosition + Vector2.UnitY * 150.0f);
                 }
 
                 Vector2 velocityDiff = steeringInput - targetVelocity;

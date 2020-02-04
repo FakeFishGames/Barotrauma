@@ -868,7 +868,7 @@ namespace Barotrauma
                 t.RectTransform.SizeChanged += () =>
                 {
                     t.TextScale = 1.0f;
-                    t.AutoScale = true;
+                    t.AutoScaleHorizontal = true;
                 };
             }
 
@@ -1096,11 +1096,8 @@ namespace Barotrauma
             {
                 var tagBtn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tagHolder.Content.RectTransform, anchor: Anchor.CenterLeft), 
                     tag.CapitaliseFirstInvariant(), style: "GUIButtonRound");
-                tagBtn.TextBlock.AutoScale = true;
+                tagBtn.TextBlock.AutoScaleHorizontal = true;
                 tagBtn.Selected = itemEditor?.Tags?.Any(t => t.ToLowerInvariant() == tag) ?? false;
-
-                Color defaultTextColor = tagBtn.TextColor;
-                tagBtn.TextColor = tagBtn.Selected ? GUI.Style.Green : defaultTextColor;
 
                 tagBtn.OnClicked = (btn, userdata) =>
                 {
@@ -1108,13 +1105,11 @@ namespace Barotrauma
                     {
                         if (!(itemEditor?.Tags?.Any(t => t.ToLowerInvariant() == tag) ?? false)) { itemEditor = itemEditor?.WithTag(tagBtn.Text); }
                         tagBtn.Selected = true;
-                        tagBtn.TextColor = GUI.Style.Green;
                     }
                     else
                     {
                         itemEditor?.Tags?.RemoveAll(t => t.ToLowerInvariant() == tagBtn.Text.ToLowerInvariant());
                         tagBtn.Selected = false;
-                        tagBtn.TextColor = defaultTextColor;
                     }
                     return true;
                 };
@@ -1387,7 +1382,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            publishBtn.TextBlock.AutoScale = true;
+            publishBtn.TextBlock.AutoScaleHorizontal = true;
         }
 
         private void OnPreviewImageSelected(GUIImage previewImageElement, string filePath)

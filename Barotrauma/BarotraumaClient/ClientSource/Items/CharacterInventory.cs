@@ -95,14 +95,14 @@ namespace Barotrauma
                 limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
 
                 int margin = 2;
-                limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/IconAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/IconAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
 
-                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/IconAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));                
-                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(640 + margin, 0 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(768 + margin, 0 + margin, 128 - margin * 2, 128 - margin * 2)));                
-                limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/IconAtlas.png", new Rectangle(768 + margin, 896 + margin, 128 - margin * 2, 128 - margin * 2)));
+                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));                
+                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
+                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));                
+                limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
             }
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;
@@ -165,7 +165,7 @@ namespace Barotrauma
 
                 slots[i] = new InventorySlot(slotRect)
                 {
-                    SubInventoryDir = Math.Sign(HUDLayoutSettings.InventoryAreaUpper.Bottom - slotRect.Center.Y),
+                    SubInventoryDir = Math.Sign(GameMain.GraphicsHeight / 2 - slotRect.Center.Y),
                     Disabled = false,
                     SlotSprite = slotSprite,
                     Color = SlotTypes[i] == InvSlotType.Any ? Color.White * 0.2f : Color.White * 0.4f
@@ -532,7 +532,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
+            if (character == Character.Controlled && character.SelectedCharacter == null) // Permanently open subinventories only available when the default UI layout is in use -> not when grabbing characters
             {
                 //remove the highlighted slots of other characters' inventories when not grabbing anyone
                 highlightedSubInventorySlots.RemoveWhere(s => s.ParentInventory != this && s.ParentInventory?.Owner is Character);
@@ -622,32 +622,11 @@ namespace Barotrauma
             }
 
             var quickUseAction = GetQuickUseAction(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
-            slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
+
+            if (quickUseAction != QuickUseAction.Drop)
+            {
+                slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
                 "" : TextManager.GetWithVariable("QuickUseAction." + quickUseAction.ToString(), "[equippeditem]", character.SelectedItems.FirstOrDefault(i => i != null)?.Name);
-
-            //equipped item that can't be put in the inventory, use delayed dropping
-            if (quickUseAction == QuickUseAction.Drop)
-            {
-                slot.QuickUseButtonToolTip =
-                    TextManager.Get("QuickUseAction.HoldToUnequip", returnNull: true) ??
-                    (GameMain.Config.Language == "English" ? "Hold to unequip" : TextManager.Get("QuickUseAction.Unequip"));
-
-                if (PlayerInput.LeftButtonHeld())
-                {
-                    slot.QuickUseTimer = Math.Max(0.1f, slot.QuickUseTimer + deltaTime);
-                    if (slot.QuickUseTimer >= 1.0f)
-                    {
-                        item.Drop(Character.Controlled);
-                        GUI.PlayUISound(GUISoundType.DropItem);
-                    }
-                }
-                else
-                {
-                    slot.QuickUseTimer = Math.Max(0.0f, slot.QuickUseTimer - deltaTime * 5.0f);
-                }
-            }
-            else
-            {
                 if (PlayerInput.PrimaryMouseButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
                 if (PlayerInput.PrimaryMouseButtonClicked())
                 {
@@ -994,13 +973,13 @@ namespace Barotrauma
                 }
                 if (Locked) { color *= 0.3f; }
 
-                var quickUseIndicator = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
-                    EquipIndicator : DropIndicator;
-                var quickUseHighlight = Items[i].AllowedSlots.Any(a => a == InvSlotType.Any) ?
-                    EquipIndicatorHighlight : DropIndicatorHighlight;
+                if (!Items[i].AllowedSlots.Any(a => a == InvSlotType.Any))
+                {
+                    continue;
+                }
 
-                quickUseIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, quickUseIndicator.Origin, 0, UIScale);
-                slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
+                EquipIndicator.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color, EquipIndicator.Origin, 0, UIScale);
+                /*slots[i].QuickUseTimer = Math.Min(slots[i].QuickUseTimer, 1.0f);
                 if (slots[i].QuickUseTimer > 0.0f)
                 {
                     float indicatorFillAmount = character.HasEquippedItem(Items[i]) ? 1.0f - slots[i].QuickUseTimer : slots[i].QuickUseTimer;
@@ -1012,9 +991,9 @@ namespace Barotrauma
                         null,
                         Vector2.One * UIScale * 0.85f);
                 }
-                else if (character.HasEquippedItem(Items[i]))
+                else*/ if (character.HasEquippedItem(Items[i]))
                 {
-                    quickUseHighlight.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, quickUseHighlight.Origin, 0, UIScale * 0.85f);
+                    EquipIndicatorHighlight.Draw(spriteBatch, slots[i].EquipButtonRect.Center.ToVector2(), color * 0.9f, EquipIndicatorHighlight.Origin, 0, UIScale * 0.85f);
                 }
             }
 

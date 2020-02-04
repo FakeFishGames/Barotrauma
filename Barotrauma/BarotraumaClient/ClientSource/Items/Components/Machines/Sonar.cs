@@ -72,20 +72,24 @@ namespace Barotrauma.Items.Components
         private readonly Color negativeColor = Color.Red;
         private readonly Color markerColor = Color.Red;
 
+        public static readonly Vector2 controlBoxSize = new Vector2(0.33f, 0.32f);
+        public static readonly Vector2 controlBoxOffset = new Vector2(0.025f, 0);
+        public static readonly float sonarAreaSize = 1.09f;
+
         private static readonly Dictionary<BlipType, Color[]> blipColorGradient = new Dictionary<BlipType, Color[]>()
         {
-            { 
+            {
                 BlipType.Default,
-                new Color[] { Color.TransparentBlack, new Color(0, 50, 160), new Color(0, 133, 166), new Color(2, 159, 30), new Color(255, 255, 255) } 
+                new Color[] { Color.TransparentBlack, new Color(0, 50, 160), new Color(0, 133, 166), new Color(2, 159, 30), new Color(255, 255, 255) }
             },
-            { 
+            {
                 BlipType.Disruption,
-                new Color[] { Color.TransparentBlack, new Color(254, 68, 19), new Color(255, 220, 62), new Color(255, 255, 255) } 
+                new Color[] { Color.TransparentBlack, new Color(254, 68, 19), new Color(255, 220, 62), new Color(255, 255, 255) }
             }
         };
 
         private float prevDockingDist;
-        
+
         public Vector2 DisplayOffset { get; private set; }
 
         public float DisplayRadius { get; private set; }
@@ -132,29 +136,28 @@ namespace Barotrauma.Items.Components
                 }
             }
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += ResetLayout;
-            // TODO: do we need to react on this?
-            GameMain.Config.OnHUDScaleChanged += ResetLayout;
+            GameMain.Instance.OnResolutionChanged += RecreateGUI;
         }
 
-        private void ResetLayout()
+        private void RecreateGUI()
         {
-            GuiFrame.RectTransform.Children.ForEachMod(c => c.Parent = null);
+            GuiFrame.ClearChildren();
             CreateGUI();
         }
 
         private void CreateGUI()
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(controlContainerRelativeWidth, 0.32f), GuiFrame.RectTransform, Anchor.TopRight)
-            {
-                RelativeOffset = new Vector2(controlContainerRelativeOffset, 0)
-            }, "ItemUI");
+            bool isConnectedToSteering = item.GetComponent<Steering>() != null;
+            Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(controlBoxSize.X * 2.0f, controlBoxSize.Y);
 
+            controlContainer = new GUIFrame(new RectTransform(size, GuiFrame.RectTransform, Anchor.BottomRight, Pivot.BottomLeft), "ItemUI");
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
             }, style: null);
-            var sonarModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.5f), paddedControlContainer.RectTransform, Anchor.TopCenter), style: null);
+            // Based on the height difference to the steering control box so that the elements keep the same size
+            float extraHeight = 0.03f;
+            var sonarModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.TopCenter), style: null);
             SonarModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), sonarModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
                 Selected = false,
@@ -192,13 +195,11 @@ namespace Barotrauma.Items.Components
             passiveTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             activeTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
 
-            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), paddedControlContainer.RectTransform, Anchor.TopCenter)
-            {
-                RelativeOffset = new Vector2(0, sonarModeArea.RectTransform.RelativeSize.Y + 0.025f)
-            }, style: null);
-            new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.6f), zoomContainer.RectTransform, Anchor.CenterLeft),
+            var lowerArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
+            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.TopCenter), style: null);
+            var zoomText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.6f), zoomContainer.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("SonarZoom"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
-            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.6f, 0.8f), zoomContainer.RectTransform, Anchor.CenterLeft)
+            zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), zoomContainer.RectTransform, Anchor.CenterLeft)
             {
                 RelativeOffset = new Vector2(0.35f, 0)
             }, barSize: 0.15f, isHorizontal: true, style: "DeviceSlider")
@@ -215,11 +216,9 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.2f), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), directionalModeFrame.RectTransform, Anchor.TopCenter, Pivot.BottomCenter)
-            {
-                RelativeOffset = new Vector2(0, -0.15f)
-            }, style: "HorizontalLine");
+            new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedControlContainer.RectTransform, Anchor.Center), style: "HorizontalLine");
+
+            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.BottomCenter), style: null);
             directionalModeSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), directionalModeFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
             {
                 OnClicked = (button, data) =>
@@ -241,14 +240,22 @@ namespace Barotrauma.Items.Components
 
             GuiFrame.CanBeFocused = false;
 
-            sonarView = new GUICustomComponent(new RectTransform(SonarAreaSize, GuiFrame.RectTransform, Anchor.CenterLeft),
-                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
-            sonarView.RectTransform.SetAsFirstChild();
-        }
+            GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
 
-        public static readonly float controlContainerRelativeWidth = 0.35f;
-        public static readonly float controlContainerRelativeOffset = 0.1f;
-        public static Vector2 SonarAreaSize => Vector2.One - new Vector2(controlContainerRelativeWidth + controlContainerRelativeOffset);
+            sonarView = new GUICustomComponent(new RectTransform(Vector2.One * 0.7f, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight),
+                (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
+
+            // Setup layout for nav terminal
+            if (isConnectedToSteering)
+            {
+                controlContainer.RectTransform.SetPosition(Anchor.TopLeft);
+                controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
+                sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
+                sonarView.RectTransform.SetPosition(Anchor.CenterRight);
+                sonarView.RectTransform.Resize(Vector2.One * GUI.RelativeHorizontalAspectRatio * sonarAreaSize);
+                GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
+            }
+        }
 
         private void SetPingDirection(Vector2 direction)
         {
@@ -380,7 +387,6 @@ namespace Barotrauma.Items.Components
                 else if (transducerCenter.X > Level.Loaded.Size.X)
                 {
                     outsideLevelFlow = -(transducerCenter.X - Level.Loaded.Size.X) * 0.001f;
-
                 }
 
                 if (Rand.Range(0.0f, 100.0f) < Math.Abs(outsideLevelFlow))

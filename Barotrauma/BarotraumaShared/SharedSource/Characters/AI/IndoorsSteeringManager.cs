@@ -296,14 +296,14 @@ namespace Barotrauma
                 }
                 float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
                 float targetDistance = collider.GetSize().X * multiplier;
-                float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
-                float verticalDistance = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
+                float horizontalDistance = Math.Abs(character.WorldPosition.X - currentPath.CurrentNode.WorldPosition.X);
+                float verticalDistance = Math.Abs(character.WorldPosition.Y - currentPath.CurrentNode.WorldPosition.Y);
                 if (character.CurrentHull != currentPath.CurrentNode.CurrentHull)
                 {
                     verticalDistance *= 2;
                 }
                 float distance = horizontalDistance + verticalDistance;
-                if (distance < targetDistance)
+                if (ConvertUnits.ToSimUnits(distance) < targetDistance)
                 {
                     currentPath.SkipToNextNode();
                 }

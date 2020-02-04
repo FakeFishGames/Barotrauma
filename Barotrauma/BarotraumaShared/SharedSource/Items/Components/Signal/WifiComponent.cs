@@ -83,8 +83,14 @@ namespace Barotrauma.Items.Components
         public bool CanReceive(WifiComponent sender)
         {
             if (sender == null || sender.channel != channel) { return false; }
-            if (sender.TeamID == Character.TeamType.Team1 && TeamID == Character.TeamType.Team2) { return false; }
-            if (sender.TeamID == Character.TeamType.Team2 && TeamID == Character.TeamType.Team1) { return false; }
+
+            if (sender.TeamID != Character.TeamType.None && TeamID != Character.TeamType.None)
+            {
+                if (sender.TeamID != TeamID)
+                {
+                    return false;
+                }
+            }
 
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 

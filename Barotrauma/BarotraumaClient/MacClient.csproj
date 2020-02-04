@@ -11,7 +11,7 @@
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
-    <ReleaseVersion>0.9.0.0</ReleaseVersion>
+    <ReleaseVersion>0.9.703.0</ReleaseVersion>
     <Configurations>Debug;Release;Unstable</Configurations>
   </PropertyGroup>
 

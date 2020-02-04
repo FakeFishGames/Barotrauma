@@ -39,7 +39,7 @@ namespace Barotrauma
 
         private ScriptedEventSet(XElement element, string debugIdentifier)
         {
-            DebugIdentifier = debugIdentifier;
+            DebugIdentifier = element.GetAttributeString("identifier", null) ?? debugIdentifier;
             Commonness = new Dictionary<string, float>();
             EventPrefabs = new List<ScriptedEventPrefab>();
             ChildSets = new List<ScriptedEventSet>();

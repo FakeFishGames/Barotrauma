@@ -326,7 +326,7 @@ namespace Barotrauma.Networking
                             return true;
                         }
                     };
-                    workshopBtn.TextBlock.AutoScale = true;
+                    workshopBtn.TextBlock.AutoScaleHorizontal = true;
                 }
             }
 

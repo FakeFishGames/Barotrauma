@@ -38,7 +38,8 @@ namespace Barotrauma
         UIStyle,
         TraitorMissions,
         EventManagerSettings,
-        Orders
+        Orders,
+        SkillSettings
     }
 
     public class ContentPackage

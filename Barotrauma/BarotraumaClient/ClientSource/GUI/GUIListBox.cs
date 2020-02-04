@@ -41,7 +41,17 @@ namespace Barotrauma
         private bool dimensionsNeedsRecalculation;
 
         // TODO: Define in styles?
-        private int scrollBarSize = 25;
+        private int ScrollBarSize
+        {
+            get
+            {
+                //use the average of the "desired" size and the scaled size
+                //scaling the bar linearly with the resolution tends to make them too large on large resolutions
+                float desiredSize = 25.0f;
+                float scaledSize = desiredSize * GUI.Scale;
+                return (int)((desiredSize + scaledSize) / 2.0f);
+            }
+        }
 
         public bool SelectMultiple;
 
@@ -162,7 +172,7 @@ namespace Barotrauma
         /// Automatically hides the scroll bar when the content fits in.
         /// </summary>
         public bool AutoHideScrollBar { get; set; } = true;
-
+        private bool IsScrollBarOnDefaultSide { get; set; }
 
         public bool CanDragElements { get; set; } = false;
         private GUIComponent draggedElement;
@@ -171,7 +181,8 @@ namespace Barotrauma
 
         public GUIComponent DraggedElement => draggedElement;
 
-        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "") : base(style, rectT)
+        /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
+        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true) : base(style, rectT)
         {
             CanBeFocused = true;
             selected = new List<GUIComponent>();
@@ -196,20 +207,27 @@ namespace Barotrauma
             {
                 this.color = color.Value;
             }
+            IsScrollBarOnDefaultSide = isScrollBarOnDefaultSide;
             Point size;
             Anchor anchor;
             if (isHorizontal)
             {
-                size = new Point((int)(Rect.Width - Padding.X - Padding.Z), (int)(scrollBarSize * GUI.Scale));
-                anchor = Anchor.BottomCenter;
+                size = new Point((int)(Rect.Width - Padding.X - Padding.Z), (int)(ScrollBarSize * GUI.Scale));
+                anchor = isScrollBarOnDefaultSide ? Anchor.BottomCenter : Anchor.TopCenter;
             }
             else
             {
-                size = new Point((int)(scrollBarSize * GUI.Scale), (int)(Rect.Height - Padding.Y - Padding.W));
-                anchor = Anchor.CenterRight;
+                // TODO: Should this be multiplied by the GUI.Scale as well?
+                size = new Point(ScrollBarSize, (int)(Rect.Height - Padding.Y - Padding.W));
+                anchor = isScrollBarOnDefaultSide ? Anchor.CenterRight : Anchor.CenterLeft;
             }
-            ScrollBar = new GUIScrollBar(new RectTransform(size, rectT, anchor)
-                { AbsoluteOffset = isHorizontal ? new Point(0, (int)Padding.W) : new Point((int)Padding.Z, 0) },
+            ScrollBar = new GUIScrollBar(
+                new RectTransform(size, rectT, anchor)
+                {
+                    AbsoluteOffset = isHorizontal ?
+                        new Point(0, IsScrollBarOnDefaultSide ? (int)Padding.W : (int)Padding.Y) :
+                        new Point(IsScrollBarOnDefaultSide ? (int)Padding.Z : (int)Padding.X, 0)
+                },
                 isHorizontal: isHorizontal);
             UpdateScrollBarSize();
             Enabled = true;
@@ -224,12 +242,15 @@ namespace Barotrauma
             dimensionsNeedsRecalculation = false;
             ContentBackground.RectTransform.Resize(Rect.Size);
             bool reduceScrollbarSize = KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible;
-            Point contentSize = reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, scrollBarSize) : Rect.Size;
+            Point contentSize = reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, ScrollBarSize) : Rect.Size;
             Content.RectTransform.Resize(new Point((int)(contentSize.X - Padding.X - Padding.Z), (int)(contentSize.Y - Padding.Y - Padding.W)));
-            Content.RectTransform.AbsoluteOffset = new Point((int)Padding.X, (int)Padding.Y);
+            if (!IsScrollBarOnDefaultSide) { Content.RectTransform.SetPosition(Anchor.BottomRight); }
+            Content.RectTransform.AbsoluteOffset = new Point(
+                IsScrollBarOnDefaultSide ? (int)Padding.X : (int)Padding.Z,
+                IsScrollBarOnDefaultSide ? (int)Padding.Y : (int)Padding.W);
             ScrollBar.RectTransform.Resize(ScrollBar.IsHorizontal ?
-                new Point((int)(Rect.Width - Padding.X - Padding.Z), (int)(scrollBarSize * GUI.Scale)) :
-                new Point((int)(scrollBarSize * GUI.Scale), (int)(Rect.Height - Padding.Y - Padding.W)));
+                new Point((int)(Rect.Width - Padding.X - Padding.Z), ScrollBarSize) :
+                new Point(ScrollBarSize, (int)(Rect.Height - Padding.Y - Padding.W)));
             ScrollBar.RectTransform.AbsoluteOffset = ScrollBar.IsHorizontal ? 
                 new Point(0, (int)Padding.W) : 
                 new Point((int)Padding.Z, 0);

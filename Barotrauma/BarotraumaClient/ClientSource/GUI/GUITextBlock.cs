@@ -85,7 +85,7 @@ namespace Barotrauma
                 if (Text == newText) { return; }
 
                 //reset scale, it gets recalculated in SetTextPos
-                if (autoScale) { textScale = 1.0f; }
+                if (autoScaleHorizontal || autoScaleVertical) { textScale = 1.0f; }
 
                 text = newText;
                 wrappedText = newText;
@@ -132,19 +132,36 @@ namespace Barotrauma
             }
         }
 
-        private bool autoScale;
+        private bool autoScaleHorizontal, autoScaleVertical;
 
         /// <summary>
-        /// When enabled, the text is automatically scaled down to fit the textblock.
+        /// When enabled, the text is automatically scaled down to fit the textblock horizontally.
         /// </summary>
-        public bool AutoScale
+        public bool AutoScaleHorizontal
         {
-            get { return autoScale; }
+            get { return autoScaleHorizontal; }
             set
             {
-                if (autoScale == value) return;
-                autoScale = value;
-                if (autoScale)
+                if (autoScaleHorizontal == value) { return; }
+                autoScaleHorizontal = value;
+                if (autoScaleHorizontal)
+                {
+                    SetTextPos();
+                }
+            }
+        }
+
+        /// <summary>
+        /// When enabled, the text is automatically scaled down to fit the textblock vertically.
+        /// </summary>
+        public bool AutoScaleVertical
+        {
+            get { return autoScaleVertical; }
+            set
+            {
+                if (autoScaleVertical == value) { return; }
+                autoScaleVertical = value;
+                if (autoScaleVertical)
                 {
                     SetTextPos();
                 }
@@ -309,7 +326,7 @@ namespace Barotrauma
         
         public void SetTextPos()
         {
-            if (text == null) return;
+            if (text == null) { return; }
 
             censoredText = "";
             for (int i = 0; i < text.Length; i++)
@@ -337,12 +354,13 @@ namespace Barotrauma
             Vector2 minSize = new Vector2(
                 Math.Max(rect.Width - padding.X - padding.Z, 5.0f),
                 Math.Max(rect.Height - padding.Y - padding.W, 5.0f));
-            if (autoScale && textScale > 0.1f &&
+            if (!autoScaleHorizontal) { minSize.X = float.MaxValue; }
+            if (!Wrap && !autoScaleVertical) { minSize.Y = float.MaxValue; }
+
+            if ((autoScaleHorizontal || autoScaleVertical) && textScale > 0.1f &&
                 (TextSize.X * textScale > minSize.X || TextSize.Y * textScale > minSize.Y))
             {
-                TextScale = Math.Max(0.1f, Math.Min(
-                    (rect.Width - padding.X - padding.Z) / TextSize.X,
-                    (rect.Height - padding.Y - padding.W) / TextSize.Y)) - 0.01f;
+                TextScale = Math.Max(0.1f, Math.Min(minSize.X / TextSize.X, minSize.Y / TextSize.Y)) - 0.01f;
                 return;
             }
 
@@ -490,20 +508,30 @@ namespace Barotrauma
         /// <summary>
         /// Set the text scale of the GUITextBlocks so that they all use the same scale and can fit the text within the block.
         /// </summary>
-        public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks, float? defaultScale = null)
+        public static void AutoScaleAndNormalize(bool scaleHorizontal = true, bool scaleVertical = false, params GUITextBlock[] textBlocks)
+        {
+            AutoScaleAndNormalize(textBlocks.AsEnumerable<GUITextBlock>(), scaleHorizontal, scaleVertical);
+        }
+
+        /// <summary>
+        /// Set the text scale of the GUITextBlocks so that they all use the same scale and can fit the text within the block.
+        /// </summary>
+        public static void AutoScaleAndNormalize(IEnumerable<GUITextBlock> textBlocks, bool scaleHorizontal = true, bool scaleVertical = false, float? defaultScale = null)
         {
             if (!textBlocks.Any()) { return; }
             float minScale = Math.Max(textBlocks.First().TextScale, 1.0f);
             foreach (GUITextBlock textBlock in textBlocks)
             {
                 if (defaultScale.HasValue) { textBlock.TextScale = defaultScale.Value; }
-                textBlock.AutoScale = true;
+                textBlock.AutoScaleHorizontal = scaleHorizontal;
+                textBlock.AutoScaleVertical = scaleVertical;
                 minScale = Math.Min(textBlock.TextScale, minScale);
             }
 
             foreach (GUITextBlock textBlock in textBlocks)
             {
-                textBlock.AutoScale = false;
+                textBlock.AutoScaleHorizontal = false;
+                textBlock.AutoScaleVertical = false;
                 textBlock.TextScale = minScale;
             }
         }

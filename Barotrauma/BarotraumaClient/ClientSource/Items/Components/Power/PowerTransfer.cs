@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
             };
 
             GUITextBlock.AutoScaleAndNormalize(powerLabel, loadLabel);
-            GUITextBlock.AutoScaleAndNormalize(powerText, loadText);
+            GUITextBlock.AutoScaleAndNormalize(true, true, powerText, loadText);
             GUITextBlock.AutoScaleAndNormalize(kw1, kw2);
         }
 

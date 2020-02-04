@@ -195,31 +195,39 @@ namespace Barotrauma.Sounds
             loadedSounds = new List<Sound>();
             streamingThread = null;
             categoryModifiers = null;
-            
-            alcDevice = Alc.OpenDevice(null);
-            if (alcDevice == null)
+
+            int alcError = Alc.NoError;
+
+            string deviceName = Alc.GetString(IntPtr.Zero, Alc.DefaultDeviceSpecifier);
+            DebugConsole.NewMessage($"Attempting to open ALC device \"{deviceName}\"");
+
+            alcDevice = IntPtr.Zero;
+            for (int i = 0; i < 3; i++)
             {
-                DebugConsole.ThrowError("Failed to open an ALC device! Disabling audio playback...");
-                Disabled = true;
-                return;
-            }
-
-            int alcError = Alc.GetError(alcDevice);
-            if (alcError != Alc.NoError)
-            {
-                //The audio device probably wasn't ready, this happens quite often
-                //Just wait a while and try again
-                Thread.Sleep(100);
-
-                alcDevice = Alc.OpenDevice(null);
-
-                alcError = Alc.GetError(alcDevice);
-                if (alcError != Alc.NoError)
+                alcDevice = Alc.OpenDevice(deviceName);
+                if (alcDevice == IntPtr.Zero)
                 {
-                    DebugConsole.ThrowError("Error initializing ALC device: " + alcError.ToString() + ". Disabling audio playback...");
-                    Disabled = true;
-                    return;
+                    DebugConsole.NewMessage($"ALC device initialization attempt #{i + 1} failed: device is null");
                 }
+                else
+                {
+                    alcError = Alc.GetError(alcDevice);
+                    if (alcError != Alc.NoError)
+                    {
+                        DebugConsole.NewMessage($"ALC device initialization attempt #{i + 1} failed: error code {Alc.GetErrorString(alcError)}");
+                        bool closed = Alc.CloseDevice(alcDevice);
+                        if (!closed)
+                        {
+                            DebugConsole.NewMessage($"Failed to close ALC device");
+                        }
+                        alcDevice = IntPtr.Zero;
+                    }
+                }
+            }
+            if (alcDevice == IntPtr.Zero)
+            {
+                DebugConsole.ThrowError("ALC device creation failed too many times!");
+                Disabled = true;
             }
 
             int[] alcContextAttrs = new int[] { };
@@ -241,7 +249,7 @@ namespace Barotrauma.Sounds
             alcError = Alc.GetError(alcDevice);
             if (alcError != Alc.NoError)
             {
-                DebugConsole.ThrowError("Error after assigning ALC context: " + alcError.ToString() + ". Disabling audio playback...");
+                DebugConsole.ThrowError("Error after assigning ALC context: " + Alc.GetErrorString(alcError) + ". Disabling audio playback...");
                 Disabled = true;
                 return;
             }

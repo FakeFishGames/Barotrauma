@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -62,8 +63,8 @@ namespace Barotrauma
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
 
-        public static Point ItemFrameMargin = new Point(50, 56);
-        public static Point ItemFrameOffset = new Point(0, 3);
+        public static Point ItemFrameMargin = new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+        public static Point ItemFrameOffset = new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
 
         public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
@@ -76,10 +77,17 @@ namespace Barotrauma
                 switch (name)
                 {
                     case "cursor":
-                        foreach (var children in subElement.Descendants())
+                        if (subElement.HasElements)
                         {
-                            var index = children.GetAttributeInt("state", (int) CursorState.Default);
-                            CursorSprite[index] = new Sprite(children);
+                            foreach (var children in subElement.Descendants())
+                            {
+                                var index = children.GetAttributeInt("state", (int)CursorState.Default);
+                                CursorSprite[index] = new Sprite(children);
+                            }
+                        }
+                        else
+                        {
+                            CursorSprite[(int)CursorState.Default] = new Sprite(subElement);
                         }
                         break;
                     case "green":

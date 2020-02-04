@@ -290,11 +290,41 @@ namespace Barotrauma
 
             commands.Add(new Command("startwhenclientsready", "startwhenclientsready [true/false]: Enable or disable automatically starting the round when clients are ready to start.", null));
 
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null));
+            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
 
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null));
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                        Enum.GetValues(typeof(ClientPermissions)).Cast<ClientPermissions>().Select(v => v.ToString()).ToArray()
+                    };
+                }));
+
+            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
+
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                        Enum.GetValues(typeof(ClientPermissions)).Cast<ClientPermissions>().Select(v => v.ToString()).ToArray()
+                    };
+                }));
             
-            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", null));
+            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
+
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                        PermissionPreset.List.Select(pp => pp.Name).ToArray()
+                    };
+                }));
 
             commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", null));
 
@@ -823,6 +853,7 @@ namespace Barotrauma
                 var reactor = reactorItem.GetComponent<Reactor>();
                 reactor.TurbineOutput = power / reactor.MaxPowerOutput * 100.0f;
                 reactor.FissionRate = power / reactor.MaxPowerOutput * 100.0f;
+                reactor.PowerOn = true;
                 reactor.AutoTemp = true;
 
 #if SERVER
@@ -1514,8 +1545,13 @@ namespace Barotrauma
             }
         }
 
-        public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered)
+        public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered, string[] args = null, int argCount = -1)
         {
+            if (args != null && args.Length > argCount)
+            {
+                onAnswered(args[argCount]);
+            }
+
 #if CLIENT
             activeQuestionText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, 0), listBox.Content.RectTransform),
                 "   >>" + question, font: GUI.SmallFont, wrap: true)

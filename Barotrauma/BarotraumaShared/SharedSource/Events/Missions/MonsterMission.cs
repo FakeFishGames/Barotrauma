@@ -77,6 +77,12 @@ namespace Barotrauma
             Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
 
             bool isClient = IsClient;
+
+            if (monsters.Count > 0)
+            {
+                throw new Exception($"monsters.Count > 0 ({monsters.Count})");
+            }
+
             if (!string.IsNullOrEmpty(monsterFile))
             {
                 for (int i = 0; i < monsterCount; i++)
@@ -92,11 +98,21 @@ namespace Barotrauma
                 }
             }
 
+            if (tempSonarPositions.Count > 0)
+            {
+                throw new Exception($"tempSonarPositions.Count > 0 ({tempSonarPositions.Count})");
+            }
+
             monsters.ForEach(m => m.Enabled = false);
             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
             for (int i = 0; i < monsters.Count; i++)
             {
                 tempSonarPositions.Add(spawnPos + Rand.Vector(maxSonarMarkerDistance));
+            }
+
+            if (monsters.Count != tempSonarPositions.Count)
+            {
+                throw new Exception($"monsters.Count != tempSonarPositions.Count ({monsters.Count} != {tempSonarPositions.Count})");
             }
         }
 
@@ -108,6 +124,16 @@ namespace Barotrauma
                     //keep sonar markers within maxSonarMarkerDistance from the monster(s)
                     for (int i = 0; i < tempSonarPositions.Count; i++)
                     {
+                        if (monsters.Count != tempSonarPositions.Count)
+                        {
+                            throw new Exception($"monsters.Count != tempSonarPositions.Count ({monsters.Count} != {tempSonarPositions.Count})");
+                        }
+
+                        if (i < 0 || i >= monsters.Count)
+                        {
+                            throw new Exception($"Index {i} outside of bounds 0-{monsters.Count} ({tempSonarPositions.Count})");
+                        }
+
                         if (monsters[i].Removed || monsters[i].IsDead) { continue; }
                         Vector2 diff = tempSonarPositions[i] - monsters[i].Position;
 
@@ -148,8 +174,10 @@ namespace Barotrauma
         
         public override void End()
         {
+            tempSonarPositions.Clear();
+            monsters.Clear();
             if (State < 1) { return; }
-                        
+            
             GiveReward();
             completed = true;
         }

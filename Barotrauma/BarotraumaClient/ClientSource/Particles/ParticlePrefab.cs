@@ -152,7 +152,7 @@ namespace Barotrauma.Particles
             }
         }
 
-        [Editable(0.0f, 10000.0f), Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through water.")]
+        [Editable(0.0f, 10000.0f), Serialize(0.0f, false, description: "Radius of the particle's collider. Only has an effect if UseCollision is set to true.")]
         public float CollisionRadius { get; private set; }
 
         [Editable, Serialize(false, false, description: "Does the particle collide with the walls of the submarine and the level.")]

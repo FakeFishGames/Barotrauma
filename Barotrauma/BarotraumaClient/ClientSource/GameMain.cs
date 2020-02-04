@@ -480,6 +480,7 @@ namespace Barotrauma
             LevelGenerationParams.LoadPresets();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
+            SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 

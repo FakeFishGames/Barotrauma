@@ -520,7 +520,7 @@ namespace Barotrauma
                     { if (parentObject is Character character && value is float) { character.LowPassMultiplier = (float)value; return true; } }
                     break;
                 case "SpeedMultiplier":
-                    { if (parentObject is Character character && value is float) { character.SpeedMultiplier = (float)value; return true; } }
+                    { if (parentObject is Character character && value is float) { character.StackSpeedMultiplier((float)value); return true; } }
                     break;
                 case "IsOn":
                     { if (parentObject is LightComponent lightComponent && value is bool) { lightComponent.IsOn = (bool)value; return true; } }

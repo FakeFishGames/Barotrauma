@@ -185,7 +185,7 @@ namespace Barotrauma
             {
                 Padding = Vector4.Zero,
                 ForceUpperCase = true,
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
 
             var infoHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.33f), topRow.RectTransform), isHorizontal: true, Anchor.BottomLeft) { RelativeSpacing = 0.01f,  Stretch = false };
@@ -279,7 +279,7 @@ namespace Barotrauma
             var filterTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, elementHeight), filtersHolder.RectTransform), TextManager.Get("FilterServers"), font: GUI.SubHeadingFont)
             {
                 Padding = Vector4.Zero,
-                AutoScale = true,
+                AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
 
@@ -1608,7 +1608,6 @@ namespace Barotrauma
 
             if (serverInfo.OwnerVerified)
             {
-                DebugConsole.NewMessage(serverInfo.OwnerID + " verified!");
                 var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo &&
                                                                             (serverInfo.OwnerID != 0 ? info.OwnerID == serverInfo.OwnerID : info.IP == serverInfo.IP)).ToList();
                 foreach (var child in childrenToRemove)
@@ -1637,7 +1636,7 @@ namespace Barotrauma
 
             var compatibleBox = new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[0], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {
-                Enabled = false,
+                CanBeFocused = false,
                 Selected =
                     serverInfo.GameVersion == GameMain.Version.ToString() &&
                     serverInfo.ContentPackagesMatch(GameMain.SelectedPackages),
@@ -1648,7 +1647,7 @@ namespace Barotrauma
             {
 				ToolTip = TextManager.Get((serverInfo.HasPassword) ? "ServerListHasPassword" : "FilterPassword"),
 				Selected = serverInfo.HasPassword,
-                Enabled = false,
+                CanBeFocused = false,
                 UserData = "password"
             };
 
@@ -1659,12 +1658,17 @@ namespace Barotrauma
                 ((serverInfo.OwnerID != 0 || serverInfo.LobbyID != 0) ? "[STEAMP2P] " : "[LIDGREN] ") + serverInfo.ServerName,
 #endif
                 style: "GUIServerListTextBox");
+            serverName.UserData = serverName.Text;
+            serverName.RectTransform.SizeChanged += () =>
+            {
+                serverName.Text = ToolBox.LimitString(serverName.Text, serverName.Font, serverName.Rect.Width);
+            };
 
             new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {
 				ToolTip = TextManager.Get((serverInfo.GameStarted) ? "ServerListRoundStarted" : "ServerListRoundNotStarted"),
 				Selected = serverInfo.GameStarted,
-				Enabled = false
+				CanBeFocused = false
 			};
 
             var serverPlayers = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[4], 1.0f), serverContent.RectTransform),

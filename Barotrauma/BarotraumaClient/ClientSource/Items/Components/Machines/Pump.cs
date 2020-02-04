@@ -55,7 +55,7 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-            powerLight.TextBlock.AutoScale = true;
+            powerLight.TextBlock.AutoScaleHorizontal = true;
             powerLight.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             PowerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.75f), paddedPowerArea.RectTransform, Anchor.TopCenter)
             {
@@ -83,14 +83,14 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
-            autoControlIndicator.TextBlock.AutoScale = true;
+            autoControlIndicator.TextBlock.AutoScaleHorizontal = true;
             autoControlIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
 
             var sliderArea = new GUIFrame(new RectTransform(new Vector2(1, 0.65f), rightArea.RectTransform, Anchor.BottomLeft), style: null);
             var pumpSpeedText = new GUITextBlock(new RectTransform(new Vector2(1, 0.3f), sliderArea.RectTransform, Anchor.TopLeft), "", 
                 textColor: GUI.Style.TextColor, textAlignment: Alignment.CenterLeft, wrap: false, font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             string pumpSpeedStr = TextManager.Get("PumpSpeed");
             pumpSpeedText.TextGetter = () => { return TextManager.AddPunctuation(':', pumpSpeedStr, (int)flowPercentage + " %"); };

@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
-            progressTimer += deltaTime * Voltage;
+            progressTimer += deltaTime * Math.Min(Voltage, 1.0f);
 
             var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
             if (targetItem == null) { return; }

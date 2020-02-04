@@ -148,10 +148,26 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("LevelUpdate", sw.ElapsedTicks);
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+            if (Character.Controlled != null)
             {
-                Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                if (Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+                {
+                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                }
+                if (Character.Controlled.Inventory != null)
+                {
+                    foreach (Item item in Character.Controlled.Inventory.Items)
+                    {
+                        if (item == null) { continue; }
+                        if (Character.Controlled.HasEquippedItem(item))
+                        {
+                            item.UpdateHUD(cam, Character.Controlled, (float)deltaTime);
+                        }
+                    }
+                }
             }
+
+
             sw.Restart();              
 
             Character.UpdateAll((float)deltaTime, cam);

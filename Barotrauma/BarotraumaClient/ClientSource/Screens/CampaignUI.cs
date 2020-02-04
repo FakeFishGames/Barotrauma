@@ -78,7 +78,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { SelectTab(Tab.Map); return true; }   
             };
             outpostBtn.TextBlock.Font = GUI.LargeFont;
-            outpostBtn.TextBlock.AutoScale = true;
+            outpostBtn.TextBlock.AutoScaleHorizontal = true;
 
             var tabButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.4f), topPanelContent.RectTransform, Anchor.BottomLeft), isHorizontal: true);
 
@@ -161,7 +161,7 @@ namespace Barotrauma
             {
                 UserData = "mycrew",
                 CanBeFocused = false,
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             if (campaign is SinglePlayerCampaign)
             {
@@ -170,7 +170,7 @@ namespace Barotrauma
                 {
                     UserData = "hire",
                     CanBeFocused = false,
-                    AutoScale = true
+                    AutoScaleHorizontal = true
                 };
             }
             
@@ -210,6 +210,7 @@ namespace Barotrauma
             searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform), createClearButton: true);
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
 
             var storeItemLists = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.8f), storeContent.RectTransform), isHorizontal: true)
             {
@@ -256,7 +257,7 @@ namespace Barotrauma
                    TextManager.Get("MapEntityCategory." + category), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
                 {
                     Padding = Vector4.Zero,
-                    AutoScale = true,
+                    AutoScaleHorizontal = true,
                     Color = Color.Transparent,
                     HoverColor = Color.Transparent,
                     PressedColor = Color.Transparent,
@@ -454,7 +455,7 @@ namespace Barotrauma
                 textAlignment: Alignment.Center, font: GUI.LargeFont, style: "GUISlopedHeader")
             {
                 UserData = "missionlabel",
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             var missionPanelContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), missionPanel.RectTransform, Anchor.Center))
             {
@@ -468,10 +469,11 @@ namespace Barotrauma
                 Stretch = true
             };
             selectedMissionInfo = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.25f), missionPanel.RectTransform, Anchor.BottomRight, Pivot.TopRight)
-                { MinSize = new Point(0, (int)(250 * GUI.Scale)) })
+                { MinSize = new Point(0, (int)(150 * GUI.Scale)) })
             {
                 Visible = false
             };
+            selectedMissionInfo.RectTransform.MaxSize = new Point(int.MaxValue, selectedMissionInfo.Rect.Height * 2);
             new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), selectedMissionInfo.RectTransform, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.9f)
             {
                 UserData = "outerglow",
@@ -676,7 +678,7 @@ namespace Barotrauma
             var container = selectedLocationInfo;
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Name, font: GUI.LargeFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), location.Type.Name, font: GUI.SubHeadingFont);
 
@@ -686,7 +688,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform), TextManager.Get("SelectMission"), font: GUI.SubHeadingFont)
             {
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
 
             var missionFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.3f), container.RectTransform), style: "InnerFrame");
@@ -784,13 +786,13 @@ namespace Barotrauma
             selectedMissionInfo.ClearChildren();
             var container = selectedMissionInfo.Content;
             selectedMissionInfo.Visible = selectedMission != null;
-            selectedMissionInfo.Spacing = 10;
+            selectedMissionInfo.Spacing = (int)(10 * GUI.Scale);
             if (selectedMission == null) { return; }
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
                 selectedMission.Name, font: GUI.LargeFont)
             {
-                AutoScale = true,
+                AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), container.RectTransform),
@@ -803,6 +805,12 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+
+            //scale down mission info box if it's much taller than the text
+            float missionInfoHeight = selectedMissionInfo.Content.Children.Sum(c => c.Rect.Height + selectedMissionInfo.Spacing);
+            selectedMissionInfo.Content.Children.ForEach(c => c.RectTransform.IsFixedSize = true);
+            selectedMissionInfo.RectTransform.Resize(new Point(selectedMissionInfo.Rect.Width, (int)(missionInfoHeight + 15 * GUI.Scale)));
+            selectedMissionInfo.UpdateScrollBarSize();
 
             if (StartButton != null)
             {

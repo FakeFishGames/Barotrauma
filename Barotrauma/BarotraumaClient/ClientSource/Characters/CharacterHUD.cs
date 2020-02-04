@@ -168,10 +168,13 @@ namespace Barotrauma
         
         public static void Draw(SpriteBatch spriteBatch, Character character, Camera cam)
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD) { return; }
             
             character.CharacterHealth.Alignment = Alignment.Right;
-            GUI.InfoAreaBackground.Draw(spriteBatch, Vector2.Zero);
+            if (Screen.Selected == GameMain.GameScreen)
+            {
+                GUI.InfoAreaBackground.Draw(spriteBatch, Vector2.Zero, scale: GUI.Scale);
+            }
 
             if (GameMain.GameSession?.CrewManager != null)
             {

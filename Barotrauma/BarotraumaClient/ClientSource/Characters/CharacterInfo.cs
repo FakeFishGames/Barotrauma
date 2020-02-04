@@ -41,7 +41,7 @@ namespace Barotrauma
                 Name, textColor: nameColor, font: GUI.LargeFont)
             {
                 Padding = Vector4.Zero,
-                AutoScale = true
+                AutoScaleHorizontal = true
             };
 
             if (Job != null)
@@ -213,10 +213,10 @@ namespace Barotrauma
             }
         }
 
-        public void DrawJobIcon(SpriteBatch spriteBatch)
+        public void DrawJobIcon(SpriteBatch spriteBatch, Vector2? pos = null, float scale = 1.0f)
         {
             if (jobIcon == null) return;
-            jobIcon.Draw(spriteBatch, jobIconPos, Job.Prefab.UIColor, scale: .5f * GUI.Scale);
+            jobIcon.Draw(spriteBatch, pos ?? jobIconPos, Job.Prefab.UIColor, scale: .5f * GUI.Scale * scale);
         }
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)

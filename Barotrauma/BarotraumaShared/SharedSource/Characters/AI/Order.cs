@@ -74,6 +74,8 @@ namespace Barotrauma
 
         public readonly Dictionary<string, Sprite> OptionSprites;
 
+        public readonly float Weight;
+
         static Order()
         {
             Prefabs = new Dictionary<string, Order>();
@@ -172,6 +174,9 @@ namespace Barotrauma
             PrefabList = new List<Order>(Prefabs.Values);
         }
 
+        /// <summary>
+        /// Constructor for order prefabs
+        /// </summary>
         private Order(XElement orderElement)
         {
             Identifier = orderElement.GetAttributeString("identifier", "");
@@ -199,6 +204,7 @@ namespace Barotrauma
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), orderElement.GetAttributeString("category", "undefined"), true);
+            Weight = orderElement.GetAttributeFloat(0.0f, "weight");
 
             string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
             if (translatedOptionNames == null)
@@ -243,6 +249,9 @@ namespace Barotrauma
             }
         }
         
+        /// <summary>
+        /// Constructor for order instances
+        /// </summary>
         public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
         {
             Prefab = prefab;
@@ -257,6 +266,7 @@ namespace Barotrauma
             TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
+            Weight              = prefab.Weight;
             OrderGiver          = orderGiver;
 
             TargetEntity = targetEntity;

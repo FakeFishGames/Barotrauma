@@ -103,6 +103,7 @@
   <Text file="Content/Texts/TraditionalChinese/TraditionalChineseVanilla.xml" />
   <Text file="Content/Texts/Japanese/JapaneseVanilla.xml" />
   <Text file="Content/Texts/Turkish/TurkishVanilla.xml" />
+  <Text file="Content/Texts/Korean/KoreanVanilla.xml" />
   <UIStyle file="Content/UI/style.xml"/>  
   <Afflictions file="Content/Afflictions.xml"/>
   <Structure file="Content/Map/StructurePrefabs.xml" />
@@ -130,10 +131,12 @@
   <NPCConversations file="Content/NPCConversations/TraditionalChinese/NpcConversations_TraditionalChinese.xml"/>
   <NPCConversations file="Content/NPCConversations/Japanese/NpcConversations_Japanese.xml"/>
   <NPCConversations file="Content/NPCConversations/Turkish/NpcConversations_Turkish.xml"/>
+  <NPCConversations file="Content/NPCConversations/Korean/NpcConversations_Korean.xml"/>
   <Jobs file="Content/Jobs.xml" />
   <Orders file="Content/Orders.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
+  <SkillSettings file="Content/SkillSettings.xml" />
   <Executable file="Barotrauma" />
   <ServerExecutable file="DedicatedServer" />
 </contentpackage>

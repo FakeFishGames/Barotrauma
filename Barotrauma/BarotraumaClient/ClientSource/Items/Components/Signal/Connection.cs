@@ -184,7 +184,7 @@ namespace Barotrauma.Items.Components
             x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count() - 1) / 2);
             foreach (Wire wire in panel.DisconnectedWires)
             {
-                if (wire == DraggingConnected && mouseInRect) { continue; }
+                if (wire == DraggingConnected && !mouseInRect) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
@@ -197,7 +197,10 @@ namespace Barotrauma.Items.Components
 
             //stop dragging a wire item if the cursor is within any connection panel
             //(so we don't drop the item when dropping the wire on a connection)
-            if (mouseInRect || GUI.MouseOn?.UserData is ConnectionPanel) { Inventory.draggingItem = null; }       
+            if (mouseInRect || (GUI.MouseOn?.UserData is ConnectionPanel && GUI.MouseOn.MouseRect.Contains(PlayerInput.MousePosition))) 
+            { 
+                Inventory.draggingItem = null; 
+            }       
         }
 
         private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 scale)

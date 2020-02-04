@@ -671,21 +671,33 @@ namespace Barotrauma.Items.Components
 
             return closestIndex;
         }
-        
+
         public override void FlipX(bool relativeToSub)
-        {            
+        {
+            Vector2 refPos = item.Submarine == null ?
+                Vector2.Zero :
+               item.Position - item.Submarine.HiddenSubPosition;
+
             for (int i = 0; i < nodes.Count; i++)
             {
-                nodes[i] = new Vector2(-nodes[i].X, nodes[i].Y);
+                nodes[i] = relativeToSub ?
+                    new Vector2(-nodes[i].X, nodes[i].Y) :
+                    new Vector2(refPos.X - (nodes[i].X - refPos.X), nodes[i].Y);
             }
             UpdateSections();
         }
 
         public override void FlipY(bool relativeToSub)
         {
+            Vector2 refPos = item.Submarine == null ?
+                Vector2.Zero :
+               item.Position - item.Submarine.HiddenSubPosition;
+
             for (int i = 0; i < nodes.Count; i++)
             {
-                nodes[i] = new Vector2(nodes[i].X, -nodes[i].Y);
+                nodes[i] = relativeToSub ?
+                    new Vector2(nodes[i].X, -nodes[i].Y) :
+                    new Vector2(nodes[i].X, refPos.Y - (nodes[i].Y - refPos.Y));
             }
             UpdateSections();
         }

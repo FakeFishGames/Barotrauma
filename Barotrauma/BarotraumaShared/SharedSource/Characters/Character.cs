@@ -138,6 +138,8 @@ namespace Barotrauma
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
         private readonly List<float> speedMultipliers = new List<float>();
+        private float greatestNegativeSpeedMultiplier = 1f;
+        private float greatestPositiveSpeedMultiplier = 1f;
 
         public Entity ViewTarget
         {
@@ -1069,42 +1071,32 @@ namespace Barotrauma
         {
             get
             {
-                if (speedMultipliers.Count == 0) return 1f;
-
-                float greatestPositive = 1f;
-                float greatestNegative = 1f;
-
-                for (int i = 0; i < speedMultipliers.Count; i++)
-                {
-                    float val = speedMultipliers[i];
-                    if (val < 1f)
-                    {
-                        if (val < greatestNegative)
-                        {
-                            greatestNegative = val;
-                        }
-                    }
-                    else
-                    {
-                        if (val > greatestPositive)
-                        {
-                            greatestPositive = val;
-                        }
-                    }
-                }
-
-                return greatestPositive - (1f - greatestNegative);
+                return greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier);
             }
-            set
+        }
+
+        public void StackSpeedMultiplier(float val)
+        {
+            if (val < 1f)
             {
-                if (value == 1f) return;
-                speedMultipliers.Add(value);
+                if (val < greatestNegativeSpeedMultiplier)
+                {
+                    greatestNegativeSpeedMultiplier = val;
+                }
+            }
+            else
+            {
+                if (val > greatestPositiveSpeedMultiplier)
+                {
+                    greatestPositiveSpeedMultiplier = val;
+                }
             }
         }
 
         public void ResetSpeedMultiplier()
         {
-            speedMultipliers.Clear();
+            greatestPositiveSpeedMultiplier = 1f;
+            greatestNegativeSpeedMultiplier = 1f;
         }
 
         public float ApplyTemporarySpeedLimits(float speed)
@@ -1440,6 +1432,7 @@ namespace Barotrauma
 
         public bool HasEquippedItem(Item item)
         {
+            if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.Items[i] == item && Inventory.SlotTypes[i] != InvSlotType.Any) return true;
@@ -2339,15 +2332,16 @@ namespace Barotrauma
         }
 
         private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
-        private readonly List<AIChatMessage> prevAiChatMessages = new List<AIChatMessage>();
+
+        //key = identifier, value = time the message was sent
+        private readonly Dictionary<string, float> prevAiChatMessages = new Dictionary<string, float>();
 
         public void DisableLine(string identifier)
         {
-            var dummyMsg = new AIChatMessage("", ChatMessageType.Default, identifier)
+            if (!string.IsNullOrEmpty(identifier))
             {
-                SendTime = Timing.TotalTime
-            };
-            prevAiChatMessages.Add(dummyMsg);
+                prevAiChatMessages[identifier] = (float)Timing.TotalTime;
+            }
         }
 
         public void Speak(string message, ChatMessageType? messageType = null, float delay = 0.0f, string identifier = "", float minDurationBetweenSimilar = 0.0f)
@@ -2355,10 +2349,15 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (string.IsNullOrEmpty(message)) { return; }
 
+            if (prevAiChatMessages.ContainsKey(identifier) && 
+                prevAiChatMessages[identifier] < Timing.TotalTime - minDurationBetweenSimilar) 
+            { 
+                prevAiChatMessages.Remove(identifier);                 
+            }
+
             //already sent a similar message a moment ago
             if (!string.IsNullOrEmpty(identifier) && minDurationBetweenSimilar > 0.0f &&
-                (aiChatMessageQueue.Any(m => m.Identifier == identifier) ||
-                prevAiChatMessages.Any(m => m.Identifier == identifier && m.SendTime > Timing.TotalTime - minDurationBetweenSimilar)))
+                (aiChatMessageQueue.Any(m => m.Identifier == identifier) || prevAiChatMessages.ContainsKey(identifier)))
             {
                 return;
             }
@@ -2403,15 +2402,25 @@ namespace Barotrauma
             {
                 sent.SendTime = Timing.TotalTime;
                 aiChatMessageQueue.Remove(sent);
-                prevAiChatMessages.Add(sent);
+                if (!string.IsNullOrEmpty(sent.Identifier))
+                {
+                    prevAiChatMessages[sent.Identifier] = (float)sent.SendTime;
+                }
             }
 
-            for (int i = prevAiChatMessages.Count - 1; i >= 0; i--)
+            if (prevAiChatMessages.Count > 100)
             {
-                if (prevAiChatMessages[i].SendTime < Timing.TotalTime - 60.0f)
+                List<string> toRemove = new List<string>();
+                foreach (KeyValuePair<string,float> prevMessage in prevAiChatMessages)
                 {
-                    prevAiChatMessages.RemoveRange(0, i + 1);
-                    break;
+                    if (prevMessage.Value < Timing.TotalTime - 60.0f)
+                    {
+                        toRemove.Add(prevMessage.Key);
+                    }
+                }
+                foreach (string identifier in toRemove)
+                {
+                    prevAiChatMessages.Remove(identifier);
                 }
             }
         }
