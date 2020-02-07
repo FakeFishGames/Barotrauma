@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
                 shakeTimer -= deltaTime;
                 Vector2 noisePos = new Vector2((float)PerlinNoise.CalculatePerlin(shakeTimer * 10.0f, shakeTimer * 10.0f, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(shakeTimer * 10.0f, shakeTimer * 10.0f, 0.5f) - 0.5f);
                 shakePos = noisePos * shake * 2.0f;
-                shake = Math.Min(shake, shakeTimer);
+                shake = Math.Min(shake, shakeTimer * 10.0f);
             }
             else
             {

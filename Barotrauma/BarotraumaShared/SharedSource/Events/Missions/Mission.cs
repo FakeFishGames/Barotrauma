@@ -1,11 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace Barotrauma
 {
-    partial class Mission
+    abstract partial class Mission
     {
         public readonly MissionPrefab Prefab;
         protected bool completed;
@@ -192,9 +193,7 @@ namespace Barotrauma
 
         public void GiveReward()
         {
-            var mode = GameMain.GameSession.GameMode as CampaignMode;
-            if (mode == null) return;
-            
+            if (!(GameMain.GameSession.GameMode is CampaignMode mode)) { return; }
             mode.Money += Reward;
         }
     }

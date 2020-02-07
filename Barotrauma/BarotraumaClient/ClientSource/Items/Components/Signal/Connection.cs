@@ -152,7 +152,10 @@ namespace Barotrauma.Items.Components
                             DraggingConnected.Connections[1]?.ConnectionPanel == panel)
                         {
                             DraggingConnected.RemoveConnection(panel.Item);
-                            panel.DisconnectedWires.Add(DraggingConnected);
+                            if (DraggingConnected.Item.ParentInventory == null)
+                            {
+                                panel.DisconnectedWires.Add(DraggingConnected);
+                            }
                         }
                     }
 

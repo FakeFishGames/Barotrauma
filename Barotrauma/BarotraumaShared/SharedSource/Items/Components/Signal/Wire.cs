@@ -264,7 +264,7 @@ namespace Barotrauma.Items.Components
             Character user = item.ParentInventory?.Owner as Character;
             removeNodeDelay = (user?.SelectedConstruction == null) ? removeNodeDelay - deltaTime : 0.5f;
 
-            Submarine sub = null;
+            Submarine sub = item.Submarine;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
             if (connections[1] != null && connections[1].Item.Submarine != null) { sub = connections[1].Item.Submarine; }
 

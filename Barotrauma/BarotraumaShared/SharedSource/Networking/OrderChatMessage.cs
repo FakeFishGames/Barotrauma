@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         public OrderChatMessage(Order order, string orderOption, Entity targetEntity, Character targetCharacter, Character sender)
             : this(order, orderOption,
-                  order.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),
+                  order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),
                   targetEntity, targetCharacter, sender)
         {
         }

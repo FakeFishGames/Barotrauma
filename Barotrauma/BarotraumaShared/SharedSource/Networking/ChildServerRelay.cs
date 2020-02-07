@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -81,43 +82,67 @@ namespace Barotrauma.Networking
             readCancellationToken = null;
             readStream?.Dispose(); readStream = null;
             writeStream?.Dispose(); writeStream = null;
+            msgsToRead?.Clear(); msgsToWrite?.Clear();
         }
+
+
+        private static int ReadIncomingMsgs()
+        {
+            Task<int> readTask = readStream?.ReadAsync(tempBytes, 0, tempBytes.Length, readCancellationToken.Token);
+            TimeSpan ts = TimeSpan.FromMilliseconds(100);
+            for (int i = 0; i < 150; i++)
+            {
+                if (shutDown)
+                {
+                    readCancellationToken?.Cancel();
+                    shutDown = true;
+                    return -1;
+                }
+
+                if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(ts) ?? true))
+                {
+                    break;
+                }
+            }
+
+            if (readTask == null || !readTask.IsCompleted)
+            {
+                readCancellationToken?.Cancel();
+                shutDown = true;
+                return -1;
+            }
+
+            if (readTask.Status != TaskStatus.RanToCompletion)
+            {
+                shutDown = true;
+                return -1;
+            }
+
+            return readTask.Result;
+        }
+
 
         private static void UpdateRead()
         {
             while (!shutDown)
             {
-                Task<int> readTask = readStream?.ReadAsync(tempBytes, 0, tempBytes.Length, readCancellationToken.Token);
-                TimeSpan ts = TimeSpan.FromMilliseconds(100);
-                for (int i=0;i<150;i++)
-                {
-                    if (shutDown)
-                    {
-                        readCancellationToken?.Cancel();
-                        shutDown = true;
-                        return;
-                    }
-
-                    if ((readTask?.IsCompleted ?? true) || (readTask?.Wait(ts) ?? true))
-                    {
-                        break;
-                    }
-                }
-
-                if (readTask == null || !readTask.IsCompleted)
-                {
-                    readCancellationToken?.Cancel();
-                    shutDown = true;
-                    return;
-                }
-
-                if (readTask.Status != TaskStatus.RanToCompletion)
+#if SERVER
+                if (!((readStream as AnonymousPipeClientStream)?.IsConnected ?? false))
                 {
                     shutDown = true;
                     return;
                 }
+#else
+                if (!((readStream as AnonymousPipeServerStream)?.IsConnected ?? false))
+                {
+                    shutDown = true;
+                    return;
+                }
+#endif
 
-                int readLen = readTask.Result;
+                int readLen = ReadIncomingMsgs();
+
+                if (readLen < 0) { shutDown = true; return; }
 
                 int procIndex = 0;
 
@@ -125,8 +150,20 @@ namespace Barotrauma.Networking
                 {
                     if (readState == ReadState.WaitingForPacketStart)
                     {
-                        readIncTotal = tempBytes[procIndex] | (tempBytes[procIndex + 1] << 8);
-                        procIndex += 2;
+                        readIncTotal = tempBytes[procIndex];
+                        procIndex++;
+
+                        if (procIndex >= readLen)
+                        {
+                            readLen = ReadIncomingMsgs();
+
+                            if (readLen < 0) { shutDown = true; return; }
+
+                            procIndex = 0;
+                        }
+
+                        readIncTotal |= (tempBytes[procIndex] << 8);
+                        procIndex++;
 
                         if (readIncTotal <= 0) { continue; }
 
@@ -166,6 +203,19 @@ namespace Barotrauma.Networking
         {
             while (!shutDown)
             {
+#if SERVER
+                if (!((writeStream as AnonymousPipeClientStream)?.IsConnected ?? false))
+                {
+                    shutDown = true;
+                    return;
+                }
+#else
+                if (!((writeStream as AnonymousPipeServerStream)?.IsConnected ?? false))
+                {
+                    shutDown = true;
+                    return;
+                }
+#endif
                 bool msgAvailable; byte[] msg;
                 lock (msgsToWrite)
                 {
@@ -176,9 +226,11 @@ namespace Barotrauma.Networking
                     byte[] lengthBytes = new byte[2];
                     lengthBytes[0] = (byte)(msg.Length & 0xFF);
                     lengthBytes[1] = (byte)((msg.Length >> 8) & 0xFF);
+
+                    msg = lengthBytes.Concat(msg).ToArray();
+
                     try
                     {
-                        writeStream?.Write(lengthBytes, 0, 2);
                         writeStream?.Write(msg, 0, msg.Length);
                     }
                     catch (IOException e)
@@ -199,11 +251,23 @@ namespace Barotrauma.Networking
                     writeManualResetEvent.Reset();
                     if (!writeManualResetEvent.WaitOne(1000))
                     {
-                        //heartbeat to keep the other end alive
-                        byte[] lengthBytes = new byte[2];
-                        lengthBytes[0] = (byte)0;
-                        lengthBytes[1] = (byte)0;
-                        writeStream?.Write(lengthBytes, 0, 2);
+                        if (shutDown)
+                        {
+                            return;
+                        }
+                        try
+                        {
+                            //heartbeat to keep the other end alive
+                            byte[] lengthBytes = new byte[2];
+                            lengthBytes[0] = (byte)0;
+                            lengthBytes[1] = (byte)0;
+                            writeStream?.Write(lengthBytes, 0, 2);
+                        }
+                        catch (IOException e)
+                        {
+                            shutDown = true;
+                            break;
+                        }
                     }
                 }
             }

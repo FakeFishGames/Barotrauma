@@ -173,6 +173,7 @@ namespace Barotrauma
                     XDocument doc = OpenFile(filePath);
                     StartHashDocTask(doc);
                     hashTask.Wait();
+                    hashTask = null;
                 }
 
                 return hash;
@@ -343,7 +344,10 @@ namespace Barotrauma
         public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
         {
             this.filePath = filePath;
-            LastModifiedTime = File.GetLastWriteTime(filePath);
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                LastModifiedTime = File.GetLastWriteTime(filePath);
+            }
             try
             {
                 name = displayName = Path.GetFileNameWithoutExtension(filePath);
@@ -1630,6 +1634,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
                 return false;
             }
+
+            hash = null;
+            hashTask = null;
+            Md5Hash.RemoveFromCache(filePath);
 
             return true;
         }

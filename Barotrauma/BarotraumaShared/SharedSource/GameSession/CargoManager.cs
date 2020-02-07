@@ -49,14 +49,13 @@ namespace Barotrauma
         {
             PurchasedItem purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item);
 
-            if (purchasedItem != null && quantity == 1)
+            campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
+            if (purchasedItem != null)
             {
-                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice;
-                purchasedItem.Quantity += 1;
+                purchasedItem.Quantity += quantity;
             }
             else
             {
-                campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
                 purchasedItem = new PurchasedItem(item, quantity);
                 purchasedItems.Add(purchasedItem);
             }

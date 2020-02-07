@@ -6,14 +6,18 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using Barotrauma.Media;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class LoadingScreen
     {
-        private Texture2D backgroundTexture;
+        private readonly Texture2D defaultBackgroundTexture, overlay;
+        private readonly SpriteSheet decorativeGraph, decorativeMap;
+        private Texture2D currentBackgroundTexture;
+        private Sprite noiseSprite;
 
-        private RenderTarget2D renderTarget;
+        private string randText = "";
 
         private Sprite languageSelectionCursor;
         private ScalableFont languageSelectionFont, languageSelectionFontCJK;
@@ -65,15 +69,9 @@ namespace Barotrauma
             }
         }
 
-        private float state;
-        
         private string selectedTip;
 
-        public Vector2 BackgroundPosition;
-
-        public Vector2 TitlePosition;
-
-        private object loadMutex = new object();
+        private readonly object loadMutex = new object();
         private float? loadState;
         
         public float? LoadState
@@ -109,15 +107,13 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-            backgroundTexture = TextureLoader.FromFile("Content/UI/titleBackground.png");
+            defaultBackgroundTexture = TextureLoader.FromFile("Content/Map/LocationPortraits/AlienRuins.png");
 
-            renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            GameMain.Instance.OnResolutionChanged += () =>
-            {
-                renderTarget?.Dispose();
-                renderTarget = new RenderTarget2D(graphics, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            };
+            decorativeMap = new SpriteSheet("Content/Map/MapHUD.png", 6, 5, Vector2.Zero, sourceRect: new Rectangle(0, 0, 2048, 640));
+            decorativeGraph = new SpriteSheet("Content/Map/MapHUD.png", 4, 10, Vector2.Zero, sourceRect: new Rectangle(1025, 1259, 1024, 732));
 
+            overlay = TextureLoader.FromFile("Content/UI/LoadingScreenOverlay.png");
+            noiseSprite = new Sprite("Content/UI/noise.png", Vector2.Zero);
             DrawLoadingText = true;
             selectedTip = TextManager.Get("LoadingScreenTip", true);
         }
@@ -147,41 +143,35 @@ namespace Barotrauma
 
             drawn = true;
 
-            graphics.SetRenderTarget(renderTarget);
-
-            float backgroundScale = GameMain.GraphicsHeight / 1500.0f;
-            float titleScale = MathHelper.SmoothStep(0.8f, 1.0f, state / 10.0f) * GameMain.GraphicsHeight / 1000.0f;
-
-            state += deltaTime;
-
-            if (DrawLoadingText)
-            {
-                BackgroundPosition = new Vector2(GameMain.GraphicsWidth * 0.3f, GameMain.GraphicsHeight * 0.45f);
-                TitlePosition = new Vector2(GameMain.GraphicsWidth * 0.5f, GameMain.GraphicsHeight * 0.45f);
-            }
-
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
-            graphics.Clear(Color.Black);
-
-            spriteBatch.Draw(backgroundTexture, BackgroundPosition, null, Color.White * Math.Min(state / 5.0f, 1.0f), 0.0f,
-                new Vector2(backgroundTexture.Width / 2.0f, backgroundTexture.Height / 2.0f),
-                backgroundScale * 1.5f, SpriteEffects.None, 0.2f);
-            
-            titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
-            
-            spriteBatch.End();
-
-            graphics.SetRenderTarget(null);
-
-            if (WaterRenderer.Instance != null)
-            {
-                WaterRenderer.Instance.ScrollWater(Vector2.One * 10.0f, deltaTime);
-                WaterRenderer.Instance.RenderWater(spriteBatch, renderTarget, null);
-            }
+            currentBackgroundTexture ??= defaultBackgroundTexture;
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
 
-            titleSprite?.Draw(spriteBatch, TitlePosition, Color.White * Math.Min((state - 1.0f) / 5.0f, 1.0f), scale: titleScale);
+            float scale = (GameMain.GraphicsWidth / (float)currentBackgroundTexture.Width) * 1.2f;
+            float paddingX = currentBackgroundTexture.Width * scale - GameMain.GraphicsWidth;
+            float paddingY = currentBackgroundTexture.Height * scale - GameMain.GraphicsHeight;
+
+            double noiseT = (Timing.TotalTime * 0.02f);
+            Vector2 pos = new Vector2((float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0.5f) - 0.5f);
+            pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
+
+            spriteBatch.Draw(currentBackgroundTexture,
+                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
+                null, Color.White, 0.0f, new Vector2(currentBackgroundTexture.Width / 2, currentBackgroundTexture.Height / 2),
+                scale, SpriteEffects.None, 0.0f);
+
+            spriteBatch.Draw(overlay, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), null, Color.White, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+
+            float noiseStrength = (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0);
+            float noiseScale = (float)PerlinNoise.CalculatePerlin(noiseT * 5.0f, noiseT * 2.0f, 0) * 4.0f;
+            noiseSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                startOffset: new Point(Rand.Range(0, noiseSprite.SourceRect.Width), Rand.Range(0, noiseSprite.SourceRect.Height)),
+                color: Color.White * noiseStrength * 0.1f,
+                textureScale: Vector2.One * noiseScale);
+
+            titleSprite?.Draw(spriteBatch, new Vector2(GameMain.GraphicsWidth * 0.05f, GameMain.GraphicsHeight * 0.125f), 
+                Color.White, origin: new Vector2(0.0f, titleSprite.SourceRect.Height / 2.0f), 
+                scale: GameMain.GraphicsHeight / 2000.0f);
 
             if (WaitForLanguageSelection)
             {
@@ -218,7 +208,7 @@ namespace Barotrauma
                     if (GUI.LargeFont != null)
                     {
                         GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText).X / 2.0f, GameMain.GraphicsHeight * 0.7f),
+                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText.ToUpper()).X / 2.0f, GameMain.GraphicsHeight * 0.75f),
                             Color.White);
                     }
                 }
@@ -232,11 +222,48 @@ namespace Barotrauma
                     for (int i = 0; i < lines.Length; i++)
                     {
                         GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.78f + i * lineHeight)), Color.White);
+                            new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White);
                     }
                 }
 
             }
+            spriteBatch.End();
+
+            spriteBatch.Begin(blendState: BlendState.Additive);
+
+            Vector2 decorativeScale = new Vector2(GameMain.GraphicsHeight / 1080.0f);
+
+            float noiseVal = (float)PerlinNoise.CalculatePerlin(Timing.TotalTime * 0.25f, Timing.TotalTime * 0.5f, 0);
+            decorativeGraph.Draw(spriteBatch, (int)(decorativeGraph.FrameCount * noiseVal),
+                new Vector2(GameMain.GraphicsWidth * 0.001f, GameMain.GraphicsHeight * 0.24f),
+                Color.White, Vector2.Zero, 0.0f, decorativeScale, SpriteEffects.FlipVertically);
+            
+            decorativeMap.Draw(spriteBatch, (int)(decorativeMap.FrameCount * noiseVal),
+                new Vector2(GameMain.GraphicsWidth * 0.99f, GameMain.GraphicsHeight * 0.66f),
+                Color.White, decorativeMap.FrameSize.ToVector2(), 0.0f, decorativeScale);
+
+            if (noiseVal < 0.2f)
+            {
+                //SCP-CB reference
+                randText = (new string[] { "NIL", "black white gray", "Sometimes we would have had time to scream", "e8m106]af", "NO" }).GetRandom();
+            }
+            else if (noiseVal < 0.3f)
+            {
+                randText = ToolBox.RandomSeed(9);
+            }
+            else if (noiseVal < 0.5f)
+            {
+                randText = 
+                    Rand.Int(100).ToString().PadLeft(2, '0') + " " + 
+                    Rand.Int(100).ToString().PadLeft(2, '0') + " " + 
+                    Rand.Int(100).ToString().PadLeft(2, '0') + " " +
+                    Rand.Int(100).ToString().PadLeft(2, '0');
+            }
+
+            GUI.LargeFont?.DrawString(spriteBatch, randText,
+                new Vector2(GameMain.GraphicsWidth - decorativeMap.FrameSize.X * decorativeScale.X * 0.8f, GameMain.GraphicsHeight * 0.57f),
+                Color.White * (1.0f - noiseVal));
+
             spriteBatch.End();
         }
 
@@ -336,6 +363,7 @@ namespace Barotrauma
             drawn = false;
             LoadState = null;
             selectedTip = TextManager.Get("LoadingScreenTip", true);
+            currentBackgroundTexture = LocationType.List.GetRandom()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
             
             while (!drawn)
             {

@@ -13,6 +13,7 @@ namespace Barotrauma
         class LimbHealth
         {
             public Sprite IndicatorSprite;
+            public Sprite HighlightSprite;
 
             public Rectangle HighlightArea;
 
@@ -43,6 +44,9 @@ namespace Barotrauma
                         case "sprite":
                             IndicatorSprite = new Sprite(subElement);
                             HighlightArea = subElement.GetAttributeRect("highlightarea", new Rectangle(0, 0, (int)IndicatorSprite.size.X, (int)IndicatorSprite.size.Y));
+                            break;
+                        case "highlightsprite":
+                            HighlightSprite = new Sprite(subElement);
                             break;
                         case "vitalitymultiplier":
                             if (subElement.Attribute("name") != null)

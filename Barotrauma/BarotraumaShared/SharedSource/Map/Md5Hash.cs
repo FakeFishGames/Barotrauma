@@ -70,7 +70,7 @@ namespace Barotrauma
             return false;
         }
 
-        public void SaveToCache(string filename, long? time=null)
+        public void SaveToCache(string filename, long? time = null)
         {
             if (!string.IsNullOrWhiteSpace(filename))
             {
@@ -191,9 +191,26 @@ namespace Barotrauma
         }
 
         public static string GetShortHash(string fullHash)
-        {            
+        {
             if (string.IsNullOrEmpty(fullHash)) { return ""; }
             return fullHash.Length < 7 ? fullHash : fullHash.Substring(0, 7);
+        }
+
+        public static bool RemoveFromCache(string filename)
+        {
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                filename = filename.CleanUpPath();
+                lock (cache)
+                {
+                    if (cache.ContainsKey(filename))
+                    {
+                        cache.Remove(filename);
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

@@ -364,15 +364,7 @@ namespace Barotrauma.Networking
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
 
             CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
-        }
-        
-        private bool RetryConnection(GUIButton button, object obj)
-        {
-            if (clientPeer != null) { clientPeer.Close(); }
-            clientPeer = null;
-            ConnectToServer(serverEndpoint, serverName);
-            return true;
-        }
+        }        
 
         private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
@@ -850,13 +842,14 @@ namespace Barotrauma.Networking
                 disconnectReason == DisconnectReason.ExcessiveDesyncOldEvent ||
                 disconnectReason == DisconnectReason.ExcessiveDesyncRemovedEvent ||
                 disconnectReason == DisconnectReason.SyncTimeout;
-            
+
             if (allowReconnect && 
                 (disconnectReason == DisconnectReason.Unknown || eventSyncError))
             {
                 if (eventSyncError)
                 {
                     GameMain.NetLobbyScreen.Select();
+                    GameMain.GameSession?.EndRound("");
                     gameStarted = false;
                     myCharacter = null;
                 }
@@ -1243,6 +1236,8 @@ namespace Barotrauma.Networking
                     loadSecondSub: false,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
+
+            GameMain.GameSession.Mission?.ClientReadInitial(inc);
 
             if (GameMain.GameSession.Submarine.IsFileCorrupted)
             {
@@ -1635,9 +1630,9 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetObject.ENTITY_POSITION:
                         UInt16 id = inc.ReadUInt16();
-                        byte msgLength = inc.ReadByte();
+                        uint msgLength = inc.ReadVariableUInt32();
 
-                        int msgEndPos = inc.BitPosition + msgLength * 8;
+                        int msgEndPos = (int)(inc.BitPosition + msgLength * 8);
 
                         var entity = Entity.FindEntityByID(id) as IServerSerializable;
                         if (entity != null)
@@ -2367,8 +2362,13 @@ namespace Barotrauma.Networking
             {
                 textBox.Deselect();
             }
-
             textBox.Text = "";
+
+            if (ChatBox.CloseAfterMessageSent)
+            {
+                ChatBox.ToggleOpen = false;
+                ChatBox.CloseAfterMessageSent = false;
+            }
 
             return true;
         }
@@ -2443,13 +2443,16 @@ namespace Barotrauma.Networking
                                 {
                                     msgBox.AddToGUIUpdateList();
                                     ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
+                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
                                     ChatBox.ToggleOpen = true;
+                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
                                 }
 
                                 if (radioKeyHit)
                                 {
                                     msgBox.AddToGUIUpdateList();
                                     ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
                                     ChatBox.ToggleOpen = true;
                                     if (!msgBox.Text.StartsWith(ChatBox.RadioChatString))
                                     {

@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    class MonsterMission : Mission
+    partial class MonsterMission : Mission
     {
         private readonly string monsterFile;
         private readonly int monsterCount;
-        private readonly HashSet<Tuple<string, int>> monsterFiles = new HashSet<Tuple<string, int>>();
+
+        //string = filename, point = min,max
+        private readonly HashSet<Tuple<string, Point>> monsterFiles = new HashSet<Tuple<string, Point>>();
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
@@ -50,7 +54,7 @@ namespace Barotrauma
 
             maxSonarMarkerDistance = prefab.ConfigElement.GetAttributeFloat("maxsonarmarkerdistance", 10000.0f);
 
-            monsterCount = prefab.ConfigElement.GetAttributeInt("monstercount", 1);
+            monsterCount = Math.Min(prefab.ConfigElement.GetAttributeInt("monstercount", 1), 255);
             string monsterFileName = monsterFile;
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
@@ -64,9 +68,9 @@ namespace Barotrauma
                 {
                     defaultCount = monsterElement.GetAttributeInt("amount", 1);
                 }
-                int min = monsterElement.GetAttributeInt("min", defaultCount);
-                int max = Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount));
-                monsterFiles.Add(new Tuple<string, int>(monster, Rand.Range(min, max + 1, Rand.RandSync.Server)));
+                int min = Math.Min(monsterElement.GetAttributeInt("min", defaultCount), 255);
+                int max = Math.Min(Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount)), 255);
+                monsterFiles.Add(new Tuple<string, Point>(monster, new Point(min, max)));
             }
             description = description.Replace("[monster]",
                 TextManager.Get("character." + System.IO.Path.GetFileNameWithoutExtension(monsterFileName)));
@@ -74,28 +78,9 @@ namespace Barotrauma
         
         public override void Start(Level level)
         {
-            Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
-
-            bool isClient = IsClient;
-
             if (monsters.Count > 0)
             {
                 throw new Exception($"monsters.Count > 0 ({monsters.Count})");
-            }
-
-            if (!string.IsNullOrEmpty(monsterFile))
-            {
-                for (int i = 0; i < monsterCount; i++)
-                {
-                    monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
-                }
-            }
-            foreach (var monster in monsterFiles)
-            {
-                for (int i = 0; i < monster.Item2; i++)
-                {
-                    monsters.Add(Character.Create(monster.Item1, spawnPos, ToolBox.RandomSeed(8), null, isClient, true, false));
-                }
             }
 
             if (tempSonarPositions.Count > 0)
@@ -103,16 +88,40 @@ namespace Barotrauma
                 throw new Exception($"tempSonarPositions.Count > 0 ({tempSonarPositions.Count})");
             }
 
+            if (!IsClient)
+            {
+                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                if (!string.IsNullOrEmpty(monsterFile))
+                {
+                    for (int i = 0; i < monsterCount; i++)
+                    {
+                        monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
+                    }
+                }
+                foreach (var monster in monsterFiles)
+                {
+                    int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        monsters.Add(Character.Create(monster.Item1, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
+                    }
+                }
+
+                InitializeMonsters(monsters);
+            }                         
+        }
+
+        private void InitializeMonsters(IEnumerable<Character> monsters)
+        {
             monsters.ForEach(m => m.Enabled = false);
             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
-            for (int i = 0; i < monsters.Count; i++)
+            foreach (Character monster in monsters)
             {
-                tempSonarPositions.Add(spawnPos + Rand.Vector(maxSonarMarkerDistance));
+                tempSonarPositions.Add(monster.WorldPosition + Rand.Vector(maxSonarMarkerDistance));
             }
-
-            if (monsters.Count != tempSonarPositions.Count)
+            if (monsters.Count() != tempSonarPositions.Count)
             {
-                throw new Exception($"monsters.Count != tempSonarPositions.Count ({monsters.Count} != {tempSonarPositions.Count})");
+                throw new Exception($"monsters.Count != tempSonarPositions.Count ({monsters.Count()} != {tempSonarPositions.Count})");
             }
         }
 
@@ -183,5 +192,6 @@ namespace Barotrauma
         }
 
         public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead || enemy.AIController is EnemyAIController ai && ai.State == AIState.Flee;
+
     }
 }

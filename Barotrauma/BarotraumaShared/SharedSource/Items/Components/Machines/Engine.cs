@@ -95,8 +95,10 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
             if (Math.Abs(Force) > 1.0f)
             {
+                //arbitrary multiplier that was added to changes in submarine mass without having to readjust all engines
+                float forceMultiplier = 0.1f;
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage / MinVoltage, 1.0f);
-                Vector2 currForce = new Vector2((force / 10.0f) * maxForce * voltageFactor, 0.0f);
+                Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
 
@@ -107,12 +109,12 @@ namespace Barotrauma.Items.Components
                 if (item.AiTarget != null)
                 {
                     var aiTarget = item.AiTarget;
-                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Math.Min(currForce.Length() * forceMultiplier / maxForce, 1.0f));
                 }
                 if (item.CurrentHull != null)
                 {
                     var aiTarget = item.CurrentHull.AiTarget;
-                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, currForce.Length() / maxForce);
+                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Math.Min(currForce.Length() * forceMultiplier / maxForce, 1.0f));
                     aiTarget.SoundRange = Math.Max(noise, aiTarget.SoundRange);
                 }
 #if CLIENT

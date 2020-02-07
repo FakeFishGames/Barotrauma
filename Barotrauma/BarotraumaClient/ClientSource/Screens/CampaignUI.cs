@@ -234,7 +234,7 @@ namespace Barotrauma
                 !ItemPrefab.Prefabs.Any(ep => ep.Category.HasFlag(c) && ep.CanBeBought));
             foreach (MapEntityCategory category in itemCategories)
             {
-                var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
+                var categoryButton = new GUIButton(new RectTransform(new Point(categoryButtonContainer.Rect.Width, categoryButtonContainer.Rect.Width), categoryButtonContainer.RectTransform),
                     "", style: "ItemCategory" + category.ToString())
                 {
                     UserData = category,
@@ -253,7 +253,14 @@ namespace Barotrauma
                 };
                 itemCategoryButtons.Add(categoryButton);
 
-                new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.25f), categoryButton.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) },
+                categoryButton.RectTransform.SizeChanged += () =>
+                {
+                    var sprite = categoryButton.Frame.sprites[GUIComponent.ComponentState.None].First();
+                    categoryButton.RectTransform.NonScaledSize =
+                        new Point(categoryButton.Rect.Width, (int)(categoryButton.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.256f), categoryButton.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) },
                    TextManager.Get("MapEntityCategory." + category), textAlignment: Alignment.Center, textColor: categoryButton.TextColor)
                 {
                     Padding = Vector4.Zero,
@@ -262,7 +269,7 @@ namespace Barotrauma
                     HoverColor = Color.Transparent,
                     PressedColor = Color.Transparent,
                     SelectedColor = Color.Transparent,
-                    CanBeFocused = false
+                    CanBeFocused = true
                 };
             }
             FillStoreItemList();
@@ -715,11 +722,12 @@ namespace Barotrauma
                 for (int i = 0; i < availableMissions.Count; i++)
                 {
                     var mission = availableMissions[i];
-                    var tickBox = new GUITickBox(new RectTransform(new Vector2(0.1f, 0.1f), missionContent.RectTransform),
+                    var tickBox = new GUITickBox(new RectTransform(new Vector2(0.65f, 0.1f), missionContent.RectTransform),
                        mission?.Name ?? TextManager.Get("NoMission"), style: "GUIRadioButton")
                     {
                         Enabled = GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign)
                     };
+                    tickBox.TextBlock.Wrap = true;
                     missionTickBoxes.Add(tickBox);
                     missionRadioButtonGroup.AddRadioButton(i, tickBox);
                 }
@@ -833,7 +841,7 @@ namespace Barotrauma
             var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1.0f), frame.RectTransform, Anchor.Center), 
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                RelativeSpacing = 0.02f,
+                AbsoluteSpacing = (int)(5 * GUI.Scale),
                 Stretch = true
             };
 
@@ -874,8 +882,11 @@ namespace Barotrauma
                     UserData = pi,
                     IntValue = pi.Quantity
                 };
+                amountInput.TextBox.OnSelected += (sender, key) => { suppressBuySell = true; };
+                amountInput.TextBox.OnDeselected += (sender, key) => { suppressBuySell = false; amountInput.OnValueChanged?.Invoke(amountInput); };
                 amountInput.OnValueChanged += (numberInput) =>
                 {
+                    if (suppressBuySell) { return; }
                     PurchasedItem purchasedItem = numberInput.UserData as PurchasedItem;
 
                     //Attempting to buy
@@ -889,7 +900,6 @@ namespace Barotrauma
                         {
                             BuyItem(numberInput, purchasedItem);
                         }
-                        numberInput.IntValue = purchasedItem.Quantity;
                     }
                     //Attempting to sell
                     else
@@ -901,14 +911,15 @@ namespace Barotrauma
                         }
                     }
                 };
+                frame.HoverColor = frame.SelectedColor = Color.Transparent;
             }
             listBox.RecalculateChildren();
             content.Recalculate();
             content.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
-            /*content.RectTransform.IsFixedSize = true;
-            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);*/
+            //content.RectTransform.IsFixedSize = true;
+            content.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
 
             return frame;
         }
@@ -946,21 +957,33 @@ namespace Barotrauma
             return false;
         }
 
+        private bool suppressBuySell;
+
         private void RefreshMyItems()
         {
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
             foreach (PurchasedItem pi in Campaign.CargoManager.PurchasedItems)
             {
-                var itemFrame = myItemList.Content.GetChildByUserData(pi);
+                var itemFrame = myItemList.Content.Children.FirstOrDefault(c => 
+                    c.UserData is PurchasedItem pi2 && pi.ItemPrefab == pi2.ItemPrefab);
                 if (itemFrame == null)
                 {
                     var priceInfo = pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation);
                     if (priceInfo == null) { continue; }
                     itemFrame = CreateItemFrame(pi, priceInfo, myItemList);
-                    itemFrame.Flash(GUI.Style.Green);
+                    itemFrame.Flash(GUI.Style.Green);                    
                 }
-                itemFrame.GetChild(0).GetChild<GUINumberInput>().IntValue = pi.Quantity;
+                else
+                {
+                    itemFrame.UserData = itemFrame.GetChild(0).GetChild<GUINumberInput>().UserData = pi;
+                }
                 existingItemFrames.Add(itemFrame);
+
+                suppressBuySell = true;
+                var numInput = itemFrame.GetChild(0).GetChild<GUINumberInput>();
+                if (numInput.IntValue != pi.Quantity) { itemFrame.Flash(GUI.Style.Green); }
+                numInput.IntValue = (itemFrame.UserData as PurchasedItem).Quantity = pi.Quantity;
+                suppressBuySell = false;
             }
 
             var removedItemFrames = myItemList.Content.Children.Except(existingItemFrames).ToList();

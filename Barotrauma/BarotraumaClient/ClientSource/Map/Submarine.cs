@@ -21,7 +21,7 @@ namespace Barotrauma
 
         public string Filename
         {
-            get { return Sound.Filename; }
+            get { return Sound?.Filename; }
         }
 
         public RoundSound(XElement element, Sound sound)

@@ -108,10 +108,7 @@ namespace Barotrauma.Items.Components
 
         private void CreateGUI()
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, Sonar.controlBoxSize.Y + 0.02f), GuiFrame.RectTransform, Anchor.CenterLeft)
-            {
-                RelativeOffset = new Vector2(0, 0) // The y offset should be based on the relative size difference of the steering and the status windows
-            }, "ItemUI");
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterLeft), "ItemUI");
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
@@ -120,7 +117,7 @@ namespace Barotrauma.Items.Components
             var steeringModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedControlContainer.RectTransform, Anchor.TopLeft), style: null);
             steeringModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), steeringModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
-                Selected = false,
+                Selected = autoPilot,
                 Enabled = true,
                 OnClicked = (button, data) =>
                 {
@@ -141,34 +138,26 @@ namespace Barotrauma.Items.Components
             manualPilotIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), steeringModeRightSide.RectTransform, Anchor.TopLeft),
                 TextManager.Get("SteeringManual"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
-                Selected = true,
+                Selected = !autoPilot,
                 Enabled = false
             };
             autopilotIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), steeringModeRightSide.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("SteeringAutoPilot"), font: GUI.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
-                Selected = false,
+                Selected = autoPilot,
                 Enabled = false
             };
             manualPilotIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             autopilotIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             GUITextBlock.AutoScaleAndNormalize(manualPilotIndicator.TextBlock, autopilotIndicator.TextBlock);
 
-            var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.6f), paddedControlContainer.RectTransform, Anchor.BottomCenter)
-            {
-                RelativeOffset = new Vector2(0, 0.02f)
-            }, "OutlineFrame");
-            var paddedAutoPilotControls = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), autoPilotControls.RectTransform, Anchor.Center))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.03f,
-                ChildAnchor = Anchor.TopLeft
-            };
+            var autoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.75f, 0.62f), paddedControlContainer.RectTransform, Anchor.BottomCenter), "OutlineFrame");
+            var paddedAutoPilotControls = new GUIFrame(new RectTransform(new Vector2(0.92f, 0.88f), autoPilotControls.RectTransform, Anchor.Center), style: null);
 
-            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), paddedAutoPilotControls.RectTransform),
+            maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.TopCenter),
                 TextManager.Get("SteeringMaintainPos"), font: GUI.SmallFont, style: "GUIRadioButton")
             {
-                Enabled = false,
+                Enabled = autoPilot,
                 Selected = maintainPos,
                 OnSelected = tickBox =>
                 {
@@ -200,12 +189,12 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), paddedAutoPilotControls.RectTransform),
-                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, 30),
+            int textLimit = (int)(MathHelper.Clamp(25 * GUI.xScale, 15, 35));
+            levelStartTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.Center),
+                GameMain.GameSession?.StartLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.StartLocation.Name, textLimit),
                 font: GUI.SmallFont, style: "GUIRadioButton")
             {
-                Enabled = false,
+                Enabled = autoPilot,
                 Selected = levelStartSelected,
                 OnSelected = tickBox =>
                 {
@@ -228,11 +217,11 @@ namespace Barotrauma.Items.Components
                 }
             };
 
-            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), paddedAutoPilotControls.RectTransform),
-                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, 30),
+            levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.BottomCenter),
+                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, textLimit),
                 font: GUI.SmallFont, style: "GUIRadioButton")
             {
-                Enabled = false,
+                Enabled = autoPilot,
                 Selected = levelEndSelected,
                 OnSelected = tickBox =>
                 {
@@ -254,13 +243,13 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
-
-            GUITextBlock.AutoScaleAndNormalize(maintainPosTickBox.TextBlock, levelStartTickBox.TextBlock, levelEndTickBox.TextBlock);
             maintainPosTickBox.RectTransform.IsFixedSize = levelStartTickBox.RectTransform.IsFixedSize = levelEndTickBox.RectTransform.IsFixedSize = false;
             maintainPosTickBox.RectTransform.MaxSize = levelStartTickBox.RectTransform.MaxSize = levelEndTickBox.RectTransform.MaxSize =
                 new Point(int.MaxValue, paddedAutoPilotControls.Rect.Height / 3);
             maintainPosTickBox.RectTransform.MinSize = levelStartTickBox.RectTransform.MinSize = levelEndTickBox.RectTransform.MinSize =
                 Point.Zero;
+
+            GUITextBlock.AutoScaleAndNormalize(scaleHorizontal: false, scaleVertical: true, maintainPosTickBox.TextBlock, levelStartTickBox.TextBlock, levelEndTickBox.TextBlock);
 
             GUIRadioButtonGroup destinations = new GUIRadioButtonGroup();
             destinations.AddRadioButton((int)Destination.MaintainPos, maintainPosTickBox);
@@ -401,11 +390,12 @@ namespace Barotrauma.Items.Components
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 
-            // Tooltip/helper text
-            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), paddedStatusContainer.RectTransform), TextManager.Get("SteeringDepthWarning"), GUI.Style.Red)
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter), 
+                TextManager.Get("SteeringDepthWarning"), Color.Red, GUI.LargeFont, Alignment.Center)
             {
                 Visible = false
             };
+            // Tooltip/helper text
             tipContainer = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), steerArea.RectTransform, Anchor.BottomCenter, Pivot.TopCenter)
                 , "", font: GUI.Font, wrap: true, style: "GUIToolTip", textAlignment: Alignment.Center)
             {
@@ -423,6 +413,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.ClearChildren();
             CreateGUI();
+            UpdateGUIElements();
         }
 
         /// <summary>

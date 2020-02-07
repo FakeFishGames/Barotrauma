@@ -299,6 +299,11 @@ namespace Barotrauma.Items.Components
 
                 foreach (FabricationRecipe.RequiredItem requiredItem in missingItems)
                 {
+                    while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.Items[slotIndex] != null)
+                    {
+                        slotIndex++;
+                    }
+
                     //highlight suitable ingredients in linked inventories
                     foreach (Item item in availableIngredients)
                     {
@@ -311,26 +316,24 @@ namespace Barotrauma.Items.Components
                             {
                                 if (item.ParentInventory.slots[availableSlotIndex].HighlightTimer <= 0.0f)
                                 {
-                                    item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green * 0.5f, 0.5f, 0.5f);
+                                    item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f);
+                                    if (slotIndex < inputContainer.Capacity)
+                                    {
+                                        inputContainer.Inventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f);
+                                    }
                                 }
                             }
                         }
                     }
 
-                    while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.Items[slotIndex] != null)
-                    {
-                        slotIndex++;
-                    }
                     if (slotIndex >= inputContainer.Capacity) { break; }
-
+                    
                     var itemIcon = requiredItem.ItemPrefab.InventoryIcon ?? requiredItem.ItemPrefab.sprite;
-
                     Rectangle slotRect = inputContainer.Inventory.slots[slotIndex].Rect;
-
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefab.InventoryIconColor * (availableIngredients.Any(i => IsItemValidIngredient(i, requiredItem)) ? 1.0f : 0.3f),
+                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
                     
                     if (slotRect.Contains(PlayerInput.MousePosition))

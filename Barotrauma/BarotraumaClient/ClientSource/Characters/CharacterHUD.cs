@@ -171,10 +171,10 @@ namespace Barotrauma
             if (GUI.DisableHUD) { return; }
             
             character.CharacterHealth.Alignment = Alignment.Right;
-            if (Screen.Selected == GameMain.GameScreen)
+            /*if (Screen.Selected == GameMain.GameScreen)
             {
                 GUI.InfoAreaBackground.Draw(spriteBatch, Vector2.Zero, scale: GUI.Scale);
-            }
+            }*/
 
             if (GameMain.GameSession?.CrewManager != null)
             {
@@ -318,7 +318,7 @@ namespace Barotrauma
                 if (ShouldDrawInventory(character))
                 {
                     character.Inventory.Locked = LockInventory(character);
-                    character.Inventory.DrawOwn(spriteBatch);
+                    character.Inventory.DrawThis(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
                         CharacterInventory.Layout.Right;
@@ -333,7 +333,7 @@ namespace Barotrauma
                     {
                         ///character.Inventory.CurrentLayout = Alignment.Left;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;
-                        character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
+                        character.SelectedCharacter.Inventory.DrawThis(spriteBatch);
                     }
                     else
                     {

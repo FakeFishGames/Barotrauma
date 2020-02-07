@@ -312,22 +312,15 @@ namespace Barotrauma
                     selectedCharacter.selectedBy = null;
                 selectedCharacter = value;
                 if (selectedCharacter != null)
+                {
                     selectedCharacter.selectedBy = this;
-
 #if CLIENT
-                if (GameMain.GameSession == null) return;
-                // Quick & dirty hiding of the chat whenever a character with an accessible inventory is selected to prevent overlaps
-                if (GameMain.GameSession.CrewManager.IsSinglePlayer)
-                {
-                    if (GameMain.GameSession.CrewManager.ChatBox == null) return;
-                    GameMain.GameSession.CrewManager.ChatBox.SetVisibility(!(IsHumanoid && value != null && value.Inventory != null && value.CanInventoryBeAccessed));
-                }
-                else
-                {
-                    if (GameMain.Client?.ChatBox == null) return;
-                    GameMain.Client.ChatBox.SetVisibility(!(IsHumanoid && value != null && value.Inventory != null && value.CanInventoryBeAccessed));
-                }
+                    if (Inventory != null)
+                    {
+                        Inventory.ToggleInventory(true);
+                    }
 #endif
+                }
             }
         }
 
@@ -2315,14 +2308,21 @@ namespace Barotrauma
             aiTarget.SoundRange = MathHelper.Clamp(range, 0, 10000);
         }
 
+        public bool CanHearCharacter(Character speaker)
+        {
+            if (speaker == null || speaker.SpeechImpediment > 100.0f) { return false; }
+            ChatMessageType messageType = ChatMessage.CanUseRadio(speaker) && ChatMessage.CanUseRadio(this) ?
+                ChatMessageType.Radio : 
+                ChatMessageType.Default;
+            return !string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, speaker, this));
+        }
+
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
         {
             if (orderGiver != null)
             {
                 //set the character order only if the character is close enough to hear the message
-                ChatMessageType messageType = ChatMessage.CanUseRadio(orderGiver) && ChatMessage.CanUseRadio(this) ?
-                    ChatMessageType.Radio : ChatMessageType.Default;
-                if (string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, orderGiver, this))) return;
+                if (!CanHearCharacter(orderGiver)) { return; }
             }
 
             HumanAIController humanAI = AIController as HumanAIController;

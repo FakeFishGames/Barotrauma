@@ -30,10 +30,11 @@ namespace Barotrauma
             Init(columnCount, rowCount);
         }
 
-        public SpriteSheet(string filePath, int columnCount, int rowCount, Vector2 origin)
+        public SpriteSheet(string filePath, int columnCount, int rowCount, Vector2 origin, Rectangle? sourceRect = null)
             : base(filePath, origin)
         {
             this.origin = origin;
+            if (sourceRect.HasValue) { SourceRect = sourceRect.Value; }
             Init(columnCount, rowCount);
         }
 

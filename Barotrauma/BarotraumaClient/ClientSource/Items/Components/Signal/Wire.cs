@@ -134,46 +134,57 @@ namespace Barotrauma.Items.Components
                 }
                 if (IsActive && item.ParentInventory?.Owner is Character user && user == Character.Controlled)// && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
                 {
-                    Vector2 gridPos = Character.Controlled.Position;
-                    Vector2 roundedGridPos = new Vector2(
-                        MathUtils.RoundTowardsClosest(Character.Controlled.Position.X, Submarine.GridSize.X),
-                        MathUtils.RoundTowardsClosest(Character.Controlled.Position.Y, Submarine.GridSize.Y));
-                    //Vector2 attachPos = GetAttachPosition(user);
-
-                    if (item.Submarine == null)
+                    if (user.CanInteract)
                     {
-                        Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
-                        if (attachTarget != null)
+                        Vector2 gridPos = Character.Controlled.Position;
+                        Vector2 roundedGridPos = new Vector2(
+                            MathUtils.RoundTowardsClosest(Character.Controlled.Position.X, Submarine.GridSize.X),
+                            MathUtils.RoundTowardsClosest(Character.Controlled.Position.Y, Submarine.GridSize.Y));
+                        //Vector2 attachPos = GetAttachPosition(user);
+
+                        if (item.Submarine == null)
                         {
-                            if (attachTarget.Submarine != null)
+                            Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
+                            if (attachTarget != null)
                             {
-                                //set to submarine-relative position
-                                gridPos += attachTarget.Submarine.Position;
-                                roundedGridPos += attachTarget.Submarine.Position;
+                                if (attachTarget.Submarine != null)
+                                {
+                                    //set to submarine-relative position
+                                    gridPos += attachTarget.Submarine.Position;
+                                    roundedGridPos += attachTarget.Submarine.Position;
+                                }
                             }
                         }
+                        else
+                        {
+                            gridPos += item.Submarine.Position;
+                            roundedGridPos += item.Submarine.Position;
+                        }
+
+                        Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+
+                        WireSection.Draw(
+                            spriteBatch, this,
+                            new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
+                            new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
+                            item.Color, 0.0f, 0.3f);
+
+                        WireSection.Draw(
+                            spriteBatch, this,
+                            new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
+                            item.DrawPosition,
+                            item.Color, itemDepth, 0.3f);
+
+                        GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X + drawOffset.X, -(newNodePos.Y + drawOffset.Y)) - Vector2.One * 3, Vector2.One * 6, item.Color);
                     }
                     else
                     {
-                        gridPos += item.Submarine.Position;
-                        roundedGridPos += item.Submarine.Position;
+                        WireSection.Draw(
+                            spriteBatch, this,
+                            new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
+                            item.DrawPosition,
+                            item.Color, 0.0f, 0.3f);
                     }
-
-                    Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
-
-                    WireSection.Draw(
-                        spriteBatch, this,
-                        new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
-                        new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                        item.Color, 0.0f, 0.3f);
-
-                    WireSection.Draw(
-                        spriteBatch, this,
-                        new Vector2(newNodePos.X, newNodePos.Y) + drawOffset, 
-                        item.DrawPosition,
-                        item.Color, itemDepth, 0.3f);
-
-                    GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X + drawOffset.X, -(newNodePos.Y + drawOffset.Y)) - Vector2.One * 3, Vector2.One * 6, item.Color);
                 }
             }
 

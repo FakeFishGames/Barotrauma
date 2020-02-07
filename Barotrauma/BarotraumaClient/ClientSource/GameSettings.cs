@@ -560,7 +560,7 @@ namespace Barotrauma
                 }
             };
 
-            GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"), font: GUI.SubHeadingFont);
+            GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"), font: GUI.SubHeadingFont, wrap: true);
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: "GUISlider",
                 barSize: 0.1f)
             {
@@ -576,7 +576,7 @@ namespace Barotrauma
             };
             particleScrollBar.OnMoved(particleScrollBar, particleScrollBar.BarScroll);
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"), font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LosEffect"), font: GUI.SubHeadingFont, wrap: true);
             var losModeDD = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform));
             losModeDD.AddItem(TextManager.Get("LosModeNone"), LosMode.None);
             losModeDD.AddItem(TextManager.Get("LosModeTransparent"), LosMode.Transparent);
@@ -594,7 +594,7 @@ namespace Barotrauma
                 return true;
             };
 
-            GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"), font: GUI.SubHeadingFont)
+            GUITextBlock LightText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("LightMapScale"), font: GUI.SubHeadingFont, wrap: true)
             {
                 ToolTip = TextManager.Get("LightMapScaleToolTip")
             };
@@ -638,7 +638,7 @@ namespace Barotrauma
                 }
             };
 
-            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont);
+            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont, wrap: true);
             GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
                style: "GUISlider", barSize: 0.1f)
             {

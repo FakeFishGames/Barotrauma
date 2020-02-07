@@ -59,11 +59,15 @@ namespace Barotrauma
 
         public readonly GUIStyle Style;
 
+        public readonly string Name;
+
         public int? Width { get; private set; }
         public int? Height { get; private set; }
 
         public GUIComponentStyle(XElement element, GUIStyle style)
         {
+            Name = element.Name.LocalName;
+
             Style = style;
             Element = element;
 

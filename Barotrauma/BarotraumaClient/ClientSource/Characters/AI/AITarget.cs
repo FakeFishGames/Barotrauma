@@ -28,6 +28,7 @@ namespace Barotrauma
                 }
                 ShapeExtensions.DrawCircle(spriteBatch, pos, SoundRange, 100, color, thickness: 1 / Screen.Selected.Cam.Zoom);
                 ShapeExtensions.DrawCircle(spriteBatch, pos, 3, 8, color, thickness: 2 / Screen.Selected.Cam.Zoom);
+                GUI.DrawLine(spriteBatch, pos, pos + Vector2.UnitY * SoundRange, color, width: (int)(1 / Screen.Selected.Cam.Zoom) + 1);
             }
             if (sightRange > 0.0f)
             {
@@ -39,8 +40,6 @@ namespace Barotrauma
                 else if (Entity is Item)
                 {
                     color = Color.CadetBlue;
-                    // disable the indicators for items, because they clutter the debug view
-                    return;
                 }
                 else
                 {
@@ -50,6 +49,7 @@ namespace Barotrauma
                 }
                 ShapeExtensions.DrawCircle(spriteBatch, pos, SightRange, 100, color, thickness: 1 / Screen.Selected.Cam.Zoom);
                 ShapeExtensions.DrawCircle(spriteBatch, pos, 6, 8, color, thickness: 2 / Screen.Selected.Cam.Zoom);
+                GUI.DrawLine(spriteBatch, pos, pos + Vector2.UnitY * SightRange, color, width: (int)(1 / Screen.Selected.Cam.Zoom) + 1);
             }
         }
     }

@@ -698,16 +698,19 @@ namespace Barotrauma
             //reset positions first
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
 
-            if (editingHUD != null && editingHUD.UserData == this)
+            if (editingHUD != null && editingHUD.UserData == this && 
+                ((HasInGameEditableProperties && Character.Controlled?.SelectedConstruction == this) || Screen.Selected == GameMain.SubEditorScreen))
             {
                 elementsToMove.Add(editingHUD);
-            }       
-            
+            }
+
+            debugInitialHudPositions.Clear();
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) continue;
+                if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 elementsToMove.Add(ic.GuiFrame);
+                debugInitialHudPositions.Add(ic.GuiFrame.Rect);
             }
 
             List<Rectangle> disallowedAreas = new List<Rectangle>();
@@ -728,18 +731,22 @@ namespace Barotrauma
 
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null) continue;
+                if (ic.GuiFrame == null) { continue; }
+
+
                 var linkUIToComponent = ic.GetLinkUIToComponent();
-                if (linkUIToComponent == null) continue;
-                
+                if (linkUIToComponent == null) { continue; }                
+
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = linkUIToComponent.GuiFrame.RectTransform.ScreenSpaceOffset;
             }
         }
 
+        private readonly List<Rectangle> debugInitialHudPositions = new List<Rectangle>();
+
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
-            if (HasInGameEditableProperties ||
+            if ((HasInGameEditableProperties && character.SelectedConstruction == this) ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 GUIComponent prevEditingHUD = editingHUD;
@@ -849,6 +856,23 @@ namespace Barotrauma
                 {
                     ic.DrawHUD(spriteBatch, character);
                 }
+            }
+
+            if (GameMain.DebugDraw)
+            {
+                int i = 0;
+                foreach (ItemComponent ic in activeHUDs)
+                {
+                    if (i >= debugInitialHudPositions.Count) { break; }
+                    if (activeHUDs[i].GuiFrame == null) { continue; }
+                    if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
+
+                    GUI.DrawRectangle(spriteBatch, debugInitialHudPositions[i], Color.Orange);
+                    GUI.DrawRectangle(spriteBatch, ic.GuiFrame.Rect, Color.LightGreen);
+                    GUI.DrawLine(spriteBatch, debugInitialHudPositions[i].Location.ToVector2(), ic.GuiFrame.Rect.Location.ToVector2(), Color.Orange);
+               
+                    i++;
+                }            
             }
         }
 
@@ -1249,9 +1273,8 @@ namespace Barotrauma
                     {
                         inventory = container.Inventory;
                     }
-                }                
+                }
             }
-
 
             var item = new Item(itemPrefab, pos, sub)
             {
@@ -1262,8 +1285,8 @@ namespace Barotrauma
             {
                 wifiComponent.TeamID = (Character.TeamType)teamID;
             }
-            if (descriptionChanged) item.Description = itemDesc;
-            if (tagsChanged) item.Tags = tags;
+            if (descriptionChanged) { item.Description = itemDesc; }
+            if (tagsChanged) { item.Tags = tags; }
 
             if (sub != null)
             {
@@ -1276,7 +1299,7 @@ namespace Barotrauma
                 if (inventorySlotIndex >= 0 && inventorySlotIndex < 255 &&
                     inventory.TryPutItem(item, inventorySlotIndex, false, false, null, false))
                 {
-                    return null;
+                    return item;
                 }
                 inventory.TryPutItem(item, null, item.AllowedSlots, false);
             }

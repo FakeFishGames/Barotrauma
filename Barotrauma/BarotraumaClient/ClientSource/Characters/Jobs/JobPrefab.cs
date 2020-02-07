@@ -32,7 +32,7 @@ namespace Barotrauma
                     font: GUI.SmallFont);
             }
 
-            if (!ItemNames.TryGetValue(variant, out var itemNames)) { return backFrame; }
+            if (!ItemIdentifiers.TryGetValue(variant, out var itemIdentifiers)) { return backFrame; }
             var itemContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform, Anchor.TopRight)
             { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) })
             {
@@ -40,11 +40,12 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                 TextManager.Get("Items", fallBackTag: "mapentitycategory.equipment"), font: GUI.LargeFont);
-            foreach (string itemName in itemNames.Distinct())
+            foreach (string identifier in itemIdentifiers.Distinct())
             {
-                int count = itemNames.Count(i => i == itemName);
+                if (!(MapEntityPrefab.Find(name: null, identifier: identifier) is ItemPrefab itemPrefab)) { continue; }
+                int count = itemIdentifiers.Count(i => i == identifier);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
-                    "   - " + (count == 1 ? itemName : itemName + " x" + count),
+                    "   - " + (count == 1 ? itemPrefab.Name : itemPrefab.Name + " x" + count),
                     font: GUI.SmallFont);
             }
 

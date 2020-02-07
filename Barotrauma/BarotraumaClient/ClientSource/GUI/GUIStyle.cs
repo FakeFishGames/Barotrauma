@@ -24,6 +24,7 @@ namespace Barotrauma
         public ScalableFont LargeFont { get; private set; }
         public ScalableFont SubHeadingFont { get; private set; }
         public ScalableFont DigitalFont { get; private set; }
+        public ScalableFont HotkeyFont { get; private set; }
 
         public Dictionary<ScalableFont, bool> ForceFontUpperCase
         {
@@ -63,8 +64,8 @@ namespace Barotrauma
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
 
-        public static Point ItemFrameMargin = new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
-        public static Point ItemFrameOffset = new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
+        public static Point ItemFrameMargin => new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+        public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
 
         public GUIStyle(XElement element, GraphicsDevice graphicsDevice)
         {
@@ -147,6 +148,10 @@ namespace Barotrauma
                     case "digitalfont":
                         DigitalFont = LoadFont(subElement, graphicsDevice);
                         ForceFontUpperCase[DigitalFont] = subElement.GetAttributeBool("forceuppercase", false);
+                        break;
+                    case "hotkeyfont":
+                        HotkeyFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[HotkeyFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "objectivetitle":
                     case "subheading":
@@ -236,8 +241,20 @@ namespace Barotrauma
             return new ScalableFont(file, size, graphicsDevice, dynamicLoading, isCJK);
         }
 
-        private uint GetFontSize(XElement element)
+        private uint GetFontSize(XElement element, uint defaultSize = 14)
         {
+            //check if any of the language override fonts want to override the font size as well
+            foreach (XElement subElement in element.Elements())
+            {
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
+                {
+                    uint overrideFontSize = GetFontSize(subElement, 0);
+                    if (overrideFontSize > 0) { return overrideFontSize; }
+                }
+            }
+
             foreach (XElement subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "size") { continue; }
@@ -247,7 +264,7 @@ namespace Barotrauma
                     return (uint)subElement.GetAttributeInt("size", 14);
                 }
             }
-            return 14;
+            return defaultSize;
         }
 
         private string GetFontFilePath(XElement element)

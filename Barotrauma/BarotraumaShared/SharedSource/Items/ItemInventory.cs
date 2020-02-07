@@ -47,9 +47,9 @@ namespace Barotrauma
             return (item != null && Items[i] == null && container.CanBeContained(item));
         }
 
-        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool preferNonHotkeys = false)
         {
-            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, user, allowedSlots, createNetworkEvent, preferNonHotkeys);
 
             if (wasPut)
             {
@@ -68,9 +68,9 @@ namespace Barotrauma
             return wasPut;
         }
 
-        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
+        public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool preferNonHotkeys = false)
         {
-            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
+            bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, preferNonHotkeys);
 
             if (wasPut)
             {

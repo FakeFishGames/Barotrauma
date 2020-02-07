@@ -1111,7 +1111,7 @@ namespace Barotrauma
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
             Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 0.9f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 RelativeSpacing = 0.02f,
                 Stretch = true
@@ -1122,7 +1122,7 @@ namespace Barotrauma
 
             //play style -----------------------------------------------------
 
-            var playstyleContainer = new GUIFrame(new RectTransform(new Vector2(1.5f, 0.1f), parent.RectTransform), style: null, color: Color.Black);
+            var playstyleContainer = new GUIFrame(new RectTransform(new Vector2(1.35f, 0.1f), parent.RectTransform), style: null, color: Color.Black);
 
             playstyleBanner = new GUIImage(new RectTransform(new Vector2(1.0f, 0.1f), playstyleContainer.RectTransform), 
                 ServerListScreen.PlayStyleBanners[0], scaleToFit: true)
@@ -1263,7 +1263,7 @@ namespace Barotrauma
 
             var tickboxAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
 
-            karmaEnabledBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), tickboxAreaLower.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
+            karmaEnabledBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaLower.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
             {
                 ToolTip = TextManager.Get("karmaexplanation"),
                 OnSelected = (tb) =>
@@ -1272,7 +1272,7 @@ namespace Barotrauma
                     return true;
                 }                
             };
-            karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(0.6f, 1.0f), tickboxAreaLower.RectTransform))
+            karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaLower.RectTransform))
             {
                 ButtonEnabled = false,
                 Enabled = false

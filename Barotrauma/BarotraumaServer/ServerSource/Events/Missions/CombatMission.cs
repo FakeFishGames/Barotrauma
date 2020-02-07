@@ -109,5 +109,10 @@ namespace Barotrauma
                 }
             }
         }
+
+        public override void ServerWriteInitial(IWriteMessage msg, Client c)
+        {
+            //do nothing
+        }
     }
 }

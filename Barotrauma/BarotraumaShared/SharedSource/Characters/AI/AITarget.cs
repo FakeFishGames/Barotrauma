@@ -142,16 +142,8 @@ namespace Barotrauma
             }
         }
 
-        public AITarget(Entity e, XElement element) : this(e)
+        public void Reset()
         {
-            SightRange = element.GetAttributeFloat("sightrange", 0.0f);
-            SoundRange = element.GetAttributeFloat("soundrange", 0.0f);
-            MinSightRange = element.GetAttributeFloat("minsightrange", 0f);
-            MinSoundRange = element.GetAttributeFloat("minsoundrange", 0f);
-            MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
-            MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
-            FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
-            Static = element.GetAttributeBool("static", Static);
             if (Static)
             {
                 SightRange = MaxSightRange;
@@ -163,7 +155,18 @@ namespace Barotrauma
                 SightRange = MinSightRange;
                 SoundRange = MinSoundRange;
             }
+        }
 
+        public AITarget(Entity e, XElement element) : this(e)
+        {
+            SightRange = element.GetAttributeFloat("sightrange", 0.0f);
+            SoundRange = element.GetAttributeFloat("soundrange", 0.0f);
+            MinSightRange = element.GetAttributeFloat("minsightrange", 0f);
+            MinSoundRange = element.GetAttributeFloat("minsoundrange", 0f);
+            MaxSightRange = element.GetAttributeFloat("maxsightrange", SightRange);
+            MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
+            FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
+            Static = element.GetAttributeBool("static", Static);
             SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
             SonarLabel          = element.GetAttributeString("sonarlabel", "");
             SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
@@ -172,6 +175,7 @@ namespace Barotrauma
             {
                 Type = t;
             }
+            Reset();
         }
 
         public AITarget(Entity e)

@@ -82,13 +82,20 @@ namespace Barotrauma.Items.Components
             degreeOfFailure *= degreeOfFailure;
             return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
         }
-        
+
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character.Removed) return false;
-            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) return false;
+            if (character == null || character.Removed) { return false; }
+            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) { return false; }
+
             IsActive = true;
             reloadTimer = reload;
+
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+                item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
+            }
 
             List<Body> limbBodies = new List<Body>();
             foreach (Limb l in character.AnimController.Limbs)

@@ -37,6 +37,12 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// How much the borders of a sliced sprite are allowed to scale
+        /// You may for example want to prevent a 1-pixel border from scaling down (and disappearing) on small resolutions
+        /// </summary>
+        private float minBorderScale = 0.1f, maxBorderScale = 10.0f;
+
         public bool CrossFadeIn { get; private set; } = true;
         public bool CrossFadeOut { get; private set; } = true;
 
@@ -58,6 +64,9 @@ namespace Barotrauma
             Vector4 sliceVec = element.GetAttributeVector4("slice", Vector4.Zero);
             if (sliceVec != Vector4.Zero)
             {
+                minBorderScale = element.GetAttributeFloat("minborderscale", 0.1f);
+                maxBorderScale = element.GetAttributeFloat("minborderscale", 10.0f);
+
                 Rectangle slice = new Rectangle((int)sliceVec.X, (int)sliceVec.Y, (int)(sliceVec.Z - sliceVec.X), (int)(sliceVec.W - sliceVec.Y));
 
                 Slice = true;
@@ -103,7 +112,8 @@ namespace Barotrauma
                 scale.Y = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[6].Height), 0, 1);
                 scale.X = MathHelper.Clamp((float)rect.Width / (Slices[0].Width + Slices[2].Width), 0, 1);
 
-                scale.X = scale.Y = Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale);
+                scale.X = scale.Y =
+                    MathHelper.Clamp(Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale), minBorderScale, maxBorderScale);
                 int centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale.Y);
                 int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale.X);
 

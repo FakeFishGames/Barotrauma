@@ -84,13 +84,10 @@ namespace Barotrauma.Items.Components
         {
             if (sender == null || sender.channel != channel) { return false; }
 
-            if (sender.TeamID != Character.TeamType.None && TeamID != Character.TeamType.None)
+            if (sender.TeamID != TeamID)
             {
-                if (sender.TeamID != TeamID)
-                {
-                    return false;
-                }
-            }
+                return false;
+            }            
 
             if (Vector2.DistanceSquared(item.WorldPosition, sender.item.WorldPosition) > sender.range * sender.range) { return false; }
 

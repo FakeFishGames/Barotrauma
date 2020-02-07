@@ -159,6 +159,10 @@ namespace Barotrauma
 
         public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false, bool mirrorLevel = false)
         {
+            //make sure no status effects have been carried on from the next round
+            //(they should be stopped in EndRound, this is a safeguard against cases where the round is ended ungracefully)
+            StatusEffect.StopAll();
+
 #if CLIENT
             GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
             if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
@@ -260,7 +264,18 @@ namespace Barotrauma
 
             if (GameMode.Mission != null) { Mission = GameMode.Mission; }
             if (GameMode != null) { GameMode.Start(); }
-            if (GameMode.Mission != null) { Mission.Start(Level.Loaded); }
+            if (GameMode.Mission != null)
+            {
+                int prevEntityCount = Entity.GetEntityList().Count;
+                Mission.Start(Level.Loaded);
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Entity.GetEntityList().Count != prevEntityCount)
+                {
+                    DebugConsole.ThrowError(
+                        "Entity count has changed after starting a mission as a client. " +
+                        "The clients should not instantiate entities themselves when starting the mission," +
+                        " but instead the server should inform the client of the spawned entities using Mission.ServerWriteInitial.");
+                }
+            }
 
             EventManager.StartRound(level);
             SteamAchievementManager.OnStartRound();

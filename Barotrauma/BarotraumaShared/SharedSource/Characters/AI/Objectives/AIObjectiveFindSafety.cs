@@ -145,9 +145,14 @@ namespace Barotrauma
                             },
                             onAbandon: () =>
                             {
+                                // Don't ignore any hulls if outside, because apparently it happens that we can't find a path, in which case we just want to try again.
+                                // If we ignore the hull, it might be the only airlock in the target sub, which ignores the whole sub.
                                 if (currentHull != null && goToObjective != null)
                                 {
-                                    HumanAIController.UnreachableHulls.Add(goToObjective.Target as Hull);
+                                    if (goToObjective.Target is Hull hull)
+                                    {
+                                        HumanAIController.UnreachableHulls.Add(hull);
+                                    }
                                 }
                                 RemoveSubObjective(ref goToObjective);
                             });
@@ -172,7 +177,7 @@ namespace Barotrauma
                     }
                     foreach (Character enemy in Character.CharacterList)
                     {
-                        if (HumanAIController.IsFriendly(enemy) || !HumanAIController.IsActive(enemy)) { continue; }
+                        if (!HumanAIController.IsActive(enemy) || HumanAIController.IsFriendly(enemy)) { continue; }
                         if (HumanAIController.VisibleHulls.Contains(enemy.CurrentHull))
                         {
                             Vector2 dir = character.Position - enemy.Position;

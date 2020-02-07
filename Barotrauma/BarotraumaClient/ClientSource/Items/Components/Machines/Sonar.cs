@@ -236,7 +236,6 @@ namespace Barotrauma.Items.Components
             var directionalModeSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), directionalModeFrame.RectTransform, Anchor.CenterRight),
                 TextManager.Get("SonarDirectionalPing"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
 
-            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), paddedControlContainer.RectTransform), "", warningColor, textAlignment: Alignment.Center);
 
             GuiFrame.CanBeFocused = false;
 
@@ -245,11 +244,14 @@ namespace Barotrauma.Items.Components
             sonarView = new GUICustomComponent(new RectTransform(Vector2.One * 0.7f, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight),
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
 
+            signalWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), sonarView.RectTransform, Anchor.Center, Pivot.BottomCenter),
+                "", warningColor, GUI.LargeFont, Alignment.Center);
+
             // Setup layout for nav terminal
             if (isConnectedToSteering)
             {
-                controlContainer.RectTransform.SetPosition(Anchor.TopLeft);
                 controlContainer.RectTransform.RelativeOffset = controlBoxOffset;
+                controlContainer.RectTransform.SetPosition(Anchor.TopLeft);
                 sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
                 sonarView.RectTransform.SetPosition(Anchor.CenterRight);
                 sonarView.RectTransform.Resize(Vector2.One * GUI.RelativeHorizontalAspectRatio * sonarAreaSize);

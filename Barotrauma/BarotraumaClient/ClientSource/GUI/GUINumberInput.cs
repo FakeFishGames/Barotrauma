@@ -83,7 +83,7 @@ namespace Barotrauma
             get { return floatValue; }
             set
             {
-                if (value == floatValue) return;
+                if (MathUtils.NearlyEqual(value, floatValue)) return;
                 floatValue = value;
                 ClampFloatValue();
                 float newValue = floatValue;
@@ -134,7 +134,6 @@ namespace Barotrauma
                 if (value == intValue) return;
                 intValue = value;
                 UpdateText();
-                OnValueChanged?.Invoke(this);
             }
         }
 

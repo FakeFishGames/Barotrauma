@@ -536,7 +536,6 @@ namespace Barotrauma
 
 
         private readonly List<Body> contactBodies = new List<Body>();
-        private List<Body> ignoredBodies;
         /// <summary>
         /// Returns true if the attack successfully hit something. If the distance is not given, it will be calculated.
         /// </summary>
@@ -556,20 +555,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            if (ignoredBodies == null)
-                            {
-                                ignoredBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
-                                ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
-                            }
-
-                            structureBody = Submarine.PickBody(
-                                SimPosition, attackSimPos,
-                                ignoredBodies, Physics.CollisionWall);
-                            
-                            if (damageTarget is Item)
+                            structureBody = Submarine.PickBody(SimPosition, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);                            
+                            if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
-                                // Ignore blocking on items, because it causes cases where a Mudraptor cannot hit the hatch, for example.
+                                // Ignore blocking checks on doors, because it causes cases where a Mudraptor cannot hit the hatch, for example.
                                 wasHit = true;
                             }
                             else if (damageTarget is Structure wall && structureBody != null && 

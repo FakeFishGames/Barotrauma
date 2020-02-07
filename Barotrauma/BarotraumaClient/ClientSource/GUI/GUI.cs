@@ -133,6 +133,7 @@ namespace Barotrauma
         public static ScalableFont LargeFont => Style?.LargeFont;
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
+        public static ScalableFont HotkeyFont => Style?.HotkeyFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -988,6 +989,7 @@ namespace Barotrauma
             Debug.Assert(updateList.Count == updateListSet.Count);
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
             UpdateMessages(deltaTime);
+            UpdateInput();
         }
 
         private static void UpdateMessages(float deltaTime)
@@ -1025,6 +1027,32 @@ namespace Barotrauma
             }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
+        }
+
+        private static void UpdateInput()
+        {
+            if (PlayerInput.KeyHit(InputType.ToggleInventory))
+            {
+                if (Character.Controlled?.Inventory != null)
+                {
+                    Character.Controlled.Inventory.ToggleInventory();
+                }
+            }
+
+            if (PlayerInput.KeyHit(Keys.Escape) && GameMain.WindowActive)
+            {
+                HandleEscFunctionality();
+            }
+
+#if DEBUG
+            if (GameMain.NetworkMember == null)
+            {
+                if (PlayerInput.KeyHit(Keys.P) && !(KeyboardDispatcher.Subscriber is GUITextBox))
+                {
+                    DebugConsole.Paused = !DebugConsole.Paused;
+                }
+            }
+#endif
         }
 
         #region Element drawing
@@ -1760,32 +1788,30 @@ namespace Barotrauma
                         if (!rect1.Intersects(rect2)) continue;
 
                         intersections = true;
-                        int rect1Area = rect1.Width * rect1.Height;
-                        int rect2Area = rect2.Width * rect2.Height;
                         Point centerDiff = rect1.Center - rect2.Center;
                         //move the interfaces away from each other, in a random direction if they're at the same position
                         Vector2 moveAmount = centerDiff == Point.Zero ? Rand.Vector(1.0f) : Vector2.Normalize(centerDiff.ToVector2());
 
                         //if the horizontal move amount is much larger than vertical, only move horizontally
                         //(= attempt to place the elements side-by-side if they're more apart horizontally than vertically)
-                        if (Math.Abs(moveAmount.X) > Math.Abs(moveAmount.Y) * 5.0f)
+                        if (Math.Abs(moveAmount.X) > Math.Abs(moveAmount.Y) * 8.0f)
                         {
                             moveAmount.Y = 0.0f;
                         }
                         //same for the y-axis
-                        else if (Math.Abs(moveAmount.Y) > Math.Abs(moveAmount.X) * 5.0f)
+                        else if (Math.Abs(moveAmount.Y) > Math.Abs(moveAmount.X) * 8.0f)
                         {
                             moveAmount.X = 0.0f;
                         }
 
                         //make sure we don't move the interfaces out of the screen
-                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
-                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 20.0f * rect1Area / (rect1Area + rect2Area));
+                        Vector2 moveAmount1 = ClampMoveAmount(rect1, area, moveAmount * 10.0f);
+                        Vector2 moveAmount2 = ClampMoveAmount(rect2, area, -moveAmount * 10.0f);
 
                         //move by 10 units in the desired direction and repeat until nothing overlaps
                         //(or after 100 iterations, in which case we'll just give up and let them overlap)
-                        elements[i].RectTransform.ScreenSpaceOffset += (moveAmount1).ToPoint();
-                        elements[j].RectTransform.ScreenSpaceOffset += (moveAmount2).ToPoint();
+                        elements[i].RectTransform.ScreenSpaceOffset += moveAmount1.ToPoint();
+                        elements[j].RectTransform.ScreenSpaceOffset += moveAmount2.ToPoint();
                     }
 
                     if (disallowedAreas == null) continue;
@@ -1834,6 +1860,50 @@ namespace Barotrauma
         #endregion
 
         #region Misc
+        private static void HandleEscFunctionality()
+        {
+            // Check if a text input is selected.
+            if (KeyboardDispatcher.Subscriber != null)
+            {
+                if (KeyboardDispatcher.Subscriber is GUITextBox textBox)
+                {
+                    textBox.Deselect();
+                }
+                KeyboardDispatcher.Subscriber = null;
+            }
+            //if a verification prompt (are you sure you want to x) is open, close it
+            else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
+                    GUIMessageBox.VisibleBox.UserData as string == "verificationprompt")
+            {
+                ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
+            }
+            else if (Tutorials.Tutorial.Initialized && Tutorials.Tutorial.ContentRunning)
+            {
+                (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+            }
+            else if (PauseMenuOpen)
+            {
+                TogglePauseMenu();
+            }
+            //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
+            else if ((Character.Controlled == null || !itemHudActive())
+                //TODO: do we need to check Inventory.SelectedSlot?
+                && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
+                && !CrewManager.IsCommandInterfaceOpen)
+            {
+                // Otherwise toggle pausing, unless another window/interface is open.
+                TogglePauseMenu();
+            }
+
+            bool itemHudActive()
+            {
+                if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                return
+                    Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
+                    ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
+            }
+        }
+
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;

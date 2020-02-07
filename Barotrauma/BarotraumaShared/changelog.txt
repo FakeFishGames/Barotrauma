@@ -1,4 +1,48 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.704.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Numerous UI fixes again.
+- Inventory remake.
+- Fixed yet another bug that caused inventory items to get mixed up in the campaign.
+- Fixed a bug that caused clients to get disconnected with an "invalid object header" error when a character has a large amount of different afflictions.
+- Fixed monster missions occasionally causing "entity not found" errors in the multiplayer campaign.
+- Rebalanced medical items: stat-boosting effects last much longer.
+- Modified vigor buffs from steroids and hyperzine to be intantaneous instead of delayed.
+- Nerfed opiate spawning.
+- Updated localizations (new texts are now translated to all languages).
+- Reduced the number of monsters inside ruins in high-difficulty levels, improving performance in those levels.
+- New loading screen.
+- Health interface improvements.
+- Improvements to the command interface.
+- Fixed clients failing to select a submarine file downloaded from the server if it replaced an older version of the sub.
+- Fixed performance issues when two items with editable properties are in the inventory (for example a headset and a diving suit).
+- Fixed header texts not being visible in Russian.
+- Skill gain values are now moddable (see Content/SkillSettings.xml).
+- Balanced skill levels and skill gains.
+- Job variant descriptions and items are now shown when hovering the cursor over the job variant button.
+- Fix bots occasionally getting stuck on water waypoints.
+- Fixed bots occasionally letting go of ladders too soon when going to operate an item, causing them to fall down.
+- The filter in the sub editor only searches from the currently selected category.
+- Made Unstable watermark less intrusive in sub editor.
+- Fixed chatbox disappearing when any character is accessing another character's inventory.
+- Chatbox is hidden after the message has been sent if it was hidden when starting to enter the message.
+- Fixed wifi components in the respawn shuttle being able to communicate with the main sub in non-combat missions.
+- Fixed engine sound range being up to 20 times larger than it should be.
+- Prevent dragging items while dragging inventories.
+- Fixed monsters occasionally being able to attack characters inside the sub.
+- Screwdrivers can be used as shivs!
+- Fixed last wire node appearing to be outside the submarine if a character gets electrocuted while connecting the first end of the wire.
+- Fixes to bugs that occasionally caused the client hosting a server to get silently disconnected from the server, getting stuck in a "limbo" where they can't interact with anything.
+- Fix crash with command UI when there is no reactor on the sub.
+- Fixed all items being highlighted in the multiplayer campaign store menu when another player buys something.
+- Fixed setting the number of items to buy by typing a number in the text box being practically impossible in the multiplayer campaign store.
+- Fixed grenades exploding multiple times if you throw one, pick it up before it explodes and rethrow it.
+- Fixed equipped wire being shown twice in the wiring interface if you connect and disconnect it when the other end of the wire is not connected to anything.
+- Fixed antibiotic glue being marked as a suitable treatment for gunshot wounds and internal damage, even though it only treats burns and bleeding.
+- Fixed a waypoint issue in Orca's engineering compartment that prevented the bots from reaching the oxygen generator.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.703.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
@@ -11,7 +55,7 @@ v0.9.703.0 (Unstable)
 - Fixed engines causing crashes if MinVoltage is set to 0.
 - Fixed multiplayer campaign saves appearing in the single player "load game" menu if they're placed in the singleplayer save folder (leading to a crash if a player starts to load the save).
 - Fixed fabricator cancellation failing to be communicated under certain circumstances.
-- Fixed fabricator an deconstructor operating faster when run on overvoltage, making it possible to fabricate/deconstruct things almost instantaneously by using relays.
+- Fixed fabricator and deconstructor operating faster when run on overvoltage, making it possible to fabricate/deconstruct things almost instantaneously by using relays.
 - Fixed campaign store filter doing nothing.
 - Potentially a fixed race condition when autoupdating Workshop items during loading screen.
 - Fixed subinventories not opening when trying to heal an unconscious character.
@@ -59,7 +103,7 @@ v0.9.701.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 - Fixed SteamP2P server hosting.
-- Fixed a bug that caused "missing entity" errors when joining mid-round. Occurred if entities were created or removed while the client was in the process of getting in sync with the server, for example if the other players were firing turrets while the client was joining. However, there may still other bugs left that can cause the same "missing entity" error message.
+- Fixed a bug that caused "missing entity" errors when joining mid-round. Occurred if entities were created or removed while the client was in the process of getting in sync with the server, for example if the other players were firing turrets while the client was joining. However, there may still be other bugs left that can cause the same "missing entity" error message.
 - Cap the framerate to 200 FPS when VSync is off to prevent overloading the GPU. The cap can be adjusted by changing the "framelimit" attribute in config_player.xml.
 - Rebalanced random events.
 - Numerous fixes and improvements to Berilia.
@@ -136,7 +180,7 @@ Additions and changes:
 - The job gear variants are not just visually different versions of the same item, but completely separate items. The job variants now allow the players to choose what kind of gear they want to spawn with, not just the look of the uniform.
 - Attachable items and wire nodes can now be freely placed around the character instead of always being placed at the position of the character. When attaching items/wires, there's a placement grid that makes it much easier to neatly attach/wire things mid-round.
 - The submarines now get automatically outfitted with a semi-random selection of supplies when starting a campaign. The items that have been manually placed in the submarine editor are kept as-is.
-- Splitted internal damage into multiple subtypes: blunt force trauma, lacerations and bite wounds. The new afflictions are functionally identical to the default internal damage affliction, but can be used to identify the source of the injuries.
+- Split internal damage into multiple subtypes: blunt force trauma, lacerations and bite wounds. The new afflictions are functionally identical to the default internal damage affliction, but can be used to identify the source of the injuries.
 - Humans are more resistant to gunshot wounds, lacerations and blunt force trauma than monsters. The intention is to allow making weapons more effective towards monsters without making killing your crewmates with them too easy.
 - Added a "terminal" item that can be used to send and display textual signals. Could be used for things such as terminals that send commands to devices or display some data received from devices.
 - Added muzzle flashes to small firearms.
@@ -221,7 +265,7 @@ Monsters:
 - Fixed Tigerthresher and other creatures that can't attack the submarine bumping on the doors.
 - Fixed characters occasionally getting stuck while trying to reach the last known position of the previous target.
 - Fixed a crash when the creature is set to attack when provoked and when the damage source is null.
-- Fixed extra creature being spawned when using the <monster> elements in the monster misson definitions.
+- Fixed extra creature being spawned when using the <monster> elements in the monster mission definitions.
 - Fixed Hammerhead Matriarch's skirt going throught the walls.
 - Fixed performance issues when creatures are trying to find a path out from the submarine while escaping. Also improved the escaping behavior in general.
 - Fixed Mudraptors sometimes squeezing themselves towards doors without being able to attack them.
@@ -231,7 +275,7 @@ Monsters:
 Multiplayer:
 - Fixed players not getting notified in any way when their connection to the server has timed out, allowing them to keep playing without being able to interact with anything.
 - Fixed clients only being informed of the reason for their ban the moment they're banned, but not if they try to rejoin.
-- Fixed clients not attempting to reconnect to the server automatically when if the connection is lost, forcing the client to rejoin the server manually.
+- Fixed clients not attempting to reconnect to the server automatically when the connection is lost, forcing the client to rejoin the server manually.
 - Karma system can be enabled/disabled in the "host server" menu.
 - Option to set the number of password retries before a ban.
 - Fixed voice chat indicators not working in the in-game crew list.

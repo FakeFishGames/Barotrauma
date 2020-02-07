@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            hullInfoFrame.AddToGUIUpdateList();
+            hullInfoFrame.AddToGUIUpdateList(order: 1);
         }
 
         public override void OnMapLoaded()
@@ -257,8 +257,11 @@ namespace Barotrauma.Items.Components
                 }
 
                 if (mouseOnHull == hull)
-                {                    
+                {
                     hullInfoFrame.RectTransform.ScreenSpaceOffset = hullFrame.Rect.Center;
+                    if (hullInfoFrame.Rect.Right > GameMain.GraphicsWidth) { hullInfoFrame.RectTransform.ScreenSpaceOffset -= new Point(hullInfoFrame.Rect.Width, 0); }
+                    if (hullInfoFrame.Rect.Bottom > GameMain.GraphicsHeight) { hullInfoFrame.RectTransform.ScreenSpaceOffset -= new Point(0, hullInfoFrame.Rect.Height); }
+
                     hullInfoFrame.Visible = true;
                     hullNameText.Text = hull.DisplayName;
 

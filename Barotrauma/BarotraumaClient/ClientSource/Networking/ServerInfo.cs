@@ -195,7 +195,10 @@ namespace Barotrauma.Networking
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.025f), content.RectTransform), style: null);
 
             var serverMsg = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform)) { ScrollBarVisible = true };
-            var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, font: GUI.SmallFont, wrap: true) { CanBeFocused = true };
+            var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), serverMsg.Content.RectTransform), ServerMessage, font: GUI.SmallFont, wrap: true) 
+            { 
+                CanBeFocused = false 
+            };
             serverMsg.Content.RectTransform.SizeChanged += () => { msgText.CalculateHeightFromText(); };
             msgText.RectTransform.SizeChanged += () => { serverMsg.UpdateScrollBarSize(); };
 

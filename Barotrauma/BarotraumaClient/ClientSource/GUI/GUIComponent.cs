@@ -517,6 +517,7 @@ namespace Barotrauma
             return state switch
             {
                 ComponentState.Hover => HoverColor,
+                ComponentState.HoverSelected => HoverColor,
                 ComponentState.Pressed => PressedColor,
                 ComponentState.Selected => SelectedColor,
                 _ => Color,

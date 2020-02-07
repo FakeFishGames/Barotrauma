@@ -345,7 +345,7 @@ namespace Barotrauma
 
             IWriteMessage tempBuffer = new WriteOnlyMessage();
             body.ServerWrite(tempBuffer, c, extraData);
-            msg.Write((byte)tempBuffer.LengthBytes);
+            msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
             msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             msg.WritePadBits();
         }

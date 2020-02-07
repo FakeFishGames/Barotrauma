@@ -61,7 +61,8 @@ namespace Barotrauma
         }
 
         public readonly Dictionary<int, XElement> ItemSets = new Dictionary<int, XElement>();
-        public readonly Dictionary<int, List<string>> ItemNames = new Dictionary<int, List<string>>();
+        public readonly Dictionary<int, List<string>> ItemIdentifiers = new Dictionary<int, List<string>>();
+        public readonly Dictionary<int, Dictionary<string, bool>> ShowItemPreview = new Dictionary<int, Dictionary<string, bool>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
         public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
@@ -184,9 +185,10 @@ namespace Barotrauma
                 {
                     case "itemset":
                         ItemSets.Add(variant, subElement);
-                        var itemNames = new List<string>();
-                        loadItemNames(subElement, itemNames);
-                        ItemNames.Add(variant++, itemNames);
+                        ItemIdentifiers[variant] = new List<string>();
+                        ShowItemPreview[variant] = new Dictionary<string, bool>();
+                        loadItemIdentifiers(subElement, variant);
+                        variant++;
                         break;
                     case "skills":
                         foreach (XElement skillElement in subElement.Elements())
@@ -201,20 +203,19 @@ namespace Barotrauma
                     case "appropriateorders":
                         subElement.Elements().ForEach(order => AppropriateOrders.Add(order.GetAttributeString("identifier", "").ToLowerInvariant()));
                         break;
-                    case "icon":
+                    case "jobicon":
                         Icon = new Sprite(subElement.FirstElement());
                         break;
                 }
             }
 
-            void loadItemNames(XElement parentElement, List<string> itemNames)
+            void loadItemIdentifiers(XElement parentElement, int variant)
             {
                 foreach (XElement itemElement in parentElement.GetChildElements("Item"))
                 {
                     if (itemElement.Element("name") != null)
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - use identifiers instead of names to configure the items.");
-                        itemNames.Add(itemElement.GetAttributeString("name", ""));
                         continue;
                     }
 
@@ -222,22 +223,13 @@ namespace Barotrauma
                     if (string.IsNullOrWhiteSpace(itemIdentifier))
                     {
                         DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item with no identifier.");
-                        itemNames.Add("");
                     }
                     else
                     {
-                        var prefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
-                        if (prefab == null)
-                        {
-                            DebugConsole.ThrowError("Error in job config \"" + Name + "\" - item prefab \"" + itemIdentifier + "\" not found.");
-                            itemNames.Add("");
-                        }
-                        else
-                        {
-                            itemNames.Add(prefab.Name);
-                        }
+                        ItemIdentifiers[variant].Add(itemIdentifier);
+                        ShowItemPreview[variant][itemIdentifier] = itemElement.GetAttributeBool("showpreview", true);
                     }
-                    loadItemNames(itemElement, itemNames);
+                    loadItemIdentifiers(itemElement, variant);
                 }
             }
 

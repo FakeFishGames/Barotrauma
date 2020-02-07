@@ -16,9 +16,9 @@ namespace Barotrauma
             }*/
         }
 
-        partial void SetOrderProjSpecific(Order order)
+        partial void SetOrderProjSpecific(Order order, string option)
         {
-            GameMain.GameSession.CrewManager.DisplayCharacterOrder(Character, order);
+            GameMain.GameSession.CrewManager.DisplayCharacterOrder(Character, order, option);
         }
 
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)

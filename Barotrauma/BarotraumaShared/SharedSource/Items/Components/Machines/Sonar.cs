@@ -79,7 +79,14 @@ namespace Barotrauma.Items.Components
         public float Range
         {
             get { return range; }
-            set { range = MathHelper.Clamp(value, 0.0f, 100000.0f); }
+            set
+            {
+                range = MathHelper.Clamp(value, 0.0f, 100000.0f);
+                if (item?.AiTarget != null && item.AiTarget.MaxSoundRange <= 0)
+                {
+                    item.AiTarget.MaxSoundRange = range;
+                }
+            }
         }
 
         [Serialize(false, false, description: "Should the sonar display the walls of the submarine it is inside.")]

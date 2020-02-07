@@ -204,7 +204,7 @@ namespace Barotrauma
             Submarine.DrawBack(spriteBatch, false, e => !(e is Structure) || e.SpriteDepth < 0.9f);
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.Limbs.Any(l => l.DeformSprite != null) || !c.IsVisible) { continue; }
+                if (!c.IsVisible || c.AnimController.Limbs.Any(l => l.DeformSprite != null)) { continue; }
                 c.Draw(spriteBatch, Cam);
             }
             spriteBatch.End();

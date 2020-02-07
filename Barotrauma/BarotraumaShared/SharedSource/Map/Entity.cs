@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -283,15 +284,22 @@ namespace Barotrauma
             Removed = true;
         }
 
-        public static void DumpIds(int count)
+        public static void DumpIds(int count, string filename)
         {
             List<Entity> entities = dictionary.Values.OrderByDescending(e => e.id).ToList();
 
             count = Math.Min(entities.Count, count);
 
+            List<string> lines = new List<string>();
             for (int i = 0; i < count; i++)
             {
+                lines.Add(entities[i].id + ": " + entities[i].ToString());
                 DebugConsole.ThrowError(entities[i].id + ": " + entities[i].ToString());
+            }
+
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+                File.WriteAllLines(filename, lines);
             }
         }
     }

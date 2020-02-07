@@ -511,7 +511,7 @@ namespace Barotrauma
                 try
                 {
                     int count = args.Length == 0 ? 10 : int.Parse(args[0]);
-                    Entity.DumpIds(count);
+                    Entity.DumpIds(count, args.Length >= 2 ? args[1] : null);
                 }
                 catch (Exception e)
                 {
@@ -1550,6 +1550,7 @@ namespace Barotrauma
             if (args != null && args.Length > argCount)
             {
                 onAnswered(args[argCount]);
+                return;
             }
 
 #if CLIENT

@@ -175,6 +175,7 @@ namespace Barotrauma.Networking
                     GameMain.NetworkMember?.KarmaManager?.SaveCustomPreset();
                     GameMain.NetworkMember?.KarmaManager?.Save();
                 }
+                SaveSettings();
                 GameMain.NetLobbyScreen.LastUpdateID++;
             }
         }

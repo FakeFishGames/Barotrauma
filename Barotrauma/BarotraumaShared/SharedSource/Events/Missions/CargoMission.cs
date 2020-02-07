@@ -5,11 +5,11 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class CargoMission : Mission
+    partial class CargoMission : Mission
     {
-        private XElement itemConfig;
+        private readonly XElement itemConfig;
 
-        private List<Item> items;
+        private readonly List<Item> items = new List<Item>();
 
         private int requiredDeliveryAmount;
 
@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private void InitItems()
         {
-            items = new List<Item>();
+            items.Clear();
 
             if (itemConfig == null)
             {
@@ -35,7 +35,7 @@ namespace Barotrauma
                 LoadItemAsChild(subElement, null);
             }
 
-            if (requiredDeliveryAmount == 0) requiredDeliveryAmount = items.Count;
+            if (requiredDeliveryAmount == 0) { requiredDeliveryAmount = items.Count; }
         }
 
         private void LoadItemAsChild(XElement element, Item parent)
@@ -90,8 +90,6 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);
             item.FindHull();
-
-
             items.Add(item);
             
             if (parent != null) parent.Combine(item, user: null);
@@ -108,7 +106,10 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            InitItems();
+            if (!IsClient)
+            {
+                InitItems();
+            }
         }
 
         public override void End()
@@ -127,8 +128,9 @@ namespace Barotrauma
 
             foreach (Item item in items)
             {
-                if (!item.Removed) item.Remove();
+                if (!item.Removed) { item.Remove(); }
             }
+            items.Clear();
         }
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -35,12 +36,13 @@ namespace Barotrauma
 
                 GameMain.NetLobbyScreen.Frame.FindChild("modevotes", true).Visible = value;
 
-                //gray out modes that can't be voted
-                foreach (GUITextBlock comp in GameMain.NetLobbyScreen.ModeList.Content.Children)
+                // Disable modes that cannot be voted on
+                foreach (var guiComponent in GameMain.NetLobbyScreen.ModeList.Content.Children)
                 {
-                    comp.TextColor =
-                        new Color(comp.TextColor.R, comp.TextColor.G, comp.TextColor.B, 
-                            !allowModeVoting || ((GameModePreset)comp.UserData).Votable ? (byte)255 : (byte)100);
+                    if (guiComponent is GUIFrame frame)
+                    {
+                        frame.CanBeFocused = !allowModeVoting || ((GameModePreset) frame.UserData).Votable;
+                    }
                 }
                 
                 UpdateVoteTexts(null, VoteType.Mode);

@@ -273,10 +273,8 @@ namespace Barotrauma
             }
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-            if (Map.SelectedConnection != null)
-            {
-                Map.SelectMission(selectedMissionIndex);
-            }
+            if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
+            if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndex); }
 
             List<PurchasedItem> currentItems = new List<PurchasedItem>(CargoManager.PurchasedItems);
             foreach (PurchasedItem pi in currentItems)

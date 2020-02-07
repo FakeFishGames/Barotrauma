@@ -20,6 +20,11 @@ namespace Barotrauma.Networking
             get { return createTime; }
         }
 
+        public void ResetCreateTime()
+        {
+            createTime = Timing.TotalTime;
+        }
+
         public ServerEntityEvent(IServerSerializable serializableEntity, UInt16 id)
             : base(serializableEntity, id)
         {
@@ -223,6 +228,7 @@ namespace Barotrauma.Networking
                 {
                     lastWarningTime = Timing.TotalTime;
                     GameServer.Log("WARNING: ServerEntityEventManager is lagging behind! Last sent id: " + lastSentToAnyone.ToString() + ", latest create id: " + ID.ToString(), ServerLog.MessageType.ServerMessage);
+                    events.ForEach(e => e.ResetCreateTime());
                     //TODO: reset clients if this happens, maybe do it if a majority are behind rather than all of them?
                 }
                 

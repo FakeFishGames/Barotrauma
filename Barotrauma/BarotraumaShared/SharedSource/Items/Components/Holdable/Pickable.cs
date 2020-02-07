@@ -82,7 +82,7 @@ namespace Barotrauma.Items.Components
 
         public virtual bool OnPicked(Character picker)
         {
-            if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
+            if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots, true, true))
             {
                 if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
                 this.picker = picker;

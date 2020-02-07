@@ -36,7 +36,7 @@ namespace Barotrauma.Items.Components
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.90f, 0.80f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
                 Stretch = true, 
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.08f
             };
 
             var topFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), paddedFrame.RectTransform), style: null);
@@ -51,15 +51,15 @@ namespace Barotrauma.Items.Components
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, inputLabelArea.RectTransform), style: "HorizontalLine");
 
-                var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1.2f), topFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
+                var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), topFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
                     
                     // === INPUT SLOTS === //
                     inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
                         inputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawOverLay, null) { CanBeFocused = false };
 
                     // === ACTIVATE BUTTON === //
-                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.75f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
-                        activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.65f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
+                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.7f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
+                        activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.8f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
                         {
                             TextBlock = { AutoScaleHorizontal = true },
                             OnClicked = ToggleActive
@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
                     new GUIFrame(new RectTransform(Vector2.One, outputLabelArea.RectTransform), style: "HorizontalLine");
 
                 // === OUTPUT SLOTS === //
-                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.2f), bottomFrame.RectTransform, Anchor.CenterLeft), style: null);
+                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1f), bottomFrame.RectTransform, Anchor.CenterLeft), style: null);
         }
 
         public override bool Select(Character character)

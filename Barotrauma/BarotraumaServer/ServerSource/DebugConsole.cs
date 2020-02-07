@@ -439,7 +439,7 @@ namespace Barotrauma
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
-                }, args, 2);
+                }, args, 1);
             });
 
             AssignOnExecute("revokeperm", (string[] args) =>
@@ -474,7 +474,7 @@ namespace Barotrauma
                     client.RemovePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Revoked " + perm + " permissions from " + client.Name + ".", Color.White);
-                }, args, 2);
+                }, args, 1);
             });
 
             AssignOnExecute("giverank", (string[] args) =>
@@ -511,7 +511,7 @@ namespace Barotrauma
                     client.SetPermissions(preset.Permissions, preset.PermittedCommands);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Assigned the rank \"" + preset.Name + "\" to " + client.Name + ".", Color.White);
-                }, args, 2);
+                }, args, 1);
             });
 
             AssignOnExecute("givecommandperm", (string[] args) =>
@@ -552,7 +552,7 @@ namespace Barotrauma
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
-                }, args, 2);
+                }, args, 1);
             });
 
             AssignOnExecute("revokecommandperm", (string[] args) =>
@@ -592,7 +592,7 @@ namespace Barotrauma
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
-                }, args, 2);
+                }, args, 1);
             });
 
             AssignOnExecute("showperm", (string[] args) =>

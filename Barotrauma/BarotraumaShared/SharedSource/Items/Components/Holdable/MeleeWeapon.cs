@@ -110,6 +110,12 @@ namespace Barotrauma.Items.Components
             hitTargets.Clear();
 
             IsActive = true;
+
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+                item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
+            }
             return false;
         }
         

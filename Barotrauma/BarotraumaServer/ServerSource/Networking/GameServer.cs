@@ -1783,6 +1783,17 @@ namespace Barotrauma.Networking
 
             if (campaign != null)
             {
+                if (campaign.Map == null)
+                {
+                    throw new Exception("Campaign map was null.");
+                }
+                if (campaign.Map.SelectedConnection == null)
+                {
+                    //this should not happen, there should always be some destination selected
+                    DebugConsole.ThrowError("No connection between locations was selected when starting the round. Choosing a random location...");
+                    campaign.Map.SelectRandomLocation(preferUndiscovered: true);
+                }
+
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
                     reloadSub: true,
                     loadSecondSub: teamCount > 1,
@@ -2006,6 +2017,8 @@ namespace Barotrauma.Networking
             }
 
             serverSettings.WriteMonsterEnabled(msg);
+
+            GameMain.GameSession.Mission?.ServerWriteInitial(msg, client);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }

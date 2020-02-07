@@ -1102,6 +1102,8 @@ namespace Barotrauma
                 return true;
             };
 
+            nameBox.Text = subNameLabel?.Text ?? "";
+
             submarineNameCharacterCount.Text = nameBox.Text.Length + " / " + submarineNameLimit;
 
             var descriptionHeaderGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.03f), leftColumn.RectTransform), true);

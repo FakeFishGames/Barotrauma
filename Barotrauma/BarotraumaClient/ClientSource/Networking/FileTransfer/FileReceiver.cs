@@ -307,6 +307,8 @@ namespace Barotrauma.Networking
                             Status = FileTransferStatus.Finished,
                             FileSize = 0
                         };
+
+                        Md5Hash.RemoveFromCache(directTransfer.FilePath);
                         OnFinished(directTransfer);
                     }
                     break;
@@ -376,6 +378,7 @@ namespace Barotrauma.Networking
                             {
                                 finishedTransfers.Add(new Pair<int, double>(transferId, Timing.TotalTime));
                                 StopTransfer(activeTransfer);
+                                Md5Hash.RemoveFromCache(activeTransfer.FilePath);
                                 OnFinished(activeTransfer);
                             }
                             else

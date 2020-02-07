@@ -711,6 +711,7 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string option, Character orderGiver, bool speak = true)
         {
+            SetOrderProjSpecific(order, option);
             CurrentOrderOption = option;
             CurrentOrder = order;
             objectiveManager.SetOrder(order, option, orderGiver);
@@ -749,10 +750,9 @@ namespace Barotrauma
                     Character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
                 }
             }
-            SetOrderProjSpecific(order);
         }
 
-        partial void SetOrderProjSpecific(Order order);
+        partial void SetOrderProjSpecific(Order order, string option);
 
         public override void SelectTarget(AITarget target)
         {
@@ -970,8 +970,8 @@ namespace Barotrauma
             {
                 bool isValidTarget(Character e) => IsActive(e) && !IsFriendly(character, e);
                 int enemyCount = visibleHulls == null ?
-                    Character.CharacterList.Count(e => e.CurrentHull == hull && isValidTarget(e)) :
-                    Character.CharacterList.Count(e => visibleHulls.Contains(e.CurrentHull) && isValidTarget(e));
+                    Character.CharacterList.Count(e => isValidTarget(e) && e.CurrentHull == hull) :
+                    Character.CharacterList.Count(e => isValidTarget(e) && visibleHulls.Contains(e.CurrentHull));
                 // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
                 enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             }
@@ -988,7 +988,7 @@ namespace Barotrauma
             return sameSpecies && !differentTeam;
         }
 
-        public static bool IsActive(Character other) => !other.Removed && !other.IsDead && !other.IsUnconscious;
+        public static bool IsActive(Character other) => other != null && !other.Removed && !other.IsDead && !other.IsUnconscious;
 
         public static bool IsTrueForAllCrewMembers(Character character, Func<HumanAIController, bool> predicate)
         {

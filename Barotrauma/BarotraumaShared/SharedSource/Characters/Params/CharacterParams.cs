@@ -464,7 +464,7 @@ namespace Barotrauma
             private bool TryAddTarget(XElement targetElement, out TargetParams target)
             {
                 string tag = targetElement.GetAttributeString("tag", null);
-                if (!CheckTag(tag))
+                if (!HasTag(tag))
                 {
                     target = null;
                     DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
@@ -487,15 +487,18 @@ namespace Barotrauma
                 if (TryAddTarget(element, out targetParams))
                 {
                     Element.Add(element);
+                    return true;
                 }
-                return targetParams != null;
+                else
+                {
+                    return false;
+                }
             }
 
-            private bool CheckTag(string tag)
+            public bool HasTag(string tag)
             {
                 if (tag == null) { return false; }
-                tag = tag.ToLowerInvariant();
-                return targets.None(t => t.Tag == tag);
+                return targets.None(t => t.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase));
             }
 
             public bool RemoveTarget(TargetParams target) => RemoveSubParam(target, targets);

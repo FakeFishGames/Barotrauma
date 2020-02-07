@@ -11,6 +11,12 @@ namespace Barotrauma
         {
             base.ControlInput(cam);
             cam.OffsetAmount = 0;
+
+            if (Character.Controlled?.Inventory != null)
+            {
+                Character.Controlled.Inventory.ToggleInventory(true);
+            }
+
             //if this is used, we need to implement syncing this inventory with the server
             /*Character.DisableControls = true;
             if (Character.Controlled != null)
@@ -19,7 +25,7 @@ namespace Barotrauma
                 {
                     Character.Controlled.SelectedConstruction = null;
                 }
-            }*/            
+            }*/
         }
 
         protected override void CalculateBackgroundFrame()

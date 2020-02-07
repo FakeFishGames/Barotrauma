@@ -36,7 +36,6 @@ namespace Barotrauma.Items.Components
         public Propulsion(Item item, XElement element)
             : base(item,element)
         {
-            ResetSoundRange();
         }
         
         public override bool Use(float deltaTime, Character character = null)
@@ -104,20 +103,6 @@ namespace Barotrauma.Items.Components
             if (item.AiTarget != null && IsActive)
             {
                 item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
-            }
-        }
-
-        public override void Unequip(Character character)
-        {
-            base.Unequip(character);
-            ResetSoundRange();
-        }
-
-        private void ResetSoundRange()
-        {
-            if (item.AiTarget != null)
-            {
-                item.AiTarget.SoundRange = item.AiTarget.MinSoundRange;
             }
         }
     }

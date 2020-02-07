@@ -37,6 +37,8 @@ namespace Barotrauma
         }
         private float openState;
 
+        public bool CloseAfterMessageSent;
+
         private float prevUIScale;
 
         //individual message texts that pop up when the chatbox is hidden
@@ -286,6 +288,10 @@ namespace Barotrauma
         public void SetVisibility(bool visible)
         {
             GUIFrame.Parent.Visible = visible;
+            if (GameMain.GameSession?.CrewManager?.ReportButtonFrame != null)
+            {
+                GameMain.GameSession.CrewManager.ReportButtonFrame.Visible = visible;
+            }
         }
 
         private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)
@@ -328,6 +334,17 @@ namespace Barotrauma
                 SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
+            }
+
+            //hide chatbox when accessing the inventory of another character to prevent overlaps
+            if (Character.Controlled?.SelectedCharacter?.Inventory != null &&
+                Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
+            {
+                SetVisibility(false);
+            }
+            else
+            {
+                SetVisibility(true);
             }
 
             if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)

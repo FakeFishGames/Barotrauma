@@ -25,6 +25,7 @@ namespace Barotrauma
         public static Sprite ShortcutNode { get; private set; }
         public static Sprite ExpandNode { get; private set; }
         public static Sprite NodeContainer { get; private set; }
+        public static Sprite HotkeyContainer { get; private set; }
         public static Sprite CommandBackground { get; private set; }
         public static List<Order> PrefabList { get; private set; }
         public static Order GetPrefab(string identifier)
@@ -162,6 +163,9 @@ namespace Barotrauma
                                     break;
                                 case "nodecontainer":
                                     NodeContainer = new Sprite(spriteElement, lazyLoad: true);
+                                    break;
+                                case "hotkeycontainer":
+                                    HotkeyContainer = new Sprite(spriteElement, lazyLoad: true);
                                     break;
                                 case "commandbackground":
                                     CommandBackground = new Sprite(spriteElement, lazyLoad: true);

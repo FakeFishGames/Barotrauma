@@ -265,6 +265,14 @@ namespace Barotrauma
         {
             get
             {
+                if (SteeringManager == PathSteering && PathSteering.CurrentPath?.CurrentNode?.Ladders != null)
+                {
+                    //don't consider the character to be close enough to the target while climbing ladders,
+                    //UNLESS the last node in the path has been reached
+                    //otherwise characters can let go of the ladders too soon once they're close enough to the target
+                    if (PathSteering.CurrentPath.NextNode != null) { return false; }
+                }
+
                 bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
                 if (closeEnough)
                 {

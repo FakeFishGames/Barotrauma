@@ -1,4 +1,6 @@
-﻿namespace Barotrauma
+﻿using Barotrauma.Networking;
+
+namespace Barotrauma
 {
     partial class CombatMission
     {
@@ -17,6 +19,11 @@
                 //team specific
                 return descriptions[GameMain.Client.Character.TeamID == Character.TeamType.Team1 ? 1 : 2];
             }
+        }
+
+        public override void ClientReadInitial(IReadMessage msg)
+        {
+            //do nothing
         }
     }
 }

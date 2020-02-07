@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class SalvageMission : Mission
+    partial class SalvageMission : Mission
     {
         private readonly ItemPrefab itemPrefab;
 
         private Item item;
 
-        private Level.PositionType spawnPositionType;
+        private readonly Level.PositionType spawnPositionType;
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -62,23 +62,26 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
-            //ruin items are allowed to spawn close to the sub
-            float minDistance = spawnPositionType == Level.PositionType.Ruin ? 0.0f : Level.Loaded.Size.X * 0.3f;
-            Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
-            
-            item = new Item(itemPrefab, position, null);
-            item.body.FarseerBody.BodyType = BodyType.Kinematic;
-
-            if (item.HasTag("alien"))
+            if (!IsClient)
             {
-                //try to find an artifact holder and place the artifact inside it
-                foreach (Item it in Item.ItemList)
-                {
-                    if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
+                //ruin items are allowed to spawn close to the sub
+                float minDistance = spawnPositionType == Level.PositionType.Ruin ? 0.0f : Level.Loaded.Size.X * 0.3f;
+                Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
+            
+                item = new Item(itemPrefab, position, null);
+                item.body.FarseerBody.BodyType = BodyType.Kinematic;
 
-                    var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
-                    if (itemContainer == null) continue;
-                    if (itemContainer.Combine(item, user: null)) break; // Placement successful
+                if (item.HasTag("alien"))
+                {
+                    //try to find an artifact holder and place the artifact inside it
+                    foreach (Item it in Item.ItemList)
+                    {
+                        if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
+
+                        var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
+                        if (itemContainer == null) { continue; }
+                        if (itemContainer.Combine(item, user: null)) { break; } // Placement successful
+                    }
                 }
             }
         }
@@ -108,7 +111,8 @@ namespace Barotrauma
         {
             if (item.CurrentHull?.Submarine == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) { return; }
 
-            item.Remove();
+            item?.Remove();
+            item = null;
             GiveReward();
             completed = true;
         }

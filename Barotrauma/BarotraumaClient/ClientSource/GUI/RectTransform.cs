@@ -701,8 +701,16 @@ namespace Barotrauma
 
         public void MatchPivotToAnchor() => MatchPivotToAnchor(Anchor);
 
+
+        private Point? animTargetPos;
+        public Point AnimTargetPos
+        {
+            get { return animTargetPos ?? AbsoluteOffset; }
+        }
+
         public void MoveOverTime(Point targetPos, float duration)
         {
+            animTargetPos = targetPos;
             CoroutineManager.StartCoroutine(DoMoveAnimation(targetPos, duration));
         }
         public void ScaleOverTime(Point targetSize, float duration)
@@ -721,6 +729,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
             AbsoluteOffset = targetPos;
+            animTargetPos = null;
             yield return CoroutineStatus.Success;
         }
         private IEnumerable<object> DoScaleAnimation(Point targetSize, float duration)
