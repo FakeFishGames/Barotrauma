@@ -67,6 +67,9 @@ namespace Barotrauma
         {
             if (isClient) { return; }
 
+            pendingEventSets.Clear();
+            selectedEvents.Clear();
+
             var suitableSettings = EventManagerSettings.List.FindAll(s =>
                 level.Difficulty >= s.MinLevelDifficulty &&
                 level.Difficulty <= s.MaxLevelDifficulty);
@@ -321,6 +324,12 @@ namespace Barotrauma
                     if (!CanStartEventSet(eventSet)) { continue; }
 
                     pendingEventSets.RemoveAt(i);
+
+                    if (!selectedEvents.ContainsKey(eventSet))
+                    {
+                        DebugConsole.ThrowError("Error in EventManager.Update: pending event set \"" + eventSet.DebugIdentifier + "\" not present in selected event sets.");
+                        continue;
+                    }
 
                     //start events in this set
                     foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])

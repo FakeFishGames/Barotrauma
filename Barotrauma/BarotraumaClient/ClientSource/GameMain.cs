@@ -648,7 +648,6 @@ namespace Barotrauma
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            Timing.TotalTime = gameTime.TotalGameTime.TotalSeconds;
             Timing.Accumulator += gameTime.ElapsedGameTime.TotalSeconds;
             int updateIterations = (int)Math.Floor(Timing.Accumulator / Timing.Step);
             if (Timing.Accumulator > Timing.Step * 6.0)
@@ -677,6 +676,8 @@ namespace Barotrauma
 
             while (Timing.Accumulator >= Timing.Step)
             {
+                Timing.TotalTime += Timing.Step;
+
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
 

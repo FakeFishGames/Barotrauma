@@ -262,7 +262,10 @@ namespace Barotrauma
 
 #if CLIENT
         private Sprite jobIcon;
-        private Vector2 jobIconPos;
+        private Vector2 jobIconPos
+        {
+            get { return new Vector2(HUDLayoutSettings.HealthBarAreaLeft.Right, HUDLayoutSettings.HealthBarAreaLeft.Y - HUDLayoutSettings.Padding); }
+        }
 #endif
 
         private Sprite portraitBackground;
@@ -449,9 +452,6 @@ namespace Barotrauma
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
 #if CLIENT
             jobIcon = Job.Prefab.Icon;
-            //TODO: fix jobIconPos
-            jobIconPos = new Vector2(HUDLayoutSettings.HealthBarAreaLeft.Right, HUDLayoutSettings.HealthBarAreaLeft.Y - HUDLayoutSettings.Padding);
-            GameMain.Instance.OnResolutionChanged += () => jobIconPos = new Vector2(HUDLayoutSettings.HealthBarAreaLeft.Right, HUDLayoutSettings.HealthBarAreaLeft.Y - HUDLayoutSettings.Padding);
 #endif
 
             if (!string.IsNullOrEmpty(name))

@@ -66,6 +66,8 @@ namespace Barotrauma
                 return true;
             };
             loadCampaignContainer.Visible = false;
+
+            GUITextBlock.AutoScaleAndNormalize(newCampaignButton.TextBlock, loadCampaignButton.TextBlock);
             
             campaignSetupUI.StartNewGame = GameMain.Client.SetupNewCampaign;
             campaignSetupUI.LoadGame = GameMain.Client.SetupLoadCampaign;

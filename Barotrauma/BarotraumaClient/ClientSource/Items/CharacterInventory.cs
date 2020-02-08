@@ -42,6 +42,8 @@ namespace Barotrauma
         private Vector2 inventoryExtendButtonOffset, inventoryArrowOffset;
         private int inventoryOpeningOffset;
 
+        private Point prevResolution;
+
         public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
         public Vector2[] SlotPositions;
@@ -120,7 +122,6 @@ namespace Barotrauma
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;
             SetSlotPositions();
-            GameMain.Instance.OnResolutionChanged += SetSlotPositions;
         }
 
         protected override ItemInventory GetActiveEquippedSubInventory(int slotIndex)
@@ -282,7 +283,9 @@ namespace Barotrauma
             Point slotSize = (SlotSpriteSmall.size * UIScale).ToPoint();
             int bottomOffset = slotSize.Y + spacing * 2 + ContainedIndicatorHeight;
 
-            if (slots == null) CreateSlots();
+            prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+
+            if (slots == null) { CreateSlots(); }
 
             hideButton.Visible = false;
 
@@ -539,29 +542,38 @@ namespace Barotrauma
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
             if (CharacterHealth.OpenHealthWindow != null) hoverOnInventory = true;
             
-            if (layout == Layout.Default && hideButton.Visible)
+            if (layout == Layout.Default)
             {
-                hideButton.AddToGUIUpdateList();
-                hideButton.UpdateManually(deltaTime, alsoChildren: true);
-
-                hidePersonalSlotsState = hidePersonalSlots ? 
-                    Math.Min(hidePersonalSlotsState + deltaTime * 5.0f, 1.0f) : 
-                    Math.Max(hidePersonalSlotsState -  deltaTime * 5.0f, 0.0f);
-                
-                for (int i = 0; i < slots.Length; i++)
+                if (hideButton.Visible)
                 {
-                    if (!PersonalSlots.HasFlag(SlotTypes[i])) { continue; }
-                    if (HidePersonalSlots)
+                    hideButton.AddToGUIUpdateList();
+                    hideButton.UpdateManually(deltaTime, alsoChildren: true);
+
+                    hidePersonalSlotsState = hidePersonalSlots ? 
+                        Math.Min(hidePersonalSlotsState + deltaTime * 5.0f, 1.0f) : 
+                        Math.Max(hidePersonalSlotsState -  deltaTime * 5.0f, 0.0f);
+                
+                    for (int i = 0; i < slots.Length; i++)
                     {
-                        if (selectedSlot?.Slot == slots[i]) { selectedSlot = null; }
-                        highlightedSubInventorySlots.RemoveWhere(s => s.Slot == slots[i]);
+                        if (!PersonalSlots.HasFlag(SlotTypes[i])) { continue; }
+                        if (HidePersonalSlots)
+                        {
+                            if (selectedSlot?.Slot == slots[i]) { selectedSlot = null; }
+                            highlightedSubInventorySlots.RemoveWhere(s => s.Slot == slots[i]);
+                        }
+                        slots[i].DrawOffset = Vector2.Lerp(Vector2.Zero, new Vector2(personalSlotArea.Width, 0.0f), hidePersonalSlotsState);
                     }
-                    slots[i].DrawOffset = Vector2.Lerp(Vector2.Zero, new Vector2(personalSlotArea.Width, 0.0f), hidePersonalSlotsState);
+                }
+
+                InventoryToggleContains = InventoryToggleArea.Contains(PlayerInput.MousePosition);
+                if (InventoryToggleContains && PlayerInput.PrimaryMouseButtonClicked())
+                {
+                    ToggleInventory();
                 }
             }
-            
-            if (hoverOnInventory) HideTimer = 0.5f;
-            if (HideTimer > 0.0f) HideTimer -= deltaTime;
+
+            if (hoverOnInventory) { HideTimer = 0.5f; }
+            if (HideTimer > 0.0f) { HideTimer -= deltaTime; }
 
             for (int i = 0; i < capacity; i++)
             {
@@ -1007,8 +1019,13 @@ namespace Barotrauma
         
         public void DrawThis(SpriteBatch spriteBatch)
         {
-            if (!AccessibleWhenAlive && !character.IsDead) return;
-            if (slots == null) CreateSlots();
+            if (!AccessibleWhenAlive && !character.IsDead) { return; }
+            if (slots == null) { CreateSlots(); }
+
+            if (prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight)
+            {
+                SetSlotPositions();
+            }
 
             if (hideButton != null && hideButton.Visible && !Locked)
             {
@@ -1033,12 +1050,6 @@ namespace Barotrauma
                 }
 
                 GUI.DrawString(spriteBatch, arrowPosition + new Vector2(UIScale * 25, -3 * UIScale), GameMain.Config.KeyBindText(InputType.ToggleInventory), Color.White, font: GUI.HotkeyFont);
-
-                InventoryToggleContains = InventoryToggleArea.Contains(PlayerInput.MousePosition);
-                if (InventoryToggleContains && PlayerInput.PrimaryMouseButtonClicked())
-                {
-                    ToggleInventory();
-                }
             }
             
             InventorySlot highlightedQuickUseSlot = null;

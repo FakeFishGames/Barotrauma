@@ -638,13 +638,14 @@ namespace Barotrauma.Items.Components
                 signalWarningText.Text = TextManager.Get(signalStrength <= 0.0f ? "SonarNoSignal" : "SonarSignalWeak");
                 signalWarningText.Color = signalStrength <= 0.0f ? negativeColor : warningColor;
                 signalWarningText.Visible = true;
+                return;
             }
             else
             {
                 signalWarningText.Visible = false;
             }
 
-            if (GameMain.GameSession == null) return;
+            if (GameMain.GameSession == null) { return; }
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
@@ -1376,6 +1377,8 @@ namespace Barotrauma.Items.Components
                 sprite.Remove();
             }
             targetIcons.Clear();
+
+            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

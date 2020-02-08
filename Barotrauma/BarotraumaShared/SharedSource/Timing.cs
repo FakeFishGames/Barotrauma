@@ -11,7 +11,7 @@ namespace Barotrauma
 
         public static double Accumulator;
         public const int FixedUpdateRate = 60;
-        public static double Step = 1.0 / FixedUpdateRate;
+        public const double Step = 1.0 / FixedUpdateRate;
 
         private static int frameLimit;
         /// <summary>

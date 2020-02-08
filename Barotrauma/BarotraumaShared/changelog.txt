@@ -1,4 +1,30 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.705.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Fixed server owner occasionally timing out if loading the round takes too long.
+- Fixed server owner's character occasionally being killed due to round start timeouts.
+- Reduced the severity of the burns caused by deusizine.
+- Fixed report buttons doing nothing.
+- Fixed report buttons being visible when not controlling a character.
+- Fixed sonar markers being visible when not receiving a signal from a remotely controlled shuttle.
+- Fixed wire being drawn twice in the connection panel interface if it's first connected from both ends and then dragged away from the connection.
+- Fixed client-side giveperm/giverank.
+- Added "killdisconnectedtime" command that can be used to set the time after a disconnected player's character gets automatically killed.
+- Increased default killdisconnectedtime to 2 minutes.
+- Fixed items that can be put in either hand slot, but not in the "Any" slots (e.g. duffel bag), being put into both hand slots.
+- Fixed crashing when attempting to draw an inventory when not controlling a character (happened in the sub editor when selecting an item container in the character mode and switching to default mode).
+- Fixed crashing if there's no audio device available.
+- Fixed wire being drawn twice in the connection panel interface if it's first connected from both ends and then dragged away from the connection.
+- Fixed inventory toggle button working unreliably.
+- Fixed alarm buzzer not returning to the original rotation when the alarm stops.
+- Fixed grenades sometimes not exploding client-side in multiplayer.
+- Fixed characters letting go of ladders when opening the health interface.
+- An attempt to fix occasional crashing when autoupdating workshop items.
+- Improved crewlist scaling on small resolutions.
+- Fixes to text overflows on small resolutions.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.704.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 

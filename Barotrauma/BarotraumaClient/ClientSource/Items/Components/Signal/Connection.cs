@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
             x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count() - 1) / 2);
             foreach (Wire wire in panel.DisconnectedWires)
             {
-                if (wire == DraggingConnected && !mouseInRect) { continue; }
+                if (wire == DraggingConnected) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";

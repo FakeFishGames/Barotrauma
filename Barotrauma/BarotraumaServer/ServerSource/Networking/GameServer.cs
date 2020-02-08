@@ -357,18 +357,20 @@ namespace Barotrauma.Networking
 
                     character.KillDisconnectedTimer += deltaTime;
                     character.SetStun(1.0f);
-                    if (character.KillDisconnectedTimer > serverSettings.KillDisconnectedTime)
+
+                    Client owner = connectedClients.Find(c =>
+                        c.Name == character.OwnerClientName &&
+                        c.EndpointMatches(character.OwnerClientEndPoint));
+
+                    if ((OwnerConnection == null || owner?.Connection != OwnerConnection) && character.KillDisconnectedTimer > serverSettings.KillDisconnectedTime)
                     {
                         character.Kill(CauseOfDeathType.Disconnected, null);
                         continue;
                     }
 
-                    Client owner = connectedClients.Find(c =>
-                        c.InGame && !c.NeedsMidRoundSync &&
-                        c.Name == character.OwnerClientName &&
-                        c.EndpointMatches(character.OwnerClientEndPoint));
-
-                    if (owner != null && (!serverSettings.AllowSpectating || !owner.SpectateOnly))
+                    if (owner != null &&
+                        owner.InGame && !owner.NeedsMidRoundSync &&
+                        (!serverSettings.AllowSpectating || !owner.SpectateOnly))
                     {
                         SetClientCharacter(owner, character);
                     }

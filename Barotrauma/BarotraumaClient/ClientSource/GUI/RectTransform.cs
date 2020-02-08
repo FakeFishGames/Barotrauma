@@ -647,7 +647,7 @@ namespace Barotrauma
         public void SortChildren(Comparison<RectTransform> comparison)
         {
             children.Sort(comparison);
-            RecalculateAll(false, true, true);
+            RecalculateAll(false, false, true);
             Parent.ChildrenChanged?.Invoke(this);
         }
 

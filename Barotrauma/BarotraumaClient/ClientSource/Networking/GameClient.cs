@@ -207,6 +207,7 @@ namespace Barotrauma.Networking
                     return true;
                 }
             };
+            ShowLogButton.TextBlock.AutoScaleHorizontal = true;
 
             GameMain.DebugDraw = false;
             Hull.EditFire = false;

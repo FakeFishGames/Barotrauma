@@ -282,6 +282,8 @@ namespace Barotrauma
 
             commands.Add(new Command("botspawnmode", "botspawnmode [fill/normal]: Set how bots are spawned in the multiplayer.", null));
 
+            commands.Add(new Command("killdisconnectedtimer", "killdisconnectedtimer [seconds]: Set the time after which disconnect players' characters get automatically killed.", null));
+
             commands.Add(new Command("autorestart", "autorestart [true/false]: Enable or disable round auto-restart.", null));
 
             commands.Add(new Command("autorestartinterval", "autorestartinterval [seconds]: Set how long the server waits between rounds before automatically starting a new one. If set to 0, autorestart is disabled.", null));

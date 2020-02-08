@@ -198,7 +198,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (!free) continue;
+                if (!free) { continue; }
 
                 for (int i = 0; i < capacity; i++)
                 {
@@ -212,7 +212,8 @@ namespace Barotrauma
                         item.Equip(character);
                         placedInSlot = i;
                     }
-                }              
+                }
+                if (placedInSlot > -1) { break; }
             }
 
             return placedInSlot > -1;

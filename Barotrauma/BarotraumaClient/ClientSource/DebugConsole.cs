@@ -1733,21 +1733,15 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
-                    {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
                     NewMessage("Valid permissions are:", Color.White);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
                         NewMessage(" - " + permission.ToString(), Color.White);
                     }
-                    ShowQuestionPrompt("Permission to grant to client #" + id + "?", (perm) =>
+                    ShowQuestionPrompt("Permission to grant to client " + args[0] + "?", (perm) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("giveperm " + id + " " + perm);
-                    });
+                        GameMain.Client?.SendConsoleCommand("giveperm " + args[0] + " " + perm);
+                    }, args, 1);
                 }
             );
 
@@ -1757,22 +1751,16 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
-                    {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
                     NewMessage("Valid permissions are:", Color.White);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                     {
                         NewMessage(" - " + permission.ToString(), Color.White);
                     }
 
-                    ShowQuestionPrompt("Permission to revoke from client #" + id + "?", (perm) =>
+                    ShowQuestionPrompt("Permission to revoke from client " + args[0] + "?", (perm) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("revokeperm " + id + " " + perm);
-                    });
+                        GameMain.Client?.SendConsoleCommand("revokeperm " + args[0] + " " + perm);
+                    }, args, 1);
                 }
             );
 
@@ -1782,21 +1770,15 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
-                    {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
                     NewMessage("Valid ranks are:", Color.White);
                     foreach (PermissionPreset permissionPreset in PermissionPreset.List)
                     {
                         NewMessage(" - " + permissionPreset.Name, Color.White);
                     }
-                    ShowQuestionPrompt("Rank to grant to client #" + id + "?", (rank) =>
+                    ShowQuestionPrompt("Rank to grant to client " + args[0] + "?", (rank) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("giverank " + id + " " + rank);
-                    });
+                        GameMain.Client?.SendConsoleCommand("giverank " + args[0] + " " + rank);
+                    }, args, 1);
                 }
             );
 
@@ -1806,16 +1788,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
+                    ShowQuestionPrompt("Console command permissions to grant to client " + args[0] + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
-                    ShowQuestionPrompt("Console command permissions to grant to client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
-                    {
-                        GameMain.Client?.SendConsoleCommand("givecommandperm " + id + " " + commandNames);
-                    });
+                        GameMain.Client?.SendConsoleCommand("givecommandperm " + args[0] + " " + commandNames);
+                    }, args, 1);
                 }
             );
 
@@ -1825,16 +1801,10 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
+                    ShowQuestionPrompt("Console command permissions to revoke from client " + args[0] + "? You may enter multiple commands separated with a space.", (commandNames) =>
                     {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
-                    ShowQuestionPrompt("Console command permissions to revoke from client #" + id + "? You may enter multiple commands separated with a space.", (commandNames) =>
-                    {
-                        GameMain.Client?.SendConsoleCommand("revokecommandperm " + id + " " + commandNames);
-                    });
+                        GameMain.Client?.SendConsoleCommand("revokecommandperm " + args[0] + " " + commandNames);
+                    }, args, 1);
                 }
             );
 
@@ -1844,13 +1814,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    if (!int.TryParse(args[0], out int id))
-                    {
-                        ThrowError("\"" + id + "\" is not a valid client ID.");
-                        return;
-                    }
-
-                    GameMain.Client.SendConsoleCommand("showperm " + id);
+                    GameMain.Client.SendConsoleCommand("showperm " + args[0]);
                 }
             );
 

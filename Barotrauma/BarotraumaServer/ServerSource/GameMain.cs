@@ -333,10 +333,10 @@ namespace Barotrauma
                     //prevent spiral of death
                     Timing.Accumulator = Timing.Step;
                 }
-                Timing.TotalTime += elapsedTime;
                 prevTicks = currTicks;
                 while (Timing.Accumulator >= Timing.Step)
                 {
+                    Timing.TotalTime += Timing.Step;
                     DebugConsole.Update();
                     Screen.Selected?.Update((float)Timing.Step);
                     Server.Update((float)Timing.Step);

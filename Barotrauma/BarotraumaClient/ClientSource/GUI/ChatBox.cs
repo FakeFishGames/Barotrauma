@@ -288,10 +288,6 @@ namespace Barotrauma
         public void SetVisibility(bool visible)
         {
             GUIFrame.Parent.Visible = visible;
-            if (GameMain.GameSession?.CrewManager?.ReportButtonFrame != null)
-            {
-                GameMain.GameSession.CrewManager.ReportButtonFrame.Visible = visible;
-            }
         }
 
         private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)

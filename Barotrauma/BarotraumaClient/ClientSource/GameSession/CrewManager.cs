@@ -102,7 +102,7 @@ namespace Barotrauma
 
             crewArea = new GUIFrame(
                 new RectTransform(
-                    new Point(crewAreaWithButtons.Rect.Width, crewAreaWithButtons.Rect.Height - 3 * buttonHeight - 2 * HUDLayoutSettings.Padding),
+                    new Point(crewAreaWithButtons.Rect.Width, crewAreaWithButtons.Rect.Height - (int)(1.5f * buttonHeight) - 2 * HUDLayoutSettings.Padding),
                     crewAreaWithButtons.RectTransform,
                     Anchor.BottomLeft),
                 style: null,
@@ -111,39 +111,32 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var buttonSize = new Point((int)(79.0f / 126.0f * (2 * buttonHeight)), 2 * buttonHeight);
+            var buttonSize = new Point((int)(182.0f / 99.0f * buttonHeight), buttonHeight);
             var commandButton = new GUIButton(
                 new RectTransform(buttonSize, parent: crewAreaWithButtons.RectTransform),
-                style: null)
+                style: "CommandButton")
             {
+                ToolTip = TextManager.Get("inputtype.command"),
                 OnClicked = (button, userData) =>
                 {
                     ToggleCommandUI();
                     return true;
                 }
             };
-            new GUIImage(
-                new RectTransform(Vector2.One, commandButton.RectTransform),
-                new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(551, 1, 79, 126)),
-                scaleToFit: true)
-            {
-                Color = GUIColorSettings.InventorySlotColor * 0.8f,
-                HoverColor = GUIColorSettings.InventorySlotColor,
-                PressedColor = GUIColorSettings.InventorySlotColor,
-                SelectedColor = GUIColorSettings.InventorySlotColor * 0.8f,
-                ToolTip = TextManager.Get("inputtype.command")
-            };
 
-            var keybindText = new GUITextBlock(new RectTransform(Vector2.One, commandButton.RectTransform), "", font: GUI.SmallFont,
-                textAlignment: Alignment.TopLeft, color: GUI.Style.TextColorBright)
+            var keybindText = new GUITextBlock(new RectTransform(new Vector2(0.9f), commandButton.RectTransform, Anchor.Center),
+                "",
+                font: GUI.SmallFont,
+                textAlignment: Alignment.TopLeft,
+                textColor: GUI.Style.TextColorBright,
+                style: null)
             {
                 TextGetter = () =>
                 {
                     //hide the text if using a long non-default keybind
-                    string txt = GameMain.Config.KeyBindText(InputType.CrewOrders);
+                    string txt = GameMain.Config.KeyBindText(InputType.Command);
                     return txt.Length > 2 ? "" : txt;
                 },
-                HoverTextColor = GUI.Style.TextColorBright,
                 Padding = Vector4.One * 3,
                 CanBeFocused = false
             };
@@ -162,10 +155,10 @@ namespace Barotrauma
 
             toggleCrewButton = new GUIButton(
                 new RectTransform(
-                    new Point(buttonHeight),
+                    new Point(buttonSize.X, (int)(0.5f * buttonHeight)),
                     parent: crewAreaWithButtons.RectTransform)
                 {
-                    AbsoluteOffset = new Point(0, 2 * buttonHeight + HUDLayoutSettings.Padding)
+                    AbsoluteOffset = new Point(0, buttonHeight + HUDLayoutSettings.Padding)
                 },
                 style: "UIToggleButton")
             {
@@ -389,7 +382,7 @@ namespace Barotrauma
         private void AddCharacterToCrewList(Character character)
         {
             int width = crewList.Content.Rect.Width - HUDLayoutSettings.Padding;
-            int height = Math.Max(45, (int)((1.0f / 8.0f) * width));
+            int height = Math.Max(32, (int)((1.0f / 8.0f) * width));
             var background = new GUIImage(
                 new RectTransform(new Point(width, height), parent: crewList.Content.RectTransform, anchor: Anchor.TopRight),
                 crewMemberBackground,
@@ -435,11 +428,13 @@ namespace Barotrauma
             }
 
             var relativeWidth = 1.0f - 4.5f * iconRelativeSize - 5 * layoutGroup.RelativeSpacing;
+            var font = layoutGroup.Rect.Width < 150 ? GUI.SmallFont : GUI.Font;
             new GUITextBlock(
                 new RectTransform(
                     new Vector2(relativeWidth, 1.0f),
                     layoutGroup.RectTransform),
-                ToolBox.LimitString(character.Name, GUI.SubHeadingFont, (int)(relativeWidth * layoutGroup.Rect.Width)),
+                ToolBox.LimitString(character.Name, font, (int)(relativeWidth * layoutGroup.Rect.Width)),
+                font: font,
                 textColor: character.Info?.Job?.Prefab?.UIColor)
             {
                 CanBeFocused = false
@@ -651,12 +646,6 @@ namespace Barotrauma
         /// </summary>
         public void SetCharacterOrder(Character character, Order order, string option, Character orderGiver)
         {
-            if (character == null)
-            {
-                //can't issue an order if no characters are available
-                return;
-            }
-
             if (order != null && order.TargetAllCharacters)
             {
                 if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
@@ -675,6 +664,12 @@ namespace Barotrauma
             }
             else
             {
+                if (character == null)
+                {
+                    //can't issue an order if no characters are available
+                    return;
+                }
+
                 if (IsSinglePlayer)
                 {
                     character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
@@ -2289,7 +2284,10 @@ namespace Barotrauma
 
             if (canIssueOrders)
             {
-                ReportButtonFrame.Visible = true;
+                //report buttons are hidden when accessing another character's inventory
+                ReportButtonFrame.Visible = 
+                    Character.Controlled?.SelectedCharacter?.Inventory == null ||
+                    !Character.Controlled.SelectedCharacter.CanInventoryBeAccessed;
 
                 var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
                 if (reportButtonParent == null) { return; }

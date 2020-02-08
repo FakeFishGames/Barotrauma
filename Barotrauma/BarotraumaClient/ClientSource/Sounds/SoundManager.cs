@@ -106,6 +106,7 @@ namespace Barotrauma.Sounds
         {
             get
             {
+                if (Disabled) { return 0.0f; }
                 float aggregateAmplitude = 0.0f;
                 //NOTE: this is obviously not entirely accurate;
                 //It assumes a linear falloff model, and assumes that audio
@@ -228,6 +229,7 @@ namespace Barotrauma.Sounds
             {
                 DebugConsole.ThrowError("ALC device creation failed too many times!");
                 Disabled = true;
+                return;
             }
 
             int[] alcContextAttrs = new int[] { };

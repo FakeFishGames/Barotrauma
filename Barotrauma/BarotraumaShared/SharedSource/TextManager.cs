@@ -86,7 +86,7 @@ namespace Barotrauma
             HashSet<string> newLanguages = new HashSet<string>();
             Dictionary<string, List<TextPack>> newTextPacks = new Dictionary<string, List<TextPack>>();
 
-            var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text);
+            var textFiles = ContentPackage.GetFilesOfType(selectedContentPackages, ContentType.Text).ToList();
 
             foreach (ContentFile file in textFiles)
             {
@@ -131,13 +131,7 @@ namespace Barotrauma
             {
                 textPacks = newTextPacks;
                 availableLanguages = newLanguages;
-
-                string loadedLangsMsg = "Loaded languages: ";
-                foreach (string language in newLanguages)
-                {
-                    loadedLangsMsg += language + ", ";
-                }
-                DebugConsole.NewMessage(loadedLangsMsg.Substring(0,loadedLangsMsg.Length-2));
+                DebugConsole.NewMessage("Loaded languages: " + string.Join(", ", newLanguages));
             }
 
             Initialized = true;

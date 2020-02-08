@@ -757,21 +757,23 @@ namespace Barotrauma.Networking
             };
             tickBoxContainer.Padding *= 2.0f;
 
-            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
+            var allowFriendlyFire = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
             GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
 
-            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
+            var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
 
-            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform),
+            var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));
             GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);
 
-            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.05f), tickBoxContainer.Content.RectTransform), 
+            var voteKickBox = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
                 TextManager.Get("ServerSettingsAllowVoteKick"));
             GetPropertyData("AllowVoteKick").AssignGUIComponent(voteKickBox);
+
+            GUITextBlock.AutoScaleAndNormalize(tickBoxContainer.Content.Children.Select(c => ((GUITickBox)c).TextBlock));
 
             tickBoxContainer.RectTransform.MinSize = new Point(0, (int)(tickBoxContainer.Content.Children.First().Rect.Height * 2.0f + tickBoxContainer.Padding.Y + tickBoxContainer.Padding.W));
 
@@ -913,9 +915,12 @@ namespace Barotrauma.Networking
                 ToolTip = TextManager.Get(labelTag)
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform),
-                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont);
-            var input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
+                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont)
+            {
+                AutoScaleHorizontal = true
+            };
+            var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max

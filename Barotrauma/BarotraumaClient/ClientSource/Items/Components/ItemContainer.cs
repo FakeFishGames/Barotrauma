@@ -13,6 +13,8 @@ namespace Barotrauma.Items.Components
 
         private GUICustomComponent guiCustomComponent;
 
+        private Point prevResolution;
+
         public Sprite InventoryTopSprite
         {
             get { return inventoryTopSprite; }
@@ -118,7 +120,7 @@ namespace Barotrauma.Items.Components
             {
                 //if a GUIFrame has been defined, draw the inventory inside it
                 CreateGUI();
-                GameMain.Instance.OnResolutionChanged += () => { GuiFrame.ClearChildren(); CreateGUI(); };
+                prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             }
         }
 
@@ -165,6 +167,16 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
+            
+            if ((prevResolution.X > 0 && prevResolution.Y > 0) &&
+                (prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight))
+            {
+                GuiFrame.ClearChildren(); 
+                CreateGUI();
+
+                prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            }
+
             DrawContainedItems(spriteBatch, itemDepth);
         }
 

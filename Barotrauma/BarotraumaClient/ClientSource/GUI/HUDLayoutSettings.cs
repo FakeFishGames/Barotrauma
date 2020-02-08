@@ -143,7 +143,7 @@ namespace Barotrauma
 
             var crewAreaY = AfflictionAreaLeft.Bottom + Padding;
             var crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
-            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 400), crewAreaHeight);
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 150), crewAreaHeight);
 
             InventoryAreaLower = new Rectangle(Padding, inventoryTopY, GameMain.GraphicsWidth - Padding * 2, GameMain.GraphicsHeight - inventoryTopY);
 

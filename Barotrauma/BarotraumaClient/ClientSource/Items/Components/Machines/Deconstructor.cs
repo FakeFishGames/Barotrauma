@@ -23,12 +23,14 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(XElement element)
         {
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += () =>
-            {
-                GuiFrame.ClearChildren();
-                CreateGUI();
-                OnItemLoadedProjSpecific();
-            };
+            GameMain.Instance.OnResolutionChanged += RecreateGUI;
+        }
+
+        private void RecreateGUI()
+        {
+            GuiFrame.ClearChildren();
+            CreateGUI();
+            OnItemLoadedProjSpecific();
         }
 
         private void CreateGUI()
@@ -167,6 +169,11 @@ namespace Barotrauma.Items.Components
         {
             SetActive(msg.ReadBoolean());
             progressTimer = msg.ReadSingle();
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
     }
 }

@@ -271,7 +271,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            var timedOutClients = clients.FindAll(c => c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
+            var timedOutClients = clients.FindAll(c => c.Connection != GameMain.Server.OwnerConnection && c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             foreach (Client timedOutClient in timedOutClients)
             {
                 GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);

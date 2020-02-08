@@ -250,11 +250,13 @@ namespace Barotrauma
         
         private static Client FindClient(string arg)
         {
-            int.TryParse(arg, out int id);
-            var client = GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+            Client client = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name, arg));
+            if (int.TryParse(arg, out int id))
+            {
+                client ??= GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+            }
             client ??= GameMain.Server.ConnectedClients.Find(c => c.EndpointMatches(arg));
             client ??= GameMain.Server.ConnectedClients.Find(c => c.SteamID == Steam.SteamManager.SteamIDStringToUInt64(arg));
-            client ??= GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name, arg));
             return client;
         }
 
@@ -293,6 +295,20 @@ namespace Barotrauma
                 else
                 {
                     NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
+                }
+            });
+
+            AssignOnExecute("killdisconnectedtimer", (string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                float seconds = GameMain.Server.ServerSettings.KillDisconnectedTime;
+                if (float.TryParse(args[0], out seconds))
+                {
+                    NewMessage("Set kill disconnected timer to " + seconds + " seconds", Color.White);
+                }
+                else
+                {
+                    NewMessage("\"" + args[0] + "\" is not a valid duration.", Color.White);
                 }
             });
 
@@ -457,6 +473,11 @@ namespace Barotrauma
                     ThrowError("Client \"" + args[0] + "\" not found.");
                     return;
                 }
+                if (client.Connection == GameMain.Server.OwnerConnection)
+                {
+                    NewMessage("Cannot revoke permissions from the server owner!", Color.Red);
+                    return;
+                }
 
                 NewMessage("Valid permissions are:", Color.White);
                 foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
@@ -490,6 +511,11 @@ namespace Barotrauma
                 if (client == null)
                 {
                     ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                if (client.Connection == GameMain.Server.OwnerConnection)
+                {
+                    NewMessage("Cannot modify the rank of the server owner!", Color.Red);
                     return;
                 }
 
@@ -568,6 +594,11 @@ namespace Barotrauma
                 if (client == null)
                 {
                     ThrowError("Client \"" + args[0] + "\" not found.");
+                    return;
+                }
+                if (client.Connection == GameMain.Server.OwnerConnection)
+                {
+                    NewMessage("Cannot revoke command permissions from the server owner!", Color.Red);
                     return;
                 }
 
@@ -1609,6 +1640,11 @@ namespace Barotrauma
                         ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
+                    if (client.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        GameMain.Server.SendConsoleMessage("Cannot revoke permissions from the server owner!", senderClient);
+                        return;
+                    }
 
                     string perm = string.Join("", args.Skip(1));
 
@@ -1637,6 +1673,11 @@ namespace Barotrauma
                         ThrowError("Client \"" + args[0] + "\" not found.");
                         return;
                     }
+                    if (client.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        GameMain.Server.SendConsoleMessage("Cannot modify the rank of the server owner!", senderClient);
+                        return;
+                    }
 
                     string rank = string.Join("", args.Skip(1));
                     PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
@@ -1663,6 +1704,11 @@ namespace Barotrauma
                     if (client == null)
                     {
                         ThrowError("Client \"" + args[0] + "\" not found.");
+                        return;
+                    }
+                    if (client.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        GameMain.Server.SendConsoleMessage("Cannot modify the command permissions of the server owner!", senderClient);
                         return;
                     }
 
@@ -1700,6 +1746,11 @@ namespace Barotrauma
                     if (client == null)
                     {
                         ThrowError("Client \"" + args[0] + "\" not found.");
+                        return;
+                    }
+                    if (client.Connection == GameMain.Server.OwnerConnection)
+                    {
+                        GameMain.Server.SendConsoleMessage("Cannot revoke command permissions from the server owner!", senderClient);
                         return;
                     }
 
@@ -1874,7 +1925,7 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) return;
             if (string.IsNullOrWhiteSpace(command)) return;
-            if (!client.HasPermission(ClientPermissions.ConsoleCommands))
+            if (!client.HasPermission(ClientPermissions.ConsoleCommands) && client.Connection != GameMain.Server.OwnerConnection)
             {
                 GameMain.Server.SendConsoleMessage("You are not permitted to use console commands!", client);
                 GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use console commands.", ServerLog.MessageType.ConsoleUsage);
@@ -1883,7 +1934,7 @@ namespace Barotrauma
 
             string[] splitCommand = SplitCommand(command);
             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
-            if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand))
+            if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand) && client.Connection != GameMain.Server.OwnerConnection)
             {
                 GameMain.Server.SendConsoleMessage("You are not permitted to use the command\"" + matchingCommand.names[0] + "\"!", client);
                 GameServer.Log(client.Name + " attempted to execute the console command \"" + command + "\" without a permission to use the command.", ServerLog.MessageType.ConsoleUsage);

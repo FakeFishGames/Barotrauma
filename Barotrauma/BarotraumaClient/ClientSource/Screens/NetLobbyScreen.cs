@@ -408,10 +408,11 @@ namespace Barotrauma
                 Visible = false
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"))
+            var disconnectButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), bottomBarLeft.RectTransform), TextManager.Get("disconnect"))
             {
                 OnClicked = (bt, userdata) => { GameMain.QuitToMainMenu(save: false, showVerificationPrompt: true); return true; }
             };
+            disconnectButton.TextBlock.AutoScaleHorizontal = true;
 
             // file transfers  ------------------------------------------------------------
             FileTransferFrame = new GUIFrame(new RectTransform(Vector2.One, bottomBarLeft.RectTransform), style: "TextFrame");
@@ -637,11 +638,11 @@ namespace Barotrauma
 
             // Spectate button
             spectateButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
-                TextManager.Get("SpectateButton"), style: "GUIButtonLarge");
+                TextManager.Get("SpectateButton"));
 
             // Start button
             StartButton = new GUIButton(new RectTransform(Vector2.One, roundControlsHolder.RectTransform),
-                TextManager.Get("StartGameButton"), style: "GUIButtonLarge")
+                TextManager.Get("StartGameButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -1013,9 +1014,9 @@ namespace Barotrauma
                 RelativeSpacing = 0.025f
             };
 
-            var traitorsSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
+            var traitorsSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), traitorsSettingHolder.RectTransform), TextManager.Get("Traitors"));
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), traitorsSettingHolder.RectTransform), TextManager.Get("Traitors"), wrap: true);
 
             var traitorProbContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), traitorsSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             traitorProbabilityButtons = new GUIButton[2];
@@ -1045,9 +1046,9 @@ namespace Barotrauma
 
             //bot count ------------------------------------------------------------------
 
-            var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
+            var botCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botCountSettingHolder.RectTransform), TextManager.Get("BotCount"));
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), botCountSettingHolder.RectTransform), TextManager.Get("BotCount"), wrap: true);
             var botCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             botCountButtons = new GUIButton[2];
             botCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botCountContainer.RectTransform), style: "GUIButtonToggleLeft")
@@ -1071,9 +1072,9 @@ namespace Barotrauma
 
             clientDisabledElements.AddRange(botCountButtons);
 
-            var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true) { Stretch = true };
+            var botSpawnModeSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"), wrap: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), botSpawnModeSettingHolder.RectTransform), TextManager.Get("BotSpawnMode"), wrap: true);
             var botSpawnModeContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), botSpawnModeSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
             botSpawnModeButtons = new GUIButton[2];
             botSpawnModeButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), botSpawnModeContainer.RectTransform), style: "GUIButtonToggleLeft")
@@ -1097,9 +1098,9 @@ namespace Barotrauma
 
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             int spacingElementCount = 0;
-            for (int i = 1; i < settingsElements.Count; i++)
+            for (int i = 0; i < settingsElements.Count; i++)
             {
-                settingsElements[i].RectTransform.MinSize = new Point(0, (int)(20 * GUI.Scale));
+                settingsElements[i].RectTransform.MinSize = new Point(0, Math.Max(settingsElements[i].RectTransform.Children.Max(c => c.Rect.Height), (int)(20 * GUI.Scale)));
                 if (settingsElements[i] is GUITextBlock)
                 {
                     var spacing = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), settingsContent.RectTransform), style: null);
@@ -1495,14 +1496,13 @@ namespace Barotrauma
             };
 
             string name =
-                TextManager.Get("jobname." + jobPrefab.Identifier + (variant + 1), returnNull: true) ??
-                jobPrefab.Name;
+                TextManager.Get("jobname." + jobPrefab.Identifier + (variant + 1), returnNull: true, fallBackTag: "jobname." + jobPrefab.Identifier) ?? 
+                "";
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), name, font: GUI.SubHeadingFont);
                        
             string description = 
-                TextManager.Get("jobdescription." + jobPrefab.Identifier + (variant + 1), returnNull: true) ??
-                TextManager.Get("jobdescription." + jobPrefab.Identifier, returnNull: true) ??
+                TextManager.Get("jobdescription." + jobPrefab.Identifier + (variant + 1), returnNull: true, fallBackTag: "jobdescription." + jobPrefab.Identifier) ??
                 "";
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), description, wrap: true, font: GUI.SmallFont);
@@ -2326,7 +2326,7 @@ namespace Barotrauma
 
                 Rectangle slotRect = new Rectangle(slotPos.ToPoint(), slotSize);
                 Inventory.SlotSpriteSmall.Draw(spriteBatch, slotPos,
-                    scale: slotSize.X / (float)Inventory.SlotSpriteSmall.SourceRect.Width, 
+                    scale: slotSize.X / (float)Inventory.SlotSpriteSmall.SourceRect.Width,
                     color: slotRect.Contains(PlayerInput.MousePosition) ? Color.White : Color.White * 0.6f);
 
                 Sprite icon = itemPrefab.InventoryIcon ?? itemPrefab.sprite;
@@ -2342,7 +2342,7 @@ namespace Barotrauma
 
                 if (slotRect.Contains(PlayerInput.MousePosition))
                 {
-                    GUIComponent.DrawToolTip(spriteBatch, itemPrefab.Name+'\n'+itemPrefab.Description, slotRect);
+                    GUIComponent.DrawToolTip(spriteBatch, itemPrefab.Name + '\n' + itemPrefab.Description, slotRect);
                 }
                 i++;
             }
@@ -2784,9 +2784,10 @@ namespace Barotrauma
             var textBlock = new GUITextBlock(
               innerFrame.CountChildren == 0 ?
                   new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center) :
-                  new RectTransform(new Vector2(selectedByPlayer ? 0.75f : 0.95f, 0.25f), parent.RectTransform, Anchor.TopCenter),
-              jobPrefab.Name, wrap: true, textAlignment: Alignment.Center)
+                  new RectTransform(new Vector2(selectedByPlayer ? 0.65f : 0.95f, 0.3f), parent.RectTransform, Anchor.TopCenter),
+              jobPrefab.Name, wrap: true, textAlignment: Alignment.TopCenter)
             {
+                Padding = Vector4.Zero,
                 HoverColor = Color.Transparent,
                 SelectedColor = Color.Transparent,
                 TextColor = jobPrefab.UIColor,
@@ -3109,7 +3110,6 @@ namespace Barotrauma
                 (variantIndex + 1).ToString(), style: "JobVariantButton")
             {
                 Selected = jobPrefab.Second == variantIndex,
-                //ToolTip = TextManager.Get("jobdescription." + jobPrefab.First.Identifier + (variantIndex + 1), returnNull: true) ?? "",
                 UserData = new Pair<JobPrefab, int>(jobPrefab.First, variantIndex),
             };
 

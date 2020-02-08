@@ -1151,7 +1151,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (item != null && Character.Controlled.HasEquippedItem(item))
+                    if (item != null && Character.Controlled != null && Character.Controlled.HasEquippedItem(item))
                     {
                         slotColor = slot.IsHighlighted ? GUIColorSettings.InventorySlotEquippedColor : GUIColorSettings.InventorySlotEquippedColor * 0.8f;
                     }

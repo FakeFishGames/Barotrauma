@@ -222,5 +222,10 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        protected override void RemoveComponentSpecific()
+        {
+            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
+        }
     }
 }

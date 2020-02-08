@@ -226,7 +226,10 @@ namespace Barotrauma
                 if (openHealthWindow != null)
                 {
                     openHealthWindow.characterName.Text = value.Character.Name;
-                    Character.Controlled.SelectedConstruction = null;
+                    if (Character.Controlled.SelectedConstruction != null && Character.Controlled.SelectedConstruction.GetComponent<Ladder>() == null)
+                    {
+                        Character.Controlled.SelectedConstruction = null;
+                    }
                 }
             }
         }

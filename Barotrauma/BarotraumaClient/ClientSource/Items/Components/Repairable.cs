@@ -79,11 +79,11 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.02f
             };
 
-            progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.7f, 1.0f), progressBarHolder.RectTransform),
+            progressBar = new GUIProgressBar(new RectTransform(new Vector2(0.6f, 1.0f), progressBarHolder.RectTransform),
                 color: GUI.Style.Green, barSize: 0.0f, style: "DeviceProgressBar");
             repairButtonText = TextManager.Get("RepairButton");
             repairingText = TextManager.Get("Repairing");
-            RepairButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
+            RepairButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
             {
                 OnClicked = (btn, obj) =>
                 {
@@ -92,6 +92,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+            RepairButton.TextBlock.AutoScaleHorizontal = true;
             progressBarHolder.RectTransform.MinSize = RepairButton.RectTransform.MinSize;
             RepairButton.RectTransform.MinSize = new Point((int)(RepairButton.TextBlock.TextSize.X * 1.2f), RepairButton.RectTransform.MinSize.Y);
 

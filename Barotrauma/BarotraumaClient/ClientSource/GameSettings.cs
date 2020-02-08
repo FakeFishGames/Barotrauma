@@ -1062,12 +1062,6 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
-            GameMain.Instance.OnResolutionChanged += () =>
-            {
-                foreach (GUILayoutGroup inputContainer in inputColumnLeft.Children) { inputContainer.Recalculate(); }
-                foreach (GUILayoutGroup inputContainer in inputColumnRight.Children) { inputContainer.Recalculate(); }
-            };
-
             GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
 
             var resetControlsArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), style: null);

@@ -752,7 +752,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(30.0f, true)]
+        [Serialize(120.0f, true)]
         public float KillDisconnectedTime
         {
             get;

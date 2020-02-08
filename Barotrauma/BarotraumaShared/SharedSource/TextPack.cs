@@ -16,7 +16,7 @@ namespace Barotrauma
         /// </summary>
         public readonly string TranslatedName;
 
-        private Dictionary<string, List<string>> texts;
+        private readonly Dictionary<string, List<string>> texts;
         
         public readonly string FilePath;
 

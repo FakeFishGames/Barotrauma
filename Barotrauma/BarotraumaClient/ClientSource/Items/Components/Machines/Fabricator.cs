@@ -42,12 +42,14 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific()
         {
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += () =>
-            {
-                GuiFrame.ClearChildren();
-                CreateGUI();
-                OnItemLoadedProjSpecific();
-            };
+            GameMain.Instance.OnResolutionChanged += RecreateGUI;
+        }
+
+        private void RecreateGUI()
+        {
+            GuiFrame.ClearChildren();
+            CreateGUI();
+            OnItemLoadedProjSpecific();
         }
 
         private void CreateGUI()
@@ -599,6 +601,11 @@ namespace Barotrauma.Items.Components
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);
             }
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
     }
 }

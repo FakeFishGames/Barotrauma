@@ -804,6 +804,8 @@ namespace Barotrauma.Items.Components
             maintainPosIndicator?.Remove();
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
+
+            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
