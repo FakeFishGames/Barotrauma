@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         public GUIButton CreateInfoFrame(int variant)
         {
-            int width = 500, height = 450;
+            int width = 500, height = 400;
 
             GUIButton backFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), backFrame.RectTransform, Anchor.Center));
@@ -32,7 +32,7 @@ namespace Barotrauma
                     font: GUI.SmallFont);
             }
 
-            if (!ItemIdentifiers.TryGetValue(variant, out var itemIdentifiers)) { return backFrame; }
+            /*if (!ItemIdentifiers.TryGetValue(variant, out var itemIdentifiers)) { return backFrame; }
             var itemContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform, Anchor.TopRight)
             { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) })
             {
@@ -47,7 +47,7 @@ namespace Barotrauma
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), itemContainer.RectTransform),
                     "   - " + (count == 1 ? itemPrefab.Name : itemPrefab.Name + " x" + count),
                     font: GUI.SmallFont);
-            }
+            }*/
 
             return backFrame;
         }

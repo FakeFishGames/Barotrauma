@@ -723,6 +723,8 @@ namespace FarseerPhysics.Dynamics
         public void SetTransformIgnoreContacts(ref Vector2 position, float angle)
         {
             Debug.Assert(World != null);
+            if (World == null)
+                throw new InvalidOperationException("Could not set the transform of a body (World was null - has the body been removed?)");
             if (World.IsLocked)
                 throw new WorldLockedException("Cannot modify the transform of a body when the World is locked.");
 

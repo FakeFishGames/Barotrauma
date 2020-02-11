@@ -91,7 +91,10 @@ namespace Barotrauma.Items.Components
                         }
 
                         existingWire.RemoveConnection(item);
-                        item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Add(existingWire);
+                        if (existingWire.Item.ParentInventory == null)
+                        {
+                            item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Add(existingWire);
+                        }
 
                         if (!wires.Any(w => w.Contains(existingWire)))
                         {
@@ -103,8 +106,14 @@ namespace Barotrauma.Items.Components
                             GameServer.Log(c.Character.LogName + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Wiring);
 
-                            if (!clientSideDisconnectedWires.Contains(existingWire))
+                            if (existingWire.Item.ParentInventory != null)
                             {
+                                //in an inventory and not connected to anything -> the wire cannot have any nodes
+                                existingWire.ClearConnections();
+                            }
+                            else if (!clientSideDisconnectedWires.Contains(existingWire))
+                            {
+                                //not in an inventory, not connected to anything, not hanging loose from any panel -> must be dropped
                                 existingWire.Item.Drop(c.Character);
                             }
                         }
@@ -145,7 +154,8 @@ namespace Barotrauma.Items.Components
             {
                 if (disconnectedWire.Connections[0] == null && 
                     disconnectedWire.Connections[1] == null &&
-                    !clientSideDisconnectedWires.Contains(disconnectedWire))
+                    !clientSideDisconnectedWires.Contains(disconnectedWire) &&
+                    disconnectedWire.Item.ParentInventory == null)
                 {
                     disconnectedWire.Item.Drop(c.Character);
                     GameServer.Log(c.Character.LogName + " dropped " + disconnectedWire.Name, ServerLog.MessageType.Inventory);

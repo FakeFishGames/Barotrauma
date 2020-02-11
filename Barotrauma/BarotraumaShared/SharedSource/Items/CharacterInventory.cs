@@ -16,7 +16,6 @@ namespace Barotrauma
 
     partial class CharacterInventory : Inventory
     {
-        private const int hotkeyCount = 5;
         private Character character;
 
         public InvSlotType[] SlotTypes
@@ -53,7 +52,16 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Error in the inventory config of \"" + character.SpeciesName + "\" - " + slotTypeNames[i] + " is not a valid inventory slot type.");
                 }
-                SlotTypes[i] = parsedSlotType;            
+                SlotTypes[i] = parsedSlotType;
+                switch (SlotTypes[i])
+                {
+                    //case InvSlotType.Head:
+                    //case InvSlotType.OuterClothes:
+                    case InvSlotType.LeftHand:
+                    case InvSlotType.RightHand:
+                        hideEmptySlot[i] = true;
+                        break;
+                }               
             }
             
             InitProjSpecific(element);
@@ -122,25 +130,25 @@ namespace Barotrauma
         /// <summary>
         /// If there is no room in the generic inventory (InvSlotType.Any), check if the item can be auto-equipped into its respective limbslot
         /// </summary>
-        public bool TryPutItemWithAutoEquipCheck(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool preferNonHotkeys = false)
+        public bool TryPutItemWithAutoEquipCheck(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             // Does not auto-equip the item if specified and no suitable any slot found (for example handcuffs are not auto-equipped)
             if (item.AllowedSlots.Contains(InvSlotType.Any))
             {
                 var wearable = item.GetComponent<Wearable>();
-                if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false, preferNonHotkeys) == -1)
+                if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false) == -1)
                 {
                     return false;
                 }
             }
 
-            return TryPutItem(item, user, allowedSlots, createNetworkEvent, preferNonHotkeys);
+            return TryPutItem(item, user, allowedSlots, createNetworkEvent);
         }
 
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool preferNonHotkeys = false)
+        public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             if (allowedSlots == null || !allowedSlots.Any()) return false;
 
@@ -164,7 +172,7 @@ namespace Barotrauma
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
             {
-                int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot, preferNonHotkeys);
+                int freeIndex = CheckIfAnySlotAvailable(item, inWrongSlot);
                 if (freeIndex > -1)
                 {
                     PutItem(item, freeIndex, user, true, createNetworkEvent);
@@ -207,7 +215,12 @@ namespace Barotrauma
 #if CLIENT
                         if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
 #endif
-                        bool removeFromOtherSlots = item.ParentInventory != this || (placedInSlot == -1 && inWrongSlot);
+                        bool removeFromOtherSlots = item.ParentInventory != this;
+                        if (placedInSlot == -1 && inWrongSlot)
+                        {
+                            if (!hideEmptySlot[i] || SlotTypes[currentSlot] != InvSlotType.Any) removeFromOtherSlots = true;
+                        }
+
                         PutItem(item, i, user, removeFromOtherSlots, createNetworkEvent);
                         item.Equip(character);
                         placedInSlot = i;
@@ -219,19 +232,16 @@ namespace Barotrauma
             return placedInSlot > -1;
         }
 
-        public int CheckIfAnySlotAvailable(Item item, bool inWrongSlot, bool preferNonHotkeys)
+        public int CheckIfAnySlotAvailable(Item item, bool inWrongSlot)
         {
-            for (int i = 0; i < capacity; i++)
-            {
-                if (SlotTypes[i] != InvSlotType.Any) continue;
-                if (Items[i] == item)
+                for (int i = 0; i < capacity; i++)
                 {
-                    return i;
+                    if (SlotTypes[i] != InvSlotType.Any) continue;
+                    if (Items[i] == item)
+                    {
+                        return i;
+                    }
                 }
-            }
-
-            if (!preferNonHotkeys)
-            {
                 for (int i = 0; i < capacity; i++)
                 {
                     if (SlotTypes[i] != InvSlotType.Any) continue;
@@ -246,45 +256,11 @@ namespace Barotrauma
 
                     return i;
                 }
-            }
-            else
-            {
-                int hotkeysCounted = 0;
-                // First go through non-hotkeyed slots
-                for (int i = 0; i < capacity; i++)
-                {
-                    if (SlotTypes[i] != InvSlotType.Any) continue;
-                    hotkeysCounted++;
-
-                    if (hotkeysCounted <= hotkeyCount) continue;
-
-                    if (inWrongSlot)
-                    {
-                        if (Items[i] != item && Items[i] != null) continue;
-                    }
-                    else
-                    {
-                        if (Items[i] != null) continue;
-                    }
-
-#if CLIENT
-                    if (!inventoryOpen)
-                    {
-                        ToggleInventory();
-                    }
-#endif
-
-                    return i;
-                }
-
-                // Then redo with no preference
-                return CheckIfAnySlotAvailable(item, inWrongSlot, false);
-            }
 
             return -1;
         }
 
-        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool avoidHotkeys = false)
+        public override bool TryPutItem(Item item, int index, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             if (index < 0 || index >= Items.Length)
             {

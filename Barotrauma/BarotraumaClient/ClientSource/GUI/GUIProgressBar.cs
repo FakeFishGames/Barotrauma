@@ -1,16 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
     public class GUIProgressBar : GUIComponent
     {
         private bool isHorizontal;
-
-        private GUIFrame frame, slider;
+        private readonly GUIFrame frame, slider;
         private float barSize;
-        private bool showFrame;
+        private readonly bool showFrame;
                 
         public delegate float ProgressGetterHandler();
         public ProgressGetterHandler ProgressGetter;
@@ -55,6 +55,45 @@ namespace Barotrauma
             Enabled = true;
         }
 
+        /// <summary>
+        /// Get the area the slider should be drawn inside
+        /// </summary>
+        /// <param name="fillAmount">0 = empty, 1 = full</param>
+        public Rectangle GetSliderRect(float fillAmount)
+        {
+            Rectangle sliderArea = new Rectangle(
+                frame.Rect.X + (int)style.Padding.X,
+                frame.Rect.Y + (int)style.Padding.Y,
+                (int)(frame.Rect.Width - style.Padding.X - style.Padding.Z),
+                (int)(frame.Rect.Height - style.Padding.Y - style.Padding.W));
+
+            Vector4 sliceBorderSizes = Vector4.Zero;
+            if (slider.sprites.ContainsKey(slider.State) && (slider.sprites[slider.State].First()?.Slice ?? false))
+            {
+                var slices = slider.sprites[slider.State].First().Slices;
+                sliceBorderSizes = new Vector4(slices[0].Width, slices[0].Height, slices[8].Width, slices[8].Height);
+                sliceBorderSizes *= slider.sprites[slider.State].First().GetSliceBorderScale(sliderArea.Size);
+            }
+
+            Rectangle sliderRect = IsHorizontal ?
+                new Rectangle(
+                    sliderArea.X + (int)sliceBorderSizes.X,
+                    sliderArea.Y,
+                    (int)((sliderArea.Width - sliceBorderSizes.X - sliceBorderSizes.Z) * fillAmount),
+                    sliderArea.Height)
+                :
+                new Rectangle(
+                    sliderArea.X,
+                    (int)(sliderArea.Bottom - (sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount - sliceBorderSizes.W),
+                    sliderArea.Width,
+                    (int)((sliderArea.Height - sliceBorderSizes.Y - sliceBorderSizes.W) * fillAmount));
+
+            sliderRect.Width = Math.Max(sliderRect.Width, 1);
+            sliderRect.Height = Math.Max(sliderRect.Height, 1);
+
+            return sliderRect;
+        }
+
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }
@@ -75,14 +114,7 @@ namespace Barotrauma
                 }
             }
 
-            Rectangle sliderRect = new Rectangle(
-                    frame.Rect.X + (int)style.Padding.X,
-                    (int)(frame.Rect.Y + (int)style.Padding.Y + (isHorizontal ? 0 : frame.Rect.Height * (1.0f - barSize))),
-                    isHorizontal ? (int)((frame.Rect.Width - style.Padding.X - style.Padding.Z) * barSize) : frame.Rect.Width,
-                    isHorizontal ? (int)(frame.Rect.Height - style.Padding.Y - style.Padding.W) : (int)(frame.Rect.Height * barSize));
-
-            sliderRect.Width = Math.Max(sliderRect.Width, 1);
-            sliderRect.Height = Math.Max(sliderRect.Height, 1);
+            var sliderRect = GetSliderRect(barSize);
 
             slider.RectTransform.AbsoluteOffset = new Point((int)style.Padding.X, (int)style.Padding.Y);
             slider.RectTransform.MaxSize = new Point(

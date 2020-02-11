@@ -78,8 +78,12 @@ namespace Barotrauma
                 if (frozen == value) return;
 
                 frozen = value;
-                
-                Collider.PhysEnabled = !frozen;
+
+                Collider.FarseerBody.LinearDamping = frozen ? (1.5f / (float)Timing.Step) : 0.0f;
+                Collider.FarseerBody.AngularDamping = frozen ? (1.5f / (float)Timing.Step) : 0.0f;
+                Collider.FarseerBody.IgnoreGravity = frozen;
+
+                //Collider.PhysEnabled = !frozen;
                 if (frozen && MainLimb != null) MainLimb.PullJointWorldAnchorB = MainLimb.SimPosition;                
             }
         }

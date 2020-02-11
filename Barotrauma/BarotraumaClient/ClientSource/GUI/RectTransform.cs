@@ -52,9 +52,9 @@ namespace Barotrauma
                 {
                     parent.children.Add(this);
                     RecalculateAll(false, true, true);
-                    ParentChanged?.Invoke(parent);
                     Parent.ChildrenChanged?.Invoke(this);
                 }
+                ParentChanged?.Invoke(parent);
             }
         }
 
@@ -512,7 +512,7 @@ namespace Barotrauma
             }
         }
 
-        private bool RemoveFromHierarchy(bool displayErrors = true, bool recalculate = true)
+        private bool RemoveFromHierarchy(bool displayErrors = true)
         {
             if (Parent == null)
             {

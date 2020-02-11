@@ -56,7 +56,7 @@ namespace Barotrauma
             get { return activeEvents; }
         }
         
-        public EventManager(GameSession session)
+        public EventManager()
         {
             isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
         }
@@ -70,21 +70,9 @@ namespace Barotrauma
             pendingEventSets.Clear();
             selectedEvents.Clear();
 
-            var suitableSettings = EventManagerSettings.List.FindAll(s =>
-                level.Difficulty >= s.MinLevelDifficulty &&
-                level.Difficulty <= s.MaxLevelDifficulty);
-
-            if (suitableSettings.Count == 0)
-            {
-                DebugConsole.ThrowError("No suitable event manager settings found for the selected level (difficulty " + level.Difficulty + ")");
-                settings = EventManagerSettings.List[Rand.Int(EventManagerSettings.List.Count, Rand.RandSync.Server)];
-            }
-            else
-            {
-                settings = suitableSettings[Rand.Int(suitableSettings.Count, Rand.RandSync.Server)];
-            }
-
             this.level = level;
+            SelectSettings();
+
             var initialEventSet = SelectRandomEvents(ScriptedEventSet.List);
             if (initialEventSet != null)
             {
@@ -100,6 +88,32 @@ namespace Barotrauma
             currentIntensity = targetIntensity;
             eventThreshold = settings.DefaultEventThreshold;
             eventCoolDown = 0.0f;
+        }
+
+        private void SelectSettings()
+        {
+            if (EventManagerSettings.List.Count == 0)
+            {
+                throw new InvalidOperationException("Could not select EventManager settings (no settings loaded).");
+            }
+            if (level == null)
+            {
+                throw new InvalidOperationException("Could not select EventManager settings (level not set).");
+            }
+
+            var suitableSettings = EventManagerSettings.List.FindAll(s =>
+                level.Difficulty >= s.MinLevelDifficulty &&
+                level.Difficulty <= s.MaxLevelDifficulty);
+
+            if (suitableSettings.Count == 0)
+            {
+                DebugConsole.ThrowError("No suitable event manager settings found for the selected level (difficulty " + level.Difficulty + ")");
+                settings = EventManagerSettings.List[Rand.Int(EventManagerSettings.List.Count, Rand.RandSync.Server)];
+            }
+            else
+            {
+                settings = suitableSettings[Rand.Int(suitableSettings.Count, Rand.RandSync.Server)];
+            }
         }
 
         public IEnumerable<ContentFile> GetFilesToPreload()
@@ -309,6 +323,18 @@ namespace Barotrauma
             if (isClient) { return; }
 
             roundDuration += deltaTime;
+
+            if (settings == null)
+            {
+                DebugConsole.ThrowError("Event settings not set before updating EventManager. Attempting to select...");
+                SelectSettings();
+                if (settings == null)
+                {
+                    DebugConsole.ThrowError("Could not select EventManager settings. Disabling EventManager for the round...");
+                    Enabled = false;
+                    return;
+                }
+            }
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
             if (eventCoolDown > 0.0f)

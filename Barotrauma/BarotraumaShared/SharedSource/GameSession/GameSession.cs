@@ -91,7 +91,7 @@ namespace Barotrauma
             Submarine.MainSub = submarine;
             this.Submarine = submarine;
             GameMain.GameSession = this;
-            EventManager = new EventManager(this);
+            EventManager = new EventManager();
             this.SavePath = savePath;
         }
 

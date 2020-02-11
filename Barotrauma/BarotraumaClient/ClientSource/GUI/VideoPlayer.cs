@@ -176,10 +176,10 @@ namespace Barotrauma
 
             background.RectTransform.NonScaledSize = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
-            videoFrame.RectTransform.NonScaledSize += scaledVideoResolution + new Point(scaledBorderSize, scaledBorderSize);
-            videoView.RectTransform.NonScaledSize += scaledVideoResolution;
+            videoFrame.RectTransform.NonScaledSize = scaledVideoResolution + new Point(scaledBorderSize, scaledBorderSize);
+            videoView.RectTransform.NonScaledSize = scaledVideoResolution;
 
-            title.RectTransform.NonScaledSize += new Point(scaledTextWidth, scaledTitleHeight);
+            title.RectTransform.NonScaledSize = new Point(scaledTextWidth, scaledTitleHeight);
             title.RectTransform.AbsoluteOffset = new Point((int)(5 * GUI.Scale), (int)(10 * GUI.Scale));
 
             if (textSettings != null && !string.IsNullOrEmpty(textSettings.Text))
@@ -187,7 +187,7 @@ namespace Barotrauma
                 textSettings.Text = ToolBox.WrapText(textSettings.Text, scaledTextWidth, GUI.Font);
                 int wrappedHeight = textSettings.Text.Split('\n').Length * scaledTextHeight;
 
-                textFrame.RectTransform.NonScaledSize += new Point(scaledTextWidth + scaledBorderSize, wrappedHeight + scaledBorderSize + scaledButtonSize.Y + scaledTitleHeight);
+                textFrame.RectTransform.NonScaledSize = new Point(scaledTextWidth + scaledBorderSize, wrappedHeight + scaledBorderSize + scaledButtonSize.Y + scaledTitleHeight);
 
                 if (useTextOnRightSide)
                 {
@@ -198,7 +198,7 @@ namespace Barotrauma
                     textFrame.RectTransform.AbsoluteOffset = new Point(0, scaledVideoResolution.Y + scaledBorderSize * 2);
                 }
 
-                textContent.RectTransform.NonScaledSize += new Point(scaledTextWidth, wrappedHeight);
+                textContent.RectTransform.NonScaledSize = new Point(scaledTextWidth, wrappedHeight);
                 textContent.RectTransform.AbsoluteOffset = new Point(0, scaledBorderSize + scaledTitleHeight);
             }
 
@@ -210,7 +210,7 @@ namespace Barotrauma
                 objectiveText.RectTransform.AbsoluteOffset = new Point(scaledXOffset, textContent.RectTransform.Rect.Height + objectiveTitle.Rect.Height + (int)(scaledTextHeight * 2.25f));
 
                 textFrame.RectTransform.NonScaledSize += new Point(0, scaledObjectiveFrameHeight);
-                objectiveText.RectTransform.NonScaledSize += new Point(textFrame.Rect.Width, scaledTextHeight);
+                objectiveText.RectTransform.NonScaledSize = new Point(textFrame.Rect.Width, scaledTextHeight);
                 objectiveTitle.Visible = objectiveText.Visible = true;
             }
             else

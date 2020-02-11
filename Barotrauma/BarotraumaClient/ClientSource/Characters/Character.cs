@@ -535,6 +535,17 @@ namespace Barotrauma
             return closestCharacter;
         }
 
+        public bool ShouldLockHud()
+        {
+            if (this != controlled) { return false; }
+
+            //lock if using a controller, except if we're also using a connection panel in the same item
+            return
+                SelectedConstruction != null &&
+                SelectedConstruction?.GetComponent<Controller>()?.User == this &&
+                SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != this;
+        }
+
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {

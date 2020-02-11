@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (newNodeIndex == 0)
+                if (newNodeIndex == 0 && nodes.Count > 1)
                 {
                     nodes.Insert(0, nodePos);                    
                 }
@@ -499,7 +499,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void ClearConnections(Character user = null)
+        public void ClearConnections(Character user = null)
         {
             nodes.Clear();
             sections.Clear();

@@ -49,11 +49,11 @@ namespace Barotrauma
         {
             if (!forceColor)
             {
-                if (!body.Enabled)
+                if (!FarseerBody.Enabled)
                 {
                     color = Color.Black;
                 }
-                else if (!body.Awake)
+                else if (!FarseerBody.Awake)
                 {
                     color = Color.Blue;
                 }
@@ -71,7 +71,7 @@ namespace Barotrauma
 
             if (drawOffset != Vector2.Zero)
             {
-                Vector2 pos = ConvertUnits.ToDisplayUnits(body.Position);
+                Vector2 pos = ConvertUnits.ToDisplayUnits(FarseerBody.Position);
                 if (Submarine != null) pos += Submarine.DrawPosition;
 
                 GUI.DrawLine(spriteBatch,
@@ -160,7 +160,7 @@ namespace Barotrauma
 
             Vector2 newPosition         = SimPosition;
             float? newRotation          = null;
-            bool awake                  = body.Awake;
+            bool awake                  = FarseerBody.Awake;
             Vector2 newVelocity         = LinearVelocity;
             float? newAngularVelocity   = null;
 

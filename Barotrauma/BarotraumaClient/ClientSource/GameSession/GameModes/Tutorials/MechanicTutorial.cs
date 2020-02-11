@@ -348,6 +348,9 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(4); // Deconstruct
 
             SetHighlight(mechanic_craftingCabinet.Item, true);
+
+            bool gotOxygenTank = false;
+            bool gotSodium = false;
             do
             {
                 if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
@@ -381,8 +384,18 @@ namespace Barotrauma.Tutorials
                         }
                     }
                 }
+
+                if (!gotOxygenTank && mechanic.Inventory.FindItemByIdentifier("oxygentank") != null)
+                {
+                    gotOxygenTank = true;
+                }
+                if (!gotSodium && mechanic.Inventory.FindItemByIdentifier("sodium") != null)
+                {
+                    gotSodium = true;
+                }
                 yield return null;
-            } while ((mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null) || mechanic.Inventory.FindItemByIdentifier("sodium") == null); // Wait until looted
+            } while (!gotOxygenTank || !gotSodium); // Wait until looted
+
             yield return new WaitForSeconds(1.0f, false);
             SetHighlight(mechanic_craftingCabinet.Item, false);
             SetHighlight(mechanic_deconstructor.Item, true);
@@ -424,7 +437,9 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (mechanic.Inventory.FindItemByIdentifier("aluminium") == null); // Wait until deconstructed
+            } while (
+                mechanic.Inventory.FindItemByIdentifier("aluminium") == null && 
+                mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") == null); // Wait until aluminium obtained
 
             SetHighlight(mechanic_deconstructor.Item, false);
             RemoveCompletedObjective(segments[4]);

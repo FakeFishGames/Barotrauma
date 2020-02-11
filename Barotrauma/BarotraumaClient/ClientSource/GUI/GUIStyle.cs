@@ -24,7 +24,6 @@ namespace Barotrauma
         public ScalableFont LargeFont { get; private set; }
         public ScalableFont SubHeadingFont { get; private set; }
         public ScalableFont DigitalFont { get; private set; }
-        public ScalableFont HotkeyFont { get; private set; }
 
         public Dictionary<ScalableFont, bool> ForceFontUpperCase
         {
@@ -148,10 +147,6 @@ namespace Barotrauma
                     case "digitalfont":
                         DigitalFont = LoadFont(subElement, graphicsDevice);
                         ForceFontUpperCase[DigitalFont] = subElement.GetAttributeBool("forceuppercase", false);
-                        break;
-                    case "hotkeyfont":
-                        HotkeyFont = LoadFont(subElement, graphicsDevice);
-                        ForceFontUpperCase[HotkeyFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "objectivetitle":
                     case "subheading":

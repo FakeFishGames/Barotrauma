@@ -82,7 +82,8 @@ namespace Barotrauma
             // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
             prefabsWithContainer.ForEach(i => SpawnItems(i));
             // Spawn items that don't have containers last
-            prefabsWithoutContainer.Randomize().ForEach(i => SpawnItems(i));
+            prefabsWithoutContainer.RandomizeList();
+            prefabsWithoutContainer.ForEach(i => SpawnItems(i));
 
             if (OutputDebugInfo)
             {

@@ -14,6 +14,7 @@ namespace Barotrauma
         protected readonly int capacity;
 
         public Item[] Items;
+        protected bool[] hideEmptySlot;
         
         public bool Locked;
 
@@ -31,6 +32,7 @@ namespace Barotrauma
             this.Owner = owner;
 
             Items = new Item[capacity];
+            hideEmptySlot = new bool[capacity];
 
 #if CLIENT
             this.slotsPerRow = slotsPerRow;
@@ -39,8 +41,15 @@ namespace Barotrauma
             {
                 DraggableIndicator = GUI.Style.GetComponentStyle("GUIDragIndicator").Sprites[GUIComponent.ComponentState.None][0].Sprite;
 
-                EquipIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(137, 10, 112, 25), new Vector2(0.5f, 1f), 0);
-                EquipIndicator.size = new Vector2(EquipIndicator.SourceRect.Width * 0.682f, EquipIndicator.SourceRect.Height * 0.682f);
+                slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(258, 7, 120, 120), null, 0);
+
+                EquippedIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 137, 87, 16), new Vector2(0.5f, 0.5f), 0);
+                EquippedHoverIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 157, 87, 16), new Vector2(0.5f, 0.5f), 0);
+                EquippedClickedIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 177, 87, 16), new Vector2(0.5f, 0.5f), 0);
+
+                UnequippedIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 197, 87, 16), new Vector2(0.5f, 0.5f), 0);
+                UnequippedHoverIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 217, 87, 16), new Vector2(0.5f, 0.5f), 0);
+                UnequippedClickedIndicator = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(550, 237, 87, 16), new Vector2(0.5f, 0.5f), 0);
             }
 #endif
         }
@@ -102,7 +111,7 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool avoidHotkeys = false)
+        public virtual bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
             int slot = FindAllowedSlot(item);
             if (slot < 0) return false;
@@ -111,7 +120,7 @@ namespace Barotrauma
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool avoidHotkeys = false)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             if (i < 0 || i >= Items.Length)
             {

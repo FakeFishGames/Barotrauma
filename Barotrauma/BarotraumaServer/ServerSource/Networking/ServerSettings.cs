@@ -184,29 +184,25 @@ namespace Barotrauma.Networking
         {
             XDocument doc = new XDocument(new XElement("serversettings"));
 
-            SerializableProperty.SerializeProperties(this, doc.Root, true);
-
             doc.Root.SetAttributeValue("name", ServerName);
             doc.Root.SetAttributeValue("public", IsPublic);
             doc.Root.SetAttributeValue("port", Port);
 #if USE_STEAM
             doc.Root.SetAttributeValue("queryport", QueryPort);
 #endif
+            doc.Root.SetAttributeValue("password", password ?? "");
+            
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
-
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
-            if (!string.IsNullOrEmpty(password))
-            {
-                doc.Root.SetAttributeValue("password", password);
-            }
-            
             doc.Root.SetAttributeValue("LevelDifficulty", ((int)selectedLevelDifficulty).ToString());
-            
+
+            doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
+
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => c.First + "-" + c.Second)));
-            
-            doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
+
+            SerializableProperty.SerializeProperties(this, doc.Root, true);
 
             XmlWriterSettings settings = new XmlWriterSettings
             {

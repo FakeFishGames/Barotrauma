@@ -109,17 +109,20 @@ namespace Barotrauma.Items.Components
         {
             base.CreateEditingHUD(editor);
 
-            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(customInterfaceElementList[0]);
-            PropertyDescriptor labelProperty = properties.Find("Label", false);
-            PropertyDescriptor signalProperty = properties.Find("Signal", false);
-            for (int i = 0; i < customInterfaceElementList.Count; i++)
-            {
-                editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(labelProperty),
-                    customInterfaceElementList[i].Label, "Label #" + (i + 1), "");
-                editor.CreateStringField(customInterfaceElementList[i],
-                    new SerializableProperty(signalProperty),
-                    customInterfaceElementList[i].Signal, "Signal #" + (i + 1), "");
+            if (customInterfaceElementList.Count > 0) 
+            { 
+                PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(customInterfaceElementList[0]);
+                PropertyDescriptor labelProperty = properties.Find("Label", false);
+                PropertyDescriptor signalProperty = properties.Find("Signal", false);
+                for (int i = 0; i < customInterfaceElementList.Count; i++)
+                {
+                    editor.CreateStringField(customInterfaceElementList[i],
+                        new SerializableProperty(labelProperty),
+                        customInterfaceElementList[i].Label, "Label #" + (i + 1), "");
+                    editor.CreateStringField(customInterfaceElementList[i],
+                        new SerializableProperty(signalProperty),
+                        customInterfaceElementList[i].Signal, "Signal #" + (i + 1), "");
+                }
             }
         }
 

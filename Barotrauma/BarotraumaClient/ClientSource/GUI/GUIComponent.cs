@@ -772,22 +772,27 @@ namespace Barotrauma
 
             if (rectTransform != null)
             {
-                if (style.Width.HasValue) 
-                { 
-                    RectTransform.MinSize = new Point(style.Width.Value, RectTransform.MinSize.Y);
-                    RectTransform.MaxSize = new Point(style.Width.Value, RectTransform.MaxSize.Y);
-                    if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(style.Width.Value, rectTransform.NonScaledSize.Y)); }
-                }
-                if (style.Height.HasValue)
-                {
-                    RectTransform.MinSize = new Point(RectTransform.MinSize.X, style.Height.Value);
-                    RectTransform.MaxSize = new Point(RectTransform.MaxSize.X, style.Height.Value);
-                    if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(rectTransform.NonScaledSize.X, style.Height.Value)); }
-                }
+                ApplySizeRestrictions(style);
             }
 
 
             this.style = style;
+        }
+
+        public void ApplySizeRestrictions(GUIComponentStyle style)
+        {
+            if (style.Width.HasValue)
+            {
+                RectTransform.MinSize = new Point(style.Width.Value, RectTransform.MinSize.Y);
+                RectTransform.MaxSize = new Point(style.Width.Value, RectTransform.MaxSize.Y);
+                if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(style.Width.Value, rectTransform.NonScaledSize.Y)); }
+            }
+            if (style.Height.HasValue)
+            {
+                RectTransform.MinSize = new Point(RectTransform.MinSize.X, style.Height.Value);
+                RectTransform.MaxSize = new Point(RectTransform.MaxSize.X, style.Height.Value);
+                if (rectTransform.IsFixedSize) { RectTransform.Resize(new Point(rectTransform.NonScaledSize.X, style.Height.Value)); }
+            }
         }
 
         public static GUIComponent FromXML(XElement element, RectTransform parent)

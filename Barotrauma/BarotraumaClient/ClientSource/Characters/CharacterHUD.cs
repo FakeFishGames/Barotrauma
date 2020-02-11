@@ -92,7 +92,7 @@ namespace Barotrauma
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Info != null)
+                if (character.Info != null && !character.ShouldLockHud())
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
@@ -170,11 +170,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) { return; }
             
-            character.CharacterHealth.Alignment = Alignment.Right;
-            /*if (Screen.Selected == GameMain.GameScreen)
-            {
-                GUI.InfoAreaBackground.Draw(spriteBatch, Vector2.Zero, scale: GUI.Scale);
-            }*/
+            character.CharacterHealth.Alignment = Alignment.Right;           
 
             if (GameMain.GameSession?.CrewManager != null)
             {
@@ -309,7 +305,7 @@ namespace Barotrauma
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), targetWidth: HUDLayoutSettings.PortraitArea.Width);
                         character.Info.DrawJobIcon(spriteBatch);
                     }
-                    mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition);
+                    mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
                         GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.PortraitArea, GUI.Style.Green * 0.5f);
@@ -318,7 +314,7 @@ namespace Barotrauma
                 if (ShouldDrawInventory(character))
                 {
                     character.Inventory.Locked = LockInventory(character);
-                    character.Inventory.DrawThis(spriteBatch);
+                    character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
                         CharacterInventory.Layout.Right;
@@ -333,7 +329,7 @@ namespace Barotrauma
                     {
                         ///character.Inventory.CurrentLayout = Alignment.Left;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;
-                        character.SelectedCharacter.Inventory.DrawThis(spriteBatch);
+                        character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
                     }
                     else
                     {
@@ -417,11 +413,7 @@ namespace Barotrauma
         {
             if (character?.Inventory == null || !character.AllowInput || character.LockHands) { return true; }
 
-            //lock if using a controller, except if we're also using a connection panel in the same item
-            return
-                character.SelectedConstruction != null &&
-                character.SelectedConstruction?.GetComponent<Controller>()?.User == character &&
-                character.SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != character;
+            return character.ShouldLockHud();
         }
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)

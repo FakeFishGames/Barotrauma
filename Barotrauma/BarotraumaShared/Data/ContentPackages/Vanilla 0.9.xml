@@ -28,6 +28,8 @@
   <Item file="Content/Items/Materials/medmaterials.xml" />
   <Item file="Content/Items/Materials/minerals.xml" />
   <Item file="Content/Items/Medical/medical.xml" />
+  <Item file="Content/Items/Medical/poisons.xml" />
+  <Item file="Content/Items/Medical/buffs.xml" />
   <Item file="Content/Items/Misc/misc.xml" />
   <Item file="Content/Items/OxygenGenerator/oxygengenerator.xml" />
   <Item file="Content/Items/Pump/pump.xml" />

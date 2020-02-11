@@ -228,7 +228,7 @@ namespace Barotrauma
             {
                 var sub = child.UserData as Submarine;
                 if (sub == null) { return; }
-                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
+                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.DisplayName.ToLower().Contains(filter.ToLower());
             }
         }
 
@@ -292,7 +292,7 @@ namespace Barotrauma
             {
                 var textBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
+                    ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
                     {
                         ToolTip = sub.Description,
                         UserData = sub

@@ -20,13 +20,7 @@ namespace Barotrauma
     class Order
     {
         public static Dictionary<string, Order> Prefabs { get; private set; }
-        public static Dictionary<OrderCategory, Sprite> OrderCategoryIcons { get; private set; }
-        public static Sprite StartNode { get; private set; }
-        public static Sprite ShortcutNode { get; private set; }
-        public static Sprite ExpandNode { get; private set; }
-        public static Sprite NodeContainer { get; private set; }
-        public static Sprite HotkeyContainer { get; private set; }
-        public static Sprite CommandBackground { get; private set; }
+        public static Dictionary<OrderCategory, Tuple<Sprite, Color>> OrderCategoryIcons { get; private set; }
         public static List<Order> PrefabList { get; private set; }
         public static Order GetPrefab(string identifier)
         {
@@ -52,7 +46,30 @@ namespace Barotrauma
 
         public readonly string Identifier;
 
-        public readonly Color Color;
+        private Color? color;
+        public Color Color
+        {
+            get
+            {
+                if (color.HasValue)
+                {
+                    return color.Value;
+                }
+                else if (OrderCategoryIcons.TryGetValue(Category, out Tuple<Sprite, Color> sprite))
+                {
+                    return sprite.Item2;
+                }
+                else
+                {
+                    return Color.White;
+                }
+            }
+            private set
+            {
+                color = value;
+            }
+        }
+        
 
         //if true, the order is issued to all available characters
         public bool TargetAllCharacters;
@@ -80,7 +97,7 @@ namespace Barotrauma
         static Order()
         {
             Prefabs = new Dictionary<string, Order>();
-            OrderCategoryIcons = new Dictionary<OrderCategory, Sprite>();
+            OrderCategoryIcons = new Dictionary<OrderCategory, Tuple<Sprite, Color>>();
 
             foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.Orders))
             {
@@ -125,7 +142,7 @@ namespace Barotrauma
                     else if (name.Equals("ordercategory", StringComparison.OrdinalIgnoreCase))
                     {
                         var category = (OrderCategory)Enum.Parse(typeof(OrderCategory), element.GetAttributeString("category", "undefined"), true);
-                        if (OrderCategoryIcons.TryGetValue(category, out Sprite duplicate))
+                        if (OrderCategoryIcons.ContainsKey(category))
                         {
                             if (allowOverriding || sourceElement.IsOverride())
                             {
@@ -142,35 +159,8 @@ namespace Barotrauma
                         if (spriteElement != null)
                         {
                             var sprite = new Sprite(spriteElement, lazyLoad: true);
-                            OrderCategoryIcons.Add(category, sprite);
-                        }
-                    }
-                    else
-                    {
-                        var spriteElement = element.GetChildElement("sprite");
-                        if (spriteElement != null)
-                        {
-                            switch (name.ToLowerInvariant())
-                            {
-                                case "startnode":
-                                    StartNode = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                                case "shortcutnode":
-                                    ShortcutNode = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                                case "expandnode":
-                                    ExpandNode = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                                case "nodecontainer":
-                                    NodeContainer = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                                case "hotkeycontainer":
-                                    HotkeyContainer = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                                case "commandbackground":
-                                    CommandBackground = new Sprite(spriteElement, lazyLoad: true);
-                                    break;
-                            }
+                            var color = element.GetAttributeColor("color", Color.White);
+                            OrderCategoryIcons.Add(category, new Tuple<Sprite, Color>(sprite, color));
                         }
                     }
                 }
@@ -201,7 +191,7 @@ namespace Barotrauma
             }
 
             ItemIdentifiers = orderElement.GetAttributeStringArray("targetitemidentifiers", new string[0], trim: true, convertToLowerInvariant: true);
-            Color = orderElement.GetAttributeColor("color", Color.White);
+            color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
@@ -271,6 +261,7 @@ namespace Barotrauma
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
             Weight              = prefab.Weight;
+            Category            = prefab.Category;
             OrderGiver          = orderGiver;
 
             TargetEntity = targetEntity;
@@ -300,22 +291,22 @@ namespace Barotrauma
             }
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
-                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) return true;
+                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) { return true; }
             }
             return false;
         }
 
         public string GetChatMessage(string targetCharacterName, string targetRoomName, bool givingOrderToSelf, string orderOption = "")
         {
-            orderOption = orderOption ?? "";
+            orderOption ??= "";
 
             string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + Identifier;
-            if (!string.IsNullOrEmpty(orderOption)) messageTag += "." + orderOption;
+            if (!string.IsNullOrEmpty(orderOption)) { messageTag += "." + orderOption; }
 
-            if (targetCharacterName == null) targetCharacterName = "";
-            if (targetRoomName == null) targetRoomName = "";
+            if (targetCharacterName == null) { targetCharacterName = ""; }
+            if (targetRoomName == null) { targetRoomName = ""; }
             string msg = TextManager.GetWithVariables(messageTag, new string[2] { "[name]", "[roomname]" }, new string[2] { targetCharacterName, targetRoomName }, new bool[2] { false, true }, true);
-            if (msg == null) return "";
+            if (msg == null) { return ""; }
 
             return msg;
         }

@@ -397,7 +397,7 @@ namespace Barotrauma
                     Submarine.Load(string.Join(" ", args), true);
                 }
                 GameMain.SubEditorScreen.Select();
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
             {
@@ -1092,6 +1092,22 @@ namespace Barotrauma
                             missingTags[nameIdentifier].Add(language);
                         }
                         string descriptionIdentifier = "missiondescription." + missionPrefab.Identifier;
+                        if (!tags[language].Contains(descriptionIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
+                            missingTags[descriptionIdentifier].Add(language);
+                        }
+                    }
+
+                    foreach (Submarine sub in Submarine.SavedSubmarines)
+                    {
+                        string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
+                        if (!tags[language].Contains(nameIdentifier))
+                        {
+                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
+                            missingTags[nameIdentifier].Add(language);
+                        }
+                        string descriptionIdentifier = "submarine.description." + sub.Name.ToLowerInvariant();
                         if (!tags[language].Contains(descriptionIdentifier))
                         {
                             if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }

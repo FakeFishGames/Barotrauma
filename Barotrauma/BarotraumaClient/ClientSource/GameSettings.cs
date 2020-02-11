@@ -403,19 +403,19 @@ namespace Barotrauma
                 UnsavedSettings = true;
 
                 var msgBox = new GUIMessageBox(
-                    TextManager.Get("RestartRequiredLabel"), 
-                    TextManager.Get("RestartRequiredLanguage"), 
-                    buttons: new string[] { TextManager.Get("Cancel"), TextManager.Get("OK") });
+                    TextManager.Get("RestartRequiredLabel"),
+                    TextManager.Get("RestartRequiredLanguage"),
+                    buttons: new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
                 msgBox.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    ApplySettings();
+                    GameMain.Instance.Exit();
+                    return true;
+                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
                 {
                     Language = prevLanguage;
                     languageDD.SelectItem(Language);
                     msgBox.Close();
-                    return true;
-                }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
-                {
-                    ApplySettings();
-                    GameMain.Instance.Exit();
                     return true;
                 };
 
@@ -1057,7 +1057,7 @@ namespace Barotrauma
                 {
                     UserData = i
                 };
-                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
+                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }

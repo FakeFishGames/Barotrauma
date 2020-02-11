@@ -17,9 +17,18 @@ namespace Barotrauma.Extensions
         /// <summary>
         /// Randomizes the list in place.
         /// </summary>
-        public static void RandomizeList<T>(this List<T> source)
+        public static void RandomizeList<T>(this List<T> list)
         {
-            source.Sort((x, y) => Rand.Value().CompareTo(Rand.Value()));
+            //Fisher-Yates shuffle
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = Rand.Int(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
 
         public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync = Rand.RandSync.Unsynced)

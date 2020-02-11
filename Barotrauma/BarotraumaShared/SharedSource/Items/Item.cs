@@ -1986,7 +1986,14 @@ namespace Barotrauma
                 body.ResetDynamics();
                 if (dropper != null)
                 {
-                    body.SetTransform(dropper.SimPosition, 0.0f);
+                    if (body.Removed)
+                    {
+                        DebugConsole.ThrowError("Failed to drop the item \"" + Name + "\" (body has been removed).");
+                    }
+                    else
+                    {
+                        body.SetTransform(dropper.SimPosition, 0.0f);
+                    }
                 }
             }
 

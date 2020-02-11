@@ -312,15 +312,7 @@ namespace Barotrauma
                     selectedCharacter.selectedBy = null;
                 selectedCharacter = value;
                 if (selectedCharacter != null)
-                {
                     selectedCharacter.selectedBy = this;
-#if CLIENT
-                    if (Inventory != null)
-                    {
-                        Inventory.ToggleInventory(true);
-                    }
-#endif
-                }
             }
         }
 

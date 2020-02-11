@@ -41,7 +41,7 @@ namespace Barotrauma
         /// How much the borders of a sliced sprite are allowed to scale
         /// You may for example want to prevent a 1-pixel border from scaling down (and disappearing) on small resolutions
         /// </summary>
-        private float minBorderScale = 0.1f, maxBorderScale = 10.0f;
+        private readonly float minBorderScale = 0.1f, maxBorderScale = 10.0f;
 
         public bool CrossFadeIn { get; private set; } = true;
         public bool CrossFadeOut { get; private set; } = true;
@@ -95,6 +95,19 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Get the scale of the sliced sprite's borders when it's draw inside an area of a specific size
+        /// </summary>
+        public float GetSliceBorderScale(Point drawSize)
+        {
+            if (!Slice) { return 1.0f; }
+
+            Vector2 scale = new Vector2(
+                MathHelper.Clamp((float)drawSize.X / (Slices[0].Height + Slices[6].Height), 0, 1),
+                MathHelper.Clamp((float)drawSize.Y / (Slices[0].Width + Slices[2].Width), 0, 1)); 
+            return MathHelper.Clamp(Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale), minBorderScale, maxBorderScale);
+        }
+
         public void Draw(SpriteBatch spriteBatch, Rectangle rect, Color color, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (Sprite.Texture == null)
@@ -107,23 +120,17 @@ namespace Barotrauma
             {
                 Vector2 pos = new Vector2(rect.X, rect.Y);
 
-                Vector2 scale = Vector2.One;
-
-                scale.Y = MathHelper.Clamp((float)rect.Height / (Slices[0].Height + Slices[6].Height), 0, 1);
-                scale.X = MathHelper.Clamp((float)rect.Width / (Slices[0].Width + Slices[2].Width), 0, 1);
-
-                scale.X = scale.Y =
-                    MathHelper.Clamp(Math.Min(Math.Min(scale.X, scale.Y), GUI.SlicedSpriteScale), minBorderScale, maxBorderScale);
-                int centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale.Y);
-                int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale.X);
+                float scale = GetSliceBorderScale(rect.Size);
+                int centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale);
+                int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale);
 
                 for (int x = 0; x < 3; x++)
                 {
-                    int width = (int)(x == 1 ? centerWidth : Slices[x].Width * scale.X);
+                    int width = (int)(x == 1 ? centerWidth : Slices[x].Width * scale);
                     if (width <= 0) { continue; }
                     for (int y = 0; y < 3; y++)
                     {
-                        int height = (int)(y == 1 ? centerHeight : Slices[x + y * 3].Height * scale.Y);
+                        int height = (int)(y == 1 ? centerHeight : Slices[x + y * 3].Height * scale);
                         if (height <= 0) { continue; }
 
                         spriteBatch.Draw(Sprite.Texture,

@@ -334,9 +334,9 @@ namespace Barotrauma.Items.Components
             //docking interface ----------------------------------------------------
             float dockingButtonSize = 1.1f;
             float elementScale = 0.6f;
-            dockingContainer = new GUIFrame(new RectTransform(new Point(160).Multiply(GUI.Scale * dockingButtonSize), GuiFrame.RectTransform, Anchor.BottomLeft)
+            dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest)
             {
-                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.15f, -0.1f)
+                RelativeOffset = Sonar.controlBoxOffset
             }, style: null);
 
             dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");

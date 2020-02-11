@@ -765,6 +765,60 @@ namespace Barotrauma
 
                     SoundPlayer.Update((float)Timing.Step);
 
+                    if (PlayerInput.KeyHit(Keys.Escape) && WindowActive)
+                    {
+                        // Check if a text input is selected.
+                        if (GUI.KeyboardDispatcher.Subscriber != null)
+                        {
+                            if (GUI.KeyboardDispatcher.Subscriber is GUITextBox textBox)
+                            {
+                                textBox.Deselect();
+                            }
+                            GUI.KeyboardDispatcher.Subscriber = null;
+                        }
+                        //if a verification prompt (are you sure you want to x) is open, close it
+                        else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
+                                GUIMessageBox.VisibleBox.UserData as string == "verificationprompt")
+                        {
+                            ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
+                        }
+                        else if (Tutorial.Initialized && Tutorial.ContentRunning)
+                        {
+                            (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
+                        }
+                        else if (GUI.PauseMenuOpen)
+                        {
+                            GUI.TogglePauseMenu();
+                        }
+                        //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
+                        else if ((Character.Controlled == null || !itemHudActive())
+                            //TODO: do we need to check Inventory.SelectedSlot?
+                            && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
+                            && !CrewManager.IsCommandInterfaceOpen)
+                        {
+                            // Otherwise toggle pausing, unless another window/interface is open.
+                            GUI.TogglePauseMenu();
+                        }
+
+                        bool itemHudActive()
+                        {
+                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            return 
+                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) || 
+                                ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
+                        }
+                    }
+
+#if DEBUG
+                    if (GameMain.NetworkMember == null)
+                    {
+                        if (PlayerInput.KeyHit(Keys.P) && !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
+                        {
+                            DebugConsole.Paused = !DebugConsole.Paused;
+                        }
+                    }
+#endif
+
                     GUI.ClearUpdateList();
                     Paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);

@@ -88,14 +88,13 @@ namespace Barotrauma
             Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
-        private static List<PhysicsBody> list = new List<PhysicsBody>();
+        private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
         public static List<PhysicsBody> List
         {
             get { return list; }
         }
 
-        //the farseer physics body of the item
-        private Body body;
+
         protected Vector2 prevPosition;
         protected float prevRotation;
 
@@ -105,6 +104,12 @@ namespace Barotrauma
         private Vector2 drawPosition;
         private float drawRotation;
         
+        public bool Removed
+        {
+            get;
+            private set;
+        }
+
         public Vector2 LastSentPosition
         {
             get;
@@ -114,7 +119,7 @@ namespace Barotrauma
         private Shape bodyShape;
         public float height, width, radius;
         
-        private float density;
+        private readonly float density;
 
         //the direction the item is facing (for example, a gun has to be 
         //flipped horizontally if the Character holding it turns around)
@@ -198,7 +203,7 @@ namespace Barotrauma
                 isEnabled = value;
                 try
                 {
-                    if (isEnabled) body.Enabled = isPhysEnabled; else body.Enabled = false;
+                    if (isEnabled) FarseerBody.Enabled = isPhysEnabled; else FarseerBody.Enabled = false;
                 }
                 catch (Exception e)
                 {
@@ -206,7 +211,7 @@ namespace Barotrauma
                     if (UserData != null) DebugConsole.NewMessage("PhysicsBody UserData: " + UserData.GetType().ToString(), Color.Red);
                     if (GameMain.World.ContactManager == null) DebugConsole.NewMessage("ContactManager is null!", Color.Red);
                     else if (GameMain.World.ContactManager.BroadPhase == null) DebugConsole.NewMessage("Broadphase is null!", Color.Red);
-                    if (body.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
+                    if (FarseerBody.FixtureList == null) DebugConsole.NewMessage("FixtureList is null!", Color.Red);
 
                     if (UserData is Entity entity)
                     {
@@ -218,18 +223,18 @@ namespace Barotrauma
 
         public bool PhysEnabled
         {
-            get { return body.Enabled; }
-            set { isPhysEnabled = value; if (Enabled) body.Enabled = value; }
+            get { return FarseerBody.Enabled; }
+            set { isPhysEnabled = value; if (Enabled) FarseerBody.Enabled = value; }
         }
 
         public Vector2 SimPosition
         {
-            get { return body.Position; }
+            get { return FarseerBody.Position; }
         }
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.Position); }
+            get { return ConvertUnits.ToDisplayUnits(FarseerBody.Position); }
         }
 
         public Vector2 PrevPosition
@@ -239,7 +244,7 @@ namespace Barotrauma
 
         public float Rotation
         {
-            get { return body.Rotation; }
+            get { return FarseerBody.Rotation; }
         }
 
         /// <summary>
@@ -249,27 +254,27 @@ namespace Barotrauma
 
         public Vector2 LinearVelocity
         {
-            get { return body.LinearVelocity; }
+            get { return FarseerBody.LinearVelocity; }
             set
             {
                 if (!IsValidValue(value, "velocity", -1000.0f, 1000.0f)) return;
-                body.LinearVelocity = value;
+                FarseerBody.LinearVelocity = value;
             }
         }
 
         public float AngularVelocity
         {
-            get { return body.AngularVelocity; }
+            get { return FarseerBody.AngularVelocity; }
             set
             {
                 if (!IsValidValue(value, "angular velocity", -1000f, 1000f)) return;
-                body.AngularVelocity = value;
+                FarseerBody.AngularVelocity = value;
             }
         }
 
         public float Mass
         {
-            get { return body.Mass; }
+            get { return FarseerBody.Mass; }
         }
 
         public float Density
@@ -277,36 +282,33 @@ namespace Barotrauma
             get { return density; }
         }
 
-        public Body FarseerBody
-        {
-            get { return body; }
-        }
+        public Body FarseerBody { get; private set; }
 
         public object UserData
         {
-            get { return body.UserData; }
-            set { body.UserData = value; }
+            get { return FarseerBody.UserData; }
+            set { FarseerBody.UserData = value; }
         }
 
         public float Friction
         {
-            set { body.Friction = value; }
+            set { FarseerBody.Friction = value; }
         }
 
         public BodyType BodyType
         {
-            get { return body.BodyType; }
-            set { body.BodyType = value; }
+            get { return FarseerBody.BodyType; }
+            set { FarseerBody.BodyType = value; }
         }
 
         public Category CollisionCategories
         {
-            set { body.CollisionCategories = value; }
+            set { FarseerBody.CollisionCategories = value; }
         }
 
         public Category CollidesWith
         {
-            set { body.CollidesWith = value; }
+            set { FarseerBody.CollidesWith = value; }
         }
 
         public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
@@ -316,15 +318,15 @@ namespace Barotrauma
         public PhysicsBody(float width, float height, float radius, float density)
         {
             CreateBody(width, height, radius, density);
-            LastSentPosition = body.Position;
+            LastSentPosition = FarseerBody.Position;
             list.Add(this);
         }
 
         public PhysicsBody(Body farseerBody)
         {
-            body = farseerBody;
-            if (body.UserData == null) body.UserData = this;
-            LastSentPosition = body.Position;
+            FarseerBody = farseerBody;
+            if (FarseerBody.UserData == null) FarseerBody.UserData = this;
+            LastSentPosition = FarseerBody.Position;
             list.Add(this);
         }
 
@@ -335,13 +337,13 @@ namespace Barotrauma
             float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
             density = 10;
             CreateBody(width, height, radius, density);
-            body.BodyType = BodyType.Dynamic;
-            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-            body.CollisionCategories = Physics.CollisionCharacter;
-            body.AngularDamping = 5.0f;
-            body.FixedRotation = true;
-            body.Friction = 0.05f;
-            body.Restitution = 0.05f;
+            FarseerBody.BodyType = BodyType.Dynamic;
+            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            FarseerBody.CollisionCategories = Physics.CollisionCharacter;
+            FarseerBody.AngularDamping = 5.0f;
+            FarseerBody.FixedRotation = true;
+            FarseerBody.Friction = 0.05f;
+            FarseerBody.Restitution = 0.05f;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
@@ -354,13 +356,13 @@ namespace Barotrauma
             float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Ragdoll.LimbScale;
             density = limbParams.Density;
             CreateBody(width, height, radius, density);
-            body.BodyType = BodyType.Dynamic;
-            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-            body.CollisionCategories = Physics.CollisionItem;
-            body.Friction = limbParams.Friction;
-            body.Restitution = limbParams.Restitution;
-            body.AngularDamping = limbParams.AngularDamping;
-            body.UserData = this;
+            FarseerBody.BodyType = BodyType.Dynamic;
+            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            FarseerBody.CollisionCategories = Physics.CollisionItem;
+            FarseerBody.Friction = limbParams.Friction;
+            FarseerBody.Restitution = limbParams.Restitution;
+            FarseerBody.AngularDamping = limbParams.AngularDamping;
+            FarseerBody.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
@@ -374,12 +376,12 @@ namespace Barotrauma
             density = element.GetAttributeFloat("density", 10.0f);
             CreateBody(width, height, radius, density);
             //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            body.BodyType = BodyType.Dynamic;
-            body.CollisionCategories = Physics.CollisionItem;
-            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
-            body.Friction = element.GetAttributeFloat("friction", 0.3f);
-            body.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
-            body.UserData = this;
+            FarseerBody.BodyType = BodyType.Dynamic;
+            FarseerBody.CollisionCategories = Physics.CollisionItem;
+            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
+            FarseerBody.Friction = element.GetAttributeFloat("friction", 0.3f);
+            FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
+            FarseerBody.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;      
             list.Add(this);
@@ -393,16 +395,16 @@ namespace Barotrauma
                 switch (bodyShape)
                 {
                     case Shape.Capsule:
-                        body = GameMain.World.CreateCapsule(height, radius, density);
+                        FarseerBody = GameMain.World.CreateCapsule(height, radius, density);
                         break;
                     case Shape.HorizontalCapsule:
-                        body = GameMain.World.CreateCapsuleHorizontal(width, radius, density);
+                        FarseerBody = GameMain.World.CreateCapsuleHorizontal(width, radius, density);
                         break;
                     case Shape.Circle:
-                        body = GameMain.World.CreateCircle(radius, density);
+                        FarseerBody = GameMain.World.CreateCircle(radius, density);
                         break;
                     case Shape.Rectangle:
-                        body = GameMain.World.CreateRectangle(width, height, density);
+                        FarseerBody = GameMain.World.CreateRectangle(width, height, density);
                         break;
                     default:
                         throw new NotImplementedException(bodyShape.ToString());
@@ -567,15 +569,15 @@ namespace Barotrauma
 
         public void ResetDynamics()
         {
-            body.ResetDynamics();
+            FarseerBody.ResetDynamics();
         }
 
         public void ApplyLinearImpulse(Vector2 impulse)
         {
-            if (!IsValidValue(impulse / body.Mass, "new velocity", -1000f, 1000f)) return;
+            if (!IsValidValue(impulse / FarseerBody.Mass, "new velocity", -1000f, 1000f)) return;
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
 
-            body.ApplyLinearImpulse(impulse);
+            FarseerBody.ApplyLinearImpulse(impulse);
         }
 
         /// <summary>
@@ -587,24 +589,24 @@ namespace Barotrauma
             if (!IsValidValue(maxVelocity, "max velocity")) return;
             
             Vector2 velocityAddition = impulse / Mass;
-            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            Vector2 newVelocity = FarseerBody.LinearVelocity + velocityAddition;
             float newSpeedSqr = newVelocity.LengthSquared();
             if (newSpeedSqr > maxVelocity * maxVelocity)
             {
                 newVelocity = newVelocity.ClampLength(maxVelocity);
             }
 
-            if (!IsValidValue((newVelocity - body.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
+            if (!IsValidValue((newVelocity - FarseerBody.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
 
-            body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass);
+            FarseerBody.ApplyLinearImpulse((newVelocity - FarseerBody.LinearVelocity) * Mass);
         }
 
         public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
         {
             if (!IsValidValue(impulse, "impulse", -1e10f, 1e10f)) return;
             if (!IsValidValue(point, "point")) return;
-            if (!IsValidValue(impulse / body.Mass, "new velocity", -1000.0f, 1000.0f)) return;
-            body.ApplyLinearImpulse(impulse, point);
+            if (!IsValidValue(impulse / FarseerBody.Mass, "new velocity", -1000.0f, 1000.0f)) return;
+            FarseerBody.ApplyLinearImpulse(impulse, point);
         }
 
         /// <summary>
@@ -617,18 +619,18 @@ namespace Barotrauma
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
             Vector2 velocityAddition = impulse / Mass;
-            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            Vector2 newVelocity = FarseerBody.LinearVelocity + velocityAddition;
             float newSpeedSqr = newVelocity.LengthSquared();
             if (newSpeedSqr > maxVelocity * maxVelocity)
             {
                 newVelocity = newVelocity.ClampLength(maxVelocity);
             }
 
-            if (!IsValidValue((newVelocity - body.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
+            if (!IsValidValue((newVelocity - FarseerBody.LinearVelocity), "new velocity", -1000.0f, 1000.0f)) return;
 
-            body.ApplyLinearImpulse((newVelocity - body.LinearVelocity) * Mass, point);
-            body.AngularVelocity = MathHelper.Clamp(
-                body.AngularVelocity, 
+            FarseerBody.ApplyLinearImpulse((newVelocity - FarseerBody.LinearVelocity) * Mass, point);
+            FarseerBody.AngularVelocity = MathHelper.Clamp(
+                FarseerBody.AngularVelocity, 
                 -NetConfig.MaxPhysicsBodyAngularVelocity, 
                 NetConfig.MaxPhysicsBodyAngularVelocity);
         }
@@ -636,7 +638,7 @@ namespace Barotrauma
         public void ApplyForce(Vector2 force)
         {
             if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
-            body.ApplyForce(force);
+            FarseerBody.ApplyForce(force);
         }
 
         /// <summary>
@@ -647,10 +649,10 @@ namespace Barotrauma
             if (!IsValidValue(maxVelocity, "max velocity")) return;
 
             Vector2 velocityAddition = force / Mass * (float)Timing.Step;
-            Vector2 newVelocity = body.LinearVelocity + velocityAddition;
+            Vector2 newVelocity = FarseerBody.LinearVelocity + velocityAddition;
 
             float newSpeedSqr = newVelocity.LengthSquared();
-            if (newSpeedSqr > maxVelocity * maxVelocity && Vector2.Dot(body.LinearVelocity, force) > 0.0f)
+            if (newSpeedSqr > maxVelocity * maxVelocity && Vector2.Dot(FarseerBody.LinearVelocity, force) > 0.0f)
             {
                 float newSpeed = (float)Math.Sqrt(newSpeedSqr);
                 float maxVelAddition = maxVelocity - newSpeed;
@@ -659,20 +661,20 @@ namespace Barotrauma
             }
 
             if (!IsValidValue(force, "clamped force", -1e10f, 1e10f)) return;
-            body.ApplyForce(force);
+            FarseerBody.ApplyForce(force);
         }
 
         public void ApplyForce(Vector2 force, Vector2 point)
         {
             if (!IsValidValue(force, "force", -1e10f, 1e10f)) return;
             if (!IsValidValue(point, "point")) return;
-            body.ApplyForce(force, point);
+            FarseerBody.ApplyForce(force, point);
         }
 
         public void ApplyTorque(float torque)
         {
             if (!IsValidValue(torque, "torque")) return;
-            body.ApplyTorque(torque);
+            FarseerBody.ApplyTorque(torque);
         }
 
         public bool SetTransform(Vector2 simPosition, float rotation, bool setPrevTransform = true)
@@ -684,7 +686,7 @@ namespace Barotrauma
             if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
             if (!IsValidValue(rotation, "rotation")) return false;
 
-            body.SetTransform(simPosition, rotation);
+            FarseerBody.SetTransform(simPosition, rotation);
             if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
             return true;
         }
@@ -698,7 +700,7 @@ namespace Barotrauma
             if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return false;
             if (!IsValidValue(rotation, "rotation")) return false;
 
-            body.SetTransformIgnoreContacts(ref simPosition, rotation);
+            FarseerBody.SetTransformIgnoreContacts(ref simPosition, rotation);
             if (setPrevTransform) { SetPrevTransform(simPosition, rotation); }
             return true;
         }
@@ -718,9 +720,9 @@ namespace Barotrauma
 
             if (lerp)
             {
-                if (Vector2.DistanceSquared((Vector2)targetPosition, body.Position) < 10.0f * 10.0f)
+                if (Vector2.DistanceSquared((Vector2)targetPosition, FarseerBody.Position) < 10.0f * 10.0f)
                 {
-                    drawOffset = -((Vector2)targetPosition - (body.Position + drawOffset));
+                    drawOffset = -((Vector2)targetPosition - (FarseerBody.Position + drawOffset));
                     prevPosition = (Vector2)targetPosition;
                 }
                 else
@@ -729,26 +731,26 @@ namespace Barotrauma
                 }
                 if (targetRotation.HasValue)
                 {
-                    rotationOffset = -MathUtils.GetShortestAngle(body.Rotation + rotationOffset, targetRotation.Value);
+                    rotationOffset = -MathUtils.GetShortestAngle(FarseerBody.Rotation + rotationOffset, targetRotation.Value);
                 }
             }
 
-            SetTransformIgnoreContacts((Vector2)targetPosition, targetRotation == null ? body.Rotation : (float)targetRotation);
+            SetTransformIgnoreContacts((Vector2)targetPosition, targetRotation == null ? FarseerBody.Rotation : (float)targetRotation);
             targetPosition = null;
             targetRotation = null;
         }
 
         public void MoveToPos(Vector2 simPosition, float force, Vector2? pullPos = null)
         {
-            if (pullPos == null) pullPos = body.Position;
+            if (pullPos == null) pullPos = FarseerBody.Position;
 
             if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
             if (!IsValidValue(force, "force")) return;
 
-            Vector2 vel = body.LinearVelocity;
+            Vector2 vel = FarseerBody.LinearVelocity;
             Vector2 deltaPos = simPosition - (Vector2)pullPos;
             deltaPos *= force;
-            body.ApplyLinearImpulse((deltaPos - vel * 0.5f) * body.Mass, (Vector2)pullPos);
+            FarseerBody.ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
         }
 
         /// <summary>
@@ -774,7 +776,7 @@ namespace Barotrauma
             }
 
             ApplyForce(dragForce + buoyancy, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-            ApplyTorque(body.AngularVelocity * body.Mass * -0.08f);
+            ApplyTorque(FarseerBody.AngularVelocity * FarseerBody.Mass * -0.08f);
         }
 
         public void Update()
@@ -789,9 +791,9 @@ namespace Barotrauma
 
         public void UpdateDrawPosition()
         {
-            drawPosition = Timing.Interpolate(prevPosition, body.Position);
+            drawPosition = Timing.Interpolate(prevPosition, FarseerBody.Position);
             drawPosition = ConvertUnits.ToDisplayUnits(drawPosition + drawOffset);
-            drawRotation = Timing.InterpolateRotation(prevRotation, body.Rotation) + rotationOffset;
+            drawRotation = Timing.InterpolateRotation(prevRotation, FarseerBody.Rotation) + rotationOffset;
         }
         
         public void CorrectPosition<T>(List<T> positionBuffer,
@@ -827,27 +829,29 @@ namespace Barotrauma
         /// <param name="wrapAngle">Should the angles be wrapped. Set to false if it makes a difference whether the angle of the body is 0.0f or 360.0f.</param>
         public void SmoothRotate(float targetRotation, float force = 10.0f, bool wrapAngle = true)
         {
-            float nextAngle = body.Rotation + body.AngularVelocity * (float)Timing.Step;
+            float nextAngle = FarseerBody.Rotation + FarseerBody.AngularVelocity * (float)Timing.Step;
             float angle = wrapAngle ? 
                 MathUtils.GetShortestAngle(nextAngle, targetRotation) : 
                 MathHelper.Clamp(targetRotation - nextAngle, -MathHelper.Pi, MathHelper.Pi);
             float torque = angle * 60.0f * (force / 100.0f);
 
-            if (body.BodyType == BodyType.Kinematic)
+            if (FarseerBody.BodyType == BodyType.Kinematic)
             {
                 if (!IsValidValue(torque, "torque")) return;
-                body.AngularVelocity = torque;
+                FarseerBody.AngularVelocity = torque;
             }
             else
             {
-                ApplyTorque(body.Mass * torque);
+                ApplyTorque(FarseerBody.Mass * torque);
             }
         }
         
         public void Remove()
         {
             list.Remove(this);
-            GameMain.World.Remove(body);
+            GameMain.World.Remove(FarseerBody);
+
+            Removed = true;
 
             DisposeProjSpecific();
         }

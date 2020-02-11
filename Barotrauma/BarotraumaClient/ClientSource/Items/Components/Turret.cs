@@ -444,9 +444,10 @@ namespace Barotrauma.Items.Components
                 }
                 powerIndicator.DrawManually(spriteBatch, true);
 
-                int requiredChargeIndicatorPos = (int)((powerConsumption / (batteryCapacity * 3600.0f)) * powerIndicator.Rect.Width);
+                Rectangle sliderRect = powerIndicator.GetSliderRect(1.0f);
+                int requiredChargeIndicatorPos = (int)(powerConsumption / (batteryCapacity * 3600.0f) * sliderRect.Width);
                 GUI.DrawRectangle(spriteBatch,
-                    new Rectangle(powerIndicator.Rect.X + requiredChargeIndicatorPos, powerIndicator.Rect.Y, 3, powerIndicator.Rect.Height),
+                    new Rectangle(sliderRect.X + requiredChargeIndicatorPos, sliderRect.Y, 2, sliderRect.Height),
                     Color.White * 0.5f, true);
             }
 
@@ -459,7 +460,7 @@ namespace Barotrauma.Items.Components
                 Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, (int)(60 * GUI.Scale));
                 for (int i = 0; i < availableAmmo.Count; i++)
                 {
-                    // TODO: Optimize? Creates multiple new classes per frame?
+                    // TODO: Optimize? Creates multiple new objects per frame?
                     Inventory.DrawSlot(spriteBatch, null,
                         new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
                         availableAmmo[i], -1, true);

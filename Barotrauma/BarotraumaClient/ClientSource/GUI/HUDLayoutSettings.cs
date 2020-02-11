@@ -132,18 +132,17 @@ namespace Barotrauma
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
             MessageAreaTop = new Rectangle((GameMain.GraphicsWidth - messageAreaWidth) / 2, ButtonAreaTop.Bottom, messageAreaWidth, ButtonAreaTop.Height);
 
-            int toggleButtonWidth = (int)(ChatBox.ToggleButtonWidthRaw * GUI.Scale);
-            int chatBoxWidth = (int)(475 * GUI.Scale);
+            bool isFourByThree = GUI.IsFourByThree();
+            int chatBoxWidth = !isFourByThree ? (int)(475 * GUI.Scale) : (int)(375 * GUI.Scale);
             int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
-            ChatBoxArea = new Rectangle(Padding + toggleButtonWidth, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
+            ChatBoxArea = new Rectangle(Padding, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
 
             int objectiveAnchorWidth = (int)(250 * GUI.Scale);
             int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
             ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
             var crewAreaY = AfflictionAreaLeft.Bottom + Padding;
-            var crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
-            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 150), crewAreaHeight);
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), ObjectiveAnchor.Top - Padding - crewAreaY);
 
             InventoryAreaLower = new Rectangle(Padding, inventoryTopY, GameMain.GraphicsWidth - Padding * 2, GameMain.GraphicsHeight - inventoryTopY);
 

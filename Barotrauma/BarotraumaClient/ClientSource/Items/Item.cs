@@ -708,6 +708,8 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
+                //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
+                if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 elementsToMove.Add(ic.GuiFrame);
                 debugInitialHudPositions.Add(ic.GuiFrame.Rect);
@@ -779,10 +781,10 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeComponents)
             {
                 if (ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
-                    (ic.CanBeSelected || character.HasEquippedItem(this)) &&
+                    (ic.CanBeSelected || (character.HasEquippedItem(this) && ic.DrawHudWhenEquipped)) &&
                     (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
                 {
-                    if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) maxPriorityHUDs.Clear();
+                    if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) { maxPriorityHUDs.Clear(); }
                     maxPriorityHUDs.Add(ic);
                 }
             }
@@ -795,7 +797,8 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeComponents)
                 {
-                    if ((ic.CanBeSelected || character.HasEquippedItem(this)) && ic.ShouldDrawHUD(character))
+                    if (ic.ShouldDrawHUD(character) &&
+                        (ic.CanBeSelected || (character.HasEquippedItem(this) && ic.DrawHudWhenEquipped)))
                     {
                         activeHUDs.Add(ic);
                     }

@@ -133,7 +133,6 @@ namespace Barotrauma
         public static ScalableFont LargeFont => Style?.LargeFont;
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
-        public static ScalableFont HotkeyFont => Style?.HotkeyFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -162,8 +161,6 @@ namespace Barotrauma
         {
             get { return arrow; }
         }
-
-        public static Sprite InfoAreaBackground;
 
         public static bool SettingsMenuOpen
         {
@@ -260,7 +257,6 @@ namespace Barotrauma
             arrow = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(392, 393, 49, 45), new Vector2(0.5f, 0.5f));
             SpeechBubbleIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(385, 449, 66, 60), new Vector2(0.5f, 0.5f));
             BrokenIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(898, 386, 123, 123), new Vector2(0.5f, 0.5f));
-            InfoAreaBackground = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(290, 320, 400, 300), new Vector2(0.0f, 0.0f));
         }
 
         /// <summary>
@@ -782,9 +778,21 @@ namespace Barotrauma
             if (GUIScrollBar.DraggingBar != null) { return GUIScrollBar.DraggingBar.Bar.HoverCursor; }
 
             // Wire cursors
-            if (ConnectionPanel.HighlightedWire != null) { return CursorState.Hand; }
-            if (Wire.DraggingWire != null) { return CursorState.Dragging; }
-            if (Connection.DraggingConnected != null) { return CursorState.Dragging; }
+            if (Character.Controlled != null)
+            {
+                if (Character.Controlled.SelectedConstruction?.GetComponent<ConnectionPanel>() != null)
+                {
+                    if (Connection.DraggingConnected != null)
+                    {
+                        return CursorState.Dragging;
+                    }
+                    else if (ConnectionPanel.HighlightedWire != null)
+                    {
+                        return CursorState.Hand;
+                    }
+                }
+                if (Wire.DraggingWire != null) { return CursorState.Dragging; }
+            }
            
             if (c == null || c is GUICustomComponent)
             {
@@ -794,7 +802,7 @@ namespace Barotrauma
                     case CharacterEditorScreen editor:
                         return editor.GetMouseCursorState();
                     // Portrait area during gameplay
-                    case GameScreen _ when HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition):
+                    case GameScreen _ when HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && !(Character.Controlled?.ShouldLockHud() ?? true):
                         return CursorState.Hand;
                     // Sub editor drag and highlight
                     case SubEditorScreen editor:
@@ -989,7 +997,6 @@ namespace Barotrauma
             Debug.Assert(updateList.Count == updateListSet.Count);
             updateList.ForEach(c => c.UpdateAuto(deltaTime));
             UpdateMessages(deltaTime);
-            UpdateInput();
         }
 
         private static void UpdateMessages(float deltaTime)
@@ -1027,32 +1034,6 @@ namespace Barotrauma
             }
 
             messages.RemoveAll(m => m.Timer <= 0.0f);
-        }
-
-        private static void UpdateInput()
-        {
-            if (PlayerInput.KeyHit(InputType.ToggleInventory))
-            {
-                if (Character.Controlled?.Inventory != null)
-                {
-                    Character.Controlled.Inventory.ToggleInventory();
-                }
-            }
-
-            if (PlayerInput.KeyHit(Keys.Escape) && GameMain.WindowActive)
-            {
-                HandleEscFunctionality();
-            }
-
-#if DEBUG
-            if (GameMain.NetworkMember == null)
-            {
-                if (PlayerInput.KeyHit(Keys.P) && !(KeyboardDispatcher.Subscriber is GUITextBox))
-                {
-                    DebugConsole.Paused = !DebugConsole.Paused;
-                }
-            }
-#endif
         }
 
         #region Element drawing
@@ -1860,50 +1841,6 @@ namespace Barotrauma
         #endregion
 
         #region Misc
-        private static void HandleEscFunctionality()
-        {
-            // Check if a text input is selected.
-            if (KeyboardDispatcher.Subscriber != null)
-            {
-                if (KeyboardDispatcher.Subscriber is GUITextBox textBox)
-                {
-                    textBox.Deselect();
-                }
-                KeyboardDispatcher.Subscriber = null;
-            }
-            //if a verification prompt (are you sure you want to x) is open, close it
-            else if (GUIMessageBox.VisibleBox as GUIMessageBox != null &&
-                    GUIMessageBox.VisibleBox.UserData as string == "verificationprompt")
-            {
-                ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
-            }
-            else if (Tutorials.Tutorial.Initialized && Tutorials.Tutorial.ContentRunning)
-            {
-                (GameMain.GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
-            }
-            else if (PauseMenuOpen)
-            {
-                TogglePauseMenu();
-            }
-            //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
-            else if ((Character.Controlled == null || !itemHudActive())
-                //TODO: do we need to check Inventory.SelectedSlot?
-                && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
-                && !CrewManager.IsCommandInterfaceOpen)
-            {
-                // Otherwise toggle pausing, unless another window/interface is open.
-                TogglePauseMenu();
-            }
-
-            bool itemHudActive()
-            {
-                if (Character.Controlled?.SelectedConstruction == null) { return false; }
-                return
-                    Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
-                    ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
-            }
-        }
-
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) return;
@@ -2101,6 +2038,12 @@ namespace Barotrauma
             if (soundIndex < 0 || soundIndex >= sounds.Length) { return; }
 
             sounds[soundIndex]?.Play(null, "ui");
+        }
+
+        public static bool IsFourByThree()
+        {
+            float aspectRatio = HorizontalAspectRatio;
+            return aspectRatio > 1.3f && aspectRatio < 1.4f;
         }
         #endregion
     }

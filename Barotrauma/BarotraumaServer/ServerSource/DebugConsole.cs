@@ -283,6 +283,15 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.SetBotCount(botCount);
                 NewMessage("Set the number of bots to " + botCount, Color.White);
             });
+            AssignOnClientRequestExecute("botcount", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                int botCount = GameMain.Server.ServerSettings.BotCount;
+                int.TryParse(args[0], out botCount);
+                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                NewMessage(client.Name + " set the number of bots to " + botCount, Color.White);
+                GameMain.Server.SendConsoleMessage("Set the number of bots to " + botCount, client);
+            });
 
             AssignOnExecute("botspawnmode", (string[] args) =>
             {
@@ -297,6 +306,20 @@ namespace Barotrauma
                     NewMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", Color.White);
                 }
             });
+            AssignOnClientRequestExecute("botspawnmode", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                if (Enum.TryParse(args[0], true, out BotSpawnMode spawnMode))
+                {
+                    GameMain.NetLobbyScreen.SetBotSpawnMode(spawnMode);
+                    NewMessage(client.Name + " set bot spawn mode to " + spawnMode, Color.White);
+                    GameMain.Server.SendConsoleMessage("Set bot spawn mode to " + spawnMode, client);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid bot spawn mode. (Valid modes are Fill and Normal)", client);
+                }
+            });
 
             AssignOnExecute("killdisconnectedtimer", (string[] args) =>
             {
@@ -304,11 +327,27 @@ namespace Barotrauma
                 float seconds = GameMain.Server.ServerSettings.KillDisconnectedTime;
                 if (float.TryParse(args[0], out seconds))
                 {
-                    NewMessage("Set kill disconnected timer to " + seconds + " seconds", Color.White);
+                    seconds = Math.Max(0, seconds);
+                    NewMessage("Set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds), Color.White);
                 }
                 else
                 {
                     NewMessage("\"" + args[0] + "\" is not a valid duration.", Color.White);
+                }
+            });
+            AssignOnClientRequestExecute("killdisconnectedtimer", (Client client, Vector2 cursorPos, string[] args) =>
+            {
+                if (args.Length < 1 || GameMain.Server == null) return;
+                float seconds = GameMain.Server.ServerSettings.KillDisconnectedTime;
+                if (float.TryParse(args[0], out seconds))
+                {
+                    seconds = Math.Max(0, seconds);
+                    GameMain.Server.SendConsoleMessage("Set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds), client);
+                    NewMessage(client.Name + " set kill disconnected timer to " + ToolBox.SecondsToReadableTime(seconds), Color.White);
+                }
+                else
+                {
+                    GameMain.Server.SendConsoleMessage("\"" + args[0] + "\" is not a valid duration.", client);
                 }
             });
 
@@ -329,10 +368,6 @@ namespace Barotrauma
                     if (GameMain.Server.ServerSettings.AutoRestartInterval <= 0) GameMain.Server.ServerSettings.AutoRestartInterval = 10;
                     GameMain.Server.ServerSettings.AutoRestartTimer = GameMain.Server.ServerSettings.AutoRestartInterval;
                     GameMain.Server.ServerSettings.AutoRestart = enabled;
-#if CLIENT
-                    //TODO: reimplement
-                    GameMain.NetLobbyScreen.SetAutoRestart(enabled, GameMain.Server.AutoRestartTimer);
-#endif
                     GameMain.NetLobbyScreen.LastUpdateID++;
                 }
                 NewMessage(GameMain.Server.ServerSettings.AutoRestart ? "Automatic restart enabled." : "Automatic restart disabled.", Color.White);
@@ -357,10 +392,6 @@ namespace Barotrauma
                             GameMain.Server.ServerSettings.AutoRestart = false;
                             NewMessage("Autorestart disabled.", Color.White);
                         }
-#if CLIENT
-                        //TODO: redo again
-                        GameMain.NetLobbyScreen.SetAutoRestart(GameMain.Server.AutoRestart, GameMain.Server.AutoRestartTimer);
-#endif
                         GameMain.NetLobbyScreen.LastUpdateID++;
                     }
                 }
@@ -676,6 +707,13 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
                 NewMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", Color.LightGreen);
+            });
+            AssignOnClientRequestExecute("togglekarma", (Client client, Vector2 cursorWorldPos, string[] args) =>
+            {
+                if (GameMain.Server == null) return;
+                GameMain.Server.ServerSettings.KarmaEnabled = !GameMain.Server.ServerSettings.KarmaEnabled;
+                NewMessage((GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled by " : "Karma system disabled by ") + client.Name, Color.LightGreen);
+                GameMain.Server.SendConsoleMessage(GameMain.Server.ServerSettings.KarmaEnabled ? "Karma system enabled." : "Karma system disabled.", client);
             });
 
             AssignOnExecute("resetkarma", (string[] args) =>

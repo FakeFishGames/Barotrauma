@@ -1269,7 +1269,7 @@ namespace Barotrauma
                 {
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
                     GameMain.Client.SendConsoleCommand(command);
-                    NewMessage("Server command: " + command, Color.White);
+                    NewMessage("Server command: " + command, Color.Cyan);
                     return;
                 }
                 else if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
@@ -1277,7 +1277,7 @@ namespace Barotrauma
                     if (matchingCommand.RelayToServer)
                     {
                         GameMain.Client.SendConsoleCommand(command);
-                        NewMessage("Server command: " + command, Color.White);
+                        NewMessage("Server command: " + command, Color.Cyan);
                     }
                     else
                     {
@@ -1424,8 +1424,6 @@ namespace Barotrauma
                 var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.Server) : 0;
                 CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
-                spawnedCharacter.GiveJobItems(spawnPoint);
-
                 if (GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
@@ -1437,6 +1435,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
                 }
+                spawnedCharacter.GiveJobItems(spawnPoint);
             }
             else
             {

@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        [Serialize(Character.TeamType.None, false, description: "WiFi components can only communicate with components that have the same Team ID.")]
+        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.")]
         public Character.TeamType TeamID { get; set; }
 
         [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.")]

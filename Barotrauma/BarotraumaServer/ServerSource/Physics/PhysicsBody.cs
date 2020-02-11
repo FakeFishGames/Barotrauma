@@ -15,10 +15,10 @@ namespace Barotrauma
             msg.Write(SimPosition.Y);
 
 #if DEBUG
-            if (Math.Abs(body.LinearVelocity.X) > MaxVel || 
-                Math.Abs(body.LinearVelocity.Y) > MaxVel)
+            if (Math.Abs(FarseerBody.LinearVelocity.X) > MaxVel || 
+                Math.Abs(FarseerBody.LinearVelocity.Y) > MaxVel)
             {
-                DebugConsole.ThrowError("Item velocity out of range (" + body.LinearVelocity + ")");
+                DebugConsole.ThrowError("Item velocity out of range (" + FarseerBody.LinearVelocity + ")");
             }
 #endif
 
@@ -27,20 +27,20 @@ namespace Barotrauma
 
             if (!FarseerBody.FixedRotation)
             {
-                msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 8);
+                msg.WriteRangedSingle(MathUtils.WrapAngleTwoPi(FarseerBody.Rotation), 0.0f, MathHelper.TwoPi, 8);
             }
             if (FarseerBody.Awake)
             {
-                body.Enabled = true;
-                body.LinearVelocity = new Vector2(
-                    MathHelper.Clamp(body.LinearVelocity.X, -MaxVel, MaxVel),
-                    MathHelper.Clamp(body.LinearVelocity.Y, -MaxVel, MaxVel));
-                msg.WriteRangedSingle(body.LinearVelocity.X, -MaxVel, MaxVel, 12);
-                msg.WriteRangedSingle(body.LinearVelocity.Y, -MaxVel, MaxVel, 12);
+                FarseerBody.Enabled = true;
+                FarseerBody.LinearVelocity = new Vector2(
+                    MathHelper.Clamp(FarseerBody.LinearVelocity.X, -MaxVel, MaxVel),
+                    MathHelper.Clamp(FarseerBody.LinearVelocity.Y, -MaxVel, MaxVel));
+                msg.WriteRangedSingle(FarseerBody.LinearVelocity.X, -MaxVel, MaxVel, 12);
+                msg.WriteRangedSingle(FarseerBody.LinearVelocity.Y, -MaxVel, MaxVel, 12);
                 if (!FarseerBody.FixedRotation)
                 {
-                    body.AngularVelocity = MathHelper.Clamp(body.AngularVelocity, -MaxAngularVel, MaxAngularVel);
-                    msg.WriteRangedSingle(body.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
+                    FarseerBody.AngularVelocity = MathHelper.Clamp(FarseerBody.AngularVelocity, -MaxAngularVel, MaxAngularVel);
+                    msg.WriteRangedSingle(FarseerBody.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
                 }
             }
 

@@ -29,10 +29,6 @@ namespace Barotrauma
             {
                 _toggleOpen = GameMain.Config.ChatOpen = value;
                 if (value) hideableElements.Visible = true;
-                foreach (GUIComponent child in ToggleButton.Children)
-                {
-                    child.SpriteEffects = _toggleOpen ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                }
             }
         }
         private float openState;
@@ -56,7 +52,7 @@ namespace Barotrauma
 
         public GUITextBox InputBox { get; private set; }
 
-        public GUIButton ToggleButton { get; private set; }
+        public GUIButton ToggleButton;
 
         private GUIButton showNewMessagesButton;
 
@@ -79,18 +75,10 @@ namespace Barotrauma
             var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), hideableElements.RectTransform), style: "ChatBox");
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
 
-            ToggleButton = new GUIButton(new RectTransform(new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height), parent.RectTransform),
-                style: "UIToggleButton");
-
-            ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
-            {
-                ToggleOpen = !ToggleOpen;
-                return true;
-            };
-
             InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.125f), hideableElements.RectTransform, Anchor.BottomLeft),
                 style: "ChatTextBox")
             {
+                OverflowClip = true,
                 Font = GUI.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
             };
@@ -110,7 +98,8 @@ namespace Barotrauma
                 return true;
             };
             chatSendButton.RectTransform.AbsoluteOffset = new Point((int)(InputBox.Rect.Height * 0.15f), 0);
-            InputBox.TextBlock.RectTransform.MaxSize = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f), int.MaxValue);
+            InputBox.TextBlock.RectTransform.MaxSize 
+                = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.Z), int.MaxValue);
 
             showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.125f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.125f) }, TextManager.Get("chat.shownewmessages"));
             showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -317,10 +306,7 @@ namespace Barotrauma
             GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
             GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
 
-            ToggleButton.RectTransform.NonScaledSize = new Point(toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Height);
-            ToggleButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.ChatBoxArea.Left - toggleButtonWidth, HUDLayoutSettings.ChatBoxArea.Y);
-
-            popupMessageOffset = ToggleButton.Rect.Width + GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width;
+            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width;
         }
 
         public void Update(float deltaTime)
@@ -346,6 +332,11 @@ namespace Barotrauma
             if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)
             {
                 showNewMessagesButton.Visible = false;
+            }
+
+            if (ToggleButton != null)
+            {
+                ToggleButton.RectTransform.AbsoluteOffset = new Point(GUIFrame.Rect.Right, GUIFrame.Rect.Y + HUDLayoutSettings.ChatBoxArea.Height - ToggleButton.Rect.Height);
             }
 
             if (ToggleOpen)

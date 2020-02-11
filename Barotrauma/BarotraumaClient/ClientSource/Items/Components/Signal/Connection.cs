@@ -156,6 +156,10 @@ namespace Barotrauma.Items.Components
                             {
                                 panel.DisconnectedWires.Add(DraggingConnected);
                             }
+                            else if (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null)
+                            {
+                                DraggingConnected.ClearConnections(user: Character.Controlled);
+                            }
                         }
                     }
 
@@ -187,7 +191,7 @@ namespace Barotrauma.Items.Components
             x = (int)(x + width / 2 - step * (panel.DisconnectedWires.Count() - 1) / 2);
             foreach (Wire wire in panel.DisconnectedWires)
             {
-                if (wire == DraggingConnected) { continue; }
+                if (wire == DraggingConnected && mouseInRect) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";

@@ -276,7 +276,7 @@ namespace Barotrauma
             };
             healthShadowSize = 1.0f;
 
-            healthInterfaceFrame = new GUIFrame(new RectTransform(new Vector2(0.85f * 1.1f, 0.66f * 0.85f * 1.1f), GUI.Canvas, anchor: Anchor.Center, scaleBasis: ScaleBasis.Smallest), style: "ItemUI");
+            healthInterfaceFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.55f), GUI.Canvas, anchor: Anchor.Center, scaleBasis: ScaleBasis.Smallest), style: "ItemUI");
 
             var healthInterfaceLayout = new GUILayoutGroup(new RectTransform(Vector2.One / 1.05f, healthInterfaceFrame.RectTransform, anchor: Anchor.Center), true);
 
@@ -331,16 +331,15 @@ namespace Barotrauma
                 },
                 (dt, component) =>
                 {
-                    medUIExtraAnimState += dt * 10.0f;
-                    while (medUIExtraAnimState >= 16.0f)
+                    if (!GameMain.Instance.Paused)
                     {
-                        medUIExtraAnimState -= 16.0f;
+                        medUIExtraAnimState = (medUIExtraAnimState + dt * 10.0f) % 16.0f;
                     }
                 });
 
             GUILayoutGroup selectedLimbLayout = new GUILayoutGroup(new RectTransform(Vector2.One, rightSide.RectTransform));
 
-            selectedLimbText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.08f), selectedLimbLayout.RectTransform), "", font: GUI.LargeFont, textAlignment: Alignment.Center)
+            selectedLimbText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.08f), selectedLimbLayout.RectTransform), "", font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
             {
                 AutoScaleHorizontal = true
             };
@@ -454,10 +453,15 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     Character selectedCharacter = Character.Controlled?.SelectedCharacter;
-                    if (selectedCharacter == null || (!selectedCharacter.IsUnconscious && selectedCharacter.Stun <= 0.0f)) return false;
+                    if (selectedCharacter == null || (!selectedCharacter.IsUnconscious && selectedCharacter.Stun <= 0.0f)) 
+                    { 
+                        return false; 
+                    }
 
                     Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
                         AnimController.Animation.None : AnimController.Animation.CPR;
+
+                    button.Selected = Character.Controlled.AnimController.Anim == AnimController.Animation.CPR;
 
                     selectedCharacter.AnimController.ResetPullJoints();
 
@@ -468,6 +472,7 @@ namespace Barotrauma
 
                     return true;
                 },
+                ToolTip = TextManager.Get("doctor.cprobjective"),
                 Visible = false
             };
 
@@ -540,12 +545,10 @@ namespace Barotrauma
             switch (alignment)
             {
                 case Alignment.Left:
-                    healthInterfaceFrame.RectTransform.Anchor = Anchor.CenterLeft;
-                    healthInterfaceFrame.RectTransform.Pivot = Pivot.CenterLeft;
+                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.CenterLeft);
                     break;
                 case Alignment.Right:
-                    healthInterfaceFrame.RectTransform.Anchor = Anchor.CenterRight;
-                    healthInterfaceFrame.RectTransform.Pivot = Pivot.CenterRight;
+                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.CenterRight);
                     break;
             }
             healthInterfaceFrame.RectTransform.RecalculateChildren(false);
@@ -833,7 +836,7 @@ namespace Barotrauma
 
                 treatmentLayout.Recalculate();
 
-                lowSkillIndicator.Color = new Color(lowSkillIndicator.Color, MathHelper.Lerp(0.1f, 1.0f, (float)(Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f));
+                lowSkillIndicator.Color = new Color(lowSkillIndicator.Color, MathHelper.Lerp(0.5f, 1.0f, (float)(Math.Sin(Timing.TotalTime * 5.0f) + 1.0f) / 2.0f));
 
                 if (Inventory.draggingItem != null)
                 {
@@ -868,8 +871,8 @@ namespace Barotrauma
 
             Rectangle hoverArea = Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft);
 
-            if (Character.AllowInput && UseHealthWindow && 
-                Character.SelectedConstruction?.GetComponent<Controller>()?.User != Character &&
+            healthBar.CanBeFocused = healthBarShadow.CanBeFocused = !Character.ShouldLockHud();
+            if (Character.AllowInput && UseHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
                 hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
@@ -983,7 +986,7 @@ namespace Barotrauma
                     AfflictionPrefab afflictionPrefab = affliction.Prefab;
 
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
-                    if (afflictionIconRect.Contains(PlayerInput.MousePosition))
+                    if (afflictionIconRect.Contains(PlayerInput.MousePosition) && !Character.ShouldLockHud())
                     {
                         highlightedIcon = statusIcon;
                         highlightedIconPos = afflictionIconRect.Center.ToVector2();
@@ -1023,7 +1026,7 @@ namespace Barotrauma
                 if (highlightedIcon != null)
                 {
                     GUI.DrawString(spriteBatch,
-                        alignment == Alignment.Left ? highlightedIconPos + new Vector2(60 * GUI.Scale, 5) : highlightedIconPos + new Vector2(-iconSize / 2, iconSize / 2),
+                        alignment == Alignment.Left ? highlightedIconPos + new Vector2(60 * GUI.Scale, 5) : highlightedIconPos + new Vector2(iconSize * 0.4f, 0.0f),
                         highlightedIcon.Second,
                         Color.White * 0.8f, Color.Black * 0.5f);
                 }
@@ -1127,6 +1130,7 @@ namespace Barotrauma
             {
                 var child = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), afflictionIconContainer.Content.RectTransform, Anchor.TopCenter))
                 {
+                    Stretch = true,
                     UserData = affliction
                 };
 
@@ -1145,7 +1149,7 @@ namespace Barotrauma
                     buttonToSelect = button;
                 }
 
-                var afflictionIcon = new GUIImage(new RectTransform(Vector2.One * 0.9f, button.RectTransform, Anchor.Center), affliction.Prefab.Icon, scaleToFit: true)
+                var afflictionIcon = new GUIImage(new RectTransform(Vector2.One * 0.8f, button.RectTransform, Anchor.Center), affliction.Prefab.Icon, scaleToFit: true)
                 {
                     Color = GetAfflictionIconColor(affliction.Prefab, affliction),
                     CanBeFocused = false
@@ -1166,7 +1170,11 @@ namespace Barotrauma
                     afflictionEffectColor = GUI.Style.Green;
                 }
 
-                new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.1f), child.RectTransform), 0.0f, afflictionEffectColor, style: "CharacterHealthBar")
+                var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), child.RectTransform), 
+                    affliction.Prefab.Name, font: GUI.SmallFont, textAlignment: Alignment.Center, style: "GUIToolTip");
+                nameText.Text = ToolBox.LimitString(nameText.Text, nameText.Font, nameText.Rect.Width);
+
+                new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.1f), child.RectTransform), 0.0f, afflictionEffectColor, style: "GUIAfflictionBar")
                 {
                     UserData = "afflictionstrength"
                 };
@@ -1240,14 +1248,14 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            var afflictionStrength = new GUITextBlock(new RectTransform(new Vector2(0.35f, 0.6f), labelContainer.RectTransform), "", textAlignment: Alignment.TopRight, font: GUI.LargeFont)
+            var afflictionStrength = new GUITextBlock(new RectTransform(new Vector2(0.35f, 0.6f), labelContainer.RectTransform), "", textAlignment: Alignment.TopRight, font: GUI.SubHeadingFont)
             {
-                Padding = Vector4.Zero,
                 UserData = "strength",
                 CanBeFocused = false
             };
             var vitality = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), labelContainer.RectTransform, Anchor.BottomRight), "", textAlignment: Alignment.BottomRight)
             {
+                Padding = afflictionStrength.Padding,
                 IgnoreLayoutGroups = true,
                 UserData = "vitality",
                 CanBeFocused = false
@@ -1557,7 +1565,10 @@ namespace Barotrauma
 
         private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
         {
-            limbIndicatorOverlayAnimState += deltaTime * 8.0f;
+            if (!GameMain.Instance.Paused)
+            {
+                limbIndicatorOverlayAnimState += deltaTime * 8.0f;
+            }
 
             highlightedLimbIndex = -1;
             int i = 0;
