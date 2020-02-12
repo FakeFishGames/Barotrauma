@@ -226,7 +226,7 @@ namespace Barotrauma
             }
 
             ReportButtonFrame = new GUILayoutGroup(new RectTransform(
-                new Point((HUDLayoutSettings.ChatBoxArea.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height), guiFrame.RectTransform))
+                new Point((HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height - (int)((reports.Count - 1) * 5 * GUI.Scale)) / reports.Count, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height), guiFrame.RectTransform))
             {
                 AbsoluteSpacing = (int)(5 * GUI.Scale),
                 UserData = "reportbuttons",
@@ -1604,13 +1604,8 @@ namespace Barotrauma
 
         private void CreateOrderCategoryNodes()
         {
-            var points = shortcutCenterNode != null ?
-                GetCircumferencePointCount(availableCategories.Count) :
-                availableCategories.Count;
-            var firstAngle = shortcutCenterNode != null ?
-                GetFirstNodeAngle(availableCategories.Count) :
-                0.0f;
-            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, points, firstAngle);
+            // TODO: Calculate firstAngle parameter based on category count
+            var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance, availableCategories.Count, MathHelper.ToRadians(225));
             var offsetIndex = 0;
             availableCategories.ForEach(oc => CreateOrderCategoryNode(oc, offsets[offsetIndex++].ToPoint(), offsetIndex));
         }
@@ -2396,7 +2391,7 @@ namespace Barotrauma
                 var reportButtonParent = ChatBox ?? GameMain.Client?.ChatBox;
                 if (reportButtonParent == null) { return; }
 
-                ReportButtonFrame.RectTransform.AbsoluteOffset = new Point(reportButtonParent.GUIFrame.Rect.Right + (int)(10 * GUI.Scale), reportButtonParent.GUIFrame.Rect.Y - reportButtonParent.ToggleButton.Rect.Height);
+                ReportButtonFrame.RectTransform.AbsoluteOffset = new Point(reportButtonParent.GUIFrame.Rect.Right + (int)(10 * GUI.Scale), reportButtonParent.GUIFrame.Rect.Y);
 
                 bool hasFires = Character.Controlled.CurrentHull.FireSources.Count > 0;
                 ToggleReportButton("reportfire", hasFires);
@@ -2445,15 +2440,22 @@ namespace Barotrauma
             {
                 Character character;
                 character = Character.Create(characterInfos[i], waypoints[i].WorldPosition, characterInfos[i].Name);
-                if (character.Info != null && !character.Info.StartItemsGiven)
-                {
-                    character.GiveJobItems(waypoints[i]);
-                    character.Info.StartItemsGiven = true;
-                }
 
-                if (character.Info?.InventoryData != null)
+                if (character.Info != null)
                 {
-                    character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                    if (!character.Info.StartItemsGiven && character.Info.InventoryData != null)
+                    {
+                        DebugConsole.ThrowError($"Error when initializing a single player round: character \"{character.Name}\" has not been given their initial items but has saved inventory data. Using the saved inventory data instead of giving the character new items.");
+                    }
+                    if (character.Info.InventoryData != null)
+                    {
+                        character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                    }
+                    else if (!character.Info.StartItemsGiven)
+                    {
+                        character.GiveJobItems(waypoints[i]);
+                    }
+                    character.Info.StartItemsGiven = true;
                 }
 
                 AddCharacter(character);

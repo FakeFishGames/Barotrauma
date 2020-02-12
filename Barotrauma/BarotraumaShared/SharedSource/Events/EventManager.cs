@@ -41,6 +41,9 @@ namespace Barotrauma
 
         private readonly List<ScriptedEvent> activeEvents = new List<ScriptedEvent>();
 
+#if DEBUG && SERVER
+        private DateTime nextIntensityLogTime;
+#endif
 
         private EventManagerSettings settings;
 
@@ -86,7 +89,6 @@ namespace Barotrauma
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
-            eventThreshold = settings.DefaultEventThreshold;
             eventCoolDown = 0.0f;
         }
 
@@ -113,6 +115,10 @@ namespace Barotrauma
             else
             {
                 settings = suitableSettings[Rand.Int(suitableSettings.Count, Rand.RandSync.Server)];
+            }
+            if (settings != null)
+            {
+                eventThreshold = settings.DefaultEventThreshold;
             }
         }
 
@@ -320,6 +326,14 @@ namespace Barotrauma
             //(the intensity is used for controlling the background music)
             CalculateCurrentIntensity(deltaTime);
 
+#if DEBUG && SERVER
+            if (DateTime.Now > nextIntensityLogTime)
+            {
+                DebugConsole.NewMessage("EventManager intensity: " + (int)Math.Round(currentIntensity * 100) + " %");
+                nextIntensityLogTime = DateTime.Now + new TimeSpan(0, minutes: 1, seconds: 0);
+            }
+#endif
+
             if (isClient) { return; }
 
             roundDuration += deltaTime;
@@ -331,6 +345,9 @@ namespace Barotrauma
                 if (settings == null)
                 {
                     DebugConsole.ThrowError("Could not select EventManager settings. Disabling EventManager for the round...");
+#if SERVER
+                    GameMain.Server?.SendChatMessage("Could not select EventManager settings. Disabling EventManager for the round...", Networking.ChatMessageType.Error);
+#endif
                     Enabled = false;
                     return;
                 }
@@ -393,19 +410,20 @@ namespace Barotrauma
             int characterCount = 0;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead) continue;
-#if CLIENT
-                if ((character.AIController is HumanAIController || character.IsRemotePlayer ||  character == Character.Controlled) &&
-                    (GameMain.Client?.Character == null || GameMain.Client.Character.TeamID == character.TeamID))
+                if (character.IsDead || character.TeamID == Character.TeamType.FriendlyNPC) { continue; }
+                if (character.AIController is HumanAIController || character.IsRemotePlayer)
                 {
                     avgCrewHealth += character.Vitality / character.MaxVitality * (character.IsUnconscious ? 0.5f : 1.0f);
                     characterCount++;
                 }
-#endif
             }
             if (characterCount > 0)
             {
-                avgCrewHealth = avgCrewHealth / characterCount;
+                avgCrewHealth /= characterCount;
+            }
+            else
+            {
+                avgCrewHealth = 0.5f;
             }
 
             // enemy amount --------------------------------------------------------

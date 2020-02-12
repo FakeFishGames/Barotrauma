@@ -202,7 +202,7 @@ namespace Barotrauma
                 if (openHealthWindow == value) return;
                 if (value != null && !value.UseHealthWindow) return;
 
-                var prevOpenHealthWindow = openHealthWindow;
+                var prevOpenHealthWindow = openHealthWindow;                
 
                 if (prevOpenHealthWindow != null)
                 {
@@ -262,18 +262,21 @@ namespace Barotrauma
             character.OnAttacked += OnAttacked;
 
             bool horizontal = true;
-            healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: GUIColorSettings.HealthBarColorHigh, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical")
+
+            healthBar = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarArea, GUI.Canvas),
+                barSize: 1.0f, color: GUIColorSettings.HealthBarColorHigh, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical")
             {
                 Enabled = true,
                 HoverCursor = CursorState.Hand,
                 IsHorizontal = horizontal
-            };
-            healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarAreaLeft, GUI.Canvas),
-                barSize: 1.0f, color: Color.Green, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical", showFrame: false)
+            };        
+
+            healthBarShadow = new GUIProgressBar(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.HealthBarArea, GUI.Canvas),
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "GUIProgressBar" : "GUIProgressBarVertical", showFrame: false)
             {
                 IsHorizontal = horizontal
             };
+            healthBarShadow.Visible = false;
             healthShadowSize = 1.0f;
 
             healthInterfaceFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.55f), GUI.Canvas, anchor: Anchor.Center, scaleBasis: ScaleBasis.Smallest), style: "ItemUI");
@@ -390,7 +393,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.15f, 1.0f), nameContainer.RectTransform),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), component.Rect.Width);
+                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), character.Info.Portrait.size * .25f, component.Rect.Width);
                     character.Info.DrawJobIcon(spriteBatch, new Vector2(component.Rect.Right + component.Rect.Width, (float)component.Rect.Top + component.Rect.Height * 0.75f), 0.75f);
                 });
             characterName = new GUITextBlock(new RectTransform(new Vector2(0.85f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.BottomLeft, font: GUI.SubHeadingFont)
@@ -541,6 +544,14 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             inventoryScale = Inventory.UIScale;
             uiScale = GUI.Scale;
+
+            healthBar.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarArea.Location;
+            healthBar.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarArea.Size;
+            healthBar.RectTransform.RelativeOffset = Vector2.Zero;
+
+            healthBarShadow.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarArea.Location;
+            healthBarShadow.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarArea.Size;
+            healthBarShadow.RectTransform.RelativeOffset = Vector2.Zero;
 
             switch (alignment)
             {
@@ -869,7 +880,7 @@ namespace Barotrauma
                 highlightedLimbIndex = -1;
             }
 
-            Rectangle hoverArea = Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarAreaLeft);
+            Rectangle hoverArea = Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea);
 
             healthBar.CanBeFocused = healthBarShadow.CanBeFocused = !Character.ShouldLockHud();
             if (Character.AllowInput && UseHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
@@ -959,7 +970,7 @@ namespace Barotrauma
         public void DrawStatusHUD(SpriteBatch spriteBatch)
         {
             //Rectangle interactArea = healthBar.Rect;
-            if (openHealthWindow != this)
+            if (Character.Controlled?.SelectedCharacter == null)
             {
                 List<Pair<Affliction, string>> statusIcons = new List<Pair<Affliction, string>>();
                 if (Character.CurrentHull == null || Character.CurrentHull.LethalPressure > 5.0f)
@@ -975,10 +986,11 @@ namespace Barotrauma
                 Pair<Affliction, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea = HUDLayoutSettings.AfflictionAreaLeft;
-                Point pos = afflictionArea.Location + healthBar.RectTransform.ScreenSpaceOffset;
 
                 bool horizontal = afflictionArea.Width > afflictionArea.Height;
                 int iconSize = horizontal ? afflictionArea.Height : afflictionArea.Width;
+
+                Point pos = new Point(afflictionArea.Right - iconSize, afflictionArea.Top);
 
                 foreach (Pair<Affliction, string> statusIcon in statusIcons)
                 {
@@ -1018,7 +1030,7 @@ namespace Barotrauma
                         scale: iconSize / afflictionPrefab.Icon.size.X);
 
                     if (horizontal)
-                        pos.X += iconSize + (int)(5 * GUI.Scale);
+                        pos.X -= iconSize + (int)(5 * GUI.Scale);
                     else
                         pos.Y += iconSize + (int)(5 * GUI.Scale);
                 }
@@ -1800,7 +1812,13 @@ namespace Barotrauma
                 (int)(limbHealth.HighlightArea.Width * scale),
                 (int)(limbHealth.HighlightArea.Height * scale));
         }
-        
+
+        public void SetHealthBarVisibility(bool value)
+        {
+            healthBar.Visible = value;
+            healthBarShadow.Visible = value;
+        }
+
         public void ClientRead(IReadMessage inc)
         {
             List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();

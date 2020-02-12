@@ -30,7 +30,6 @@ namespace Barotrauma
             get; private set;
         }
 
-
         public static Rectangle CrewArea
         {
             get; private set;
@@ -55,10 +54,16 @@ namespace Barotrauma
         {
             get; private set;
         }*/
-        public static Rectangle HealthBarAreaLeft
+        public static Rectangle HealthBarArea
         {
             get; private set;
         }
+
+        public static Rectangle BottomRightInfoArea
+        {
+            get; private set;
+        }
+
         public static Rectangle AfflictionAreaLeft
         {
             get; private set;
@@ -70,11 +75,6 @@ namespace Barotrauma
         }
 
         public static Rectangle PortraitArea
-        {
-            get; private set;
-        }
-
-        public static Rectangle PortraitTooltipArea
         {
             get; private set;
         }
@@ -91,6 +91,7 @@ namespace Barotrauma
                 GameMain.Instance.OnResolutionChanged += CreateAreas;
                 GameMain.Config.OnHUDScaleChanged += CreateAreas;
                 CreateAreas();
+                CharacterInfo.Init();
             }
         }
         
@@ -104,23 +105,26 @@ namespace Barotrauma
 
         public static void CreateAreas()
         {
-            Padding = (int)(10 * GUI.Scale);
+            Padding = (int)(11 * GUI.Scale);
 
             if (inventoryTopY == 0) { inventoryTopY = GameMain.GraphicsHeight - 30; }
 
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
-
+            
+            int infoAreaWidth = (int)(142 * GUI.Scale * CharacterInfo.BgScale);
+            int infoAreaHeight = (int)(98 * GUI.Scale * CharacterInfo.BgScale);
             int portraitSize = (int)(125 * GUI.Scale);
-            PortraitArea = new Rectangle(Padding * 2, Padding * 2, portraitSize, portraitSize);
-            PortraitTooltipArea = new Rectangle(PortraitArea.X + portraitSize / 2 + Padding, PortraitArea.Top - portraitSize, portraitSize, portraitSize);
+            BottomRightInfoArea = new Rectangle(GameMain.GraphicsWidth - Padding * 2 - infoAreaWidth, GameMain.GraphicsHeight - Padding * 2 - infoAreaHeight, infoAreaWidth, infoAreaHeight);
+            PortraitArea = new Rectangle(GameMain.GraphicsWidth - Padding - portraitSize, GameMain.GraphicsHeight - Padding - portraitSize, portraitSize, portraitSize);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
-            int healthBarWidth = (int)Math.Max(250 * GUI.Scale, 150);
-            int healthBarHeight = (int)Math.Max(15f * GUI.Scale, 12.5f);
+            int healthBarHeight = (int)Math.Max(25f * GUI.Scale, 12.5f);
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
-            HealthBarAreaLeft = new Rectangle(PortraitArea.X, PortraitArea.Y + Padding / 2 + portraitSize, healthBarWidth, healthBarHeight);
-            AfflictionAreaLeft = new Rectangle(PortraitArea.X, HealthBarAreaLeft.Y + healthBarHeight + Padding, healthBarWidth, afflictionAreaHeight);
+            int healthBarWidth = BottomRightInfoArea.Width;
+            //int healthBarWidth = (int)((BottomRightInfoArea.Width + CharacterInventory.SlotSize.X + CharacterInventory.Spacing) * 1.1f);
+            HealthBarArea = new Rectangle(BottomRightInfoArea.X, BottomRightInfoArea.Y - healthBarHeight - (int)(8 * GUI.Scale), healthBarWidth, healthBarHeight);
+            AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);
             
             //HealthBarAreaRight = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);
             /*if (HealthBarAreaRight.Y + healthBarHeight * 0.75f < PortraitArea.Y)
@@ -134,15 +138,14 @@ namespace Barotrauma
 
             bool isFourByThree = GUI.IsFourByThree();
             int chatBoxWidth = !isFourByThree ? (int)(475 * GUI.Scale) : (int)(375 * GUI.Scale);
-            int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.22f, 150);
+            int chatBoxHeight = (int)Math.Max(GameMain.GraphicsHeight * 0.25f, 150);
             ChatBoxArea = new Rectangle(Padding, GameMain.GraphicsHeight - Padding - chatBoxHeight, chatBoxWidth, chatBoxHeight);
 
             int objectiveAnchorWidth = (int)(250 * GUI.Scale);
             int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
             ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
-            var crewAreaY = AfflictionAreaLeft.Bottom + Padding;
-            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), ObjectiveAnchor.Top - Padding - crewAreaY);
+            CrewArea = new Rectangle(Padding, Padding, (int)Math.Max(400 * GUI.Scale, 220), ObjectiveAnchor.Top - Padding * 2);
 
             InventoryAreaLower = new Rectangle(Padding, inventoryTopY, GameMain.GraphicsWidth - Padding * 2, GameMain.GraphicsHeight - inventoryTopY);
 
@@ -160,10 +163,11 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUI.Style.Orange * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarAreaLeft, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, HealthBarArea, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
+            GUI.DrawRectangle(spriteBatch, BottomRightInfoArea, Color.Green * 0.5f);
         }
     }
 

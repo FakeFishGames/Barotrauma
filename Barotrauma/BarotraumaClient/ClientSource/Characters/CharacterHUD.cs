@@ -302,8 +302,9 @@ namespace Barotrauma
                 {
                     if (character.Info != null)
                     {
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), targetWidth: HUDLayoutSettings.PortraitArea.Width);
-                        character.Info.DrawJobIcon(spriteBatch);
+                        character.Info.DrawBackground(spriteBatch);
+                        character.Info.DrawJobIcon(spriteBatch, scale: 1.25f);
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2((int)(-4 * GUI.Scale), (int)(2 * GUI.Scale)), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
                     }
                     mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
@@ -352,7 +353,7 @@ namespace Barotrauma
                 GUIComponent.DrawToolTip(
                     spriteBatch,
                     character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
-                    HUDLayoutSettings.PortraitTooltipArea);
+                    HUDLayoutSettings.PortraitArea);
             }
         }
 

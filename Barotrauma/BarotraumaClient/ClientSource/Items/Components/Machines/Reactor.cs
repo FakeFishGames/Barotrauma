@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
             //left column
             //----------------------------------------------------------
 
-            GUIFrame inventoryWindow = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.5f), GuiFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight)
+            GUIFrame inventoryWindow = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.75f), GuiFrame.RectTransform, Anchor.TopLeft, Pivot.TopRight)
             {
                 MinSize = new Point(85, 220),
                 RelativeOffset = new Vector2(-0.02f, 0)
@@ -112,8 +112,8 @@ namespace Barotrauma.Items.Components
                 Stretch = true
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), inventoryContent.RectTransform), "", 
-                textAlignment: Alignment.Center, font: GUI.SubHeadingFont, wrap: true);
+            /*new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), inventoryContent.RectTransform), "", 
+                textAlignment: Alignment.Center, font: GUI.SubHeadingFont, wrap: true);*/
             inventoryContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.9f), inventoryContent.RectTransform), style: null);
 
             //----------------------------------------------------------
@@ -381,16 +381,17 @@ namespace Barotrauma.Items.Components
             var itemContainer = item.GetComponent<ItemContainer>();
             if (itemContainer != null)
             {
+                itemContainer.UILabel = "";
                 itemContainer.AllowUIOverlap = true;
                 itemContainer.Inventory.RectTransform = inventoryContainer.RectTransform;
-                var inventoryLabel = inventoryContainer.Parent?.GetChild<GUITextBlock>();
+                /*var inventoryLabel = inventoryContainer.Parent?.GetChild<GUITextBlock>();
                 if (inventoryLabel != null)
                 {
                     inventoryLabel.RectTransform.MinSize = new Point(100, 0);
                     inventoryLabel.Text = itemContainer.GetUILabel();
                     inventoryLabel.CalculateHeightFromText();
                     (inventoryLabel.Parent as GUILayoutGroup).Recalculate();
-                }
+                }*/
             }
         }
 

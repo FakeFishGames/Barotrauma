@@ -261,32 +261,43 @@ namespace Barotrauma.Items.Components
             if (picker.Inventory == null) { return; }
 
             item.Submarine = picker.Submarine;
+
             if (item.body != null)
             {
-                item.body.ResetDynamics();
-                Limb heldHand, arm;
-                if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                if (item.body.Removed)
                 {
-                    heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
-                    arm = picker.AnimController.GetLimb(LimbType.LeftArm);
+                    DebugConsole.ThrowError(
+                        "Failed to drop the Holdable component of the item \"" + item.Name + "\" (body has been removed"
+                        + (item.Removed ? ", item has been removed)" : ")"));
                 }
                 else
                 {
-                    heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
-                    arm = picker.AnimController.GetLimb(LimbType.RightArm);
+                    item.body.ResetDynamics();
+                    Limb heldHand, arm;
+                    if (picker.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
+                    {
+                        heldHand = picker.AnimController.GetLimb(LimbType.LeftHand);
+                        arm = picker.AnimController.GetLimb(LimbType.LeftArm);
+                    }
+                    else
+                    {
+                        heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
+                        arm = picker.AnimController.GetLimb(LimbType.RightArm);
+                    }
+                    if (heldHand != null && arm != null)
+                    {
+                        //hand simPosition is actually in the wrist so need to move the item out from it slightly
+                        Vector2 diff = new Vector2(
+                            (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
+                            (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
+                        item.SetTransform(heldHand.SimPosition + diff, 0.0f);
+                    }
+                    else
+                    {
+                        item.SetTransform(picker.SimPosition, 0.0f);
+                    }     
                 }
-                if (heldHand != null && arm != null)
-                {
-                    //hand simPosition is actually in the wrist so need to move the item out from it slightly
-                    Vector2 diff = new Vector2(
-                        (heldHand.SimPosition.X - arm.SimPosition.X) / 2f,
-                        (heldHand.SimPosition.Y - arm.SimPosition.Y) / 2.5f);
-                    item.SetTransform(heldHand.SimPosition + diff, 0.0f);
-                }
-                else
-                {
-                    item.SetTransform(picker.SimPosition, 0.0f);
-                }                
+           
             }
 
             picker.DeselectItem(item);

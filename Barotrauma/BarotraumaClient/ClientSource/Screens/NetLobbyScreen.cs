@@ -107,6 +107,8 @@ namespace Barotrauma
 
         //elements that can only be used by the host
         private readonly List<GUIComponent> clientDisabledElements = new List<GUIComponent>();
+        //elements that can't be interacted with but don't look disabled
+        private readonly List<GUITextBox> clientReadonlyElements = new List<GUITextBox>();
         //elements that aren't shown client-side
         private readonly List<GUIComponent> clientHiddenElements = new List<GUIComponent>();
 
@@ -704,9 +706,12 @@ namespace Barotrauma
             };
             ServerName.OnDeselected += (textBox, key) =>
             {
-                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
+                if (!textBox.Readonly)
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Name);
+                }
             };
-            clientDisabledElements.Add(ServerName);
+            clientReadonlyElements.Add(ServerName);
 
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), lobbyHeader.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerSettingsButton"));
@@ -755,9 +760,12 @@ namespace Barotrauma
             };
             ServerMessage.OnDeselected += (textBox, key) =>
             {
-                GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Message);
+                if (!textBox.Readonly)
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Message);
+                }
             };
-            clientDisabledElements.Add(ServerMessage);
+            clientReadonlyElements.Add(ServerMessage);
 
             //submarine list ------------------------------------------------------------------
 
@@ -1221,6 +1229,7 @@ namespace Barotrauma
 
             //disable/hide elements the clients are not supposed to use/see
             clientDisabledElements.ForEach(c => c.Enabled = false);
+            clientReadonlyElements.ForEach(c => c.Readonly = true);
             clientHiddenElements.ForEach(c => c.Visible = false);
 
             UpdatePermissions();
@@ -1268,8 +1277,8 @@ namespace Barotrauma
         
         public void UpdatePermissions()
         {
-            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             missionTypeList.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             foreach (var tickBox in missionTypeTickBoxes)
             {
@@ -1288,8 +1297,8 @@ namespace Barotrauma
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !campaignContainer.Visible;
-            ServerName.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            ServerMessage.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             shuttleList.Enabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub);
@@ -1313,8 +1322,6 @@ namespace Barotrauma
             if (GameMain.Client == null) return;
             spectateButton.Visible = true;
             spectateButton.Enabled = true;
-
-            StartButton.Visible = false;
         }
 
         public void SetCampaignCharacterInfo(CharacterInfo newCampaignCharacterInfo)

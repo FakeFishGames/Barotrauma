@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace Barotrauma
 {
@@ -27,14 +28,14 @@ namespace Barotrauma
         {
             GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + eventCoolDown, Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "AvgHealth: " + (int)Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "AvgHullIntegrity: " + (int)Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) && 

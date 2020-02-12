@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.708.0
+---------------------------------------------------------------------------------------------------------
+
+- Minor UI improvements.
+- Reverted "improved the way clients initialize rounds to prevent timeouts if loading the round takes too long". There were a couple of oversights in the logic that caused issues such as combat missions not starting and campaign failing to start after the first completed round.
+- Fixed EventManager intensity being calculated incorrectly in multiplayer, causing monster spawns to be more sparse in multiplayer than in singleplayer.
+- Updated tutorial videos.
+- Increased duffel bag capacity to 20 to make sure it can hold all the items in a character's inventory (+ a couple more).
+- Fixed "Commando" security officer variant spawning without an SMG magazine.
+- Potential fix to crashes in "Body.SetTransformIgnoreContacts".
+- Fixed bots spawned with the "spawn" console command being unable to communicate via headsets after the first round in the single player campaign.
+- Fixed engine's AI target changing it's range too rapidly when the engine's force changes rapidly, causing monsters to often lose track of the sub after just spotting it.
+- Do not allow steering input on the nav terminal while command interface is enabled.
+- Fixed lobby command (which switches to the single player lobby) being usable in multiplayer.
+- Prevented chat message popups (the individual messages that popup when the chatbox is hidden) from getting cursor focus and blocking turret usage.
+- Made reactor's fuel rod panel a little larger.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.707.0
 ---------------------------------------------------------------------------------------------------------
 

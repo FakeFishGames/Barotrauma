@@ -627,7 +627,7 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
-                            SendStartMessage(roundStartSeed, GameMain.GameSession.Level.Seed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClient, true);
+                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClient);
                         }
                     }
                     break;
@@ -1796,8 +1796,6 @@ namespace Barotrauma.Networking
                     campaign.Map.SelectRandomLocation(preferUndiscovered: true);
                 }
 
-                SendStartMessage(roundStartSeed, campaign.Map.SelectedConnection.Level.Seed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients, false);
-
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
                     reloadSub: true,
                     loadSecondSub: teamCount > 1,
@@ -1810,8 +1808,6 @@ namespace Barotrauma.Networking
             }
             else
             {
-                SendStartMessage(roundStartSeed, GameMain.NetLobbyScreen.LevelSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients, false);
-
                 GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty, teamCount > 1);
                 Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
                 Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
@@ -1950,7 +1946,7 @@ namespace Barotrauma.Networking
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
 
-            SendRoundStartFinalize(connectedClients);
+            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
 
             yield return CoroutineStatus.Running;
 
@@ -1969,21 +1965,22 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void SendStartMessage(int seed, string levelSeed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients, bool includesFinalize)
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients)
         {
             foreach (Client client in clients)
             {
-                SendStartMessage(seed, levelSeed, selectedSub, selectedMode, client, includesFinalize);
+                SendStartMessage(seed, selectedSub, selectedMode, client);
             }
         }
 
-        private void SendStartMessage(int seed, string levelSeed, Submarine selectedSub, GameModePreset selectedMode, Client client, bool includesFinalize)
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, Client client)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.STARTGAME);
 
             msg.Write(seed);
-            msg.Write(levelSeed);
+            msg.Write(GameMain.GameSession.Level.Seed);
+            msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
             msg.Write(serverSettings.SelectedLevelDifficulty);
 
             msg.Write((byte)GameMain.Config.LosMode);
@@ -2023,32 +2020,6 @@ namespace Barotrauma.Networking
 
             serverSettings.WriteMonsterEnabled(msg);
 
-            msg.Write(includesFinalize); msg.WritePadBits();
-            if (includesFinalize)
-            {
-                msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
-                GameMain.GameSession.Mission?.ServerWriteInitial(msg, client);
-            }
-
-            //GameMain.GameSession.Mission?.ServerWriteInitial(msg, client);
-
-            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-        }
-
-        private void SendRoundStartFinalize(List<Client> clients)
-        {
-            foreach (Client client in clients)
-            {
-                SendRoundStartFinalize(client);
-            }
-        }
-
-        private void SendRoundStartFinalize(Client client)
-        {
-            IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte)ServerPacketHeader.STARTGAMEFINALIZE);
-
-            msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
             GameMain.GameSession.Mission?.ServerWriteInitial(msg, client);
 
             serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);

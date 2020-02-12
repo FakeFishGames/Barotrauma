@@ -28,6 +28,8 @@ namespace Barotrauma
         public float FadeOutTime { get; private set; } = 1;
 
         public bool Static { get; private set; }
+        public bool StaticSound { get; private set; }
+        public bool StaticSight { get; private set; }
         
         public float SoundRange
         {
@@ -152,8 +154,8 @@ namespace Barotrauma
             else
             {
                 // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
-                SightRange = MinSightRange;
-                SoundRange = MinSoundRange;
+                SightRange = StaticSight ? MaxSightRange : MinSightRange;
+                SoundRange = StaticSound ? MaxSoundRange : MinSoundRange;
             }
         }
 
@@ -167,6 +169,13 @@ namespace Barotrauma
             MaxSoundRange = element.GetAttributeFloat("maxsoundrange", SoundRange);
             FadeOutTime = element.GetAttributeFloat("fadeouttime", FadeOutTime);
             Static = element.GetAttributeBool("static", Static);
+            StaticSight = element.GetAttributeBool("staticsight", StaticSight);
+            StaticSound = element.GetAttributeBool("staticsound", StaticSound);
+            if (Static)
+            {
+                StaticSound = true;
+                StaticSight = true;
+            }
             SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
             SonarLabel          = element.GetAttributeString("sonarlabel", "");
             SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
@@ -189,9 +198,35 @@ namespace Barotrauma
             if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
-                SightRange -= deltaTime * (MaxSightRange / FadeOutTime);
-                SoundRange -= deltaTime * (MaxSoundRange / FadeOutTime);
+                if (!StaticSight)
+                {
+                    DecreaseSightRange(deltaTime);
+                }
+                if (!StaticSound)
+                {
+                    DecreaseSoundRange(deltaTime);
+                }
             }
+        }
+
+        public void IncreaseSoundRange(float deltaTime, float speed = 1)
+        {
+            SoundRange += speed * deltaTime * (MaxSoundRange / FadeOutTime);
+        }
+
+        public void IncreaseSightRange(float deltaTime, float speed = 1)
+        {
+            SightRange += speed * deltaTime * (MaxSightRange / FadeOutTime);
+        }
+
+        public void DecreaseSoundRange(float deltaTime, float speed = 1)
+        {
+            SoundRange -= speed * deltaTime * (MaxSoundRange / FadeOutTime);
+        }
+
+        public void DecreaseSightRange(float deltaTime, float speed = 1)
+        {
+            SightRange -= speed * deltaTime * (MaxSightRange / FadeOutTime);
         }
 
         public bool IsWithinSector(Vector2 worldPosition)

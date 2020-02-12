@@ -97,6 +97,18 @@ namespace Barotrauma.Tutorials
             stunbaton.Unequip(officer);
             officer.Inventory.RemoveItem(stunbaton);
 
+            var smg = FindOrGiveItem(officer, "smg");
+            smg.Unequip(officer);
+            officer.Inventory.RemoveItem(smg);
+
+            var divingknife = FindOrGiveItem(officer, "divingknife");
+            divingknife.Unequip(officer);
+            officer.Inventory.RemoveItem(divingknife);
+
+            var steroids = FindOrGiveItem(officer, "steroids");
+            steroids.Unequip(officer);
+            officer.Inventory.RemoveItem(steroids);
+
             var ballistichelmet =
                 officer.Inventory.FindItemByIdentifier("ballistichelmet1") ??
                 officer.Inventory.FindItemByIdentifier("ballistichelmet2") ??

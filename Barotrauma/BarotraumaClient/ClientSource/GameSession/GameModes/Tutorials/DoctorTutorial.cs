@@ -366,7 +366,8 @@ namespace Barotrauma.Tutorials
             {
                 if (CharacterHealth.OpenHealthWindow != null && doctor.AnimController.Anim != AnimController.Animation.CPR)
                 {
-                    CharacterHealth.OpenHealthWindow.CPRButton.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.0f);
+                    //Disabled pulse until it's replaced by a better effect
+                    //CharacterHealth.OpenHealthWindow.CPRButton.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.0f);
                     CharacterHealth.OpenHealthWindow.CPRButton.Flash();
                 }
                 yield return null;

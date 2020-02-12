@@ -10,6 +10,24 @@ namespace Barotrauma
 {
     partial class CharacterInfo
     {
+        public const float BgScale = 1.2f;
+        private static Sprite infoAreaPortraitBG;
+        private static Vector2 infoBGPosition;
+        private static Vector2 jobIconPos;
+
+        public static void Init()
+        {
+            GameMain.Instance.OnResolutionChanged += SetUILayout;
+            infoAreaPortraitBG = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
+            SetUILayout();
+        }
+
+        private static void SetUILayout()
+        {
+            jobIconPos = HUDLayoutSettings.BottomRightInfoArea.Center.ToVector2() + new Vector2(12 * GUI.Scale, 24 * GUI.Scale);
+            infoBGPosition = HUDLayoutSettings.BottomRightInfoArea.Location.ToVector2();
+        }
+
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
@@ -160,24 +178,25 @@ namespace Barotrauma
             sprite.SourceRect = new Rectangle(location, sprite.SourceRect.Size);
         }
 
-        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, float targetWidth, bool flip = false)
+        public void DrawBackground(SpriteBatch spriteBatch)
         {
-            float backgroundScale = 1;
-            if (PortraitBackground != null)
-            {
-                backgroundScale = targetWidth / PortraitBackground.size.X;
-                PortraitBackground.Draw(spriteBatch, screenPos, scale: backgroundScale);
-            }
+            infoAreaPortraitBG.Draw(spriteBatch, infoBGPosition, Color.White, Vector2.Zero, 0.0f,
+                scale: new Vector2(
+                    HUDLayoutSettings.BottomRightInfoArea.Width / (float)infoAreaPortraitBG.SourceRect.Width,
+                    HUDLayoutSettings.BottomRightInfoArea.Height / (float)infoAreaPortraitBG.SourceRect.Height));
+        }
+
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 offset, float targetWidth, bool flip = false)
+        {
             if (Portrait != null)
             {
                 // Scale down the head sprite 10%
                 float scale = targetWidth * 0.9f / Portrait.size.X;
-                Vector2 offset = Portrait.size * backgroundScale / 4;
                 if (Head.SheetIndex.HasValue)
                 {
                     Portrait.SourceRect = new Rectangle(CalculateOffset(Portrait, Head.SheetIndex.Value.ToPoint()), Portrait.SourceRect.Size);
                 }
-                Portrait.Draw(spriteBatch, screenPos + offset, scale: scale, spriteEffect: flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                Portrait.Draw(spriteBatch, screenPos + offset, Color.White, Portrait.Origin, scale: scale, spriteEffect: flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
                 if (AttachmentSprites != null)
                 {
                     float depthStep = 0.000001f;
@@ -216,7 +235,8 @@ namespace Barotrauma
         public void DrawJobIcon(SpriteBatch spriteBatch, Vector2? pos = null, float scale = 1.0f)
         {
             if (jobIcon == null) return;
-            jobIcon.Draw(spriteBatch, pos ?? jobIconPos, Job.Prefab.UIColor, scale: .5f * GUI.Scale * scale);
+            float combinedScale = .5f * GUI.Scale * scale;
+            jobIcon.Draw(spriteBatch, pos ?? jobIconPos, Job.Prefab.UIColor, scale: combinedScale);
         }
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)

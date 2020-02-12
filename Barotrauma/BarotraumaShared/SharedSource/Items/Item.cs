@@ -1279,9 +1279,9 @@ namespace Barotrauma
                 }
             }
 
-            if (!isActive) { return; }
-
             aiTarget?.Update(deltaTime);
+
+            if (!isActive) { return; }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
@@ -1988,7 +1988,9 @@ namespace Barotrauma
                 {
                     if (body.Removed)
                     {
-                        DebugConsole.ThrowError("Failed to drop the item \"" + Name + "\" (body has been removed).");
+                        DebugConsole.ThrowError(
+                            "Failed to drop the item \"" + Name + "\" (body has been removed"
+                            + (Removed ? ", item has been removed)" : ")"));
                     }
                     else
                     {

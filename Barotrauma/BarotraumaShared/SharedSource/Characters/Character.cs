@@ -313,6 +313,10 @@ namespace Barotrauma
                 selectedCharacter = value;
                 if (selectedCharacter != null)
                     selectedCharacter.selectedBy = this;
+
+#if CLIENT
+                CharacterHealth.SetHealthBarVisibility(value == null);
+#endif
             }
         }
 

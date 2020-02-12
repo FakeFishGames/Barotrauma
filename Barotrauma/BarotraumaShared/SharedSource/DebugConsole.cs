@@ -1436,6 +1436,7 @@ namespace Barotrauma
 #endif
                 }
                 spawnedCharacter.GiveJobItems(spawnPoint);
+                spawnedCharacter.Info.StartItemsGiven = true;
             }
             else
             {

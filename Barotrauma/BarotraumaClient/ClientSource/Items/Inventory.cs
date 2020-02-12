@@ -55,7 +55,7 @@ namespace Barotrauma
 
                 float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale * Inventory.IndicatorScaleAdjustment;
 
-                Vector2 equipIndicatorPos = new Vector2(Rect.Left, Rect.Center.Y + (Rect.Height / 2 + 25 * Inventory.UIScale) * buttonDir - sizeY / 2f);
+                Vector2 equipIndicatorPos = new Vector2(Rect.Left, Rect.Center.Y + (Rect.Height / 2 + 15 * Inventory.UIScale) * buttonDir - sizeY / 2f);
                 equipIndicatorPos += DrawOffset;
 
                 return new Rectangle((int)equipIndicatorPos.X, (int)equipIndicatorPos.Y, (int)Rect.Width, (int)sizeY);
@@ -141,7 +141,7 @@ namespace Barotrauma
                     //TODO: define this in xml
                     slotSpriteSmall = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(10, 6, 119, 120), null, 0);
                     // Adjustment to match the old size of 75,71
-                    SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * 0.625f, SlotSpriteSmall.SourceRect.Height * 0.625f);
+                    SlotSpriteSmall.size = new Vector2(SlotSpriteSmall.SourceRect.Width * 0.575f, SlotSpriteSmall.SourceRect.Height * 0.575f);
                 }
                 return slotSpriteSmall;
             }
@@ -152,7 +152,7 @@ namespace Barotrauma
         {
             get
             {
-                return !GUI.IsFourByThree() ? 0.85f : 0.75f;
+                return !GUI.IsFourByThree() ? 0.8f : 0.7f;
             }
         }
        
@@ -773,10 +773,10 @@ namespace Barotrauma
             
             if (selInv != null)
             {
-                foreach (var slot in selInv.slots)
+                for (int i = 0; i < selInv.slots.Length; i++)
                 {
-                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) ||
-                        slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                    InventorySlot slot = selInv.slots[i];
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) || (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && selInv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any)))
                     {
                         return CursorState.Hand;
                     }
@@ -801,9 +801,10 @@ namespace Barotrauma
                 }
             }
 
-            foreach (var slot in inv.slots)
+            for (int i = 0; i < inv.slots.Length; i++)
             {
-                if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition))
+                InventorySlot slot = inv.slots[i];
+                if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && inv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any))
                 {
                     return CursorState.Hand;
                 }

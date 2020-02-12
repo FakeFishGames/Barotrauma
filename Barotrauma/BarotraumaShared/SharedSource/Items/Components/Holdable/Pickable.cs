@@ -204,14 +204,14 @@ namespace Barotrauma.Items.Components
 
             if (picker == null || picker.Inventory == null)
             {
-                if (item.ParentInventory != null && item.ParentInventory.Owner != null)
+                if (item.ParentInventory != null && item.ParentInventory.Owner != null && !item.ParentInventory.Owner.Removed)
                 {
                     bodyDropPos = item.ParentInventory.Owner.SimPosition;
 
                     if (item.body != null) item.body.ResetDynamics();                    
                 }
             }
-            else
+            else if (!picker.Removed)
             {
                 DropConnectedWires(picker);
 
@@ -224,9 +224,18 @@ namespace Barotrauma.Items.Components
 
             if (item.body != null && !item.body.Enabled)
             {
-                item.body.ResetDynamics();
-                item.SetTransform(bodyDropPos, 0.0f);
-                item.body.Enabled = true;
+                if (item.body.Removed)
+                {
+                    DebugConsole.ThrowError(
+                        "Failed to drop the Pickable component of the item \"" + item.Name + "\" (body has been removed"
+                        + (item.Removed ? ", item has been removed)" : ")"));
+                }
+                else
+                {
+                    item.body.ResetDynamics();
+                    item.SetTransform(bodyDropPos, 0.0f);
+                    item.body.Enabled = true;
+                }
             }
         }
 

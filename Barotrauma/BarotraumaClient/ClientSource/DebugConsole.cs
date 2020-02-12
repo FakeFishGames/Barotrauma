@@ -782,6 +782,12 @@ namespace Barotrauma
 
             commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
             {
+                if (GameMain.Client != null)
+                {
+                    ThrowError("This command cannot be used in multiplayer.");
+                    return;
+                }
+
                 GameMain.LobbyScreen.Select();
             }));
 

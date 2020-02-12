@@ -262,36 +262,7 @@ namespace Barotrauma
 
 #if CLIENT
         private Sprite jobIcon;
-        private Vector2 jobIconPos
-        {
-            get { return new Vector2(HUDLayoutSettings.HealthBarAreaLeft.Right, HUDLayoutSettings.HealthBarAreaLeft.Y - HUDLayoutSettings.Padding); }
-        }
 #endif
-
-        private Sprite portraitBackground;
-        public Sprite PortraitBackground
-        {
-            get
-            {
-                if (portraitBackground == null)
-                {
-                    var portraitBackgroundElement = CharacterConfigElement.Element("portraitbackground");
-                    if (portraitBackgroundElement != null)
-                    {
-                        portraitBackground = new Sprite(portraitBackgroundElement.Element("sprite"));
-                    }
-                }
-                return portraitBackground;
-            }
-            private set
-            {
-                if (portraitBackground != null)
-                {
-                    portraitBackground.Remove();
-                }
-                portraitBackground = value;
-            }
-        }
 
         private List<WearableSprite> attachmentSprites;
         public List<WearableSprite> AttachmentSprites
@@ -956,8 +927,20 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
                     continue;
                 }
-                
+
+                //make sure there's no other item in the slot
+                //this should not happen normally, but can occur if the character is accidentally given new job items while also loading previous items in the campaign
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (slotIndices.Contains(i) && inventory.Items[i] != null && inventory.Items[i] != newItem)
+                    {
+                        DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{inventory.Items[i].Name} ({inventory.Items[i].ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
+                        inventory.Items[i].Drop(null, createNetworkEvent: false);
+                    }
+                }
+
                 inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
+                newItem.ParentInventory = inventory;
 
                 //force the item to the correct slots
                 //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
@@ -1016,7 +999,6 @@ namespace Barotrauma
             Character = null;
             HeadSprite = null;
             Portrait = null;
-            PortraitBackground = null;
             AttachmentSprites = null;
         }
     }

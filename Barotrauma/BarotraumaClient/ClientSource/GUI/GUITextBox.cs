@@ -233,9 +233,11 @@ namespace Barotrauma
         {
             get { return textBlock.WrappedText; }
         }
-        
+
+        public bool Readonly { get; set; }
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false)
+                          Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false)
             : base(style, rectT)
         {
             HoverCursor = CursorState.IBeam;
@@ -670,6 +672,7 @@ namespace Barotrauma
 
         public void ReceiveTextInput(string input)
         {
+            if (Readonly) { return; }
             if (selectedCharacters > 0)
             {
                 RemoveSelectedText();
@@ -693,7 +696,7 @@ namespace Barotrauma
 
             switch (command)
             {
-                case '\b': //backspace
+                case '\b' when !Readonly: //backspace
                     if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                     {
                         SetText(string.Empty, false);
@@ -715,7 +718,7 @@ namespace Barotrauma
                 case (char)0x3: // ctrl-c
                     CopySelectedText();
                     break;
-                case (char)0x16: // ctrl-v
+                case (char)0x16 when !Readonly: // ctrl-v
                     string text = GetCopiedText();
                     RemoveSelectedText();
                     if (SetText(Text.Insert(CaretIndex, text)))
@@ -726,12 +729,15 @@ namespace Barotrauma
                     break;
                 case (char)0x18: // ctrl-x
                     CopySelectedText();
-                    RemoveSelectedText();
+                    if (!Readonly)
+                    {
+                        RemoveSelectedText();
+                    }
                     break;
                 case (char)0x1: // ctrl-a
                     SelectAll();
                     break;
-                case (char)0x1A: // ctrl-z
+                case (char)0x1A when !Readonly: // ctrl-z
                     text = memento.Undo();
                     if (text != Text)
                     {
@@ -741,7 +747,7 @@ namespace Barotrauma
                         OnTextChanged?.Invoke(this, Text);
                     }
                     break;
-                case (char)0x12: // ctrl-r
+                case (char)0x12 when !Readonly: // ctrl-r
                     text = memento.Redo();
                     if (text != Text)
                     {
@@ -798,7 +804,7 @@ namespace Barotrauma
                     caretTimer = 0;
                     HandleSelection();
                     break;
-                case Keys.Delete:
+                case Keys.Delete when !Readonly:
                     if (selectedCharacters > 0)
                     {
                         RemoveSelectedText();

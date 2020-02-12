@@ -101,22 +101,14 @@ namespace Barotrauma.Items.Components
                 Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
-
                 item.Submarine.ApplyForce(currForce);
-
                 UpdatePropellerDamage(deltaTime);
-
-                if (item.AiTarget != null)
-                {
-                    var aiTarget = item.AiTarget;
-                    aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Math.Min(currForce.Length() * forceMultiplier / maxForce, 1.0f));
-                }
-                if (item.CurrentHull != null)
-                {
-                    var aiTarget = item.CurrentHull.AiTarget;
-                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, Math.Min(currForce.Length() * forceMultiplier / maxForce, 1.0f));
-                    aiTarget.SoundRange = Math.Max(noise, aiTarget.SoundRange);
-                }
+                float maxChangeSpeed = 0.5f;
+                float modifier = 2;
+                float noise = currForce.Length() * forceMultiplier * modifier / maxForce;
+                float min = Math.Max(1 - maxChangeSpeed, 0);
+                float max = 1 + maxChangeSpeed;
+                UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);
 #if CLIENT
                 for (int i = 0; i < 5; i++)
                 {
@@ -125,6 +117,19 @@ namespace Barotrauma.Items.Components
                         0.0f, item.CurrentHull);
                 }
 #endif
+            }
+        }
+
+        private void UpdateAITargets(float increaseSpeed, float deltaTime)
+        {
+            if (item.AiTarget != null)
+            {
+                item.AiTarget.IncreaseSoundRange(deltaTime, increaseSpeed);
+                if (item.CurrentHull != null && item.CurrentHull.AiTarget != null)
+                {
+                    // It's possible that some othe item increases the hull's soundrange more than the engine.
+                    item.CurrentHull.AiTarget.SoundRange = Math.Max(item.CurrentHull.AiTarget.SoundRange, item.AiTarget.SoundRange);
+                }
             }
         }
 

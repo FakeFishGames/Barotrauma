@@ -41,7 +41,9 @@ namespace Barotrauma
         private Point screenResolution;
 
         public Vector2[] SlotPositions;
-                
+        public static Point SlotSize;
+        public static int Spacing;
+
         private Layout layout;
         public Layout CurrentLayout
         {
@@ -245,20 +247,18 @@ namespace Barotrauma
         }
         private void SetSlotPositions(Layout layout)
         {
-            int spacing;
-
             bool isFourByThree = GUI.IsFourByThree();
             if (isFourByThree)
             {
-                spacing = (int)(5 * UIScale);
+                Spacing = (int)(5 * UIScale);
             }
             else
             {
-                spacing = (int)(10 * UIScale);
+                Spacing = (int)(8 * UIScale);
             }
 
-            Point slotSize = !isFourByThree ? (SlotSpriteSmall.size * UIScale).ToPoint() : (SlotSpriteSmall.size * UIScale * .925f).ToPoint();
-            int bottomOffset = slotSize.Y + spacing * 2 + ContainedIndicatorHeight;
+            SlotSize = !isFourByThree ? (SlotSpriteSmall.size * UIScale).ToPoint() : (SlotSpriteSmall.size * UIScale * .925f).ToPoint();
+            int bottomOffset = SlotSize.Y + Spacing * 2 + ContainedIndicatorHeight;
 
             if (slots == null) { CreateSlots(); }
 
@@ -271,11 +271,12 @@ namespace Barotrauma
                         int personalSlotCount = SlotTypes.Count(s => PersonalSlots.HasFlag(s));
                         int normalSlotCount = SlotTypes.Count(s => !PersonalSlots.HasFlag(s));
 
-                        int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (slotSize.X + spacing) / 2;
-                        int upperX = GameMain.GraphicsWidth - slotSize.X * 2;
+                        int x = GameMain.GraphicsWidth / 2 - normalSlotCount * (SlotSize.X + Spacing) / 2;
+                        int upperX = HUDLayoutSettings.BottomRightInfoArea.X - Spacing * 2 - SlotSize.X - SlotSize.X / 2;
+                        //int upperX = GameMain.GraphicsWidth - personalSlotCount * (slotSize.X + spacing) + (int)(11 * GUI.Scale) + spacing;
 
                         //make sure the rightmost normal slot doesn't overlap with the personal slots
-                        x -= Math.Max((x + normalSlotCount * (slotSize.X + spacing)) - (upperX - personalSlotCount * (slotSize.X + spacing)), 0);
+                        x -= Math.Max((x + normalSlotCount * (SlotSize.X + Spacing)) - (upperX - personalSlotCount * (SlotSize.X + Spacing)), 0);
 
                         int hideButtonSlotIndex = -1;
                         for (int i = 0; i < SlotPositions.Length; i++)
@@ -283,26 +284,26 @@ namespace Barotrauma
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(upperX, GameMain.GraphicsHeight - bottomOffset);
-                                upperX -= slotSize.X + spacing;
+                                upperX -= SlotSize.X + Spacing;
                                 personalSlotArea = (hideButtonSlotIndex == -1) ? 
-                                    new Rectangle(SlotPositions[i].ToPoint(), slotSize) :
-                                    Rectangle.Union(personalSlotArea, new Rectangle(SlotPositions[i].ToPoint(), slotSize));
+                                    new Rectangle(SlotPositions[i].ToPoint(), SlotSize) :
+                                    Rectangle.Union(personalSlotArea, new Rectangle(SlotPositions[i].ToPoint(), SlotSize));
                                 hideButtonSlotIndex = i;
                             }
                             else
                             {
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
-                                x += slotSize.X + spacing;
+                                x += SlotSize.X + Spacing;
                             }
                         }
 
                         if (hideButtonSlotIndex > -1)
                         {
                             hideButton.RectTransform.SetPosition(Anchor.TopLeft, Pivot.TopLeft);
-                            hideButton.RectTransform.NonScaledSize = new Point(slotSize.X / 2, slotSize.Y + slots[hideButtonSlotIndex].EquipButtonRect.Height);
+                            hideButton.RectTransform.NonScaledSize = new Point(SlotSize.X / 2, HUDLayoutSettings.BottomRightInfoArea.Height);
                             hideButton.RectTransform.AbsoluteOffset = new Point(
-                                personalSlotArea.Right + spacing, 
-                                personalSlotArea.Y - slots[hideButtonSlotIndex].EquipButtonRect.Height);
+                                personalSlotArea.Right + Spacing,
+                                HUDLayoutSettings.BottomRightInfoArea.Y);
                             hideButton.Visible = true;
                         }
                     }
@@ -311,7 +312,7 @@ namespace Barotrauma
                     {
                         int extraOffset = 0;
                         int x = HUDLayoutSettings.InventoryAreaLower.Right;
-                        int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - slotSize.X - spacing;
+                        int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - Spacing;
                         for (int i = 0; i < slots.Length; i++)
                         {
                             if (HideSlot(i)) continue;
@@ -321,7 +322,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                x -= slotSize.X + spacing;
+                                x -= SlotSize.X + Spacing;
                             }
                         }
 
@@ -331,13 +332,13 @@ namespace Barotrauma
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - spacing * 2);
-                                personalSlotX -= slots[i].Rect.Width + spacing;
+                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - Spacing * 2);
+                                personalSlotX -= slots[i].Rect.Width + Spacing;
                             }
                             else
                             {
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
-                                x += slots[i].Rect.Width + spacing;
+                                x += slots[i].Rect.Width + Spacing;
                             }
                         }
 
@@ -345,7 +346,7 @@ namespace Barotrauma
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (!HideSlot(i)) continue;
-                            x -= slots[i].Rect.Width + spacing;
+                            x -= slots[i].Rect.Width + Spacing;
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
                         }
                     }
@@ -359,28 +360,28 @@ namespace Barotrauma
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - spacing * 2);
-                                personalSlotX += slots[i].Rect.Width + spacing;
+                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2);
+                                personalSlotX += slots[i].Rect.Width + Spacing;
                             }
                             else
                             {
                                 SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
-                                x += slots[i].Rect.Width + spacing;
+                                x += slots[i].Rect.Width + Spacing;
                             }
                         }
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (!HideSlot(i)) continue;
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
-                            x += slots[i].Rect.Width + spacing;
+                            x += slots[i].Rect.Width + Spacing;
                         }
                     }
                     break;
                 case Layout.Center:
                     {
                         int columns = 5;
-                        int startX = (GameMain.GraphicsWidth / 2) - (slotSize.X * columns + spacing * (columns - 1)) / 2;
-                        int startY = GameMain.GraphicsHeight / 2 - (slotSize.Y * 2);
+                        int startX = (GameMain.GraphicsWidth / 2) - (SlotSize.X * columns + Spacing * (columns - 1)) / 2;
+                        int startY = GameMain.GraphicsHeight / 2 - (SlotSize.Y * 2);
                         int x = startX, y = startY;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
@@ -388,10 +389,10 @@ namespace Barotrauma
                             if (SlotTypes[i] == InvSlotType.Card || SlotTypes[i] == InvSlotType.Headset || SlotTypes[i] == InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
-                                x += slots[i].Rect.Width + spacing;
+                                x += slots[i].Rect.Width + Spacing;
                             }
                         }
-                        y += slots[0].Rect.Height + spacing + ContainedIndicatorHeight + slots[0].EquipButtonRect.Height;
+                        y += slots[0].Rect.Height + Spacing + ContainedIndicatorHeight + slots[0].EquipButtonRect.Height;
                         x = startX;
                         int n = 0;
                         for (int i = 0; i < SlotPositions.Length; i++)
@@ -400,12 +401,12 @@ namespace Barotrauma
                             if (SlotTypes[i] != InvSlotType.Card && SlotTypes[i] != InvSlotType.Headset && SlotTypes[i] != InvSlotType.InnerClothes)
                             {
                                 SlotPositions[i] = new Vector2(x, y);
-                                x += slots[i].Rect.Width + spacing;
+                                x += slots[i].Rect.Width + Spacing;
                                 n++;
                                 if (n >= columns)
                                 {
                                     x = startX;
-                                    y += slots[i].Rect.Height + spacing + ContainedIndicatorHeight + slots[i].EquipButtonRect.Height;
+                                    y += slots[i].Rect.Height + Spacing + ContainedIndicatorHeight + slots[i].EquipButtonRect.Height;
                                     n = 0;
                                 }
                             }

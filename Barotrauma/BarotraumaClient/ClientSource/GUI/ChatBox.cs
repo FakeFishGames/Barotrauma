@@ -101,7 +101,7 @@ namespace Barotrauma
             InputBox.TextBlock.RectTransform.MaxSize 
                 = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.Z), int.MaxValue);
 
-            showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.125f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, -0.125f) }, TextManager.Get("chat.shownewmessages"));
+            showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.075f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.125f) }, TextManager.Get("chat.shownewmessages"));
             showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
             {
                 chatBox.ScrollBar.BarScrollValue = 1f;
@@ -239,7 +239,8 @@ namespace Barotrauma
             {
                 var popupMsg = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: "GUIToolTip")
                 {
-                    Visible = false
+                    Visible = false,
+                    CanBeFocused = false
                 };
                 var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), popupMsg.RectTransform, Anchor.TopRight),
                     senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
@@ -306,7 +307,7 @@ namespace Barotrauma
             GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
             GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
 
-            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width;
+            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width + (int)(20 * GUI.Scale);
         }
 
         public void Update(float deltaTime)
