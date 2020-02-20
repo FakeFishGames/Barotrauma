@@ -742,7 +742,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(120.0f, true)]
+        [Serialize(600.0f, true)]
         public float KickAFKTime
         {
             get;
