@@ -2307,6 +2307,7 @@ namespace Barotrauma
         public bool CanHearCharacter(Character speaker)
         {
             if (speaker == null || speaker.SpeechImpediment > 100.0f) { return false; }
+            if (speaker == this) { return true; }
             ChatMessageType messageType = ChatMessage.CanUseRadio(speaker) && ChatMessage.CanUseRadio(this) ?
                 ChatMessageType.Radio : 
                 ChatMessageType.Default;
@@ -2321,8 +2322,16 @@ namespace Barotrauma
                 if (!CanHearCharacter(orderGiver)) { return; }
             }
 
-            HumanAIController humanAI = AIController as HumanAIController;
-            humanAI?.SetOrder(order, orderOption, orderGiver, speak);
+            if (AIController is HumanAIController humanAI)
+            {
+                humanAI.SetOrder(order, orderOption, orderGiver, speak);
+            }
+#if CLIENT
+            else
+            {
+                GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
+            }
+#endif
 
             CurrentOrder = order;
         }

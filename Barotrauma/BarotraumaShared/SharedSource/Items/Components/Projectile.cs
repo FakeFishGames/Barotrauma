@@ -405,9 +405,24 @@ namespace Barotrauma.Items.Components
         {
             if (User != null && User.Removed) { User = null; return false; }
             if (IgnoredBodies.Contains(target.Body)) { return false; }
-            if (target.Body.UserData is Submarine submarine)
+            if (target.Body.UserData is Submarine sub)
             {
-                return !Hitscan;
+                Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
+                    contact.Manifold.LocalNormal : Vector2.Normalize(item.body.LinearVelocity);
+
+                //do a raycast in the sub's coordinate space to see if it hit a structure
+                var wallBody = Submarine.PickBody(
+                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
+                    item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
+                    collisionCategory: Physics.CollisionWall);
+                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure structure)
+                {
+                    target = wallBody.FixtureList.First();
+                }
+                else
+                {
+                    return false;
+                }
             }
             else if (target.Body.UserData is Limb limb)
             {

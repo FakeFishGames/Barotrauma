@@ -368,7 +368,10 @@ namespace Barotrauma.Tutorials
                 {
                     //Disabled pulse until it's replaced by a better effect
                     //CharacterHealth.OpenHealthWindow.CPRButton.Pulsate(Vector2.One, Vector2.One * 1.5f, 1.0f);
-                    CharacterHealth.OpenHealthWindow.CPRButton.Flash();
+                    if (CharacterHealth.OpenHealthWindow.CPRButton.FlashTimer <= 0.0f)
+                    {
+                        CharacterHealth.OpenHealthWindow.CPRButton.Flash(highlightColor);
+                    }
                 }
                 yield return null;
             }

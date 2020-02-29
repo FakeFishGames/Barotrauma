@@ -260,10 +260,6 @@ namespace Barotrauma
             }
         }
 
-#if CLIENT
-        private Sprite jobIcon;
-#endif
-
         private List<WearableSprite> attachmentSprites;
         public List<WearableSprite> AttachmentSprites
         {
@@ -421,9 +417,6 @@ namespace Barotrauma
             CalculateHeadSpriteRange();
             Head.HeadSpriteId = GetRandomHeadID();
             Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
-#if CLIENT
-            jobIcon = Job.Prefab.Icon;
-#endif
 
             if (!string.IsNullOrEmpty(name))
             {

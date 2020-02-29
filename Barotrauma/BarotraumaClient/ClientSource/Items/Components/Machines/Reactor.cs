@@ -123,23 +123,22 @@ namespace Barotrauma.Items.Components
             var topLeftArea = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.2f), columnLeft.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                Stretch = true,
-                RelativeSpacing = 0.02f
+                Stretch = true
             };
 
 
-            Point maxIndicatorSize = new Point(int.MaxValue, (int)(50 * GUI.Scale));
-            criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+            Point maxIndicatorSize = new Point(int.MaxValue, (int)(40 * GUI.Scale));
+            criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
-            lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.4f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+            lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false
             };
-            criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.3f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
+            criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 CanBeFocused = false

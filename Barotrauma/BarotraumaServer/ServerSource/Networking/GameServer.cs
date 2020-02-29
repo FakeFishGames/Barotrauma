@@ -2587,8 +2587,8 @@ namespace Barotrauma.Networking
 
         public void SendOrderChatMessage(OrderChatMessage message)
         {
-            if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) return;
-            ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
+            if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) { return; }
+            //ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
 
             //check which clients can receive the message and apply distance effects
             foreach (Client client in ConnectedClients)
@@ -2598,13 +2598,8 @@ namespace Barotrauma.Networking
                 if (message.Sender != null &&
                     client.Character != null && !client.Character.IsDead)
                 {
-                    if (message.Sender != client.Character)
-                    {
-                        modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Text, messageType, message.Sender, client.Character);
-                    }
-
                     //too far to hear the msg -> don't send
-                    if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                    if (!client.Character.CanHearCharacter(message.Sender)) { continue; }
                 }
 
                 SendDirectChatMessage(new OrderChatMessage(message.Order, message.OrderOption, message.TargetEntity, message.TargetCharacter, message.Sender), client);

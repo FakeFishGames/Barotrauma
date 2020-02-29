@@ -330,14 +330,18 @@ namespace Barotrauma
         {
             var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.0f), parent.RectTransform))
             {
-                AbsoluteSpacing = 5
+                AbsoluteSpacing = 5,
+                CanBeFocused = true
             };
 
-            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, 30), container.RectTransform), "Sprite Deformations");
+            new GUITextBlock(new RectTransform(new Point(container.Rect.Width, (int)(60 * GUI.Scale)), container.RectTransform) { IsFixedSize = true },
+                "Sprite Deformations", textAlignment: Alignment.BottomCenter, font: GUI.LargeFont);
 
-            var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), 26, "Resolution", container.RectTransform, 
+            var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), (int)(30 * GUI.Scale), "Resolution", container.RectTransform, 
                 "How many vertices the deformable sprite has on the x and y axes. Larger values make the deformations look smoother, but are more performance intensive.");
+            resolutionField.RectTransform.IsFixedSize = true;
             GUINumberInput xField = null, yField = null;
+
             foreach (GUIComponent child in resolutionField.GetAllChildren())
             {
                 if (yField == null)
@@ -372,7 +376,8 @@ namespace Barotrauma
 
             foreach (SpriteDeformation deformation in deformations)
             {
-                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.Params, false, true);
+                var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.Params,
+                    inGame: false, showName: true, titleFont: GUI.SubHeadingFont);
                 deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
             }
 
@@ -391,7 +396,10 @@ namespace Barotrauma
 
             container.RectTransform.Resize(new Point(
                 container.Rect.Width, container.Children.Sum(c => c.Rect.Height + container.AbsoluteSpacing)), false);
+
+            container.RectTransform.MinSize = new Point(0, container.Rect.Height);
             container.RectTransform.MaxSize = new Point(int.MaxValue, container.Rect.Height);
+            container.RectTransform.IsFixedSize = true;
             container.Recalculate();
 
             return container;

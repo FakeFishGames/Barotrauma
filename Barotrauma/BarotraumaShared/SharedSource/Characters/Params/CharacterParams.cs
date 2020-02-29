@@ -195,7 +195,7 @@ namespace Barotrauma
             }
             if (space > 0)
             {
-                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
+                new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, (int)(space * GUI.yScale)), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
                 };
@@ -464,7 +464,7 @@ namespace Barotrauma
             private bool TryAddTarget(XElement targetElement, out TargetParams target)
             {
                 string tag = targetElement.GetAttributeString("tag", null);
-                if (!HasTag(tag))
+                if (HasTag(tag))
                 {
                     target = null;
                     DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
@@ -498,7 +498,7 @@ namespace Barotrauma
             public bool HasTag(string tag)
             {
                 if (tag == null) { return false; }
-                return targets.None(t => t.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase));
+                return targets.Any(t => t.Tag.Equals(tag, StringComparison.OrdinalIgnoreCase));
             }
 
             public bool RemoveTarget(TargetParams target) => RemoveSubParam(target, targets);

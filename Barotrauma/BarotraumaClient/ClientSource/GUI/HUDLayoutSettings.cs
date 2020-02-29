@@ -119,11 +119,10 @@ namespace Barotrauma
             PortraitArea = new Rectangle(GameMain.GraphicsWidth - Padding - portraitSize, GameMain.GraphicsHeight - Padding - portraitSize, portraitSize, portraitSize);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
-            int healthBarHeight = (int)Math.Max(25f * GUI.Scale, 12.5f);
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
-            int healthBarWidth = BottomRightInfoArea.Width;
-            //int healthBarWidth = (int)((BottomRightInfoArea.Width + CharacterInventory.SlotSize.X + CharacterInventory.Spacing) * 1.1f);
-            HealthBarArea = new Rectangle(BottomRightInfoArea.X, BottomRightInfoArea.Y - healthBarHeight - (int)(8 * GUI.Scale), healthBarWidth, healthBarHeight);
+            int healthBarWidth = (int)((BottomRightInfoArea.Width + CharacterInventory.SlotSize.X + CharacterInventory.Spacing) * 1.1f);
+            int healthBarHeight = (int)Math.Max(50f * GUI.Scale, 25f);
+            HealthBarArea = new Rectangle(BottomRightInfoArea.X - (healthBarWidth - BottomRightInfoArea.Width) + (int)(2 * GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + (int)(10 * GUI.Scale), healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);
             
             //HealthBarAreaRight = new Rectangle(Padding, GameMain.GraphicsHeight - healthBarHeight - Padding, healthBarWidth, healthBarHeight);

@@ -22,21 +22,20 @@ namespace Barotrauma.Items.Components
 
             var lightsArea = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1), paddedFrame.RectTransform, Anchor.CenterLeft))
             {
-                Stretch = true,
-                RelativeSpacing = 0.05f
+                Stretch = true
             };
-            powerIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), lightsArea.RectTransform), 
+            powerIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.33f), lightsArea.RectTransform), 
                 TextManager.Get("PowerTransferPowered"), font: GUI.SubHeadingFont, style: "IndicatorLightGreen")
             {
                 CanBeFocused = false
             };
-            highVoltageIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), lightsArea.RectTransform), 
+            highVoltageIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.33f), lightsArea.RectTransform), 
                 TextManager.Get("PowerTransferHighVoltage"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipOvervoltage"),
                 Enabled = false
             };
-            lowVoltageIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.3f), lightsArea.RectTransform), 
+            lowVoltageIndicator = new GUITickBox(new RectTransform(new Vector2(1, 0.33f), lightsArea.RectTransform), 
                 TextManager.Get("PowerTransferLowVoltage"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
                 ToolTip = TextManager.Get("PowerTransferTipLowvoltage"),

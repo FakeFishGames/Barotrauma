@@ -490,59 +490,40 @@ namespace Barotrauma
             return retVal;
         }
 
-        public static string ParseQuotedArgument(string[] arguments, int startIndex, out int endIndex)
+        public static string[] SplitCommand(string command)
         {
-#if WINDOWS
-            endIndex = startIndex + 1;
-            return arguments[startIndex];
-#else
-            string retVal = "";
-            int currIndex = startIndex;
-            bool escaped = false;
-            if (arguments[startIndex][0] != '\"')
+            command = command.Trim();
+
+            List<string> commands = new List<string>();
+            int escape = 0;
+            bool inQuotes = false;
+            string piece = "";
+
+            for (int i = 0; i < command.Length; i++)
             {
-                endIndex = startIndex+1;
-                return UnescapeCharacters(arguments[startIndex]);
-            }
-            while (currIndex < arguments.Length)
-            {
-                for (int i = currIndex == startIndex ? 1 : 0; i < arguments[currIndex].Length ;i++)
+                if (command[i] == '\\')
                 {
-                    if (!escaped)
-                    {
-                        if (arguments[currIndex][i] == '\\')
-                        {
-                            escaped = true;
-                        }
-                        else if (arguments[currIndex][i] == '\"')
-                        {
-                            endIndex = currIndex+1;
-                            return UnescapeCharacters(retVal);
-                        }
-                    }
-                    else
-                    {
-                        escaped = false;
-                    }
-                    retVal += arguments[currIndex][i];
+                    if (escape == 0) escape = 2;
+                    else piece += '\\';
                 }
-                retVal += " ";
-                currIndex++;
+                else if (command[i] == '"')
+                {
+                    if (escape == 0) inQuotes = !inQuotes;
+                    else piece += '"';
+                }
+                else if (command[i] == ' ' && !inQuotes)
+                {
+                    if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece);
+                    piece = "";
+                }
+                else if (escape == 0) piece += command[i];
+
+                if (escape > 0) escape--;
             }
 
-            endIndex = arguments.Length;
-            return retVal;
-#endif
-        }
+            if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece); //add final piece
 
-        public static string[] MergeArguments(string[] arguments)
-        {
-            List<string> mergedArgs = new List<string>();
-            for (int i = 0; i < arguments.Length;)
-            {
-                mergedArgs.Add(ParseQuotedArgument(arguments, i, out i));
-            }
-            return mergedArgs.ToArray();
+            return commands.ToArray();
         }
 
         public static void OpenFileWithShell(string filename)

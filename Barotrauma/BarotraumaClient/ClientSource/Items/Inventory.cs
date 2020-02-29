@@ -776,7 +776,8 @@ namespace Barotrauma
                 for (int i = 0; i < selInv.slots.Length; i++)
                 {
                     InventorySlot slot = selInv.slots[i];
-                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) || (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && selInv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any)))
+                    if (slot.InteractRect.Contains(PlayerInput.MousePosition) || 
+                        (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && selInv.Items[i] != null && selInv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any)))
                     {
                         return CursorState.Hand;
                     }
@@ -804,7 +805,7 @@ namespace Barotrauma
             for (int i = 0; i < inv.slots.Length; i++)
             {
                 InventorySlot slot = inv.slots[i];
-                if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && inv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any))
+                if (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && inv.Items[i] != null && inv.Items[i].AllowedSlots.Any(a => a == InvSlotType.Any))
                 {
                     return CursorState.Hand;
                 }
@@ -1299,7 +1300,7 @@ namespace Barotrauma
                 slot.QuickUseKey != Keys.None)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4 * UIScale), (int)(-1.25f * UIScale)), slot.QuickUseKey.ToString().Substring(1, 1), Color.Black, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), slot.QuickUseKey.ToString().Substring(1, 1), Color.Black, font: GUI.HotkeyFont);
             }
         }
 

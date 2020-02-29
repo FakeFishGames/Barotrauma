@@ -41,7 +41,7 @@ namespace Barotrauma
                 {
                     message.Write((byte)SpawnableType.Character);
                     DebugConsole.Log("Writing character spawn data: " + entities.Entity.ToString() + " (original ID: " + entities.OriginalID + ", current ID: " + entities.Entity.ID + ")");
-                    ((Character)entities.Entity).WriteSpawnData(message, entities.OriginalID);
+                    ((Character)entities.Entity).WriteSpawnData(message, entities.OriginalID, restrictMessageSize: true);
                 }
             }
         }

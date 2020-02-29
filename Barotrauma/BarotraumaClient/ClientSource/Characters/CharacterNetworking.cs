@@ -365,7 +365,11 @@ namespace Barotrauma
             {
                 character = Create(speciesName, position, seed, null, true);
                 character.ID = id;
-                character.ReadStatus(inc);
+                bool containsStatusData = inc.ReadBoolean();
+                if (containsStatusData)
+                {
+                    character.ReadStatus(inc);
+                }
             }
             else
             {
@@ -380,7 +384,11 @@ namespace Barotrauma
                 character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
-                character.ReadStatus(inc);
+                bool containsStatusData = inc.ReadBoolean();
+                if (containsStatusData)
+                {
+                    character.ReadStatus(inc);
+                }
 
                 if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC && !character.IsDead)
                 {

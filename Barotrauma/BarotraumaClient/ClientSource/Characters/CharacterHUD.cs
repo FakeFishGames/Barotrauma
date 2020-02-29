@@ -94,7 +94,7 @@ namespace Barotrauma
             {
                 if (character.Info != null && !character.ShouldLockHud())
                 {
-                    bool mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
+                    bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
@@ -300,16 +300,21 @@ namespace Barotrauma
             {
                 if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
                 {
-                    if (character.Info != null)
+                    if (character.Info != null && !character.ShouldLockHud())
                     {
                         character.Info.DrawBackground(spriteBatch);
-                        character.Info.DrawJobIcon(spriteBatch, scale: 1.25f);
+                        character.Info.DrawJobIcon(spriteBatch,
+                            new Rectangle(
+                                (int)(HUDLayoutSettings.BottomRightInfoArea.X + HUDLayoutSettings.BottomRightInfoArea.Width * 0.05f),
+                                (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
+                                (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
+                                (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)));
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2((int)(-4 * GUI.Scale), (int)(2 * GUI.Scale)), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
                     }
-                    mouseOnPortrait = HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
+                    mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
-                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.PortraitArea, GUI.Style.Green * 0.5f);
+                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUI.Style.Green * 0.5f);
                     }
                 }
                 if (ShouldDrawInventory(character))

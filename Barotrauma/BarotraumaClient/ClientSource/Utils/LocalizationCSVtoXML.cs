@@ -81,7 +81,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("NPCConversation Localization .csv to .xml conversion failed for: " + conversationFiles[j]);
                         continue;
                     }
-                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/NpcConversations_{languageNoWhitespace}_NEW.xml";
+                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/NpcConversations_{languageNoWhitespace}.xml";
                     File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
                 }
@@ -94,7 +94,7 @@ namespace Barotrauma
                         DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);
                         continue;
                     }
-                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/{languageNoWhitespace}Vanilla_NEW.xml";
+                    string xmlFileFullPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/{languageNoWhitespace}Vanilla.xml";
                     File.WriteAllLines(xmlFileFullPath, xmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
                 }

@@ -269,7 +269,8 @@ namespace Barotrauma
 
             if (selectedParams != null)
             {
-                var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)), isHorizontal: false, childAnchor: Anchor.TopCenter)
+                var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true }, 
+                    isHorizontal: false, childAnchor: Anchor.TopCenter)
                 {
                     AbsoluteSpacing = 5,
                     Stretch = true
@@ -293,7 +294,7 @@ namespace Barotrauma
             Sprite sprite = levelObjectPrefab.Sprites.FirstOrDefault() ?? levelObjectPrefab.DeformableSprite?.Sprite;
             if (sprite != null)
             {
-                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, 20)), 
+                editor.AddCustomContent(new GUIButton(new RectTransform(new Point(editor.Rect.Width / 2, (int)(25 * GUI.Scale))) { IsFixedSize = true }, 
                     TextManager.Get("leveleditor.editsprite"))
                 {
                     OnClicked = (btn, userdata) =>

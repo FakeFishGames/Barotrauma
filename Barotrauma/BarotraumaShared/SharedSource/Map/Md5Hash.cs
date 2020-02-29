@@ -25,6 +25,8 @@ namespace Barotrauma
             {
                 if (string.IsNullOrWhiteSpace(line)) { continue; }
                 string[] parts = line.Split('|');
+                if (parts.Length < 3) { continue; }
+
                 string path = parts[0].CleanUpPath();
                 string hashStr = parts[1];
                 long timeLong = long.Parse(parts[2]);
@@ -32,7 +34,7 @@ namespace Barotrauma
                 Md5Hash hash = new Md5Hash(hashStr);
                 DateTime time = DateTime.FromBinary(timeLong);
 
-                if (File.GetLastWriteTime(path) == time)
+                if (File.GetLastWriteTime(path) == time && !cache.ContainsKey(path))
                 {
                     cache.Add(path, new Tuple<Md5Hash, long>(hash, timeLong));
                 }
@@ -72,22 +74,22 @@ namespace Barotrauma
 
         public void SaveToCache(string filename, long? time = null)
         {
-            if (!string.IsNullOrWhiteSpace(filename))
+            if (string.IsNullOrWhiteSpace(filename)) { return; }
+            
+            lock (cache)
             {
-                lock (cache)
+                filename = filename.CleanUpPath();
+                Tuple<Md5Hash, long> cacheVal = new Tuple<Md5Hash, long>(this, time ?? File.GetLastWriteTime(filename).ToBinary());
+                if (cache.ContainsKey(filename))
                 {
-                    Tuple<Md5Hash, long> cacheVal = new Tuple<Md5Hash, long>(this, time ?? File.GetLastWriteTime(filename).ToBinary());
-                    if (cache.ContainsKey(filename))
-                    {
-                        cache[filename] = cacheVal;
-                    }
-                    else
-                    {
-                        cache.Add(filename, cacheVal);
-                    }
-                    SaveCache();
+                    cache[filename] = cacheVal;
                 }
-            }
+                else
+                {
+                    cache.Add(filename, cacheVal);
+                }
+                SaveCache();
+            }            
         }
 
         public static Md5Hash FetchFromCache(string filename)

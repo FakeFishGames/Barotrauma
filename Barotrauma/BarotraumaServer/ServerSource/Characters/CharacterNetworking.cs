@@ -438,7 +438,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg, UInt16 entityId)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityId, bool restrictMessageSize)
         {
             if (GameMain.Server == null) return;
             
@@ -465,7 +465,7 @@ namespace Barotrauma
             //character with no characterinfo (e.g. some monster)
             if (Info == null)
             {
-                WriteStatus(msg);
+                TryWriteStatus(msg);
                 return;
             }
 
@@ -489,7 +489,23 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
-            WriteStatus(msg);
+            TryWriteStatus(msg);
+
+            void TryWriteStatus(IWriteMessage msg)
+            {
+                var tempBuffer = new ReadWriteMessage();
+                WriteStatus(tempBuffer);
+                if (msg.LengthBytes + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
+                { 
+                    msg.Write(false);
+                    DebugConsole.ThrowError($"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msg.LengthBytes} + {tempBuffer.LengthBytes})");
+                }
+                else
+                {
+                    msg.Write(true);
+                    WriteStatus(msg);
+                }
+            }
 
             DebugConsole.Log("Character spawn message length: " + (msg.LengthBytes - msgLength));
         }

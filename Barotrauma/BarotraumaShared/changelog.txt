@@ -1,63 +1,8 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.708.0
+v0.9.7.1
 ---------------------------------------------------------------------------------------------------------
 
-- Minor UI improvements.
-- Reverted "improved the way clients initialize rounds to prevent timeouts if loading the round takes too long". There were a couple of oversights in the logic that caused issues such as combat missions not starting and campaign failing to start after the first completed round.
-- Fixed EventManager intensity being calculated incorrectly in multiplayer, causing monster spawns to be more sparse in multiplayer than in singleplayer.
-- Updated tutorial videos.
-- Increased duffel bag capacity to 20 to make sure it can hold all the items in a character's inventory (+ a couple more).
-- Fixed "Commando" security officer variant spawning without an SMG magazine.
-- Potential fix to crashes in "Body.SetTransformIgnoreContacts".
-- Fixed bots spawned with the "spawn" console command being unable to communicate via headsets after the first round in the single player campaign.
-- Fixed engine's AI target changing it's range too rapidly when the engine's force changes rapidly, causing monsters to often lose track of the sub after just spotting it.
-- Do not allow steering input on the nav terminal while command interface is enabled.
-- Fixed lobby command (which switches to the single player lobby) being usable in multiplayer.
-- Prevented chat message popups (the individual messages that popup when the chatbox is hidden) from getting cursor focus and blocking turret usage.
-- Made reactor's fuel rod panel a little larger.
-
----------------------------------------------------------------------------------------------------------
-v0.9.707.0
----------------------------------------------------------------------------------------------------------
-
-- Whoops, fixed crashing in multiplayer due to CrewManager attempting to access the single player chatbox.
-
----------------------------------------------------------------------------------------------------------
-v0.9.706.0
----------------------------------------------------------------------------------------------------------
-
-- Reverted back to the old inventory UI (with updated graphics) for now.
-- Miscellaneous UI layout fixes and improvements.
-- Visual improvements to the health interface.
-- Fixed bots spawned using console commands not getting assigned the correct team id on their headsets, causing them to be disabled in the command interface.
-- Fixed team ids of character's headsets resetting after the first campaign round, preventing them from communicating via radio with the players/bots who are playing their first round.
-- Fixed collider tunneling when client is slow to send inputs. Caused characters to occasionally noclip through walls when the connection or framerate is poor.
-- Improved the way clients initialize rounds to prevent timeouts if loading the round takes too long.
-- Fixed enemy team being visible in the command UI in combat missions.
-- Adjusted repair times to better suit current skill balance.
-- Medical item balancing.
-- Command button is hidden when it cannot be used.
-- Added a button to give orders to crew members directly.
-- Don't close item UI when opening crew list with keybind.
-- Allow toggling crew list with keybind in spectator and freecam modes.
-- Fixed command UI hotkey navigation triggering inventory hotkey in the last step.
-- Fixed command UI being immediately re-enabled after giving an order in clickless mode.
-- Fixed sonar beacon UI overlapping with the chatbox.
-- Fixed nav terminal's docking button overlapping with the chatbox.
-- Marked "editsubs" a cheat command.
-- Fixed cursor getting stuck to the dragging or hand state if dragging/highlighting a wire is interrupted by any other reason than letting go of the left mouse button (electrocution, getting killed, ending the round...)
-- Improved server lobby scaling when switching resolutions.
-- Fixed some server-side console commands not sending anything back to the client executing them, making it seem as if the command did nothing (botcount, botspawnmode, killdisconnectedtimer, togglekarma).
-- Fixed progress bars having a bunch of dead space at the beginning and end (causing battery/repair sliders to appear empty when below ~5%, and full when above ~95%).
-- Fixed CustomInterface crashing the game when selected if it contains no buttons/tickboxes.
-- Fixed a couple of unfair ruin traps (rooms with coil/sensor placement that makes it impossible to pass through without getting zapped).
-- Fixed tutorial video scaling when opened more than once.
-- Lock portrait area, health bar, affliction icons and report buttons when using a turret.
-- Fixed lower docking port ladder on Typhon 2.
-- Safeguards to prevent EventManager from crashing the game due to missing EventManagerSettings (#2066).
-- Some safeguards and extra error logging for case where the world field of a physics body seems to be null when dropping an item (#2252).
-- Fixed a rare crash with the message "Compare() method returns inconsistent results" when autoplacing items in the sub.
-- Fixed mechanic tutorial getting softlocked if the player never has an oxygen tank (or aluminium) and sodium in their inventory at the same time. I.e. if they deconstruct the oxygen tanks first and put the aluminium in the fabricator, and then get the sodium and put it in the fabricator.
+- Fixed crashing when attempting to publish Workshop items.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.7.0
@@ -224,6 +169,7 @@ Multiplayer:
 - Fixed a bunch of bugs that caused "missing entity" errors. However, there are many different reasons the error can occur, so even though we have not run into the issue anymore during out testing rounds, there is still a chance it may occur in some situations.
 - Fixed inventory items occasionally getting mixed up in the multiplayer campaign.
 - Fixed a bug that caused clients to get disconnected with an "invalid object header" error when a character has a large amount of different afflictions.
+- Fixed collider tunneling when client is slow to send inputs. Caused characters to occasionally noclip through walls when the connection or framerate is poor.
 - Fixed server owner occasionally timing out if loading the round takes too long.
 - Fixed server owner's character occasionally being killed due to round start timeouts.
 - Fixed players not getting notified in any way when their connection to the server has timed out, allowing them to keep playing without being able to interact with anything.
@@ -243,6 +189,7 @@ Multiplayer:
 - Increased default killdisconnectedtime to 2 minutes.
 - Player cap can be adjusted in the server settings.
 - Made "showseed" console command usable by clients.
+- Fixed lobby command (which switches to the single player lobby) being usable in multiplayer.
 
 Bugfixes:
 - Fixes to render order oddities (structures with a depth > 0.5 always rendering behind all items, inconsistent render order between sub editor and in-game). Now structures with a depth of >= 0.9 are always behind everything (and visible through the LOS effect), and item's sprite depth is capped to 0.9.
@@ -250,6 +197,7 @@ Bugfixes:
 - Fixed Kastrull flooding when the drone undocks.
 - Fixed ballast pumps deteriorating in Kastrull's drone despite being unreachable by the players.
 - Fixed sonar transducers consuming no power.
+- Fixed EventManager intensity being calculated incorrectly in multiplayer, causing monster spawns to be more sparse in multiplayer than in singleplayer.
 - Fixed autopilot overshooting and compensating too heavily when attempting to maintain position, causing it to never fully stop on the target position.
 - Fixed charactes being unable to get through multi-layer walls from inside the sub (for example the walls above Humpback's command room).
 - Fixed plasma cutter not cutting through holes in walls.
@@ -298,6 +246,8 @@ Bugfixes:
 - Fixed engine sound range being up to 20 times larger than it should be.
 - Fixed monsters occasionally being able to attack through walls.
 - Fixed alarm buzzer not returning to the original rotation when the alarm stops.
+- Fixed a couple of unfair ruin traps (rooms with coil/sensor placement that makes it impossible to pass through without getting zapped).
+- Fixed mechanic tutorial getting softlocked if the player never has an oxygen tank (or aluminium) and sodium in their inventory at the same time. I.e. if they deconstruct the oxygen tanks first and put the aluminium in the fabricator, and then get the sodium and put it in the fabricator.
 
 ---------------------------------------------------------------------------------------------------------
 v0.9.6.0

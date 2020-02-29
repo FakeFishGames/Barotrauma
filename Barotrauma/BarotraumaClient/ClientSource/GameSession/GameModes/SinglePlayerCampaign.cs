@@ -293,7 +293,7 @@ namespace Barotrauma
 
                     summaryScreen.RemoveChild(summaryScreen.Children.FirstOrDefault(c => c is GUIButton));
 
-                    var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                    var okButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("LoadGameButton"))
                     {
                         OnClicked = (GUIButton button, object obj) =>
@@ -305,7 +305,7 @@ namespace Barotrauma
                         }
                     };
 
-                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonArea.RectTransform),
+                    var quitButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform),
                         TextManager.Get("QuitButton"));
                     quitButton.OnClicked += GameMain.LobbyScreen.QuitToMainMenu;
                     quitButton.OnClicked += (GUIButton button, object obj) =>

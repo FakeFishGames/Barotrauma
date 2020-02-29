@@ -1970,7 +1970,7 @@ namespace Barotrauma
                 return;
             }
 
-            string[] splitCommand = SplitCommand(command);
+            string[] splitCommand = ToolBox.SplitCommand(command);
             Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
             if (matchingCommand != null && !client.PermittedConsoleCommands.Contains(matchingCommand) && client.Connection != GameMain.Server.OwnerConnection)
             {

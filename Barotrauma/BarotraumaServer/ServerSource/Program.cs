@@ -97,7 +97,7 @@ namespace Barotrauma
             sb.AppendLine("System info:");
             sb.AppendLine("    Operating system: " + System.Environment.OSVersion + (System.Environment.Is64BitOperatingSystem ? " 64 bit" : " x86"));
             sb.AppendLine("\n");
-            sb.AppendLine("Exception: "+exception.Message);
+            sb.AppendLine("Exception: " + exception.Message + " (" + exception.GetType().ToString() + ")");
             sb.AppendLine("Target site: " +exception.TargetSite.ToString());
             sb.AppendLine("Stack trace: ");
             sb.AppendLine(exception.StackTrace);

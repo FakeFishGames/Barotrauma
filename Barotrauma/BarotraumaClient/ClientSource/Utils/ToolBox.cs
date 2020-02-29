@@ -239,49 +239,16 @@ namespace Barotrauma
         {
             name = null; endpoint = null; lobbyId = 0;
             if (args == null || args.Length < 2) { return; }
-            for (int i = 0; i < args.Length - 1; i++)
-            {
-                if (i < args.Length-2 && args[i].Trim().ToLowerInvariant().Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    int j = i + 2;
 
-                    name = "";
-                    if (args[i + 1].Trim()[0] == '"')
-                    {
-                        name = args[i + 1].Trim().Substring(1);
-                        if (!(name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\')))
-                        {
-                            for (; j < args.Length - 1; j++)
-                            {
-                                name += " " + args[j].Trim();
-                                if (name[name.Length - 1] == '"' && (name.Length < 2 || name[name.Length - 1] != '\\'))
-                                {
-                                    name = name.Substring(0, name.Length - 1).Replace("\\\"", "\"");
-                                    j++;
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            name = name.Substring(0, name.Length - 1);
-                        }
-                    }
-                    else
-                    {
-                        name = args[i + 1].Trim();
-                    }
-                    endpoint = args[j].Trim();
-                    
-                    break;
-                }
-                else if (i < args.Length-1 && args[i].Trim().ToLower().Equals("+connect_lobby", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    UInt64.TryParse(args[i + 1].Trim(), out lobbyId);
-                    endpoint = null;
-                    name = null;
-                    break;
-                }
+            if (args[0].Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
+            {
+                if (args.Length < 3) { return; }
+                name = args[1];
+                endpoint = args[2];
+            }
+            else if (args[0].Equals("+connect_lobby", StringComparison.InvariantCultureIgnoreCase))
+            {
+                UInt64.TryParse(args[1], out lobbyId);
             }
         }
     }

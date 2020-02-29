@@ -302,11 +302,11 @@ namespace Barotrauma.Tutorials
         protected Item FindOrGiveItem(Character character, string identifier)
         {
             var item = character.Inventory.FindItemByIdentifier(identifier);
-            if (item != null) { return item; }
+            if (item != null && !item.Removed) { return item; }
 
             ItemPrefab itemPrefab = MapEntityPrefab.Find(name: null, identifier: identifier) as ItemPrefab;
             item = new Item(itemPrefab, Vector2.Zero, submarine: null);
-            character.Inventory.TryPutItem(item, character);
+            character.Inventory.TryPutItem(item, character, item.AllowedSlots);
             return item;
         }
     }

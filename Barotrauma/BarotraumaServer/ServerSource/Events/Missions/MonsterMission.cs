@@ -15,7 +15,7 @@ namespace Barotrauma
             msg.Write((byte)monsters.Count);
             foreach (Character monster in monsters)
             {
-                monster.WriteSpawnData(msg, monster.ID);
+                monster.WriteSpawnData(msg, monster.ID, restrictMessageSize: false);
             }
         }
     }

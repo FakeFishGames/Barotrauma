@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         private readonly List<GUIComponent> uiElements = new List<GUIComponent>();
         private GUILayoutGroup uiElementContainer;
 
-        private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(60 * GUI.yScale));
+        private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(65 * GUI.yScale));
 
         partial void InitProjSpecific(XElement element)
         {
@@ -25,6 +25,7 @@ namespace Barotrauma.Items.Components
         {
             GuiFrame.ClearChildren();
             CreateGUI();
+            UpdateLabelsProjSpecific();
         }
 
         private void CreateGUI()
@@ -42,7 +43,6 @@ namespace Barotrauma.Items.Components
             };
 
             float elementSize = Math.Min(1.0f / visibleElements.Count(), 1);
-            var textBlocks = new List<GUITextBlock>();
             foreach (CustomInterfaceElement ciElement in visibleElements)
             {
                 if (ciElement.ContinuousSignal)
@@ -55,7 +55,6 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
-                    textBlocks.Add(tickBox.TextBlock);
                     tickBox.OnSelected += (tBox) =>
                     {
                         if (GameMain.Client == null)
@@ -80,7 +79,6 @@ namespace Barotrauma.Items.Components
                     {
                         UserData = ciElement
                     };
-                    textBlocks.Add(btn.TextBlock);
                     btn.OnClicked += (_, userdata) =>
                     {
                         if (GameMain.Client == null)
@@ -97,11 +95,9 @@ namespace Barotrauma.Items.Components
                     //reset size restrictions set by the Style to make sure the elements can fit the interface
                     btn.RectTransform.MinSize = btn.Frame.RectTransform.MinSize = new Point(0, 0);
                     btn.RectTransform.MaxSize = btn.Frame.RectTransform.MaxSize = ElementMaxSize;
-                    btn.TextBlock.Wrap = true;
 
                     uiElements.Add(btn);
                 }
-                GUITextBlock.AutoScaleAndNormalize(textBlocks);
             }
         }
 
@@ -183,14 +179,36 @@ namespace Barotrauma.Items.Components
                     button.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
                         TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
                         customInterfaceElementList[i].Label;
+                    button.TextBlock.Wrap = button.Text.Contains(' ');
                 }
                 else if (uiElements[i] is GUITickBox tickBox)
                 {
                     tickBox.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
                         TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
                         customInterfaceElementList[i].Label;
+                    tickBox.TextBlock.Wrap = tickBox.Text.Contains(' ');
                 }
             }
+
+            uiElementContainer.Recalculate();
+            var textBlocks = new List<GUITextBlock>();
+            foreach (GUIComponent element in uiElementContainer.Children)
+            {
+                if (element is GUIButton btn)
+                {
+                    if (btn.TextBlock.TextSize.Y > btn.Rect.Height - btn.TextBlock.Padding.Y - btn.TextBlock.Padding.W)
+                    {
+                        btn.RectTransform.RelativeSize = new Vector2(btn.RectTransform.RelativeSize.X, btn.RectTransform.RelativeSize.Y * 1.5f);
+                    }
+                    textBlocks.Add(btn.TextBlock);
+                }
+                else if (element is GUITickBox tickBox)
+                {
+                    textBlocks.Add(tickBox.TextBlock);
+                }
+            }
+            uiElementContainer.Recalculate();
+            GUITextBlock.AutoScaleAndNormalize(textBlocks);
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

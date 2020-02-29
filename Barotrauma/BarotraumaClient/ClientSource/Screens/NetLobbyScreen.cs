@@ -1428,7 +1428,10 @@ namespace Barotrauma
 
                 GUITextBlock.AutoScaleAndNormalize(jobPreferencesButton.TextBlock, appearanceButton.TextBlock);
 
+                // Unsubscribe from previous events, not even sure if this matters here but it doesn't hurt so why not
+                if (characterInfoFrame != null) { characterInfoFrame.RectTransform.SizeChanged -= RecalculateSubDescription; }
                 characterInfoFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), infoContainer.RectTransform), style: null);
+                characterInfoFrame.RectTransform.SizeChanged += RecalculateSubDescription;
 
                 JobList = new GUIListBox(new RectTransform(Vector2.One, characterInfoFrame.RectTransform), true)
                 {
@@ -2166,12 +2169,13 @@ namespace Barotrauma
                 OnClicked = ClosePlayerFrame
             };
 
-            buttonAreaLower.RectTransform.MinSize = new Point(0, buttonAreaLower.RectTransform.Children.Max(c => c.MinSize.Y));
-
+            buttonAreaLower.RectTransform.NonScaledSize = new Point(buttonAreaLower.Rect.Width, buttonAreaLower.RectTransform.Children.Max(c => c.NonScaledSize.Y));
+            
             if (buttonAreaTop != null)
             {
-                buttonAreaTop.RectTransform.MinSize = buttonAreaLower.RectTransform.MinSize =
-                    new Point(0, Math.Max(buttonAreaLower.RectTransform.MinSize.Y, buttonAreaTop.RectTransform.Children.Max(c => c.MinSize.Y)));
+                buttonAreaTop.RectTransform.NonScaledSize = 
+                buttonAreaLower.RectTransform.NonScaledSize =
+                    new Point(buttonAreaLower.Rect.Width, Math.Max(buttonAreaLower.RectTransform.NonScaledSize.Y, buttonAreaTop.RectTransform.Children.Max(c => c.NonScaledSize.Y)));
             }
 
             return false;
@@ -3301,13 +3305,21 @@ namespace Barotrauma
 
         private void CreateSubPreview(Submarine sub)
         {
-            subPreviewContainer.ClearChildren();
+            subPreviewContainer?.ClearChildren();
             sub.CreatePreviewWindow(subPreviewContainer);
-            var descriptionBox = subPreviewContainer.FindChild("descriptionbox", recursive: true);
-            //if description box and character info box are roughly the same size, scale them to the same size
-            if (characterInfoFrame != null && Math.Abs(descriptionBox.Rect.Height - characterInfoFrame.Rect.Height) < 80 * GUI.Scale)
+            RecalculateSubDescription();
+        }
+
+        private void RecalculateSubDescription()
+        {
+            var descriptionBox = subPreviewContainer?.FindChild("descriptionbox", recursive: true);
+            if (descriptionBox != null && characterInfoFrame != null)
             {
-                descriptionBox.RectTransform.MaxSize = new Point(descriptionBox.Rect.Width, characterInfoFrame.Rect.Height);
+                //if description box and character info box are roughly the same size, scale them to the same size
+                if (Math.Abs(descriptionBox.Rect.Height - characterInfoFrame.Rect.Height) < 80 * GUI.Scale)
+                {
+                    descriptionBox.RectTransform.MaxSize = new Point(descriptionBox.Rect.Width, characterInfoFrame.Rect.Height);
+                }
             }
         }
     }

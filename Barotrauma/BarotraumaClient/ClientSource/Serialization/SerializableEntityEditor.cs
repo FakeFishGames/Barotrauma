@@ -476,7 +476,8 @@ namespace Barotrauma
             {
                 if (property.TrySetValue(entity, numInput.FloatValue))
                 {
-                    numInput.FloatValue = (float)property.GetValue(entity);
+                    // This causes stack overflow. What's the purpose of it?
+                    //numInput.FloatValue = (float)property.GetValue(entity);
                     TrySendNetworkUpdate(entity, property);
                 }
             };

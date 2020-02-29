@@ -370,7 +370,7 @@ namespace Barotrauma
 
                     if (!selectedEvents.ContainsKey(eventSet))
                     {
-                        DebugConsole.ThrowError("Error in EventManager.Update: pending event set \"" + eventSet.DebugIdentifier + "\" not present in selected event sets.");
+                        //no events selected from this event set
                         continue;
                     }
 

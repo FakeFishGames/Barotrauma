@@ -210,13 +210,17 @@ namespace Barotrauma
 
             #region Reports
             var chatBox = ChatBox ?? GameMain.Client?.ChatBox;
-            chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), guiFrame.RectTransform), style: "ChatToggleButton");
-            chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
-            chatBox.ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
+            if (chatBox != null)
             {
-                chatBox.ToggleOpen = !chatBox.ToggleOpen;
-                return true;
-            };
+                chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), guiFrame.RectTransform), style: "ChatToggleButton");
+                chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
+                chatBox.ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
+                {
+                    chatBox.ToggleOpen = !chatBox.ToggleOpen;
+                    chatBox.CloseAfterMessageSent = false;
+                    return true;
+                };
+            }
 
             var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
             if (reports.None())
@@ -257,7 +261,7 @@ namespace Barotrauma
                     ToolTip = order.Name
                 };
 
-                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "InnerGlowCircular")
+                new GUIFrame(new RectTransform(new Vector2(1.5f), btn.RectTransform, Anchor.Center), "OuterGlowCircular")
                 {
                     Color = GUI.Style.Red * 0.8f,
                     HoverColor = GUI.Style.Red * 1.0f,
@@ -728,18 +732,28 @@ namespace Barotrauma
             if (characterFrame == null) { return; }
 
             GUILayoutGroup layoutGroup = (GUILayoutGroup)characterFrame.FindChild(c => c is GUILayoutGroup);
-            layoutGroup.RemoveChild(GetPreviousOrderComponent(layoutGroup));
             var currentOrderComponent = GetCurrentOrderComponent(layoutGroup);
 
-            if (order != null && currentOrderComponent != null)
+            if (order != null)
             {
-                var currentOrderInfo = (OrderInfo)currentOrderComponent.UserData;
+                var prevOrderComponent = GetPreviousOrderComponent(layoutGroup);
+                if (currentOrderComponent?.UserData is OrderInfo currentOrderInfo)
+                {
+                    if (order.Identifier == currentOrderInfo.Order.Identifier &&
+                        option == currentOrderInfo.OrderOption &&
+                        order.TargetEntity == currentOrderInfo.Order.TargetEntity) { return; }
 
-                if (order.Identifier == currentOrderInfo.Order.Identifier &&
-                    option == currentOrderInfo.OrderOption &&
-                    order.TargetEntity == currentOrderInfo.Order.TargetEntity) { return; }
-
-                DisplayPreviousCharacterOrder(character, layoutGroup, currentOrderInfo);
+                    layoutGroup.RemoveChild(prevOrderComponent);
+                    DisplayPreviousCharacterOrder(character, layoutGroup, currentOrderInfo);
+                }
+                else if (order.Identifier != dismissedOrderPrefab.Identifier &&
+                         prevOrderComponent?.UserData is OrderInfo prevOrderInfo &&
+                         order.Identifier == prevOrderInfo.Order.Identifier &&
+                         option == prevOrderInfo.OrderOption &&
+                         order.TargetEntity == prevOrderInfo.Order.TargetEntity)
+                {
+                    layoutGroup.RemoveChild(prevOrderComponent);
+                }
             }
 
             layoutGroup.RemoveChild(currentOrderComponent);
@@ -973,7 +987,7 @@ namespace Barotrauma
             if (PlayerInput.KeyDown(InputType.Command) && (GUI.KeyboardDispatcher.Subscriber == null || GUI.KeyboardDispatcher.Subscriber == crewList) &&
                 commandFrame == null && !clicklessSelectionActive && CanIssueOrders)
             {
-                CreateCommandUI(GUI.MouseOn?.UserData as Character);
+                CreateCommandUI(HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) ? Character.Controlled : GUI.MouseOn?.UserData as Character);
                 clicklessSelectionActive = isOpeningClick = true;
             }
 
@@ -1152,8 +1166,11 @@ namespace Barotrauma
                     {
                         ChatBox.InputBox.AddToGUIUpdateList();
                         ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                        ChatBox.ToggleOpen = true;
+                        if (!ChatBox.ToggleOpen)
+                        {
+                            ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                            ChatBox.ToggleOpen = true;
+                        }
                         ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
                     }
 
@@ -1161,8 +1178,11 @@ namespace Barotrauma
                     {
                         ChatBox.InputBox.AddToGUIUpdateList();
                         ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                        ChatBox.ToggleOpen = true;
+                        if (!ChatBox.ToggleOpen)
+                        {
+                            ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                            ChatBox.ToggleOpen = true;
+                        }
 
                         if (!ChatBox.InputBox.Text.StartsWith(ChatBox.RadioChatString))
                         {

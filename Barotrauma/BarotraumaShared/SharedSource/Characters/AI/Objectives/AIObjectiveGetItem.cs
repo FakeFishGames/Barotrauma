@@ -100,6 +100,14 @@ namespace Barotrauma
                     return;
                 }
             }
+            if (targetItem == null || targetItem.Removed)
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Target null or removed. Aborting.", Color.Red);
+#endif
+                Abandon = true;
+                return;
+            }
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG

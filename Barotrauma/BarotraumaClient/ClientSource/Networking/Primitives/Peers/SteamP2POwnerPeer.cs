@@ -408,6 +408,7 @@ namespace Barotrauma.Networking
 
             OnDisconnect?.Invoke();
 
+            SteamManager.LeaveLobby();
             Steamworks.SteamNetworking.ResetActions();
             Steamworks.SteamUser.OnValidateAuthTicketResponse -= OnAuthChange;
         }
@@ -427,6 +428,12 @@ namespace Barotrauma.Networking
             byte[] bufToSend = (byte[])msgToSend.Buffer.Clone();
             Array.Resize(ref bufToSend, msgToSend.LengthBytes);
             ChildServerRelay.Write(bufToSend);
+        }
+
+        ~SteamP2POwnerPeer()
+        {
+            OnDisconnect = null;
+            Close();
         }
 
 #if DEBUG

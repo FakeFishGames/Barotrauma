@@ -199,7 +199,17 @@ namespace Barotrauma
             ConnectEndpoint = null;
             ConnectLobby = 0;
 
-            ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint, out ConnectLobby);
+            try
+            {
+                ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint, out ConnectLobby);
+            }
+            catch (IndexOutOfRangeException e)
+            {
+                DebugConsole.ThrowError($"Failed to parse console arguments ({string.Join(' ', ConsoleArguments)})", e);
+                ConnectName = null;
+                ConnectEndpoint = null;
+                ConnectLobby = 0;
+            }
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
 
@@ -631,9 +641,21 @@ namespace Barotrauma
 
         public void OnInvitedToGame(string connectCommand)
         {
-            ToolBox.ParseConnectCommand(connectCommand.Split(' '), out ConnectName, out ConnectEndpoint, out ConnectLobby);
+            try
+            {
+                ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand), out ConnectName, out ConnectEndpoint, out ConnectLobby);
+            }
+            catch (IndexOutOfRangeException e)
+            {
+#if DEBUG
+                DebugConsole.ThrowError($"Failed to parse a Steam friend's connect invitation command ({connectCommand})", e);
+#endif
+                ConnectName = null;
+                ConnectEndpoint = null;
+                ConnectLobby = 0;
+            }
 
-            DebugConsole.NewMessage(ConnectName+", "+ConnectEndpoint,Color.Yellow);
+            DebugConsole.NewMessage(ConnectName + ", " + ConnectEndpoint, Color.Yellow);
         }
 
         public void OnLobbyJoinRequested(Steamworks.Data.Lobby lobby, Steamworks.SteamId friendId)

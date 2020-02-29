@@ -1118,45 +1118,9 @@ namespace Barotrauma
             commands.Sort((c1, c2) => c1.names[0].CompareTo(c2.names[0]));
         }
 
-        private static string[] SplitCommand(string command)
-        {
-            command = command.Trim();
-
-            List<string> commands = new List<string>();
-            int escape = 0;
-            bool inQuotes = false;
-            string piece = "";
-            
-            for (int i = 0; i < command.Length; i++)
-            {
-                if (command[i] == '\\')
-                {
-                    if (escape == 0) escape = 2;
-                    else piece += '\\';
-                }
-                else if (command[i] == '"')
-                {
-                    if (escape == 0) inQuotes = !inQuotes;
-                    else piece += '"';
-                }
-                else if (command[i] == ' ' && !inQuotes)
-                {
-                    if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece);
-                    piece = "";
-                }
-                else if (escape == 0) piece += command[i];
-
-                if (escape > 0) escape--;
-            }
-
-            if (!string.IsNullOrWhiteSpace(piece)) commands.Add(piece); //add final piece
-
-            return commands.ToArray();
-        }
-
         public static string AutoComplete(string command, int increment = 1)
         {
-            string[] splitCommand = SplitCommand(command);
+            string[] splitCommand = ToolBox.SplitCommand(command);
             string[] args = splitCommand.Skip(1).ToArray();
 
             //if an argument is given or the last character is a space, attempt to autocomplete the argument
@@ -1245,7 +1209,7 @@ namespace Barotrauma
 
             if (string.IsNullOrWhiteSpace(command) || command == "\\" || command == "\n") { return; }
 
-            string[] splitCommand = SplitCommand(command);
+            string[] splitCommand = ToolBox.SplitCommand(command);
             if (splitCommand.Length == 0)
             {
                 ThrowError("Failed to execute command \"" + command + "\"!");

@@ -171,6 +171,14 @@ namespace Barotrauma
                 TextBlock.SetTextPos();
             }
             GUI.Style.Apply(textBlock, "", this);
+
+            //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
+            //use the default CJK font as a fallback
+            if (TextManager.IsCJK(textBlock.Text) && !textBlock.Font.IsCJK)
+            {
+                textBlock.Font = GUI.CJKFont;
+            }
+
             Enabled = true;
         }
 

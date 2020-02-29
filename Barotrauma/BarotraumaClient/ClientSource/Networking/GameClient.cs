@@ -248,6 +248,14 @@ namespace Barotrauma.Networking
 
         private void ConnectToServer(object endpoint, string hostName)
         {
+            LastClientListUpdateID = 0;
+            foreach (var c in ConnectedClients)
+            {
+                GameMain.NetLobbyScreen.RemovePlayer(c);
+                c.Dispose();
+            }
+            ConnectedClients.Clear();
+
             chatBox.InputBox.Enabled = false;
             if (GameMain.NetLobbyScreen?.ChatInput != null)
             {
@@ -2449,17 +2457,23 @@ namespace Barotrauma.Networking
                                 {
                                     msgBox.AddToGUIUpdateList();
                                     ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                    ChatBox.ToggleOpen = true;
-                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                                    if (!chatBox.ToggleOpen)
+                                    {
+                                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                                        ChatBox.ToggleOpen = true;
+                                    }
                                 }
 
                                 if (radioKeyHit)
                                 {
                                     msgBox.AddToGUIUpdateList();
                                     ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                                    ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                    ChatBox.ToggleOpen = true;
+                                    if (!chatBox.ToggleOpen)
+                                    {
+                                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                                        ChatBox.ToggleOpen = true;
+                                    }
+                                    
                                     if (!msgBox.Text.StartsWith(ChatBox.RadioChatString))
                                     {
                                         msgBox.Text = ChatBox.RadioChatString;

@@ -933,7 +933,7 @@ namespace Barotrauma.CharacterEditor
                     bool useSpritesheetOrientation = float.IsNaN(lastLimb.Params.SpriteOrientation);
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteOrientation") + ":", useSpritesheetOrientation ? Color.White : Color.Yellow, Color.Gray * 0.5f, 10, GUI.Font);
                     float orientation = useSpritesheetOrientation ? RagdollParams.SpritesheetOrientation : lastLimb.Params.SpriteOrientation;
-                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 610 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), orientation, string.Empty, useSpritesheetOrientation ? Color.White : Color.Yellow,
                         angle =>
                         {
                             TryUpdateSubParam(lastLimb.Params, "spriteorientation", angle);
@@ -948,7 +948,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
-                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 560 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
+                    DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 610 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
                         angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
                 }
             }
@@ -1823,7 +1823,6 @@ namespace Barotrauma.CharacterEditor
         #endregion
 
         #region GUI
-        private static Point outerMargin = new Point(0, 0);
         private static Vector2 innerScale = new Vector2(0.95f, 0.95f);
 
         private GUILayoutGroup rightArea, leftArea;
@@ -1903,7 +1902,7 @@ namespace Barotrauma.CharacterEditor
             };
             centerArea = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.95f), parent: Frame.RectTransform, anchor: Anchor.TopRight)
             {
-                AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + 20), outerMargin.Y + 20)
+                AbsoluteOffset = new Point((int)(rightArea.RectTransform.ScaledSize.X + rightArea.RectTransform.RelativeOffset.X * rightArea.RectTransform.Parent.ScaledSize.X + (int)(20 * GUI.xScale)), (int)(20 * GUI.yScale))
 
             }, style: null)
             { CanBeFocused = false };
@@ -2213,22 +2212,25 @@ namespace Barotrauma.CharacterEditor
 
         private void CreateContextualControls()
         {
-            Point elementSize = new Point(120, 20);
+            Point elementSize = new Point(120, 20).Multiply(GUI.Scale);
             int textAreaHeight = 20;
             // General controls
             backgroundColorPanel = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.TopRight)
             {
-                AbsoluteOffset = new Point(10, 0)
+                AbsoluteOffset = new Point(10, 0).Multiply(GUI.Scale)
             }, style: null)
             {
                 CanBeFocused = false
             };
             // Background color
-            var frame = new GUIFrame(new RectTransform(new Point(500, 80), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
-            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform) { MinSize = new Point(80, 26) }, GetCharacterEditorTranslation("BackgroundColor") + ":", textColor: Color.WhiteSmoke);
+            var frame = new GUIFrame(new RectTransform(new Point(500, 80).Multiply(GUI.Scale), backgroundColorPanel.RectTransform, Anchor.TopRight), style: null, color: Color.Black * 0.4f);
+            new GUITextBlock(new RectTransform(new Vector2(0.2f, 1), frame.RectTransform)
+            {
+                MinSize = new Point(80, 26)
+            }, GetCharacterEditorTranslation("BackgroundColor") + ":", textColor: Color.WhiteSmoke);
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 1), frame.RectTransform, Anchor.TopRight)
             {
-                AbsoluteOffset = new Point(20, 0)
+                AbsoluteOffset = new Point(20, 0).Multiply(GUI.Scale)
             }, isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 Stretch = true,
@@ -2275,16 +2277,20 @@ namespace Barotrauma.CharacterEditor
             // Spritesheet controls
             spriteSheetControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f), centerArea.RectTransform, Anchor.BottomLeft)
             {
-                RelativeOffset = new Vector2(0, 0.05f)
+                RelativeOffset = new Vector2(0, 0.1f)
             }, style: null)
             {
                 CanBeFocused = false
             };
-            var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform)) { AbsoluteSpacing = 5, CanBeFocused = false };
+            var layoutGroupSpriteSheet = new GUILayoutGroup(new RectTransform(Vector2.One, spriteSheetControls.RectTransform))
+            {
+                AbsoluteSpacing = 5,
+                CanBeFocused = false
+            };
             new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupSpriteSheet.RectTransform), GetCharacterEditorTranslation("SpriteSheetZoom") + ":", Color.White);
             var spriteSheetControlElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2, textAreaHeight), layoutGroupSpriteSheet.RectTransform), style: null);
             CalculateSpritesheetZoom();
-            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.75f, 1), spriteSheetControlElement.RectTransform, Anchor.CenterLeft), barSize: 0.2f)
+            spriteSheetZoomBar = new GUIScrollBar(new RectTransform(new Vector2(0.69f, 1), spriteSheetControlElement.RectTransform, Anchor.CenterLeft), barSize: 0.2f, style: "GUISlider")
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom)),
                 Step = 0.01f,
@@ -2294,8 +2300,7 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.3f, 1), spriteSheetControlElement.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.75f, 0.0f) },
-                GetCharacterEditorTranslation("Reset"))
+            new GUIButton(new RectTransform(new Vector2(0.3f, 1.25f), spriteSheetControlElement.RectTransform, Anchor.CenterRight), GetCharacterEditorTranslation("Reset"), style: "GUIButtonFreeScale")
             {                
                 OnClicked = (box, data) =>
                 {
@@ -2344,17 +2349,22 @@ namespace Barotrauma.CharacterEditor
             };
             resetSpriteOrientationButtonParent = new GUIFrame(new RectTransform(new Vector2(0.1f, 0.025f), centerArea.RectTransform, Anchor.BottomCenter)
             {
-                AbsoluteOffset = new Point(0, -5),
+                AbsoluteOffset = new Point(0, -5).Multiply(GUI.Scale),
                 RelativeOffset = new Vector2(-0.05f, 0)
             }, style: null)
             {
                 CanBeFocused = false
             };
-            new GUIButton(new RectTransform(Vector2.One, resetSpriteOrientationButtonParent.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"))
+            new GUIButton(new RectTransform(Vector2.One, resetSpriteOrientationButtonParent.RectTransform, Anchor.TopRight), GetCharacterEditorTranslation("Reset"), style: "GUIButtonFreeScale")
             {
                 OnClicked = (box, data) =>
                 {
-                    foreach (var limb in selectedLimbs)
+                    IEnumerable<Limb> limbs = selectedLimbs;
+                    if (limbs.None())
+                    {
+                        limbs = selectedJoints.Select(j => PlayerInput.KeyDown(Keys.LeftAlt) ? j.LimbB : j.LimbA);
+                    }
+                    foreach (var limb in limbs)
                     {
                         TryUpdateSubParam(limb.Params, "spriteorientation", float.NaN);
                         if (limbPairEditing)
@@ -2421,7 +2431,7 @@ namespace Barotrauma.CharacterEditor
             };
 
             // Joint controls
-            Point sliderSize = new Point(300, 20);
+            Point sliderSize = new Point(300, 20).Multiply(GUI.Scale);
             jointControls = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.075f), centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupJoints = new GUILayoutGroup(new RectTransform(Vector2.One, jointControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             copyJointsToggle = new GUITickBox(new RectTransform(new Point(elementSize.X, textAreaHeight), layoutGroupJoints.RectTransform), GetCharacterEditorTranslation("CopyJointSettings"))
@@ -2453,7 +2463,7 @@ namespace Barotrauma.CharacterEditor
             var jointScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), jointScaleElement.RectTransform), $"{GetCharacterEditorTranslation("JointScale")}: {RagdollParams.JointScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
             var limbScaleElement = new GUIFrame(new RectTransform(sliderSize + new Point(0, textAreaHeight), layoutGroupRagdoll.RectTransform), style: null);
             var limbScaleText = new GUITextBlock(new RectTransform(new Point(elementSize.X, textAreaHeight), limbScaleElement.RectTransform), $"{GetCharacterEditorTranslation("LimbScale")}: {RagdollParams.LimbScale.FormatDoubleDecimal()}", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
+            jointScaleBar = new GUIScrollBar(new RectTransform(sliderSize, jointScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f, style: "GUISlider")
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.JointScale)),
                 Step = 0.001f,
@@ -2469,7 +2479,7 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
-            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f)
+            limbScaleBar = new GUIScrollBar(new RectTransform(sliderSize, limbScaleElement.RectTransform, Anchor.BottomLeft), barSize: 0.1f, style: "GUISlider")
             {
                 BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(RagdollParams.MIN_SCALE, RagdollParams.MAX_SCALE, RagdollParams.LimbScale)),
                 Step = 0.001f,
@@ -2514,64 +2524,58 @@ namespace Barotrauma.CharacterEditor
                 return true;
             };
 
-            Point buttonSize = new Point(180, 30);
-            int innerMargin = 5;
-            int outerMargin = 10;
-            extraRagdollControls = new GUIFrame(new RectTransform(new Point(buttonSize.X + outerMargin * 2, buttonSize.Y * 4 + innerMargin * 3 + outerMargin * 2), centerArea.RectTransform, Anchor.BottomRight)
+            // Just an approximation
+            Point buttonSize = new Point(200, 40).Multiply(GUI.Scale);
+            extraRagdollControls = new GUIFrame(new RectTransform(new Point(buttonSize.X, buttonSize.Y * 4), centerArea.RectTransform, Anchor.BottomRight)
             {
-                AbsoluteOffset = new Point(30, 0)
+                AbsoluteOffset = new Point(30, 0).Multiply(GUI.Scale),
+                MinSize = new Point(0, 120)
             }, style: null, color: Color.Black)
             {
                 CanBeFocused = false
             };
-            var extraRagdollLayout = new GUILayoutGroup(new RectTransform(new Point(extraRagdollControls.Rect.Width - outerMargin * 2, extraRagdollControls.Rect.Height - outerMargin * 2), extraRagdollControls.RectTransform, anchor: Anchor.Center))
+            var paddedFrame = new GUILayoutGroup(new RectTransform(Vector2.One * 0.95f, extraRagdollControls.RectTransform, Anchor.Center))
             {
-                AbsoluteSpacing = innerMargin
+                Stretch = true,
+                AbsoluteSpacing = 5
             };
-            deleteSelectedButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DeleteSelected"))
+            var buttons = GUI.CreateButtons(4, new Vector2(1, 0.25f), paddedFrame.RectTransform, Anchor.TopCenter, style: "GUIButtonSmallFreeScale");
+            deleteSelectedButton = buttons[0];
+            deleteSelectedButton.Text = GetCharacterEditorTranslation("DeleteSelected");
+            deleteSelectedButton.OnClicked = (button, data) =>
             {
-                OnClicked = (button, data) =>
-                {
-                    DeleteSelected();
-                    return true;
-                }
+                DeleteSelected();
+                return true;
             };
-            duplicateLimbButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("DuplicateLimb"))
+            duplicateLimbButton = buttons[1];
+            duplicateLimbButton.Text = GetCharacterEditorTranslation("DuplicateLimb");
+            duplicateLimbButton.OnClicked = (button, data) =>
             {
-                OnClicked = (button, data) =>
-                {
-                    CopyLimb(selectedLimbs.FirstOrDefault());
-                    return true;
-                }
+                CopyLimb(selectedLimbs.FirstOrDefault());
+                return true;
             };
-            createJointButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateJoint"))
+            createJointButton = buttons[2];
+            createJointButton.Text = GetCharacterEditorTranslation("CreateJoint");
+            createJointButton.OnClicked = (button, data) =>
             {
-                OnClicked = (button, data) =>
-                {
-                    ToggleJointCreationMode();
-                    return true;
-                }
+                ToggleJointCreationMode();
+                return true;
             };
-            createLimbButton = new GUIButton(new RectTransform(buttonSize, extraRagdollLayout.RectTransform), GetCharacterEditorTranslation("CreateLimb"))
+            createLimbButton = buttons[3];
+            createLimbButton.Text = GetCharacterEditorTranslation("CreateLimb");
+            createLimbButton.OnClicked = (button, data) =>
             {
-                OnClicked = (button, data) =>
-                {
-                    ToggleLimbCreationMode();
-                    return true;
-                }
+                ToggleLimbCreationMode();
+                return true;
             };
-
-            extraRagdollLayout.RectTransform.Resize(
-                new Point(extraRagdollLayout.Rect.Width, extraRagdollLayout.RectTransform.Children.Sum(c => c.MinSize.Y + extraRagdollLayout.AbsoluteSpacing)));
-            extraRagdollControls.RectTransform.Resize(new Point(extraRagdollControls.Rect.Width, extraRagdollLayout.Rect.Height + outerMargin * 2));
-            GUITextBlock.AutoScaleAndNormalize(extraRagdollLayout.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
+            GUITextBlock.AutoScaleAndNormalize(buttons.Select(b => b.TextBlock));
 
             // Animation
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
-            var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - 5, elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
+            var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - (int)(5 * GUI.xScale), elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
             var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation") + ": ", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            animSelection = new GUIDropDown(new RectTransform(new Point(100, elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 4);
+            animSelection = new GUIDropDown(new RectTransform(new Point((int)(100 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 4);
             if (character.AnimController.CanWalk)
             {
                 animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);
@@ -2762,7 +2766,7 @@ namespace Barotrauma.CharacterEditor
             saveRagdollButton.OnClicked += (button, userData) =>
             {
                 var box = new GUIMessageBox(GetCharacterEditorTranslation("SaveRagdoll"), $"{GetCharacterEditorTranslation("ProvideFileName")}: ", new string[] { TextManager.Get("Cancel"), TextManager.Get("Save") }, messageBoxRelSize);
-                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, 30), box.Content.RectTransform, Anchor.Center), RagdollParams.Name.RemoveWhitespace());
+                var inputField = new GUITextBox(new RectTransform(new Point(box.Content.Rect.Width, (int)(30 * GUI.yScale)), box.Content.RectTransform, Anchor.Center), RagdollParams.Name.RemoveWhitespace());
                 box.Buttons[0].OnClicked += (b, d) =>
                 {
                     box.Close();
@@ -3216,13 +3220,13 @@ namespace Barotrauma.CharacterEditor
                 CharacterParams.AddToEditor(mainEditor, space: 10);
                 var characterEditor = CharacterParams.SerializableEntityEditor;
                 // Add some space after the title
-                characterEditor.AddCustomContent(new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, 10), characterEditor.RectTransform), style: null) { CanBeFocused = false }, 1);
+                characterEditor.AddCustomContent(new GUIFrame(new RectTransform(new Point(characterEditor.Rect.Width, (int)(10 * GUI.yScale)), characterEditor.RectTransform), style: null) { CanBeFocused = false }, 1);
                 if (CharacterParams.AI != null)
                 {
                     CreateAddButton(CharacterParams.AI.SerializableEntityEditor, () => CharacterParams.AI.TryAddEmptyTarget(out _), GetCharacterEditorTranslation("AddAITarget"));
                     foreach (var target in CharacterParams.AI.Targets)
                     {
-                        CreateCloseButton(target.SerializableEntityEditor, () => CharacterParams.AI.RemoveTarget(target));
+                        CreateCloseButton(target.SerializableEntityEditor, () => CharacterParams.AI.RemoveTarget(target), size: 0.8f);
                     }
                 }
                 foreach (var emitter in CharacterParams.BloodEmitters)
@@ -3247,7 +3251,7 @@ namespace Barotrauma.CharacterEditor
                     CreateCloseButton(editor, () => CharacterParams.RemoveInventory(inventory));
                     foreach (var item in inventory.Items)
                     {
-                        CreateCloseButton(item.SerializableEntityEditor, () => inventory.RemoveItem(item));
+                        CreateCloseButton(item.SerializableEntityEditor, () => inventory.RemoveItem(item), size: 0.8f);
                     }
                     CreateAddButton(editor, () => inventory.AddItem(), GetCharacterEditorTranslation("AddInventoryItem"));
                 }
@@ -3319,13 +3323,13 @@ namespace Barotrauma.CharacterEditor
                                 {
                                     if (attackParams.AfflictionEditors.TryGetValue(affliction.Key, out SerializableEntityEditor afflictionEditor))
                                     {
-                                        CreateCloseButton(afflictionEditor, () => attackParams.RemoveAffliction(affliction.Value));
+                                        CreateCloseButton(afflictionEditor, () => attackParams.RemoveAffliction(affliction.Value), size: 0.8f);
                                     }
                                 }
                                 var attackEditor = attackParams.SerializableEntityEditor;
                                 CreateAddButton(attackEditor, () => attackParams.AddNewAffliction(), GetCharacterEditorTranslation("AddAffliction"));
                                 CreateCloseButton(attackEditor, () => limb.Params.RemoveAttack());
-                                var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, 20), attackEditor.RectTransform), style: null, color: ParamsEditor.Color)
+                                var space = new GUIFrame(new RectTransform(new Point(attackEditor.RectTransform.Rect.Width, (int)(20 * GUI.yScale)), attackEditor.RectTransform), style: null, color: ParamsEditor.Color)
                                 {
                                     CanBeFocused = false
                                 };
@@ -3341,13 +3345,14 @@ namespace Barotrauma.CharacterEditor
                 }
             }
 
-            void CreateCloseButton(SerializableEntityEditor editor, Action onButtonClicked)
+            void CreateCloseButton(SerializableEntityEditor editor, Action onButtonClicked, float size = 1)
             {
-                var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 30), editor.RectTransform), style: null)
+                int height = 30;
+                var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(height * size * GUI.yScale)), editor.RectTransform, isFixedSize: true), style: null)
                 {
                     CanBeFocused = false
                 };
-                new GUIButton(new RectTransform(new Vector2(0.08f, 0.8f), parent.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton", color: GUI.Style.Red)
+                new GUIButton(new RectTransform(new Vector2(0.9f), parent.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight), style: "GUICancelButton", color: GUI.Style.Red)
                 {
                     OnClicked = (button, data) =>
                     {
@@ -3361,7 +3366,7 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButtonAtLast(ParamsEditor editor, Action onButtonClicked, string text)
             {
-                var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, 50), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
+                var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, (int)(50 * GUI.yScale)), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
                 };
@@ -3378,11 +3383,11 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButton(SerializableEntityEditor editor, Action onButtonClicked, string text)
             {
-                var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, 40), editor.RectTransform), style: null)
+                var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(60 * GUI.yScale)), editor.RectTransform), style: null)
                 {
                     CanBeFocused = false
                 };
-                new GUIButton(new RectTransform(new Vector2(0.45f, 0.6f), parent.RectTransform, Anchor.CenterLeft), text)
+                new GUIButton(new RectTransform(new Vector2(0.45f, 0.4f), parent.RectTransform, Anchor.CenterLeft), text)
                 {
                     OnClicked = (button, data) =>
                     {

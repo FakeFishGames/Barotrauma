@@ -392,6 +392,12 @@ namespace Barotrauma.Networking
             OnDisconnect?.Invoke();
         }
 
+        ~SteamP2PClientPeer()
+        {
+            OnDisconnect = null;
+            Close();
+        }
+
 #if DEBUG
         public override void ForceTimeOut()
         {

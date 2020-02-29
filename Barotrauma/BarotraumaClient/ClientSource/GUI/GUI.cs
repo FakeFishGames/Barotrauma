@@ -133,6 +133,7 @@ namespace Barotrauma
         public static ScalableFont LargeFont => Style?.LargeFont;
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
+        public static ScalableFont HotkeyFont => Style?.HotkeyFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
@@ -802,14 +803,19 @@ namespace Barotrauma
                     case CharacterEditorScreen editor:
                         return editor.GetMouseCursorState();
                     // Portrait area during gameplay
-                    case GameScreen _ when HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition) && !(Character.Controlled?.ShouldLockHud() ?? true):
-                        return CursorState.Hand;
+                    case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
+                        if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
+                            Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
+                        {
+                            return CursorState.Hand;
+                        }
+                        break;
                     // Sub editor drag and highlight
                     case SubEditorScreen editor:
                     {
                         // Portrait area
                         if ((editor.CharacterMode || editor.WiringMode) && 
-                            HUDLayoutSettings.PortraitArea.Contains(PlayerInput.MousePosition))
+                            HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
                         {
                             return CursorState.Hand;
                         }

@@ -840,7 +840,7 @@ namespace Barotrauma
             msg.Write((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
-                msg.Write(affliction.Prefab.Identifier);
+                msg.Write(affliction.Prefab.UIntIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
@@ -860,7 +860,7 @@ namespace Barotrauma
             foreach (var limbAffliction in limbAfflictions)
             {
                 msg.WriteRangedInteger(limbHealths.IndexOf(limbAffliction.First), 0, limbHealths.Count - 1);
-                msg.Write(limbAffliction.Second.Prefab.Identifier);
+                msg.Write(limbAffliction.Second.Prefab.UIntIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
                     0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);

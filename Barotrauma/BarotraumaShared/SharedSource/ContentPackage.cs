@@ -121,12 +121,14 @@ namespace Barotrauma
             {
                 if (md5Hash == null)
                 {
-                    md5Hash = Md5Hash.FetchFromCache(Path);
+                    //TODO: before re-enabling content package hash caching, make sure the hash gets recalculated when any file in the content package changes, not just when the filelist.xml changes.
+                    /*md5Hash = Md5Hash.FetchFromCache(Path);
                     if (md5Hash == null)
                     {
                         CalculateHash();
                         md5Hash.SaveToCache(Path);
-                    }
+                    }*/
+                    CalculateHash();
                 }
                 return md5Hash; 
             }

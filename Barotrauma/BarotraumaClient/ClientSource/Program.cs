@@ -162,7 +162,7 @@ namespace Barotrauma
             }
 
             sb.AppendLine("\n");
-            sb.AppendLine("Exception: " + exception.Message);
+            sb.AppendLine("Exception: " + exception.Message + " (" + exception.GetType().ToString() + ")");
 #if WINDOWS
             if (exception is SharpDXException sharpDxException && ((uint)sharpDxException.HResult) == 0x887A0005)
             {

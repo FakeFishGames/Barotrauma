@@ -446,6 +446,7 @@ namespace Barotrauma
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
 #if DEBUG
+            AssignRelayToServer("crash", false);
             AssignRelayToServer("simulatedlatency", false);
             AssignRelayToServer("simulatedloss", false);
             AssignRelayToServer("simulatedduplicateschance", false);
@@ -1183,7 +1184,6 @@ namespace Barotrauma
             {
                 GameMain.Client.PrintReceiverTransters();
             }));
-
 
             commands.Add(new Command("spamchatmessages", "", (string[] args) =>
             {

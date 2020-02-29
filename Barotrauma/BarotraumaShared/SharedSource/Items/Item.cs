@@ -1369,7 +1369,7 @@ namespace Barotrauma
                         container = container.Container;
                     }
                 }
-                if (hasWaterStatusEffects && condition <= 0.0f)
+                if (hasWaterStatusEffects && condition > 0.0f)
                 {
                     ApplyStatusEffects(!waterProof && inWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
                 }

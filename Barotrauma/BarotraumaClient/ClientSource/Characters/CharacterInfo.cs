@@ -12,21 +12,12 @@ namespace Barotrauma
     {
         public const float BgScale = 1.2f;
         private static Sprite infoAreaPortraitBG;
-        private static Vector2 infoBGPosition;
-        private static Vector2 jobIconPos;
 
         public static void Init()
         {
-            GameMain.Instance.OnResolutionChanged += SetUILayout;
             infoAreaPortraitBG = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
-            SetUILayout();
         }
 
-        private static void SetUILayout()
-        {
-            jobIconPos = HUDLayoutSettings.BottomRightInfoArea.Center.ToVector2() + new Vector2(12 * GUI.Scale, 24 * GUI.Scale);
-            infoBGPosition = HUDLayoutSettings.BottomRightInfoArea.Location.ToVector2();
-        }
 
         public GUIFrame CreateInfoFrame(GUIFrame frame)
         {
@@ -180,7 +171,7 @@ namespace Barotrauma
 
         public void DrawBackground(SpriteBatch spriteBatch)
         {
-            infoAreaPortraitBG.Draw(spriteBatch, infoBGPosition, Color.White, Vector2.Zero, 0.0f,
+            infoAreaPortraitBG.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea.Location.ToVector2(), Color.White, Vector2.Zero, 0.0f,
                 scale: new Vector2(
                     HUDLayoutSettings.BottomRightInfoArea.Width / (float)infoAreaPortraitBG.SourceRect.Width,
                     HUDLayoutSettings.BottomRightInfoArea.Height / (float)infoAreaPortraitBG.SourceRect.Height));
@@ -232,11 +223,20 @@ namespace Barotrauma
             }
         }
 
-        public void DrawJobIcon(SpriteBatch spriteBatch, Vector2? pos = null, float scale = 1.0f)
+        public void DrawJobIcon(SpriteBatch spriteBatch, Vector2 pos, float scale = 1.0f)
         {
-            if (jobIcon == null) return;
-            float combinedScale = .5f * GUI.Scale * scale;
-            jobIcon.Draw(spriteBatch, pos ?? jobIconPos, Job.Prefab.UIColor, scale: combinedScale);
+            var icon = Job?.Prefab?.Icon;
+            if (icon == null) { return; }
+            icon.Draw(spriteBatch, pos, Job.Prefab.UIColor, scale: scale);
+        }
+        public void DrawJobIcon(SpriteBatch spriteBatch, Rectangle area)
+        {
+            var icon = Job?.Prefab?.Icon;
+            if (icon == null) { return; }
+            icon.Draw(spriteBatch,
+                area.Center.ToVector2(),
+                Job.Prefab.UIColor,
+                scale: Math.Min(area.Width / (float)icon.SourceRect.Width, area.Height / (float)icon.SourceRect.Height));
         }
 
         private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)

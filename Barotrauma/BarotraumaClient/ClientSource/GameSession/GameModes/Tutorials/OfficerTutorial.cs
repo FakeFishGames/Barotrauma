@@ -124,6 +124,11 @@ namespace Barotrauma.Tutorials
             officer_gunIcon = gunOrder.SymbolSprite;
             officer_gunIconColor = gunOrder.Color;
 
+            var bandage = FindOrGiveItem(officer, "antibleeding1");
+            bandage.Unequip(officer);
+            officer.Inventory.RemoveItem(bandage);
+            FindOrGiveItem(officer, "antibleeding1");
+
             // Other tutorial items
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
             tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
@@ -199,6 +204,8 @@ namespace Barotrauma.Tutorials
         public override IEnumerable<object> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
+
+            yield return new WaitForSeconds(0.01f);
 
             // Room 1
             SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);

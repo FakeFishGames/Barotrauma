@@ -336,7 +336,7 @@ namespace Barotrauma.Items.Components
             float elementScale = 0.6f;
             dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest)
             {
-                RelativeOffset = Sonar.controlBoxOffset
+                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.05f, Sonar.controlBoxOffset.Y)
             }, style: null);
 
             dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
@@ -358,6 +358,8 @@ namespace Barotrauma.Items.Components
                 }
             };
             dockingButton.Font = GUI.SubHeadingFont;
+            dockingButton.TextBlock.RectTransform.MaxSize = new Point((int)(dockingButton.Rect.Width * 0.7f), int.MaxValue);
+            dockingButton.TextBlock.AutoScaleHorizontal = true;
 
             var style = GUI.Style.GetComponentStyle("DockingButtonUp");
             Sprite buttonSprite = style.Sprites.FirstOrDefault().Value.FirstOrDefault()?.Sprite;

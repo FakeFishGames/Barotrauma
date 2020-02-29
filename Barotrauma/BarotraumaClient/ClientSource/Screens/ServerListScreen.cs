@@ -1295,7 +1295,20 @@ namespace Barotrauma
                 {
                     info.StatusText = friend.GetRichPresence("status") ?? "";
                     string connectCommand = friend.GetRichPresence("connect") ?? "";
-                    ToolBox.ParseConnectCommand(connectCommand.Split(' '), out info.ConnectName, out info.ConnectEndpoint, out info.ConnectLobby);
+
+                    try
+                    {
+                        ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand), out info.ConnectName, out info.ConnectEndpoint, out info.ConnectLobby);
+                    }
+                    catch (IndexOutOfRangeException e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError($"Failed to parse a Steam friend's connect command ({connectCommand})", e);
+#endif
+                        info.ConnectName = null;
+                        info.ConnectEndpoint = null;
+                        info.ConnectLobby = 0;
+                    }
                 }
                 else
                 {

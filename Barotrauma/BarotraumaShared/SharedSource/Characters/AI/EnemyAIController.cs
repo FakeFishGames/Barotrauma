@@ -1271,16 +1271,42 @@ namespace Barotrauma
 
             if (attackResult.Damage > 0.0f)
             {
+                bool canAttack = attacker.Submarine == Character.Submarine && canAttackCharacters || attacker.Submarine != null && canAttackSub;
                 if (Character.Params.AI.AttackWhenProvoked)
                 {
-                    if (attacker.Submarine == Character.Submarine && canAttackCharacters || attacker.Submarine != null && canAttackSub)
+                    if (canAttack)
                     {
                         ChangeTargetState(attacker, AIState.Attack, 100);
                     }
                 }
                 else if (!AIParams.HasTag(attacker.SpeciesName))
                 {
-                    ChangeTargetState(attacker, AIState.Flee, 100);
+                    if (attacker.AIController is EnemyAIController enemyAI)
+                    {
+                        if (enemyAI.CombatStrength > CombatStrength)
+                        {
+                            if (!AIParams.HasTag("stronger"))
+                            {
+                                ChangeTargetState(attacker, AIState.Escape, 100);
+                            }
+                        }
+                        else if (enemyAI.CombatStrength < CombatStrength)
+                        {
+                            if (!AIParams.HasTag("weaker"))
+                            {
+                                ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
+                            }
+                        }
+                        else
+                        {
+                            // Equal strength
+                            ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
+                        }
+                    }
+                    else
+                    {
+                        ChangeTargetState(attacker, AIState.Escape, 100);
+                    }
                 }
             }
 
@@ -1850,7 +1876,7 @@ namespace Barotrauma
             SetStateResetTimer();
             ChangeParams(target.SpeciesName);
             // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items
-            if (state == AIState.Attack || state == AIState.Flee)
+            if (state == AIState.Attack || state == AIState.Escape)
             {
                 ChangeParams("weapon");
                 ChangeParams("tool");
