@@ -262,7 +262,7 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().Equals("nojob", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)

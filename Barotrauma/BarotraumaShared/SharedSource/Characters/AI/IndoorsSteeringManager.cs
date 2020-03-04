@@ -56,7 +56,7 @@ namespace Barotrauma
         /// <summary>
         /// Returns true if any node in the path is in stairs
         /// </summary>
-        public bool PathHasStairs => currentPath != null && currentPath.Nodes.Any(n => n.Stairs != null);
+        public bool InStairs => currentPath != null && currentPath.Nodes.Any(n => n.Stairs != null);
 
         public bool IsNextNodeLadder => GetNextLadder() != null;
 
@@ -134,7 +134,7 @@ namespace Barotrauma
 
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
-            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.Finished || Vector2.DistanceSquared(target, currentTarget) > 1);
+            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.NextNode == null || Vector2.DistanceSquared(target, currentTarget) > 1);
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (needsNewPath || findPathTimer < -1.0f)
             {
@@ -308,7 +308,7 @@ namespace Barotrauma
                     currentPath.SkipToNextNode();
                 }
             }
-            else if (!IsNextLadderSameAsCurrent)
+            else
             {
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
@@ -530,6 +530,7 @@ namespace Barotrauma
             if (node.Waypoint != null && node.Waypoint.CurrentHull != null)
             {
                 var hull = node.Waypoint.CurrentHull;
+
                 if (hull.FireSources.Count > 0)
                 {
                     foreach (FireSource fs in hull.FireSources)
@@ -537,14 +538,9 @@ namespace Barotrauma
                         penalty += fs.Size.X * 10.0f;
                     }
                 }
-                if (character.NeedsAir && hull.WaterVolume / hull.Rect.Width > 100.0f)
-                {
-                    penalty += 500.0f;
-                }
-                if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume)
-                {
-                    penalty += 1000.0f;
-                }
+
+                if (character.NeedsAir && hull.WaterVolume / hull.Rect.Width > 100.0f) penalty += 500.0f;
+                if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume) penalty += 1000.0f;
             }
 
             return penalty;

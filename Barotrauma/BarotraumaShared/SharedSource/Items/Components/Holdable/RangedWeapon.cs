@@ -29,13 +29,6 @@ namespace Barotrauma.Items.Components
             set { reload = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
-        public int ProjectileCount
-        {
-            get;
-            set;
-        }
-
         [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
         public float Spread
         {
@@ -117,60 +110,54 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             }
 
-            for (int i = 0; i < ProjectileCount; i++)
+            Projectile projectile = FindProjectile(triggerOnUseOnContainers: true);
+            if (projectile == null) { return true; }
+            
+            float spread = GetSpread(character);
+            float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
+            rotation += spread * Rand.Range(-0.5f, 0.5f);
+
+            projectile.User = character;
+            //add the limbs of the shooter to the list of bodies to be ignored
+            //so that the player can't shoot himself
+            projectile.IgnoredBodies = new List<Body>(limbBodies);
+
+            Vector2 projectilePos = item.SimPosition;
+            Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
+            Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
+            //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
+            if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
-                Projectile projectile = FindProjectile(triggerOnUseOnContainers: true);
-                if (projectile == null) { return true; }
-
-                float spread = GetSpread(character);
-                float rotation = (item.body.Dir == 1.0f) ? item.body.Rotation : item.body.Rotation - MathHelper.Pi;
-                rotation += spread * Rand.Range(-0.5f, 0.5f);
-
-                projectile.User = character;
-                //add the limbs of the shooter to the list of bodies to be ignored
-                //so that the player can't shoot himself
-                projectile.IgnoredBodies = new List<Body>(limbBodies);
-
-                Vector2 projectilePos = item.SimPosition;
-                Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
-                Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
-                //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
-                if (Submarine.PickBody(sourcePos, barrelPos, projectile.IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
-                {
-                    //no obstacles -> we can spawn the projectile at the barrel
-                    projectilePos = barrelPos;
-                }
-                else if ((sourcePos - barrelPos).LengthSquared() > 0.0001f)
-                {
-                    //spawn the projectile body.GetMaxExtent() away from the position where the raycast hit the obstacle
-                    projectilePos = sourcePos - Vector2.Normalize(barrelPos - projectilePos) * Math.Max(projectile.Item.body.GetMaxExtent(), 0.1f);
-                }
-
-                projectile.Item.body.ResetDynamics();
-                projectile.Item.SetTransform(projectilePos, rotation);
-
-                projectile.Use(deltaTime);
-                if (projectile.Item.Removed) { continue; }
-                projectile.User = character;
-
-                projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
-
-                //set the rotation of the projectile again because dropping the projectile resets the rotation
-                projectile.Item.SetTransform(projectilePos,
-                    rotation + (projectile.Item.body.Dir * projectile.LaunchRotationRadians));
-
-                item.RemoveContained(projectile.Item);
-
-                if (i == 0)
-                {
-                    //recoil
-                    item.body.ApplyLinearImpulse(
-                        new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f,
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                }
+                //no obstacles -> we can spawn the projectile at the barrel
+                projectilePos = barrelPos;
             }
+            else if ((sourcePos - barrelPos).LengthSquared() > 0.0001f)
+            {
+                //spawn the projectile body.GetMaxExtent() away from the position where the raycast hit the obstacle
+                projectilePos = sourcePos - Vector2.Normalize(barrelPos - projectilePos) * Math.Max(projectile.Item.body.GetMaxExtent(), 0.1f);
+            }
+                
+            projectile.Item.body.ResetDynamics();
+            projectile.Item.SetTransform(projectilePos, rotation);
+
+            projectile.Use(deltaTime);
+            if (projectile.Item.Removed) { return true; }
+            projectile.User = character;
+
+            projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+
+            //set the rotation of the projectile again because dropping the projectile resets the rotation
+            projectile.Item.SetTransform(projectilePos,
+                rotation + (projectile.Item.body.Dir * projectile.LaunchRotationRadians));
+
+            //recoil
+            item.body.ApplyLinearImpulse(
+                new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * item.body.Mass * -50.0f, 
+                maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
             LaunchProjSpecific();
+
+            item.RemoveContained(projectile.Item);
 
             return true;
         }

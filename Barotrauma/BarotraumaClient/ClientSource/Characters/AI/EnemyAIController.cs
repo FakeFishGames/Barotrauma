@@ -17,7 +17,7 @@ namespace Barotrauma
             if (State == AIState.Idle && PreviousState == AIState.Attack)
             {
                 var target = _selectedAiTarget ?? _lastAiTarget;
-                if (target != null && target.Entity != null)
+                if (target != null)
                 {
                     var memory = GetTargetMemory(target);
                     Vector2 targetPos = memory.Location;

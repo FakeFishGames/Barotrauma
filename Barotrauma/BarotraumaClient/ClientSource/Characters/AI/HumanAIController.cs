@@ -16,6 +16,11 @@ namespace Barotrauma
             }*/
         }
 
+        partial void SetOrderProjSpecific(Order order, string option)
+        {
+            GameMain.GameSession.CrewManager.DisplayCharacterOrder(Character, order, option);
+        }
+
         public override void DebugDraw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
         {
             Vector2 pos = Character.WorldPosition;
@@ -35,7 +40,7 @@ namespace Barotrauma
                 var currentOrder = ObjectiveManager.CurrentOrder;
                 if (currentOrder != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                 }
                 else if (ObjectiveManager.WaitTimer > 0)
                 {
@@ -46,17 +51,17 @@ namespace Barotrauma
                 {
                     if (currentOrder == null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     }
-                    var subObjective = currentObjective.CurrentSubObjective;
+                    var subObjective = currentObjective.SubObjectives.FirstOrDefault();
                     if (subObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                     var activeObjective = ObjectiveManager.GetActiveObjective();
                     if (activeObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.GetPriority().FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }

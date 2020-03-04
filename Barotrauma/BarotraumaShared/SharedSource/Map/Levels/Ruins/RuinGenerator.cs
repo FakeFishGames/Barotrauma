@@ -721,10 +721,8 @@ namespace Barotrauma.RuinGeneration
 
                     //doors create their own gaps, don't create an additional one if there's a door at this 
                     bool doorFound = false;
-                    foreach (Item item in Item.ItemList)
+                    foreach (Door door in doors)
                     {
-                        var door = item.GetComponent<Door>();
-                        if (door == null) { continue; }
                         if (Math.Abs(door.Item.WorldPosition.X - gapRect.Value.Center.X) < 5 &&
                             Math.Abs(door.Item.WorldPosition.Y - gapRect.Value.Center.Y) < 5)
                         {

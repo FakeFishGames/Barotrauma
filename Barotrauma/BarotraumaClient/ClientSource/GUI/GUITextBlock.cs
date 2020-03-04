@@ -328,7 +328,11 @@ namespace Barotrauma
         {
             if (text == null) { return; }
 
-            censoredText = string.IsNullOrEmpty(text) ? "" : new string('\u2022', text.Length);
+            censoredText = "";
+            for (int i = 0; i < text.Length; i++)
+            {
+                censoredText += "\u2022";
+            }
 
             var rect = Rect;
 

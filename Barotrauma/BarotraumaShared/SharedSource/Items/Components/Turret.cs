@@ -72,13 +72,6 @@ namespace Barotrauma.Items.Components
             set { reloadTime = value; }
         }
 
-        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
-        public int ProjectileCount
-        {
-            get;
-            set;
-        }
-
         [Editable, Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate. TODO")]
         public Vector2 RotationLimits
         {
@@ -220,13 +213,13 @@ namespace Barotrauma.Items.Components
         {
             this.cam = cam;
 
-            if (reload > 0.0f) { reload -= deltaTime; }
+            if (reload > 0.0f) reload -= deltaTime;
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             UpdateProjSpecific(deltaTime);
 
-            if (minRotation == maxRotation) { return; }
+            if (minRotation == maxRotation) return;
 
             float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
 
@@ -237,18 +230,11 @@ namespace Barotrauma.Items.Components
                 targetRotation = (targetMidDiff < 0.0f) ? minRotation : maxRotation;
             }
 
-            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);
-            if (degreeOfSuccess < 0.5f) { degreeOfSuccess *= degreeOfSuccess; } //the ease of aiming drops quickly with insufficient skill levels
+            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);            
+            if (degreeOfSuccess < 0.5f) degreeOfSuccess *= degreeOfSuccess; //the ease of aiming drops quickly with insufficient skill levels
             float springStiffness = MathHelper.Lerp(SpringStiffnessLowSkill, SpringStiffnessHighSkill, degreeOfSuccess);
             float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
             float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
-
-            if (user?.Info != null)
-            {
-                user.Info.IncreaseSkillLevel("weapons",
-                    SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime / Math.Max(user.GetSkillLevel("weapons"), 1.0f),
-                    user.WorldPosition + Vector2.UnitY * 150.0f);
-            }
 
             angularVelocity += 
                 (MathHelper.WrapAngle(targetRotation - rotation) * springStiffness - angularVelocity * springDamping) * deltaTime;
@@ -279,16 +265,18 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!characterUsable && character != null) { return false; }
+            if (!characterUsable && character != null) return false;
             return TryLaunch(deltaTime, character);
         }
 
         private bool TryLaunch(float deltaTime, Character character = null)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+#if CLIENT
+            if (GameMain.Client != null) return false;
+#endif
 
-            if (reload > 0.0f) { return false; }
-            
+            if (reload > 0.0f) return false;
+
             if (GetAvailableBatteryPower() < powerConsumption)
             {
 #if CLIENT
@@ -300,77 +288,72 @@ namespace Barotrauma.Items.Components
 #endif
                 return false;
             }
-
-            Projectile launchedProjectile = null;
-            for (int i = 0; i < ProjectileCount; i++)
+            
+            foreach (MapEntity e in item.linkedTo)
             {
-                foreach (MapEntity e in item.linkedTo)
+                //use linked projectile containers in case they have to react to the turret being launched somehow
+                //(play a sound, spawn more projectiles)
+                if (!(e is Item linkedItem)) continue;
+                ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                if (projectileContainer != null)
                 {
-                    //use linked projectile containers in case they have to react to the turret being launched somehow
-                    //(play a sound, spawn more projectiles)
-                    if (!(e is Item linkedItem)) { continue; }
-                    ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
-                    if (projectileContainer != null)
+                    linkedItem.Use(deltaTime, null);
+                    var repairable = linkedItem.GetComponent<Repairable>();
+                    if (repairable != null)
                     {
-                        linkedItem.Use(deltaTime, null);
-                        var repairable = linkedItem.GetComponent<Repairable>();
-                        if (repairable != null)
-                        {
-                            repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
-                        }
+                        repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
                     }
                 }
-
-                var projectiles = GetLoadedProjectiles(true);
-                if (projectiles.Count == 0)
-                {
-                    //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
-                    //causing a one frame delay before the gun can be launched (or more in multiplayer where there may be a longer delay)
-                    //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
-                    failedLaunchAttempts++;
-#if CLIENT
-                    if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
-                    {
-                        flashNoAmmo = true;
-                        failedLaunchAttempts = 0;
-                        GUI.PlayUISound(GUISoundType.PickItemFail);
-                    }
-#endif
-                    return false;
-                }
-
-                failedLaunchAttempts = 0;
-
-                var batteries = item.GetConnectedComponents<PowerContainer>();
-                float neededPower = powerConsumption;
-
-                while (neededPower > 0.0001f && batteries.Count > 0)
-                {
-                    batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
-                    float takePower = neededPower / batteries.Count;
-                    takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
-                    foreach (PowerContainer battery in batteries)
-                    {
-                        neededPower -= takePower;
-                        battery.Charge -= takePower / 3600.0f;
-#if SERVER
-                        if (GameMain.Server != null)
-                        {
-                            battery.Item.CreateServerEvent(battery);
-                        }
-#endif
-                    }
-                }
-
-                launchedProjectile = projectiles[0];
-                Launch(projectiles[0].Item, character);
             }
 
-#if SERVER
-            if (character != null && launchedProjectile != null)
+            var projectiles = GetLoadedProjectiles(true);
+            if (projectiles.Count == 0)
             {
-                string msg = character.LogName + " launched " + item.Name + " (projectile: " + launchedProjectile.Item.Name;
-                var containedItems = launchedProjectile.Item.ContainedItems;
+                //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
+                //causing a one frame delay before the gun can be launched (or more in multiplayer where there may be a longer delay)
+                //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
+                failedLaunchAttempts++;
+#if CLIENT
+                if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
+                {
+                    flashNoAmmo = true;
+                    failedLaunchAttempts = 0;
+                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                }
+#endif
+                return false;
+            }
+
+            failedLaunchAttempts = 0;
+
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+            float neededPower = powerConsumption;
+
+            while (neededPower > 0.0001f && batteries.Count > 0)
+            {
+                batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                float takePower = neededPower / batteries.Count;
+                takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                foreach (PowerContainer battery in batteries)
+                {
+                    neededPower -= takePower;
+                    battery.Charge -= takePower / 3600.0f;
+#if SERVER
+                    if (GameMain.Server != null)
+                    {
+                        battery.Item.CreateServerEvent(battery);
+                    }
+#endif
+                }
+            }
+
+            Launch(projectiles[0].Item, character);
+
+#if SERVER
+            if (character != null)
+            {
+                string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
+                var containedItems = projectiles[0].Item.ContainedItems;
                 if (containedItems == null || !containedItems.Any())
                 {
                     msg += ")";
@@ -564,7 +547,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase))
+            if (objective.Option.ToLowerInvariant() == "fireatwill")
             {
                 character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Shoot, true, true);

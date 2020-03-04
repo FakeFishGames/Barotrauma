@@ -52,7 +52,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull hull, Vector2 worldPosition)
         {
             if (entity == null) { return; }
 
@@ -116,13 +116,13 @@ namespace Barotrauma
                 {
                     if (entity is Item item && item.body != null)
                     {
-                        angle = -item.body.Rotation;
-                        if (item.body.Dir < 0.0f) { angle += MathHelper.Pi; }
+                        angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                     }
                 }
 
-                emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: angle);
-            }            
+                emitter.Emit(deltaTime, worldPosition, hull, angle);
+            }
+            
         }
 
         static partial void UpdateAllProjSpecific(float deltaTime)

@@ -97,32 +97,6 @@ namespace Barotrauma.Sounds
 
                 if (position != null)
                 {
-                    if (float.IsNaN(position.Value.X))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.X is NaN");
-                    }
-                    if (float.IsNaN(position.Value.Y))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Y is NaN");
-                    }
-                    if (float.IsNaN(position.Value.Z))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Z is NaN");
-                    }
-
-                    if (float.IsInfinity(position.Value.X))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.X is Infinity");
-                    }
-                    if (float.IsInfinity(position.Value.Y))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Y is Infinity");
-                    }
-                    if (float.IsInfinity(position.Value.Z))
-                    {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Z is Infinity");
-                    }
-
                     uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                     Al.Sourcei(alSource, Al.SourceRelative, Al.False);
                     int alError = Al.GetError();
@@ -404,12 +378,12 @@ namespace Barotrauma.Sounds
                 uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
                 if (!Al.IsSource(alSource)) return false;
                 Al.GetSourcei(alSource, Al.SourceState, out state);
+                bool playing = state == Al.Playing;
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
                     throw new Exception("Failed to determine playing state from source: " + debugName + ", " + Al.GetErrorString(alError));
                 }
-                bool playing = state == Al.Playing;
                 return playing;
             }
         }
@@ -641,7 +615,7 @@ namespace Barotrauma.Sounds
                     uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
 
                     int state;
-                    Al.GetSourcei(alSource, Al.SourceState, out state);
+                    Al.GetSourcei(Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.SourceState, out state);
                     bool playing = state == Al.Playing;
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
@@ -656,7 +630,7 @@ namespace Barotrauma.Sounds
                     {
                         throw new Exception("Failed to determine processed buffers from streamed source: " + debugName + ", " + Al.GetErrorString(alError));
                     }
-
+                        
                     Al.SourceUnqueueBuffers(alSource, unqueuedBufferCount, unqueuedBuffers);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
@@ -753,20 +727,9 @@ namespace Barotrauma.Sounds
                     streamAmplitude = streamBufferAmplitudes[queueStartIndex];
 
                     Al.GetSourcei(alSource, Al.SourceState, out state);
-                    alError = Al.GetError();
-                    if (alError != Al.NoError)
-                    {
-                        throw new Exception("Failed to retrieve stream source state: " + debugName + ", " + Al.GetErrorString(alError));
-                    }
-
                     if (state != Al.Playing)
                     {
                         Al.SourcePlay(alSource);
-                        alError = Al.GetError();
-                        if (alError != Al.NoError)
-                        {
-                            throw new Exception("Failed to start stream playback: " + debugName + ", " + Al.GetErrorString(alError));
-                        }
                     }
                 }
 
@@ -774,10 +737,6 @@ namespace Barotrauma.Sounds
                 {
                     streamAmplitude = 0.0f;
                 }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError($"An exception was thrown when updating a sound stream ({debugName})", e);
             }
             finally
             {

@@ -13,7 +13,6 @@ namespace Barotrauma
 
         private GUIFrame infoFrameContent;
         public RoundSummary RoundSummary { get; private set; }
-        public static bool IsInfoFrameOpen => GameMain.GameSession?.infoFrame != null;
 
         private bool ToggleInfoFrame()
         {

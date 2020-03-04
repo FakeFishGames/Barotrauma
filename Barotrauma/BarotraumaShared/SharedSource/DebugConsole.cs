@@ -531,17 +531,18 @@ namespace Barotrauma
 
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
-                if (args.Length == 0) { return; }
+                if (args.Length == 0) return;
+                args[0] = args[0].ToLowerInvariant();
                 foreach (MapEntity mapEntity in MapEntity.mapEntityList)
                 {
-                    if (mapEntity.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase))
+                    if (mapEntity.Name.ToLowerInvariant() == args[0])
                     {
                         ThrowError(mapEntity.ID + ": " + mapEntity.Name.ToString());
                     }
                 }
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) || character.SpeciesName.Equals(args[0], StringComparison.OrdinalIgnoreCase))
+                    if (character.Name.ToLowerInvariant() == args[0] || character.SpeciesName.ToLowerInvariant() == args[0])
                     {
                         ThrowError(character.ID + ": " + character.Name.ToString());
                     }
@@ -553,8 +554,8 @@ namespace Barotrauma
                 if (args.Length < 2) return;
 
                 AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
-                    a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
-                    a.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() ||
+                    a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
                 if (afflictionPrefab == null)
                 {
                     ThrowError("Affliction \"" + args[0] + "\" not found.");
@@ -705,7 +706,7 @@ namespace Barotrauma
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
 
-                if (args.Length > 0 && args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
+                if (args.Length > 0 && args[0].ToLowerInvariant() == "start")
                 {
                     Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
@@ -1219,17 +1220,15 @@ namespace Barotrauma
                 return;
             }
 
-            string firstCommand = splitCommand[0].ToLowerInvariant();
-
-            if (!firstCommand.Equals("admin", StringComparison.OrdinalIgnoreCase))
+            if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
             {
                 NewMessage(command, Color.White, true);
             }
-
+            
 #if CLIENT
             if (GameMain.Client != null)
             {
-                Command matchingCommand = commands.Find(c => c.names.Contains(firstCommand));
+                Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
                 if (matchingCommand == null)
                 {
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
@@ -1237,7 +1236,7 @@ namespace Barotrauma
                     NewMessage("Server command: " + command, Color.Cyan);
                     return;
                 }
-                else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
+                else if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
                 {
                     if (matchingCommand.RelayToServer)
                     {
@@ -1256,7 +1255,7 @@ namespace Barotrauma
             bool commandFound = false;
             foreach (Command c in commands)
             {
-                if (!c.names.Contains(firstCommand)) { continue; }                
+                if (!c.names.Contains(splitCommand[0].ToLowerInvariant())) continue;                
                 c.Execute(splitCommand.Skip(1).ToArray());
                 commandFound = true;
                 break;                
@@ -1284,7 +1283,7 @@ namespace Barotrauma
             }
 
             var matchingCharacters = Character.CharacterList.FindAll(c => 
-                c.Name.Equals(characterName, StringComparison.OrdinalIgnoreCase) &&
+                c.Name.ToLowerInvariant() == characterName &&
                 (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
 
             if (!matchingCharacters.Any())
@@ -1330,7 +1329,7 @@ namespace Barotrauma
             JobPrefab job = null;
             if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
             {
-                job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
+                job = JobPrefab.Prefabs.Find(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
             }
             else
             {
@@ -1588,7 +1587,12 @@ namespace Barotrauma
             return true;
         }
 
-        public static Command FindCommand(string commandName) => commands.Find(c => c.names.Any(n => n.Equals(commandName, StringComparison.OrdinalIgnoreCase)));
+        public static Command FindCommand(string commandName)
+        {
+            commandName = commandName.ToLowerInvariant();
+            return commands.Find(c => c.names.Any(n => n.ToLowerInvariant() == commandName));
+        }
+
 
         public static void Log(string message)
         {
@@ -1606,24 +1610,8 @@ namespace Barotrauma
                 }
             }
             System.Diagnostics.Debug.WriteLine(error);
+            NewMessage(error, Color.Red);
 #if CLIENT
-            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                style: "InnerFrame", color: Color.White)
-            {
-                CanBeFocused = false
-            };
-            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                error, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
-            {
-                CanBeFocused = false,
-                TextColor = Color.Red
-            };
-            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
-            textBlock.SetTextPos();
-
-            listBox.UpdateScrollBarSize();
-            listBox.BarScroll = 1.0f;
-
             if (createMessageBox)
             {
                 CoroutineManager.StartCoroutine(CreateMessageBox(error));
@@ -1632,8 +1620,6 @@ namespace Barotrauma
             {
                 isOpen = true;
             }
-#else
-            NewMessage(error, Color.Red);
 #endif
         }
 

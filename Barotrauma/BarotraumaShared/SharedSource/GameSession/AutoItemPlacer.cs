@@ -66,7 +66,7 @@ namespace Barotrauma
 
             spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
-            prefabsWithContainer.Shuffle();
+            prefabsWithContainer.RandomizeList();
             // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
             for (int i = 0; i < prefabsWithContainer.Count; i++)
             {
@@ -82,7 +82,7 @@ namespace Barotrauma
             // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
             prefabsWithContainer.ForEach(i => SpawnItems(i));
             // Spawn items that don't have containers last
-            prefabsWithoutContainer.Shuffle();
+            prefabsWithoutContainer.RandomizeList();
             prefabsWithoutContainer.ForEach(i => SpawnItems(i));
 
             if (OutputDebugInfo)

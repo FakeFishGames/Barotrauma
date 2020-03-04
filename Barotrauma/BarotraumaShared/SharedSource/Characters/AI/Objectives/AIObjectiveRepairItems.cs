@@ -81,17 +81,18 @@ namespace Barotrauma
                 // Don't stop fixing until done
                 return 100;
             }
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>(), onlyBots: true);
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>());
             int items = Targets.Count;
             bool anyFixers = otherFixers > 0;
-            float ratio = anyFixers ? items / (float)otherFixers : 1;
+            float ratio = anyFixers ? items / otherFixers : 1;
+            var result = ratio;
             if (objectiveManager.CurrentOrder == this)
             {
                 return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
             }
             else
             {
-                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f))
                 {
                     // Enough fixers
                     return 0;

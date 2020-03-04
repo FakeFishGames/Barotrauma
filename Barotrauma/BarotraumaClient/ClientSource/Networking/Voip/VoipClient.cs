@@ -93,7 +93,7 @@ namespace Barotrauma.Networking
                 if (client.VoipSound == null)
                 {
                     DebugConsole.Log("Recreating voipsound " + queueId);
-                    client.VoipSound = new VoipSound(client.Name, GameMain.SoundManager, client.VoipQueue);
+                    client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
                 }
 
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
@@ -119,7 +119,7 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
 
-                if ((client.VoipSound.CurrentAmplitude * client.VoipSound.Gain * GameMain.SoundManager.GetCategoryGainMultiplier("voip")) > 0.1f) //TODO: might need to tweak
+                if (client.VoipSound.CurrentAmplitude > 0.1f) //TODO: might need to tweak
                 {
                     if (client.Character != null && !client.Character.Removed)
                     {

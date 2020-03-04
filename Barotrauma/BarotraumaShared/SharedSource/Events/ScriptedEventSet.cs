@@ -25,10 +25,6 @@ namespace Barotrauma
         //the events in this set are delayed if the current EventManager intensity is not between these values
         public readonly float MinIntensity, MaxIntensity;
 
-        public readonly bool AllowAtStart;
-
-        public readonly bool PerRuin;
-
         public readonly Dictionary<string, float> Commonness;
 
         public readonly List<ScriptedEventPrefab> EventPrefabs;
@@ -58,9 +54,6 @@ namespace Barotrauma
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
-            AllowAtStart = element.GetAttributeBool("allowatstart", false);
-            PerRuin = element.GetAttributeBool("perruin", false);
-
             Commonness[""] = 1.0f;
             foreach (XElement subElement in element.Elements())
             {
@@ -70,7 +63,7 @@ namespace Barotrauma
                         Commonness[""] = subElement.GetAttributeFloat("commonness", 0.0f);
                         foreach (XElement overrideElement in subElement.Elements())
                         {
-                            if (overrideElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
+                            if (overrideElement.Name.ToString().ToLowerInvariant() == "override")
                             {
                                 string levelType = overrideElement.GetAttributeString("leveltype", "");
                                 if (!Commonness.ContainsKey(levelType))
@@ -123,7 +116,7 @@ namespace Barotrauma
                 int i = 0;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (!element.Name.ToString().Equals("eventset", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (element.Name.ToString().ToLowerInvariant() != "eventset") { continue; }
                     List.Add(new ScriptedEventSet(element, i.ToString()));
                     i++;
                 }

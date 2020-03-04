@@ -29,23 +29,16 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (Leak.Removed || Leak.Open <= 0)
-            {
-                Priority = 0;
-            }
-            else
-            {
-                float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
-                float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
-                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
-                // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                float distanceFactor = xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
-                float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
-                float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
-                float devotion = CumulatedDevotion / 100;
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
-            }
-            return Priority;
+            if (Leak.Removed || Leak.Open <= 0) { return 0; }
+            float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
+            float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
+            // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
+            // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
+            float distanceFactor = xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
+            float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+            float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
+            float devotion = Math.Min(Priority, 10) / 100;
+            return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + severity * distanceFactor * PriorityModifier, 0, 1));
         }
 
         protected override void Act(float deltaTime)

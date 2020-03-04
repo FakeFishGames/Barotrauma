@@ -216,7 +216,7 @@ namespace Barotrauma
             limbHealths.Clear();
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("limb", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "limb") continue;
                 limbHealths.Add(new LimbHealth(subElement, this));
             }
             if (limbHealths.Count == 0)
@@ -408,10 +408,11 @@ namespace Barotrauma
             return resistance;
         }
 
-        private List<Affliction> matchingAfflictions = new List<Affliction>();
         public void ReduceAffliction(Limb targetLimb, string affliction, float amount)
         {
-            matchingAfflictions.Clear();
+            affliction = affliction.ToLowerInvariant();
+
+            List<Affliction> matchingAfflictions = new List<Affliction>(afflictions);
 
             if (targetLimb != null)
             {
@@ -425,8 +426,8 @@ namespace Barotrauma
                 }
             }
             matchingAfflictions.RemoveAll(a => 
-                !a.Prefab.Identifier.Equals(affliction, StringComparison.OrdinalIgnoreCase) && 
-                !a.Prefab.AfflictionType.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+                a.Prefab.Identifier.ToLowerInvariant() != affliction && 
+                a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
 
             if (matchingAfflictions.Count == 0) return;
 
@@ -690,15 +691,13 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                    string identifier = affliction.Prefab.Identifier.ToLowerInvariant();
-                    string type = affliction.Prefab.AfflictionType.ToLowerInvariant();
-                    if (limbHealth.VitalityMultipliers.ContainsKey(identifier))
+                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier.ToLowerInvariant()))
                     {
-                        vitalityDecrease *= limbHealth.VitalityMultipliers[identifier];
+                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier.ToLowerInvariant()];
                     }
-                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(type))
+                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType.ToLowerInvariant()))
                     {
-                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[type];
+                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
                     }
                     vitalityDecrease *= damageResistanceMultiplier;
                     Vitality -= vitalityDecrease;
@@ -792,7 +791,8 @@ namespace Barotrauma
         /// </summary>
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>
-        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>        
+        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>
+        
         public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, float randomization = 0.0f)
         {
             //key = item identifier
@@ -873,11 +873,5 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
-
-        /// <summary>
-        /// Automatically filters out buffs.
-        /// </summary>
-        public static IEnumerable<Affliction> SortAfflictionsBySeverity(IEnumerable<Affliction> afflictions) =>
-            afflictions.Where(a => !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength);
     }
 }

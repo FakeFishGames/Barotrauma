@@ -333,14 +333,6 @@ namespace Barotrauma
                         attack  = dequeuedInput.HasFlag(InputNetFlags.Attack);
                         shoot   = dequeuedInput.HasFlag(InputNetFlags.Shoot);
                     }
-                    else if (keys != null)
-                    {
-                        aiming  = keys[(int)InputType.Aim].GetHeldQueue;
-                        use     = keys[(int)InputType.Use].GetHeldQueue;
-                        attack  = keys[(int)InputType.Attack].GetHeldQueue;
-                        shoot   = keys[(int)InputType.Shoot].GetHeldQueue;
-                        networkUpdateSent = true;
-                    }
 
                     tempBuffer.Write(aiming);
                     tempBuffer.Write(shoot);
@@ -497,31 +489,6 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
-
-            // Current order
-            if (info.CurrentOrder != null)
-            {
-                msg.Write(true);
-                msg.Write((byte)Order.PrefabList.IndexOf(info.CurrentOrder.Prefab));
-                msg.Write(info.CurrentOrder.TargetEntity == null ? (UInt16)0 :
-                    info.CurrentOrder.TargetEntity.ID);
-                if (info.CurrentOrder.OrderGiver != null)
-                {
-                    msg.Write(true);
-                    msg.Write(info.CurrentOrder.OrderGiver.ID);
-                }
-                else
-                {
-                    msg.Write(false);
-                }
-                msg.Write((byte)(string.IsNullOrWhiteSpace(info.CurrentOrderOption) ? 0 :
-                    Array.IndexOf(info.CurrentOrder.Prefab.Options, info.CurrentOrderOption)));
-            }
-            else
-            {
-                msg.Write(false);
-            }
-
             TryWriteStatus(msg);
 
             void TryWriteStatus(IWriteMessage msg)

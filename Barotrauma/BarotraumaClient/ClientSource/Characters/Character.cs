@@ -603,11 +603,6 @@ namespace Barotrauma
             }
         }
 
-        partial void SetOrderProjSpecific(Order order, string orderOption)
-        {
-            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
-        }
-
         public static void AddAllToGUIUpdateList()
         {
             for (int i = 0; i < CharacterList.Count; i++)
@@ -643,7 +638,8 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) { return; }
+            if (!Enabled) return;
+
             AnimController.Draw(spriteBatch, cam);
         }
 
@@ -660,6 +656,8 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 AnimController.DebugDraw(spriteBatch);
+
+                if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
             if (GUI.DisableHUD) return;

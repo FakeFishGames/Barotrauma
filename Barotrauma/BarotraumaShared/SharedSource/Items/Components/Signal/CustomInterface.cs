@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().Equals("statuseffect", System.StringComparison.OrdinalIgnoreCase))
+                    if (subElement.Name.ToString().ToLowerInvariant() == "statuseffect")
                     {
                         StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName: "custom interface element (label " + Label + ")"));
                     }

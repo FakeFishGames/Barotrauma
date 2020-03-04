@@ -627,14 +627,8 @@ namespace Barotrauma.Networking
                         //game already started -> send start message immediately
                         if (gameStarted)
                         {
-                            SendStartMessage(roundStartSeed, GameMain.GameSession.Level.Seed, GameMain.GameSession, connectedClient, true);
+                            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClient);
                         }
-                    }
-                    break;
-                case ClientPacketHeader.REQUEST_STARTGAMEFINALIZE:
-                    if (gameStarted && connectedClient != null)
-                    {
-                        SendRoundStartFinalize(connectedClient);
                     }
                     break;
                 case ClientPacketHeader.UPDATE_LOBBY:
@@ -784,8 +778,8 @@ namespace Barotrauma.Networking
                 Directory.CreateDirectory(ServerLog.SavePath);
             }
 
-            string filePath = "event_error_log_server_" + client.Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
-            filePath = Path.Combine(ServerLog.SavePath, ToolBox.RemoveInvalidFileNameChars(filePath));
+            string filePath = "event_error_log_server_" + client.Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
+            filePath = Path.Combine(ServerLog.SavePath, filePath);
             if (File.Exists(filePath)) { return; }
 
             List<string> errorLines = new List<string>
@@ -1078,7 +1072,7 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Kick:
                     string kickedName = inc.ReadString().ToLowerInvariant();
                     string kickReason = inc.ReadString();
-                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.Equals(kickedName, StringComparison.OrdinalIgnoreCase) && cl.Connection != OwnerConnection);
+                    var kickedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == kickedName && cl.Connection != OwnerConnection);
                     if (kickedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" kicked \"" + kickedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -1095,7 +1089,7 @@ namespace Barotrauma.Networking
                     bool range = inc.ReadBoolean();
                     double durationSeconds = inc.ReadDouble();
 
-                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.Equals(bannedName, StringComparison.OrdinalIgnoreCase) && cl.Connection != OwnerConnection);
+                    var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.ToLowerInvariant() == bannedName && cl.Connection != OwnerConnection);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + sender.Name + "\" banned \"" + bannedClient.Name + "\".", ServerLog.MessageType.ServerMessage);
@@ -1154,7 +1148,7 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.SelectMode:
                     UInt16 modeIndex = inc.ReadUInt16();
-                    if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.Equals("multiplayercampaign", StringComparison.OrdinalIgnoreCase))
+                    if (GameMain.NetLobbyScreen.GameModes[modeIndex].Identifier.ToLowerInvariant() == "multiplayercampaign")
                     {
                         string[] saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Multiplayer).ToArray();
                         for (int i = 0; i < saveFiles.Length; i++)
@@ -1779,10 +1773,10 @@ namespace Barotrauma.Networking
             //always allow the server owner to spectate even if it's disallowed in server settings
             playingClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
 
-            if (GameMain.GameSession.GameMode.Mission != null)
+            if (GameMain.GameSession.GameMode.Mission != null &&
+                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(playingClients))
             {
-                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(playingClients);
-                teamCount = GameMain.GameSession.GameMode.Mission.TeamCount;
+                teamCount = 2;
             }
             else
             {
@@ -1802,10 +1796,9 @@ namespace Barotrauma.Networking
                     campaign.Map.SelectRandomLocation(preferUndiscovered: true);
                 }
 
-                SendStartMessage(roundStartSeed, campaign.Map.SelectedConnection.Level.Seed, GameMain.GameSession, connectedClients, false);
-
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
                     reloadSub: true,
+                    loadSecondSub: teamCount > 1,
                     mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
 
                 campaign.AssignClientCharacterInfos(connectedClients);
@@ -1815,9 +1808,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                SendStartMessage(roundStartSeed, GameMain.NetLobbyScreen.LevelSeed, GameMain.GameSession, connectedClients, false);
-
-                GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty);
+                GameMain.GameSession.StartRound(GameMain.NetLobbyScreen.LevelSeed, serverSettings.SelectedLevelDifficulty, teamCount > 1);
                 Log("Game mode: " + selectedMode.Name, ServerLog.MessageType.ServerMessage);
                 Log("Submarine: " + selectedSub.Name, ServerLog.MessageType.ServerMessage);
                 Log("Level seed: " + GameMain.NetLobbyScreen.LevelSeed, ServerLog.MessageType.ServerMessage);
@@ -1955,6 +1946,8 @@ namespace Barotrauma.Networking
 
             GameAnalyticsManager.AddDesignEvent("Traitors:" + (TraitorManager == null ? "Disabled" : "Enabled"));
 
+            SendStartMessage(roundStartSeed, Submarine.MainSub, GameMain.GameSession.GameMode.Preset, connectedClients);
+
             yield return CoroutineStatus.Running;
 
             GameMain.GameScreen.Select();
@@ -1972,34 +1965,35 @@ namespace Barotrauma.Networking
             yield return CoroutineStatus.Success;
         }
 
-        private void SendStartMessage(int seed, string levelSeed, GameSession gameSession, List<Client> clients, bool includesFinalize)
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, List<Client> clients)
         {
             foreach (Client client in clients)
             {
-                SendStartMessage(seed, levelSeed, gameSession, client, includesFinalize);
+                SendStartMessage(seed, selectedSub, selectedMode, client);
             }
         }
 
-        private void SendStartMessage(int seed, string levelSeed, GameSession gameSession, Client client, bool includesFinalize)
+        private void SendStartMessage(int seed, Submarine selectedSub, GameModePreset selectedMode, Client client)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ServerPacketHeader.STARTGAME);
 
             msg.Write(seed);
-            msg.Write(levelSeed);
+            msg.Write(GameMain.GameSession.Level.Seed);
+            msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
             msg.Write(serverSettings.SelectedLevelDifficulty);
 
             msg.Write((byte)GameMain.Config.LosMode);
 
             msg.Write((byte)GameMain.NetLobbyScreen.MissionType);
 
-            msg.Write(gameSession.Submarine.Name);
-            msg.Write(gameSession.Submarine.MD5Hash.Hash);
+            msg.Write(selectedSub.Name);
+            msg.Write(selectedSub.MD5Hash.Hash);
             msg.Write(serverSettings.UseRespawnShuttle);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
             msg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.Hash);
 
-            msg.Write(gameSession.GameMode.Preset.Identifier);
+            msg.Write(selectedMode.Identifier);
             msg.Write((short)(GameMain.GameSession.GameMode?.Mission == null ?
                 -1 : MissionPrefab.List.IndexOf(GameMain.GameSession.GameMode.Mission.Prefab)));
 
@@ -2008,43 +2002,13 @@ namespace Barotrauma.Networking
             MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
             msg.Write(serverSettings.AllowRespawn && missionAllowRespawn);
+            msg.Write(Submarine.MainSubs[1] != null); //loadSecondSub
 
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
 
             msg.Write(serverSettings.AllowRagdollButton);
 
-            serverSettings.WriteMonsterEnabled(msg);
-
-            msg.Write(includesFinalize); msg.WritePadBits();
-            if (includesFinalize)
-            {
-                WriteRoundStartFinalize(msg, client);
-            }
-
-            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-        }
-
-        private void SendRoundStartFinalize(List<Client> clients)
-        {
-            foreach (Client client in clients)
-            {
-                SendRoundStartFinalize(client);
-            }
-        }
-
-        private void SendRoundStartFinalize(Client client)
-        {
-            IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte)ServerPacketHeader.STARTGAMEFINALIZE);
-
-            WriteRoundStartFinalize(msg, client);
-
-            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
-        }
-
-        private void WriteRoundStartFinalize(IWriteMessage msg, Client client)
-        {
             //tell the client what content files they should preload
             var contentToPreload = GameMain.GameSession.EventManager.GetFilesToPreload();
             msg.Write((ushort)contentToPreload.Count());
@@ -2054,8 +2018,11 @@ namespace Barotrauma.Networking
                 msg.Write(contentFile.Path);
             }
 
-            msg.Write(GameMain.GameSession.Level.EqualityCheckVal);
+            serverSettings.WriteMonsterEnabled(msg);
+
             GameMain.GameSession.Mission?.ServerWriteInitial(msg, client);
+
+            serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
         }
 
         public void EndGame()
@@ -2203,9 +2170,11 @@ namespace Barotrauma.Networking
 
         public override void KickPlayer(string playerName, string reason)
         {
+            playerName = playerName.ToLowerInvariant();
+
             Client client = connectedClients.Find(c =>
-                c.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase) ||
-                (c.Character != null && c.Character.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase)));
+                c.Name.ToLowerInvariant() == playerName ||
+                (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
             KickClient(client, reason);
         }
@@ -2239,9 +2208,11 @@ namespace Barotrauma.Networking
 
         public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
         {
+            playerName = playerName.ToLowerInvariant();
+
             Client client = connectedClients.Find(c =>
-                c.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase) ||
-                (c.Character != null && c.Character.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase)));
+                c.Name.ToLowerInvariant() == playerName ||
+                (c.Character != null && c.Character.Name.ToLowerInvariant() == playerName));
 
             if (client == null)
             {

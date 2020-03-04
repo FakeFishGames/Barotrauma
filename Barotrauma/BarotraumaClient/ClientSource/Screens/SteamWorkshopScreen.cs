@@ -1097,7 +1097,7 @@ namespace Barotrauma
                 var tagBtn = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), tagHolder.Content.RectTransform, anchor: Anchor.CenterLeft), 
                     tag.CapitaliseFirstInvariant(), style: "GUIButtonRound");
                 tagBtn.TextBlock.AutoScaleHorizontal = true;
-                tagBtn.Selected = itemEditor?.Tags?.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)) ?? false;
+                tagBtn.Selected = itemEditor?.Tags?.Any(t => t.ToLowerInvariant() == tag) ?? false;
 
                 tagBtn.OnClicked = (btn, userdata) =>
                 {
@@ -1108,7 +1108,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        itemEditor?.Tags?.RemoveAll(t => t.Equals(tagBtn.Text, StringComparison.OrdinalIgnoreCase));
+                        itemEditor?.Tags?.RemoveAll(t => t.ToLowerInvariant() == tagBtn.Text.ToLowerInvariant());
                         tagBtn.Selected = false;
                     }
                     return true;

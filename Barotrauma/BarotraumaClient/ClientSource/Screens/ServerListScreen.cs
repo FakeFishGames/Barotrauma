@@ -965,7 +965,7 @@ namespace Barotrauma
 
                     child.Visible =
                         serverInfo.OwnerVerified &&
-                        serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase) &&
+                        serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
                         (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
                         (!filterPassword.Selected || !serverInfo.HasPassword) &&
                         (!filterIncompatible.Selected || !incompatible) &&
@@ -996,7 +996,7 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in gameModeTickBoxes)
                 {
                     var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
+                    if (!tickBox.Selected && (serverInfo.GameMode == gameMode.ToLowerInvariant() || serverInfo.GameMode == gameMode))
                     {
                         child.Visible = false;
                         break;
@@ -1512,7 +1512,7 @@ namespace Barotrauma
         {
             serverList.ClearChildren();
                         
-            if (masterServerData.Substring(0, 5).Equals("error", StringComparison.OrdinalIgnoreCase))
+            if (masterServerData.Substring(0, 5).ToLowerInvariant() == "error")
             {
                 DebugConsole.ThrowError("Error while connecting to master server (" + masterServerData + ")!");
                 return;

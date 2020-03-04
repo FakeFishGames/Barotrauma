@@ -741,7 +741,7 @@ namespace Barotrauma.Items.Components
             { 
                 foreach (XAttribute attribute in componentElement.Attributes())
                 {
-                    if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
+                    if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
                     property.TrySetValue(this, attribute.Value);
                 }
                 ParseMsg();
@@ -870,7 +870,6 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
-                    case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmptyRequirements, item.Name);
                         if (newRequiredItem == null) continue;
 

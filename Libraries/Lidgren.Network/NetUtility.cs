@@ -401,7 +401,7 @@ namespace Lidgren.Network
 					{
 						if (j >= h)
 						{
-							if (string.Compare(list[j - h].Name, tmp.Name, StringComparison.OrdinalIgnoreCase) > 0)
+							if (string.Compare(list[j - h].Name, tmp.Name, StringComparison.InvariantCulture) > 0)
 							{
 								list[j] = list[j - h];
 								j -= h;

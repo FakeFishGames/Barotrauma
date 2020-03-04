@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
@@ -112,7 +111,7 @@ namespace Barotrauma.Items.Components
                 element.GetAttributeString("name", "");
 
             //backwards compatibility
-            var showRepairUIAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase));
+            var showRepairUIAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().ToLowerInvariant() == "showrepairuithreshold");
             if (showRepairUIAttribute != null)
             {
                 float repairThreshold;
@@ -131,26 +130,7 @@ namespace Barotrauma.Items.Components
         }
 
         partial void InitProjSpecific(XElement element);
-
-        /// <summary>
-        /// Check if the character manages to succesfully repair the item
-        /// </summary>
-        public bool CheckCharacterSuccess(Character character)
-        {
-            if (character == null) { return false; }
-
-            // Only check for success when repairing electrical devices
-            if (requiredSkills.None(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase))) { return true; }
-
-            //unpowered items can be repaired without a risk of electrical shock
-            if (item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) { return true; }
-
-            if (Rand.Range(0.0f, 0.5f) < DegreeOfSuccess(character)) { return true; }
-
-            item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
-            return false;
-        }
-
+        
         public bool StartRepairing(Character character, FixActions action)
         {
             if (character == null || character.IsDead || action == FixActions.None)
@@ -163,15 +143,8 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (CurrentFixer != character || currentFixerAction != action)
                 {
-                    if (!CheckCharacterSuccess(character))
-                    {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
-                        return false;
-                    }
                     item.CreateServerEvent(this);
                 }
-#else
-                if (GameMain.Client == null && (CurrentFixer != character || currentFixerAction != action) && !CheckCharacterSuccess(character)) { return false; }
 #endif
                 CurrentFixer = character;
                 CurrentFixerAction = action;

@@ -56,8 +56,6 @@ namespace Barotrauma
         private static List<RoundSound> roundSounds = null;
         public static RoundSound LoadRoundSound(XElement element, bool stream = false)
         {
-            if (GameMain.SoundManager?.Disabled ?? true) { return null; }
-
             string filename = element.GetAttributeString("file", "");
             if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
 

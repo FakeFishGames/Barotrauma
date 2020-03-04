@@ -51,8 +51,7 @@ namespace Barotrauma
         // Only used by attacks
         public readonly bool TargetSelf;
 
-        // Only used by conditionals targeting an item (makes the conditional check the item/character whose inventory this item is inside)
-        public readonly bool TargetContainer;
+        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
 
         private readonly int cancelStatusEffect;
 
@@ -63,7 +62,6 @@ namespace Barotrauma
             {
                 case "targetitemcomponent":
                 case "targetself":
-                case "targetcontainer":
                     return false;
                 default:
                     return true;
@@ -134,7 +132,6 @@ namespace Barotrauma
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
-            TargetContainer = attribute.Parent.GetAttributeBool("targetcontainer", false);
             TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
 
             foreach (XElement subElement in attribute.Parent.Elements())
@@ -153,9 +150,13 @@ namespace Barotrauma
 
             if (!Enum.TryParse(AttributeName, true, out Type))
             {
-                if (AfflictionPrefab.Prefabs.Any(p => p.Identifier.Equals(AttributeName, StringComparison.OrdinalIgnoreCase)))
+                if (afflictionNames.Any(n => n == AttributeName))
                 {
                     Type = ConditionType.Affliction;
+                    if (AttributeName == "husk" || AttributeName == "huskaffliction")
+                    {
+                        AttributeName = "huskinfection";
+                    }
                 }
                 else
                 {
@@ -172,7 +173,8 @@ namespace Barotrauma
 
         public bool Matches(ISerializableEntity target)
         {
-            string valStr = AttributeValue.ToString();            
+            string valStr = AttributeValue.ToString();
+
             switch (Type)
             {
                 case ConditionType.PropertyValue:

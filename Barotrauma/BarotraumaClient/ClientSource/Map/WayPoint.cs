@@ -9,8 +9,9 @@ namespace Barotrauma
 {
     partial class WayPoint : MapEntity
     {
-        private static Dictionary<SpawnType, Sprite> iconSprites;
-        private const int WaypointSize = 12, SpawnPointSize = 32;
+        private static Texture2D iconTexture;
+        private const int IconSize = 32;
+        private static int[] iconIndices = { 3, 0, 1, 2 };
 
         public override bool IsVisible(Rectangle worldView)
         {
@@ -22,72 +23,64 @@ namespace Barotrauma
             get { return !IsHidden(); }
         }
 
-
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing && !GameMain.DebugDraw) { return; }
+
             if (IsHidden()) { return; }
 
+            //Rectangle drawRect =
+            //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
+
             Vector2 drawPos = Position;
-            if (Submarine != null) { drawPos += Submarine.DrawPosition; }
+            if (Submarine != null) drawPos += Submarine.DrawPosition;
             drawPos.Y = -drawPos.Y;
 
-            Draw(spriteBatch, drawPos);
-        }
-
-        public void Draw(SpriteBatch spriteBatch, Vector2 drawPos)
-        {
-            Color clr = currentHull == null ? Color.CadetBlue : GUI.Style.Green;
-            if (spawnType != SpawnType.Path) { clr = Color.Gray; }
+            Color clr = currentHull == null ? Color.Blue : Color.White;
             if (isObstructed)
             {
                 clr = Color.Black;
             }
-            if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
+            if (IsSelected) clr = GUI.Style.Red;
+            if (IsHighlighted) clr = Color.DarkRed;
 
-            int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
-            if (ConnectedGap != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path) { iconSize = (int)(iconSize * 1.5f); }
+            int iconX = iconIndices[(int)spawnType] * IconSize % iconTexture.Width;
+            int iconY = (int)(Math.Floor(iconIndices[(int)spawnType] * IconSize / (float)iconTexture.Width)) * IconSize;
 
-            if (IsSelected || IsHighlighted)
+            int iconSize = IconSize;
+            if (ConnectedGap != null)
             {
-                int glowSize = (int)(iconSize * 1.5f);
-                GUI.Style.UIGlowCircular.Draw(spriteBatch,
-                    new Rectangle((int)(drawPos.X - glowSize / 2), (int)(drawPos.Y - glowSize / 2), glowSize, glowSize),
-                    Color.White);
+                iconSize = (int)(iconSize * 1.5f);
+            }
+            if (Ladders != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
+            }
+            if (Stairs != null)
+            {
+                iconSize = (int)(iconSize * 1.5f);
             }
 
-            Sprite sprite = iconSprites[SpawnType];
-            if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
-            {
-                sprite = iconSprites[SpawnType.Path];
-            }
-            sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
-            sprite.RelativeOrigin = Vector2.One * 0.5f;
-            if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
-            {
-                AssignedJob.Icon.Draw(spriteBatch, drawPos, AssignedJob.UIColor, scale: iconSize / (float)AssignedJob.Icon.SourceRect.Width * 0.8f, depth: 0.0f);
-            }
+            spriteBatch.Draw(iconTexture,
+                new Rectangle((int)(drawPos.X - iconSize / 2), (int)(drawPos.Y - iconSize / 2), iconSize, iconSize),
+                new Rectangle(iconX, iconY, IconSize, IconSize), clr);
+
+            //GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
+
+            //GUI.SmallFont.DrawString(spriteBatch, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    (isObstructed ? Color.Gray : GUI.Style.Green) * 0.7f, width: 5, depth: 0.002f);
+                    isObstructed ? Color.Gray : GUI.Style.Green, width: 5);
             }
 
             GUI.SmallFont.DrawString(spriteBatch,
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
                 Color.WhiteSmoke);
-        }
-
-        public override bool IsMouseOn(Vector2 position)
-        {
-            if (IsHidden()) { return false; }
-            float dist = Vector2.DistanceSquared(position, WorldPosition);
-            float radius = (SpawnType == SpawnType.Path ? WaypointSize : SpawnPointSize) * 0.6f;
-            return dist < radius * radius;
         }
 
         private bool IsHidden()

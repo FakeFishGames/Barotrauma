@@ -88,7 +88,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (XElement subElement in item.Prefab.ConfigElement.Elements())
                 {
-                    if (!subElement.Name.ToString().Equals("connectionpanel", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (subElement.Name.ToString().ToLowerInvariant() != "connectionpanel") { continue; }
                     
                     foreach (XElement connectionElement in subElement.Elements())
                     {

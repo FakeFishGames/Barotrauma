@@ -51,6 +51,7 @@ namespace Barotrauma
             {
                 if (toggleCrewListOpen == value) { return; }
                 toggleCrewListOpen = GameMain.Config.CrewMenuOpen = value;
+                toggleCrewButton.Children.ForEach(c => c.SpriteEffects = toggleCrewListOpen ? SpriteEffects.None : SpriteEffects.FlipHorizontally);
             }
         }
 
@@ -69,13 +70,13 @@ namespace Barotrauma
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "character") continue;
 
                 var characterInfo = new CharacterInfo(subElement);
                 characterInfos.Add(characterInfo);
                 foreach (XElement invElement in subElement.Elements())
                 {
-                    if (!invElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (invElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
                     characterInfo.InventoryData = invElement;
                     break;
                 }
@@ -97,13 +98,11 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var commandButtonHeight = (int)(GUI.Scale * 40);
-            var buttonSize = new Point((int)(182f / 99f * commandButtonHeight), commandButtonHeight);
-            var crewListToggleButtonHeight = (int)(64f * buttonSize.X / 175f);
+            var buttonHeight = (int)(GUI.Scale * 40);
 
             crewArea = new GUIFrame(
                 new RectTransform(
-                    new Point(crewAreaWithButtons.Rect.Width, crewAreaWithButtons.Rect.Height - commandButtonHeight - crewListToggleButtonHeight - 2 * HUDLayoutSettings.Padding),
+                    new Point(crewAreaWithButtons.Rect.Width, crewAreaWithButtons.Rect.Height - (int)(1.5f * buttonHeight) - 2 * HUDLayoutSettings.Padding),
                     crewAreaWithButtons.RectTransform,
                     Anchor.BottomLeft),
                 style: null,
@@ -112,6 +111,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            var buttonSize = new Point((int)(182.0f / 99.0f * buttonHeight), buttonHeight);
             commandButton = new GUIButton(
                 new RectTransform(buttonSize, parent: crewAreaWithButtons.RectTransform),
                 style: "CommandButton")
@@ -139,13 +139,14 @@ namespace Barotrauma
                 Spacing = (int)(GUI.Scale * 10)
             };
 
-            buttonSize.Y = crewListToggleButtonHeight;
             toggleCrewButton = new GUIButton(
-                new RectTransform(buttonSize, parent: crewAreaWithButtons.RectTransform)
+                new RectTransform(
+                    new Point(buttonSize.X, (int)(0.5f * buttonHeight)),
+                    parent: crewAreaWithButtons.RectTransform)
                 {
-                    AbsoluteOffset = new Point(0, commandButtonHeight + HUDLayoutSettings.Padding)
+                    AbsoluteOffset = new Point(0, buttonHeight + HUDLayoutSettings.Padding)
                 },
-                style: "CrewListToggleButton")
+                style: "UIToggleButton")
             {
                 OnClicked = (GUIButton btn, object userdata) =>
                 {
@@ -211,7 +212,7 @@ namespace Barotrauma
             var chatBox = ChatBox ?? GameMain.Client?.ChatBox;
             if (chatBox != null)
             {
-                chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), chatBox.GUIFrame.Parent.RectTransform), style: "ChatToggleButton");
+                chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), guiFrame.RectTransform), style: "ChatToggleButton");
                 chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
                 chatBox.ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
                 {
@@ -329,7 +330,17 @@ namespace Barotrauma
             }
 
             AddCharacterToCrewList(character);
-            DisplayCharacterOrder(character, character.CurrentOrder, character.CurrentOrderOption);
+
+            if (character is AICharacter)
+            {
+                var ai = character.AIController as HumanAIController;
+                if (ai == null)
+                {
+                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
+                    return;
+                }
+                character.SetOrder(ai.CurrentOrder, "", null, false);
+            }
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -777,11 +788,11 @@ namespace Barotrauma
             characterFrame.SetAsFirstChild();
         }
 
-        private void DisplayPreviousCharacterOrder(Character character, GUILayoutGroup characterComponent, OrderInfo orderInfo)
+        private void DisplayPreviousCharacterOrder(Character character, GUILayoutGroup characterComponent, OrderInfo currentOrderInfo)
         {
-            if (orderInfo.Order == null || orderInfo.Order.Identifier == dismissedOrderPrefab.Identifier) { return; }
+            if (currentOrderInfo.Order == null || currentOrderInfo.Order.Identifier == dismissedOrderPrefab.Identifier) { return; }
 
-            var previousOrderInfo = new OrderInfo(orderInfo);
+            var previousOrderInfo = new OrderInfo(currentOrderInfo);
             var prevOrderFrame = new GUIButton(
                 new RectTransform(
                     characterComponent.GetChildByUserData("job").RectTransform.RelativeSize,
@@ -824,12 +835,12 @@ namespace Barotrauma
 
         private GUIComponent GetCurrentOrderComponent(GUILayoutGroup characterComponent)
         {
-            return characterComponent?.FindChild(c => c?.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "currentorder");
+            return characterComponent.FindChild(c => c.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "currentorder");
         }
 
         private GUIComponent GetPreviousOrderComponent(GUILayoutGroup characterComponent)
         {
-            return characterComponent?.FindChild(c => c?.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "previousorder");
+            return characterComponent.FindChild(c => c.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "previousorder");
         }
 
         private struct OrderInfo
@@ -899,11 +910,7 @@ namespace Barotrauma
                 {
                     if (!(c.UserData is Character character) || character.IsDead || character.Removed) { continue; }
                     AddCharacter(character);
-                    if (GetPreviousOrderComponent(c.GetChild<GUILayoutGroup>())?.UserData is OrderInfo prevInfo &&
-                        crewList.Content.Children.FirstOrDefault(c => c?.UserData == character)?.GetChild<GUILayoutGroup>() is GUILayoutGroup newLayoutGroup)
-                    {
-                        DisplayPreviousCharacterOrder(character, newLayoutGroup, prevInfo);
-                    }
+                    DisplayCharacterOrder(character, character.CurrentOrder, (character.AIController as HumanAIController)?.CurrentOrderOption);
                 }
             }
 
@@ -1286,21 +1293,13 @@ namespace Barotrauma
         {
             get
             {
-#if DEBUG
-                return Character.Controlled == null || Character.Controlled.Info != null && Character.Controlled.SpeechImpediment < 100.0f;
-#else
                 return Character.Controlled != null && Character.Controlled.SpeechImpediment < 100.0f;
-#endif
             }
         }
 
         private bool CanSomeoneHearCharacter()
         {
-#if DEBUG
-            return true;
-#else
             return Character.Controlled != null && characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled));
-#endif
         }
 
         private void CreateCommandUI(Character characterContext = null)
@@ -1506,7 +1505,17 @@ namespace Barotrauma
                 shortcutCenterNode = null;
             }
             CreateNodes(userData);
-            CreateReturnNodeHotkey();
+            if (returnNode != null && returnNode.Visible)
+            {
+                var hotkey = optionNodes.Count + 1;
+                if (expandNode != null && expandNode.Visible) { hotkey += 1; }
+                CreateHotkeyIcon(returnNode.RectTransform, hotkey % 10, true);
+                returnNodeHotkey = Keys.D0 + hotkey % 10;
+            }
+            else
+            {
+                returnNodeHotkey = Keys.None;
+            }
             return true;
         }
 
@@ -1530,20 +1539,10 @@ namespace Barotrauma
                 returnNode = null;
             }
             CreateNodes(userData);
-            CreateReturnNodeHotkey();
-            return true;
-        }
-
-        private void CreateReturnNodeHotkey()
-        {
             if (returnNode != null && returnNode.Visible)
             {
-                var hotkey = 1;
-                if (targetFrame == null || !targetFrame.Visible)
-                {
-                    hotkey = optionNodes.Count + 1;
-                    if (expandNode != null && expandNode.Visible) { hotkey += 1; }
-                }
+                var hotkey = optionNodes.Count + 1;
+                if (expandNode != null && expandNode.Visible) { hotkey += 1; }
                 CreateHotkeyIcon(returnNode.RectTransform, hotkey % 10, true);
                 returnNodeHotkey = Keys.D0 + hotkey % 10;
             }
@@ -1551,6 +1550,7 @@ namespace Barotrauma
             {
                 returnNodeHotkey = Keys.None;
             }
+            return true;
         }
 
         private void SetCenterNode(GUIButton node)
@@ -2148,11 +2148,7 @@ namespace Barotrauma
                 ToolTip = character.Info.DisplayName + " (" + character.Info.Job.Name + ")"
             };
 
-#if DEBUG
-            bool canHear = true;
-#else
             bool canHear = character.CanHearCharacter(Character.Controlled);
-#endif
             if (!canHear)
             {
                 node.CanBeFocused = icon.CanBeFocused = false;
@@ -2275,10 +2271,8 @@ namespace Barotrauma
 
         private Character GetBestCharacterForOrder(Order order)
         {
-#if !DEBUG
             if (Character.Controlled == null) { return null; }
-#endif
-            return characters.FindAll(c => Character.Controlled == null || (c != Character.Controlled && c.TeamID == Character.Controlled.TeamID))
+            return characters.FindAll(c => c != Character.Controlled && c.TeamID == Character.Controlled.TeamID)
                 .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                 .ThenByDescending(c => order.HasAppropriateJob(c))
                 .ThenBy(c => c.CurrentOrder?.Weight)
@@ -2287,18 +2281,16 @@ namespace Barotrauma
 
         private List<Character> GetCharactersSortedForOrder(Order order)
         {
-#if !DEBUG
             if (Character.Controlled == null) { return new List<Character>(); }
-#endif
             if (order.Identifier == "follow")
             {
-                return characters.FindAll(c => Character.Controlled == null || (c != Character.Controlled && c.TeamID == Character.Controlled.TeamID))
+                return characters.FindAll(c => c != Character.Controlled && c.TeamID == Character.Controlled.TeamID)
                     .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                     .ToList();
             }
             else
             {
-                return characters.FindAll(c => Character.Controlled == null || c.TeamID == Character.Controlled.TeamID)
+                return characters.FindAll(c => c.TeamID == Character.Controlled.TeamID)
                     .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                     .ThenByDescending(c => order.HasAppropriateJob(c))
                     .ThenBy(c => c.CurrentOrder?.Weight)

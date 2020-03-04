@@ -26,9 +26,8 @@ namespace Barotrauma
         public static float WaveSpread = 0.05f;
         public static float WaveDampening = 0.05f;
         
-        //how much excess water the room can contain, relative to the volume of the room.
-        //needed to make it possible for pressure to "push" water up through U-shaped hull configurations
-        public const float MaxCompress = 1.05f;
+        //how much excess water the room can contain  (= more than the volume of the room)
+        public const float MaxCompress = 10000f;
         
         public readonly Dictionary<string, SerializableProperty> properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -155,7 +154,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
+                waterVolume = MathHelper.Clamp(value, 0.0f, Volume + MaxCompress);
                 if (waterVolume < Volume) Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
                 if (waterVolume > 0.0f) update = true;
             }
@@ -322,7 +321,6 @@ namespace Barotrauma
                     CeilingHeight = ConvertUnits.ToDisplayUnits(upperPickedPos.Y - lowerPickedPos.Y);
                 }
             }
-            Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
         }
 
         public void AddToGrid(Submarine submarine)
@@ -875,7 +873,7 @@ namespace Barotrauma
 
             var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
             {
-                WaterVolume = element.GetAttributeFloat("pressure", 0.0f),
+                waterVolume = element.GetAttributeFloat("pressure", 0.0f),
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 

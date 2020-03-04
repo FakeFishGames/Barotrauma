@@ -260,15 +260,15 @@ namespace Barotrauma
                         }
 
 #if CLIENT
-                        if (subElement.GetAttributeBool("fliphorizontal", false))
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;
-                        if (subElement.GetAttributeBool("flipvertical", false))
+                        if (subElement.GetAttributeBool("flipvertical", false)) 
                             sp.sprite.effects = SpriteEffects.FlipVertically;
 #endif
-
+                        
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
-
+                        
                         if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
                         {
                             sp.sprite.Name = sp.Name;
@@ -286,10 +286,12 @@ namespace Barotrauma
                             sp.BackgroundSprite.RelativeOrigin = subElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                         }
 #if CLIENT
-                        if (subElement.GetAttributeBool("fliphorizontal", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally; }
-                        if (subElement.GetAttributeBool("flipvertical", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipVertically; }
-                        sp.BackgroundSpriteColor = subElement.GetAttributeColor("color", Color.White);
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
+                            sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
+                        if (subElement.GetAttributeBool("flipvertical", false)) 
+                            sp.BackgroundSprite.effects = SpriteEffects.FlipVertically;
 #endif
+
                         break;
                 }
             }

@@ -293,9 +293,6 @@ namespace Barotrauma
 
         private NPCPersonalityTrait personalityTrait;
 
-        public Order CurrentOrder { get; set;}
-        public string CurrentOrderOption { get; set; }
-
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
         public ushort ID;
@@ -527,11 +524,9 @@ namespace Barotrauma
             }      
             foreach (XElement subElement in infoElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase))
-                {
-                    Job = new Job(subElement);
-                    break;
-                }
+                if (subElement.Name.ToString().ToLowerInvariant() != "job") continue;
+                Job = new Job(subElement);
+                break;
             }
             LoadHeadAttachments();
         }
@@ -666,7 +661,7 @@ namespace Barotrauma
         {
             foreach (XElement limbElement in Ragdoll.MainElement.Elements())
             {
-                if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (limbElement.GetAttributeString("type", "").ToLowerInvariant() != "head") { continue; }
 
                 XElement spriteElement = limbElement.Element("sprite");
                 if (spriteElement == null) { continue; }
@@ -682,7 +677,7 @@ namespace Barotrauma
                 //go through the files in the directory to find a matching sprite
                 foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
                 {
-                    if (!file.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                    if (!file.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
                     {
                         continue;
                     }
@@ -833,11 +828,6 @@ namespace Barotrauma
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
-            if (Job.Prefab.Identifier == "assistant")
-            {
-                increase *= SkillSettings.Current.AssistantSkillIncreaseMultiplier;
-            }
-
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase);
 
@@ -965,7 +955,7 @@ namespace Barotrauma
                 foreach (XElement childInvElement in itemElement.Elements())
                 {
                     if (itemContainerIndex >= itemContainers.Count) break;
-                    if (!childInvElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (childInvElement.Name.ToString().ToLowerInvariant() != "inventory") continue;
                     SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
                     itemContainerIndex++;
                 }

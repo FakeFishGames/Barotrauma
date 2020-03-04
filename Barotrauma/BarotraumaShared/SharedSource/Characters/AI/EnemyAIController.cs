@@ -1017,63 +1017,58 @@ namespace Barotrauma
                 return;
             }
 
-            if (AttackingLimb != null && AttackingLimb.attack.Retreat)
+            Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
+            // Offset so that we don't overshoot the movement
+            Vector2 steerPos = attackSimPos + offset;
+
+            if (SteeringManager is IndoorsSteeringManager pathSteering)
             {
-                UpdateFallBack(attackWorldPos, deltaTime, false);
-            }
-            else
-            {
-                Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
-                // Offset so that we don't overshoot the movement
-                Vector2 steerPos = attackSimPos + offset;
-                if (SteeringManager is IndoorsSteeringManager pathSteering)
+                if (pathSteering.CurrentPath != null)
                 {
-                    if (pathSteering.CurrentPath != null)
+                    // Attack doors
+                    if (canAttackSub)
                     {
-                        // Attack doors
-                        if (canAttackSub)
+                        // If the target is in the same hull, there shouldn't be any doors blocking the path
+                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
                         {
-                            // If the target is in the same hull, there shouldn't be any doors blocking the path
-                            if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                            if (door != null && !door.IsOpen)
                             {
-                                var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                                if (door != null && !door.IsOpen)
+                                if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
                                 {
-                                    if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
-                                    {
-                                        SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
-                                        return;
-                                    }
+                                    SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
+                                    return;
                                 }
                             }
                         }
-                        // Steer towards the target if in the same room and swimming
-                        if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
-                        {
-                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
-                        }
-                        else
-                        {
-                            SteeringManager.SteeringSeek(steerPos, 2);
-                            // Switch to Idle when cannot reach the target and if cannot damage the walls
-                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                            {
-                                State = AIState.Idle;
-                                return;
-                            }
-                        }
+                    }
+                    // Steer towards the target if in the same room and swimming
+                    if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                    {
+                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
                     }
                     else
                     {
-                        SteeringManager.SteeringSeek(steerPos, 5);
+                        SteeringManager.SteeringSeek(steerPos, 2);
+                        // Switch to Idle when cannot reach the target and if cannot damage the walls
+                        if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                        {
+                            State = AIState.Idle;
+                            return;
+                        }
                     }
                 }
                 else
                 {
-                    SteeringManager.SteeringSeek(steerPos, 10);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+                    SteeringManager.SteeringSeek(steerPos, 5);
                 }
             }
+            else
+            {
+                SteeringManager.SteeringSeek(steerPos, 10);
+                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+            }
+
             if (canAttack)
             {
                 if (!UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb))
@@ -1277,9 +1272,12 @@ namespace Barotrauma
             if (attackResult.Damage > 0.0f)
             {
                 bool canAttack = attacker.Submarine == Character.Submarine && canAttackCharacters || attacker.Submarine != null && canAttackSub;
-                if (Character.Params.AI.AttackWhenProvoked && canAttack)
+                if (Character.Params.AI.AttackWhenProvoked)
                 {
-                    ChangeTargetState(attacker, AIState.Attack, 100);
+                    if (canAttack)
+                    {
+                        ChangeTargetState(attacker, AIState.Attack, 100);
+                    }
                 }
                 else if (!AIParams.HasTag(attacker.SpeciesName))
                 {
@@ -1289,14 +1287,14 @@ namespace Barotrauma
                         {
                             if (!AIParams.HasTag("stronger"))
                             {
-                                ChangeTargetState(attacker, canAttack ? AIState.PassiveAggressive : AIState.Escape, 100);
+                                ChangeTargetState(attacker, AIState.Escape, 100);
                             }
                         }
                         else if (enemyAI.CombatStrength < CombatStrength)
                         {
                             if (!AIParams.HasTag("weaker"))
                             {
-                                ChangeTargetState(attacker, canAttack ? AIState.PassiveAggressive : AIState.Escape, 100);
+                                ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                             }
                         }
                         else
@@ -1307,7 +1305,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        ChangeTargetState(attacker, canAttack ? AIState.PassiveAggressive : AIState.Escape, 100);
+                        ChangeTargetState(attacker, AIState.Escape, 100);
                     }
                 }
             }

@@ -57,9 +57,6 @@ namespace Barotrauma
         public Hull CurrentHull = null;
 
         public bool IsRemotePlayer;
-
-        public bool IsPlayer => Controlled == this || IsRemotePlayer;
-
         public readonly Dictionary<string, SerializableProperty> Properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -131,40 +128,13 @@ namespace Barotrauma
             set => Params.Noise = value;
         }
 
-        public float Visibility
-        {
-            get => Params.Visibility;
-            set => Params.Visibility = value;
-        }
-
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
         public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
 
         private float attackCoolDown;
 
-        public Order CurrentOrder
-        {
-            get
-            {
-                return Info?.CurrentOrder;
-            }
-            private set
-            {
-                if (Info != null) { Info.CurrentOrder = value; }
-            }
-        }
-        public string CurrentOrderOption
-        {
-            get
-            {
-                return Info?.CurrentOrderOption;
-            }
-            private set
-            {
-                if (Info != null) { Info.CurrentOrderOption = value; }
-            }
-        }
+        public Order CurrentOrder { get; private set; }
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
         private readonly List<float> speedMultipliers = new List<float>();
@@ -788,7 +758,7 @@ namespace Barotrauma
                 var matchingAffliction = AfflictionPrefab.List
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.OrdinalIgnoreCase)));
+                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
                 string nonHuskedSpeciesName = string.Empty;
                 if (matchingAffliction == null)
                 {
@@ -2042,8 +2012,8 @@ namespace Barotrauma
             HideFace = false;
 
 
-            UpdateSightRange(deltaTime);
-            UpdateSoundRange(deltaTime);
+            UpdateSightRange();
+            UpdateSoundRange();
 
             if (IsDead) { return; }
 
@@ -2192,8 +2162,6 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
-        partial void SetOrderProjSpecific(Order order, string orderOption);
-
         private void UpdateOxygen(float deltaTime)
         {
             PressureProtection -= deltaTime * 100.0f;
@@ -2296,12 +2264,7 @@ namespace Barotrauma
                     if (itemContainer == null) { return; }
                     foreach (Item inventoryItem in Inventory.Items)
                     {
-                        if (inventoryItem == null) { continue; }
-                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null))
-                        {
-                            //if the item couldn't be put inside the despawn container, just drop it
-                            inventoryItem.Drop(dropper: this);
-                        }
+                        itemContainer.Inventory.TryPutItem(inventoryItem, user: null);
                     }
                 }
             }
@@ -2327,39 +2290,18 @@ namespace Barotrauma
             }
         }
 
-        private readonly float maxAIRange = 10000;
-        private readonly float aiTargetChangeSpeed = 5;
-
-        private void UpdateSightRange(float deltaTime)
+        private void UpdateSightRange()
         {
             if (aiTarget == null) { return; }
-            float minRange = Math.Clamp((float)Math.Sqrt(Mass) * Visibility, 250, 1000);
-            float massFactor = (float)Math.Sqrt(Mass / 20);
-            float targetRange = Math.Min(minRange + massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Visibility, maxAIRange);
-            float newRange = MathHelper.SmoothStep(aiTarget.SightRange, targetRange, deltaTime * aiTargetChangeSpeed);
-            if (!float.IsNaN(newRange))
-            {
-                aiTarget.SightRange = newRange;
-            }
+            float range = (float)Math.Sqrt(Mass) * 250 + AnimController.Collider.LinearVelocity.Length() * 500;
+            aiTarget.SightRange = MathHelper.Clamp(range, 0, 10000);
         }
 
-        private void UpdateSoundRange(float deltaTime)
+        private void UpdateSoundRange()
         {
             if (aiTarget == null) { return; }
-            if (IsDead)
-            {
-                aiTarget.SoundRange = 0;
-            }
-            else
-            {
-                float massFactor = (float)Math.Sqrt(Mass / 10);
-                float targetRange = Math.Min(massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Noise, maxAIRange);
-                float newRange = MathHelper.SmoothStep(aiTarget.SoundRange, targetRange, deltaTime * aiTargetChangeSpeed);
-                if (!float.IsNaN(newRange))
-                {
-                    aiTarget.SoundRange = newRange;
-                }
-            }
+            float range = ((float)Math.Sqrt(Mass) / 3) * (AnimController.TargetMovement.Length() * 2) * Noise;
+            aiTarget.SoundRange = MathHelper.Clamp(range, 0, 10000);
         }
 
         public bool CanHearCharacter(Character speaker)
@@ -2374,17 +2316,24 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
         {
-            //set the character order only if the character is close enough to hear the message
-            if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
+            if (orderGiver != null)
+            {
+                //set the character order only if the character is close enough to hear the message
+                if (!CanHearCharacter(orderGiver)) { return; }
+            }
 
             if (AIController is HumanAIController humanAI)
             {
                 humanAI.SetOrder(order, orderOption, orderGiver, speak);
             }
+#if CLIENT
+            else
+            {
+                GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
+            }
+#endif
 
-            SetOrderProjSpecific(order, orderOption);
             CurrentOrder = order;
-            CurrentOrderOption = orderOption;
         }
 
         private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
@@ -2653,7 +2602,6 @@ namespace Barotrauma
                     mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
-            bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
@@ -2661,10 +2609,6 @@ namespace Barotrauma
             {
                 OnAttacked?.Invoke(attacker, attackResult);
                 OnAttackedProjSpecific(attacker, attackResult);
-                if (!wasDead)
-                {
-                    TryAdjustAttackerSkill(attacker, -attackResult.Damage);
-                }
             };
 
             if (attacker != null && attackResult.Damage > 0.0f)
@@ -2676,30 +2620,6 @@ namespace Barotrauma
         }
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult);
-
-        public void TryAdjustAttackerSkill(Character attacker, float healthChange)
-        {
-            if (attacker == null) { return; }
-            
-            bool isEnemy = AIController is EnemyAIController || TeamID != attacker.TeamID;
-            if (isEnemy)
-            {
-                if (healthChange < 0.0f)
-                {
-                    float attackerSkillLevel = attacker.GetSkillLevel("weapons");
-                    attacker.Info?.IncreaseSkillLevel("weapons",
-                        -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f),
-                        attacker.WorldPosition + Vector2.UnitY * 100.0f);
-                }
-            }
-            else if (healthChange > 0.0f)
-            {
-                float attackerSkillLevel = attacker.GetSkillLevel("medical");
-                attacker.Info?.IncreaseSkillLevel("medical",
-                    healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f),
-                    attacker.WorldPosition + Vector2.UnitY * 100.0f);
-            }
-        }
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {

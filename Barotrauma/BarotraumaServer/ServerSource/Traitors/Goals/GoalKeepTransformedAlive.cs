@@ -52,7 +52,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (character.SpeciesName.Equals(speciesId, StringComparison.OrdinalIgnoreCase))
+                    if (character.SpeciesName.ToLowerInvariant() == speciesId)
                     {
                         targetCharacter = character;
                         break;

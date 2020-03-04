@@ -240,13 +240,13 @@ namespace Barotrauma
             name = null; endpoint = null; lobbyId = 0;
             if (args == null || args.Length < 2) { return; }
 
-            if (args[0].Equals("-connect", StringComparison.OrdinalIgnoreCase))
+            if (args[0].Equals("-connect", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (args.Length < 3) { return; }
                 name = args[1];
                 endpoint = args[2];
             }
-            else if (args[0].Equals("+connect_lobby", StringComparison.OrdinalIgnoreCase))
+            else if (args[0].Equals("+connect_lobby", StringComparison.InvariantCultureIgnoreCase))
             {
                 UInt64.TryParse(args[1], out lobbyId);
             }

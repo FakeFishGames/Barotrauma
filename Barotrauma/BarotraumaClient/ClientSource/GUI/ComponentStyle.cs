@@ -159,7 +159,7 @@ namespace Barotrauma
             Point size = new Point(0, 0);
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("size", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "size") { continue; }
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {

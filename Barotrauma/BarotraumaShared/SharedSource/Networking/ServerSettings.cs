@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
                         {
                             return (a == null) == (b == null);
                         }
-                        return a.ToString().Equals(b.ToString(), StringComparison.OrdinalIgnoreCase);
+                        return a.ToString().Equals(b.ToString(), StringComparison.InvariantCulture);
                 }
             }
 
@@ -759,7 +759,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(600.0f, true)]
+        [Serialize(120.0f, true)]
         public float KickAFKTime
         {
             get;

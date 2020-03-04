@@ -8,11 +8,6 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
-        public override Sprite Sprite
-        {
-            get { return prefab?.sprite; }
-        }
-
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";

@@ -70,15 +70,14 @@ namespace Barotrauma.Steam
             return Steamworks.SteamClient.Name;
         }
 
-        public static bool OverlayCustomURL(string url)
+        public static void OverlayCustomURL(string url)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid)
             {
-                return false;
+                return;
             }
 
             Steamworks.SteamFriends.OpenWebOverlay(url);
-            return true;
         }
         
         public static bool UnlockAchievement(string achievementName)

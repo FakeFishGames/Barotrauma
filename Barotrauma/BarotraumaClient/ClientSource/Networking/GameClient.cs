@@ -8,7 +8,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -60,18 +59,6 @@ namespace Barotrauma.Networking
         private List<string> permittedConsoleCommands = new List<string>();
 
         private bool connected;
-
-        private enum RoundInitStatus
-        {
-            NotStarted,
-            Starting,
-            Started,
-            TimedOut,
-            Error,
-            Interrupted
-        }
-
-        private RoundInitStatus roundInitStatus = RoundInitStatus.NotStarted;
 
         private byte myID;
 
@@ -160,8 +147,6 @@ namespace Barotrauma.Networking
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
             this.steamP2POwner = steamP2POwner;
-
-            roundInitStatus = RoundInitStatus.NotStarted;
 
             allowReconnect = true;
 
@@ -487,16 +472,12 @@ namespace Barotrauma.Networking
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
                         relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, 170));
-                    var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
+                    var passwordHolder = new GUILayoutGroup(new RectTransform(Vector2.One, msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f) , passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
                         UserData = "password",
                         Censor = true
                     };
-
-                    msgBox.Content.Recalculate();
-                    msgBox.Content.RectTransform.MinSize = new Point(0, msgBox.Content.RectTransform.Children.Sum(c => c.Rect.Height));
-                    msgBox.Content.Parent.RectTransform.MinSize = new Point(0, (int)(msgBox.Content.RectTransform.MinSize.Y / msgBox.Content.RectTransform.RelativeSize.Y));
 
                     var okButton = msgBox.Buttons[0];
                     var cancelButton = msgBox.Buttons[1];
@@ -543,7 +524,6 @@ namespace Barotrauma.Networking
 
             foreach (Client c in ConnectedClients)
             {
-                if (c.Character != null && c.Character.Removed) { c.Character = null; }
                 c.UpdateSoundPosition();
             }
 
@@ -578,13 +558,6 @@ namespace Barotrauma.Networking
 
             try
             {
-                incomingMessagesToProcess.Clear();
-                incomingMessagesToProcess.AddRange(pendingIncomingMessages);
-                foreach (var inc in incomingMessagesToProcess)
-                {
-                    ReadDataMessage(inc);
-                }
-                pendingIncomingMessages.Clear();
                 clientPeer?.Update(deltaTime);
             }
             catch (Exception e)
@@ -659,23 +632,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        private bool waitingForStartRoundFinalize = false;
-
-        private readonly List<IReadMessage> pendingIncomingMessages = new List<IReadMessage>();
-        private readonly List<IReadMessage> incomingMessagesToProcess = new List<IReadMessage>();
+        private CoroutineHandle startGameCoroutine;
 
         private void ReadDataMessage(IReadMessage inc)
         {
             ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
-
-            if (header != ServerPacketHeader.STARTGAMEFINALIZE &&
-                header != ServerPacketHeader.ENDGAME &&
-                waitingForStartRoundFinalize)
-            {
-                pendingIncomingMessages.Add(inc);
-                return;
-            }
-
             switch (header)
             {
                 case ServerPacketHeader.UPDATE_LOBBY:
@@ -753,10 +714,7 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ServerPacketHeader.STARTGAME:
-                    GameMain.Instance.ShowLoading(StartGame(inc), false);
-                    break;
-                case ServerPacketHeader.STARTGAMEFINALIZE:
-                    ReadStartGameFinalize(inc);
+                    startGameCoroutine = GameMain.Instance.ShowLoading(StartGame(inc), false);
                     break;
                 case ServerPacketHeader.ENDGAME:
                     string endMessage = inc.ReadString();
@@ -767,8 +725,6 @@ namespace Barotrauma.Networking
                         GameMain.GameSession.WinningTeam = winningTeam;
                         GameMain.GameSession.Mission.Completed = true;
                     }
-
-                    roundInitStatus = RoundInitStatus.Interrupted;
                     CoroutineManager.StartCoroutine(EndGame(endMessage), "EndGame");
                     break;
                 case ServerPacketHeader.CAMPAIGN_SETUP_INFO:
@@ -819,37 +775,7 @@ namespace Barotrauma.Networking
                     break;
             }
         }
-
-        private void ReadStartGameFinalize(IReadMessage inc)
-        {
-            ushort contentToPreloadCount = inc.ReadUInt16();
-            List<ContentFile> contentToPreload = new List<ContentFile>();
-            for (int i = 0; i < contentToPreloadCount; i++)
-            {
-                ContentType contentType = (ContentType)inc.ReadByte();
-                string filePath = inc.ReadString();
-                contentToPreload.Add(new ContentFile(filePath, contentType));
-            }
-
-            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
-
-            int levelEqualityCheckVal = inc.ReadInt32();
-
-            if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)
-            {
-                string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server (seed: " + Level.Loaded.Seed +
-                    ", sub: " + Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash.ShortHash + ")" +
-                    ", mirrored: " + Level.Loaded.Mirrored + ").";
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                throw new Exception(errorMsg);
-            }
-
-            GameMain.GameSession.Mission?.ClientReadInitial(inc);
-
-            roundInitStatus = RoundInitStatus.Started;
-        }
-
-
+        
         private void OnDisconnect()
         {
             if (SteamManager.IsInitialized)
@@ -958,7 +884,6 @@ namespace Barotrauma.Networking
             }
             else
             {
-                connected = false;
                 connectCancelled = true;
 
                 string msg = "";
@@ -1183,8 +1108,6 @@ namespace Barotrauma.Networking
             if (Character != null) Character.Remove();
             HasSpawned = false;
             eventErrorWritten = false;
-            waitingForStartRoundFinalize = false;
-            GameMain.NetLobbyScreen.StopWaitingForStartRound();
 
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
@@ -1203,11 +1126,9 @@ namespace Barotrauma.Networking
 
             EndVoteTickBox.Selected = false;
 
-            roundInitStatus = RoundInitStatus.Starting;
-
             int seed                    = inc.ReadInt32();
             string levelSeed            = inc.ReadString();
-            //int levelEqualityCheckVal   = inc.ReadInt32();
+            int levelEqualityCheckVal   = inc.ReadInt32();
             float levelDifficulty       = inc.ReadSingle();
 
             byte losMode            = inc.ReadByte();
@@ -1225,15 +1146,23 @@ namespace Barotrauma.Networking
             int missionIndex        = inc.ReadInt16();
 
             bool respawnAllowed     = inc.ReadBoolean();
+            bool loadSecondSub      = inc.ReadBoolean();
 
             bool disguisesAllowed   = inc.ReadBoolean();
             bool rewiringAllowed    = inc.ReadBoolean();
 
             bool allowRagdollButton = inc.ReadBoolean();
 
-            serverSettings.ReadMonsterEnabled(inc);
+            ushort contentToPreloadCount = inc.ReadUInt16();
+            List<ContentFile> contentToPreload = new List<ContentFile>();
+            for (int i = 0; i < contentToPreloadCount; i++)
+            {
+                ContentType contentType = (ContentType)inc.ReadByte();
+                string filePath = inc.ReadString();
+                contentToPreload.Add(new ContentFile(filePath, contentType));
+            }
 
-            bool includesFinalize = inc.ReadBoolean(); inc.ReadPadBits();
+            serverSettings.ReadMonsterEnabled(inc);
 
             GameModePreset gameMode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
             MultiPlayerCampaign campaign = 
@@ -1268,8 +1197,6 @@ namespace Barotrauma.Networking
             }
 
             Rand.SetSyncedSeed(seed);
-
-            Task startRoundTask;
 
             if (campaign == null)
             {
@@ -1310,132 +1237,21 @@ namespace Barotrauma.Networking
                     yield return CoroutineStatus.Failure;
                 }
 
-                MissionPrefab missionPrefab = missionIndex < 0 ? null : MissionPrefab.List[missionIndex];
-
                 GameMain.GameSession = missionIndex < 0 ?
                     new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionType.None) :
-                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, missionPrefab);
-
-                //startRoundTask = Task.Run(async () => { await Task.Yield(); GameMain.GameSession.StartRound(levelSeed, levelDifficulty); });
-                GameMain.GameSession.StartRound(levelSeed, levelDifficulty);
+                    new GameSession(GameMain.NetLobbyScreen.SelectedSub, "", gameMode, MissionPrefab.List[missionIndex]);
+                GameMain.GameSession.StartRound(levelSeed, levelDifficulty, loadSecondSub);
             }
             else
             {
                 if (GameMain.GameSession?.CrewManager != null) GameMain.GameSession.CrewManager.Reset();
-                /*startRoundTask = Task.Run(async () =>
-                {
-                    await Task.Yield();
-                    GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
-                        reloadSub: true,
-                        mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
-                });*/
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
-                        reloadSub: true,
-                        mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
+                    reloadSub: true,
+                    loadSecondSub: false,
+                    mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
 
-            waitingForStartRoundFinalize = true;
-
-            DateTime? timeOut = null;
-
-            while (true)
-            {
-                try
-                {
-                    if (timeOut.HasValue)
-                    {
-                        if (DateTime.Now > timeOut)
-                        {
-                            DebugConsole.ThrowError("Error while starting the round (did not receive STARTROUNDFINALIZE message from the server). Stopping the round...");
-                            roundInitStatus = RoundInitStatus.TimedOut;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (includesFinalize)
-                        {
-                            ReadStartGameFinalize(inc);
-                        }
-                        else
-                        {
-                            IWriteMessage msg = new WriteOnlyMessage();
-                            msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
-                            clientPeer.Send(msg, DeliveryMethod.Reliable);
-                        }
-
-                        //wait for up to 30 seconds for the server to send the STARTGAMEFINALIZE message
-                        timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
-                        /*if (startRoundTask.Status == TaskStatus.RanToCompletion)
-                        {
-                            if (includesFinalize)
-                            {
-                                ReadStartGameFinalize(inc);
-                            }
-                            else
-                            {
-                                IWriteMessage msg = new WriteOnlyMessage();
-                                msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
-                                clientPeer.Send(msg, DeliveryMethod.Reliable);
-                            }
-
-                            //wait for up to 30 seconds for the server to send the STARTGAMEFINALIZE message
-                            timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
-                        }
-                        else if (startRoundTask.Status == TaskStatus.Faulted)
-                        {
-                            DebugConsole.ThrowError("There was an error initializing the round: startRoundTask failed.", startRoundTask.Exception.InnerExceptions[0]);
-                            roundInitStatus = RoundInitStatus.Error;
-                            break;
-                        }
-                        else if (startRoundTask.Status == TaskStatus.Canceled)
-                        {
-                            DebugConsole.ThrowError("There was an error initializing the round: startRoundTask was canceled.");
-                            roundInitStatus = RoundInitStatus.Error;
-                            break;
-                        }*/
-                    }
-
-                    if (!connected)
-                    {
-                        roundInitStatus = RoundInitStatus.Interrupted;
-                        break;
-                    }
-
-                    if (roundInitStatus != RoundInitStatus.Starting)
-                    {
-                        break;
-                    }
-
-                    clientPeer.Update((float)Timing.Step);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("There was an error initializing the round.", e, true);
-                    roundInitStatus = RoundInitStatus.Error;
-                    //startRoundTask?.Wait();
-                    break;
-                }
-
-                //waiting for a STARTGAMEFINALIZE message
-                yield return CoroutineStatus.Running;
-            }
-
-            waitingForStartRoundFinalize = false;
-
-            if (roundInitStatus != RoundInitStatus.Started)
-            {
-                if (roundInitStatus != RoundInitStatus.Interrupted)
-                {
-                    DebugConsole.ThrowError(roundInitStatus.ToString());
-                    CoroutineManager.StartCoroutine(EndGame(""));
-                    yield return CoroutineStatus.Failure;
-                }
-                else
-                {
-                    yield return CoroutineStatus.Success;
-                }
-            }
+            GameMain.GameSession.Mission?.ClientReadInitial(inc);
 
             if (GameMain.GameSession.Submarine.IsFileCorrupted)
             {
@@ -1445,7 +1261,7 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i < Submarine.MainSubs.Length; i++)
             {
-                if (Submarine.MainSubs[i] == null) { break; }
+                if (!loadSecondSub && i > 0) { break; }
 
                 var teamID = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
                 Submarine.MainSubs[i].TeamID = teamID;
@@ -1455,10 +1271,23 @@ namespace Barotrauma.Networking
                 }
             }
 
+            if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)
+            {
+                string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server (seed: " + Level.Loaded.Seed +
+                    ", sub: " + Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash.ShortHash + ")" +
+                    ", mirrored: " + Level.Loaded.Mirrored + ").";
+                DebugConsole.ThrowError(errorMsg, createMessageBox: true);
+                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + levelSeed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                CoroutineManager.StartCoroutine(EndGame(""));
+                yield return CoroutineStatus.Failure;
+            }
+
             if (respawnAllowed) { respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null); }
 
-            gameStarted = true;
+            GameMain.GameSession.EventManager.PreloadContent(contentToPreload);
+
             ServerSettings.ServerDetailsChanged = true;
+            gameStarted = true;
 
             GameMain.GameScreen.Select();
 
@@ -1606,7 +1435,7 @@ namespace Barotrauma.Networking
                     existingClient.Muted = tc.Muted;
                     existingClient.AllowKicking = tc.AllowKicking;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
-                    if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterID > 0)
+                    if (tc.CharacterID > 0)
                     {
                         existingClient.Character = Entity.FindEntityByID(tc.CharacterID) as Character;
                         if (existingClient.Character == null)
@@ -2150,7 +1979,8 @@ namespace Barotrauma.Networking
         {
             if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) { return false; }
 
-            if (permittedConsoleCommands.Any(c => c.Equals(commandName, StringComparison.OrdinalIgnoreCase))) { return true; }
+            commandName = commandName.ToLowerInvariant();
+            if (permittedConsoleCommands.Any(c => c.ToLowerInvariant() == commandName)) { return true; }
 
             //check aliases
             foreach (DebugConsole.Command command in DebugConsole.Commands)
@@ -2668,7 +2498,6 @@ namespace Barotrauma.Networking
             {
                 var transfer = fileReceiver.ActiveTransfers.First();
                 GameMain.NetLobbyScreen.FileTransferFrame.Visible = true;
-                GameMain.NetLobbyScreen.FileTransferFrame.UserData = transfer;
                 GameMain.NetLobbyScreen.FileTransferTitle.Text =
                     ToolBox.LimitString(
                         TextManager.GetWithVariable("DownloadingFile", "[filename]", transfer.FileName),
@@ -2982,8 +2811,8 @@ namespace Barotrauma.Networking
                 errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
-            string filePath = "event_error_log_client_" + Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
-            filePath = Path.Combine(ServerLog.SavePath, ToolBox.RemoveInvalidFileNameChars(filePath));
+            string filePath = "event_error_log_client_" + Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
+            filePath = Path.Combine(ServerLog.SavePath, filePath);
 
             if (!Directory.Exists(ServerLog.SavePath))
             {

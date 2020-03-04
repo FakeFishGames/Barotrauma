@@ -94,7 +94,8 @@ namespace Barotrauma
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.Equals(speciesName, StringComparison.OrdinalIgnoreCase) && (contentPackage == null || p.ContentPackage == contentPackage));
+            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.ToLowerInvariant()==speciesName.ToLowerInvariant() &&
+                                                          (contentPackage==null || p.ContentPackage == contentPackage));
             if (prefab?.XDocument == null)
             {
                 DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
@@ -106,7 +107,7 @@ namespace Barotrauma
         public static string GetFolder(XDocument doc, string filePath)
         {
             var folder = doc.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
-            if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
@@ -149,7 +150,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");

@@ -6,12 +6,6 @@ namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
-        public Color BackgroundSpriteColor
-        {
-            get;
-            private set;
-        }
-
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);

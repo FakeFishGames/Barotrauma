@@ -39,7 +39,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().Equals("fabricableitem", StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() == "fabricableitem")
                 {
                     DebugConsole.ThrowError("Error in item " + item.Name + "! Fabrication recipes should be defined in the craftable item's xml, not in the fabricator.");
                     break;

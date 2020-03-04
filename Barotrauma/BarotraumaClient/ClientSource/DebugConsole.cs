@@ -440,7 +440,6 @@ namespace Barotrauma
             AssignRelayToServer("ban", false);
             AssignRelayToServer("banid", false);
             AssignRelayToServer("dumpids", false);
-            AssignRelayToServer("dumptofile", false);
             AssignRelayToServer("findentityids", false);
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
@@ -1058,69 +1057,23 @@ namespace Barotrauma
                 if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
                 foreach (MapEntity me in MapEntity.SelectedList)
                 {
-                    bool propertyFound = false;
-                    if (!(me is ISerializableEntity serializableEntity)) { continue; }                    
-                    if (serializableEntity.SerializableProperties == null) { continue; }
-
-                    if (serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                    if (me is ISerializableEntity serializableEntity)
                     {
-                        propertyFound = true;
-                        object prevValue = property.GetValue(me);
-                        if (property.TrySetValue(me, args[1]))
+                        if (serializableEntity.SerializableProperties == null)
                         {
-                            NewMessage($"Changed the value \"{args[0]}\" from {(prevValue?.ToString() ?? null)} to {args[1]} on entity \"{me.ToString()}\".", Color.LightGreen);
+                            continue;
                         }
-                        else
+                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
                         {
-                            NewMessage($"Failed to set the value of \"{args[0]}\" to \"{args[1]}\" on the entity \"{me.ToString()}\".", Color.Orange);
+                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
+                            continue;
                         }
-                    }
-                    if (me is Item item)
-                    {
-                        foreach (ItemComponent ic in item.Components)
+                        if (!property.TrySetValue(me, args[1]))
                         {
-                            ic.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty componentProperty);
-                            if (componentProperty == null) { continue; }
-                            propertyFound = true;
-                            object prevValue = componentProperty.GetValue(ic);
-                            if (componentProperty.TrySetValue(ic, args[1]))
-                            {
-                                NewMessage($"Changed the value \"{args[0]}\" from {prevValue} to {args[1]} on item \"{me.ToString()}\", component \"{ic.GetType().Name}\".", Color.LightGreen);
-                            }
-                            else
-                            {
-                                NewMessage($"Failed to set the value of \"{args[0]}\" to \"{args[1]}\" on the item \"{me.ToString()}\", component \"{ic.GetType().Name}\".", Color.Orange);
-                            }
-                        }
-                    }
-                    if (!propertyFound)
-                    {
-                        NewMessage($"Property \"{args[0]}\" not found in the entity \"{me.ToString()}\".", Color.Orange);
-                    }
-                }
-            },
-            () =>
-            {
-                List<string> propertyList = new List<string>();
-                foreach (MapEntity me in MapEntity.SelectedList)
-                {
-                    if (!(me is ISerializableEntity serializableEntity)) { continue; }
-                    if (serializableEntity.SerializableProperties == null) { continue; }
-                    propertyList.AddRange(serializableEntity.SerializableProperties.Select(p => p.Key));
-                    if (me is Item item)
-                    {
-                        foreach (ItemComponent ic in item.Components)
-                        {
-                            propertyList.AddRange(ic.SerializableProperties.Select(p => p.Key));
+                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
                         }
                     }
                 }
-
-                return new string[][]
-                {
-                    propertyList.Distinct().ToArray(),
-                    new string[0]
-                };
             }));
 
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
@@ -2360,7 +2313,7 @@ namespace Barotrauma
             switch (firstArg)
             {
                 case "name":
-                    var sprites = Sprite.LoadedSprites.Where(s => s.Name != null && s.Name.Equals(secondArg, StringComparison.OrdinalIgnoreCase));
+                    var sprites = Sprite.LoadedSprites.Where(s => s.Name?.ToLowerInvariant() == secondArg.ToLowerInvariant());
                     if (sprites.Any())
                     {
                         foreach (var s in sprites)
@@ -2376,7 +2329,7 @@ namespace Barotrauma
                     }
                 case "identifier":
                 case "id":
-                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID != null && s.EntityID.Equals(secondArg, StringComparison.OrdinalIgnoreCase));
+                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID?.ToLowerInvariant() == secondArg.ToLowerInvariant());
                     if (sprites.Any())
                     {
                         foreach (var s in sprites)

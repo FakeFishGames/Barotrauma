@@ -150,12 +150,6 @@ namespace Barotrauma.Particles
             {
                 DistanceMin = DistanceMax = element.GetAttributeFloat("distance", 0.0f);
             }
-            if (DistanceMax < DistanceMin)
-            {
-                var temp = DistanceMin;
-                DistanceMin = DistanceMax;
-                DistanceMax = temp;
-            }
 
             if (element.Attribute("velocity") == null)
             {
@@ -165,12 +159,6 @@ namespace Barotrauma.Particles
             else
             {
                 VelocityMin = VelocityMax = element.GetAttributeFloat("velocity", 0.0f);
-            }
-            if (VelocityMax < VelocityMin)
-            {
-                var temp = VelocityMin;
-                VelocityMin = VelocityMax;
-                VelocityMax = temp;
             }
 
             EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);

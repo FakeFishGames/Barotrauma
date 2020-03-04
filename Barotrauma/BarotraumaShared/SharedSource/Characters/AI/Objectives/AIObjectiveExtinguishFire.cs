@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -28,44 +29,32 @@ namespace Barotrauma
         public override float GetPriority()
         {
             if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
-                && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+                && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
+            float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
+            yDist = yDist > 100 ? yDist * 3 : 0;
+            float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
+            float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
+            if (targetHull == character.CurrentHull)
             {
-                Priority = 0;
+                distanceFactor = 1;
             }
-            else
-            {
-                float yDist = Math.Abs(character.WorldPosition.Y - targetHull.WorldPosition.Y);
-                yDist = yDist > 100 ? yDist * 3 : 0;
-                float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
-                float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
-                if (targetHull == character.CurrentHull)
-                {
-                    distanceFactor = 1;
-                }
-                float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
-                float devotion = CumulatedDevotion / 100;
-                Priority = MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + (severityFactor * distanceFactor * PriorityModifier), 0, 1));
-            }
-            return Priority;
+            float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
+            float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
+            float devotion = Math.Min(Priority, 10) / 100;
+            return MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + severityFactor * distanceFactor, 0, 1));
         }
 
         protected override bool Check() => targetHull.FireSources.None();
 
-        private float sinTime;
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItemByIdentifier("fireextinguisher") ?? character.Inventory.FindItemByTag("fireextinguisher");
+            var extinguisherItem = character.Inventory.FindItemByIdentifier("extinguisher") ?? character.Inventory.FindItemByTag("extinguisher");
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
                     character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
-                    return new AIObjectiveGetItem(character, "fireextinguisher", objectiveManager, equip: true)
-                    {
-                        // If the item is inside an unsafe hull, decrease the priority
-                        GetItemPriority = i => HumanAIController.UnsafeHulls.Contains(i.CurrentHull) ? 0.1f : 1
-                    };
+                    return new AIObjectiveGetItem(character, "extinguisher", objectiveManager, equip: true);
                 });
             }
             else
@@ -90,12 +79,8 @@ namespace Barotrauma
                         {
                             useExtinquisherTimer = 0.0f;
                         }
-                        // Aim
                         character.CursorPosition = fs.Position;
-                        Vector2 fromCharacterToFireSource = fs.WorldPosition - character.WorldPosition;
-                        float dist = fromCharacterToFireSource.Length();
-                        character.CursorPosition += VectorExtensions.Forward(extinguisherItem.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
-                        if (extinguisherItem.RequireAimToUse)
+                        if (extinguisher.Item.RequireAimToUse)
                         {
                             bool isOperatingButtons = false;
                             if (SteeringManager == PathSteering)
@@ -110,9 +95,8 @@ namespace Barotrauma
                             {
                                 character.SetInput(InputType.Aim, false, true);
                             }
-                            sinTime += deltaTime * 10;
                         }
-                        character.SetInput(extinguisherItem.IsShootable ? InputType.Shoot : InputType.Use, false, true);
+                        character.SetInput(extinguisher.Item.IsShootable ? InputType.Shoot : InputType.Use, false, true);
                         extinguisher.Use(deltaTime, character);
                         if (!targetHull.FireSources.Contains(fs))
                         {
@@ -126,7 +110,7 @@ namespace Barotrauma
                     if (move)
                     {
                         //go to the first firesource
-                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range / 2)
+                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager)
                         {
                             DialogueIdentifier = "dialogcannotreachfire",
                             TargetName = fs.Hull.DisplayName

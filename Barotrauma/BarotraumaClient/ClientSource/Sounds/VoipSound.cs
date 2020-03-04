@@ -59,10 +59,8 @@ namespace Barotrauma.Sounds
             get { return soundChannel?.CurrentAmplitude ?? 0.0f; }
         }
 
-        public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
+        public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
-            Filename = $"VoIP ({name})";
-
             VoipConfig.SetupEncoding();
 
             ALFormat = Al.FormatMono16;
@@ -95,28 +93,9 @@ namespace Barotrauma.Sounds
 
         public void ApplyFilters(short[] buffer, int readSamples)
         {
-            for (int i = 0; i < readSamples; i++)
-            {
-                float fVal = ShortToFloat(buffer[i]);
-                if (UseMuffleFilter)
-                {                
-                    foreach (var filter in muffleFilters)
-                    {
-                        fVal = filter.Process(fVal);
-                    }
-                }
-                if (UseRadioFilter)
-                {
-                    foreach (var filter in radioFilters)
-                    {
-                        fVal = filter.Process(fVal);
-                    }
-                }
-                buffer[i] = FloatToShort(fVal);
-            }
             if (UseMuffleFilter)
             {
-                ApplyFilters(muffleFilters, buffer, readSamples);
+                ApplyFilters(radioFilters, buffer, readSamples);
             }
 
             if (UseRadioFilter)
@@ -127,6 +106,15 @@ namespace Barotrauma.Sounds
 
         private void ApplyFilters(IEnumerable<BiQuad> filters, short[] buffer, int readSamples)
         {
+            for (int i = 0; i < readSamples; i++)
+            {
+                float fVal = ShortToFloat(buffer[i]);
+                foreach (var filter in filters)
+                {
+                    fVal = filter.Process(fVal);
+                }
+                buffer[i] = FloatToShort(fVal);
+            }
         }
 
         public override SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)

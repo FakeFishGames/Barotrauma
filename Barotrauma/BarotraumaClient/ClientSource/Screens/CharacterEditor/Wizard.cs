@@ -394,7 +394,7 @@ namespace Barotrauma.CharacterEditor
                         return false;
                     }
                     var path = Path.GetFileName(TexturePath);
-                    if (!path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                    if (!path.EndsWith(".png", StringComparison.InvariantCultureIgnoreCase))
                     {
                         GUI.AddMessage(TextManager.Get("WrongFileType"), GUI.Style.Red);
                         texturePathElement.Flash(GUI.Style.Red);
@@ -724,8 +724,8 @@ namespace Barotrauma.CharacterEditor
                 {
                     ParseLimbsFromGUIElements();
                     ParseJointsFromGUIElements();
-                    var main = LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.Equals("torso", StringComparison.OrdinalIgnoreCase)).FirstOrDefault() ?? 
-                        LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.Equals("head", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                    var main = LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "torso").FirstOrDefault() ?? 
+                        LimbXElements.Values.Select(xe => xe.Attribute("type")).Where(a => a.Value.ToLowerInvariant() == "head").FirstOrDefault();
                     if (main == null)
                     {
                         GUI.AddMessage(GetCharacterEditorTranslation("MissingTorsoOrHead"), GUI.Style.Red);

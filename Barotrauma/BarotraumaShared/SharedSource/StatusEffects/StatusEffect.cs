@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,27 +9,11 @@ namespace Barotrauma
 {
     class DurationListElement
     {
-        public readonly StatusEffect Parent;
-        public readonly Entity Entity;
-        public readonly List<ISerializableEntity> Targets;
-        public Character User { get; private set; }
-        
+        public StatusEffect Parent;
+        public Entity Entity;
+        public List<ISerializableEntity> Targets;
         public float Timer;
-
-        public DurationListElement(StatusEffect parentEffect, Entity parentEntity, IEnumerable<ISerializableEntity> targets, float duration, Character user)
-        {
-            Parent = parentEffect;
-            Entity = parentEntity;
-            Targets = new List<ISerializableEntity>(targets);
-            Timer = duration;
-            User = user;
-        }           
-        
-        public void Reset(float duration, Character newUser)
-        {
-            Timer = duration;
-            User = newUser;
-        }
+        public Character User;
     }
     
     partial class StatusEffect
@@ -71,7 +54,7 @@ namespace Barotrauma
                     //backwards compatibility
                     DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
                     string itemPrefabName = element.GetAttributeString("name", "");
-                    ItemPrefab = ItemPrefab.Prefabs.Find(m => m.NameMatches(itemPrefabName, StringComparison.OrdinalIgnoreCase) || m.Tags.Contains(itemPrefabName));
+                    ItemPrefab = ItemPrefab.Prefabs.Find(m => m.NameMatches(itemPrefabName) || m.Tags.Contains(itemPrefabName));
                     if (ItemPrefab == null)
                     {
                         DebugConsole.ThrowError("Error in StatusEffect \""+ parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
@@ -374,7 +357,7 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
                             string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.Equals(afflictionName, StringComparison.OrdinalIgnoreCase));
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.ToLowerInvariant() == afflictionName);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
@@ -384,7 +367,7 @@ namespace Barotrauma
                         else
                         {
                             string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase));
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - Affliction prefab with the identifier \"" + afflictionIdentifier + "\" not found.");
@@ -493,68 +476,41 @@ namespace Barotrauma
             }
         }
 
-        public bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets)
-        {
-            return HasRequiredConditions(targets, targetingContainer: false);
-        }
-
-        private bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets, bool targetingContainer)
+        public virtual bool HasRequiredConditions(List<ISerializableEntity> targets)
         {
             if (!propertyConditionals.Any()) { return true; }
-            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && !targets.Any()) { return true; }
+            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && targets.Count == 0) { return true; }
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
-                    foreach (PropertyConditional pc in propertyConditionals)
+                    foreach (ISerializableEntity target in targets)
                     {
-                        if (pc.TargetContainer && !targetingContainer)
+                        foreach (PropertyConditional pc in propertyConditionals)
                         {
-                            var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
-                            var targetItem = target as Item ?? (target as ItemComponent)?.Item;
-                            if (targetItem?.ParentInventory == null) { continue; }
-                            if (targetItem.ParentInventory.Owner is Item container && HasRequiredConditions(container.AllPropertyObjects, targetingContainer: true)) { return true; }
-                            if (targetItem.ParentInventory.Owner is Character character && HasRequiredConditions(character.ToEnumerable(), targetingContainer: true)) { return true; }
-                        }
-                        else
-                        {
-                            foreach (ISerializableEntity target in targets)
+                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
                             {
-                                if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
+                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
                                 {
-                                    if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                    {
-                                        continue;
-                                    }
+                                    continue;
                                 }
-                                if (pc.Matches(target)) { return true; }
                             }
+                            if (pc.Matches(target)) { return true; }
                         }
                     }
                     return false;
                 case PropertyConditional.Comparison.And:
-                    foreach (PropertyConditional pc in propertyConditionals)
+                    foreach (ISerializableEntity target in targets)
                     {
-                        if (pc.TargetContainer && !targetingContainer)
+                        foreach (PropertyConditional pc in propertyConditionals)
                         {
-                            var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
-                            var targetItem = target as Item ?? (target as ItemComponent)?.Item;
-                            if (targetItem?.ParentInventory == null) { return false; }
-                            if (targetItem.ParentInventory.Owner is Item container && !HasRequiredConditions(container.AllPropertyObjects, targetingContainer: true)) { return false; }
-                            if (targetItem.ParentInventory.Owner is Character character && !HasRequiredConditions(character.ToEnumerable(), targetingContainer: true)) { return false; }
-                        }
-                        else
-                        {
-                            foreach (ISerializableEntity target in targets)
+                            if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
                             {
-                                if (!string.IsNullOrEmpty(pc.TargetItemComponentName))
+                                if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
                                 {
-                                    if (!(target is ItemComponent ic) || ic.Name != pc.TargetItemComponentName)
-                                    {
-                                        continue;
-                                    }
+                                    continue;
                                 }
-                                if (!pc.Matches(target)) { return false; }
                             }
+                            if (!pc.Matches(target)) { return false; }
                         }
                     }
                     return true;
@@ -604,26 +560,33 @@ namespace Barotrauma
 
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
+            if (this.type != type || !HasRequiredItems(entity)) return;
 
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
+            if (targetIdentifiers != null && !IsValidTarget(target)) return;
             
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
                 DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.FirstOrDefault() == target);
-                existingEffect?.Reset(Math.Max(existingEffect.Timer, duration), user);
-                return;
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
+                    return;
+                }
             }
 
-            if (!HasRequiredConditions(target.ToEnumerable())) { return; }
-            Apply(deltaTime, entity, target.ToEnumerable(), worldPosition);
+            List<ISerializableEntity> targets = new List<ISerializableEntity> { target };
+
+            if (!HasRequiredConditions(targets)) return;
+
+            Apply(deltaTime, entity, targets, worldPosition);
         }
 
         protected readonly List<ISerializableEntity> currentTargets = new List<ISerializableEntity>();
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
-            if (this.type != type) { return; }
+            if (this.type != type) return;
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
@@ -638,20 +601,24 @@ namespace Barotrauma
 
             if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
 
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) { return; }
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) return;
 
             if (duration > 0.0f && !Stackable)
             {
                 //ignore if not stackable and there's already an identical statuseffect
                 DurationListElement existingEffect = DurationList.Find(d => d.Parent == this && d.Targets.SequenceEqual(currentTargets));
-                existingEffect?.Reset(Math.Max(existingEffect.Timer, duration), user);
-                return;
+                if (existingEffect != null)
+                {
+                    existingEffect.Timer = Math.Max(existingEffect.Timer, duration);
+                    existingEffect.User = user;
+                    return;
+                }
             }
 
             Apply(deltaTime, entity, currentTargets, worldPosition);
         }
 
-        protected void Apply(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
+        protected void Apply(float deltaTime, Entity entity, List<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (lifeTime > 0)
             {
@@ -718,7 +685,16 @@ namespace Barotrauma
 
             if (duration > 0.0f)
             {
-                DurationList.Add(new DurationListElement(this, entity, targets, duration, user));
+                DurationListElement element = new DurationListElement
+                {
+                    Parent = this,
+                    Timer = duration,
+                    Entity = entity,
+                    Targets = targets,
+                    User = user
+                };
+
+                DurationList.Add(element);
             }
             else
             {
@@ -756,7 +732,7 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
-                            limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                             limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
@@ -765,7 +741,7 @@ namespace Barotrauma
                     else if (target is Limb limb)
                     {
                         if (limb.character.Removed || limb.Removed) { continue; }
-                        limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.DamageLimb(position, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
                     }
                 }
@@ -788,7 +764,6 @@ namespace Barotrauma
                     {
                         float prevVitality = targetCharacter.Vitality;
                         targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAmount);
-                        targetCharacter.TryAdjustAttackerSkill(user, targetCharacter.Vitality - prevVitality);
 #if SERVER
                         GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality);
 #endif
@@ -878,7 +853,7 @@ namespace Barotrauma
             ApplyProjSpecific(deltaTime, entity, targets, hull, position);
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition);
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, List<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition);
 
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
@@ -959,12 +934,12 @@ namespace Barotrauma
                         if (target is Character character)
                         {
                             if (character.Removed) { continue; }
-                            character.AddDamage(character.WorldPosition, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attacker: element.User);
+                            character.AddDamage(character.WorldPosition, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attacker: element.User);
                         }
                         else if (target is Limb limb)
                         {
                             if (limb.character.Removed || limb.Removed) { continue; }
-                            limb.character.DamageLimb(limb.WorldPosition, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
+                            limb.character.DamageLimb(limb.WorldPosition, limb, new List<Affliction>() { multipliedAffliction }, stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
                         }
                     }
 
@@ -985,7 +960,6 @@ namespace Barotrauma
                         {
                             float prevVitality = targetCharacter.Vitality;
                             targetCharacter.CharacterHealth.ReduceAffliction(targetLimb, reduceAffliction.First, reduceAffliction.Second * deltaTime);
-                            targetCharacter.TryAdjustAttackerSkill(element.User, targetCharacter.Vitality - prevVitality);
 #if SERVER
                             GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, prevVitality - targetCharacter.Vitality);
 #endif

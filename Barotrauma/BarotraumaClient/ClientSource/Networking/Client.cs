@@ -71,8 +71,7 @@ namespace Barotrauma.Networking
             else
             {
                 VoipSound.SetPosition(null);
-                VoipSound.Gain = 1.0f;
-            }
+            }            
         }
 
         partial void InitProjSpecific()

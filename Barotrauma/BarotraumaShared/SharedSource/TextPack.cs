@@ -30,7 +30,7 @@ namespace Barotrauma
             {
                 doc = XMLExtensions.TryLoadXml(filePath);
                 if (doc != null) { break; }
-                if (filePath.Equals("content/texts/englishvanilla.xml", StringComparison.OrdinalIgnoreCase))
+                if (filePath.ToLowerInvariant() == "content/texts/englishvanilla.xml")
                 {
                     //try fixing legacy EnglishVanilla path
                     string newPath = "Content/Texts/English/EnglishVanilla.xml";

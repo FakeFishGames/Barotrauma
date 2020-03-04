@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
@@ -649,20 +648,6 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
-                        unsentChanges = true;
-                    }
-                    break;
-                case "set_fissionrate":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
-                    {
-                        FissionRate = newFissionRate;
-                        unsentChanges = true;
-                    }
-                    break;
-                case "set_turbineoutput":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
-                    {
-                        TurbineOutput = newTurbineOutput;
                         unsentChanges = true;
                     }
                     break;

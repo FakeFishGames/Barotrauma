@@ -123,7 +123,7 @@ namespace Barotrauma
             string filePathB = b.GetAttributeString("file", "").CleanUpPath();
             float baseGainB = b.GetAttributeFloat("volume", 1.0f);
             float rangeB = b.GetAttributeFloat("range", 1000.0f);
-            return a.Name.ToString().Equals(b.Name.ToString(), StringComparison.OrdinalIgnoreCase) &&
+            return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&
                    filePathA == filePathB && MathUtils.NearlyEqual(baseGainA, baseGainB) &&
                    MathUtils.NearlyEqual(rangeA, rangeB);
         }
@@ -151,7 +151,7 @@ namespace Barotrauma
             
             SoundCount = 1 + soundElements.Count();
 
-            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().Equals("startupsound", StringComparison.OrdinalIgnoreCase));
+            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().ToLowerInvariant() == "startupsound");
             if (startUpSoundElement != null)
             {
                 startUpSound = GameMain.SoundManager.LoadSound(startUpSoundElement, false);
@@ -182,7 +182,7 @@ namespace Barotrauma
                             musicClips.AddIfNotNull(newMusicClip);
                             if (loadedSoundElements != null)
                             {
-                                if (newMusicClip.Type.Equals("menu", StringComparison.OrdinalIgnoreCase))
+                                if (newMusicClip.Type.ToLowerInvariant() == "menu")
                                 {
                                     targetMusic[0] = newMusicClip;
                                 }

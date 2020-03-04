@@ -216,13 +216,6 @@ namespace Barotrauma
                     }
                 }
 
-#if DEBUG
-                if (GameMain.Config != null && GameMain.Config.TextManagerDebugModeEnabled)
-                {
-                    return textTag;
-                }
-#endif
-
                 foreach (TextPack textPack in textPacks[Language])
                 {
                     string text = textPack.Get(textTag);

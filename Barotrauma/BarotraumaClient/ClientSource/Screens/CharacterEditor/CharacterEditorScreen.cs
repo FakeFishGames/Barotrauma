@@ -3347,7 +3347,6 @@ namespace Barotrauma.CharacterEditor
 
             void CreateCloseButton(SerializableEntityEditor editor, Action onButtonClicked, float size = 1)
             {
-                if (editor == null) { return; }
                 int height = 30;
                 var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(height * size * GUI.yScale)), editor.RectTransform, isFixedSize: true), style: null)
                 {
@@ -3367,7 +3366,6 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButtonAtLast(ParamsEditor editor, Action onButtonClicked, string text)
             {
-                if (editor == null) { return; }
                 var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, (int)(50 * GUI.yScale)), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
@@ -3385,7 +3383,6 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButton(SerializableEntityEditor editor, Action onButtonClicked, string text)
             {
-                if (editor == null) { return; }
                 var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(60 * GUI.yScale)), editor.RectTransform), style: null)
                 {
                     CanBeFocused = false

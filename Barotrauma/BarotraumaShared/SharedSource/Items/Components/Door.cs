@@ -287,21 +287,24 @@ namespace Barotrauma.Items.Components
 
         public override bool Select(Character character)
         {
-            if (isBroken) { return true; }
-            bool hasRequiredItems = HasRequiredItems(character, false);
-            if (HasAccess(character))
+            if (!isBroken)
             {
-                float originalPickingTime = PickingTime;
-                PickingTime = 0;
-                ToggleState(ActionType.OnUse, character);
-                PickingTime = originalPickingTime;
-            }
+                bool hasRequiredItems = HasRequiredItems(character, false);
+                if (HasAccess(character))
+                {
+                    float originalPickingTime = PickingTime;
+                    PickingTime = 0;
+                    ToggleState(ActionType.OnUse, character);
+                    PickingTime = originalPickingTime;
+                }
 #if CLIENT
-            else if (hasRequiredItems && character != null && character == Character.Controlled)
-            {
-                GUI.AddMessage(accessDeniedTxt, GUI.Style.Red);
-            }
+                else if (hasRequiredItems && character != null && character == Character.Controlled)
+                {
+                    GUI.AddMessage(accessDeniedTxt, GUI.Style.Red);
+
+                }
 #endif
+            }
             return false;
         }
 

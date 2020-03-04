@@ -252,29 +252,21 @@ namespace Barotrauma
                     Visible = false,
                     CanBeFocused = false
                 };
-                var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), popupMsg.RectTransform, Anchor.Center));
-                Vector2 senderTextSize = Vector2.Zero;
-                if (!string.IsNullOrEmpty(senderName))
-                {
-                    var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                        senderName, textColor: senderColor, style: null, font: GUI.SmallFont)
-                    {
-                        CanBeFocused = false
-                    };
-                    senderTextSize = senderText.Font.MeasureString(senderText.WrappedText);
-                    senderText.RectTransform.MinSize = new Point(0, senderText.Rect.Height);
-                }
-                var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true)
+                var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), popupMsg.RectTransform, Anchor.TopRight),
+                    senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
                 {
                     CanBeFocused = false
                 };
-                msgPopupText.RectTransform.MinSize = new Point(0, msgPopupText.Rect.Height);
-                Vector2 msgSize = msgPopupText.Font.MeasureString(msgPopupText.WrappedText);
-                int textWidth = (int)Math.Max(msgSize.X + msgPopupText.Padding.X + msgPopupText.Padding.Z, senderTextSize.X) + 10;
-                popupMsg.RectTransform.Resize(new Point((int)(textWidth / content.RectTransform.RelativeSize.X) , (int)((senderTextSize.Y + msgSize.Y) / content.RectTransform.RelativeSize.Y)), resizeChildren: true);
-                popupMsg.RectTransform.IsFixedSize = true;
-                content.Recalculate();
+                var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), popupMsg.RectTransform, Anchor.TopRight)
+                    { AbsoluteOffset = new Point(0, senderText.Rect.Height) },
+                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopRight, style: null, wrap: true)
+                {
+                    CanBeFocused = false
+                };
+                int textWidth = (int)Math.Max(
+                    msgPopupText.Font.MeasureString(msgPopupText.WrappedText).X,
+                    senderText.Font.MeasureString(senderText.WrappedText).X);
+                popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgPopupText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
                 popupMessages.Enqueue(popupMsg);
             }
 

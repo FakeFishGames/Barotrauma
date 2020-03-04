@@ -1839,30 +1839,6 @@ namespace Barotrauma
             return true;         
         }
 
-        public float GetContainedItemConditionPercentage()
-        {
-            var containedItems = ContainedItems;
-
-            if (containedItems != null)
-            {
-                float condition = 0f;
-                float maxCondition = 0f;
-
-                foreach (Item item in containedItems)
-                {
-                    condition += item.condition;
-                    maxCondition += item.MaxCondition;
-                }
-
-                if (maxCondition > 0.0f)
-                {
-                    return condition / maxCondition;
-                }
-            }
-
-            return -1;
-        }
-
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
             if (RequireAimToUse && (character == null || !character.IsKeyDown(InputType.Aim)))

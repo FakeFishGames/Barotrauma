@@ -150,14 +150,14 @@ namespace Barotrauma
             SaveUtil.LoadGame(SavePath);
         }
 
-        public void StartRound(string levelSeed, float? difficulty = null)
+        public void StartRound(string levelSeed, float? difficulty = null, bool loadSecondSub = false)
         {
             Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
 
-            StartRound(randomLevel, true);
+            StartRound(randomLevel, true, loadSecondSub);
         }
 
-        public void StartRound(Level level, bool reloadSub = true, bool mirrorLevel = false)
+        public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false, bool mirrorLevel = false)
         {
             //make sure no status effects have been carried on from the next round
             //(they should be stopped in EndRound, this is a safeguard against cases where the round is ended ungracefully)
@@ -177,7 +177,7 @@ namespace Barotrauma
 
             if (reloadSub || Submarine.MainSub != Submarine) { Submarine.Load(true); }
             Submarine.MainSub = Submarine;
-            if (GameMode.Mission != null && GameMode.Mission.TeamCount > 1)
+            if (loadSecondSub)
             {
                 if (Submarine.MainSubs[1] == null)
                 {
@@ -231,7 +231,7 @@ namespace Barotrauma
                         if (port.Item.WorldPosition.Y < Submarine.WorldPosition.Y) { continue; }
 
                         float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
-                        if (myPort == null || dist < closestDistance || (port.MainDockingPort && !myPort.MainDockingPort))
+                        if (myPort == null || dist < closestDistance)
                         {
                             myPort = port;
                             closestDistance = dist;

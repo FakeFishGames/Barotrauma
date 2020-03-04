@@ -732,20 +732,14 @@ namespace Barotrauma
             limbJoint.IsSevered = true;
             limbJoint.Enabled = false;
 
-            Vector2 limbDiff = limbJoint.LimbA.SimPosition - limbJoint.LimbB.SimPosition;
-            if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
-            limbDiff = Vector2.Normalize(limbDiff);
-            float mass = limbJoint.BodyA.Mass + limbJoint.BodyB.Mass;
-            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
-            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
-
             List<Limb> connectedLimbs = new List<Limb>();
             List<LimbJoint> checkedJoints = new List<LimbJoint>();
 
             GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
             foreach (Limb limb in Limbs)
             {
-                if (connectedLimbs.Contains(limb)) { continue; }
+                if (connectedLimbs.Contains(limb)) continue;
+
                 limb.IsSevered = true;
             }
 

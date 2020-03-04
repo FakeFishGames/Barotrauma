@@ -77,18 +77,7 @@ namespace Barotrauma
 
         private SubmarineBody subBody;
 
-        public readonly Dictionary<Submarine, DockingPort> ConnectedDockingPorts;
-        public IEnumerable<Submarine> DockedTo
-        {
-            get
-            {
-                if (ConnectedDockingPorts == null) { yield break; }
-                foreach (Submarine sub in ConnectedDockingPorts.Keys)
-                {
-                    yield return sub;
-                }
-            }
-        }
+        public readonly List<Submarine> DockedTo;
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
@@ -453,7 +442,7 @@ namespace Barotrauma
                 }
             }
 
-            ConnectedDockingPorts = new Dictionary<Submarine, DockingPort>();
+            DockedTo = new List<Submarine>();
 
             FreeID();
         }
@@ -511,7 +500,7 @@ namespace Barotrauma
             LeftBehindSubDockingPortOccupied = false;
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("linkedsubmarine")) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "linkedsubmarine") { continue; }
                 if (subElement.Attribute("location") == null) { continue; }
                 
                 subsLeftBehind = true;
@@ -572,32 +561,27 @@ namespace Barotrauma
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it
         /// </summary>
-        public Rectangle GetDockedBorders(List<Submarine> checkd=null)
+        public Rectangle GetDockedBorders()
         {
-            if (checkd == null) { checkd = new List<Submarine>(); }
-            checkd.Add(this);
-
             Rectangle dockedBorders = Borders;
+            dockedBorders.Y -= dockedBorders.Height;
 
-            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.IsOutpost).ToList();
+            var connectedSubs = GetConnectedSubs();
 
             foreach (Submarine dockedSub in connectedSubs)
             {
-                //use docking ports instead of world position to determine
-                //borders, as world position will not necessarily match where
-                //the subs are supposed to go
-                Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
-                if (expectedLocation == null) { continue; }
+                if (dockedSub == this) continue;
 
-                Rectangle dockedSubBorders = dockedSub.GetDockedBorders(checkd);
-                dockedSubBorders.Location += MathUtils.ToPoint(expectedLocation.Value);
+                Vector2 diff = dockedSub.Submarine == this ? dockedSub.WorldPosition : dockedSub.WorldPosition - WorldPosition;
 
-                dockedBorders.Y = -dockedBorders.Y;
-                dockedSubBorders.Y = -dockedSubBorders.Y;
+                Rectangle dockedSubBorders = dockedSub.Borders;
+                dockedSubBorders.Y -= dockedSubBorders.Height;
+                dockedSubBorders.Location += MathUtils.ToPoint(diff);
+
                 dockedBorders = Rectangle.Union(dockedBorders, dockedSubBorders);
-                dockedBorders.Y = -dockedBorders.Y;
             }
 
+            dockedBorders.Y += dockedBorders.Height;
             return dockedBorders;
         }
 
@@ -1147,35 +1131,23 @@ namespace Barotrauma
             prevPosition = position;
         }
 
-        public void SetPosition(Vector2 position, List<Submarine> checkd=null)
+        public void SetPosition(Vector2 position)
         {
             if (!MathUtils.IsValid(position)) return;
-
-            if (checkd == null) { checkd = new List<Submarine>(); }
-            if (checkd.Contains(this)) { return; }
-
-            checkd.Add(this);
-
+            
             subBody.SetPosition(position);
 
-            foreach (Submarine dockedSub in DockedTo)
+            foreach (Submarine sub in loaded)
             {
-                Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
-                if (expectedLocation == null) { continue; }
+                if (sub != this && sub.Submarine == this)
+                {
+                    sub.SetPosition(position + sub.WorldPosition);
+                    sub.Submarine = null;
+                }
 
-                dockedSub.SetPosition(position + expectedLocation.Value, checkd);
             }
             //Level.Loaded.SetPosition(-position);
             //prevPosition = position;
-        }
-
-        public static Vector2? CalculateDockOffset(Submarine sub, Submarine dockedSub)
-        {
-            Item myPort = sub.ConnectedDockingPorts.ContainsKey(dockedSub) ? sub.ConnectedDockingPorts[dockedSub].Item : null;
-            if (myPort == null) { return null; }
-            Item theirPort = dockedSub.ConnectedDockingPorts.ContainsKey(sub) ? dockedSub.ConnectedDockingPorts[sub].Item : null;
-            if (theirPort == null) { return null; }
-            return (myPort.Position - sub.HiddenSubPosition) - (theirPort.Position - dockedSub.HiddenSubPosition);
         }
 
         public void Translate(Vector2 amount)
@@ -1264,17 +1236,9 @@ namespace Barotrauma
             {
                 if (Path.GetFullPath(savedSubmarines[i].filePath) == fullPath)
                 {
-                    if (savedSubmarines[i] == MainSub)
-                    {
-                        savedSubmarines.Remove(savedSubmarines[i]);
-                    }
-                    else
-                    {
-                        savedSubmarines[i].Dispose();
-                    }
+                    savedSubmarines[i].Dispose();
                 }
             }
-            
             if (File.Exists(filePath))
             {
                 var sub = new Submarine(filePath);
@@ -1592,7 +1556,7 @@ namespace Barotrauma
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.ToLowerInvariant().Contains("roomname."))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
@@ -1769,7 +1733,7 @@ namespace Barotrauma
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
-            ConnectedDockingPorts?.Clear();
+            DockedTo?.Clear();
         }
 
         public void Dispose()

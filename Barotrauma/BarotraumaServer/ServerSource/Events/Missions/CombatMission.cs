@@ -21,7 +21,7 @@ namespace Barotrauma
             }
         }
 
-        public override void AssignTeamIDs(List<Client> clients)
+        public override bool AssignTeamIDs(List<Client> clients)
         {
             List<Client> randList = new List<Client>(clients);
             for (int i = 0; i < randList.Count; i++)
@@ -44,6 +44,7 @@ namespace Barotrauma
                     randList[i].TeamID = Character.TeamType.Team2;
                 }
             }
+            return true;
         }
 
         public override void Update(float deltaTime)

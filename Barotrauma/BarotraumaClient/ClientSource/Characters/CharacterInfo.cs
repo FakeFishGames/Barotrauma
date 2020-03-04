@@ -10,12 +10,12 @@ namespace Barotrauma
 {
     partial class CharacterInfo
     {
+        public const float BgScale = 1.2f;
         private static Sprite infoAreaPortraitBG;
 
         public static void Init()
         {
-            infoAreaPortraitBG = GUI.Style.GetComponentStyle("InfoAreaPortraitBG")?.Sprites[GUIComponent.ComponentState.None][0].Sprite;
-            new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
+            infoAreaPortraitBG = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
         }
 
 
@@ -171,7 +171,6 @@ namespace Barotrauma
 
         public void DrawBackground(SpriteBatch spriteBatch)
         {
-            if (infoAreaPortraitBG == null) { return; }
             infoAreaPortraitBG.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea.Location.ToVector2(), Color.White, Vector2.Zero, 0.0f,
                 scale: new Vector2(
                     HUDLayoutSettings.BottomRightInfoArea.Width / (float)infoAreaPortraitBG.SourceRect.Width,

@@ -219,40 +219,13 @@ namespace Barotrauma
 
         private void CreateEvents(ScriptedEventSet eventSet)
         {
-            int applyCount = 1;
-            if (eventSet.PerRuin)
+            if (eventSet.ChooseRandom)
             {
-                applyCount = Level.Loaded.Ruins.Count();
-            }
-            for (int i = 0; i < applyCount; i++)
-            {
-                if (eventSet.ChooseRandom)
+                if (eventSet.EventPrefabs.Count > 0)
                 {
-                    if (eventSet.EventPrefabs.Count > 0)
-                    {
-                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
-                        var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
-                        if (eventPrefab != null)
-                        {
-                            var newEvent = eventPrefab.CreateInstance();
-                            newEvent.Init(true);
-                            DebugConsole.Log("Initialized event " + newEvent.ToString());
-                            if (!selectedEvents.ContainsKey(eventSet))
-                            {
-                                selectedEvents.Add(eventSet, new List<ScriptedEvent>());
-                            }
-                            selectedEvents[eventSet].Add(newEvent);
-                        }
-                    }
-                    if (eventSet.ChildSets.Count > 0)
-                    {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                        if (newEventSet != null) { CreateEvents(newEventSet); }
-                    }
-                }
-                else
-                {
-                    foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
+                    MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                    var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
+                    if (eventPrefab != null)
                     {
                         var newEvent = eventPrefab.CreateInstance();
                         newEvent.Init(true);
@@ -263,11 +236,30 @@ namespace Barotrauma
                         }
                         selectedEvents[eventSet].Add(newEvent);
                     }
-
-                    foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
+                }
+                if (eventSet.ChildSets.Count > 0)
+                {
+                    var newEventSet = SelectRandomEvents(eventSet.ChildSets);
+                    if (newEventSet != null) { CreateEvents(newEventSet); }
+                }
+            }
+            else
+            {
+                foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
+                {
+                    var newEvent = eventPrefab.CreateInstance();
+                    newEvent.Init(true);
+                    DebugConsole.Log("Initialized event " + newEvent.ToString());
+                    if (!selectedEvents.ContainsKey(eventSet))
                     {
-                        CreateEvents(childEventSet);
+                        selectedEvents.Add(eventSet, new List<ScriptedEvent>());
                     }
+                    selectedEvents[eventSet].Add(newEvent);
+                }
+
+                foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
+                {
+                    CreateEvents(childEventSet);
                 }
             }
         }
@@ -304,14 +296,11 @@ namespace Barotrauma
                 0.0f, 1.0f);
 
             //don't create new events if within 50 meters of the start/end of the level
-            if (!eventSet.AllowAtStart)
+            if (distanceTraveled <= 0.0f ||
+                distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
+                distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
             {
-                if (distanceTraveled <= 0.0f ||
-                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
-                {
-                    return false;
-                }
+                return false;
             }
 
             if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&

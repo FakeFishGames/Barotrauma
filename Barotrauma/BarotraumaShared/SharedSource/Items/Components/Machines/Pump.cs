@@ -144,7 +144,7 @@ namespace Barotrauma.Items.Components
             if (GameMain.Client != null) { return false; }
 #endif
 
-            if (objective.Option.Equals("stoppumping", StringComparison.OrdinalIgnoreCase))
+            if (objective.Option.ToLowerInvariant() == "stoppumping")
             {
 #if SERVER
                 if (FlowPercentage > 0.0f)

@@ -237,7 +237,7 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (!element.Name.ToString().Equals(prefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (element.Name.ToString().ToLowerInvariant() != prefab.Name.ToLowerInvariant()) continue;
                         SerializableProperty.SerializeProperties(prefab, element, true);
                     }
                 }

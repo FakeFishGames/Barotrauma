@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -32,32 +31,19 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (component.Item.ConditionPercentage <= 0)
+            if (component.Item.ConditionPercentage <= 0) { return 0; }
+            if (objectiveManager.CurrentOrder == this)
             {
-                Priority = 0;
+                return AIObjectiveManager.OrderPriority;
             }
-            else
-            {
-                if (objectiveManager.CurrentOrder == this)
-                {
-                    Priority = AIObjectiveManager.OrderPriority;
-                }
-                if (component.Item.CurrentHull == null || component.Item.CurrentHull.FireSources.None() || IsOperatedByAnother(GetTarget()))
-                {
-                    Priority = 0;
-                }
-                else if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
-                {
-                    Priority = 0;
-                }
-                else
-                {
-                    float value = CumulatedDevotion + (AIObjectiveManager.OrderPriority * PriorityModifier);
-                    float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
-                    Priority = MathHelper.Clamp(value, 0, max);
-                }
-            }
-            return Priority;
+            if (component.Item.CurrentHull == null) { return 0; }
+            if (component.Item.CurrentHull.FireSources.Count > 0) { return 0; }
+            if (IsOperatedByAnother(GetTarget())) { return 0; }
+            if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return 0; }
+            float devotion = MathHelper.Min(10, Priority);
+            float value = devotion + AIObjectiveManager.OrderPriority * PriorityModifier;
+            float max = MathHelper.Min((AIObjectiveManager.OrderPriority - 1), 90);
+            return MathHelper.Clamp(value, 0, max);
         }
 
         public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) 

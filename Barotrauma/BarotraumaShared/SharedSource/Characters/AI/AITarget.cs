@@ -25,7 +25,7 @@ namespace Barotrauma
         /// <summary>
         /// How long does it take for the ai target to fade out if not kept alive.
         /// </summary>
-        public float FadeOutTime { get; private set; } = 2;
+        public float FadeOutTime { get; private set; } = 1;
 
         public bool Static { get; private set; }
         public bool StaticSound { get; private set; }
@@ -92,7 +92,7 @@ namespace Barotrauma
         public string SonarLabel;
         public string SonarIconIdentifier;
 
-        public bool Enabled => SoundRange > 0 || SightRange > 0;
+        public bool Enabled = true;
 
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = 100000, MaxSightRange = 100000;
@@ -195,7 +195,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (Enabled && !Static && FadeOutTime > 0)
+            if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
                 if (!StaticSight)

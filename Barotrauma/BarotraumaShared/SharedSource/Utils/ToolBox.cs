@@ -118,10 +118,6 @@ namespace Barotrauma
 
             for (int i = 0; i < subDirs.Length; i++)
             {
-                if (i == subDirs.Length - 1 && string.IsNullOrEmpty(subDirs[i]))
-                {
-                    break;
-                }
                 string enumPath = string.IsNullOrEmpty(filename) ? "./" : filename;
                 List<string> filePaths = Directory.GetFileSystemEntries(enumPath).Select(s => Path.GetFileName(s)).ToList();
                 if (filePaths.Any(s => s.Equals(subDirs[i], StringComparison.Ordinal)))
@@ -151,7 +147,7 @@ namespace Barotrauma
 
         public static string RemoveInvalidFileNameChars(string fileName)
         {
-            var invalidChars = Path.GetInvalidFileNameChars().Concat(new char[] {':', ';'});
+            var invalidChars = Path.GetInvalidFileNameChars();
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");

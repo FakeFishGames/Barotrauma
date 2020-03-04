@@ -41,15 +41,6 @@ namespace Barotrauma
         public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
-        /// <summary>
-        /// Returns the last active objective of the specific type.
-        /// </summary>
-        public T GetActiveObjective<T>() where T : AIObjective => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).LastOrDefault(so => so is T) as T;
-
-        /// <summary>
-        /// Returns all active objectives of the specific type. Creates a new collection -> don't use too frequently.
-        /// </summary>
-        public IEnumerable<T> GetActiveObjectives<T>() where T : AIObjective => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).Where(so => so is T).Select(so => so as T);
 
         public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
 
@@ -155,7 +146,7 @@ namespace Barotrauma
         {
             var previousObjective = CurrentObjective;
             var firstObjective = Objectives.FirstOrDefault();
-            if (CurrentOrder != null && firstObjective != null && CurrentOrder.Priority > firstObjective.Priority)
+            if (CurrentOrder != null && firstObjective != null && CurrentOrder.GetPriority() > firstObjective.GetPriority())
             {
                 CurrentObjective = CurrentOrder;
             }
@@ -167,14 +158,14 @@ namespace Barotrauma
             {
                 previousObjective?.OnDeselected();
                 CurrentObjective?.OnSelected();
-                GetObjective<AIObjectiveIdle>().CalculatePriority();
+                GetObjective<AIObjectiveIdle>().SetRandom();
             }
             return CurrentObjective;
         }
 
         public float GetCurrentPriority()
         {
-            return CurrentObjective == null ? 0.0f : CurrentObjective.Priority;
+            return CurrentObjective == null ? 0.0f : CurrentObjective.GetPriority();
         }
 
         public void UpdateObjectives(float deltaTime)
@@ -214,8 +205,7 @@ namespace Barotrauma
         {
             if (Objectives.Any())
             {
-                Objectives.ForEach(o => o.GetPriority());
-                Objectives.Sort((x, y) => y.Priority.CompareTo(x.Priority));
+                Objectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
             }
             GetCurrentObjective()?.SortSubObjectives();
         }
@@ -307,7 +297,7 @@ namespace Barotrauma
                     {
                         IsLoop = true,
                         // Don't override unless it's an order by a player
-                        Override = orderGiver != null && orderGiver.IsPlayer
+                        Override = orderGiver != null && (orderGiver == Character.Controlled || orderGiver.IsRemotePlayer)
                     };
                     break;
                 default:
@@ -316,7 +306,7 @@ namespace Barotrauma
                     {
                         IsLoop = true,
                         // Don't override unless it's an order by a player
-                        Override = orderGiver != null && orderGiver.IsPlayer
+                        Override = orderGiver != null && (orderGiver == Character.Controlled || orderGiver.IsRemotePlayer)
                     };
                     break;
             }

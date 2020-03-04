@@ -248,6 +248,8 @@ namespace Barotrauma
 
             if (!editing && !GameMain.DebugDraw) return;
 
+            if (aiTarget != null) aiTarget.Draw(spriteBatch);
+
            Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
@@ -269,8 +271,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
                 if (WaterVolume > Volume)
                 {
-                    float maxExcessWater = Volume * MaxCompress;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUI.Style.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), GUI.Style.Red, true);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
 

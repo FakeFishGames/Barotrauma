@@ -125,7 +125,7 @@ namespace Barotrauma
         public static string GetFolder(XDocument doc, string filePath)
         {
             var folder = doc.Root?.Element("animations")?.GetAttributeString("folder", string.Empty);
-            if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Animations");
             }
@@ -198,7 +198,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                        selectedFile = filteredFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[AnimationParams] Could not find an animation file that matches the name {fileName} and the animation type {animType}. Using the default animations.");

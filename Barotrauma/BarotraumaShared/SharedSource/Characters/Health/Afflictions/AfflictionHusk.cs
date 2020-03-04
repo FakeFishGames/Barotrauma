@@ -220,7 +220,7 @@ namespace Barotrauma
             var element = appendageDefinition;
             if (element == null)
             {
-                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("affliction", string.Empty).Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
+                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("affliction", string.Empty).Equals(afflictionIdentifier));
             }
             if (element == null)
             {

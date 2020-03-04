@@ -378,7 +378,7 @@ namespace Barotrauma
                         delta = Math.Min(((hull2.Pressure + subOffset.Y) - hull1.Pressure) * 5.0f * sizeModifier, Math.Min(hull2.WaterVolume, hull2.Volume));
                         
                         //make sure not to place more water to the target room than it can hold
-                        delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - (hull1.WaterVolume));
+                        delta = Math.Min(delta, hull1.Volume + Hull.MaxCompress - (hull1.WaterVolume));
                         hull1.WaterVolume += delta;
                         hull2.WaterVolume -= delta;
                         if (hull1.WaterVolume > hull1.Volume)
@@ -399,7 +399,7 @@ namespace Barotrauma
                         delta = Math.Min((hull1.Pressure - (hull2.Pressure + subOffset.Y)) * 5.0f * sizeModifier, Math.Min(hull1.WaterVolume, hull1.Volume));
 
                         //make sure not to place more water to the target room than it can hold
-                        delta = Math.Min(delta, hull2.Volume * Hull.MaxCompress - (hull2.WaterVolume));
+                        delta = Math.Min(delta, hull2.Volume + Hull.MaxCompress - (hull2.WaterVolume));
                         hull1.WaterVolume -= delta;
                         hull2.WaterVolume += delta;
                         if (hull2.WaterVolume > hull2.Volume)
@@ -414,14 +414,14 @@ namespace Barotrauma
                     {
                         float avg = (hull1.Surface + hull2.Surface) / 2.0f;
 
-                        if (hull1.WaterVolume < hull1.Volume / Hull.MaxCompress &&
+                        if (hull1.WaterVolume < hull1.Volume - Hull.MaxCompress &&
                             hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1] < rect.Y)
                         {
                             hull1.WaveVel[hull1.WaveY.Length - 1] = (avg - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 0.1f;
                             hull1.WaveVel[hull1.WaveY.Length - 2] = hull1.WaveVel[hull1.WaveY.Length - 1];
                         }
 
-                        if (hull2.WaterVolume < hull2.Volume / Hull.MaxCompress &&
+                        if (hull2.WaterVolume < hull2.Volume - Hull.MaxCompress &&
                             hull2.Surface + hull2.WaveY[0] < rect.Y)
                         {
                             hull2.WaveVel[0] = (avg - (hull2.Surface + hull2.WaveY[0])) * 0.1f;
@@ -436,12 +436,12 @@ namespace Barotrauma
                 //lower room is full of water
                 if (hull2.Pressure + subOffset.Y > hull1.Pressure && hull2.WaterVolume > 0.0f)
                 {
-                    float delta = Math.Min(hull2.WaterVolume - hull2.Volume + (hull2.Volume * Hull.MaxCompress), deltaTime * 8000.0f * sizeModifier);
+                    float delta = Math.Min(hull2.WaterVolume - hull2.Volume + Hull.MaxCompress, deltaTime * 8000.0f * sizeModifier);
 
                     //make sure not to place more water to the target room than it can hold
-                    if (hull1.WaterVolume + delta > hull1.Volume * Hull.MaxCompress)
+                    if (hull1.WaterVolume + delta > hull1.Volume + Hull.MaxCompress)
                     {
-                        delta -= (hull1.WaterVolume + delta) - (hull1.Volume * Hull.MaxCompress);
+                        delta -= (hull1.WaterVolume + delta) - (hull1.Volume + Hull.MaxCompress);
                     }
 
                     delta = Math.Max(delta, 0.0f);
@@ -469,9 +469,9 @@ namespace Barotrauma
                     float delta = Math.Min(hull1.WaterVolume, deltaTime * 25000f * sizeModifier);
 
                     //make sure not to place more water to the target room than it can hold
-                    if (hull2.WaterVolume + delta > hull2.Volume * Hull.MaxCompress)
+                    if (hull2.WaterVolume + delta > hull2.Volume + Hull.MaxCompress)
                     {
-                        delta -= (hull2.WaterVolume + delta) - (hull2.Volume * Hull.MaxCompress);
+                        delta -= (hull2.WaterVolume + delta) - (hull2.Volume + Hull.MaxCompress);
                     }
                     hull1.WaterVolume -= delta;
                     hull2.WaterVolume += delta;
@@ -489,7 +489,7 @@ namespace Barotrauma
 
             if (open > 0.0f)
             {
-                if (hull1.WaterVolume > hull1.Volume / Hull.MaxCompress && hull2.WaterVolume > hull2.Volume / Hull.MaxCompress)
+                if (hull1.WaterVolume > hull1.Volume - Hull.MaxCompress && hull2.WaterVolume > hull2.Volume - Hull.MaxCompress)
                 {
                     float avgLethality = (hull1.LethalPressure + hull2.LethalPressure) / 2.0f;
                     hull1.LethalPressure = avgLethality;
@@ -515,10 +515,10 @@ namespace Barotrauma
             //the larger the gap is, the faster the water flows
             float sizeModifier = size * open * open;
 
-            float delta = hull1.Volume * Hull.MaxCompress * sizeModifier * deltaTime;
+            float delta = Hull.MaxCompress * sizeModifier * deltaTime;
             
             //make sure not to place more water to the target room than it can hold
-            delta = Math.Min(delta, hull1.Volume * Hull.MaxCompress - hull1.WaterVolume);
+            delta = Math.Min(delta, hull1.Volume + Hull.MaxCompress - hull1.WaterVolume);
             hull1.WaterVolume += delta;
 
             if (hull1.WaterVolume > hull1.Volume) hull1.Pressure += 0.5f;
@@ -541,7 +541,7 @@ namespace Barotrauma
                 higherSurface = hull1.Surface;
                 lowerSurface = rect.Y;
 
-                if (hull1.WaterVolume < hull1.Volume / Hull.MaxCompress &&
+                if (hull1.WaterVolume < hull1.Volume - Hull.MaxCompress &&
                     hull1.Surface < rect.Y)
                 {
                     if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
@@ -576,7 +576,7 @@ namespace Barotrauma
                 {
                     flowForce = new Vector2(0.0f, delta);
                 }
-                if (hull1.WaterVolume >= hull1.Volume / Hull.MaxCompress)
+                if (hull1.WaterVolume >= hull1.Volume - Hull.MaxCompress)
                 {
                     hull1.LethalPressure += (Submarine != null && Submarine.AtDamageDepth) ? 100.0f * deltaTime : 10.0f * deltaTime;
                 }

@@ -810,7 +810,7 @@ namespace Barotrauma
 
         public PriceInfo GetPrice(Location location)
         {
-            if (prices == null || !prices.ContainsKey(location.Type.Identifier.ToLowerInvariant())) { return null; }
+            if (prices == null || !prices.ContainsKey(location.Type.Identifier.ToLowerInvariant())) return null;
             return prices[location.Type.Identifier.ToLowerInvariant()];
         }
 

@@ -112,16 +112,16 @@ namespace Barotrauma
             //slice from the top of the screen for misc buttons (info, end round, server controls)
             ButtonAreaTop = new Rectangle(Padding, Padding, GameMain.GraphicsWidth - Padding * 2, (int)(50 * GUI.Scale));
             
-            int infoAreaWidth = (int)(142 * GUI.Scale);
-            int infoAreaHeight = (int)(98 * GUI.Scale);
-            int portraitSize = (int)(infoAreaHeight * 0.95f);
+            int infoAreaWidth = (int)(142 * GUI.Scale * CharacterInfo.BgScale);
+            int infoAreaHeight = (int)(98 * GUI.Scale * CharacterInfo.BgScale);
+            int portraitSize = (int)(125 * GUI.Scale);
             BottomRightInfoArea = new Rectangle(GameMain.GraphicsWidth - Padding * 2 - infoAreaWidth, GameMain.GraphicsHeight - Padding * 2 - infoAreaHeight, infoAreaWidth, infoAreaHeight);
-            PortraitArea = new Rectangle(GameMain.GraphicsWidth - portraitSize, BottomRightInfoArea.Bottom - portraitSize + Padding / 2, portraitSize, portraitSize);
+            PortraitArea = new Rectangle(GameMain.GraphicsWidth - Padding - portraitSize, GameMain.GraphicsHeight - Padding - portraitSize, portraitSize, portraitSize);
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
-            int healthBarWidth = BottomRightInfoArea.Width + CharacterInventory.SlotSize.X + CharacterInventory.Spacing * 2 + CharacterInventory.HideButtonWidth;
-            int healthBarHeight = (int)(50f * GUI.Scale);
+            int healthBarWidth = (int)((BottomRightInfoArea.Width + CharacterInventory.SlotSize.X + CharacterInventory.Spacing) * 1.1f);
+            int healthBarHeight = (int)Math.Max(50f * GUI.Scale, 25f);
             HealthBarArea = new Rectangle(BottomRightInfoArea.X - (healthBarWidth - BottomRightInfoArea.Width) + (int)(2 * GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + (int)(10 * GUI.Scale), healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);
             

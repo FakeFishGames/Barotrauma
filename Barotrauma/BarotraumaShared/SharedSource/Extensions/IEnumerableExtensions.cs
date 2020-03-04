@@ -7,23 +7,24 @@ namespace Barotrauma.Extensions
     public static class IEnumerableExtensions
     {
         /// <summary>
-        /// Randomizes the collection (using OrderBy) and returns it.
+        /// Randomizes the collection and returns it.
         /// </summary>
-        public static IOrderedEnumerable<T> Randomize<T>(this IEnumerable<T> source, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static IOrderedEnumerable<T> Randomize<T>(this IEnumerable<T> source)
         {
-            return source.OrderBy(i => Rand.Value(randSync));
+            return source.OrderBy(i => Rand.Value());
         }
 
         /// <summary>
-        /// Randomizes the list in place without creating a new collection, using a Fisher-Yates-based algorithm.
+        /// Randomizes the list in place.
         /// </summary>
-        public static void Shuffle<T>(this IList<T> list, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static void RandomizeList<T>(this List<T> list)
         {
+            //Fisher-Yates shuffle
             int n = list.Count;
             while (n > 1)
             {
                 n--;
-                int k = Rand.Int(n + 1, randSync);
+                int k = Rand.Int(n + 1);
                 T value = list[k];
                 list[k] = list[n];
                 list[n] = value;
@@ -88,11 +89,6 @@ namespace Barotrauma.Extensions
             {
                 return source.Count(predicate) > 1;
             }
-        }
-        
-        public static IEnumerable<T> ToEnumerable<T>(this T item)
-        {
-            yield return item;
         }
 
         // source: https://stackoverflow.com/questions/19237868/get-all-children-to-one-list-recursive-c-sharp

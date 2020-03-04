@@ -121,15 +121,9 @@ namespace Barotrauma
             idCardTags = new string[0];
 
 #if CLIENT
-            if (iconSprites == null)
+            if (iconTexture == null)
             {
-                iconSprites = new Dictionary<SpawnType, Sprite>()
-                {
-                    { SpawnType.Path, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,0,128,128)) },
-                    { SpawnType.Human, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,0,128,128)) },
-                    { SpawnType.Enemy, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256,0,128,128)) },
-                    { SpawnType.Cargo, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384,0,128,128)) }
-                };
+                iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
             }
 #endif
 
@@ -154,12 +148,21 @@ namespace Barotrauma
             return clone;
         }
 
-        public static bool GenerateSubWaypoints(Submarine submarine)
+        public override bool IsMouseOn(Vector2 position)
+        {
+#if CLIENT
+            if (IsHidden()) return false;
+#endif
+
+            return base.IsMouseOn(position);
+        }
+
+        public static void GenerateSubWaypoints(Submarine submarine)
         {
             if (!Hull.hullList.Any())
             {
                 DebugConsole.ThrowError("Couldn't generate waypoints: no hulls found.");
-                return false;
+                return;
             }
 
             List<WayPoint> existingWaypoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Path);
@@ -462,8 +465,6 @@ namespace Barotrauma
             {
                 door.Body.Enabled = false;
             }
-
-            return true;
         }
 
         private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance, Body ignoredBody = null)
@@ -653,7 +654,7 @@ namespace Barotrauma
             {
                 w.assignedJob = 
                     JobPrefab.Get(jobIdentifier) ??
-                    JobPrefab.Prefabs.Find(jp => jp.Name.Equals(jobIdentifier, StringComparison.OrdinalIgnoreCase));                
+                    JobPrefab.Prefabs.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);

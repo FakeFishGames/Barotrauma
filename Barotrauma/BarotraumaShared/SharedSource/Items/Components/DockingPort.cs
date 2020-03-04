@@ -58,13 +58,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
-        public bool MainDockingPort
-        {
-            get;
-            set;
-        }
-
         public DockingPort DockingTarget { get; private set; }
 
         public bool Docked
@@ -180,8 +173,8 @@ namespace Barotrauma.Items.Components
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
             if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
 
-            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
-            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
+            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.DockedTo.Add(item.Submarine);
+            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.DockedTo.Add(target.item.Submarine);
 
             DockingTarget = target;
             DockingTarget.DockingTarget = this;
@@ -710,8 +703,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnSecondaryUse, 1.0f);
 
-            DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
-            item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
+            DockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
+            item.Submarine.DockedTo.Remove(DockingTarget.item.Submarine);
 
             if (door != null && DockingTarget.door != null)
             {

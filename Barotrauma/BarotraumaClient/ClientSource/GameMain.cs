@@ -66,7 +66,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
                 }
                 return vanillaContent;
             }
@@ -397,7 +397,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f, 0);
 
             if (Config.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
             {
@@ -421,27 +421,17 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            if (Config.AutoUpdateWorkshopItems)
+            CrossThread.RequestExecutionOnMainThread(() =>
             {
-                bool waitingForWorkshopUpdates = true;
-                bool result = false;
-                TaskPool.Add(SteamManager.AutoUpdateWorkshopItems(), (task) =>
+                if (Config.AutoUpdateWorkshopItems)
                 {
-                    result = task.Result;
-                    waitingForWorkshopUpdates = false;
-                });
-
-                while (waitingForWorkshopUpdates) { yield return CoroutineStatus.Running; }
-
-                if (result)
-                {
-                    CrossThread.RequestExecutionOnMainThread(() =>
+                    if (SteamManager.AutoUpdateWorkshopItems())
                     {
                         ContentPackage.LoadAll();
                         Config.ReloadContentPackages();
-                    });
+                    }
                 }
-            }
+            });
             
 
             if (SelectedPackages.None())
@@ -1096,10 +1086,7 @@ namespace Barotrauma
                 UserData = "https://steamcommunity.com/app/602960/discussions/1/",
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!SteamManager.OverlayCustomURL(userdata as string))
-                    {
-                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
-                    }
+                    SteamManager.OverlayCustomURL(userdata as string);
                     msgBox.Close();
                     return true;
                 }

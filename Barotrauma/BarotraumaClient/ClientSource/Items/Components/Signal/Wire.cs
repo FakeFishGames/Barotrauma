@@ -72,7 +72,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().Equals("wiresprite", StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() == "wiresprite")
                 {
                     overrideSprite = new Sprite(subElement);
                     break;

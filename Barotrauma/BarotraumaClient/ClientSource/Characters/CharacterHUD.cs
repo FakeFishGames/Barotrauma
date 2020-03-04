@@ -92,7 +92,7 @@ namespace Barotrauma
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
+                if (character.Info != null && !character.ShouldLockHud())
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
@@ -309,7 +309,7 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)));
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2((int)(-4 * GUI.Scale), (int)(2 * GUI.Scale)), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
                     }
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)

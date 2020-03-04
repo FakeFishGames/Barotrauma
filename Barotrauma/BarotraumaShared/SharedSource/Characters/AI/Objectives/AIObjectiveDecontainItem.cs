@@ -54,6 +54,15 @@ namespace Barotrauma
 
         protected override bool Check() => IsCompleted;
 
+        public override float GetPriority()
+        {
+            if (objectiveManager.CurrentOrder == this)
+            {
+                return AIObjectiveManager.OrderPriority;
+            }
+            return 1.0f;
+        }
+
         protected override void Act(float deltaTime)
         {
             Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)), recursive: false);

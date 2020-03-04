@@ -78,7 +78,7 @@ namespace Barotrauma
         [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
         public AttackTarget TargetType { get; private set; }
 
-        [Serialize(LimbType.None, true, description: "To which limb is the attack aimed at? If not defined or set to none, the closest limb is used (default)."), Editable]
+        [Serialize(LimbType.None, true, description: "If not defined or set to none, the closest limb is used (default)."), Editable]
         public LimbType TargetLimbType { get; private set; }
 
         [Serialize(HitDetection.Distance, true, description: "Collision detection is more accurate, but it only affects targets that are in contact with the limb."), Editable]
@@ -87,11 +87,8 @@ namespace Barotrauma
         [Serialize(AIBehaviorAfterAttack.FallBack, true, description: "The preferred AI behavior after the attack."), Editable]
         public AIBehaviorAfterAttack AfterAttack { get; set; }
 
-        [Serialize(false, true, description: "Should the AI try to turn around when aiming with this attack?"), Editable]
+        [Serialize(false, true, description: "Should the AI try to reverse when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
-
-        [Serialize(false, true, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
-        public bool Retreat { get; private set; }
 
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; set; }
@@ -282,7 +279,7 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
                             string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.Equals(afflictionName, System.StringComparison.OrdinalIgnoreCase));
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.ToLowerInvariant() == afflictionName);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
@@ -292,7 +289,7 @@ namespace Barotrauma
                         else
                         {
                             string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
@@ -327,7 +324,7 @@ namespace Barotrauma
                 AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
+                afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
                 if (afflictionPrefab != null)
                 {
                     float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");

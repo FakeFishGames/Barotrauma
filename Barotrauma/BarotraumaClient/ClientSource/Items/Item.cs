@@ -333,6 +333,15 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
+                aiTarget?.Draw(spriteBatch);
+                var containedItems = ContainedItems;
+                if (containedItems != null)
+                {
+                    foreach (Item item in containedItems)
+                    {
+                        item.AiTarget?.Draw(spriteBatch);
+                    }
+                }
                 if (body != null)
                 {
                     body.DebugDraw(spriteBatch, Color.White);

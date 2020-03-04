@@ -67,7 +67,7 @@ namespace Barotrauma
                                 {
                                     continue;
                                 }
-                                if (character.SpeciesName.Equals(entities[activeEntityIndex], StringComparison.OrdinalIgnoreCase) && Vector2.Distance(activeEntitySavedPosition, character.WorldPosition) < graceDistance)
+                                if (character.SpeciesName.ToLowerInvariant() == entities[activeEntityIndex] && Vector2.Distance(activeEntitySavedPosition, character.WorldPosition) < graceDistance)
                                 {
                                     activeEntity = character;
                                     transformationTime = 0.0;
@@ -117,7 +117,7 @@ namespace Barotrauma
                             {
                                 continue;
                             }
-                            if (character.SpeciesName.Equals(entities[activeEntityIndex], StringComparison.OrdinalIgnoreCase))
+                            if (character.SpeciesName.ToLowerInvariant() == entities[activeEntityIndex].ToLowerInvariant())
                             {
                                 activeEntity = character;
                                 break;
@@ -131,7 +131,7 @@ namespace Barotrauma
                             {
                                 continue;
                             }
-                            if (item.prefab.Identifier.Equals(entities[0], StringComparison.OrdinalIgnoreCase))
+                            if (item.prefab.Identifier.ToLowerInvariant() == entities[0].ToLowerInvariant())
                             {
                                 activeEntity = item;
                                 break;

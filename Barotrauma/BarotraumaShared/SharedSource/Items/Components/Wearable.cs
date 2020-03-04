@@ -211,7 +211,6 @@ namespace Barotrauma.Items.Components
         }
 
         public bool AutoEquipWhenFull { get; private set; }
-        public bool DisplayContainedStatus { get; private set; }
 
         public readonly int Variants;
 
@@ -265,7 +264,6 @@ namespace Barotrauma.Items.Components
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
             AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
-            DisplayContainedStatus = element.GetAttributeBool("displaycontainedstatus", false);
             int i = 0;
             foreach (XElement subElement in element.Elements())
             {
@@ -286,7 +284,7 @@ namespace Barotrauma.Items.Components
 
                         foreach (XElement lightElement in subElement.Elements())
                         {
-                            if (!lightElement.Name.ToString().Equals("lightcomponent", StringComparison.OrdinalIgnoreCase)) { continue; }
+                            if (lightElement.Name.ToString().ToLowerInvariant() != "lightcomponent") continue;
                             wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
                             {
                                 Parent = this

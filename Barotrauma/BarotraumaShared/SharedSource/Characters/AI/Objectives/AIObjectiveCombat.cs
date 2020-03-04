@@ -100,11 +100,7 @@ namespace Barotrauma
             }
         }
 
-        public override float GetPriority()
-        {
-            Priority = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
-            return Priority;
-        }
+        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
 
         public override void Update(float deltaTime)
         {
@@ -143,7 +139,7 @@ namespace Barotrauma
             }
             if (seekAmmunition == null)
             {
-                if (Mode != CombatMode.Retreat && TryArm() && Enemy != null && !Enemy.Removed)
+                if (TryArm() && Enemy != null && !Enemy.Removed)
                 {
                     OperateWeapon(deltaTime);
                 }

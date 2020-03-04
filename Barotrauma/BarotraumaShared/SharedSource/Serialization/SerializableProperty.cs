@@ -679,7 +679,7 @@ namespace Barotrauma
         {
             foreach (XElement subElement in configElement.Elements())
             {
-                if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "upgrade") { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
                 if (savedVersion >= upgradeVersion) { continue; }         
                 

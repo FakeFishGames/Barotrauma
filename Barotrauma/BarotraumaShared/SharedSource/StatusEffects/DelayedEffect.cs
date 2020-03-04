@@ -1,27 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
     class DelayedListElement
     {
-        public readonly DelayedEffect Parent;
-        public readonly Entity Entity;
-        public readonly Vector2? WorldPosition;
-        public readonly List<ISerializableEntity> Targets;
+        public DelayedEffect Parent;
+        public Entity Entity;
+        public Vector2? WorldPosition;
+        public List<ISerializableEntity> Targets;
         public float StartTimer;
-
-        public DelayedListElement(DelayedEffect parentEffect, Entity parentEntity, IEnumerable<ISerializableEntity> targets, float delay, Vector2? worldPosition)
-        {
-            Parent = parentEffect;
-            Entity = parentEntity;
-            Targets = new List<ISerializableEntity>(targets);
-            StartTimer = delay;
-            WorldPosition = worldPosition;
-        }
     }
     class DelayedEffect : StatusEffect
     {
@@ -37,18 +27,28 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) { return; }
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
-            if (!HasRequiredConditions(target.ToEnumerable())) { return; }
+            if (this.type != type || !HasRequiredItems(entity)) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) return;
+            
+            if (targetIdentifiers != null && !IsValidTarget(target)) return;
+            if (!HasRequiredConditions(new List<ISerializableEntity>() { target })) return;
 
-            DelayList.Add(new DelayedListElement(this, entity, target.ToEnumerable(), delay, worldPosition));
+            DelayedListElement element = new DelayedListElement
+            {
+                Parent = this,
+                StartTimer = delay,
+                Entity = entity,
+                WorldPosition = worldPosition,
+                Targets = new List<ISerializableEntity>() { target }
+            };
+
+            DelayList.Add(element);
         }
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
-            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) { return; }
+            if (this.type != type || !HasRequiredItems(entity)) return;
+            if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) return;
             
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
@@ -61,9 +61,18 @@ namespace Barotrauma
                 currentTargets.Add(target);
             }
 
-            if (!HasRequiredConditions(currentTargets)) { return; }
+            if (!HasRequiredConditions(currentTargets)) return;
 
-            DelayList.Add(new DelayedListElement(this, entity, currentTargets, delay, worldPosition));
+            DelayedListElement element = new DelayedListElement
+            {
+                Parent = this,
+                StartTimer = delay,
+                Entity = entity,
+                WorldPosition = worldPosition,
+                Targets = currentTargets
+            };
+
+            DelayList.Add(element);
         }
 
         public static void Update(float deltaTime)
@@ -79,7 +88,7 @@ namespace Barotrauma
 
                 element.StartTimer -= deltaTime;
 
-                if (element.StartTimer > 0.0f) { continue; }
+                if (element.StartTimer > 0.0f) continue;
 
                 element.Parent.Apply(1.0f, element.Entity, element.Targets, element.WorldPosition);
                 DelayList.Remove(element);

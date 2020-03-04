@@ -9,6 +9,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fires";
         public override bool ForceRun => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 

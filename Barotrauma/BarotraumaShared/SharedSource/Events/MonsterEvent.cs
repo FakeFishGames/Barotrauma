@@ -9,38 +9,42 @@ namespace Barotrauma
 {
     class MonsterEvent : ScriptedEvent
     {
-        private readonly string speciesName;
-        private readonly int minAmount, maxAmount;
+        private string speciesName;
+
+        private int minAmount, maxAmount;
+
         private List<Character> monsters;
 
-        private readonly bool spawnDeep;
+        private bool spawnDeep;
 
         private Vector2? spawnPos;
 
-        private readonly bool disallowed;
-
-        private readonly Level.PositionType spawnPosType;
+        private bool disallowed;
+                
+        private Level.PositionType spawnPosType;
 
         private bool spawnPending;
 
+        private string characterFileName;
+        
         public override Vector2 DebugDrawPos
         {
-            get { return spawnPos ?? Vector2.Zero; }
+            get { return spawnPos.HasValue ? spawnPos.Value : Vector2.Zero; }
         }
-
+        
         public override string ToString()
         {
             if (maxAmount <= 1)
             {
-                return "MonsterEvent (" + speciesName + ")";
+                return "MonsterEvent (" + characterFileName + ")";
             }
             else if (minAmount < maxAmount)
             {
-                return "MonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
+                return "MonsterEvent (" + characterFileName + " x" + minAmount + "-" + maxAmount + ")";
             }
             else
             {
-                return "MonsterEvent (" + speciesName + " x" + maxAmount + ")";
+                return "MonsterEvent (" + characterFileName + " x" + maxAmount + ")";
             }
         }
 
@@ -72,6 +76,7 @@ namespace Barotrauma
             }
 
             spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
+            characterFileName = Path.GetFileName(Path.GetDirectoryName(speciesName)).ToLower();
 
             if (GameMain.NetworkMember != null)
             {
@@ -240,37 +245,7 @@ namespace Barotrauma
                 {
                     if (submarine.IsOutpost) { continue; }
                     float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
-                }
-
-                //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
-                //unnecessary monsters in places the players might never visit during the round
-                if (spawnPosType == Level.PositionType.Ruin || 
-                    spawnPosType == Level.PositionType.Cave)
-                {
-                    bool someoneNearby = false;
-                    float minDist = Items.Components.Sonar.DefaultSonarRange * 0.8f;
-                    foreach (Submarine submarine in Submarine.Loaded)
-                    {
-                        if (submarine.IsOutpost) { continue; }
-                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist)
-                        {
-                            someoneNearby = true;
-                            break;
-                        }
-                    }
-                    foreach (Character c in Character.CharacterList)
-                    {
-                        if (c == Character.Controlled || c.IsRemotePlayer)
-                        {
-                            if (Vector2.DistanceSquared(c.WorldPosition, spawnPos.Value) < minDist * minDist)
-                            {
-                                someoneNearby = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!someoneNearby) { return; }
+                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) return;
                 }
 
                 spawnPending = false;
@@ -305,7 +280,7 @@ namespace Barotrauma
 
             Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
 #if CLIENT
-            if (Character.Controlled != null) { targetEntity = Character.Controlled; }
+            if (Character.Controlled != null) targetEntity = (Entity)Character.Controlled;
 #endif
             
             bool monstersDead = true;
@@ -322,7 +297,7 @@ namespace Barotrauma
                 }
             }
 
-            if (monstersDead) { Finished(); }
+            if (monstersDead) Finished();
         }
     }
 }

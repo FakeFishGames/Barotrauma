@@ -558,7 +558,7 @@ namespace Barotrauma
 
                 ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
                 {
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
                     if (preset == null)
                     {
                         ThrowError("Rank \"" + rank + "\" not found.");
@@ -1165,7 +1165,7 @@ namespace Barotrauma
                     else
                     {
                         string modeName = string.Join(" ", args);
-                        if (modeName.Equals("campaign", StringComparison.OrdinalIgnoreCase))
+                        if (modeName.ToLowerInvariant() == "campaign")
                         {
                             MultiPlayerCampaign.StartCampaignSetup();
                         }
@@ -1493,7 +1493,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
                     if (afflictionPrefab == null)
                     {
                         GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
@@ -1718,7 +1718,7 @@ namespace Barotrauma
                     }
 
                     string rank = string.Join("", args.Skip(1));
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
                     if (preset == null)
                     {
                         GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient);

@@ -329,10 +329,10 @@ namespace Barotrauma
         {
             foreach (XElement subElement in SourceElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() == "override")
                 {
                     string language = subElement.GetAttributeString("language", "");
-                    if (TextManager.Language.Equals(language, StringComparison.InvariantCultureIgnoreCase))
+                    if (TextManager.Language.ToLower() == language.ToLower())
                     {
                         return subElement;
                     }

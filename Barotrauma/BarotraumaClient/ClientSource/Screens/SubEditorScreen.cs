@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using EventInput;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -90,9 +88,6 @@ namespace Barotrauma
         private GUITextBlock submarineDescriptionCharacterCount;
 
         private Mode mode;
-        
-        // Prevent the mode from changing
-        private bool lockMode;
 
         public override Camera Cam
         {
@@ -238,21 +233,15 @@ namespace Barotrauma
                 return true;
             };
 
-            var spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
             defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
             {
                 ToolTip = TextManager.Get("SubEditorEditingMode"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (!lockMode)
-                    {
-                        if (tBox.Selected) { SetMode(Mode.Default); }
-
-                        return true;
-                    }
-                    else { return false;  }
+                    if (tBox.Selected) { SetMode(Mode.Default); }
+                    return true;
                 }
             };
 
@@ -261,12 +250,8 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("CharacterModeButton") + '\n' + TextManager.Get("CharacterModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (!lockMode)
-                    {
-                        SetMode(tBox.Selected ? Mode.Character : Mode.Default);
-                        return true;
-                    }
-                    else { return false; }
+                    SetMode(tBox.Selected ? Mode.Character : Mode.Default);
+                    return true;
                 }
             };
 
@@ -275,17 +260,20 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip"),
                 OnSelected = (GUITickBox tBox) =>
                 {
-                    if (!lockMode)
-                    {
-                        SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
-                        return true;
-                    }
-                    else { return false;  }
+                    SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
+                    return true;
                 }
             };
 
-            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
+
+            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
+            {
+                ToolTip = TextManager.Get("GenerateWaypointsButton") + '\n' + TextManager.Get("GenerateWaypointsToolTip"),
+                OnClicked = GenerateWaypoints
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
             var visibilityButton = new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "SetupVisibilityButton")
             {
@@ -307,42 +295,6 @@ namespace Barotrauma
                     showEntitiesPanel.Visible = false;
                     previouslyUsedPanel.Visible = !previouslyUsedPanel.Visible;
                     previouslyUsedPanel.RectTransform.AbsoluteOffset = new Point(btn.Rect.X, TopPanel.Rect.Height);
-                    return true;
-                }
-            };
-
-            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
-            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
-
-            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
-            {
-                ToolTip = TextManager.Get("GenerateWaypointsButton") + '\n' + TextManager.Get("GenerateWaypointsToolTip"),
-                OnClicked = (btn, userdata) =>
-                {
-                    if (WayPoint.WayPointList.Any())
-                    {
-                        var generateWaypointsVerification = new GUIMessageBox("", TextManager.Get("generatewaypointsverification"), new string[] { TextManager.Get("ok"), TextManager.Get("cancel") });
-                        generateWaypointsVerification.Buttons[0].OnClicked = (btn, userdata) =>
-                        {
-                            if (GenerateWaypoints())
-                            {
-                                GUI.AddMessage(TextManager.Get("waypointsgeneratedsuccesfully"), GUI.Style.Green);
-                            }
-                            WayPoint.ShowWayPoints = true;
-                            generateWaypointsVerification.Close();
-                            return true;
-                        };
-                        generateWaypointsVerification.Buttons[1].OnClicked = generateWaypointsVerification.Close;
-                    }
-                    else
-                    {
-                        if (GenerateWaypoints())
-                        {
-                            GUI.AddMessage(TextManager.Get("waypointsgeneratedsuccesfully"), GUI.Style.Green);
-                        }
-                        WayPoint.ShowWayPoints = true;
-
-                    }
                     return true;
                 }
             };
@@ -1035,27 +987,18 @@ namespace Barotrauma
                 nameBox.Flash();
                 return false;
             }
-            var result = SaveSubToFile(nameBox.Text);
-            saveFrame = null;
-            return result;
-        }
-
-        private bool SaveSubToFile(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
+            
+            foreach (char illegalChar in Path.GetInvalidFileNameChars())
             {
-                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), GUI.Style.Red);
-                return false;
+                if (nameBox.Text.Contains(illegalChar))
+                {
+                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
+                    nameBox.Flash();
+                    return false;
+                }
             }
             
-            foreach (var illegalChar in Path.GetInvalidFileNameChars())
-            {
-                if (!name.Contains(illegalChar)) continue;
-                GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
-                return false;
-            }
-            
-            string savePath = name + ".sub";
+            string savePath = nameBox.Text + ".sub";
             string prevSavePath = null;
             if (Submarine.MainSub != null)
             {
@@ -1072,8 +1015,8 @@ namespace Barotrauma
             if (vanilla != null)
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
-                string pathToCompare = savePath.Replace(@"\", @"/");
-                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").Equals(pathToCompare, StringComparison.OrdinalIgnoreCase)))
+                string pathToCompare = savePath.Replace(@"\", @"/").ToLowerInvariant();
+                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
                 {
                     GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), GUI.Style.Red, font: GUI.LargeFont);
                     return false;
@@ -1081,7 +1024,7 @@ namespace Barotrauma
             }
 #endif
 
-            if (previewImage?.Sprite?.Texture != null)
+            if (previewImage.Sprite?.Texture != null)
             {
                 using (MemoryStream imgStream = new MemoryStream())
                 {
@@ -1093,7 +1036,7 @@ namespace Barotrauma
             {
                 Submarine.SaveCurrent(savePath);
             }
-            Submarine.MainSub?.CheckForErrors();
+            Submarine.MainSub.CheckForErrors();
             
             GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", Submarine.MainSub.FilePath), GUI.Style.Green);
 
@@ -1111,6 +1054,8 @@ namespace Barotrauma
 
             subNameLabel.Text = ToolBox.LimitString(Submarine.MainSub.Name, subNameLabel.Font, subNameLabel.Rect.Width);
 
+            saveFrame = null;
+            
             return false;
         }
 
@@ -1679,10 +1624,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 var lightComponent = item.GetComponent<LightComponent>();
-                if (lightComponent != null)
-                {
-                    lightComponent.Light.Enabled = item.ParentInventory == null;
-                }
+                if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
             }
 
             if (selectedSub.GameVersion < new Version("0.8.9.0"))
@@ -1812,20 +1754,18 @@ namespace Barotrauma
             return true;
         }
 
-        public void SetMode(Mode newMode)
+        public void SetMode(Mode mode)
         {
-            if (newMode == mode) { return; }
-            mode = newMode;
+            if (mode == this.mode) { return; }
+            this.mode = mode;
 
-            lockMode = true;
-            defaultModeTickBox.Selected = newMode == Mode.Default;
+            defaultModeTickBox.Selected = mode == Mode.Default;
             defaultModeTickBox.CanBeFocused = !defaultModeTickBox.Selected;
 
-            characterModeTickBox.Selected = newMode == Mode.Character;
-            wiringModeTickBox.Selected = newMode == Mode.Wiring;
-            lockMode = false;
-            
-            switch (newMode)
+            characterModeTickBox.Selected = mode == Mode.Character;
+            wiringModeTickBox.Selected = mode == Mode.Wiring;
+
+            switch (mode)
             {
                 case Mode.Character:
                     CreateDummyCharacter();
@@ -1850,7 +1790,6 @@ namespace Barotrauma
             }
 
             MapEntity.DeselectAll();
-            MapEntity.FilteredSelectedList.Clear();
         }
 
         private void RemoveDummyCharacter()
@@ -2065,10 +2004,12 @@ namespace Barotrauma
             return false;
         }
 
-        private bool GenerateWaypoints()
+        private bool GenerateWaypoints(GUIButton button, object obj)
         {
-            if (Submarine.MainSub == null) { return false; }
-            return WayPoint.GenerateSubWaypoints(Submarine.MainSub);
+            if (Submarine.MainSub == null) return false;
+
+            WayPoint.GenerateSubWaypoints(Submarine.MainSub);
+            return true;
         }
 
         private void AddPreviouslyUsed(MapEntityPrefab mapEntityPrefab)
@@ -2465,53 +2406,12 @@ namespace Barotrauma
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
 
-            if (GUI.KeyboardDispatcher.Subscriber == null)
+            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Tab))
             {
-                // TODO adjust when the new inventory stuff rolls in
-                if (PlayerInput.KeyHit(Keys.Q) && mode == Mode.Default)
-                {
-                    toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
-                }
-                
-                if (PlayerInput.KeyHit(Keys.Tab))
-                {
-                    entityFilterBox.Select();
-                }
-
-                if (PlayerInput.KeyDown(Keys.LeftControl))
-                {
-                    // Save menu
-                    if (PlayerInput.KeyHit(Keys.S))
-                    {
-                        if (PlayerInput.KeyDown(Keys.LeftShift))
-                        {
-                            // Save the sub without a menu
-                            if (subNameLabel != null)
-                            {
-                                SaveSubToFile(subNameLabel.Text);
-                            } 
-                        }
-                        else
-                        {
-                            // Save menu
-                            if (saveFrame == null)
-                            {
-                                CreateSaveScreen();
-                            }
-                        }
-                    }
-
-                    // 1-3 keys on the keyboard for switching modes
-                    if (PlayerInput.KeyHit(Keys.D1)) { SetMode(Mode.Default); }
-                    if (PlayerInput.KeyHit(Keys.D2)) { SetMode(Mode.Character); }
-                    if (PlayerInput.KeyHit(Keys.D3)) { SetMode(Mode.Wiring); }
-                }
-                else
-                {
-                    cam.MoveCamera((float) deltaTime, true);
-                }
+                entityFilterBox.Select();
             }
-
+            
+            cam.MoveCamera((float)deltaTime, true);       
             if (PlayerInput.MidButtonHeld())
             {
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;

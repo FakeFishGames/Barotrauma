@@ -198,7 +198,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 30.0f, 0);
 #endif
             }
         }
@@ -236,7 +236,6 @@ namespace Barotrauma
 
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
-        public bool TextManagerDebugModeEnabled { get; set; }
 #endif
 
         private FileSystemWatcher modsFolderWatcher;
@@ -1203,7 +1202,6 @@ namespace Barotrauma
                 new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
-                , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
 #endif
                 );
 
@@ -1389,7 +1387,6 @@ namespace Barotrauma
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
-            TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
 #endif
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();

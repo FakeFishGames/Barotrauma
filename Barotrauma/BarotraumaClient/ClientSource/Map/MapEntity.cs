@@ -589,14 +589,6 @@ namespace Barotrauma
                             if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
                             if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
                         }
-                        else if (e is WayPoint wayPoint)
-                        {
-                            Vector2 drawPos = e.WorldPosition;
-                            drawPos.Y = -drawPos.Y;
-                            drawPos += moveAmount;
-                            wayPoint.Draw(spriteBatch, drawPos);
-                            continue;
-                        }
                         e.prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
                         GUI.DrawRectangle(spriteBatch,

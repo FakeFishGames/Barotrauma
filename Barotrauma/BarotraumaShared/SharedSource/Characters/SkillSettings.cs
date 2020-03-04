@@ -65,37 +65,6 @@ namespace Barotrauma
             set { skillIncreasePerFabricatorRequiredSkill = value; }
         }
 
-        private float skillIncreasePerHostileDamage;
-        [Serialize(0.01f, true)]
-        public float SkillIncreasePerHostileDamage
-        {
-            get { return skillIncreasePerHostileDamage * GetCurrentSkillGainMultiplier(); }
-            set { skillIncreasePerHostileDamage = value; }
-        }
-
-        private float skillIncreasePerSecondWhenOperatingTurret;
-        [Serialize(0.001f, true)]
-        public float SkillIncreasePerSecondWhenOperatingTurret
-        {
-            get { return skillIncreasePerSecondWhenOperatingTurret * GetCurrentSkillGainMultiplier(); }
-            set { skillIncreasePerSecondWhenOperatingTurret = value; }
-        }
-
-        private float skillIncreasePerFriendlyHealed;
-        [Serialize(0.001f, true)]
-        public float SkillIncreasePerFriendlyHealed
-        {
-            get { return skillIncreasePerFriendlyHealed * GetCurrentSkillGainMultiplier(); }
-            set { skillIncreasePerFriendlyHealed = value; }
-        }
-
-        [Serialize(1.1f, true)]
-        public float AssistantSkillIncreaseMultiplier
-        {
-            get;
-            set;
-        }
-
         private SkillSettings(XElement element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);

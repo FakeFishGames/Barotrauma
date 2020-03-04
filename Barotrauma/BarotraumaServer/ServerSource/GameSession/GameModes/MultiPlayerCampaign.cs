@@ -46,7 +46,7 @@ namespace Barotrauma
             DebugConsole.NewMessage("********* CAMPAIGN SETUP *********", Color.White);
             DebugConsole.ShowQuestionPrompt("Do you want to start a new campaign? Y/N", (string arg) =>
             {
-                if (arg.Equals("y", StringComparison.OrdinalIgnoreCase) || arg.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                if (arg.ToLowerInvariant() == "y" || arg.ToLowerInvariant() == "yes")
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {

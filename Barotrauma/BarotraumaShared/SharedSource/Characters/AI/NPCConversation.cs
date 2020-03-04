@@ -136,10 +136,9 @@ namespace Barotrauma
             string allowedJobsStr = element.GetAttributeString("allowedjobs", "");
             foreach (string allowedJobIdentifier in allowedJobsStr.Split(','))
             {
-                string key = allowedJobIdentifier.ToLowerInvariant();
-                if (JobPrefab.Prefabs.ContainsKey(key))
+                if (JobPrefab.Prefabs.ContainsKey(allowedJobIdentifier.ToLowerInvariant()))
                 {
-                    AllowedJobs.Add(JobPrefab.Prefabs[key]);
+                    AllowedJobs.Add(JobPrefab.Prefabs[allowedJobIdentifier.ToLowerInvariant()]);
                 }
             }
 

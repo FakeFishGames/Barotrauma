@@ -61,7 +61,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
                 }
                 return vanillaContent;
             }

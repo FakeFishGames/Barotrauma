@@ -291,7 +291,7 @@ namespace Barotrauma
             }
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
-                if (character.Info.Job.Prefab.Identifier.Equals(AppropriateJobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
+                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) { return true; }
             }
             return false;
         }

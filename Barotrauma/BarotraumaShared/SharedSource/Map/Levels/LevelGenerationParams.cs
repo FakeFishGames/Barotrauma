@@ -415,10 +415,10 @@ namespace Barotrauma
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
                     if (biomeName == "none") { continue; }
 
-                    Biome matchingBiome = biomes.Find(b => b.Identifier.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
+                    Biome matchingBiome = biomes.Find(b => b.Identifier.ToLowerInvariant() == biomeName);
                     if (matchingBiome == null)
                     {
-                        matchingBiome = biomes.Find(b => b.DisplayName.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
+                        matchingBiome = biomes.Find(b => b.DisplayName.ToLowerInvariant() == biomeName);
                         if (matchingBiome == null)
                         {
                             DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
@@ -487,7 +487,7 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     biomeElements.Clear();
                     levelParamElements.Clear();
-                    DebugConsole.NewMessage($"Overriding the level generation parameters and biomes with '{file.Path}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
                 }
                 else if (biomeElements.Any() || levelParamElements.Any())
                 {
@@ -497,22 +497,7 @@ namespace Barotrauma
 
                 foreach (XElement element in mainElement.Elements())
                 {
-                    if (element.IsOverride())
-                    {
-                        if (element.FirstElement().Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
-                        {
-                            biomeElements.Clear();
-                            biomeElements.AddRange(element.FirstElement().Elements());
-                            DebugConsole.NewMessage($"Overriding biomes with '{file.Path}'", Color.Yellow);
-                        }
-                        else
-                        {
-                            levelParamElements.Clear();
-                            DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
-                            levelParamElements.AddRange(element.Elements());
-                        }
-                    }                    
-                    else if (element.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
+                    if (element.Name.ToString().ToLowerInvariant() == "biomes")
                     {
                         biomeElements.AddRange(element.Elements());
                     }

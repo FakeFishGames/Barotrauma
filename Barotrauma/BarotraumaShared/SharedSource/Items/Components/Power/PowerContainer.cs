@@ -213,7 +213,7 @@ namespace Barotrauma.Items.Components
             }
             if (HasBeenTuned) { return true; }
 
-            if (string.IsNullOrEmpty(objective.Option) || objective.Option.Equals("charge", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(objective.Option) || objective.Option.ToLowerInvariant() == "charge")
             {
                 if (Math.Abs(rechargeSpeed - maxRechargeSpeed * aiRechargeTargetRatio) > 0.05f)
                 {

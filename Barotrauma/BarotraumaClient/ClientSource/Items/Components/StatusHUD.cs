@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawCharacterInfo(SpriteBatch spriteBatch, Character target, float alpha = 1.0f)
         {
-            Vector2 hudPos = GameMain.GameScreen.Cam.WorldToScreen(target.DrawPosition);
+            Vector2 hudPos = GameMain.GameScreen.Cam.WorldToScreen(target.WorldPosition);
             hudPos += Vector2.UnitX * 50.0f;
 
             List<string> texts = new List<string>();

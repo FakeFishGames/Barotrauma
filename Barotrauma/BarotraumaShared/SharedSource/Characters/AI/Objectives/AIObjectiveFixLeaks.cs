@@ -11,6 +11,7 @@ namespace Barotrauma
         public override string DebugTag => "fix leaks";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool IgnoreUnsafeHulls => true;
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
@@ -35,7 +36,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>(), onlyBots: true);
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>());
             int totalLeaks = Targets.Count();
             if (totalLeaks == 0) { return 0; }
             int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
@@ -43,13 +44,13 @@ namespace Barotrauma
             bool anyFixers = otherFixers > 0;
             if (objectiveManager.CurrentOrder == this)
             {
-                float ratio = anyFixers ? totalLeaks / (float)otherFixers : 1;
+                float ratio = anyFixers ? totalLeaks / otherFixers : 1;
                 return Targets.Sum(t => GetLeakSeverity(t)) * ratio;
             }
             else
             {
                 float ratio = leaks == 0 ? 1 : anyFixers ? leaks / otherFixers : 1;
-                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
+                if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / HumanAIController.CountCrew() > 0.75f))
                 {
                     // Enough fixers
                     return 0;

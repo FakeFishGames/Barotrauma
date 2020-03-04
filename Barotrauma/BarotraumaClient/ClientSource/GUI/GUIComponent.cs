@@ -801,7 +801,8 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase) && !CheckConditional(subElement))
+                if (subElement.Name.ToString().ToLowerInvariant() == "conditional" &&
+                    !CheckConditional(subElement))
                 {
                     return null;
                 }
@@ -850,7 +851,7 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
                 }
 
@@ -1018,7 +1019,7 @@ namespace Barotrauma
 
         private static GUIFrame LoadGUIFrame(XElement element, RectTransform parent)
         {
-            string style = element.GetAttributeString("style", element.Name.ToString().Equals("spacing", StringComparison.OrdinalIgnoreCase) ? null : "");
+            string style = element.GetAttributeString("style", element.Name.ToString().ToLowerInvariant() == "spacing" ? null : "");
             if (style == "null") { style = null; }
             return new GUIFrame(RectTransform.Load(element, parent), style: style);
         }

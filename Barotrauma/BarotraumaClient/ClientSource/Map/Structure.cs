@@ -254,7 +254,7 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        color: Prefab.BackgroundSpriteColor,
+                        color: color,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
                         depth: Math.Max(Prefab.BackgroundSprite.Depth + (ID % 255) * 0.000001f, depth + 0.000001f));
@@ -350,6 +350,8 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                AiTarget?.Draw(spriteBatch);
             }
         }
 

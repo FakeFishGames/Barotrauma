@@ -59,35 +59,10 @@ namespace Barotrauma
         /// </summary>
         public Color Blue { get; private set; } = Color.Blue;
 
-        public Color ColorInventoryEmpty { get; private set; } = Color.Red;
-        public Color ColorInventoryHalf { get; private set; } = Color.Orange;
-        public Color ColorInventoryFull { get; private set; } = Color.LightGreen;
-        public Color ColorInventoryBackground { get; private set; } = Color.Gray;
-
         public Color TextColor { get; private set; } = Color.White * 0.8f;
         public Color TextColorBright { get; private set; } = Color.White * 0.9f;
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
-
-        // Inventory
-        public Color EquipmentSlotIconColor { get; private set; } = new Color(99, 70, 64);
-
-        // Health HUD
-        public Color BuffColorLow { get; private set; } = Color.LightGreen;
-        public Color BuffColorMedium { get; private set; } = Color.Green;
-        public Color BuffColorHigh { get; private set; } = Color.DarkGreen;
-
-        public Color DebuffColorLow { get; private set; } = Color.DarkSalmon;
-        public Color DebuffColorMedium { get; private set; } = Color.Red;
-        public Color DebuffColorHigh { get; private set; } = Color.DarkRed;
-
-        public Color HealthBarColorLow { get; private set; } = Color.Red;
-        public Color HealthBarColorMedium { get; private set; } = Color.Orange;
-        public Color HealthBarColorHigh { get; private set; } = new Color(78, 114, 88);
-
-        public Color EquipmentIndicatorNotEquipped { get; private set; } = Color.Gray;
-        public Color EquipmentIndicatorEquipped { get; private set; } = new Color(105, 202, 125);
-        public Color EquipmentIndicatorRunningOut { get; private set; } = new Color(202, 105, 105);
 
         public static Point ItemFrameMargin => new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
@@ -128,22 +103,10 @@ namespace Barotrauma
                     case "blue":
                         Blue = subElement.GetAttributeColor("color", Blue);
                         break;
-                    case "colorinventoryempty":
-                        ColorInventoryEmpty = subElement.GetAttributeColor("color", ColorInventoryEmpty);
-                        break;
-                    case "colorinventoryhalf":
-                        ColorInventoryHalf = subElement.GetAttributeColor("color", ColorInventoryHalf);
-                        break;
-                    case "colorinventoryfull":
-                        ColorInventoryFull = subElement.GetAttributeColor("color", ColorInventoryFull);
-                        break;
-                    case "colorinventorybackground":
-                        ColorInventoryBackground = subElement.GetAttributeColor("color", ColorInventoryBackground);
-                        break;
                     case "textcolordark":
                         TextColorDark = subElement.GetAttributeColor("color", TextColorDark);
                         break;
-                    case "textcolorbright":
+                    case "TextColorBright":
                         TextColorBright = subElement.GetAttributeColor("color", TextColorBright);
                         break;
                     case "textcolordim":
@@ -152,45 +115,6 @@ namespace Barotrauma
                     case "textcolornormal":
                     case "textcolor":
                         TextColor = subElement.GetAttributeColor("color", TextColor);
-                        break;
-                    case "equipmentsloticoncolor":
-                        EquipmentSlotIconColor = subElement.GetAttributeColor("color", EquipmentSlotIconColor);
-                        break;
-                    case "buffcolorlow":
-                        BuffColorLow = subElement.GetAttributeColor("color", BuffColorLow);
-                        break;
-                    case "buffcolormedium":
-                        BuffColorMedium = subElement.GetAttributeColor("color", BuffColorMedium);
-                        break;
-                    case "buffcolorhigh":
-                        BuffColorHigh = subElement.GetAttributeColor("color", BuffColorHigh);
-                        break;
-                    case "debuffcolorlow":
-                        DebuffColorLow = subElement.GetAttributeColor("color", DebuffColorLow);
-                        break;
-                    case "debuffcolormedium":
-                        DebuffColorMedium = subElement.GetAttributeColor("color", DebuffColorMedium);
-                        break;
-                    case "debuffcolorhigh":
-                        DebuffColorHigh = subElement.GetAttributeColor("color", DebuffColorHigh);
-                        break;
-                    case "healthbarcolorlow":
-                        HealthBarColorLow = subElement.GetAttributeColor("color", HealthBarColorLow);
-                        break;
-                    case "healthbarcolormedium":
-                        HealthBarColorMedium = subElement.GetAttributeColor("color", HealthBarColorMedium);
-                        break;
-                    case "healthbarcolorhigh":
-                        HealthBarColorHigh = subElement.GetAttributeColor("color", HealthBarColorHigh);
-                        break;
-                    case "equipmentindicatornotequipped":
-                        EquipmentIndicatorNotEquipped = subElement.GetAttributeColor("color", EquipmentIndicatorNotEquipped);
-                        break;
-                    case "equipmentindicatorequipped":
-                        EquipmentIndicatorEquipped = subElement.GetAttributeColor("color", EquipmentIndicatorEquipped);
-                        break;
-                    case "equipmentindicatorrunningout":
-                        EquipmentIndicatorRunningOut = subElement.GetAttributeColor("color", EquipmentIndicatorRunningOut);
                         break;
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
@@ -326,8 +250,9 @@ namespace Barotrauma
             //check if any of the language override fonts want to override the font size as well
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
                 {
                     uint overrideFontSize = GetFontSize(subElement, 0);
                     if (overrideFontSize > 0) { return overrideFontSize; }
@@ -336,7 +261,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("size", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Name.ToString().ToLowerInvariant() != "size") { continue; }
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
@@ -350,8 +275,9 @@ namespace Barotrauma
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
                 {
                     return subElement.GetAttributeString("file", "");
                 }
@@ -363,8 +289,9 @@ namespace Barotrauma
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
                 {
                     return subElement.GetAttributeBool("dynamicloading", false);
                 }
@@ -376,8 +303,9 @@ namespace Barotrauma
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
+                if (subElement.Name.ToString().ToLowerInvariant() != "override") { continue; }
+                string language = subElement.GetAttributeString("language", "").ToLowerInvariant();
+                if (GameMain.Config.Language.ToLowerInvariant() == language)
                 {
                     return subElement.GetAttributeBool("iscjk", false);
                 }

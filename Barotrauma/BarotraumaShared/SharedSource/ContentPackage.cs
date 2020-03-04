@@ -460,12 +460,12 @@ namespace Barotrauma
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                         var rootElement = doc.Root;
                         var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(ragdollFolder))
                         {
                             Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
-                        var animationFolder = AnimationParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var animationFolder = AnimationParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(animationFolder))
                         {
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
