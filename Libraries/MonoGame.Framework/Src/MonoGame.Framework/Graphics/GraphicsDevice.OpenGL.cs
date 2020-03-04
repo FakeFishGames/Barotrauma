@@ -353,6 +353,15 @@ namespace Microsoft.Xna.Framework.Graphics
             _bufferBindingInfos = new BufferBindingInfo[_maxVertexBufferSlots];
             for (int i = 0; i < _bufferBindingInfos.Length; i++)
                 _bufferBindingInfos[i] = new BufferBindingInfo(null, IntPtr.Zero, 0, -1);
+
+            Clear(Color.Black);
+            PlatformPresent();
+        }
+
+        partial void PlatformReset()
+        {
+            Clear(Color.Black);
+            PlatformPresent();
         }
         
         private DepthStencilState clearDepthStencilState = new DepthStencilState { StencilEnable = true };

@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -21,6 +26,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
@@ -35,17 +41,17 @@ namespace FarseerPhysics.Collision
 
         public int CompareTo(Pair other)
         {
-            if (ProxyIdA < other.ProxyIdA)
+            if (ProxyIdB < other.ProxyIdB)
             {
                 return -1;
             }
-            if (ProxyIdA == other.ProxyIdA)
+            if (ProxyIdB == other.ProxyIdB)
             {
-                if (ProxyIdB < other.ProxyIdB)
+                if (ProxyIdA < other.ProxyIdA)
                 {
                     return -1;
                 }
-                if (ProxyIdB == other.ProxyIdB)
+                if (ProxyIdA == other.ProxyIdA)
                 {
                     return 0;
                 }
@@ -109,11 +115,12 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="proxy">The user data.</param>
         /// <returns></returns>
-        public int AddProxy(ref FixtureProxy proxy)
+        public int AddProxy(ref AABB aabb)
         {
-            int proxyId = _tree.AddProxy(ref proxy.AABB, proxy);
+            int proxyId = _tree.AddProxy(ref aabb);
             ++_proxyCount;
             BufferMove(proxyId);
+
             return proxyId;
         }
 
@@ -206,6 +213,11 @@ namespace FarseerPhysics.Collision
             _tree.GetFatAABB(proxyId, out aabb);
         }
 
+        public void SetProxy(int proxyId, ref FixtureProxy proxy)
+        {
+            _tree.SetUserData(proxyId, proxy, proxy.Body);
+        }
+
         /// <summary>
         /// Get user data from a proxy. Returns null if the id is invalid.
         /// </summary>
@@ -224,11 +236,10 @@ namespace FarseerPhysics.Collision
         /// <returns></returns>
         public bool TestOverlap(int proxyIdA, int proxyIdB)
         {
-            AABB aabbA, aabbB;
-            _tree.GetFatAABB(proxyIdA, out aabbA);
-            _tree.GetFatAABB(proxyIdB, out aabbB);
-            return AABB.TestOverlap(ref aabbA, ref aabbB);
+            return _tree.TestFatAABBOverlap(proxyIdA, proxyIdB);
         }
+
+        private readonly HashSet<int> processedPairs = new HashSet<int>();
 
         /// <summary>
         /// Update the pairs. This results in pair callbacks. This can only add pairs.
@@ -250,32 +261,37 @@ namespace FarseerPhysics.Collision
 
                 // We have to query the tree with the fat AABB so that
                 // we don't fail to create a pair that may touch later.
-                AABB fatAABB;
-                _tree.GetFatAABB(_queryProxyId, out fatAABB);
+                AABB fatAABB = _tree.GetFatAABB(_queryProxyId);
+
+                object body = _tree.GetBody(_queryProxyId);
 
                 // Query tree, create pairs and add them pair buffer.
-                _tree.Query(_queryCallback, ref fatAABB);
+                _tree.Query(_queryCallback, ref fatAABB, ref body);
             }
 
             // Reset move buffer
             _moveCount = 0;
 
             // Sort the pair buffer to expose duplicates.
-            Array.Sort(_pairBuffer, 0, _pairCount);
+            //Array.Sort(_pairBuffer, 0, _pairCount);
+            processedPairs.Clear();
 
             // Send the pairs back to the client.
             int i = 0;
             while (i < _pairCount)
             {
                 Pair primaryPair = _pairBuffer[i];
-                FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyIdA);
-                FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyIdB);
+                int pairID = primaryPair.ProxyIdA + (primaryPair.ProxyIdB << 16);
+                if (!processedPairs.Contains(pairID))
+                {
+                    callback(primaryPair.ProxyIdA, primaryPair.ProxyIdB);
+                    processedPairs.Add(pairID);
+                }
 
-                callback(ref userDataA, ref userDataB);
                 ++i;
 
                 // Skip any duplicate pairs.
-                while (i < _pairCount)
+                /*while (i < _pairCount)
                 {
                     Pair pair = _pairBuffer[i];
                     if (pair.ProxyIdA != primaryPair.ProxyIdA || pair.ProxyIdB != primaryPair.ProxyIdB)
@@ -283,7 +299,7 @@ namespace FarseerPhysics.Collision
                         break;
                     }
                     ++i;
-                }
+                }*/
             }
 
             // Try to keep the tree balanced.
@@ -310,9 +326,10 @@ namespace FarseerPhysics.Collision
         /// </summary>
         /// <param name="callback">A callback class that is called for each proxy that is hit by the ray.</param>
         /// <param name="input">The ray-cast input data. The ray extends from p1 to p1 + maxFraction * (p2 - p1).</param>
-        public void RayCast(Func<RayCastInput, int, float> callback, ref RayCastInput input)
+        /// <param name="collisionCategory">The collision categories of the fixtures to raycast against.</param>
+        public void RayCast(Func<RayCastInput, FixtureProxy, float> callback, ref RayCastInput input, Category collisionCategory = Category.All)
         {
-            _tree.RayCast(callback, ref input);
+            _tree.RayCast(this, callback, ref input, collisionCategory);
         }
 
         public void ShiftOrigin(Vector2 newOrigin)

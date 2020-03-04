@@ -11,12 +11,23 @@ bld/
 [Oo]bj/
 [Dd]ebug*/
 [Rr]elease*/
+*.o
 
 # Misc vs crap 
 *.v12.suo
 *.suo
 *.csproj.user
 *.shproj.user
+*.vcxproj.user
+
+# Platform-specific webm_mem_playback files
+Libraries/webm_mem_playback/libvpx_x64_linux/
+Libraries/webm_mem_playback/libvpx_x64_vs15/
+Libraries/webm_mem_playback/libvpx_x86_vs15/
+Libraries/webm_mem_playback/libwebm_x64_linux/
+Libraries/webm_mem_playback/libwebm_x64_vs19/
+Libraries/webm_mem_playback/libwebm_x86_vs19/
+Libraries/webm_mem_playback/opus_x64_linux/
 
 #performance reports & sessions
 *.vsp

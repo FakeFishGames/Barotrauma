@@ -507,6 +507,14 @@ namespace Lidgren.Network
 #endif
 
 		/// <summary>
+		/// Changes the number of maximum connections after the peer has been started
+		/// </summary>
+		internal void ChangeMaximumConnectionsInternal(int num)
+		{
+			m_maximumConnections = num;
+		}
+
+		/// <summary>
 		/// Creates a memberwise shallow clone of this configuration
 		/// </summary>
 		public NetPeerConfiguration Clone()

@@ -18,9 +18,8 @@ If you're interested in working on the code, either to develop mods or to contri
 
 ## Prerequisities:
 ### Windows
-- [Visual Studio](https://www.visualstudio.com/vs/community/) with C# 7.0 support (VS 2017 or later recommended)
+- [Visual Studio](https://www.visualstudio.com/vs/community/) with C# 8.0 support (VS 2019 or later recommended)
 ### Linux
-- [mono-devel 5.18](http://www.mono-project.com)
+- [.NET Core 3.0 SDK](https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1904)
 ### macOS
-- [Mono 5.16](http://www.mono-project.com)
-- [Visual Studio](https://www.visualstudio.com/vs/community/)
+- [Visual Studio 2019 for Mac](https://visualstudio.microsoft.com/vs/mac/)

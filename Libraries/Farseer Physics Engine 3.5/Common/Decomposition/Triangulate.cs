@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using FarseerPhysics.Common.ConvexHull;
@@ -69,7 +74,12 @@ namespace FarseerPhysics.Common.Decomposition
 
     public static class Triangulate
     {
-        public static List<Vertices> ConvexPartition(Vertices vertices, TriangulationAlgorithm algorithm, bool discardAndFixInvalid = true, float tolerance = 0.001f)
+        /// <param name="skipSanityChecks">
+        /// Set this to true to skip sanity checks in the engine. This will speed up the
+        /// tools by removing the overhead of the checks, but you will need to handle checks
+        /// yourself where it is needed.
+        /// </param>
+        public static List<Vertices> ConvexPartition(Vertices vertices, TriangulationAlgorithm algorithm, bool discardAndFixInvalid = true, float tolerance = 0.001f, bool skipSanityChecks = false)
         {
             if (vertices.Count <= 3)
                 return new List<Vertices> { vertices };
@@ -79,49 +89,37 @@ namespace FarseerPhysics.Common.Decomposition
             switch (algorithm)
             {
                 case TriangulationAlgorithm.Earclip:
-                    if (Settings.SkipSanityChecks)
+                    if (skipSanityChecks)
                         Debug.Assert(!vertices.IsCounterClockWise(), "The Earclip algorithm expects the polygon to be clockwise.");
-                    else
+                    else if (vertices.IsCounterClockWise())
                     {
-                        if (vertices.IsCounterClockWise())
-                        {
-                            Vertices temp = new Vertices(vertices);
-                            temp.Reverse();
-                            results = EarclipDecomposer.ConvexPartition(temp, tolerance);
-                        }
-                        else
-                            results = EarclipDecomposer.ConvexPartition(vertices, tolerance);
+                        Vertices temp = new Vertices(vertices);
+                        temp.Reverse();
+                        vertices = temp;
                     }
+                    results = EarclipDecomposer.ConvexPartition(vertices, tolerance);
                     break;
                 case TriangulationAlgorithm.Bayazit:
-                    if (Settings.SkipSanityChecks)
+                    if (skipSanityChecks)
                         Debug.Assert(vertices.IsCounterClockWise(), "The polygon is not counter clockwise. This is needed for Bayazit to work correctly.");
-                    else
+                    else if (!vertices.IsCounterClockWise())
                     {
-                        if (!vertices.IsCounterClockWise())
-                        {
-                            Vertices temp = new Vertices(vertices);
-                            temp.Reverse();
-                            results = BayazitDecomposer.ConvexPartition(temp);
-                        }
-                        else
-                            results = BayazitDecomposer.ConvexPartition(vertices);
+                        Vertices temp = new Vertices(vertices);
+                        temp.Reverse();
+                        vertices = temp;
                     }
+                    results = BayazitDecomposer.ConvexPartition(vertices);
                     break;
                 case TriangulationAlgorithm.Flipcode:
-                    if (Settings.SkipSanityChecks)
+                    if (skipSanityChecks)
                         Debug.Assert(vertices.IsCounterClockWise(), "The polygon is not counter clockwise. This is needed for Bayazit to work correctly.");
-                    else
+                    else if (!vertices.IsCounterClockWise())
                     {
-                        if (!vertices.IsCounterClockWise())
-                        {
-                            Vertices temp = new Vertices(vertices);
-                            temp.Reverse();
-                            results = FlipcodeDecomposer.ConvexPartition(temp);
-                        }
-                        else
-                            results = FlipcodeDecomposer.ConvexPartition(vertices);
+                        Vertices temp = new Vertices(vertices);
+                        temp.Reverse();
+                        vertices = temp;
                     }
+                    results = FlipcodeDecomposer.ConvexPartition(vertices);
                     break;
                 case TriangulationAlgorithm.Seidel:
                     results = SeidelDecomposer.ConvexPartition(vertices, tolerance);

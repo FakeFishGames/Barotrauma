@@ -98,7 +98,6 @@ namespace Hyper.ComponentModel
         }
 
         [SecuritySafeCritical]
-        [ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
         private ICustomTypeDescriptor BuildDescriptor(Type objectType)
         {
             // NOTE: "descriptors" already locked here

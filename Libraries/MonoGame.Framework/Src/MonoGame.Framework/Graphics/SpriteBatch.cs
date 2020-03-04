@@ -65,7 +65,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// Begins a new sprite and text batch with the specified render state.
         /// </summary>
         /// <param name="sortMode">The drawing order for sprite and text drawing. <see cref="SpriteSortMode.Deferred"/> by default.</param>
-        /// <param name="blendState">State of the blending. Uses <see cref="BlendState.AlphaBlend"/> if null.</param>
+        /// <param name="blendState">State of the blending. Uses <see cref="BlendState.NonPremultiplied"/> if null.</param>
         /// <param name="samplerState">State of the sampler. Uses <see cref="SamplerState.LinearClamp"/> if null.</param>
         /// <param name="depthStencilState">State of the depth-stencil buffer. Uses <see cref="DepthStencilState.None"/> if null.</param>
         /// <param name="rasterizerState">State of the rasterization. Uses <see cref="RasterizerState.CullCounterClockwise"/> if null.</param>
@@ -90,7 +90,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
             // defaults
             _sortMode = sortMode;
-            _blendState = blendState ?? BlendState.AlphaBlend;
+            _blendState = blendState ?? BlendState.NonPremultiplied;
             _samplerState = samplerState ?? SamplerState.LinearClamp;
             _depthStencilState = depthStencilState ?? DepthStencilState.None;
             _rasterizerState = rasterizerState ?? RasterizerState.CullCounterClockwise;

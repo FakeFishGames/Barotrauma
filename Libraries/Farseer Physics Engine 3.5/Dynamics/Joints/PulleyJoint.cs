@@ -1,3 +1,8 @@
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -23,6 +28,7 @@
 using System;
 using System.Diagnostics;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Dynamics.Joints
@@ -225,10 +231,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            _rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            _rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            _rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            _rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
             // Get the pulley axes.
             _uA = cA + _rA - WorldAnchorA;
@@ -256,8 +263,8 @@ namespace FarseerPhysics.Dynamics.Joints
             }
 
             // Compute effective mass.
-            float ruA = MathUtils.Cross(_rA, _uA);
-            float ruB = MathUtils.Cross(_rB, _uB);
+            float ruA = MathUtils.Cross(ref _rA, ref _uA);
+            float ruB = MathUtils.Cross(ref _rB, ref _uB);
 
             float mA = _invMassA + _invIA * ruA * ruA;
             float mB = _invMassB + _invIB * ruB * ruB;
@@ -269,7 +276,7 @@ namespace FarseerPhysics.Dynamics.Joints
                 _mass = 1.0f / _mass;
             }
 
-            if (Settings.EnableWarmstarting)
+            if (data.step.warmStarting)
             {
                 // Scale impulses to support variable time steps.
                 _impulse *= data.step.dtRatio;
@@ -279,9 +286,9 @@ namespace FarseerPhysics.Dynamics.Joints
                 Vector2 PB = (-Ratio * _impulse) * _uB;
 
                 vA += _invMassA * PA;
-                wA += _invIA * MathUtils.Cross(_rA, PA);
+                wA += _invIA * MathUtils.Cross(ref _rA, ref PA);
                 vB += _invMassB * PB;
-                wB += _invIB * MathUtils.Cross(_rB, PB);
+                wB += _invIB * MathUtils.Cross(ref _rB, ref PB);
             }
             else
             {
@@ -301,8 +308,8 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 vB = data.velocities[_indexB].v;
             float wB = data.velocities[_indexB].w;
 
-            Vector2 vpA = vA + MathUtils.Cross(wA, _rA);
-            Vector2 vpB = vB + MathUtils.Cross(wB, _rB);
+            Vector2 vpA = vA + MathUtils.Cross(wA, ref _rA);
+            Vector2 vpB = vB + MathUtils.Cross(wB, ref _rB);
 
             float Cdot = -Vector2.Dot(_uA, vpA) - Ratio * Vector2.Dot(_uB, vpB);
             float impulse = -_mass * Cdot;
@@ -311,9 +318,9 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 PA = -impulse * _uA;
             Vector2 PB = -Ratio * impulse * _uB;
             vA += _invMassA * PA;
-            wA += _invIA * MathUtils.Cross(_rA, PA);
+            wA += _invIA * MathUtils.Cross(ref _rA, ref PA);
             vB += _invMassB * PB;
-            wB += _invIB * MathUtils.Cross(_rB, PB);
+            wB += _invIB * MathUtils.Cross(ref _rB, ref PB);
 
             data.velocities[_indexA].v = vA;
             data.velocities[_indexA].w = wA;
@@ -328,10 +335,11 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 cB = data.positions[_indexB].c;
             float aB = data.positions[_indexB].a;
 
-            Rot qA = new Rot(aA), qB = new Rot(aB);
+            Complex qA = Complex.FromAngle(aA);
+            Complex qB = Complex.FromAngle(aB);
 
-            Vector2 rA = MathUtils.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = MathUtils.Mul(qB, LocalAnchorB - _localCenterB);
+            Vector2 rA = Complex.Multiply(LocalAnchorA - _localCenterA, ref qA);
+            Vector2 rB = Complex.Multiply(LocalAnchorB - _localCenterB, ref qB);
 
             // Get the pulley axes.
             Vector2 uA = cA + rA - WorldAnchorA;
@@ -359,8 +367,8 @@ namespace FarseerPhysics.Dynamics.Joints
             }
 
             // Compute effective mass.
-            float ruA = MathUtils.Cross(rA, uA);
-            float ruB = MathUtils.Cross(rB, uB);
+            float ruA = MathUtils.Cross(ref rA, ref uA);
+            float ruB = MathUtils.Cross(ref rB, ref uB);
 
             float mA = _invMassA + _invIA * ruA * ruA;
             float mB = _invMassB + _invIB * ruB * ruB;
@@ -381,9 +389,9 @@ namespace FarseerPhysics.Dynamics.Joints
             Vector2 PB = -Ratio * impulse * uB;
 
             cA += _invMassA * PA;
-            aA += _invIA * MathUtils.Cross(rA, PA);
+            aA += _invIA * MathUtils.Cross(ref rA, ref PA);
             cB += _invMassB * PB;
-            aB += _invIB * MathUtils.Cross(rB, PB);
+            aB += _invIB * MathUtils.Cross(ref rB, ref PB);
 
             data.positions[_indexA].c = cA;
             data.positions[_indexA].a = aA;

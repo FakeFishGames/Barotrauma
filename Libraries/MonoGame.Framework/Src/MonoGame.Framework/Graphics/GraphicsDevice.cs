@@ -26,7 +26,7 @@ namespace Microsoft.Xna.Framework.Graphics
         private bool _blendStateDirty;
 
         private BlendState _blendStateAdditive;
-        private BlendState _blendStateAlphaBlend;
+        //private BlendState _blendStateAlphaBlend;
         private BlendState _blendStateNonPremultiplied;
         private BlendState _blendStateOpaque;
 
@@ -74,7 +74,8 @@ namespace Microsoft.Xna.Framework.Graphics
         // Despite XNA4 using Purple here, we use black (in Release) to avoid
         // performance warnings on Intel/Mesa
 #if DEBUG
-        private static readonly Color DiscardColor = new Color(68, 34, 136, 255);
+        // Replicating XNA behavior stopped mattering ages ago
+        private static readonly Color DiscardColor = new Color(0, 0, 0, 255); //new Color(68, 34, 136, 255);
 #else
         private static readonly Color DiscardColor = new Color(0, 0, 0, 255);
 #endif
@@ -252,7 +253,7 @@ namespace Microsoft.Xna.Framework.Graphics
             SamplerStates = new SamplerStateCollection(this, MaxTextureSlots, false);
 
             _blendStateAdditive = BlendState.Additive.Clone();
-            _blendStateAlphaBlend = BlendState.AlphaBlend.Clone();
+            //_blendStateAlphaBlend = BlendState.AlphaBlend.Clone();
             _blendStateNonPremultiplied = BlendState.NonPremultiplied.Clone();
             _blendStateOpaque = BlendState.Opaque.Clone();
 
@@ -414,8 +415,8 @@ namespace Microsoft.Xna.Framework.Graphics
                 var newBlendState = _blendState;
                 if (ReferenceEquals(_blendState, BlendState.Additive))
                     newBlendState = _blendStateAdditive;
-                else if (ReferenceEquals(_blendState, BlendState.AlphaBlend))
-                    newBlendState = _blendStateAlphaBlend;
+                /*else if (ReferenceEquals(_blendState, BlendState.AlphaBlend))
+                    newBlendState = _blendStateAlphaBlend;*/
                 else if (ReferenceEquals(_blendState, BlendState.NonPremultiplied))
                     newBlendState = _blendStateNonPremultiplied;
                 else if (ReferenceEquals(_blendState, BlendState.Opaque))
@@ -549,7 +550,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     _blendState = null;
                     _actualBlendState = null;
                     _blendStateAdditive.Dispose();
-                    _blendStateAlphaBlend.Dispose();
+                    //_blendStateAlphaBlend.Dispose();
                     _blendStateNonPremultiplied.Dispose();
                     _blendStateOpaque.Dispose();
 

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+echo "REQUIREMENTS:"
+echo " - https://osdn.net/projects/mingw/downloads/68260/mingw-get-setup.exe/"
+echo "   - You won't need MinGW itself, just get MSYS"
+echo "   - Install msys-perl-bin afterwards"
+echo " - http://www.tortall.net/projects/yasm/releases/yasm-1.3.0-win64.exe"
+echo "   - Drag into [VS2019 Install Dir]/Common7/Tools and rename to yasm.exe"
+echo " - https://www.microsoft.com/en-us/download/details.aspx?id=13523"
+echo "   - The VS2010 C++ redist is required for yasm; output files will not require it"
+echo " - https://cmake.org/download/ (I'm so sorry)"
+echo ""
+
+mkdir -p libvpx_x64_vs15
+cp -rf libvpx/. libvpx_x64_vs15/
+cd libvpx_x64_vs15/
+./configure --target=x86_64-win64-vs15 --enable-static-msvcrt --disable-static --disable-install-bins --disable-install-libs --disable-examples --disable-docs --enable-webm-io --disable-vp8-encoder --disable-vp9-encoder
+make
+cd ..
+
+mkdir -p libvpx_x86_vs15
+cp -rf libvpx/. libvpx_x86_vs15/
+cd libvpx_x86_vs15/
+./configure --target=x86-win32-vs15 --enable-static-msvcrt --disable-static --disable-install-bins --disable-install-libs --disable-examples --disable-docs --enable-webm-io --disable-vp8-encoder --disable-vp9-encoder
+make
+cd ..
+
+mkdir -p libwebm_x64_vs19
+cp -rf libwebm/. libwebm_x64_vs19/
+cd libwebm_x64_vs19/
+cmake -G "Visual Studio 16 2019" -A x64 ./
+cd ..
+
+mkdir -p libwebm_x86_vs19
+cp -rf libwebm/. libwebm_x86_vs19/
+cd libwebm_x86_vs19/
+cmake -G "Visual Studio 16 2019" ./
+cd ..

@@ -216,8 +216,9 @@ namespace Microsoft.Xna.Framework.Content
 			preparedType = preparedType.Replace(", Microsoft.Xna.Framework.Graphics", string.Format(", {0}", _assemblyName));
             preparedType = preparedType.Replace(", Microsoft.Xna.Framework.Video", string.Format(", {0}", _assemblyName));
             preparedType = preparedType.Replace(", Microsoft.Xna.Framework", string.Format(", {0}", _assemblyName));
-			
-			return preparedType;
+            preparedType = preparedType.Replace(", MonoGame.Framework", string.Format(", {0}", _assemblyName));
+
+            return preparedType;
 		}
 
         // Static map of type names to creation functions. Required as iOS requires all types at compile time

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "REQUIREMENTS:"
+echo " - NASM"
+echo "   - You download that somewhere. If you have homebrew installed you can install it from there."
+echo " - https://cmake.org/download/"
+echo ""
+echo "IMPORTANT NOTE: libwebm_x64_macos will generate a file called \"Makefile.unix\", rename that to \"Makefile\" to call \"make\" on the folder."
+echo ""
+echo "ANOTHER IMPORTANT NOTE: The Opus makefile puts the .a file in a hidden folder called \".libs\""
+echo ""
+
+cd "$(dirname "$0")"
+
+echo "Creating libvpx Makefile..."
+echo ""
+
+mkdir -p libvpx_x64_macos
+cp -rf libvpx/. libvpx_x64_macos/
+cd libvpx_x64_macos/
+chmod +x ./configure
+./configure --target=x86_64-darwin17-gcc --enable-optimizations --enable-pic --disable-shared --disable-install-bins --disable-install-libs --disable-examples --disable-docs --enable-webm-io --disable-vp8-encoder --disable-vp9-encoder
+cd ..
+
+echo "Creating libwebm Makefile..."
+echo ""
+
+mkdir -p libwebm_x64_macos
+cp -rf libwebm/. libwebm_x64_macos/
+cd libwebm_x64_macos/
+cmake -G "Unix Makefiles" -DCMAKE_CXX_FLAGS="-fPIC -O3" -DCMAKE_C_FLAGS="-fPIC -O3"
+cd ..
+
+echo "Creating opus Makefile..."
+echo ""
+
+mkdir -p opus_x64_macos
+cp -rf opus/. opus_x64_macos/
+cd opus_x64_macos/
+chmod +x ./configure
+./configure --enable-asm --enable-intrinsics --enable-float-approx --enable-static --disable-shared --with-pic
+cd ..
+
+echo "Done"
+echo ""

@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>1577d2e0-959b-4106-a7d8-d77b41c09f0c</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>GA_SDK_MONO_SHARED</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Device\GADevice.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EGAErrorSeverity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EGAGender.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EGALoggerMessageType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EGAProgressionStatus.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EGAResourceFlowType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Events\GAEvents.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\Task.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskManager.Net.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskManager.WSA.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Foundation\Tasks\TaskTResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GameAnalytics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Http\EGAHTTPApiResponse.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Http\EGASdkErrorType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Http\GAHTTPApi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ICommandCenterListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logging\GALogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)State\GAState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Store\GAStore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tasks\SdkErrorTask.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\GAThreading.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\PriorityQueue.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\TimedBlock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\GAUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleJSON.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utilities\SimpleJSONBinary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Validators\GAValidator.cs" />
+  </ItemGroup>
+</Project>

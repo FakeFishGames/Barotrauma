@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Platforms>AnyCPU;x64</Platforms>
+    <PackageId>Concentus</PackageId>
+    <Authors>Logan Stromberg</Authors>
+    <Version>1.1.6.0</Version>
+    <Copyright>Copyright © Xiph.Org Foundation, Skype Limited, CSIRO, Microsoft Corp.</Copyright>
+    <Description>This package is a pure portable C# implementation of the Opus audio compression codec (see https://opus-codec.org/ for more details). This package contains the Opus encoder, decoder, multistream codecs, repacketizer, as well as a port of the libspeexdsp resampler. It does NOT contain code to parse .ogg or .opus container files or to manage RTP packet streams</Description>
+    <PackageLicenseExpression />
+    <PackageProjectUrl>https://github.com/lostromb/concentus</PackageProjectUrl>
+  </PropertyGroup>
+
+</Project>

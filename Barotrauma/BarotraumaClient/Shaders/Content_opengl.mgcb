@@ -36,6 +36,12 @@
 /processorParam:DebugMode=Auto
 /build:deformshader_opengl.fx
 
+#begin gradientshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:gradientshader_opengl.fx
+
 #begin losshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor

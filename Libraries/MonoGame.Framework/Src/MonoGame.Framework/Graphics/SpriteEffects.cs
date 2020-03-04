@@ -15,7 +15,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <summary>
         /// No options specified.
         /// </summary>
-		None = 0,
+        None = 0,
         /// <summary>
         /// Render the sprite reversed along the X axis.
         /// </summary>

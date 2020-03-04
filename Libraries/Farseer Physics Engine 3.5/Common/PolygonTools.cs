@@ -1,7 +1,13 @@
-﻿using System;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using FarseerPhysics.Common.TextureTools;
+using FarseerPhysics.Common.Maths;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common
@@ -35,14 +41,12 @@ namespace FarseerPhysics.Common
         {
             Vertices vertices = CreateRectangle(hx, hy);
 
-            Transform xf = new Transform();
-            xf.p = center;
-            xf.q.Set(angle);
+            Transform xf = new Transform(center, angle);
 
             // Transform vertices
             for (int i = 0; i < 4; ++i)
             {
-                vertices[i] = MathUtils.Mul(ref xf, vertices[i]);
+                vertices[i] = Transform.Multiply(vertices[i], ref xf);
             }
 
             return vertices;

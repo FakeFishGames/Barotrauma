@@ -1,4 +1,11 @@
-﻿/*
+﻿// Copyright (c) 2017 Kastellanos Nikolaos
+
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 * 
@@ -41,23 +48,23 @@ namespace FarseerPhysics.Dynamics
 
     public delegate void PostSolveDelegate(Contact contact, ContactVelocityConstraint impulse);
 
-    public delegate void FixtureDelegate(Fixture fixture);
+    public delegate void FixtureDelegate(World sender, Body body, Fixture fixture);
 
-    public delegate void JointDelegate(Joint joint);
+    public delegate void JointDelegate(World sender, Joint joint);
 
-    public delegate void BodyDelegate(Body body);
+    public delegate void BodyDelegate(World sender, Body body);
 
-    public delegate void ControllerDelegate(Controller controller);
+    public delegate void ControllerDelegate(World sender, Controller controller);
 
     public delegate bool CollisionFilterDelegate(Fixture fixtureA, Fixture fixtureB);
 
-    public delegate void BroadphaseDelegate(ref FixtureProxy proxyA, ref FixtureProxy proxyB);
+    public delegate void BroadphaseDelegate(int proxyIdA, int proxyIdB);
 
-    public delegate bool BeforeCollisionEventHandler(Fixture fixtureA, Fixture fixtureB);
+    public delegate bool BeforeCollisionEventHandler(Fixture sender, Fixture other);
 
-    public delegate bool OnCollisionEventHandler(Fixture fixtureA, Fixture fixtureB, Contact contact);
+    public delegate bool OnCollisionEventHandler(Fixture sender, Fixture other, Contact contact);
 
-    public delegate void AfterCollisionEventHandler(Fixture fixtureA, Fixture fixtureB, Contact contact, ContactVelocityConstraint impulse);
+    public delegate void AfterCollisionEventHandler(Fixture sender, Fixture other, Contact contact, ContactVelocityConstraint impulse);
 
-    public delegate void OnSeparationEventHandler(Fixture fixtureA, Fixture fixtureB);
+    public delegate void OnSeparationEventHandler(Fixture sender, Fixture other, Contact contact);
 }

@@ -1,0 +1,363 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		190BCE86229F2AF4002812E4 /* Exports.h in Headers */ = {isa = PBXBuildFile; fileRef = 190BCE80229F2AF4002812E4 /* Exports.h */; };
+		190BCE87229F2AF4002812E4 /* AudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 190BCE81229F2AF4002812E4 /* AudioDecoder.h */; };
+		190BCE88229F2AF4002812E4 /* Video.h in Headers */ = {isa = PBXBuildFile; fileRef = 190BCE82229F2AF4002812E4 /* Video.h */; };
+		190BCE89229F2AF4002812E4 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 190BCE83229F2AF4002812E4 /* Video.cpp */; };
+		190BCE8A229F2AF4002812E4 /* Exports.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 190BCE84229F2AF4002812E4 /* Exports.cpp */; };
+		190BCE8B229F2AF4002812E4 /* AudioDecoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 190BCE85229F2AF4002812E4 /* AudioDecoder.cpp */; };
+		19A65EBF229F41B70046F8D9 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19A65EBE229F41B70046F8D9 /* libvpx.a */; };
+		19A65EC1229F41C90046F8D9 /* libwebm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19A65EC0229F41C90046F8D9 /* libwebm.a */; };
+		19A65EC5229F45640046F8D9 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19A65EC4229F45640046F8D9 /* libopus.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		190BCE77229F2A5E002812E4 /* libwebm_mem_playback.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libwebm_mem_playback.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		190BCE80229F2AF4002812E4 /* Exports.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Exports.h; path = ../../Exports.h; sourceTree = "<group>"; };
+		190BCE81229F2AF4002812E4 /* AudioDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AudioDecoder.h; path = ../../AudioDecoder.h; sourceTree = "<group>"; };
+		190BCE82229F2AF4002812E4 /* Video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Video.h; path = ../../Video.h; sourceTree = "<group>"; };
+		190BCE83229F2AF4002812E4 /* Video.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Video.cpp; path = ../../Video.cpp; sourceTree = "<group>"; };
+		190BCE84229F2AF4002812E4 /* Exports.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Exports.cpp; path = ../../Exports.cpp; sourceTree = "<group>"; };
+		190BCE85229F2AF4002812E4 /* AudioDecoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AudioDecoder.cpp; path = ../../AudioDecoder.cpp; sourceTree = "<group>"; };
+		19A65EBE229F41B70046F8D9 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = ../../libvpx_x64_macos/libvpx.a; sourceTree = "<group>"; };
+		19A65EC0229F41C90046F8D9 /* libwebm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebm.a; path = ../../libwebm_x64_macos/libwebm.a; sourceTree = "<group>"; };
+		19A65EC4229F45640046F8D9 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libopus.a; path = ../../opus_x64_macos/libopus.a; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		190BCE75229F2A5E002812E4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19A65EC5229F45640046F8D9 /* libopus.a in Frameworks */,
+				19A65EC1229F41C90046F8D9 /* libwebm.a in Frameworks */,
+				19A65EBF229F41B70046F8D9 /* libvpx.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		190BCE6E229F2A5E002812E4 = {
+			isa = PBXGroup;
+			children = (
+				190BCE7F229F2ADC002812E4 /* Source */,
+				190BCE78229F2A5E002812E4 /* Products */,
+				19A65EBD229F41B70046F8D9 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		190BCE78229F2A5E002812E4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				190BCE77229F2A5E002812E4 /* libwebm_mem_playback.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		190BCE7F229F2ADC002812E4 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				190BCE81229F2AF4002812E4 /* AudioDecoder.h */,
+				190BCE85229F2AF4002812E4 /* AudioDecoder.cpp */,
+				190BCE80229F2AF4002812E4 /* Exports.h */,
+				190BCE84229F2AF4002812E4 /* Exports.cpp */,
+				190BCE82229F2AF4002812E4 /* Video.h */,
+				190BCE83229F2AF4002812E4 /* Video.cpp */,
+			);
+			path = Source;
+			sourceTree = "<group>";
+		};
+		19A65EBD229F41B70046F8D9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				19A65EC4229F45640046F8D9 /* libopus.a */,
+				19A65EC0229F41C90046F8D9 /* libwebm.a */,
+				19A65EBE229F41B70046F8D9 /* libvpx.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		190BCE73229F2A5E002812E4 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				190BCE88229F2AF4002812E4 /* Video.h in Headers */,
+				190BCE87229F2AF4002812E4 /* AudioDecoder.h in Headers */,
+				190BCE86229F2AF4002812E4 /* Exports.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		190BCE76229F2A5E002812E4 /* webm_mem_playback */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 190BCE7B229F2A5E002812E4 /* Build configuration list for PBXNativeTarget "webm_mem_playback" */;
+			buildPhases = (
+				190BCE73229F2A5E002812E4 /* Headers */,
+				190BCE74229F2A5E002812E4 /* Sources */,
+				190BCE75229F2A5E002812E4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = webm_mem_playback;
+			productName = webm_mem_playback;
+			productReference = 190BCE77229F2A5E002812E4 /* libwebm_mem_playback.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		190BCE6F229F2A5E002812E4 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1120;
+				ORGANIZATIONNAME = wut;
+				TargetAttributes = {
+					190BCE76229F2A5E002812E4 = {
+						CreatedOnToolsVersion = 10.2.1;
+					};
+				};
+			};
+			buildConfigurationList = 190BCE72229F2A5E002812E4 /* Build configuration list for PBXProject "webm_mem_playback" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 190BCE6E229F2A5E002812E4;
+			productRefGroup = 190BCE78229F2A5E002812E4 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				190BCE76229F2A5E002812E4 /* webm_mem_playback */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		190BCE74229F2A5E002812E4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				190BCE8B229F2AF4002812E4 /* AudioDecoder.cpp in Sources */,
+				190BCE89229F2AF4002812E4 /* Video.cpp in Sources */,
+				190BCE8A229F2AF4002812E4 /* Exports.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		190BCE79229F2A5E002812E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../libwebm_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../opus_x64_macos/include/,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-fvisibility=hidden";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		190BCE7A229F2A5E002812E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../libwebm_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../opus_x64_macos/include/,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "-fvisibility=hidden";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		190BCE7C229F2A5E002812E4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					../../libwebm_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../opus_x64_macos/include/,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../../opus_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../libwebm_x64_macos/,
+				);
+				OTHER_CFLAGS = "-fvisibility=hidden";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		190BCE7D229F2A5E002812E4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					../../libwebm_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../opus_x64_macos/include/,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					../../opus_x64_macos/,
+					../../libvpx_x64_macos/,
+					../../libwebm_x64_macos/,
+				);
+				OTHER_CFLAGS = "-fvisibility=hidden";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		190BCE72229F2A5E002812E4 /* Build configuration list for PBXProject "webm_mem_playback" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				190BCE79229F2A5E002812E4 /* Debug */,
+				190BCE7A229F2A5E002812E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		190BCE7B229F2A5E002812E4 /* Build configuration list for PBXNativeTarget "webm_mem_playback" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				190BCE7C229F2A5E002812E4 /* Debug */,
+				190BCE7D229F2A5E002812E4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 190BCE6F229F2A5E002812E4 /* Project object */;
+}

@@ -1,4 +1,9 @@
-﻿/*
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 */
@@ -49,10 +54,8 @@ namespace FarseerPhysics.Common
         /// </summary>
         SideTooSmall
     }
-
-#if !(XBOX360)
+    
     [DebuggerDisplay("Count = {Count} Vertices = {ToString()}")]
-#endif
     public class Vertices : List<Vector2>
     {
         public Vertices() { }

@@ -187,7 +187,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
 
         public static readonly BlendState Additive;
-        public static readonly BlendState AlphaBlend;
+        //public static readonly BlendState AlphaBlend;
         public static readonly BlendState NonPremultiplied;
         public static readonly BlendState Opaque;
 
@@ -204,14 +204,14 @@ namespace Microsoft.Xna.Framework.Graphics
             _independentBlendEnable = false;
         }
 
-        private BlendState(string name, Blend sourceBlend, Blend destinationBlend)
+        private BlendState(string name, Blend sourceBlend, Blend destinationBlend, Blend? srcAlphaBlend = null, Blend? destAlphaBlend = null)
             : this()
         {
             Name = name;
             ColorSourceBlend = sourceBlend;
-            AlphaSourceBlend = sourceBlend;
+            AlphaSourceBlend = srcAlphaBlend ?? sourceBlend;
             ColorDestinationBlend = destinationBlend;
-            AlphaDestinationBlend = destinationBlend;
+            AlphaDestinationBlend = destAlphaBlend ?? destinationBlend;
             _defaultStateObject = true;
         }
 
@@ -233,8 +233,8 @@ namespace Microsoft.Xna.Framework.Graphics
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
-            AlphaBlend = new BlendState("BlendState.AlphaBlend", Blend.One, Blend.InverseSourceAlpha);
-            NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha);
+            //AlphaBlend = new BlendState("BlendState.AlphaBlend", Blend.One, Blend.InverseSourceAlpha);
+            NonPremultiplied = new BlendState("BlendState.NonPremultiplied", Blend.SourceAlpha, Blend.InverseSourceAlpha, Blend.One, Blend.InverseSourceAlpha);
             Opaque = new BlendState("BlendState.Opaque", Blend.One, Blend.Zero);
 		}
 

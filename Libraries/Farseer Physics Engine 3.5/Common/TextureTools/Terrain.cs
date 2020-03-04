@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
+using System.Collections.Generic;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Common.PolygonManipulation;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 
 namespace FarseerPhysics.Common.TextureTools
@@ -218,7 +222,7 @@ namespace FarseerPhysics.Common.TextureTools
                     {
                         for (int i = 0; i < _bodyMap[x, y].Count; i++)
                         {
-                            World.RemoveBody(_bodyMap[x, y][i]);
+                            World.Remove(_bodyMap[x, y][i]);
                         }
                     }
 
@@ -256,7 +260,7 @@ namespace FarseerPhysics.Common.TextureTools
                 foreach (Vertices poly in decompPolys)
                 {
                     if (poly.Count > 2)
-                        _bodyMap[gx, gy].Add(BodyFactory.CreatePolygon(World, poly, 1));
+                        _bodyMap[gx, gy].Add(World.CreatePolygon(poly, 1));
                 }
             }
         }
