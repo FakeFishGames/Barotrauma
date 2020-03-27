@@ -88,6 +88,10 @@ namespace Barotrauma
 
                         if (!prevItems.Contains(item) && !item.CanClientAccess(c))
                         {
+                            if (item.body != null && !c.PendingPositionUpdates.Contains(item))
+                            {
+                                c.PendingPositionUpdates.Enqueue(item);
+                            }
                             item.PositionUpdateInterval = 0.0f;                            
                             continue;
                         }
@@ -106,7 +110,7 @@ namespace Barotrauma
             CreateNetworkEvent();
             foreach (Inventory prevInventory in prevItemInventories.Distinct())
             {
-                if (prevInventory != this) prevInventory?.CreateNetworkEvent();
+                if (prevInventory != this) { prevInventory?.CreateNetworkEvent(); }
             }
 
             foreach (Item item in Items.Distinct())

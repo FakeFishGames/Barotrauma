@@ -146,6 +146,7 @@ namespace Barotrauma
             private set;
         }
 
+        // TODO: not used
         [Serialize(10.0f, false)]
         public float Commonness
         {
@@ -241,7 +242,7 @@ namespace Barotrauma
         }
         
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => p.Identifier != "watchman", sync);
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {
@@ -262,7 +263,7 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
+                if (element.Name.ToString().Equals("nojob", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)

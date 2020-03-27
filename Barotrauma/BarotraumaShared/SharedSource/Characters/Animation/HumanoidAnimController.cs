@@ -900,7 +900,7 @@ namespace Barotrauma
 
                 surfaceLimiter = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 0.4f) - surfacePos;
                 surfaceLimiter = Math.Max(1.0f, surfaceLimiter);
-                if (surfaceLimiter > 50.0f) return;
+                if (surfaceLimiter > 50.0f) { return; }
             }
 
             Limb leftHand = GetLimb(LimbType.LeftHand);
@@ -928,8 +928,7 @@ namespace Barotrauma
                 if (!aiming)
                 {
                     float newRotation = MathUtils.VectorToAngle(TargetMovement) - MathHelper.PiOver2;
-                    Collider.SmoothRotate(newRotation, 5.0f);
-                    //torso.body.SmoothRotate(newRotation);                
+                    Collider.SmoothRotate(newRotation, 5.0f * character.SpeedMultiplier);                
                 }
             }
             else
@@ -942,13 +941,13 @@ namespace Barotrauma
                     TargetMovement = new Vector2(0.0f, -0.1f);
 
                     float newRotation = MathUtils.VectorToAngle(diff);
-                    Collider.SmoothRotate(newRotation, 5.0f);
+                    Collider.SmoothRotate(newRotation, 5.0f * character.SpeedMultiplier);
                 }
             }
 
             torso.body.MoveToPos(Collider.SimPosition + new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * 0.4f, 5.0f);
 
-            if (TargetMovement == Vector2.Zero) return;
+            if (TargetMovement == Vector2.Zero) { return; }
 
             movement = MathUtils.SmoothStep(movement, TargetMovement, 0.3f);
 
@@ -1007,7 +1006,7 @@ namespace Barotrauma
 
             var waist = GetLimb(LimbType.Waist);
             footPos = waist == null ? Vector2.Zero : waist.SimPosition - new Vector2((float)Math.Sin(-Collider.Rotation), (float)Math.Cos(-Collider.Rotation)) * (upperLegLength + lowerLegLength);
-            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength) * CurrentSwimParams.LegMoveAmount * CurrentAnimationParams.CycleSpeed, 0.0f);
+            Vector2 transformedFootPos = new Vector2((float)Math.Sin(legCyclePos / CurrentSwimParams.LegCycleLength / character.SpeedMultiplier) * CurrentSwimParams.LegMoveAmount, 0.0f);
             transformedFootPos = Vector2.Transform(transformedFootPos, Matrix.CreateRotationZ(Collider.Rotation));
 
             if (rightFoot != null && !rightFoot.Disabled)
@@ -1061,7 +1060,7 @@ namespace Barotrauma
                 rightHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, rightHandPos.X) : Math.Min(-0.3f, rightHandPos.X);
                 rightHandPos = Vector2.Transform(rightHandPos, rotationMatrix);
 
-                HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.HandMoveStrength);
+                HandIK(rightHand, handPos + rightHandPos, CurrentSwimParams.HandMoveStrength * character.SpeedMultiplier);
             }
 
             if (leftHand != null && !leftHand.Disabled)
@@ -1070,7 +1069,7 @@ namespace Barotrauma
                 leftHandPos.X = (Dir == 1.0f) ? Math.Max(0.3f, leftHandPos.X) : Math.Min(-0.3f, leftHandPos.X);
                 leftHandPos = Vector2.Transform(leftHandPos, rotationMatrix);
 
-                HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.HandMoveStrength);
+                HandIK(leftHand, handPos + leftHandPos, CurrentSwimParams.HandMoveStrength * character.SpeedMultiplier);
             }
         }
 
@@ -1653,7 +1652,10 @@ namespace Barotrauma
         //TODO: refactor this method, it's way too convoluted
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f)
         {
-            if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
+            if (character.Stun > 0.0f || character.IsIncapacitated)
+            {
+                aim = false;
+            }
 
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
@@ -1677,7 +1679,7 @@ namespace Barotrauma
 
             Holdable holdable = item.GetComponent<Holdable>();
 
-            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
 
@@ -1764,7 +1766,7 @@ namespace Barotrauma
 
             if (holdable.Pusher != null)
             {
-                if (character.IsUnconscious || character.Stun > 0.0f)
+                if (character.Stun > 0.0f || character.IsIncapacitated)
                 {
                     holdable.Pusher.Enabled = false;
                 }
@@ -1779,7 +1781,7 @@ namespace Barotrauma
                     else
                     {
                         holdable.Pusher.TargetPosition = currItemPos;
-                        holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
+                        holdable.Pusher.TargetRotation = holdAngle * Dir;
 
                         holdable.Pusher.MoveToTargetPosition(true);
 
@@ -1929,7 +1931,7 @@ namespace Barotrauma
                 float sqrDist = Vector2.DistanceSquared(character.WorldPosition, handWorldPos);
                 if (sqrDist > MathUtils.Pow(ConvertUnits.ToDisplayUnits(upperArmLength + forearmLength), 2))
                 {
-                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false);
+                    TargetMovement = Vector2.Normalize(handWorldPos - character.WorldPosition) * GetCurrentSpeed(false) * Math.Max(character.SpeedMultiplier, 1);
                 }
             }
 

@@ -33,6 +33,8 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
+            msg.Write((byte)State);
+            msg.Write(timeUntilReady);
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(itemIndex, -1, fabricationRecipes.Count - 1);
             UInt16 userID = fabricatedItem == null || user == null ? (UInt16)0 : user.ID;

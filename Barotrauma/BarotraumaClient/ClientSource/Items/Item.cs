@@ -29,14 +29,8 @@ namespace Barotrauma
         private bool editingHUDRefreshPending;
         private float editingHUDRefreshTimer;
 
-        class SpriteState
-        {
-            public float RotationState;
-            public float OffsetState;
-            public bool IsActive = true;
-        }
 
-        private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
+        private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
 
         private Sprite activeSprite;
         public override Sprite Sprite
@@ -160,7 +154,7 @@ namespace Barotrauma
             foreach (var decorativeSprite in ((ItemPrefab)prefab).DecorativeSprites)
             {
                 decorativeSprite.Sprite.EnsureLazyLoaded();
-                spriteAnimState.Add(decorativeSprite, new SpriteState());
+                spriteAnimState.Add(decorativeSprite, new DecorativeSprite.State());
             }
         }
 
@@ -197,8 +191,8 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!Visible || (!editing && HiddenInGame)) return;
-            if (editing && !ShowItems) return;
+            if (!Visible || (!editing && HiddenInGame)) { return; }
+            if (editing && !ShowItems) { return; }
             
             Color color = IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUI.Style.Orange : GetSpriteColor();
             //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
@@ -333,15 +327,6 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                aiTarget?.Draw(spriteBatch);
-                var containedItems = ContainedItems;
-                if (containedItems != null)
-                {
-                    foreach (Item item in containedItems)
-                    {
-                        item.AiTarget?.Draw(spriteBatch);
-                    }
-                }
                 if (body != null)
                 {
                     body.DebugDraw(spriteBatch, Color.White);
@@ -407,46 +392,7 @@ namespace Barotrauma
 
         public void UpdateSpriteStates(float deltaTime)
         {
-            foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
-            {
-                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
-                {
-                    var decorativeSprite = Prefab.DecorativeSpriteGroups[spriteGroup][i];
-                    if (decorativeSprite == null) { continue; }
-                    if (spriteGroup > 0)
-                    {
-                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Count;
-                        if (i != activeSpriteIndex)
-                        {
-                            spriteAnimState[decorativeSprite].IsActive = false;
-                            continue;
-                        }
-                    }
-
-                    //check if the sprite is active (whether it should be drawn or not)
-                    var spriteState = spriteAnimState[decorativeSprite];
-                    spriteState.IsActive = true;
-                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
-                    {
-                        if (!ConditionalMatches(conditional))
-                        {
-                            spriteState.IsActive = false;
-                            break;
-                        }
-                    }
-                    if (!spriteState.IsActive) { continue; }
-
-                    //check if the sprite should be animated
-                    bool animate = true;
-                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
-                    {
-                        if (!ConditionalMatches(conditional)) { animate = false; break; }
-                    }
-                    if (!animate) { continue; }
-                    spriteState.OffsetState += deltaTime;
-                    spriteState.RotationState += deltaTime;
-                }
-            }            
+            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);
         }
 
         public override void UpdateEditing(Camera cam)
@@ -1227,6 +1173,8 @@ namespace Barotrauma
                 }
             }
 
+            byte bodyType = msg.ReadByte();
+
             byte teamID = msg.ReadByte();
             bool tagsChanged = msg.ReadBoolean();
             string tags = "";
@@ -1283,6 +1231,11 @@ namespace Barotrauma
             {
                 ID = itemId
             };
+
+            if (item.body != null)
+            {
+                item.body.BodyType = (BodyType)bodyType;
+            }
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {

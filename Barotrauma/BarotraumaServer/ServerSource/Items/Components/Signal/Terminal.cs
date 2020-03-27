@@ -17,9 +17,10 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(c.Character.LogName + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
+                item.SendSignal(0, newOutputValue, "signal_out", null);
+                item.CreateServerEvent(this);
             }
 
-            item.CreateServerEvent(this);
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)

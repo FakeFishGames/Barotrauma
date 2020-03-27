@@ -8,6 +8,13 @@ namespace Barotrauma
 {
     class DecorativeSprite : ISerializableEntity
     {
+        public class State
+        {
+            public float RotationState;
+            public float OffsetState;
+            public bool IsActive = true;
+        }
+
         public string Name => $"Decorative Sprite";
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
@@ -113,10 +120,10 @@ namespace Barotrauma
             switch (OffsetAnim)
             {
                 case AnimationType.Sine:
-                    offsetState = offsetState % (MathHelper.TwoPi / OffsetAnimSpeed);
+                    offsetState %= (MathHelper.TwoPi / OffsetAnimSpeed);
                     return Offset * (float)Math.Sin(offsetState * OffsetAnimSpeed);
                 case AnimationType.Noise:
-                    offsetState = offsetState % (1.0f / (OffsetAnimSpeed * 0.1f));
+                    offsetState %= (1.0f / (OffsetAnimSpeed * 0.1f));
 
                     float t = offsetState * 0.1f * OffsetAnimSpeed;
                     return new Vector2(
@@ -143,6 +150,51 @@ namespace Barotrauma
                     return rotationRadians * (PerlinNoise.GetPerlin(rotationState * rotationSpeedRadians, rotationState * rotationSpeedRadians) - 0.5f);
                 default:
                     return rotationState * rotationSpeedRadians;
+            }
+        }
+
+        public static void UpdateSpriteStates(Dictionary<int, List<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates, 
+            int entityID, float deltaTime, Func<PropertyConditional,bool> checkConditional)
+        {
+            foreach (int spriteGroup in spriteGroups.Keys)
+            {
+                for (int i = 0; i < spriteGroups.Count; i++)
+                {
+                    var decorativeSprite = spriteGroups[spriteGroup][i];
+                    if (decorativeSprite == null) { continue; }
+                    if (spriteGroup > 0)
+                    {
+                        int activeSpriteIndex = entityID % spriteGroups[spriteGroup].Count;
+                        if (i != activeSpriteIndex)
+                        {
+                            animStates[decorativeSprite].IsActive = false;
+                            continue;
+                        }
+                    }
+
+                    //check if the sprite is active (whether it should be drawn or not)
+                    var spriteState = animStates[decorativeSprite];
+                    spriteState.IsActive = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!checkConditional(conditional))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!checkConditional(conditional)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+                }
             }
         }
 

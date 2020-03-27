@@ -197,6 +197,7 @@ namespace Barotrauma
             if (item.body != null)
             {
                 item.body.Enabled = false;
+                item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
             }
         }
 

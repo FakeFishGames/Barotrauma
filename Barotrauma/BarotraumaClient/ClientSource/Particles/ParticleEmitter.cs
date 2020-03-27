@@ -108,7 +108,8 @@ namespace Barotrauma.Particles
 
         public readonly bool CopyEntityAngle;
 
-        public readonly bool DrawOnTop;
+        public bool DrawOnTop => forceDrawOnTop || ParticlePrefab.DrawOnTop;
+        private readonly bool forceDrawOnTop;
 
         public ParticleEmitterPrefab(XElement element)
         {
@@ -150,6 +151,12 @@ namespace Barotrauma.Particles
             {
                 DistanceMin = DistanceMax = element.GetAttributeFloat("distance", 0.0f);
             }
+            if (DistanceMax < DistanceMin)
+            {
+                var temp = DistanceMin;
+                DistanceMin = DistanceMax;
+                DistanceMax = temp;
+            }
 
             if (element.Attribute("velocity") == null)
             {
@@ -160,13 +167,19 @@ namespace Barotrauma.Particles
             {
                 VelocityMin = VelocityMax = element.GetAttributeFloat("velocity", 0.0f);
             }
+            if (VelocityMax < VelocityMin)
+            {
+                var temp = VelocityMin;
+                VelocityMin = VelocityMax;
+                VelocityMax = temp;
+            }
 
             EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
             ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
             HighQualityCollisionDetection = element.GetAttributeBool("highqualitycollisiondetection", false);
             CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
-            DrawOnTop = element.GetAttributeBool("drawontop", false);
+            forceDrawOnTop = element.GetAttributeBool("drawontop", false);
         }
     }
 }

@@ -46,6 +46,8 @@ namespace Barotrauma.Items.Components
         private float checkConnectedPortsTimer;
         private const float CheckConnectedPortsInterval = 1.0f;
 
+        public DockingPort ActiveDockingSource, DockingTarget;
+
         private Vector2 keyboardInput = Vector2.Zero;
         private float inputCumulation;
 
@@ -665,7 +667,7 @@ namespace Barotrauma.Items.Components
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen)
+                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsInfoFrameOpen)
                 {
                     Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
                     displaySubPos.Y = -displaySubPos.Y;

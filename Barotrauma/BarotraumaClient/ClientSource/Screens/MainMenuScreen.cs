@@ -31,6 +31,7 @@ namespace Barotrauma
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaEnabledBox;
         private GUIDropDown karmaPresetDD;
+        private readonly GUIFrame downloadingModsContainer, enableModsContainer;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
@@ -230,13 +231,31 @@ namespace Barotrauma
             };
 
 #if USE_STEAM
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            var steamWorkshopButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), style: null);
+
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), steamWorkshopButtonContainer.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
                 Enabled = false,
                 UserData = Tab.SteamWorkshop,
                 OnClicked = SelectTab
             };
+
+            downloadingModsContainer = new GUIFrame(new RectTransform(new Vector2(1.4f, 0.9f), steamWorkshopButtonContainer.RectTransform,
+                Anchor.CenterRight, Pivot.CenterLeft)
+            { RelativeOffset = new Vector2(0.3f, 0.0f) },
+                "MainMenuNotifBackground", Color.Yellow)
+            {
+                CanBeFocused = false,
+                UserData = "workshopnotif",
+                Visible = false
+            };
+            new GUITextBlock(new RectTransform(Vector2.One * 0.9f, downloadingModsContainer.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.05f, 0.0f) },
+                TextManager.Get("ModsDownloadingNotif"), Color.Black)
+            {
+                CanBeFocused = false,
+            };
+
 #endif
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -280,11 +299,27 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            var settingsButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), style: null);
+
+            new GUIButton(new RectTransform(Vector2.One, settingsButtonContainer.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
+            };
+            
+            enableModsContainer = new GUIFrame(new RectTransform(new Vector2(1.4f, 0.9f), settingsButtonContainer.RectTransform,
+                Anchor.CenterRight, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.5f, 0.0f) },
+                "MainMenuNotifBackground", Color.Yellow)
+            {
+                CanBeFocused = false,
+                UserData = "settingsnotif",
+                Visible = false
+            };
+            new GUITextBlock(new RectTransform(Vector2.One * 0.9f, enableModsContainer.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.05f, 0.0f) },
+                TextManager.Get("ModsInstalledNotif"), Color.Black)
+            {
+                CanBeFocused = false
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
@@ -401,11 +436,17 @@ namespace Barotrauma
                 GameMain.Client = null;
             }
 
+            GameMain.SubEditorScreen?.ClearBackedUpSubInfo();
             Submarine.Unload();
             
             ResetButtonStates(null);
 
             GameAnalyticsManager.SetCustomDimension01("");
+
+            if (GameMain.SteamWorkshopScreen != null)
+            {
+                CoroutineManager.StartCoroutine(GameMain.SteamWorkshopScreen.RefreshDownloadState());
+            }
 
 #if OSX
             // Hack for adjusting the viewport properly after splash screens on older Macs
@@ -495,12 +536,13 @@ namespace Barotrauma
                     }
                     campaignSetupUI.CreateDefaultSaveName();
                     campaignSetupUI.RandomizeSeed();
-                    campaignSetupUI.UpdateSubList(Submarine.SavedSubmarines);
+                    campaignSetupUI.UpdateSubList(SubmarineInfo.SavedSubmarines);
                     break;
                 case Tab.LoadGame:
                     campaignSetupUI.UpdateLoadMenu();
                     break;
                 case Tab.Settings:
+                    GameMain.MainMenuScreen?.SetEnableModsNotification(false);
                     menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
                     GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
                     GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
@@ -631,12 +673,12 @@ namespace Barotrauma
                 Rand.SetLocalRandom(1);
             }
 
-            Submarine selectedSub = null;
+            SubmarineInfo selectedSub = null;
             string subName = GameMain.Config.QuickStartSubmarineName;
             if (!string.IsNullOrEmpty(subName))
             {
                 DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
-                selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s =>
+                selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s =>
                     s.Name.ToLower() == subName.ToLower());
 
                 if (selectedSub == null)
@@ -647,7 +689,7 @@ namespace Barotrauma
             if (selectedSub == null)
             {
                 DebugConsole.NewMessage("Loading a random sub.", Color.White);
-                var subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
+                var subs = SubmarineInfo.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.Shuttle) && !s.HasTag(SubmarineTag.HideInMenus));
                 selectedSub = subs.ElementAt(Rand.Int(subs.Count()));
             }
             var gamesession = new GameSession(
@@ -682,6 +724,16 @@ namespace Barotrauma
                 gamesession.CrewManager.AddCharacter(newCharacter);
                 Character.Controlled = newCharacter;
             }         
+        }
+
+        public void SetEnableModsNotification(bool visible)
+        {
+            if (enableModsContainer != null) { enableModsContainer.Visible = visible; }
+        }
+
+        public void SetDownloadingModsNotification(bool visible)
+        {
+            if (downloadingModsContainer != null) { downloadingModsContainer.Visible = visible; }
         }
 
         private void ShowTutorialSkipWarning(Tab tabToContinueTo)
@@ -990,7 +1042,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void StartGame(Submarine selectedSub, string saveName, string mapSeed)
+        private void StartGame(SubmarineInfo selectedSub, string saveName, string mapSeed)
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
@@ -1027,7 +1079,7 @@ namespace Barotrauma
                 return;
             }
 
-            selectedSub = new Submarine(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), "");
+            selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
             GameMain.GameSession = new GameSession(selectedSub, saveName,
                 GameModePreset.List.Find(g => g.Identifier == "singleplayercampaign"));
@@ -1072,7 +1124,7 @@ namespace Barotrauma
             var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
                 style: null);
 
-            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, Submarine.SavedSubmarines)
+            campaignSetupUI = new CampaignSetupUI(false, paddedNewGame, paddedLoadGame, SubmarineInfo.SavedSubmarines)
             {
                 LoadGame = LoadGame,
                 StartNewGame = StartGame

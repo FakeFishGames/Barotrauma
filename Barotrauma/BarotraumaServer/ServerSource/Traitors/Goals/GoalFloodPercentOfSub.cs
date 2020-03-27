@@ -23,7 +23,7 @@ namespace Barotrauma
                 var floodingAmount = 0.0f;
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine == null || hull.Submarine.IsOutpost || Traitors.All(traitor => hull.Submarine.TeamID != traitor.Character.TeamID)) { continue; }
+                    if (hull.Submarine == null || hull.Submarine.Info.IsOutpost || Traitors.All(traitor => hull.Submarine.TeamID != traitor.Character.TeamID)) { continue; }
                     if (hull.Submarine == GameMain.Server?.RespawnManager?.RespawnShuttle) { continue; }
                     ++validHullsCount;
                     floodingAmount += hull.WaterVolume / hull.Volume;

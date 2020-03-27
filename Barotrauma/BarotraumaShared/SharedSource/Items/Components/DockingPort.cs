@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
+        public bool MainDockingPort
+        {
+            get;
+            set;
+        }
+
         public DockingPort DockingTarget { get; private set; }
 
         public bool Docked
@@ -173,8 +180,8 @@ namespace Barotrauma.Items.Components
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
             if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
 
-            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.DockedTo.Add(item.Submarine);
-            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.DockedTo.Add(target.item.Submarine);
+            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
+            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
 
             DockingTarget = target;
             DockingTarget.DockingTarget = this;
@@ -234,12 +241,12 @@ namespace Barotrauma.Items.Components
 
                 Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
                 if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                    DockingTarget.item.Submarine.IsOutpost)
+                    DockingTarget.item.Submarine.Info.IsOutpost)
                 {
                     item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
                 }
                 else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                   item.Submarine.IsOutpost)
+                   item.Submarine.Info.IsOutpost)
                 {
                     DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
                 }
@@ -703,8 +710,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnSecondaryUse, 1.0f);
 
-            DockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
-            item.Submarine.DockedTo.Remove(DockingTarget.item.Submarine);
+            DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
+            item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
 
             if (door != null && DockingTarget.door != null)
             {
@@ -951,12 +958,12 @@ namespace Barotrauma.Items.Components
                 if (docked)
                 {
                     if (item.Submarine != null && DockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.LogName + " docked " + item.Submarine.Name + " to " + DockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(sender.LogName + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else
                 {
                     if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.LogName + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(sender.LogName + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
 #endif

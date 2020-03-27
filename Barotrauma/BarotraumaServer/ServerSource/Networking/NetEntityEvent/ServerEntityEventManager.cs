@@ -175,7 +175,7 @@ namespace Barotrauma.Networking
 
                 //UNLESS the character is unconscious, in which case we'll read the messages immediately (because further inputs will be ignored)
                 //atm the "give in" command is the only thing unconscious characters can do, other types of events are ignored
-                if (!bufferedEvent.Character.IsUnconscious &&
+                if (!bufferedEvent.Character.IsIncapacitated &&
                     NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID))
                 {
                     continue;

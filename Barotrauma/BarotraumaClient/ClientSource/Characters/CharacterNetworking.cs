@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -384,6 +385,37 @@ namespace Barotrauma
                 character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
+
+                // Check if the character has a current order
+                if (inc.ReadBoolean())
+                {
+                    int orderPrefabIndex = inc.ReadByte();
+                    Entity targetEntity = FindEntityByID(inc.ReadUInt16());
+                    Character orderGiver = inc.ReadBoolean() ? FindEntityByID(inc.ReadUInt16()) as Character : null;
+                    int orderOptionIndex = inc.ReadByte();
+
+                    if (orderPrefabIndex >= 0 && orderPrefabIndex < Order.PrefabList.Count)
+                    {
+                        var orderPrefab = Order.PrefabList[orderPrefabIndex];
+                        if ((orderPrefab.ItemComponentType == null && orderPrefab.ItemIdentifiers.None()) ||
+                            (targetEntity != null && (targetEntity as Item).Components.Any(c => c?.GetType() == orderPrefab.ItemComponentType)))
+                        {
+                            character.SetOrder(
+                                new Order(orderPrefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(c => c?.GetType() == orderPrefab.ItemComponentType), orderGiver: orderGiver),
+                                orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length ? orderPrefab.Options[orderOptionIndex] : null,
+                                orderGiver, speak: false);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError("Could not set order \"" + orderPrefab.Identifier + "\" for character \"" + character.Name + "\" because required target entity was not found.");
+                        }
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Invalid order prefab index - index (" + orderPrefabIndex + ") out of bounds.");
+                    }
+                }
+
                 bool containsStatusData = inc.ReadBoolean();
                 if (containsStatusData)
                 {

@@ -253,7 +253,7 @@ namespace Barotrauma
 
             jointDir = attachLimb.Dir;
 
-            Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.character.AnimController.RagdollParams.LimbScale;
+            Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.Scale * attachLimb.Params.Ragdoll.LimbScale;
             if (jointDir < 0.0f) transformedLocalAttachPos.X = -transformedLocalAttachPos.X;
 
             //transformedLocalAttachPos = Vector2.Transform(transformedLocalAttachPos, Matrix.CreateRotationZ(attachLimb.Rotation));

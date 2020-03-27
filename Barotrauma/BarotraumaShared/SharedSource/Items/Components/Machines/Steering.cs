@@ -165,7 +165,6 @@ namespace Barotrauma.Items.Components
 
         #region Docking
         public List<DockingPort> DockingSources = new List<DockingPort>();
-        public DockingPort ActiveDockingSource, DockingTarget;
         private bool searchedConnectedDockingPort;
 
         private bool dockingModeEnabled;
@@ -200,7 +199,7 @@ namespace Barotrauma.Items.Components
             if (dockingConnection != null)
             {
                 var connectedPorts = item.GetConnectedComponentsRecursive<DockingPort>(dockingConnection);
-                DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.IsOutpost));
+                DockingSources.AddRange(connectedPorts.Where(p => p.Item.Submarine != null && !p.Item.Submarine.Info.IsOutpost));
             }
         }
         #endregion
@@ -344,6 +343,7 @@ namespace Barotrauma.Items.Components
                 autopilotRecalculatePathTimer = RecalculatePathInterval;
             }
 
+            if (steeringPath == null) { return; }
             steeringPath.CheckProgress(ConvertUnits.ToSimUnits(controlledSub.WorldPosition), 10.0f);
 
             if (autopilotRayCastTimer <= 0.0f && steeringPath.NextNode != null)
@@ -475,6 +475,8 @@ namespace Barotrauma.Items.Components
 
         private void UpdatePath()
         {
+            if (Level.Loaded == null) { return; }
+            
             if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
 
             Vector2 target;
@@ -536,7 +538,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private bool aiDockingToggled;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (objective.Override)
@@ -572,7 +573,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigateback":
-                    if (!aiDockingToggled && DockingSources.Any(d => d.Docked))
+                    if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal(0, "1", "toggle_docking", sender: null);
                     }
@@ -586,7 +587,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigatetodestination":
-                    if (!aiDockingToggled && DockingSources.Any(d => d.Docked))
+                    if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal(0, "1", "toggle_docking", sender: null);
                     }

@@ -45,12 +45,17 @@ namespace Barotrauma
 
         public float QuickUseTimer;
         public string QuickUseButtonToolTip;
+        public bool IsMoving = false;
 
+        private static Rectangle offScreenRect = new Rectangle(new Point(-1000, 0), Point.Zero);
         public GUIComponent.ComponentState EquipButtonState;
         public Rectangle EquipButtonRect
         {
             get
             {
+                // Returns a point off-screen, Rectangle.Empty places buttons in the top left of the screen
+                if (IsMoving) return offScreenRect;
+
                 int buttonDir = Math.Sign(SubInventoryDir);
 
                 float sizeY = Inventory.UnequippedIndicator.size.Y * Inventory.UIScale * Inventory.IndicatorScaleAdjustment;
@@ -284,6 +289,7 @@ namespace Barotrauma
         }
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
+        private static List<SlotReference> subInventorySlotsToDraw = new List<SlotReference>();
 
         protected static SlotReference selectedSlot;
 
@@ -1048,11 +1054,14 @@ namespace Barotrauma
             return hoverArea;
         }
 
+
         public static void DrawFront(SpriteBatch spriteBatch)
         {
-            if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) return;
+            if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) { return; }
 
-            foreach (var slot in highlightedSubInventorySlots)
+            subInventorySlotsToDraw.Clear();
+            subInventorySlotsToDraw.AddRange(highlightedSubInventorySlots);
+            foreach (var slot in subInventorySlotsToDraw)
             {
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
                 if (slotIndex > -1 && slotIndex < slot.ParentInventory.slots.Length)
@@ -1136,11 +1145,11 @@ namespace Barotrauma
                 /*if (inventory != null && (CharacterInventory.PersonalSlots.HasFlag(type) || (inventory.isSubInventory && (inventory.Owner as Item) != null 
                     && (inventory.Owner as Item).AllowedSlots.Any(a => CharacterInventory.PersonalSlots.HasFlag(a)))))
                 {
-                    slotColor = slot.IsHighlighted ? GUIColorSettings.EquipmentSlotColor : GUIColorSettings.EquipmentSlotColor * 0.8f;
+                    slotColor = slot.IsHighlighted ? GUI.Style.EquipmentSlotColor : GUI.Style.EquipmentSlotColor * 0.8f;
                 }
                 else
                 {
-                    slotColor = slot.IsHighlighted ? GUIColorSettings.InventorySlotColor : GUIColorSettings.InventorySlotColor * 0.8f;
+                    slotColor = slot.IsHighlighted ? GUI.Style.InventorySlotColor : GUI.Style.InventorySlotColor * 0.8f;
                 }*/
 
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
@@ -1199,13 +1208,15 @@ namespace Barotrauma
                             dir < 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
                         containedIndicatorArea.Inflate(-4, 0);
 
+                        Color backgroundColor = GUI.Style.ColorInventoryBackground;
+
                         if (itemContainer.ContainedStateIndicator?.Texture == null)
                         {
                             containedIndicatorArea.Inflate(0, -2);
-                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, Color.Gray * 0.9f, true);
+                            GUI.DrawRectangle(spriteBatch, containedIndicatorArea, backgroundColor, true);
                             GUI.DrawRectangle(spriteBatch,
                                 new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
-                                ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.LightGreen) * 0.8f, true);
+                                ToolBox.GradientLerp(containedState, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull) * 0.8f, true);
                             GUI.DrawLine(spriteBatch, 
                                 new Vector2(containedIndicatorArea.X + (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Y),
                                 new Vector2(containedIndicatorArea.X + (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Bottom),
@@ -1224,12 +1235,12 @@ namespace Barotrauma
                             }
 
                             indicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
-                                (inventory != null && inventory.Locked) ? Color.Gray * 0.5f : Color.Gray * 0.9f,
+                                (inventory != null && inventory.Locked) ? backgroundColor * 0.5f : backgroundColor,
                                 origin: indicatorSprite.size / 2,
                                 rotate: 0.0f,
                                 scale: indicatorScale);
 
-                            Color indicatorColor = ToolBox.GradientLerp(containedState, Color.Red, Color.Orange, Color.LightGreen);
+                            Color indicatorColor = ToolBox.GradientLerp(containedState, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull);
                             if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
 
                             spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),

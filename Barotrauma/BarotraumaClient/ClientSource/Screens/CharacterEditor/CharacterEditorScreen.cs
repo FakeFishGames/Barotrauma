@@ -119,8 +119,8 @@ namespace Barotrauma.CharacterEditor
             if (Submarine.MainSub == null)
             {
                 ResetVariables();
-                Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
-                Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
+                var subInfo = new SubmarineInfo("Content/AnimEditor.sub");
+                Submarine.MainSub = new Submarine(subInfo);
                 Submarine.MainSub.PhysicsBody.Enabled = false;
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
                 CloneWalls();
@@ -3347,6 +3347,7 @@ namespace Barotrauma.CharacterEditor
 
             void CreateCloseButton(SerializableEntityEditor editor, Action onButtonClicked, float size = 1)
             {
+                if (editor == null) { return; }
                 int height = 30;
                 var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(height * size * GUI.yScale)), editor.RectTransform, isFixedSize: true), style: null)
                 {
@@ -3366,6 +3367,7 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButtonAtLast(ParamsEditor editor, Action onButtonClicked, string text)
             {
+                if (editor == null) { return; }
                 var parentFrame = new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, (int)(50 * GUI.yScale)), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
                 {
                     CanBeFocused = false
@@ -3383,6 +3385,7 @@ namespace Barotrauma.CharacterEditor
 
             void CreateAddButton(SerializableEntityEditor editor, Action onButtonClicked, string text)
             {
+                if (editor == null) { return; }
                 var parent = new GUIFrame(new RectTransform(new Point(editor.Rect.Width, (int)(60 * GUI.yScale)), editor.RectTransform), style: null)
                 {
                     CanBeFocused = false
@@ -4386,7 +4389,7 @@ namespace Barotrauma.CharacterEditor
                                 ResetParamsEditor();
                             }
                             limb.PullJointWorldAnchorA = ScreenToSim(PlayerInput.MousePosition);
-                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.Params.Ragdoll.LimbScale));
+                            TryUpdateLimbParam(limb, "pullpos", ConvertUnits.ToDisplayUnits(limb.PullJointLocalAnchorA / limb.Params.Scale / limb.Params.Ragdoll.LimbScale));
                             GUI.DrawLine(spriteBatch, SimToScreen(limb.SimPosition), tformedPullPos, Color.MediumPurple);
                         });
                     }
@@ -4469,7 +4472,7 @@ namespace Barotrauma.CharacterEditor
                                 if (joint.BodyA == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorA += input;
-                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale);
+                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / joint.Scale);
                                     TryUpdateJointParam(joint, "limb1anchor", transformedValue);
                                     // Snap all selected joints to the first selected
                                     if (copyJointSettings)
@@ -4484,7 +4487,7 @@ namespace Barotrauma.CharacterEditor
                                 else if (joint.BodyB == limb.body.FarseerBody)
                                 {
                                     joint.LocalAnchorB += input;
-                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale);
+                                    Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / joint.Scale);
                                     TryUpdateJointParam(joint, "limb2anchor", transformedValue);
                                     // Snap all selected joints to the first selected
                                     if (copyJointSettings)
@@ -4504,12 +4507,12 @@ namespace Barotrauma.CharacterEditor
                                         if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
                                         {
                                             otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale));
+                                            TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / joint.Scale));
                                         }
                                         else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
                                         {
                                             otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale));
+                                            TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / joint.Scale));
                                         }
                                     });
                                 }
@@ -4873,10 +4876,10 @@ namespace Barotrauma.CharacterEditor
                                         {
                                             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
                                             float multiplier = 0.85f;
-                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * RagdollParams.LimbScale * RagdollParams.TextureScale * multiplier);
-                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / RagdollParams.LimbScale / RagdollParams.TextureScale));
-                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / RagdollParams.LimbScale / RagdollParams.TextureScale));
-                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * l.Scale * RagdollParams.TextureScale * multiplier);
+                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                         }
                                         void RecalculateOrigin(Limb l)
                                         {
@@ -4963,7 +4966,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     continue;
                 }
-                Vector2 tformedJointPos = jointPos = jointPos / RagdollParams.JointScale / limb.TextureScale * spriteSheetZoom;
+                Vector2 tformedJointPos = jointPos = jointPos / joint.Scale / limb.TextureScale * spriteSheetZoom;
                 tformedJointPos.Y = -tformedJointPos.Y;
                 tformedJointPos.X *= character.AnimController.Dir;
                 tformedJointPos += limbScreenPos;
@@ -4991,11 +4994,11 @@ namespace Barotrauma.CharacterEditor
                         Vector2 input = ConvertUnits.ToSimUnits(scaledMouseSpeed);
                         input.Y = -input.Y;
                         input.X *= character.AnimController.Dir;
-                        input *= RagdollParams.JointScale * limb.TextureScale / spriteSheetZoom;
+                        input *= joint.Scale * limb.TextureScale / spriteSheetZoom;
                         if (joint.BodyA == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorA += input;
-                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale);
+                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / joint.Scale);
                             TryUpdateJointParam(joint, "limb1anchor", transformedValue);
                             // Snap all selected joints to the first selected
                             if (copyJointSettings)
@@ -5010,7 +5013,7 @@ namespace Barotrauma.CharacterEditor
                         else if (joint.BodyB == limb.body.FarseerBody)
                         {
                             joint.LocalAnchorB += input;
-                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale);
+                            Vector2 transformedValue = ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / joint.Scale);
                             TryUpdateJointParam(joint, "limb2anchor", transformedValue);
                             // Snap all selected joints to the first selected
                             if (copyJointSettings)
@@ -5029,12 +5032,12 @@ namespace Barotrauma.CharacterEditor
                                 if (joint.BodyA == limb.body.FarseerBody && otherJoint.BodyA == otherLimb.body.FarseerBody)
                                 {
                                     otherJoint.LocalAnchorA = joint.LocalAnchorA;
-                                    TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / RagdollParams.JointScale));
+                                    TryUpdateJointParam(otherJoint, "limb1anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorA / joint.Scale));
                                 }
                                 else if (joint.BodyB == limb.body.FarseerBody && otherJoint.BodyB == otherLimb.body.FarseerBody)
                                 {
                                     otherJoint.LocalAnchorB = joint.LocalAnchorB;
-                                    TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / RagdollParams.JointScale));
+                                    TryUpdateJointParam(otherJoint, "limb2anchor", ConvertUnits.ToDisplayUnits(joint.LocalAnchorB / joint.Scale));
                                 }
                             });
                         }

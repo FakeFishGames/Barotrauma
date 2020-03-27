@@ -1,50 +1,46 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml.Linq;
+using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
     class MonsterEvent : ScriptedEvent
     {
-        private string speciesName;
-
-        private int minAmount, maxAmount;
-
+        private readonly string speciesName;
+        private readonly int minAmount, maxAmount;
         private List<Character> monsters;
 
-        private bool spawnDeep;
+        private readonly bool spawnDeep;
 
         private Vector2? spawnPos;
 
-        private bool disallowed;
-                
-        private Level.PositionType spawnPosType;
+        private readonly bool disallowed;
+
+        private readonly Level.PositionType spawnPosType;
 
         private bool spawnPending;
 
-        private string characterFileName;
-        
         public override Vector2 DebugDrawPos
         {
-            get { return spawnPos.HasValue ? spawnPos.Value : Vector2.Zero; }
+            get { return spawnPos ?? Vector2.Zero; }
         }
-        
+
         public override string ToString()
         {
             if (maxAmount <= 1)
             {
-                return "MonsterEvent (" + characterFileName + ")";
+                return "MonsterEvent (" + speciesName + ")";
             }
             else if (minAmount < maxAmount)
             {
-                return "MonsterEvent (" + characterFileName + " x" + minAmount + "-" + maxAmount + ")";
+                return "MonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
             }
             else
             {
-                return "MonsterEvent (" + characterFileName + " x" + maxAmount + ")";
+                return "MonsterEvent (" + speciesName + " x" + maxAmount + ")";
             }
         }
 
@@ -76,7 +72,6 @@ namespace Barotrauma
             }
 
             spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
-            characterFileName = Path.GetFileName(Path.GetDirectoryName(speciesName)).ToLower();
 
             if (GameMain.NetworkMember != null)
             {
@@ -85,7 +80,10 @@ namespace Barotrauma
 
                 if (!string.IsNullOrWhiteSpace(tryKey))
                 {
-                    if (!GameMain.NetworkMember.ServerSettings.MonsterEnabled[tryKey]) disallowed = true; //spawn was disallowed by host
+                    if (!GameMain.NetworkMember.ServerSettings.MonsterEnabled[tryKey])
+                    {
+                        disallowed = true; //spawn was disallowed by host
+                    }
                 }
             }
         }
@@ -106,18 +104,8 @@ namespace Barotrauma
 
         public override bool CanAffectSubImmediately(Level level)
         {
-            float maxRange = Items.Components.Sonar.DefaultSonarRange * 0.8f;
-
-            List<Vector2> positions = GetAvailableSpawnPositions();
-            foreach (Vector2 position in positions)
-            {
-                if (Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition) < maxRange * maxRange)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            float maxRange = Sonar.DefaultSonarRange * 0.8f;
+            return GetAvailableSpawnPositions().Any(p => Vector2.DistanceSquared(p.Position.ToVector2(), Submarine.MainSub.WorldPosition) < maxRange * maxRange);
         }
 
         public override void Init(bool affectSubImmediately)
@@ -128,28 +116,44 @@ namespace Barotrauma
             }
         }
 
-        private List<Vector2> GetAvailableSpawnPositions()
+        private List<Level.InterestingPosition> GetAvailableSpawnPositions()
         {
-            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType));
-
-            List<Vector2> positions = new List<Vector2>();
-            foreach (var allowedPosition in availablePositions)
+            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType) && !Level.Loaded.UsedPositions.Contains(p));
+            var removals = new List<Level.InterestingPosition>();
+            foreach (var position in availablePositions)
             {
-                if (Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(allowedPosition.Position.ToVector2())))) { continue; }
-                positions.Add(allowedPosition.Position.ToVector2());
-            }
-
-            if (spawnDeep)
-            {
-                for (int i = 0; i < positions.Count; i++)
+                if (position.Submarine != null)
                 {
-                    positions[i] = new Vector2(positions[i].X, positions[i].Y - Level.Loaded.Size.Y);
+                    if (position.Submarine.ThalamusAI != null && position.Submarine.ThalamusAI.IsAlive)
+                    {
+                        removals.Add(position);
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+                if (position.PositionType != Level.PositionType.MainPath) { continue; }
+                if (Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(position.Position.ToVector2()))))
+                {
+                    removals.Add(position);
+                }
+                if (spawnDeep)
+                {
+                    for (int i = 0; i < availablePositions.Count; i++)
+                    {
+                        var pos = availablePositions[i].Position;
+                        pos = new Point(pos.X, pos.Y - Level.Loaded.Size.Y);
+                        availablePositions[i] = new Level.InterestingPosition(pos, availablePositions[i].PositionType);
+                    }
+                }
+                if (position.Position.Y < Level.Loaded.GetBottomPosition(position.Position.X).Y)
+                {
+                    removals.Add(position);
                 }
             }
-
-            positions.RemoveAll(pos => pos.Y < Level.Loaded.GetBottomPosition(pos.X).Y);
-            
-            return positions;
+            removals.ForEach(r => availablePositions.Remove(r));         
+            return availablePositions;
         }
 
         private void FindSpawnPosition(bool affectSubImmediately)
@@ -158,67 +162,98 @@ namespace Barotrauma
 
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
-            if (affectSubImmediately && spawnPosType != Level.PositionType.Ruin)
+            var chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
+            var removedPositions = new List<Level.InterestingPosition>();
+            foreach (var position in availablePositions)
             {
-                if (availablePositions.Count == 0)
+                if (Rand.Value(Rand.RandSync.Server) > prefab.SpawnProbability)
+                {
+                    removedPositions.Add(position);
+                    if (prefab.AllowOnlyOnce)
+                    {
+                        Level.Loaded.UsedPositions.Add(position);
+                    }
+                }
+            }
+            removedPositions.ForEach(p => availablePositions.Remove(p));
+            bool isSubOrWreck = spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Wreck;
+            if (affectSubImmediately && !isSubOrWreck)
+            {
+                if (availablePositions.None())
                 {
                     //no suitable position found, disable the event
                     Finished();
                     return;
                 }
-
                 float closestDist = float.PositiveInfinity;
                 //find the closest spawnposition that isn't too close to any of the subs
-                foreach (Vector2 position in availablePositions)
+                foreach (var position in availablePositions)
                 {
-                    float dist = Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition);
+                    Vector2 pos = position.Position.ToVector2();
+                    float dist = Vector2.DistanceSquared(pos, Submarine.MainSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.IsOutpost) { continue; }
+                        if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist > minDistToSub * minDistToSub && dist < closestDist)
                         {
                             closestDist = dist;
-                            spawnPos = position;
+                            chosenPosition = position;
                         }
                     }
                 }
-
                 //only found a spawnpos that's very far from the sub, pick one that's closer
                 //and wait for the sub to move further before spawning
                 if (closestDist > 15000.0f * 15000.0f)
                 {
-                    foreach (Vector2 position in availablePositions)
+                    foreach (var position in availablePositions)
                     {
-                        float dist = Vector2.DistanceSquared(position, Submarine.MainSub.WorldPosition);
+                        float dist = Vector2.DistanceSquared(position.Position.ToVector2(), Submarine.MainSub.WorldPosition);
                         if (dist < closestDist)
                         {
                             closestDist = dist;
-                            spawnPos = position;
+                            chosenPosition = position;
                         }
                     }
                 }
             }
             else
             {
-                float minDist = spawnPosType == Level.PositionType.Ruin ? 0.0f : 20000.0f;
-                availablePositions.RemoveAll(p => Vector2.Distance(Submarine.MainSub.WorldPosition, p) < minDist);
-                if (availablePositions.Count == 0)
+                if (!isSubOrWreck)
+                {
+                    float minDistance = 20000;
+                    availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
+                }
+                if (availablePositions.None())
                 {
                     //no suitable position found, disable the event
                     Finished();
                     return;
                 }
-
-                spawnPos = availablePositions[Rand.Int(availablePositions.Count, Rand.RandSync.Server)];
+                chosenPosition = availablePositions.GetRandom();
             }
-            spawnPending = true;
+            if (chosenPosition.IsValid)
+            {
+                spawnPos = chosenPosition.Position.ToVector2();
+                if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
+                {
+                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, useSyncedRand: false);
+                    if (spawnPoint != null)
+                    {
+                        spawnPos = spawnPoint.WorldPosition;
+                    }
+                }
+                spawnPending = true;
+                if (prefab.AllowOnlyOnce)
+                {
+                    Level.Loaded.UsedPositions.Add(chosenPosition);
+                }
+            }
         }
 
         private float GetMinDistanceToSub(Submarine submarine)
         {
-            //9000 units is slightly less than the default range of the sonar
-            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), 9000.0f);
+            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), Sonar.DefaultSonarRange * 0.9f);
         }
 
         public override void Update(float deltaTime)
@@ -243,9 +278,38 @@ namespace Barotrauma
                 //wait until there are no submarines at the spawnpos
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    if (submarine.IsOutpost) { continue; }
+                    if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                     float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) return;
+                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                }
+
+                //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
+                //unnecessary monsters in places the players might never visit during the round
+                if (spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Cave || spawnPosType == Level.PositionType.Wreck)
+                {
+                    bool someoneNearby = false;
+                    float minDist = Sonar.DefaultSonarRange * 0.8f;
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist)
+                        {
+                            someoneNearby = true;
+                            break;
+                        }
+                    }
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c == Character.Controlled || c.IsRemotePlayer)
+                        {
+                            if (Vector2.DistanceSquared(c.WorldPosition, spawnPos.Value) < minDist * minDist)
+                            {
+                                someoneNearby = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!someoneNearby) { return; }
                 }
 
                 spawnPending = false;
@@ -280,7 +344,7 @@ namespace Barotrauma
 
             Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
 #if CLIENT
-            if (Character.Controlled != null) targetEntity = (Entity)Character.Controlled;
+            if (Character.Controlled != null) { targetEntity = Character.Controlled; }
 #endif
             
             bool monstersDead = true;
@@ -297,7 +361,7 @@ namespace Barotrauma
                 }
             }
 
-            if (monstersDead) Finished();
+            if (monstersDead) { Finished(); }
         }
     }
 }

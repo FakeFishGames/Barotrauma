@@ -1,0 +1,15 @@
+CXX=clang++
+CXXFLAGS= -std=c++11 -O3 -fPIC -Wall -I../libvpx_x64_macos -I../libwebm_x64_macos -I../opus/include
+
+
+webm_mem_playback_x64: Exports.o AudioDecoder.o Video.o
+	$(CXX) $(CXXFLAGS) -shared -L../opus_x64_macos/.libs/ -L../libvpx_x64_macos/ -L../libwebm_x64_macos/ -Wl -lopus -lvpx -lwebm -lpthread -Wl -o libwebm_mem_playback_x64.dylib Exports.o AudioDecoder.o Video.o
+
+Exports.o: Exports.cpp Exports.h Video.h
+	$(CXX) $(CXXFLAGS) -c Exports.cpp
+
+Video.o: Video.cpp AudioDecoder.h Video.h
+	$(CXX) $(CXXFLAGS) -c Video.cpp
+
+AudioDecoder.o: AudioDecoder.cpp AudioDecoder.h
+	$(CXX) $(CXXFLAGS) -c AudioDecoder.cpp

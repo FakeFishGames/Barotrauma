@@ -206,6 +206,12 @@ namespace Barotrauma
         {
             lock (mutex)
             {
+                if (textPacks == null)
+                {
+                    DebugConsole.ThrowError($"Failed to get the text \"{textTag}\" (no text packs loaded).");
+                    return textTag;
+                }
+
                 if (!textPacks.ContainsKey(Language))
                 {
                     DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");
@@ -215,6 +221,13 @@ namespace Barotrauma
                         throw new Exception("No text packs available in English!");
                     }
                 }
+
+#if DEBUG
+                if (GameMain.Config != null && GameMain.Config.TextManagerDebugModeEnabled)
+                {
+                    return textTag;
+                }
+#endif
 
                 foreach (TextPack textPack in textPacks[Language])
                 {

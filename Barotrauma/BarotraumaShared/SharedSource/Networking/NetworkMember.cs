@@ -22,6 +22,8 @@ namespace Barotrauma.Networking
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
 
+        REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
+
         ERROR           //tell the server that an error occurred
     }
     enum ClientNetObject
@@ -60,6 +62,7 @@ namespace Barotrauma.Networking
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
+        STARTGAMEFINALIZE,  //finalize round initialization
         ENDGAME,
 
         TRAITOR_MESSAGE,

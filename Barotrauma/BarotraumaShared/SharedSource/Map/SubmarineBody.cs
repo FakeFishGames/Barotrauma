@@ -521,9 +521,16 @@ namespace Barotrauma
             Vector2 normalizedVel = character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
                 Vector2.Zero : Vector2.Normalize(character.AnimController.Collider.LinearVelocity);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
+            //try to find the hull right next to the contact point
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal * 0.1f);
             Hull newHull = Hull.FindHull(targetPos, null);
-
+            //not found, try searching a bit further
+            if (newHull == null)
+            {
+                targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
+                newHull = Hull.FindHull(targetPos, null);
+            }
+            //still not found, try searching in the direction the character is heading to
             if (newHull == null)
             {
                 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
@@ -771,7 +778,7 @@ namespace Barotrauma
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-                if (!submarine.IsOutpost && !submarine.DockedTo.Any(s => s.IsOutpost))
+                if (submarine.Info.Type == SubmarineInfo.SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineInfo.SubmarineType.Player))
                 {
                     float angularVelocity = 
                         (impactPos.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 

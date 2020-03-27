@@ -17,7 +17,7 @@ namespace Barotrauma
     public enum LimbType
     {
         None, LeftHand, RightHand, LeftArm, RightArm, LeftForearm, RightForearm,
-        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist
+        LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, Jaw
     };
     
     partial class LimbJoint : RevoluteJoint
@@ -27,6 +27,8 @@ namespace Barotrauma
         public readonly JointParams Params;
         public readonly Ragdoll ragdoll;
         public readonly Limb LimbA, LimbB;
+
+        public float Scale => Params.Scale * ragdoll.RagdollParams.JointScale;
 
         public LimbJoint(Limb limbA, Limb limbB, JointParams jointParams, Ragdoll ragdoll) : this(limbA, limbB, Vector2.One, Vector2.One)
         {
@@ -59,15 +61,15 @@ namespace Barotrauma
             }
             if (ragdoll.IsFlipped)
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Params.Ragdoll.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Params.Ragdoll.JointScale);
+                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Scale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Scale);
                 UpperLimit = MathHelper.ToRadians(-Params.LowerLimit);
                 LowerLimit = MathHelper.ToRadians(-Params.UpperLimit);
             }
             else
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Params.Ragdoll.JointScale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Params.Ragdoll.JointScale);
+                LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Scale);
+                LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Scale);
                 UpperLimit = MathHelper.ToRadians(Params.UpperLimit);
                 LowerLimit = MathHelper.ToRadians(Params.LowerLimit);
             }
@@ -125,9 +127,29 @@ namespace Barotrauma
         private Direction dir;
 
         public int HealthIndex => Params.HealthIndex;
-        public float Scale => Params.Ragdoll.LimbScale;
+        public float Scale => Params.Scale * Params.Ragdoll.LimbScale;
         public float AttackPriority => Params.AttackPriority;
-        public bool DoesFlip => Params.Flip;
+        public bool DoesFlip
+        {
+            get
+            {
+                if (character.AnimController.CurrentAnimationParams is GroundedMovementParams)
+                {
+                    switch (type)
+                    {
+                        case LimbType.LeftFoot:
+                        case LimbType.LeftLeg:
+                        case LimbType.LeftThigh:
+                        case LimbType.RightFoot:
+                        case LimbType.RightLeg:
+                        case LimbType.RightThigh:
+                            // Legs always has to flip
+                            return true;
+                    }
+                }
+                return Params.Flip;
+            }
+        }
 
         public float SteerForce => Params.SteerForce;
         
@@ -654,32 +676,36 @@ namespace Barotrauma
             }
 
             Vector2 diff = attackSimPos - SimPosition;
-            bool applyForces = (!attack.ApplyForcesOnlyOnce || !wasRunning) && diff.LengthSquared() > 0.00001f;
+            bool applyForces = !attack.ApplyForcesOnlyOnce || !wasRunning;
             if (applyForces)
             {
-
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
                 {
                     foreach (int limbIndex in attack.ForceOnLimbIndices)
                     {
-                        if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) continue;
-
+                        if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) { continue; }
                         Limb limb = character.AnimController.Limbs[limbIndex];
-                        limb.body.ApplyTorque(limb.Mass * character.AnimController.Dir * attack.Torque);
+                        diff = attackSimPos - limb.SimPosition;
+                        if (diff == Vector2.Zero) { continue; }
+                        limb.body.ApplyTorque(limb.Mass * character.AnimController.Dir * attack.Torque * limb.Params.AttackForceMultiplier);
                         Vector2 forcePos = limb.pullJoint == null ? limb.body.SimPosition : limb.pullJoint.WorldAnchorA;
-                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), forcePos,
-                            maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        limb.body.ApplyLinearImpulse(limb.Mass * attack.Force * limb.Params.AttackForceMultiplier * Vector2.Normalize(diff), forcePos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     }
                 }
-                else
+                else if (diff != Vector2.Zero)
                 {
-                    body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque);
+                    body.ApplyTorque(Mass * character.AnimController.Dir * attack.Torque * Params.AttackForceMultiplier);
                     Vector2 forcePos = pullJoint == null ? body.SimPosition : pullJoint.WorldAnchorA;
-                    body.ApplyLinearImpulse(
-                        Mass * attack.Force * Vector2.Normalize(attackSimPos - SimPosition), 
-                        forcePos, 
-                        maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    body.ApplyLinearImpulse(Mass * attack.Force * Params.AttackForceMultiplier * Vector2.Normalize(diff), forcePos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
+            }
+            Vector2 forceWorld = attack.CalculateAttackPhase(attack.RootTransitionEasing);
+            forceWorld.X *= character.AnimController.Dir;
+            character.AnimController.MainLimb.body.ApplyLinearImpulse(character.Mass * forceWorld, character.SimPosition, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            if (!attack.IsRunning)
+            {
+                // Set the main collider where the body lands after the attack
+                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: 0);
             }
             return wasHit;
         }

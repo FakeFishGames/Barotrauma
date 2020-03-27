@@ -33,6 +33,8 @@ namespace Barotrauma
 
         private bool resetPriority;
 
+        public override float GetPriority() => Priority;
+
         public override void Update(float deltaTime)
         {
             if (resetPriority)
@@ -252,7 +254,7 @@ namespace Barotrauma
                 else
                 {
                     // Outside
-                    if (hull.RoomName != null && hull.RoomName.ToLowerInvariant().Contains("airlock"))
+                    if (hull.RoomName != null && hull.RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
                     {
                         hullSafety = 100;
                     }

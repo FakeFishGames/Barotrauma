@@ -11,7 +11,18 @@ namespace Barotrauma.Particles
 
         public string OriginalName { get { return Name; } }
 
-        public string Identifier { get { return Name.ToLowerInvariant(); } }
+        private string _identifier;
+        public string Identifier
+        {
+            get
+            {
+                if (_identifier == null)
+                {
+                    _identifier = Name.ToLowerInvariant();
+                }
+                return _identifier;
+            }
+        }
 
         public string FilePath { get; private set; }
 
@@ -46,7 +57,7 @@ namespace Barotrauma.Particles
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "sprite")
+                if (subElement.Name.ToString().Equals("sprite", StringComparison.OrdinalIgnoreCase))
                 {
                     Sprites.Add(new Sprite(subElement));             
                 }

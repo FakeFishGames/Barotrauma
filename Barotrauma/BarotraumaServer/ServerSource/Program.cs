@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 #endregion
 
@@ -17,53 +18,63 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
+#if LINUX
+        /// <summary>
+        /// Sets the required environment variables for the game to initialize Steamworks correctly.
+        /// </summary>
+        [DllImport("linux_steam_env", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void setLinuxEnv();
+#endif
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
-            GameMain game = null;
-
 #if !DEBUG
-            try
-            {
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
 #endif
-                Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
-                    " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
 
-                game = new GameMain(args);
-
-                game.Run();
-                if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
-                SteamManager.ShutDown();
-#if !DEBUG
-            }
-            catch (Exception e)
-            {
-                CrashDump(game, "servercrashreport.log", e);
-                GameMain.Server?.NotifyCrash();
-            }
+#if LINUX
+            setLinuxEnv();
 #endif
+            Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
+                " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+
+            Game = new GameMain(args);
+
+            Game.Run();
+            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            SteamManager.ShutDown();
         }
-        
-        static void CrashDump(GameMain game, string filePath, Exception exception)
+
+        static GameMain Game;
+
+        private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
             try
             {
-                GameMain.Server?.ServerSettings?.SaveSettings();
-                GameMain.Server?.ServerSettings?.BanList.Save();
-                if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
-                {
-                    GameMain.Server?.KarmaManager?.SaveCustomPreset();
-                    GameMain.Server?.KarmaManager?.Save();
-                }
+                Game?.Exit();
+                CrashDump("servercrashreport.log", (Exception)args.ExceptionObject);
+                GameMain.Server?.NotifyCrash();
             }
-            //gotta catch them all, we don't want to crash while writing a crash report
-            catch (Exception e)
+            catch
             {
-                string errorMsg = "Exception thrown while writing a crash report: " + e.Message + "\n" + e.StackTrace;
-                GameAnalyticsManager.AddErrorEventOnce("CrashDump:FailedToSaveSettings", EGAErrorSeverity.Error, errorMsg);
+                //exception handler is broken, we have a serious problem here!!
+                return;
+            }
+        }
+
+        static void CrashDump(string filePath, Exception exception)
+        {
+            GameMain.Server?.ServerSettings?.SaveSettings();
+            GameMain.Server?.ServerSettings?.BanList.Save();
+            if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
+            {
+                GameMain.Server?.KarmaManager?.SaveCustomPreset();
+                GameMain.Server?.KarmaManager?.Save();
             }
 
             int existingFiles = 0;
@@ -81,11 +92,13 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
-            sb.AppendLine("Game version " + GameMain.Version +
-            " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
-            sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+            if (GameMain.SelectedPackages != null)
+            {
+                sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+            }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
-            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
+            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
 
             if (GameMain.Server != null)

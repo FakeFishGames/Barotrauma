@@ -524,23 +524,9 @@ namespace Barotrauma
             };
         }
 
-        private float GetEasing(TransitionMode easing, float t)
-        {
-            return easing switch
-            {
-                TransitionMode.Smooth => MathUtils.SmoothStep(t),
-                TransitionMode.Smoother => MathUtils.SmootherStep(t),
-                TransitionMode.EaseIn => MathUtils.EaseIn(t),
-                TransitionMode.EaseOut => MathUtils.EaseOut(t),
-                TransitionMode.Exponential => t * t,
-                TransitionMode.Linear => t,
-                _ => t,
-            };
-        }
-
         protected Color GetBlendedColor(Color targetColor, ref Color blendedColor)
         {
-            blendedColor = ColorCrossFadeTime > 0 ? Color.Lerp(blendedColor, targetColor, MathUtils.InverseLerp(ColorCrossFadeTime, 0, GetEasing(ColorTransition, colorFadeTimer))) : targetColor;
+            blendedColor = ColorCrossFadeTime > 0 ? Color.Lerp(blendedColor, targetColor, MathUtils.InverseLerp(ColorCrossFadeTime, 0, ToolBox.GetEasing(ColorTransition, colorFadeTimer))) : targetColor;
             return blendedColor;
         }
 
@@ -598,7 +584,7 @@ namespace Barotrauma
                         foreach (UISprite uiSprite in previousSprites)
                         {
                             float alphaMultiplier = SpriteCrossFadeTime > 0 && (uiSprite.CrossFadeOut || currentSprites != null && currentSprites.Any(s => s.CrossFadeIn))
-                                ? MathUtils.InverseLerp(0, SpriteCrossFadeTime, GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : 0;
+                                ? MathUtils.InverseLerp(0, SpriteCrossFadeTime, ToolBox.GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : 0;
                             if (alphaMultiplier > 0)
                             {
                                 uiSprite.Draw(spriteBatch, rect, previousColor * alphaMultiplier, SpriteEffects);
@@ -612,7 +598,7 @@ namespace Barotrauma
                     foreach (UISprite uiSprite in currentSprites)
                     {
                         float alphaMultiplier = SpriteCrossFadeTime > 0 && (uiSprite.CrossFadeIn || previousSprites != null && previousSprites.Any(s => s.CrossFadeOut))
-                            ? MathUtils.InverseLerp(SpriteCrossFadeTime, 0, GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : (_currentColor.A / 255.0f);
+                            ? MathUtils.InverseLerp(SpriteCrossFadeTime, 0, ToolBox.GetEasing(uiSprite.TransitionMode, spriteFadeTimer)) : (_currentColor.A / 255.0f);
                         if (alphaMultiplier > 0)
                         {
                             uiSprite.Draw(spriteBatch, rect, _currentColor * alphaMultiplier, SpriteEffects);
@@ -801,8 +787,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "conditional" &&
-                    !CheckConditional(subElement))
+                if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase) && !CheckConditional(subElement))
                 {
                     return null;
                 }
@@ -851,7 +836,7 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
+                    if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase)) { continue; }
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
                 }
 
@@ -1019,7 +1004,7 @@ namespace Barotrauma
 
         private static GUIFrame LoadGUIFrame(XElement element, RectTransform parent)
         {
-            string style = element.GetAttributeString("style", element.Name.ToString().ToLowerInvariant() == "spacing" ? null : "");
+            string style = element.GetAttributeString("style", element.Name.ToString().Equals("spacing", StringComparison.OrdinalIgnoreCase) ? null : "");
             if (style == "null") { style = null; }
             return new GUIFrame(RectTransform.Load(element, parent), style: style);
         }

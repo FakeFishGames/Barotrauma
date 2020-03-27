@@ -466,6 +466,7 @@ namespace Barotrauma
                 Submarine.Draw(spriteBatch, false);
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(new Point(0, -Level.Loaded.Size.Y), Level.Loaded.Size), Color.White, thickness: (int)(1.0f / cam.Zoom));
                 spriteBatch.End();
 
                 if (lightingEnabled.Selected)
@@ -517,8 +518,21 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != genParams.Name.ToLowerInvariant()) continue;
-                        SerializableProperty.SerializeProperties(genParams, element, true);
+                        XElement levelParamElement = element;
+                        if (element.IsOverride())
+                        {
+                            foreach (XElement subElement in element.Elements())
+                            {
+                                if (subElement.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
+                                { 
+                                    SerializableProperty.SerializeProperties(genParams, subElement, true);
+                                }
+                            }
+                        }
+                        else if (element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
+                        { 
+                            SerializableProperty.SerializeProperties(genParams, element, true);
+                        }
                         break;
                     }
                 }
@@ -539,7 +553,7 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != levelObjPrefab.Name.ToLowerInvariant()) continue;
+                        if (!element.Name.ToString().Equals(levelObjPrefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                         levelObjPrefab.Save(element);
                         break;
                     }
@@ -564,7 +578,7 @@ namespace Barotrauma
                 bool elementFound = false;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (element.Name.ToString().ToLowerInvariant() != genParams.Name.ToLowerInvariant()) continue;
+                    if (!element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                     SerializableProperty.SerializeProperties(genParams, element, true);
                     elementFound = true;
                 }                

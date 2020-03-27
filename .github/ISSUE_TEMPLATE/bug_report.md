@@ -1,6 +1,9 @@
 ---
 name: Bug report
 about: Found a bug? Help us squash it by making a bug report!
+title: ''
+labels: ''
+assignees: ''
 
 ---
 

@@ -30,7 +30,7 @@ namespace Barotrauma
         {
             System.Diagnostics.Debug.Assert(Submarine.MainSub != null);
 
-            LinkedSubmarine.CreateDummy(Submarine.MainSub, mainSub.FilePath, rect.Location.ToVector2());
+            LinkedSubmarine.CreateDummy(Submarine.MainSub, mainSub.Info.FilePath, rect.Location.ToVector2());
         }
     }
 
@@ -92,7 +92,7 @@ namespace Barotrauma
         
         public static LinkedSubmarine CreateDummy(Submarine mainSub, string filePath, Vector2 position)
         {
-            XDocument doc = Submarine.OpenFile(filePath);
+            XDocument doc = SubmarineInfo.OpenFile(filePath);
             if (doc == null || doc.Root == null) return null;
 
             LinkedSubmarine sl = CreateDummy(mainSub, doc.Root, position);
@@ -105,15 +105,20 @@ namespace Barotrauma
         {
             LinkedSubmarine sl = new LinkedSubmarine(mainSub);
             sl.GenerateWallVertices(element);
+            if (sl.wallVertices.Any())
+            {
+                sl.Rect = new Rectangle(
+                    (int)sl.wallVertices.Min(v => v.X + position.X),
+                    (int)sl.wallVertices.Max(v => v.Y + position.Y),
+                    (int)sl.wallVertices.Max(v => v.X + position.X),
+                    (int)sl.wallVertices.Min(v => v.Y + position.Y));
 
-            sl.Rect = new Rectangle(
-                (int)sl.wallVertices.Min(v => v.X + position.X),
-                (int)sl.wallVertices.Max(v => v.Y + position.Y),
-                (int)sl.wallVertices.Max(v => v.X + position.X),
-                (int)sl.wallVertices.Min(v => v.Y + position.Y));
-            
-            sl.rect = new Rectangle((int)position.X, (int)position.Y, 1, 1);
-
+                sl.Rect = new Rectangle(sl.rect.X, sl.rect.Y, sl.rect.Width - sl.rect.X, sl.rect.Y - sl.rect.Height);
+            }
+            else
+            {
+                sl.Rect = new Rectangle((int)position.X, (int)position.Y, 10, 10);
+            }
             return sl;
         }
 
@@ -212,7 +217,8 @@ namespace Barotrauma
         {
             if (!loadSub) { return; }
 
-            sub = Submarine.Load(saveElement, false);
+            SubmarineInfo info = new SubmarineInfo(Submarine.Info.FilePath, "", saveElement);
+            sub = Submarine.Load(info, false);
             
             Vector2 worldPos = saveElement.GetAttributeVector2("worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
@@ -325,7 +331,7 @@ namespace Barotrauma
             {
                 if (this.saveElement == null)
                 {
-                    var doc = Submarine.OpenFile(filePath);
+                    var doc = SubmarineInfo.OpenFile(filePath);
                     saveElement = doc.Root;
                     saveElement.Name = "LinkedSubmarine";
                     saveElement.Add(new XAttribute("filepath", filePath));

@@ -52,9 +52,13 @@ namespace Barotrauma.Items.Components
             get { return sounds.Count > 0; }
         }
 
-        private bool[] hasSoundsOfType;
-        private Dictionary<ActionType, List<ItemSound>> sounds;
+        private readonly bool[] hasSoundsOfType;
+        private readonly Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
+
+        protected float correctionTimer;
+
+        public float IsActiveTimer;
 
         public GUILayoutSettings DefaultLayout { get; protected set; }
         public GUILayoutSettings AlternativeLayout { get; protected set; }
@@ -230,20 +234,23 @@ namespace Barotrauma.Items.Components
 
             if (loopingSound != null)
             {
-                float targetGain = 0.0f;
                 if (Vector3.DistanceSquared(GameMain.SoundManager.ListenerPosition, new Vector3(item.WorldPosition, 0.0f)) > loopingSound.Range * loopingSound.Range ||
-                    (targetGain = GetSoundVolume(loopingSound)) <= 0.0001f)
+                    (GetSoundVolume(loopingSound)) <= 0.0001f)
                 {
                     if (loopingSoundChannel != null)
                     {
-                        loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
+                        loopingSoundChannel.FadeOutAndDispose(); 
+                        loopingSoundChannel = null;
+                        loopingSound = null;
                     }
                     return;
                 }
 
                 if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
                 {
-                    loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
+                    loopingSoundChannel.FadeOutAndDispose();
+                    loopingSoundChannel = null;
+                    loopingSound = null;
                 }
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
@@ -258,8 +265,7 @@ namespace Barotrauma.Items.Components
                 }
                 return;
             }
-                        
-            ItemSound itemSound = null;
+
             var matchingSounds = sounds[type];
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
@@ -277,7 +283,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (ItemSound sound in matchingSounds)
                     {
-                        PlaySound(sound, item.WorldPosition, user);
+                        PlaySound(sound, item.WorldPosition);
                     }
                     return;
                 }
@@ -286,13 +292,12 @@ namespace Barotrauma.Items.Components
                     index = Rand.Int(matchingSounds.Count);
                 }
 
-                itemSound = matchingSounds[index];
-                PlaySound(matchingSounds[index], item.WorldPosition, user);
+                PlaySound(matchingSounds[index], item.WorldPosition);
             }
         }
 
 
-        private void PlaySound(ItemSound itemSound, Vector2 position, Character user = null)
+        private void PlaySound(ItemSound itemSound, Vector2 position)
         {
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > itemSound.Range * itemSound.Range)
             {
@@ -301,8 +306,7 @@ namespace Barotrauma.Items.Components
 
             if (itemSound.Loop)
             {
-                loopingSound = itemSound;
-                if (loopingSoundChannel != null && loopingSoundChannel.Sound != loopingSound.RoundSound.Sound)
+                if (loopingSoundChannel != null && loopingSoundChannel.Sound != itemSound.RoundSound.Sound)
                 {
                     loopingSoundChannel.FadeOutAndDispose(); loopingSoundChannel = null;
                 }
@@ -310,6 +314,7 @@ namespace Barotrauma.Items.Components
                 {
                     float volume = GetSoundVolume(itemSound);
                     if (volume <= 0.0001f) { return; }
+                    loopingSound = itemSound;
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
                         0.01f,

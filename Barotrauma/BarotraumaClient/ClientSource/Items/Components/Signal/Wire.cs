@@ -20,10 +20,10 @@ namespace Barotrauma.Items.Components
             public void Draw(SpriteBatch spriteBatch, Wire wire, Color color, Vector2 offset, float depth, float width = 0.3f)
             {
                 spriteBatch.Draw(wire.wireSprite.Texture,
-                    new Vector2(start.X + offset.X, -(start.Y + offset.Y)), null, color,
+                    new Vector2(start.X + offset.X, -(start.Y + offset.Y)), wire.wireSprite.SourceRect, color,
                     -angle,
                     new Vector2(0.0f, wire.wireSprite.size.Y / 2.0f),
-                    new Vector2(length / wire.wireSprite.Texture.Width, width),
+                    new Vector2(length / wire.wireSprite.size.X, width),
                     SpriteEffects.None,
                     depth);
             }
@@ -34,10 +34,10 @@ namespace Barotrauma.Items.Components
                 end.Y = -end.Y;
                 
                 spriteBatch.Draw(wire.wireSprite.Texture,
-                    start, null, color,
+                    start, wire.wireSprite.SourceRect, color,
                     MathUtils.VectorToAngle(end - start),
                     new Vector2(0.0f, wire.wireSprite.size.Y / 2.0f),
-                    new Vector2((Vector2.Distance(start, end)) / wire.wireSprite.Texture.Width, width),
+                    new Vector2((Vector2.Distance(start, end)) / wire.wireSprite.size.X, width),
                     SpriteEffects.None,
                     depth);
             }
@@ -49,6 +49,13 @@ namespace Barotrauma.Items.Components
         private static Wire draggingWire;
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
+
+        [Serialize(0.3f, false)]
+        public float Width
+        {
+            get;
+            set;
+        }
 
         public Vector2 DrawSize
         {
@@ -72,7 +79,7 @@ namespace Barotrauma.Items.Components
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "wiresprite")
+                if (subElement.Name.ToString().Equals("wiresprite", StringComparison.OrdinalIgnoreCase))
                 {
                     overrideSprite = new Sprite(subElement);
                     break;
@@ -109,20 +116,20 @@ namespace Barotrauma.Items.Components
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, Screen.Selected == GameMain.GameScreen ? higlightColor : editorHighlightColor, drawOffset, depth + 0.00001f, Width * 2.0f);
                 }
             }
             else if (item.IsSelected)
             {
                 foreach (WireSection section in sections)
                 {
-                    section.Draw(spriteBatch, this, editorSelectedColor, drawOffset, depth + 0.00001f, 0.7f);
+                    section.Draw(spriteBatch, this, editorSelectedColor, drawOffset, depth + 0.00001f, Width * 2.0f);
                 }
             }
 
             foreach (WireSection section in sections)
             {
-                section.Draw(spriteBatch, this, item.Color, drawOffset, depth, 0.3f);
+                section.Draw(spriteBatch, this, item.Color, drawOffset, depth, Width);
             }
 
             if (nodes.Count > 0)
@@ -167,13 +174,13 @@ namespace Barotrauma.Items.Components
                             spriteBatch, this,
                             new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
-                            item.Color, 0.0f, 0.3f);
+                            item.Color, 0.0f, Width);
 
                         WireSection.Draw(
                             spriteBatch, this,
                             new Vector2(newNodePos.X, newNodePos.Y) + drawOffset,
                             item.DrawPosition,
-                            item.Color, itemDepth, 0.3f);
+                            item.Color, itemDepth, Width);
 
                         GUI.DrawRectangle(spriteBatch, new Vector2(newNodePos.X + drawOffset.X, -(newNodePos.Y + drawOffset.Y)) - Vector2.One * 3, Vector2.One * 6, item.Color);
                     }
@@ -183,7 +190,7 @@ namespace Barotrauma.Items.Components
                             spriteBatch, this,
                             new Vector2(nodes[nodes.Count - 1].X, nodes[nodes.Count - 1].Y) + drawOffset,
                             item.DrawPosition,
-                            item.Color, 0.0f, 0.3f);
+                            item.Color, 0.0f, Width);
                     }
                 }
             }

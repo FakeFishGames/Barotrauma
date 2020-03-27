@@ -91,6 +91,13 @@ namespace Steamworks.Ugc
             return this;
         }
 
+		public Editor WithoutTag( string tag )
+		{
+			if (Tags != null && Tags.Contains(tag)) Tags.Remove(tag);
+
+			return this;
+		}
+
 		public async Task<PublishResult> SubmitAsync( IProgress<float> progress = null )
 		{
 			var result = default( PublishResult );

@@ -70,7 +70,7 @@ namespace Barotrauma
                 }
             }
 
-            if (IsDead || Vitality <= 0.0f || IsUnconscious || Stun > 0.0f) return;
+            if (IsDead || Vitality <= 0.0f|| Stun > 0.0f || IsIncapacitated) return;
             if (!aiController.Enabled) return;
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) return;
             if (Controlled == this) return;

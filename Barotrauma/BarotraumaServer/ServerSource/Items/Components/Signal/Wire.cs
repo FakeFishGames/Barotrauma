@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable
     {
-        private void CreateNetworkEvent()
+        public void CreateNetworkEvent()
         {
             if (GameMain.Server == null) return;
             //split into multiple events because one might not be enough to fit all the nodes

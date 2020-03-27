@@ -114,6 +114,10 @@ namespace Barotrauma
         private List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
         private List<Affliction> afflictions = new List<Affliction>();
+        /// <summary>
+        /// Note: returns only the non-limb-secific afflictions. Use GetAllAfflictions or some other method for getting also the limb-specific afflictions.
+        /// </summary>
+        public IEnumerable<Affliction> Afflictions => afflictions;
 
         private HashSet<Affliction> irremovableAfflictions = new HashSet<Affliction>();
         private Affliction bloodlossAffliction;
@@ -160,12 +164,12 @@ namespace Barotrauma
         {
             get
             {
-                if (!Character.NeedsAir || Unkillable) return 100.0f;
+                if (!Character.NeedsOxygen || Unkillable) { return 100.0f; }
                 return -oxygenLowAffliction.Strength + 100;
             }
             set
             {
-                if (!Character.NeedsAir || Unkillable) return;
+                if (!Character.NeedsOxygen || Unkillable) { return; }
                 oxygenLowAffliction.Strength = MathHelper.Clamp(-value + 100, 0.0f, 200.0f);
             }
         }
@@ -216,7 +220,7 @@ namespace Barotrauma
             limbHealths.Clear();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "limb") continue;
+                if (!subElement.Name.ToString().Equals("limb", StringComparison.OrdinalIgnoreCase)) { continue; }
                 limbHealths.Add(new LimbHealth(subElement, this));
             }
             if (limbHealths.Count == 0)
@@ -269,30 +273,6 @@ namespace Barotrauma
             }
         }
 
-        public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
-        {
-            foreach (Affliction affliction in afflictions)
-            {
-                if (affliction.Prefab.Identifier == identifier) return affliction;
-            }
-            if (!allowLimbAfflictions) return null;
-
-            foreach (LimbHealth limbHealth in limbHealths)
-            {
-                foreach (Affliction affliction in limbHealth.Afflictions)
-                {
-                    if (affliction.Prefab.Identifier == identifier) return affliction;
-                }
-            }
-
-            return null;
-        }
-
-        public T GetAffliction<T>(string identifier, bool allowLimbAfflictions = true) where T : Affliction
-        {
-            return GetAffliction(identifier, allowLimbAfflictions) as T;
-        }
-
         public IEnumerable<Affliction> GetAfflictionsByType(string afflictionType, Limb limb)
         {
             if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
@@ -302,6 +282,37 @@ namespace Barotrauma
                 return null;
             }
             return limbHealths[limb.HealthIndex].Afflictions.Where(a => a.Prefab.AfflictionType == afflictionType);
+        }
+
+        public Affliction GetAffliction(string identifier, bool allowLimbAfflictions = true)
+            => GetAffliction(a => a.Prefab.Identifier == identifier, allowLimbAfflictions);
+
+        public Affliction GetAfflictionOfType(string afflictionType, bool allowLimbAfflictions = true) 
+            => GetAffliction(a => a.Prefab.AfflictionType == afflictionType, allowLimbAfflictions);
+
+        private Affliction GetAffliction(Func<Affliction, bool> predicate, bool allowLimbAfflictions = true)
+        {
+            foreach (Affliction affliction in afflictions)
+            {
+                if (predicate(affliction)) { return affliction; }
+            }
+            if (!allowLimbAfflictions)
+            {
+                return null;
+            }
+            foreach (LimbHealth limbHealth in limbHealths)
+            {
+                foreach (Affliction affliction in limbHealth.Afflictions)
+                {
+                    if (predicate(affliction)) { return affliction; }
+                }
+            }
+            return null;
+        }
+
+        public T GetAffliction<T>(string identifier, bool allowLimbAfflictions = true) where T : Affliction
+        {
+            return GetAffliction(identifier, allowLimbAfflictions) as T;
         }
 
         public Affliction GetAffliction(string identifier, Limb limb)
@@ -408,11 +419,10 @@ namespace Barotrauma
             return resistance;
         }
 
+        private List<Affliction> matchingAfflictions = new List<Affliction>();
         public void ReduceAffliction(Limb targetLimb, string affliction, float amount)
         {
-            affliction = affliction.ToLowerInvariant();
-
-            List<Affliction> matchingAfflictions = new List<Affliction>(afflictions);
+            matchingAfflictions.Clear();
 
             if (targetLimb != null)
             {
@@ -426,8 +436,8 @@ namespace Barotrauma
                 }
             }
             matchingAfflictions.RemoveAll(a => 
-                a.Prefab.Identifier.ToLowerInvariant() != affliction && 
-                a.Prefab.AfflictionType.ToLowerInvariant() != affliction);
+                !a.Prefab.Identifier.Equals(affliction, StringComparison.OrdinalIgnoreCase) && 
+                !a.Prefab.AfflictionType.Equals(affliction, StringComparison.OrdinalIgnoreCase));
 
             if (matchingAfflictions.Count == 0) return;
 
@@ -526,7 +536,7 @@ namespace Barotrauma
         private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
-            if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
+            if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
 
             foreach (Affliction affliction in limbHealth.Afflictions)
             {
@@ -559,7 +569,7 @@ namespace Barotrauma
         private void AddAffliction(Affliction newAffliction)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) return;
-            if (!Character.NeedsAir && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
+            if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
             if (newAffliction.Prefab.AfflictionType == "huskinfection")
             {
                 var huskPrefab = newAffliction.Prefab as AfflictionPrefabHusk;
@@ -653,7 +663,7 @@ namespace Barotrauma
 
         private void UpdateOxygen(float deltaTime)
         {
-            if (!Character.NeedsAir) return;
+            if (!Character.NeedsOxygen) { return; }
 
             float prevOxygen = OxygenAmount;
             if (IsUnconscious)
@@ -691,13 +701,15 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     float vitalityDecrease = affliction.GetVitalityDecrease(this);
-                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier.ToLowerInvariant()))
+                    string identifier = affliction.Prefab.Identifier.ToLowerInvariant();
+                    string type = affliction.Prefab.AfflictionType.ToLowerInvariant();
+                    if (limbHealth.VitalityMultipliers.ContainsKey(identifier))
                     {
-                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier.ToLowerInvariant()];
+                        vitalityDecrease *= limbHealth.VitalityMultipliers[identifier];
                     }
-                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType.ToLowerInvariant()))
+                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(type))
                     {
-                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType.ToLowerInvariant()];
+                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[type];
                     }
                     vitalityDecrease *= damageResistanceMultiplier;
                     Vitality -= vitalityDecrease;
@@ -750,6 +762,7 @@ namespace Barotrauma
             return new Pair<CauseOfDeathType, Affliction>(causeOfDeath, strongestAffliction);
         }
 
+        // TODO: this method is called a lot (every half second) -> optimize, don't create new class instances and lists every time!
         private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions)
         {
             List<Affliction> allAfflictions = new List<Affliction>(afflictions);
@@ -791,8 +804,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>
-        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>
-        
+        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>        
         public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, float randomization = 0.0f)
         {
             //key = item identifier
@@ -833,10 +845,18 @@ namespace Barotrauma
             }
         }
 
+        private readonly List<Affliction> activeAfflictions = new List<Affliction>();
+        private readonly List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
         public void ServerWrite(IWriteMessage msg)
         {
-            List<Affliction> activeAfflictions = afflictions.FindAll(a => a.Strength > 0.0f && a.Strength >= a.Prefab.ActivationThreshold);
-
+            activeAfflictions.Clear();
+            foreach (var affliction in afflictions)
+            {
+                if (affliction.Strength > 0.0f && affliction.Strength >= affliction.Prefab.ActivationThreshold)
+                {
+                    activeAfflictions.Add(affliction);
+                }
+            }
             msg.Write((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
@@ -846,7 +866,7 @@ namespace Barotrauma
                     0.0f, affliction.Prefab.MaxStrength, 8);
             }
 
-            List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
+            limbAfflictions.Clear();
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 foreach (Affliction limbAffliction in limbHealth.Afflictions)
@@ -873,5 +893,11 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
+        /// <summary>
+        /// Automatically filters out buffs.
+        /// </summary>
+        public static IEnumerable<Affliction> SortAfflictionsBySeverity(IEnumerable<Affliction> afflictions) =>
+            afflictions.Where(a => !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength);
     }
 }

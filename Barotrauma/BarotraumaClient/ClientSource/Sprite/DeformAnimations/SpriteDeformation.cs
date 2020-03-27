@@ -49,6 +49,9 @@ namespace Barotrauma.SpriteDeformations
         [Serialize(false, true), Editable]
         public bool StopWhenHostIsDead { get; set; }
 
+        [Serialize(false, true), Editable]
+        public bool OnlyInWater { get; set; }
+
         /// <summary>
         /// Only used if UseMovementSine is enabled. Multiplier for Pi.
         /// </summary>

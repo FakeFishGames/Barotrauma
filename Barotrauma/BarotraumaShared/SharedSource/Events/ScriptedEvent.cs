@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -8,7 +7,7 @@ namespace Barotrauma
     {        
         protected bool isFinished;
 
-        private readonly ScriptedEventPrefab prefab;
+        protected readonly ScriptedEventPrefab prefab;
                 
         public bool IsFinished
         {

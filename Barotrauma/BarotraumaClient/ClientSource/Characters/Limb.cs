@@ -83,22 +83,22 @@ namespace Barotrauma
             //    pos.Y = -pos.Y;
             //    ShapeExtensions.DrawPoint(spriteBatch, pos, GUI.Style.Red, size: 5);
             //}
-            return;
+            
             // A debug visualisation on the bezier curve between limbs.
-            var start = LimbA.WorldPosition;
+            /*var start = LimbA.WorldPosition;
             var end = LimbB.WorldPosition;
             var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
             var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
             start.Y = -start.Y;
             end.Y = -end.Y;
             control.Y = -control.Y;
-            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
-            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
-            //GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
-            //GUI.DrawLine(spriteBatch, start, end, Color.White);
-            //GUI.DrawLine(spriteBatch, start, control, Color.Black);
-            //GUI.DrawLine(spriteBatch, control, end, Color.Black);
-            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, GUI.Style.Red);
+            GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
+            GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
+            GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
+            GUI.DrawLine(spriteBatch, start, end, Color.White);
+            GUI.DrawLine(spriteBatch, start, control, Color.Black);
+            GUI.DrawLine(spriteBatch, control, end, Color.Black);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, GUI.Style.Red);*/
         }
     }
 
@@ -220,9 +220,18 @@ namespace Barotrauma
             }
             set
             {
-                if (HuskSprite != null && value != enableHuskSprite)
+                if (enableHuskSprite == value) { return; }
+                enableHuskSprite = value;
+                if (enableHuskSprite)
                 {
-                    if (value)
+                    if (HuskSprite == null)
+                    {
+                        LoadHuskSprite();
+                    }
+                }
+                if (HuskSprite != null)
+                {
+                    if (enableHuskSprite)
                     {
                         List<WearableSprite> otherWearablesWithHusk = new List<WearableSprite>() { HuskSprite };
                         otherWearablesWithHusk.AddRange(OtherWearables);
@@ -235,7 +244,6 @@ namespace Barotrauma
                         UpdateWearableTypesToHide();
                     }
                 }
-                enableHuskSprite = value;
             }
         }
 

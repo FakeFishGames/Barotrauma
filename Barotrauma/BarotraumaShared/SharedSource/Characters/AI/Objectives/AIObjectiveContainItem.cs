@@ -74,15 +74,6 @@ namespace Barotrauma
             }
         }
 
-        public override float GetPriority()
-        {
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            return 1.0f;
-        }
-
         private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
 
         protected override void Act(float deltaTime)

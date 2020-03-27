@@ -25,7 +25,8 @@ namespace Barotrauma
         OnFire, InWater, NotInWater,
         OnImpact,
         OnEating,
-        OnDeath = OnBroken
+        OnDeath = OnBroken,
+        OnDamaged
     }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
@@ -164,13 +165,6 @@ namespace Barotrauma
             get { return description ?? prefab.Description; }
             set { description = value; }
         }
-        
-        [Editable, Serialize(false, true)]
-        public bool HiddenInGame
-        {
-            get;
-            set;
-        }
 
         [Editable, Serialize(false, true)]
         public bool NonInteractable
@@ -288,6 +282,24 @@ namespace Barotrauma
                     "";
             }
             set { /*do nothing*/ }
+        }
+
+
+        [Serialize("", true)]
+
+        /// <summary>
+        /// Can be used to modify the AITarget's label using status effects
+        /// </summary>
+        public string SonarLabel
+        {
+            get { return AiTarget?.SonarLabel ?? ""; }
+            set
+            {
+                if (AiTarget != null)
+                {
+                    AiTarget.SonarLabel = value;
+                }
+            }
         }
 
         [Serialize(false, false)]
@@ -1237,6 +1249,8 @@ namespace Barotrauma
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
+            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+
             return new AttackResult(damageAmount, null);
         }
 
@@ -1296,6 +1310,7 @@ namespace Barotrauma
 #if CLIENT
                 if (ic.HasSounds)
                 {
+                    ic.PlaySound(ActionType.Always);
                     ic.UpdateSounds();
                     if (!ic.WasUsed)
                     {
@@ -1343,7 +1358,7 @@ namespace Barotrauma
                     UpdateTransform();
                     if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
                     {
-                        Spawner.AddToRemoveQueue(this);
+                        Spawner?.AddToRemoveQueue(this);
                         return;
                     }
                 }
@@ -1726,16 +1741,15 @@ namespace Barotrauma
 
         public bool TryInteract(Character picker, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceActionKey = false)
         {
-            bool hasRequiredSkills = true;
-
             bool picked = false, selected = false;
-
+#if CLIENT
+            bool hasRequiredSkills = true;
             Skill requiredSkill = null;
-            
+#endif            
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
-                
+
                 if (picker.IsKeyDown(InputType.Aim))
                 {
                     pickHit = false;
@@ -1779,13 +1793,11 @@ namespace Barotrauma
                         picker.IsKeyHit(InputType.Select);
                 }
 #endif
-
-                if (!pickHit && !selectHit) continue;
-
-                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) hasRequiredSkills = false;
+                if (!pickHit && !selectHit) { continue; }
                 
                 bool showUiMsg = false;
 #if CLIENT
+                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) { hasRequiredSkills = false; }
                 showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
 #endif
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
@@ -1795,10 +1807,9 @@ namespace Barotrauma
                     picked = true;
                     ic.ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 #if CLIENT
-                    if (picker == Character.Controlled) GUI.ForceMouseOn(null);
+                    if (picker == Character.Controlled) { GUI.ForceMouseOn(null); }
+                    if (tempRequiredSkill != null) { requiredSkill = tempRequiredSkill; }
 #endif
-                    if (tempRequiredSkill != null) requiredSkill = tempRequiredSkill;
-
                     if (ic.CanBeSelected) selected = true;
                 }
             }
@@ -1837,6 +1848,30 @@ namespace Barotrauma
             if (Container != null) Container.RemoveContained(this);
 
             return true;         
+        }
+
+        public float GetContainedItemConditionPercentage()
+        {
+            var containedItems = ContainedItems;
+
+            if (containedItems != null)
+            {
+                float condition = 0f;
+                float maxCondition = 0f;
+
+                foreach (Item item in containedItems)
+                {
+                    condition += item.condition;
+                    maxCondition += item.MaxCondition;
+                }
+
+                if (maxCondition > 0.0f)
+                {
+                    return condition / maxCondition;
+                }
+            }
+
+            return -1;
         }
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
@@ -2333,9 +2368,9 @@ namespace Barotrauma
 
             item.SetActiveSprite();
 
-            if (submarine?.GameVersion != null)
+            if (submarine?.Info.GameVersion != null)
             {
-                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.GameVersion);
+                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.Info.GameVersion);
             }
 
             foreach (ItemComponent component in item.components)

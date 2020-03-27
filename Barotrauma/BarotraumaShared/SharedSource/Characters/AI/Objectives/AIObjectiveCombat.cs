@@ -100,7 +100,11 @@ namespace Barotrauma
             }
         }
 
-        public override float GetPriority() => (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
+        public override float GetPriority()
+        {
+            Priority = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) ? 0 : Math.Min(100 * PriorityModifier, 100);
+            return Priority;
+        }
 
         public override void Update(float deltaTime)
         {
@@ -139,18 +143,18 @@ namespace Barotrauma
             }
             if (seekAmmunition == null)
             {
-                if (TryArm() && Enemy != null && !Enemy.Removed)
+                if (Mode != CombatMode.Retreat && TryArm() && Enemy != null && !Enemy.Removed)
                 {
                     OperateWeapon(deltaTime);
                 }
                 if (!HoldPosition && seekAmmunition == null)
                 {
-                    Move();
+                    Move(deltaTime);
                 }
             }
         }
 
-        private void Move()
+        private void Move(float deltaTime)
         {
             switch (Mode)
             {
@@ -159,7 +163,7 @@ namespace Barotrauma
                     break;
                 case CombatMode.Defensive:
                 case CombatMode.Retreat:
-                    Retreat();
+                    Retreat(deltaTime);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -407,7 +411,10 @@ namespace Barotrauma
             return true;
         }
 
-        private void Retreat()
+        private float findHullTimer;
+        private readonly float findHullInterval = 1.0f;
+
+        private void Retreat(float deltaTime)
         {
             RemoveSubObjective(ref followTargetObjective);
             RemoveSubObjective(ref seekAmmunition);
@@ -417,7 +424,15 @@ namespace Barotrauma
             }
             if (retreatTarget == null || (retreatObjective != null && !retreatObjective.CanBeCompleted))
             {
-                retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
+                if (findHullTimer > 0)
+                {
+                    findHullTimer -= deltaTime;
+                }
+                else
+                {
+                    retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls);
+                    findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
+                }
             }
             if (retreatTarget != null && character.CurrentHull != retreatTarget)
             {

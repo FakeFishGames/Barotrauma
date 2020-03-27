@@ -126,7 +126,7 @@ namespace Barotrauma
             int j = 0;
             foreach (XElement subElement in Prefab.Config.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "deformablesprite") continue;                
+                if (!subElement.Name.ToString().Equals("deformablesprite", StringComparison.OrdinalIgnoreCase)) { continue; }               
                 foreach (XElement animationElement in subElement.Elements())
                 {
                     var newDeformation = SpriteDeformation.Load(animationElement, Prefab.Name);

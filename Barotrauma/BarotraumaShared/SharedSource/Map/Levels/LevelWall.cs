@@ -79,11 +79,13 @@ namespace Barotrauma
                 Vector2[] vertices = new Vector2[4];
                 vertices[0] = edgePositions[i];
                 vertices[1] = edgePositions[i + 1];
-                vertices[2] = vertices[0] + extendAmount;
-                vertices[3] = vertices[1] + extendAmount;
+                vertices[2] = vertices[1] + extendAmount;
+                vertices[3] = vertices[0] + extendAmount;
 
-                VoronoiCell wallCell = new VoronoiCell(vertices);
-                wallCell.CellType = CellType.Edge;
+                VoronoiCell wallCell = new VoronoiCell(vertices)
+                {
+                    CellType = CellType.Edge
+                };
                 wallCell.Edges[0].Cell1 = wallCell;
                 wallCell.Edges[1].Cell1 = wallCell;
                 wallCell.Edges[2].Cell1 = wallCell;

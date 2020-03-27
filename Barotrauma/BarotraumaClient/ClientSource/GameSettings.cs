@@ -47,7 +47,7 @@ namespace Barotrauma
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
             keyMapping[(int)InputType.Run] = new KeyOrMouse(Keys.LeftShift);
-            keyMapping[(int)InputType.Attack] = new KeyOrMouse(MouseButton.MiddleMouse);
+            keyMapping[(int)InputType.Attack] = new KeyOrMouse(Keys.R);
             keyMapping[(int)InputType.Crouch] = new KeyOrMouse(Keys.LeftControl);
             keyMapping[(int)InputType.Grab] = new KeyOrMouse(Keys.G);
             keyMapping[(int)InputType.Health] = new KeyOrMouse(Keys.H);
@@ -1182,7 +1182,7 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.02f, 0.02f) })
             { RelativeSpacing = 0.01f };
 
-            var automaticQuickStartTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Enable automatic quickstart", style: "GUITickBox");
+            var automaticQuickStartTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic quickstart enabled", style: "GUITickBox");
             automaticQuickStartTickBox.Selected = AutomaticQuickStartEnabled;
             automaticQuickStartTickBox.ToolTip = "Will the game automatically move on to Quickstart when the game is launched";
             automaticQuickStartTickBox.OnSelected = (tickBox) =>
@@ -1192,7 +1192,7 @@ namespace Barotrauma
                 return true;
             };
 
-            var showSplashScreenTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Show splash screen", style: "GUITickBox");
+            var showSplashScreenTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Splash screen enabled", style: "GUITickBox");
             showSplashScreenTickBox.Selected = EnableSplashScreen;
             showSplashScreenTickBox.ToolTip = "Are the splash screens shown when the game is launched";
             showSplashScreenTickBox.OnSelected = (tickBox) =>
@@ -1202,12 +1202,22 @@ namespace Barotrauma
                 return true;
             };
 
-            var verboseLoggingTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Enable verbose logging", style: "GUITickBox");
+            var verboseLoggingTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Verbose logging enabled", style: "GUITickBox");
             verboseLoggingTickBox.Selected = VerboseLogging;
             verboseLoggingTickBox.ToolTip = "Should verbose logging be used";
             verboseLoggingTickBox.OnSelected = (tickBox) =>
             {
                 VerboseLogging = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
+            };
+
+            var textManagerDebugModeTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "TextManager debug mode enabled", style: "GUITickBox");
+            textManagerDebugModeTickBox.Selected = TextManagerDebugModeEnabled;
+            textManagerDebugModeTickBox.ToolTip = "Does the TextManager return the text tags for debug purposes?";
+            textManagerDebugModeTickBox.OnSelected = (tickBox) =>
+            {
+                TextManagerDebugModeEnabled = tickBox.Selected;
                 UnsavedSettings = true;
                 return true;
             };
@@ -1279,7 +1289,7 @@ namespace Barotrauma
             string[] prefixes = { "OpenAL Soft on " };
             foreach (string prefix in prefixes)
             {
-                if (name.StartsWith(prefix, StringComparison.InvariantCulture))
+                if (name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     return name.Remove(0, prefix.Length);
                 }

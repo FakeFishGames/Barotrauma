@@ -1,11 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
+        public Color BackgroundSpriteColor
+        {
+            get;
+            private set;
+        }
+
+        public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
@@ -40,7 +50,7 @@ namespace Barotrauma
                 if (PlayerInput.PrimaryMouseButtonReleased())
                 {                    
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
-                    var structure = new Structure(newRect, this, Submarine.MainSub)
+                    new Structure(newRect, this, Submarine.MainSub)
                     {
                         Submarine = Submarine.MainSub
                     };                    

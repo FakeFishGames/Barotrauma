@@ -9,7 +9,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (!ShowAITargets) return;
+            if (!ShowAITargets) { return; }
             var pos = new Vector2(WorldPosition.X, -WorldPosition.Y);
             if (soundRange > 0.0f)
             {
@@ -43,8 +43,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    color = Color.WhiteSmoke;
-                    // disable the indicators for structures, because they clutter the debug view
+                    //color = Color.WhiteSmoke;
+                    // disable the indicators for structures and hulls, because they clutter the debug view
                     return;
                 }
                 ShapeExtensions.DrawCircle(spriteBatch, pos, SightRange, 100, color, thickness: 1 / Screen.Selected.Cam.Zoom);

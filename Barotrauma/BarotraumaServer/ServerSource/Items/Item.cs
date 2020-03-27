@@ -8,6 +8,11 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        public override Sprite Sprite
+        {
+            get { return prefab?.sprite; }
+        }
+
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             string errorMsg = "";
@@ -254,6 +259,8 @@ namespace Barotrauma
                 int slotIndex = ParentInventory.FindIndex(this);
                 msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
             }
+
+            msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())

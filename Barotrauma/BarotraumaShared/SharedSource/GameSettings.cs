@@ -27,10 +27,10 @@ namespace Barotrauma
     }
 
     public partial class GameSettings
-    {    
-        const string savePath = "config.xml";
-        const string playerSavePath = "config_player.xml";
-        const string vanillaContentPackagePath = "Data/ContentPackages/Vanilla";
+    {
+        public const string SavePath = "config.xml";
+        public const string PlayerSavePath = "config_player.xml";
+        public const string VanillaContentPackagePath = "Data/ContentPackages/Vanilla";
 
         public int GraphicsWidth { get; set; }
         public int GraphicsHeight { get; set; }
@@ -138,6 +138,13 @@ namespace Barotrauma
         public bool CrewMenuOpen { get; set; } = true;
         public bool ChatOpen { get; set; } = true;
 
+        public float CorpseDespawnDelay { get; set; } = 10.0f * 60.0f;
+
+        /// <summary>
+        /// How many corpses there can be in a sub before they start to get despawned
+        /// </summary>
+        public int CorpsesPerSubDespawnThreshold { get; set; }  = 5;
+
         private string overrideSaveFolder, overrideMultiplayerSaveFolder;
 
         private bool unsavedSettings;
@@ -198,7 +205,7 @@ namespace Barotrauma
             {
                 voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume * 30.0f, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume, 0);
 #endif
             }
         }
@@ -236,6 +243,7 @@ namespace Barotrauma
 
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
+        public bool TextManagerDebugModeEnabled { get; set; }
 #endif
 
         private FileSystemWatcher modsFolderWatcher;
@@ -311,7 +319,7 @@ namespace Barotrauma
                                             ref shouldRefreshAfflictions);
 
             if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-            if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+            if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
             if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
             if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
             if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
@@ -359,7 +367,7 @@ namespace Barotrauma
                                             ref shouldRefreshAfflictions);
 
                 if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
                 if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
                 if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
                 if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
@@ -408,7 +416,7 @@ namespace Barotrauma
                                             ref shouldRefreshAfflictions);
 
                 if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-                if (shouldRefreshSubs) { Submarine.RefreshSavedSubs(); }
+                if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
                 if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
                 if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
                 if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
@@ -496,10 +504,10 @@ namespace Barotrauma
                         shouldRefreshSoundPlayer = true;
                         break;
                     case ContentType.Particles:
-                        GameMain.ParticleManager.LoadPrefabsFromFile(file);
+                        GameMain.ParticleManager?.LoadPrefabsFromFile(file);
                         break;
                     case ContentType.Decals:
-                        GameMain.DecalManager.LoadFromFile(file);
+                        GameMain.DecalManager?.LoadFromFile(file);
                         break;
 #endif
                 }
@@ -579,10 +587,10 @@ namespace Barotrauma
                         shouldRefreshSoundPlayer = true;
                         break;
                     case ContentType.Particles:
-                        GameMain.ParticleManager.RemovePrefabsByFile(file.Path);
+                        GameMain.ParticleManager?.RemovePrefabsByFile(file.Path);
                         break;
                     case ContentType.Decals:
-                        GameMain.DecalManager.RemoveByFile(file.Path);
+                        GameMain.DecalManager?.RemoveByFile(file.Path);
                         break;
 #endif
                 }
@@ -615,6 +623,7 @@ namespace Barotrauma
                 case ContentType.Particles:
                 case ContentType.Decals:
                 case ContentType.Outpost:
+                case ContentType.Wreck:
                 case ContentType.BackgroundCreaturePrefabs:
                 case ContentType.ServerExecutable:
                 case ContentType.None:
@@ -643,7 +652,7 @@ namespace Barotrauma
             ItemAssemblyPrefab.Prefabs.SortAll();
             StructurePrefab.Prefabs.SortAll();
 
-            Submarine.RefreshSavedSubs();
+            SubmarineInfo.RefreshSavedSubs();
             ItemPrefab.InitFabricationRecipes();
             RuinGeneration.RuinGenerationParams.ClearAll();
             ScriptedEventSet.LoadPrefabs();
@@ -757,7 +766,7 @@ namespace Barotrauma
 
         private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
         {
-            if (SuppressModFolderWatcher || !(GameMain.NetworkMember?.IsClient ?? false)) { return; }
+            if (SuppressModFolderWatcher || (GameMain.NetworkMember?.IsClient ?? false)) { return; }
             switch (e.ChangeType)
             {
                 case WatcherChangeTypes.Created:
@@ -818,7 +827,7 @@ namespace Barotrauma
 
         private void LoadDefaultConfig(bool setLanguage = true)
         {
-            XDocument doc = XMLExtensions.TryLoadXml(savePath);
+            XDocument doc = XMLExtensions.TryLoadXml(SavePath);
             if (doc == null)
             {
                 GraphicsWidth = 1024;
@@ -931,7 +940,7 @@ namespace Barotrauma
 
             foreach (ContentPackage contentPackage in SelectedContentPackages)
             {
-                if (contentPackage.Path.Contains(vanillaContentPackagePath))
+                if (contentPackage.Path.Contains(VanillaContentPackagePath))
                 {
                     doc.Root.Add(new XElement("contentpackage", new XAttribute("path", contentPackage.Path)));
                     break;
@@ -986,7 +995,7 @@ namespace Barotrauma
 
             try
             {
-                using (var writer = XmlWriter.Create(savePath, settings))
+                using (var writer = XmlWriter.Create(SavePath, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -1021,7 +1030,7 @@ namespace Barotrauma
         /// </summary>
         private bool LoadPlayerConfigInternal()
         {
-            XDocument doc = XMLExtensions.LoadXml(playerSavePath);
+            XDocument doc = XMLExtensions.LoadXml(PlayerSavePath);
             if (doc == null || doc.Root == null)
             {
                 ShowUserStatisticsPrompt = true;
@@ -1199,9 +1208,12 @@ namespace Barotrauma
                 new XAttribute("crewmenuopen", CrewMenuOpen),
                 new XAttribute("campaigndisclaimershown", CampaignDisclaimerShown),
                 new XAttribute("editordisclaimershown", EditorDisclaimerShown),
-                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning)
+                new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning),
+                new XAttribute("corpsedespawndelay", CorpseDespawnDelay),
+                new XAttribute("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
+                , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
 #endif
                 );
 
@@ -1349,7 +1361,7 @@ namespace Barotrauma
 
             try
             {
-                using (var writer = XmlWriter.Create(playerSavePath, settings))
+                using (var writer = XmlWriter.Create(PlayerSavePath, settings))
                 {
                     doc.WriteTo(writer);
                     writer.Flush();
@@ -1382,11 +1394,14 @@ namespace Barotrauma
             EnableMouseLook = doc.Root.GetAttributeBool("enablemouselook", EnableMouseLook);
             CrewMenuOpen = doc.Root.GetAttributeBool("crewmenuopen", CrewMenuOpen);
             ChatOpen = doc.Root.GetAttributeBool("chatopen", ChatOpen);
+            CorpseDespawnDelay = doc.Root.GetAttributeInt("corpsedespawndelay", 10 * 60);
+            CorpsesPerSubDespawnThreshold = doc.Root.GetAttributeInt("corpsespersubdespawnthreshold", 5);
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
+            TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
 #endif
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
@@ -1560,6 +1575,8 @@ namespace Barotrauma
             InventoryScale = 1;
             AutoUpdateWorkshopItems = true;
             CampaignDisclaimerShown = false;
+            CorpseDespawnDelay = 10 * 60;
+            CorpsesPerSubDespawnThreshold = 5;
             if (resetLanguage)
             {
                 Language = "English";

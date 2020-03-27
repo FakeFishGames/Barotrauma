@@ -204,8 +204,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            while (Steamworks.SteamNetworking.IsP2PPacketAvailable())
+            for (int i=0;i<100;i++)
             {
+                if (!Steamworks.SteamNetworking.IsP2PPacketAvailable()) { break; }
                 var packet = Steamworks.SteamNetworking.ReadP2PPacket();
                 if (packet.HasValue)
                 {

@@ -14,15 +14,18 @@ namespace Barotrauma
             GameMain.Server.KarmaManager.OnCharacterHealthChanged(this, attacker, attackResult.Damage, attackResult.Afflictions);
         }
 
-        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction)
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
-            if (causeOfDeath == CauseOfDeathType.Affliction)
+            if (log)
             {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
-            }
-            else
-            {
-                GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+                if (causeOfDeath == CauseOfDeathType.Affliction)
+                {
+                    GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
+                }
+                else
+                {
+                    GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+                }
             }
 
             healthUpdateTimer = 0.0f;

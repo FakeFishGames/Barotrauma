@@ -8,6 +8,7 @@ namespace Barotrauma
     {
         const float ConversationIntervalMin = 100.0f;
         const float ConversationIntervalMax = 180.0f;
+        const float ConversationIntervalMultiplierMultiplayer = 5.0f;
         private float conversationTimer, conversationLineTimer;
         private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
@@ -74,11 +75,17 @@ namespace Barotrauma
 
         private void UpdateConversations(float deltaTime)
         {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
+
             conversationTimer -= deltaTime;
             if (conversationTimer <= 0.0f)
             {
                 CreateRandomConversation();
                 conversationTimer = Rand.Range(ConversationIntervalMin, ConversationIntervalMax);
+                if (GameMain.NetworkMember != null)
+                {
+                    conversationTimer *= ConversationIntervalMultiplierMultiplayer;
+                }
             }
 
             if (pendingConversationLines.Count > 0)

@@ -222,7 +222,7 @@ namespace Barotrauma
                     1);
             }
 
-            roundData.Casualties.Add(character);
+            roundData?.Casualties.Add(character);
 
             UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName);
             if (character.CurrentHull != null)

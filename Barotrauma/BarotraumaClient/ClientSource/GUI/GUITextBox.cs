@@ -69,6 +69,11 @@ namespace Barotrauma
 
         private readonly Memento<string> memento = new Memento<string>();
 
+        public GUIFrame Frame
+        {
+            get { return frame; }
+        }
+
         public GUITextBlock.TextGetterHandler TextGetter
         {
             get { return textBlock.TextGetter; }

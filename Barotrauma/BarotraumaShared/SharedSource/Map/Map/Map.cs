@@ -284,7 +284,7 @@ namespace Barotrauma
             foreach (LocationConnection connection in connections)
             {
                 float centerDist = Vector2.Distance(connection.CenterPos, mapCenter);
-                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 10.0f, Rand.RandSync.Server), 0, 100);
+                connection.Difficulty = MathHelper.Clamp(((1.0f - centerDist / mapRadius) * 100) + Rand.Range(-10.0f, 0.0f, Rand.RandSync.Server), 0, 100);
             }
 
             AssignBiomes();
@@ -463,7 +463,7 @@ namespace Barotrauma
                     bool disallowedFound = false;
                     foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
                     {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.ToLowerInvariant() == disallowedLocationName.ToLowerInvariant()))
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(disallowedLocationName, StringComparison.OrdinalIgnoreCase)))
                         {
                             disallowedFound = true;
                             break;
@@ -475,7 +475,7 @@ namespace Barotrauma
                     bool requiredFound = false;
                     foreach (string requiredLocationName in typeChange.RequiredAdjacentLocations)
                     {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.ToLowerInvariant() == requiredLocationName.ToLowerInvariant()))
+                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(requiredLocationName, StringComparison.OrdinalIgnoreCase)))
                         {
                             requiredFound = true;
                             break;
@@ -499,7 +499,7 @@ namespace Barotrauma
                     if (selectedTypeChange != null)
                     {
                         string prevName = location.Name;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.ToLowerInvariant() == selectedTypeChange.ChangeToType.ToLowerInvariant()));
+                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(selectedTypeChange.ChangeToType, StringComparison.OrdinalIgnoreCase)));
                         ChangeLocationType(location, prevName, selectedTypeChange);
                         location.TypeChangeTimer = -1;
                         break;
@@ -553,13 +553,12 @@ namespace Barotrauma
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
                         location.Discovered = true;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.ToLowerInvariant() == locationType.ToLowerInvariant()));
+                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase)));
                         location.TypeChangeTimer = typeChangeTimer;
                         location.MissionsCompleted = missionsCompleted;
                         if (showNotifications && prevLocationType != location.Type)
                         {
-                            var change = prevLocationType.CanChangeTo.Find(c =>
-                                c.ChangeToType.ToLowerInvariant() == location.Type.Identifier.ToLowerInvariant());
+                            var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType.Equals(location.Type.Identifier, StringComparison.OrdinalIgnoreCase));
                             if (change != null)
                             {
                                 ChangeLocationType(location, prevLocationName, change);

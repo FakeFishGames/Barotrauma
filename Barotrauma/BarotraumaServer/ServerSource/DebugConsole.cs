@@ -558,7 +558,7 @@ namespace Barotrauma
 
                 ShowQuestionPrompt("Rank to grant to \"" + client.Name + "\"?", (rank) =>
                 {
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
                     if (preset == null)
                     {
                         ThrowError("Rank \"" + rank + "\" not found.");
@@ -1165,7 +1165,7 @@ namespace Barotrauma
                     else
                     {
                         string modeName = string.Join(" ", args);
-                        if (modeName.ToLowerInvariant() == "campaign")
+                        if (modeName.Equals("campaign", StringComparison.OrdinalIgnoreCase))
                         {
                             MultiPlayerCampaign.StartCampaignSetup();
                         }
@@ -1210,7 +1210,7 @@ namespace Barotrauma
 
             commands.Add(new Command("sub|submarine", "submarine [name]: Select the submarine for the next round.", (string[] args) =>
             {
-                Submarine sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
+                SubmarineInfo sub = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
 
                 if (sub != null)
                 {
@@ -1223,13 +1223,13 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
+                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
             commands.Add(new Command("shuttle", "shuttle [name]: Select the specified submarine as the respawn shuttle for the next round.", (string[] args) =>
             {
-                Submarine shuttle = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
+                SubmarineInfo shuttle = GameMain.NetLobbyScreen.GetSubList().Find(s => s.Name.ToLower() == string.Join(" ", args).ToLower());
 
                 if (shuttle != null)
                 {
@@ -1242,7 +1242,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Submarine.SavedSubmarines.Select(s => s.Name).ToArray()
+                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
                 };
             }));
 
@@ -1476,6 +1476,27 @@ namespace Barotrauma
             );
 
             AssignOnClientRequestExecute(
+                "teleportsub",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (Submarine.MainSub == null || Level.Loaded == null) return;
+
+                    if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Submarine.MainSub.SetPosition(cursorWorldPos);
+                    }
+                    else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                    }
+                    else
+                    {
+                        Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                    }
+                }
+            );
+
+            AssignOnClientRequestExecute(
                 "godmode",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
@@ -1493,7 +1514,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.ToLowerInvariant() == args[0].ToLowerInvariant());
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                     if (afflictionPrefab == null)
                     {
                         GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);
@@ -1718,7 +1739,7 @@ namespace Barotrauma
                     }
 
                     string rank = string.Join("", args.Skip(1));
-                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.ToLowerInvariant() == rank.ToLowerInvariant());
+                    PermissionPreset preset = PermissionPreset.List.Find(p => p.Name.Equals(rank, StringComparison.OrdinalIgnoreCase));
                     if (preset == null)
                     {
                         GameMain.Server.SendConsoleMessage("Rank \"" + rank + "\" not found.", senderClient);

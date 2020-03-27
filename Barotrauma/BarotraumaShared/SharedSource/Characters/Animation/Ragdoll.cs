@@ -97,8 +97,6 @@ namespace Barotrauma
 
         protected float strongestImpact;
 
-        protected double onFloorTimer;
-
         private float splashSoundTimer;
 
         //the movement speed of the ragdoll
@@ -383,7 +381,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character.IsHusk)
+            if (character.IsHusk && character.Params.UseHuskAppendage)
             {
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
                 if (characterPrefab?.XDocument != null)
@@ -732,14 +730,20 @@ namespace Barotrauma
             limbJoint.IsSevered = true;
             limbJoint.Enabled = false;
 
+            Vector2 limbDiff = limbJoint.LimbA.SimPosition - limbJoint.LimbB.SimPosition;
+            if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
+            limbDiff = Vector2.Normalize(limbDiff);
+            float mass = limbJoint.BodyA.Mass + limbJoint.BodyB.Mass;
+            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+
             List<Limb> connectedLimbs = new List<Limb>();
             List<LimbJoint> checkedJoints = new List<LimbJoint>();
 
             GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
             foreach (Limb limb in Limbs)
             {
-                if (connectedLimbs.Contains(limb)) continue;
-
+                if (connectedLimbs.Contains(limb)) { continue; }
                 limb.IsSevered = true;
             }
 
@@ -1626,14 +1630,14 @@ namespace Barotrauma
             float sin = (float)Math.Sin(mouthLimb.Rotation);
             Vector2 bodySize = mouthLimb.body.GetSize();
             Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
-            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * RagdollParams.LimbScale;
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * mouthLimb.Scale * RagdollParams.LimbScale;
         }
 
         public Vector2 GetColliderBottom()
         {
             float offset = 0.0f;
 
-            if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
+            if (!character.IsDead && character.Stun <= 0.0f && !character.IsIncapacitated)
             {
                 offset = -ColliderHeightFromFloor;
             }

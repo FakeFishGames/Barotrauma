@@ -91,6 +91,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            incomingLidgrenMessages.Clear();
             netClient.ReadMessages(incomingLidgrenMessages);
 
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
@@ -107,8 +108,6 @@ namespace Barotrauma.Networking
                         break;
                 }
             }
-
-            incomingLidgrenMessages.Clear();
         }
 
         private void HandleDataMessage(NetIncomingMessage inc)

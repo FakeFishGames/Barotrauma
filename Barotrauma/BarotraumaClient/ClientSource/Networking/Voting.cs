@@ -116,7 +116,7 @@ namespace Barotrauma
                     Submarine sub = data as Submarine;
                     if (sub == null) return;
 
-                    msg.Write(sub.Name);
+                    msg.Write(sub.Info.Name);
                     break;
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
@@ -158,7 +158,7 @@ namespace Barotrauma
                     {
                         if (item.UserData != null && item.UserData is Submarine) serversubs.Add(item.UserData as Submarine);
                     }
-                    Submarine sub = serversubs.FirstOrDefault(sm => sm.Name == subName);
+                    Submarine sub = serversubs.FirstOrDefault(sm => sm.Info.Name == subName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
                 }
             }

@@ -7,6 +7,8 @@ using System.Text;
 using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 #if WINDOWS
 using SharpDX;
@@ -22,42 +24,56 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
+
+#if LINUX
+        /// <summary>
+        /// Sets the required environment variables for the game to initialize Steamworks correctly.
+        /// </summary>
+        [DllImport("linux_steam_env", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void setLinuxEnv();
+#endif
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
-            GameMain game = null;
             string executableDir = "";
+
 #if !DEBUG
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
+#endif
+
+#if LINUX
+            setLinuxEnv();
+#endif
+
+            Game = null;
+            executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            Directory.SetCurrentDirectory(executableDir);
+            SteamManager.Initialize();
+            Game = new GameMain(args);
+            Game.Run();
+            Game.Dispose();
+        }
+
+        private static GameMain Game;
+
+        private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
+        {
             try
             {
-#endif
-                executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                Directory.SetCurrentDirectory(executableDir);
-                SteamManager.Initialize();
-                game = new GameMain(args);
-                game.Run();
-                game.Dispose();
-#if !DEBUG
+                Game?.Exit();
+                CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
+                Game?.Dispose();
             }
-            catch (Exception e)
+            catch
             {
-                try
-                {
-                    CrashDump(game, Path.Combine(executableDir,"crashreport.log"), e);
-                }
-                catch (Exception e2)
-                {
-                    CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
-                        + e2.Message + "\n" + e2.StackTrace.ToString(),
-                        null);
-                }
-                game?.Dispose();
+                //exception handler is broken, we have a serious problem here!!
                 return;
             }
-#endif
         }
 
         public static void CrashMessageBox(string message, string filePath)
@@ -83,16 +99,9 @@ namespace Barotrauma
             string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
             var md5 = System.Security.Cryptography.MD5.Create();
             Md5Hash exeHash = null;
-            try
+            using (var stream = File.OpenRead(exePath))
             {
-                using (var stream = File.OpenRead(exePath))
-                {
-                    exeHash = new Md5Hash(stream);
-                }
-            }
-            catch
-            {
-                //gotta catch them all, we don't want to throw an exception while writing a crash report
+                exeHash = new Md5Hash(stream);
             }
 
             StreamWriter sw = new StreamWriter(filePath);
@@ -102,6 +111,33 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
+
+            try
+            {
+                if (exception is GameMain.LoadingException)
+                {
+                    //exception occurred in loading screen:
+                    //assume content packages are the culprit and reset them
+                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerSavePath);
+                    XDocument baseDoc = XMLExtensions.TryLoadXml(GameSettings.SavePath);
+                    if (doc != null && baseDoc != null)
+                    {
+                        XElement newElement = new XElement(doc.Root.Name);
+                        newElement.Add(doc.Root.Attributes());
+                        newElement.Add(doc.Root.Elements().Where(e => !e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        newElement.Add(baseDoc.Root.Elements().Where(e => e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        XDocument newDoc = new XDocument(newElement);
+                        newDoc.Save(GameSettings.PlayerSavePath);
+                        sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");
+                        sb.AppendLine("\n");
+                    }
+                }
+            }
+            catch
+            {
+                //welp i guess we couldn't reset the config!
+            }
+
             if (exeHash?.Hash != null)
             {
                 sb.AppendLine(exeHash.Hash);
@@ -119,7 +155,7 @@ namespace Barotrauma
                 sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
-            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
+            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
             if (SteamManager.IsInitialized)
             {
@@ -217,4 +253,4 @@ namespace Barotrauma
         }
     }
 #endif
-}
+        }

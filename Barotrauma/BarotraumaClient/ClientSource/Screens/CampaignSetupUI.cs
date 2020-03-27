@@ -21,7 +21,7 @@ namespace Barotrauma
 
         private GUIButton loadGameButton, deleteMpSaveButton;
         
-        public Action<Submarine, string, string> StartNewGame;
+        public Action<SubmarineInfo, string, string> StartNewGame;
         public Action<string> LoadGame;
 
         public GUIButton StartButton
@@ -32,7 +32,7 @@ namespace Barotrauma
 
         private readonly bool isMultiplayer;
 
-        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<Submarine> submarines, IEnumerable<string> saveFiles = null)
+        public CampaignSetupUI(bool isMultiplayer, GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<string> saveFiles = null)
         {
             this.isMultiplayer = isMultiplayer;
             this.newGameContainer = newGameContainer;
@@ -115,12 +115,12 @@ namespace Barotrauma
                         return false;
                     }
 
-                    Submarine selectedSub = null;
+                    SubmarineInfo selectedSub = null;
 
                     if (!isMultiplayer)
                     {
-                        if (!(subList.SelectedData is Submarine)) { return false; }
-                        selectedSub = subList.SelectedData as Submarine;
+                        if (!(subList.SelectedData is SubmarineInfo)) { return false; }
+                        selectedSub = subList.SelectedData as SubmarineInfo;
                     }
                     else
                     {
@@ -226,7 +226,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in subList.Content.Children)
             {
-                var sub = child.UserData as Submarine;
+                var sub = child.UserData as SubmarineInfo;
                 if (sub == null) { return; }
                 child.Visible = string.IsNullOrEmpty(filter) ? true : sub.DisplayName.ToLower().Contains(filter.ToLower());
             }
@@ -238,7 +238,7 @@ namespace Barotrauma
             (subPreviewContainer.Parent as GUILayoutGroup)?.Recalculate();
             subPreviewContainer.ClearChildren();
 
-            Submarine sub = obj as Submarine;
+            SubmarineInfo sub = obj as SubmarineInfo;
             if (sub == null) { return true; }
 
             sub.CreatePreviewWindow(subPreviewContainer);
@@ -278,7 +278,7 @@ namespace Barotrauma
             saveNameBox.Text = Path.GetFileNameWithoutExtension(savePath);
         }
 
-        public void UpdateSubList(IEnumerable<Submarine> submarines)
+        public void UpdateSubList(IEnumerable<SubmarineInfo> submarines)
         {
 #if !DEBUG
             var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
@@ -288,7 +288,7 @@ namespace Barotrauma
 
             subList.ClearChildren();
 
-            foreach (Submarine sub in subsToShow)
+            foreach (SubmarineInfo sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
@@ -319,7 +319,7 @@ namespace Barotrauma
                     };
                 }
             }
-            if (Submarine.SavedSubmarines.Any())
+            if (SubmarineInfo.SavedSubmarines.Any())
             {
                 var nonShuttles = subsToShow.Where(s => !s.HasTag(SubmarineTag.Shuttle)).ToList();
                 if (nonShuttles.Count > 0)
@@ -392,16 +392,17 @@ namespace Barotrauma
                 {
                     nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
                     XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
-                    if (doc.Root.GetChildElement("multiplayercampaign") != null)
-                    {
-                        //multiplayer campaign save in the wrong folder -> don't show the save
-                        saveList.Content.RemoveChild(saveFrame);
-                        continue;
-                    }
+
                     if (doc?.Root == null)
                     {
                         DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
                         nameText.TextColor = GUI.Style.Red;
+                        continue;
+                    }
+                    if (doc.Root.GetChildElement("multiplayercampaign") != null)
+                    {
+                        //multiplayer campaign save in the wrong folder -> don't show the save
+                        saveList.Content.RemoveChild(saveFrame);
                         continue;
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");

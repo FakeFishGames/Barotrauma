@@ -39,7 +39,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "sprite") continue;
+                if (!subElement.Name.ToString().Equals("sprite", System.StringComparison.OrdinalIgnoreCase)) { continue; }
 
                 Sprite = new Sprite(subElement, lazyLoad: true);
                 break;

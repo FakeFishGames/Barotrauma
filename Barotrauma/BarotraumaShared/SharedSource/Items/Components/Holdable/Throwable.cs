@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) { throwPos = 0.0f; }
             bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
 
-            if (picker.IsUnconscious || picker.IsDead || !picker.AllowInput)
+            if (picker.IsDead || !picker.AllowInput)
             {
                 throwing = false;
                 aim = false;

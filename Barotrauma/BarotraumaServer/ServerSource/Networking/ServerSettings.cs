@@ -367,7 +367,7 @@ namespace Barotrauma.Networking
                 if (clientElement.Attribute("preset") == null)
                 {
                     string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                    if (permissionsStr.ToLowerInvariant() == "all")
+                    if (permissionsStr.Equals("all", StringComparison.OrdinalIgnoreCase))
                     {
                         foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                         {
@@ -384,7 +384,7 @@ namespace Barotrauma.Networking
                     {
                         foreach (XElement commandElement in clientElement.Elements())
                         {
-                            if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
+                            if (!commandElement.Name.ToString().Equals("command", StringComparison.OrdinalIgnoreCase)) { continue; }
 
                             string commandName = commandElement.GetAttributeString("name", "");
                             DebugConsole.Command command = DebugConsole.FindCommand(commandName);

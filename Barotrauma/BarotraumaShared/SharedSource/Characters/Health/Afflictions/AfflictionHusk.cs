@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System;
 
 namespace Barotrauma
 {
@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         public enum InfectionState
         {
-            Dormant, Transition, Active
+            Initial, Dormant, Transition, Active, Final
         }
 
         private bool subscribedToDeathEvent;
@@ -17,154 +17,157 @@ namespace Barotrauma
         private InfectionState state;
 
         private List<Limb> huskAppendage;
-        
+
+        private Character character;
+
+        private readonly List<Affliction> huskInfection = new List<Affliction>();
+
+        [Serialize(0f, true), Editable]
+        public override float Strength
+        {
+            get { return _strength; }
+            set
+            {
+                // Don't allow to set the strength too high (from outside) to avoid rapid transformation into husk when taking lots of damage from husks.
+                // If the strength is more than the value, this will effectively reset the current strength to the max. That's why we use two steps.
+                float max = _strength > ActiveThreshold ? ActiveThreshold + 1 : DormantThreshold - 1;
+                _strength = Math.Clamp(value, 0, max);
+            }
+        }
+
         public InfectionState State
         {
             get { return state; }
+            private set
+            {
+                if (state == value) { return; }
+                state = value;
+                if (character != null && character == Character.Controlled)
+                {
+                    UpdateMessages();
+                }
+            }
         }
 
-        public AfflictionHusk(AfflictionPrefab prefab, float strength) : 
-            base(prefab, strength)
-        {
-        }
+        private float DormantThreshold => Prefab.MaxStrength * 0.5f;
+        private float ActiveThreshold => Prefab.MaxStrength * 0.75f;
+
+        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength) { }
 
         public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
-            float prevStrength = Strength;
             base.Update(characterHealth, targetLimb, deltaTime);
-
+            character = characterHealth.Character;
+            if (character == null) { return; }
             if (!subscribedToDeathEvent)
             {
-                characterHealth.Character.OnDeath += CharacterDead;
+                character.OnDeath += CharacterDead;
                 subscribedToDeathEvent = true;
             }
-
-            if (characterHealth.Character == Character.Controlled) UpdateMessages(prevStrength, characterHealth.Character);
-            if (Strength < Prefab.MaxStrength * 0.5f)
+            if (Strength < DormantThreshold)
             {
-                UpdateDormantState(deltaTime, characterHealth.Character);
+                DeactivateHusk();
+                State = InfectionState.Dormant;
+            }
+            else if (Strength < ActiveThreshold)
+            {
+                DeactivateHusk();
+                character.SpeechImpediment = 100;
+                State = InfectionState.Transition;
             }
             else if (Strength < Prefab.MaxStrength)
             {
-                characterHealth.Character.SpeechImpediment = 100.0f;
-                UpdateTransitionState(deltaTime, characterHealth.Character);
+                if (State != InfectionState.Active)
+                {
+                    character.SetStun(Rand.Range(2, 4, Rand.RandSync.Server));
+                }
+                State = InfectionState.Active;
+                ActivateHusk();
             }
             else
             {
-                characterHealth.Character.SpeechImpediment = 100.0f;
-                UpdateActiveState(deltaTime, characterHealth.Character);
+                State = InfectionState.Final;
+                ActivateHusk();
+                ApplyDamage(deltaTime, applyForce: true);
+                character.SetStun(1);
             }
         }
 
-        partial void UpdateMessages(float prevStrength, Character character);
+        partial void UpdateMessages();
 
-        private void UpdateDormantState(float deltaTime, Character character)
+        private void ApplyDamage(float deltaTime, bool applyForce)
         {
-            if (state != InfectionState.Dormant)
-            {
-                DeactivateHusk(character);
-            }
-            
-            state = InfectionState.Dormant;
-        }
-
-        private void UpdateTransitionState(float deltaTime, Character character)
-        {
-            if (state != InfectionState.Transition)
-            {
-                DeactivateHusk(character);                
-            }
-
-            state = InfectionState.Transition;
-        }
-
-        private void UpdateActiveState(float deltaTime, Character character)
-        {
-            if (state != InfectionState.Active)
-            {
-                ActivateHusk(character);
-                state = InfectionState.Active;
-            }
-
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                float random = Rand.Value(Rand.RandSync.Server);
+                huskInfection.Clear();
+                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * deltaTime / character.AnimController.Limbs.Length));
                 character.LastDamageSource = null;
-                character.DamageLimb(
-                    limb.WorldPosition, limb,
-                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(0.5f * deltaTime / character.AnimController.Limbs.Length) },
-                    0.0f, false, 0.0f);
+                float force = applyForce ? random * 0.1f * limb.Mass : 0;
+                character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, force);
             }
         }
 
-        public void ActivateHusk(Character character)
+        public void ActivateHusk()
         {
-            if (huskAppendage == null)
+            if (huskAppendage == null && character.Params.UseHuskAppendage)
             {
                 huskAppendage = AttachHuskAppendage(character, Prefab.Identifier);
-                if (huskAppendage != null)
-                {
-                    character.NeedsAir = false;
-                    character.SetStun(0.5f);
-                }
-#if CLIENT
-                character.AnimController.GetLimb(LimbType.Head).EnableHuskSprite = true;
-#endif
             }
+            character.NeedsAir = false;
+            character.SpeechImpediment = 100;
         }
 
-        private void DeactivateHusk(Character character)
+        private void DeactivateHusk()
         {
             character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
             if (huskAppendage != null)
             {
                 huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
                 huskAppendage = null;
-#if CLIENT
-                character.AnimController.GetLimb(LimbType.Head).EnableHuskSprite = false;
-#endif
             }
         }
 
-        public void Remove(Character character)
+        public void Remove()
         {
-            DeactivateHusk(character);
-            if (character != null) character.OnDeath -= CharacterDead;
+            if (character == null) { return; }
+            DeactivateHusk();
+            character.OnDeath -= CharacterDead;
             subscribedToDeathEvent = false;
         }
 
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < Prefab.MaxStrength * 0.5f || character.Removed) { return; }
+            if (Strength < ActiveThreshold || character.Removed) { return; }
 
             //don't turn the character into a husk if any of its limbs are severed
             if (character.AnimController?.LimbJoints != null)
             {
                 foreach (var limbJoint in character.AnimController.LimbJoints)
                 {
-                    if (limbJoint.IsSevered) return;
+                    if (limbJoint.IsSevered) { return; }
                 }
             }
 
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
-            CoroutineManager.StartCoroutine(CreateAIHusk(character));
+            CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
-        private IEnumerable<object> CreateAIHusk(Character character)
+        private IEnumerable<object> CreateAIHusk()
         {
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
-            string speciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
-            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            string huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
+            CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
 
             if (prefab == null)
             {
                 DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
                 yield return CoroutineStatus.Success;
             }
-
-            var husk = Character.Create(speciesName, character.WorldPosition, character.Info.Name, character.Info, isRemotePlayer: false, hasAi: true, ragdoll: character.AnimController.RagdollParams);
+            var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), character.Info, isRemotePlayer: false, hasAi: true);
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
@@ -197,6 +200,11 @@ namespace Barotrauma
                 husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
             }
 
+            husk.SetStun(5);
+            yield return new WaitForSeconds(5, false);
+#if CLIENT
+            husk.PlaySound(CharacterSound.SoundType.Idle);
+#endif
             yield return CoroutineStatus.Success;
         }
 

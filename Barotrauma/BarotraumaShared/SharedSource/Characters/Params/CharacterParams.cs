@@ -29,16 +29,28 @@ namespace Barotrauma
         public bool Humanoid { get; private set; }
 
         [Serialize(false, true), Editable]
+        public bool HasInfo { get; private set; }
+
+        [Serialize(false, true), Editable]
         public bool Husk { get; private set; }
 
         [Serialize(false, true), Editable]
+        public bool UseHuskAppendage { get; private set; }
+
+        [Serialize(false, true), Editable]
         public bool NeedsAir { get; set; }
+
+        [Serialize(false, true, description: "Can the creature live without water or does it die on dry land?"), Editable]
+        public bool NeedsWater { get; set; }
 
         [Serialize(false, true), Editable]
         public bool CanSpeak { get; set; }
 
         [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 1000f)]
         public float Noise { get; set; }
+
+        [Serialize(100f, true, description: "How visible the character is?"), Editable(minValue: 0f, maxValue: 1000f)]
+        public float Visibility { get; set; }
 
         [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
@@ -450,6 +462,12 @@ namespace Barotrauma
             [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }
 
+            [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable()]
+            public bool EnforceAggressiveBehaviorForMissions { get; private set; }
+
+            [Serialize(false, true, description: "Should the character target or ignore walls when it's inside the submarine. Doesn't have any effect if no target priority for walls is defined."), Editable()]
+            public bool TargetInnerWalls { get; private set; }
+
             // TODO: latchonto, swarming
 
             public IEnumerable<TargetParams> Targets => targets;
@@ -537,6 +555,9 @@ namespace Barotrauma
 
             [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. Eg. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
             public float ReactDistance { get; set; }
+
+            [Serialize(0f, true, description: "Used for defining the attack distance for PassiveAggressive and Aggressive states. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
+            public float AttackDistance { get; set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

@@ -66,7 +66,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
                 }
                 return vanillaContent;
             }
@@ -188,6 +188,11 @@ namespace Barotrauma
             Window.Title = "Barotrauma";
 
             Instance = this;
+
+            if (!Directory.Exists(Content.RootDirectory))
+            {
+                throw new Exception("Content folder not found. If you are trying to compile the game from the source code and own a legal copy of the game, you can copy the Content folder from the game's files to BarotraumaShared/Content.");
+            }
 
             Config = new GameSettings();
 
@@ -380,6 +385,13 @@ namespace Barotrauma
             }
         }
 
+        public class LoadingException : Exception
+        {
+            public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
+            {
+            }
+        }
+
         private IEnumerable<object> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
@@ -397,7 +409,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume, 0);
 
             if (Config.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
             {
@@ -421,17 +433,27 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            CrossThread.RequestExecutionOnMainThread(() =>
+            if (Config.AutoUpdateWorkshopItems)
             {
-                if (Config.AutoUpdateWorkshopItems)
+                bool waitingForWorkshopUpdates = true;
+                bool result = false;
+                TaskPool.Add(SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
-                    if (SteamManager.AutoUpdateWorkshopItems())
+                    result = task.Result;
+                    waitingForWorkshopUpdates = false;
+                });
+
+                while (waitingForWorkshopUpdates) { yield return CoroutineStatus.Running; }
+
+                if (result)
+                {
+                    CrossThread.RequestExecutionOnMainThread(() =>
                     {
                         ContentPackage.LoadAll();
                         Config.ReloadContentPackages();
-                    }
+                    });
                 }
-            });
+            }
             
 
             if (SelectedPackages.None())
@@ -488,6 +510,7 @@ namespace Barotrauma
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            WreckAIConfig.LoadAll();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
@@ -503,6 +526,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
@@ -512,7 +536,7 @@ namespace Barotrauma
             
             GameModePreset.Init();
 
-            Submarine.RefreshSavedSubs();
+            SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 65.0f;
         yield return CoroutineStatus.Running;
@@ -649,6 +673,8 @@ namespace Barotrauma
             {
 #if DEBUG
                 DebugConsole.ThrowError($"Failed to parse a Steam friend's connect invitation command ({connectCommand})", e);
+#else
+                DebugConsole.Log($"Failed to parse a Steam friend's connect invitation command ({connectCommand})\n" + e.StackTrace);
 #endif
                 ConnectName = null;
                 ConnectEndpoint = null;
@@ -741,12 +767,7 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        string errMsg = "Loading was interrupted due to an error";
-                        if (loadingCoroutine.Exception != null)
-                        {
-                            errMsg += ": " + loadingCoroutine.Exception.Message + "\n" + loadingCoroutine.Exception.StackTrace;
-                        }
-                        throw new Exception(errMsg);
+                        throw new LoadingException(loadingCoroutine.Exception);
                     }
                 }
                 else if (hasLoaded)
@@ -1086,7 +1107,10 @@ namespace Barotrauma
                 UserData = "https://steamcommunity.com/app/602960/discussions/1/",
                 OnClicked = (btn, userdata) =>
                 {
-                    SteamManager.OverlayCustomURL(userdata as string);
+                    if (!SteamManager.OverlayCustomURL(userdata as string))
+                    {
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
+                    }
                     msgBox.Close();
                     return true;
                 }

@@ -79,6 +79,12 @@ namespace Barotrauma.Items.Components
                     Wire wire = wireItem.GetComponent<Wire>();
                     if (wire != null)
                     {
+                        if (Item.ItemList.Any(it => it != item && (it.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(wire) ?? false)))
+                        {
+                            if (wire.Item.body != null) { wire.Item.body.Enabled = false; }
+                            wire.IsActive = false;
+                            wire.UpdateSections();
+                        }
                         DisconnectedWires.Add(wire);
                         base.IsActive = true;
                     }
@@ -197,7 +203,7 @@ namespace Barotrauma.Items.Components
             float degreeOfSuccess = DegreeOfSuccess(character);
             if (Rand.Range(0.0f, 0.5f) < degreeOfSuccess) { return true; }
 
-            item.ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
+            ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             return false;
         }
 

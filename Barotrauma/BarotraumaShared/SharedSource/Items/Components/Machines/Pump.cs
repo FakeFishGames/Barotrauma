@@ -37,23 +37,10 @@ namespace Barotrauma.Items.Components
         private float currFlow;
         public float CurrFlow
         {
-            get 
+            get
             {
                 if (!IsActive) { return 0.0f; }
-                return Math.Abs(currFlow); 
-            }
-        }
-
-        public override bool IsActive 
-        { 
-            get => base.IsActive;
-            set
-            {
-                base.IsActive = value;
-                if (!IsActive)
-                {
-                    powerConsumption = 0;
-                }
+                return Math.Abs(currFlow);
             }
         }
 
@@ -77,11 +64,6 @@ namespace Barotrauma.Items.Components
                 float hullPercentage = 0.0f;
                 if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
                 FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
-
-                if (pumpSpeedLockTimer <= 0.0f)
-                {
-                    targetLevel = null;
-                }
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
@@ -125,6 +107,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
+                    targetLevel = null;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }
@@ -144,7 +127,7 @@ namespace Barotrauma.Items.Components
             if (GameMain.Client != null) { return false; }
 #endif
 
-            if (objective.Option.ToLowerInvariant() == "stoppumping")
+            if (objective.Option.Equals("stoppumping", StringComparison.OrdinalIgnoreCase))
             {
 #if SERVER
                 if (FlowPercentage > 0.0f)

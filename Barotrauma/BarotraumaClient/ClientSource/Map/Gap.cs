@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
-            if (GameMain.DebugDraw)
+            if (!GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
                 Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height / 2.0f));
                 GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y) / 10.0f, GUI.Style.Red);
@@ -41,7 +41,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!editing || !ShowGaps) return;
+            if (!editing || !ShowGaps) { return; }
 
             Color clr = (open == 0.0f) ? GUI.Style.Red : Color.Cyan;
             if (IsHighlighted) clr = Color.Gold;
@@ -76,32 +76,35 @@ namespace Barotrauma
                     clr * 0.6f, width: lineWidth);
             }
 
-            for (int i = 0; i < linkedTo.Count; i++)
+            if (linkedTo.Count != 2 || linkedTo[0] != linkedTo[1])
             {
-                Vector2 dir = IsHorizontal ?
-                    new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
-                    : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
-
-                Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
-                arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
-
-                float arrowWidth = 32.0f;
-                float arrowSize = 15.0f;
-
-                bool invalidDir = false;
-                if (dir == Vector2.Zero)
+                for (int i = 0; i < linkedTo.Count; i++)
                 {
-                    invalidDir = true;
-                    dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
-                }
+                    Vector2 dir = IsHorizontal ?
+                        new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
+                        : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
 
-                GUI.Arrow.Draw(sb,
-                    arrowPos, invalidDir ? Color.Red : clr * 0.8f,
-                    GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
-                    IsHorizontal ? 
-                        new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y) : 
-                        new Vector2(Math.Min(rect.Width, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y),
-                    SpriteEffects.None, depth);
+                    Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
+                    arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));
+
+                    float arrowWidth = 32.0f;
+                    float arrowSize = 15.0f;
+
+                    bool invalidDir = false;
+                    if (dir == Vector2.Zero)
+                    {
+                        invalidDir = true;
+                        dir = IsHorizontal ? Vector2.UnitX : Vector2.UnitY;
+                    }
+
+                    GUI.Arrow.Draw(sb,
+                        arrowPos, invalidDir ? Color.Red : clr * 0.8f,
+                        GUI.Arrow.Origin, MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
+                        IsHorizontal ?
+                            new Vector2(Math.Min(rect.Height, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y) :
+                            new Vector2(Math.Min(rect.Width, arrowWidth) / GUI.Arrow.size.X, arrowSize / GUI.Arrow.size.Y),
+                        SpriteEffects.None, depth);
+                }
             }
 
             if (IsSelected)

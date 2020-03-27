@@ -231,25 +231,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Limb refLimb = GetLimb(LimbType.Head);
-                    float refAngle;
-                    if (refLimb == null)
+                    float rotation = MathHelper.WrapAngle(Collider.Rotation);
+                    rotation = MathHelper.ToDegrees(rotation);
+                    if (rotation < 0.0f)
                     {
-                        refAngle = CurrentAnimationParams.TorsoAngleInRadians;
-                        refLimb = GetLimb(LimbType.Torso);
+                        rotation += 360;
                     }
-                    else
-                    {
-                        refAngle = CurrentAnimationParams.HeadAngleInRadians;
-                    }
-
-                    float rotation = refLimb.Rotation;
-                    if (!float.IsNaN(refAngle)) { rotation -= refAngle * Dir; }
-
-                    rotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(rotation));
-
-                    if (rotation < 0.0f) rotation += 360;
-
                     if (rotation > 20 && rotation < 160)
                     {
                         TargetDir = Direction.Left;
@@ -347,9 +334,23 @@ namespace Barotrauma
                     target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
                 }
 
-                //pull the character's mouth to the target character (again with a fluctuating force)
-                float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
-                mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                if (InWater)
+                {
+                    //pull the character's mouth to the target character (again with a fluctuating force)
+                    float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
+                    mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                }
+                else
+                {
+                    float force = (float)Math.Sin(eatTimer * 100) * mouthLimb.Mass;
+                    mouthLimb.body.ApplyLinearImpulse(Vector2.UnitY * force * 2, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    mouthLimb.body.ApplyTorque(-force * 50);
+                }
+                var jaw = GetLimb(LimbType.Jaw);
+                if (jaw != null)
+                {
+                    jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
+                }
 
                 character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
 
@@ -439,7 +440,7 @@ namespace Barotrauma
 
             if (CurrentSwimParams.RotateTowardsMovement)
             {
-                Collider.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque);
+                Collider.SmoothRotate(movementAngle, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
                 if (TorsoAngle.HasValue)
                 {
                     Limb torso = GetLimb(LimbType.Torso);
@@ -491,11 +492,11 @@ namespace Barotrauma
                 }
                 if (mainLimb.type == LimbType.Head && HeadAngle.HasValue)
                 {
-                    Collider.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+                    Collider.SmoothRotate(HeadAngle.Value * Dir, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
                 }
                 else if (mainLimb.type == LimbType.Torso && TorsoAngle.HasValue)
                 {
-                    Collider.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque);
+                    Collider.SmoothRotate(TorsoAngle.Value * Dir, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
                 }
                 if (TorsoAngle.HasValue)
                 {
@@ -515,7 +516,7 @@ namespace Barotrauma
             }
 
             var waveLength = Math.Abs(CurrentSwimParams.WaveLength * RagdollParams.JointScale);
-            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude);
+            var waveAmplitude = Math.Abs(CurrentSwimParams.WaveAmplitude * character.SpeedMultiplier);
             if (waveLength > 0 && waveAmplitude > 0)
             {
                 WalkPos -= transformedMovement.Length() / Math.Abs(waveLength);
@@ -524,6 +525,10 @@ namespace Barotrauma
 
             foreach (var limb in Limbs)
             {
+                if (Math.Abs(limb.Params.ConstantTorque) > 0)
+                {
+                    limb.body.SmoothRotate(movementAngle + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Params.ConstantTorque, wrapAngle: true);
+                }
                 switch (limb.type)
                 {
                     case LimbType.LeftFoot:
@@ -548,7 +553,7 @@ namespace Barotrauma
                 if (Limbs[i].SteerForce <= 0.0f) { continue; }
                 if (!Collider.PhysEnabled) { continue; }
                 Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
-                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass, pullPos);
+                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass * Math.Max(character.SpeedMultiplier, 1), pullPos);
             }
 
             Vector2 mainLimbDiff = mainLimb.PullJointWorldAnchorB - mainLimb.SimPosition;
@@ -665,6 +670,10 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (Math.Abs(limb.Params.ConstantTorque) > 0)
+                {
+                    limb.body.SmoothRotate(movementAngle + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Params.ConstantTorque, wrapAngle: true);
+                }
                 switch (limb.type)
                 {
                     case LimbType.LeftFoot:
@@ -729,7 +738,10 @@ namespace Barotrauma
                         break;
                     case LimbType.LeftLeg:
                     case LimbType.RightLeg:
-                        if (Math.Abs(CurrentGroundedParams.LegTorque) > 0.001f) limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
+                        if (Math.Abs(CurrentGroundedParams.LegTorque) > 0)
+                        {
+                            limb.body.ApplyTorque(limb.Mass * CurrentGroundedParams.LegTorque * Dir);
+                        }
                         break;
                 }
             }

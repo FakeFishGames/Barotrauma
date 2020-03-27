@@ -490,7 +490,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f || !t.Enabled || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
+                    if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
@@ -647,6 +647,8 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.GameSession == null) { return; }
 
+            if (Level.Loaded == null) { return; }
+
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
                 "outpost",
@@ -699,8 +701,8 @@ namespace Barotrauma.Items.Components
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                              
                 DrawMarker(spriteBatch, 
-                    sub.Name, 
-                    sub.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
+                    sub.Info.Name, 
+                    sub.Info.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
                     sub.WorldPosition - transducerCenter, 
                     displayScale, center, DisplayRadius * 0.95f);
             }

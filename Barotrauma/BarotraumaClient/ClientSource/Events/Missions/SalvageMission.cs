@@ -7,10 +7,23 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
-            item = Item.ReadSpawnData(msg);
-            if (item == null)
+            bool usedExistingItem = msg.ReadBoolean();
+            if (usedExistingItem)
             {
-                throw new System.Exception("Error in SalvageMission.ClientReadInitial: spawned item was null (mission: " + Prefab.Identifier + ")");
+                ushort id = msg.ReadUInt16();
+                item = Entity.FindEntityByID(id) as Item;
+                if (item == null)
+                {
+                    throw new System.Exception("Error in SalvageMission.ClientReadInitial: failed to find item " + id + " (mission: " + Prefab.Identifier + ")");
+                }
+            }
+            else
+            {
+                item = Item.ReadSpawnData(msg);
+                if (item == null)
+                {
+                    throw new System.Exception("Error in SalvageMission.ClientReadInitial: spawned item was null (mission: " + Prefab.Identifier + ")");
+                }
             }
 
             item.body.FarseerBody.BodyType = BodyType.Kinematic;

@@ -38,7 +38,7 @@ namespace Barotrauma
             {
                 case VoteType.Sub:
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                    SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
                     break;
 
@@ -97,7 +97,7 @@ namespace Barotrauma
                 foreach (Pair<object, int> vote in voteList)
                 {
                     msg.Write((byte)vote.Second);
-                    msg.Write(((Submarine)vote.First).Name);
+                    msg.Write(((SubmarineInfo)vote.First).Name);
                 }
             }
             msg.Write(AllowModeVoting);

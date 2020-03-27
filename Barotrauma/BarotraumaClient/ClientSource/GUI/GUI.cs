@@ -26,7 +26,8 @@ namespace Barotrauma
         Click,
         PickItem,
         PickItemFail,
-        DropItem
+        DropItem,
+        PopupMenu
     }
 
     public enum CursorState
@@ -242,6 +243,7 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/RadioMsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/DeadMsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/Click.ogg", false);
+                sounds[(int)GUISoundType.PopupMenu] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/PopupMenu.ogg", false);
 
                 sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItem.ogg", false);
                 sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItemFail.ogg", false);
@@ -1921,6 +1923,19 @@ namespace Barotrauma
                             };
                             return true;
                         };
+                    }
+                    else if (GameMain.GameSession.GameMode is SubTestMode)
+                    {
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                GameMain.GameSession.GameMode.End("");
+
+                                return true;
+                            }
+                        };
+                        button.OnClicked += TogglePauseMenu;
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {

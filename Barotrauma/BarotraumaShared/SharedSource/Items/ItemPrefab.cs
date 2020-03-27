@@ -255,6 +255,13 @@ namespace Barotrauma
             private set;
         }
 
+        //if true and the item has trigger areas defined, players can only highlight the item when the cursor is on the trigger
+        [Serialize(false, false)]
+        public bool RequireCursorInsideTrigger
+        {
+            get;
+            private set;
+        }
 
         //should the camera focus on the item when selected
         [Serialize(false, false)]
@@ -535,6 +542,8 @@ namespace Barotrauma
             }
             Category = category;
 
+            var parentType = element.Parent?.GetAttributeString("itemtype", "") ?? string.Empty;
+
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
@@ -566,7 +575,15 @@ namespace Barotrauma
                     identifier = GenerateLegacyIdentifier(originalName);
                 }
             }
-
+            
+            if (string.Equals(parentType, "wrecked", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
+                }
+            }
+            
             if (string.IsNullOrEmpty(name))
             {
                 DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
@@ -810,7 +827,7 @@ namespace Barotrauma
 
         public PriceInfo GetPrice(Location location)
         {
-            if (prices == null || !prices.ContainsKey(location.Type.Identifier.ToLowerInvariant())) return null;
+            if (prices == null || !prices.ContainsKey(location.Type.Identifier.ToLowerInvariant())) { return null; }
             return prices[location.Type.Identifier.ToLowerInvariant()];
         }
 

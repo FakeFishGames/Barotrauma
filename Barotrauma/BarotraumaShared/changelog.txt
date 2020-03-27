@@ -1,4 +1,137 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.9.0
+---------------------------------------------------------------------------------------------------------
+
+- Added wrecked submarines to levels.
+- Reimplemented carrier (now called Thalamus).
+- New submarine, Azimuth.
+- Option to disable bot conversations in multiplayer.
+- Improvements to traitor missions (slightly simpler, with clearer instructions).
+- Characters with insufficient skills can fail at mechanical repairs, causing minor injuries.
+- Gaps that are inside a hull don't flood the sub, a warning icon is displayed on those gaps in the sub editor.
+- Added submarine test mode to the sub editor.
+- Moved the entity filter panel and "previously used" panel in the sub editor to the top left corner of the screen.
+- Pressing enter after modifying the value of a text field in the sub editor is no longer required.
+- "teleportsub" console command can be used to teleport the sub to the position of the cursor.
+- The engine vibrates and plays a loud sound when it's damaged to indicate more clearly that it needs repairs.
+- Added animated lights to alarm buzzers and sirens.
+- Sonar beacon's label can be edited in-game.
+
+Workshop improvements:
+- "Enabling" a mod through the ingame Workshop screen is no longer a thing; subscribing to a mod is all you need to do for the game to install it once it's downloaded.
+- Loading preview images and installing mods is done asynchronously (= no lag spikes).
+- Added notifications to the main menu to indicate when mods are being downloaded and have been installed.
+- Files are automatically added to the Workshop item publish menu as they're added to a to-be-published content package's directory.
+
+Bugfixes:
+- Fixed achievements not unlocking.
+- Fixed positions of artifacts spawning on in caves and on level walls getting desynced between the server and clients.
+- Fixed new wire node being created at an item client-side if connecting the wire fails due to an electric shock server-side.
+- Fixed clients executing console commands they don't have permission to use.
+- Fixed enablecheats command not being relayed to server.
+- Fixed light component and alarm siren/buzzer states occasionally getting desynced.
+- Fixed inability to enter the sub through very small hulls.
+- Fixed antibiotics not giving husk infection resistance when shot from a syringe gun. 
+- Fixed text overflows in the player management panel in the server lobby in languages other than English.
+- Fixed searchlight toggle doing nothing.
+- Fixed hulls that have minuscule amounts of water in them (too small to be even rendered) being able to trigger InWater effects and water footstep sounds.
+- Fixed pumps dicarding the previously received set_targetlevel signal after 0.1 seconds, preventing manual control systems from working if the pumps aren't receiving a continuous set_targetlevel signal.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.8.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Added husked Crawler.
+- Re-worked Crawler.
+- Moloch: Changed behavior. Added attacks on the tentacles. Fixed some behavior and targeting related issues.
+- Improved eating animations.
+- Rebind monster attack to "R", because the middle mouse button is now reserved for the command interface. Fixes attacking while controlling a husk or some other monster.
+- Calculate the direction from the limbs separately when attacking. Fixes some issues when an attack applies forces on multiple limbs.
+- Added damage protection on Hammerhead Matriarch's and Moloch's skirts/tentacles.
+- Changed the ai target calculations for characters.
+- Adjusted the AI targets for: navterminal, sonar, flashlight, diving suit, underwater scooter, flare, fire extinguisher, and many weapons.
+- Husk infection progress is now a bit different: The thresholds are different, and the damage is taken only in the final phase before turning.
+  The final phase now causes minor twitching in the body.
+- Husk faces are now only visible on fully turned (human) husks.
+- Fixed rapid turning into husk when taking a a lot of damage from husks.
+- Monsters with "flee health threshold" defined now only flee when they are being chased.
+- Adjusted Bonethresher's attacks.
+- Adjusted the AI priorities for Hammerhead Spawn, Husk, Tigerthresher, Moloch, Mudraptor.
+- Mudraptors don't flee anymore when on low health.
+- Improvements and fixes on the medic AI.
+- Add medical autonomous objectives for also other jobs than medics.
+- Improvements and fixes on the extinguish fires behavior.
+- The bots don't anymore report about low priority issues while fighting or fleeing. Also fixes bots always reporting theirself as the target for the required treatments.
+- Movement speed modifiers now adjust the swimming animations and steering forces too.
+- Removed deprecated Molochboss. The boss will be reimplemented later.
+- Forced aggressive behavior for creatures that are spawned as mission targets, make an exception with the Matriarch.
+- Pressing enter is not required after changing values in text fields in the sub editor.
+
+Modding:
+- Husk affliction mechanics now fully support different species.
+- Added "Visibility" parameter for the characters (similar to Noise).
+- Added "Attack Force Multiplier" for all limbs.
+- Implemented per joint and per limb scaling.
+- New LimbType: "Jaw". Used for eating animations.
+- Added "Attack Distance" parameter, which is currently only used for Aggressive and PassiveAggressive behaviors.
+- Added "Constant Angle" and "Constant Torque" for keeping a limb constantly rotated in a desired orientation.
+- Allow to define world forces for the root movement in three phases of the attack: start, middle, end. Set the main collider position to the main limb position when the attack ends to fix the rubberbanding behavior after the attacks.
+- Implemented "After Attack Delay": A property for adding a delay after the attack has hit the target, before starting to update the after attack behavior (e.g. falling back).
+- Renamed "AttackContext.NotDefined" to "AttackContext.Any".
+- Added "Retreat" parameter for attacks. When enabled, the character tries to steer away from the target while attacking it.
+- Accept the plural "requireditems" when overriding items.
+- Replaced "identifiers" with "items" on "RequiredItems" elements. Both strings are handled in code -> no functional difference. Fixed just for clarity.
+
+Bugfixes:
+- Fixes to crashes when autoupdating Workshop items during startup.
+- Fixes to disconnections with the error message "expected old event" when loading a round takes a long time.
+- Fixed crashing if the selected core content package contains errors (missing files, invalid XML files).
+- Fixed splash screen causing a crash on some Mac systems.
+- Fixed corrupted save files causing the game to crash during loading.
+- Fixed clients being able to run the "enablecheats" command client-side without the permission to use the command.
+- Fixed AI inputs not being synced with clients, preventing clients from seeing when the bots aim/shoot/attack.
+- Don't allow using the "flipx" console command while playing online.
+- Fixed portrait area & health bar being clickable (despite being hidden) when grabbing another character.
+- Fixed a case of characters getting stuck facing one direction. Happened when you switched a character when the command interface was enabled.
+- Fixed previous order disappearing from the crew list on resolution change.
+- Fixed text not being colored according to message type (default/radio/pm/dead) in the chat input box.
+- Fixed "collection was modified" exception if drawing a subinventory causes highlighted inventory slots to change.
+- Fixed coilgun/railgun projectiles occasionally hitting the wall next to the turret when launched.
+- Fixed text overlays "vibrating" when using the Health Scanner HUD while the sub is moving.
+- Fixed level editor not saving level generation parameters that are inside an <override> element.
+- Fixed job icons overflowing from the job selection panel when using mods that add more jobs.
+- Fixed clients being unable to cancel file transfers.
+- Fixed StatusEffects with a delay or a duration "transferring" to another target when the same effect is applied on another entity (for example when using the same stabilozine syringe on multiple characters).
+- Fixed particles spawned in StatusEffects only copying the emission angle of the parent item, but not the rotation when CopyEntityAngle is set to true.
+- Fixed terminals not sending any outputs server-side.
+- Fixed bots unequipping diving suits when they shouldn't. Only happened while doing a low prio objective.
+- Fixed retreating bots attacking with adhoc weapons like tools. If the bots retreat, they shouldn't use weapons at all.
+- Fixed the priority calculation for the rescue all objective. Should fix bots refusing to treat seriously injured characters and also fixes the priority of the targets.
+- Fixed occasional rapid flipping (usually noticeable only in debug draw mode) when a bot has no valid path or the path has ended.
+- Fixed bots sometimes not being able to climb ladders because they skip a node too early. Happened especially in Katrull.
+- Fixed some cases where bots fail to release the ladders when they should.
+- Fixed bots occasionally disgarding an autonomous objective with low priority after starting to follow it.
+- Fixed bots ignoring unsafe hulls (= any threats) when they shouldn't and consequently heading into danger.
+- Fixed some monster attacks causing internal damage instead of bitewounds.
+- Fixed Hammerhead Matriarch's head damage modifier ignoring bitewounds.
+- Fixed latched creatures not reacting on being damaged.
+- Fixed monsters flipping constantly while swimming.
+- Fixed Husks not regenerating health properly.
+- Fixed AI targets not being decreased on inactive items.
+- Fixed fire extinguisher definition (xml): the identifier and the tag shouldn't be the same string.
+- Fixed monsters sometimes moving slower than they should when walking inside.
+- Fixed charge indicator not being flipped in horizontally/vertically flipped batteries.
+- Fixed fabricators occasionally getting stuck to the active/inactive state client-side when the fabrication is paused due to insufficient power.
+- Fixed ancient weapon not cutting through holes in walls.
+- Fixed ambient light being brighter in the submarine editor than in-game.
+- Fixed walk speed not being affected by speed reductions.
+- Fixed all enemies ignoring the speed modifiers.
+- Fixed wires appearing as loose items on the floor after saving and reloading if they've been disconnected from both ends.
+- Fixed non-stackable status effects with a duration having no effect.
+>>>>>>> origin/feature/carrier
+
+---------------------------------------------------------------------------------------------------------
 v0.9.7.1
 ---------------------------------------------------------------------------------------------------------
 

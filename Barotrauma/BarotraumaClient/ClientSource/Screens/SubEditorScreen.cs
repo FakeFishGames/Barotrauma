@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using EventInput;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -29,6 +31,8 @@ namespace Barotrauma
         private readonly Point defaultPreviewImageSize = new Point(640, 368);
 
         private readonly Camera cam;
+
+        private SubmarineInfo backedUpSubInfo;
 
         private Point screenResolution;
 
@@ -88,6 +92,9 @@ namespace Barotrauma
         private GUITextBlock submarineDescriptionCharacterCount;
 
         private Mode mode;
+        
+        // Prevent the mode from changing
+        private bool lockMode;
 
         public override Camera Cam
         {
@@ -96,9 +103,9 @@ namespace Barotrauma
 
         public string GetSubDescription()
         {
-            string localizedDescription = TextManager.Get("submarine.description." + (Submarine.MainSub?.Name ?? ""), true);
+            string localizedDescription = TextManager.Get("submarine.description." + (Submarine.MainSub?.Info.Name ?? ""), true);
             if (localizedDescription != null) { return localizedDescription; }
-            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Description;
+            return (Submarine.MainSub == null) ? "" : Submarine.MainSub.Info.Description;
         }
 
         private string GetTotalHullVolume()
@@ -214,63 +221,10 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
 
-            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
-                TextManager.Get("unspecifiedsubfilename"), font: GUI.LargeFont, textAlignment: Alignment.CenterLeft);
-
-            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
-                TextManager.Get("AddSubButton"), elementCount: 20)
+            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "TestButton")
             {
-                ToolTip = TextManager.Get("AddSubToolTip")
-            };
-            foreach (Submarine sub in Submarine.SavedSubmarines)
-            {
-                linkedSubBox.AddItem(sub.Name, sub);
-            }
-            linkedSubBox.OnSelected += SelectLinkedSub;
-            linkedSubBox.OnDropped += (component, obj) =>
-            {
-                MapEntity.SelectedList.Clear();
-                return true;
-            };
-
-            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
-
-            defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
-            {
-                ToolTip = TextManager.Get("SubEditorEditingMode"),
-                OnSelected = (GUITickBox tBox) =>
-                {
-                    if (tBox.Selected) { SetMode(Mode.Default); }
-                    return true;
-                }
-            };
-
-            characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CharacterModeButton")
-            {
-                ToolTip = TextManager.Get("CharacterModeButton") + '\n' + TextManager.Get("CharacterModeToolTip"),
-                OnSelected = (GUITickBox tBox) =>
-                {
-                    SetMode(tBox.Selected ? Mode.Character : Mode.Default);
-                    return true;
-                }
-            };
-
-            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
-            {
-                ToolTip = TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip"),
-                OnSelected = (GUITickBox tBox) =>
-                {
-                    SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
-                    return true;
-                }
-            };
-
-            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
-
-            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
-            {
-                ToolTip = TextManager.Get("GenerateWaypointsButton") + '\n' + TextManager.Get("GenerateWaypointsToolTip"),
-                OnClicked = GenerateWaypoints
+                ToolTip = TextManager.Get("TestSubButton"),
+                OnClicked = TestSubmarine
             };
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
@@ -282,7 +236,7 @@ namespace Barotrauma
                 {
                     previouslyUsedPanel.Visible = false;
                     showEntitiesPanel.Visible = !showEntitiesPanel.Visible;
-                    showEntitiesPanel.RectTransform.AbsoluteOffset = new Point(btn.Rect.X, TopPanel.Rect.Height);
+                    showEntitiesPanel.RectTransform.AbsoluteOffset = new Point(Math.Max(Math.Max(btn.Rect.X, entityCountPanel.Rect.Right), saveAssemblyFrame.Rect.Right), TopPanel.Rect.Height);
                     return true;
                 }
             };
@@ -294,7 +248,110 @@ namespace Barotrauma
                 {
                     showEntitiesPanel.Visible = false;
                     previouslyUsedPanel.Visible = !previouslyUsedPanel.Visible;
-                    previouslyUsedPanel.RectTransform.AbsoluteOffset = new Point(btn.Rect.X, TopPanel.Rect.Height);
+                    previouslyUsedPanel.RectTransform.AbsoluteOffset = new Point(Math.Max(Math.Max(btn.Rect.X, entityCountPanel.Rect.Right), saveAssemblyFrame.Rect.Right), TopPanel.Rect.Height);
+                    return true;
+                }
+            };
+
+            new GUIFrame(new RectTransform(new Vector2(0.01f, 0.9f), paddedTopPanel.RectTransform), style: "VerticalLine");
+
+            subNameLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.9f), paddedTopPanel.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("unspecifiedsubfilename"), font: GUI.LargeFont, textAlignment: Alignment.CenterLeft);
+
+            linkedSubBox = new GUIDropDown(new RectTransform(new Vector2(0.15f, 0.9f), paddedTopPanel.RectTransform),
+                TextManager.Get("AddSubButton"), elementCount: 20)
+            {
+                ToolTip = TextManager.Get("AddSubToolTip")
+            };
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
+            {
+                linkedSubBox.AddItem(sub.Name, sub);
+            }
+            linkedSubBox.OnSelected += SelectLinkedSub;
+            linkedSubBox.OnDropped += (component, obj) =>
+            {
+                MapEntity.SelectedList.Clear();
+                return true;
+            };
+
+            var spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
+
+            defaultModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "EditSubButton")
+            {
+                ToolTip = TextManager.Get("SubEditorEditingMode"),
+                OnSelected = (GUITickBox tBox) =>
+                {
+                    if (!lockMode)
+                    {
+                        if (tBox.Selected) { SetMode(Mode.Default); }
+
+                        return true;
+                    }
+                    else { return false;  }
+                }
+            };
+
+            characterModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "CharacterModeButton")
+            {
+                ToolTip = TextManager.Get("CharacterModeButton") + '\n' + TextManager.Get("CharacterModeToolTip"),
+                OnSelected = (GUITickBox tBox) =>
+                {
+                    if (!lockMode)
+                    {
+                        SetMode(tBox.Selected ? Mode.Character : Mode.Default);
+                        return true;
+                    }
+                    else { return false; }
+                }
+            };
+
+            wiringModeTickBox = new GUITickBox(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "WiringModeButton")
+            {
+                ToolTip = TextManager.Get("WiringModeButton") + '\n' + TextManager.Get("WiringModeToolTip"),
+                OnSelected = (GUITickBox tBox) =>
+                {
+                    if (!lockMode)
+                    {
+                        SetMode(tBox.Selected ? Mode.Wiring : Mode.Default);
+                        return true;
+                    }
+                    else { return false;  }
+                }
+            };
+
+            spacing = new GUIFrame(new RectTransform(new Vector2(0.02f, 1.0f), paddedTopPanel.RectTransform), style: null);
+            new GUIFrame(new RectTransform(new Vector2(0.1f, 0.9f), spacing.RectTransform, Anchor.Center), style: "VerticalLine");
+
+            new GUIButton(new RectTransform(new Vector2(0.9f, 0.9f), paddedTopPanel.RectTransform, scaleBasis: ScaleBasis.BothHeight), "", style: "GenerateWaypointsButton")
+            {
+                ToolTip = TextManager.Get("GenerateWaypointsButton") + '\n' + TextManager.Get("GenerateWaypointsToolTip"),
+                OnClicked = (btn, userdata) =>
+                {
+                    if (WayPoint.WayPointList.Any())
+                    {
+                        var generateWaypointsVerification = new GUIMessageBox("", TextManager.Get("generatewaypointsverification"), new string[] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                        generateWaypointsVerification.Buttons[0].OnClicked = (btn, userdata) =>
+                        {
+                            if (GenerateWaypoints())
+                            {
+                                GUI.AddMessage(TextManager.Get("waypointsgeneratedsuccesfully"), GUI.Style.Green);
+                            }
+                            WayPoint.ShowWayPoints = true;
+                            generateWaypointsVerification.Close();
+                            return true;
+                        };
+                        generateWaypointsVerification.Buttons[1].OnClicked = generateWaypointsVerification.Close;
+                    }
+                    else
+                    {
+                        if (GenerateWaypoints())
+                        {
+                            GUI.AddMessage(TextManager.Get("waypointsgeneratedsuccesfully"), GUI.Style.Green);
+                        }
+                        WayPoint.ShowWayPoints = true;
+
+                    }
                     return true;
                 }
             };
@@ -325,8 +382,7 @@ namespace Barotrauma
 
             showEntitiesPanel = new GUIFrame(new RectTransform(new Vector2(0.08f, 0.5f), GUI.Canvas)
             {
-                MinSize = new Point(170, 0),
-                AbsoluteOffset = new Point(visibilityButton.Rect.X, TopPanel.Rect.Height)
+                MinSize = new Point(170, 0)
             }) 
             { 
                 Visible = false 
@@ -613,6 +669,41 @@ namespace Barotrauma
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
+        private bool TestSubmarine(GUIButton button, object obj)
+        {
+            List<string> errorMsgs = new List<string>();
+
+            if (!Hull.hullList.Any())
+            {
+                errorMsgs.Add(TextManager.Get("NoHullsWarning"));
+            }
+
+            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human))
+            {
+                errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning"));
+            }
+
+            if (errorMsgs.Any())
+            {
+                new GUIMessageBox(TextManager.Get("Error"), string.Join("\n\n", errorMsgs), new Vector2(0.25f, 0.0f), new Point(400, 200));
+                return true;
+            }
+
+            backedUpSubInfo = new SubmarineInfo(Submarine.MainSub);
+
+            GameMain.GameScreen.Select();
+
+            GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.List.Find(gm => gm.Identifier == "subtest"), null);
+            gameSession.StartRound(null, false);
+
+            return true;
+        }
+
+        public void ClearBackedUpSubInfo()
+        {
+            backedUpSubInfo = null;
+        }
+
         private void UpdateEntityList()
         {
             entityList.Content.ClearChildren();
@@ -741,9 +832,20 @@ namespace Barotrauma
         {
             base.Select();
 
+            GameMain.LightManager.AmbientLight = 
+                Level.Loaded?.GenerationParams?.AmbientLightColor ??
+                LevelGenerationParams.LevelParams?.FirstOrDefault()?.AmbientLightColor ??
+                new Color(20, 20, 20, 255); 
+
             UpdateEntityList();
 
-            string name = (Submarine.MainSub == null) ? TextManager.Get("unspecifiedsubfilename") : Submarine.MainSub.Name;
+            if (backedUpSubInfo != null)
+            {
+                Submarine.Unload();
+            }
+
+            string name = (Submarine.MainSub == null) ? TextManager.Get("unspecifiedsubfilename") : Submarine.MainSub.Info.Name;
+            if (backedUpSubInfo != null) { name = backedUpSubInfo.Name; }
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
@@ -760,23 +862,26 @@ namespace Barotrauma
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
 
-            if (Submarine.MainSub != null)
+            if (backedUpSubInfo != null)
             {
-                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-                Submarine.MainSub.UpdateTransform();
-                cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
+                Submarine.MainSub = new Submarine(backedUpSubInfo);
+                backedUpSubInfo = null;
             }
-            else
+            else if (Submarine.MainSub == null)
             {
-                Submarine.MainSub = new Submarine(Path.Combine(Submarine.SavePath, TextManager.Get("UnspecifiedSubFileName") + ".sub"), "", false);
-                cam.Position = Submarine.MainSub.Position;
+                var subInfo = new SubmarineInfo();
+                Submarine.MainSub = new Submarine(subInfo);
             }
+
+            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
+            Submarine.MainSub.UpdateTransform(interpolate: false);
+            cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f, 0);
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f, 0);
 
             linkedSubBox.ClearChildren();
-            foreach (Submarine sub in Submarine.SavedSubmarines)
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 linkedSubBox.AddItem(sub.Name, sub);
             }
@@ -987,27 +1092,37 @@ namespace Barotrauma
                 nameBox.Flash();
                 return false;
             }
-            
-            foreach (char illegalChar in Path.GetInvalidFileNameChars())
+            var result = SaveSubToFile(nameBox.Text);
+            saveFrame = null;
+            return result;
+        }
+
+        private bool SaveSubToFile(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
             {
-                if (nameBox.Text.Contains(illegalChar))
-                {
-                    GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
-                    nameBox.Flash();
-                    return false;
-                }
+                GUI.AddMessage(TextManager.Get("SubNameMissingWarning"), GUI.Style.Red);
+                return false;
             }
             
-            string savePath = nameBox.Text + ".sub";
-            string prevSavePath = null;
-            if (Submarine.MainSub != null)
+            foreach (var illegalChar in Path.GetInvalidFileNameChars())
             {
-                prevSavePath = Submarine.MainSub.FilePath;
-                savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.FilePath), savePath);
+                if (!name.Contains(illegalChar)) continue;
+                GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUI.Style.Red);
+                return false;
+            }
+            
+            string savePath = name + ".sub";
+            string prevSavePath = null;
+            if (!string.IsNullOrEmpty(Submarine.MainSub?.Info.FilePath) &&
+                Submarine.MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+            {
+                prevSavePath = Submarine.MainSub.Info.FilePath.CleanUpPath();
+                savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.Info.FilePath), savePath).CleanUpPath();
             }
             else
             {
-                savePath = Path.Combine(Submarine.SavePath, savePath);
+                savePath = Path.Combine(SubmarineInfo.SavePath, savePath);
             }
 
 #if !DEBUG
@@ -1015,8 +1130,8 @@ namespace Barotrauma
             if (vanilla != null)
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
-                string pathToCompare = savePath.Replace(@"\", @"/").ToLowerInvariant();
-                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
+                string pathToCompare = savePath.Replace(@"\", @"/");
+                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").Equals(pathToCompare, StringComparison.OrdinalIgnoreCase)))
                 {
                     GUI.AddMessage(TextManager.Get("CannotEditVanillaSubs"), GUI.Style.Red, font: GUI.LargeFont);
                     return false;
@@ -1024,38 +1139,35 @@ namespace Barotrauma
             }
 #endif
 
-            if (previewImage.Sprite?.Texture != null)
+            if (previewImage?.Sprite?.Texture != null)
             {
                 using (MemoryStream imgStream = new MemoryStream())
                 {
                     previewImage.Sprite.Texture.SaveAsPng(imgStream, previewImage.Sprite.Texture.Width, previewImage.Sprite.Texture.Height);
-                    Submarine.SaveCurrent(savePath, imgStream);
+                    Submarine.MainSub.SaveAs(savePath, imgStream);
                 }
             }
             else
             {
-                Submarine.SaveCurrent(savePath);
+                Submarine.MainSub.SaveAs(savePath);
             }
-            Submarine.MainSub.CheckForErrors();
+            Submarine.MainSub?.CheckForErrors();
             
-            GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", Submarine.MainSub.FilePath), GUI.Style.Green);
-
-            Submarine.RefreshSavedSub(savePath);
+            GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUI.Style.Green);
+            SubmarineInfo.RefreshSavedSub(savePath);
             if (prevSavePath != null && prevSavePath != savePath)
             {
-                Submarine.RefreshSavedSub(prevSavePath);
+                SubmarineInfo.RefreshSavedSub(prevSavePath);
             }
 
             linkedSubBox.ClearChildren();
-            foreach (Submarine sub in Submarine.SavedSubmarines)
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 linkedSubBox.AddItem(sub.Name, sub);
             }
 
-            subNameLabel.Text = ToolBox.LimitString(Submarine.MainSub.Name, subNameLabel.Font, subNameLabel.Rect.Width);
+            subNameLabel.Text = ToolBox.LimitString(Submarine.MainSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
 
-            saveFrame = null;
-            
             return false;
         }
 
@@ -1160,15 +1272,15 @@ namespace Barotrauma
             crewSizeMin.OnValueChanged += (numberInput) =>
             {
                 crewSizeMax.IntValue = Math.Max(crewSizeMax.IntValue, numberInput.IntValue);
-                Submarine.MainSub.RecommendedCrewSizeMin = crewSizeMin.IntValue;
-                Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
+                Submarine.MainSub.Info.RecommendedCrewSizeMin = crewSizeMin.IntValue;
+                Submarine.MainSub.Info.RecommendedCrewSizeMax = crewSizeMax.IntValue;
             };
 
             crewSizeMax.OnValueChanged += (numberInput) =>
             {
                 crewSizeMin.IntValue = Math.Min(crewSizeMin.IntValue, numberInput.IntValue);
-                Submarine.MainSub.RecommendedCrewSizeMin = crewSizeMin.IntValue;
-                Submarine.MainSub.RecommendedCrewSizeMax = crewSizeMax.IntValue;
+                Submarine.MainSub.Info.RecommendedCrewSizeMin = crewSizeMin.IntValue;
+                Submarine.MainSub.Info.RecommendedCrewSizeMax = crewSizeMax.IntValue;
             };
 
             var crewExpArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), leftColumn.RectTransform), isHorizontal: true)
@@ -1191,7 +1303,7 @@ namespace Barotrauma
                 if (currentIndex < 0) currentIndex = crewExperienceLevels.Length - 1;
                 experienceText.UserData = crewExperienceLevels[currentIndex];
                 experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
-                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
+                Submarine.MainSub.Info.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
@@ -1202,18 +1314,18 @@ namespace Barotrauma
                 if (currentIndex >= crewExperienceLevels.Length) currentIndex = 0;
                 experienceText.UserData = crewExperienceLevels[currentIndex];
                 experienceText.Text = TextManager.Get(crewExperienceLevels[currentIndex]);
-                Submarine.MainSub.RecommendedCrewExperience = (string)experienceText.UserData;
+                Submarine.MainSub.Info.RecommendedCrewExperience = (string)experienceText.UserData;
                 return true;
             };
 
             if (Submarine.MainSub != null)
             {
-                int min =  Submarine.MainSub.RecommendedCrewSizeMin;
-                int max = Submarine.MainSub.RecommendedCrewSizeMax;
+                int min =  Submarine.MainSub.Info.RecommendedCrewSizeMin;
+                int max = Submarine.MainSub.Info.RecommendedCrewSizeMax;
                 crewSizeMin.IntValue = min;
                 crewSizeMax.IntValue = max;
-                experienceText.UserData =  string.IsNullOrEmpty(Submarine.MainSub.RecommendedCrewExperience) ?
-                    crewExperienceLevels[0] : Submarine.MainSub.RecommendedCrewExperience;
+                experienceText.UserData =  string.IsNullOrEmpty(Submarine.MainSub.Info.RecommendedCrewExperience) ?
+                    crewExperienceLevels[0] : Submarine.MainSub.Info.RecommendedCrewExperience;
                 experienceText.Text = TextManager.Get((string)experienceText.UserData);
             }
             
@@ -1222,7 +1334,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), rightColumn.RectTransform), TextManager.Get("SubPreviewImage"), font: GUI.SubHeadingFont);
             
             var previewImageHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), rightColumn.RectTransform), style: null) { Color = Color.Black, CanBeFocused = false };
-            previewImage = new GUIImage(new RectTransform(Vector2.One, previewImageHolder.RectTransform), Submarine.MainSub?.PreviewImage, scaleToFit: true);
+            previewImage = new GUIImage(new RectTransform(Vector2.One, previewImageHolder.RectTransform), Submarine.MainSub?.Info.PreviewImage, scaleToFit: true);
 
             var previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
@@ -1236,7 +1348,7 @@ namespace Barotrauma
                         previewImage.Sprite = new Sprite(TextureLoader.FromStream(imgStream), null, null);
                         if (Submarine.MainSub != null)
                         {
-                            Submarine.MainSub.PreviewImage = previewImage.Sprite;
+                            Submarine.MainSub.Info.PreviewImage = previewImage.Sprite;
                         }
                     }
                     return true;
@@ -1258,7 +1370,7 @@ namespace Barotrauma
                         previewImage.Sprite = new Sprite(file, sourceRectangle: null);
                         if (Submarine.MainSub != null)
                         {
-                            Submarine.MainSub.PreviewImage = previewImage.Sprite;
+                            Submarine.MainSub.Info.PreviewImage = previewImage.Sprite;
                         }
                     };
                     FileSelection.ClearFileTypeFilters();
@@ -1288,7 +1400,7 @@ namespace Barotrauma
                 var tagTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), tagContainer.Content.RectTransform),
                     tagStr, font: GUI.SmallFont)
                 {
-                    Selected = Submarine.MainSub == null ? false : Submarine.MainSub.HasTag(tag),
+                    Selected = Submarine.MainSub == null ? false : Submarine.MainSub.Info.HasTag(tag),
                     UserData = tag,
 
                     OnSelected = (GUITickBox tickBox) =>
@@ -1296,11 +1408,11 @@ namespace Barotrauma
                         if (Submarine.MainSub == null) return false;
                         if (tickBox.Selected)
                         {
-                            Submarine.MainSub.AddTag((SubmarineTag)tickBox.UserData);
+                            Submarine.MainSub.Info.AddTag((SubmarineTag)tickBox.UserData);
                         }
                         else
                         {
-                            Submarine.MainSub.RemoveTag((SubmarineTag)tickBox.UserData);
+                            Submarine.MainSub.Info.RemoveTag((SubmarineTag)tickBox.UserData);
                         }
                         return true;
                     }
@@ -1313,7 +1425,7 @@ namespace Barotrauma
             var contentPackList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - contentPackagesLabel.RectTransform.RelativeSize.Y),
                 horizontalArea.RectTransform, Anchor.BottomRight));
 
-            List<string> contentPacks = Submarine.MainSub.RequiredContentPackages.ToList();
+            List<string> contentPacks = Submarine.MainSub.Info.RequiredContentPackages.ToList();
             foreach (ContentPackage contentPack in ContentPackage.List)
             {                
                 //don't show content packages that only define submarine files
@@ -1326,18 +1438,18 @@ namespace Barotrauma
             {
                 var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUI.SmallFont)
                 {
-                    Selected = Submarine.MainSub.RequiredContentPackages.Contains(contentPackageName),
+                    Selected = Submarine.MainSub.Info.RequiredContentPackages.Contains(contentPackageName),
                     UserData = contentPackageName
                 };
                 cpTickBox.OnSelected += (GUITickBox tickBox) =>
                 {
                     if (tickBox.Selected)
                     {
-                        Submarine.MainSub.RequiredContentPackages.Add((string)tickBox.UserData);
+                        Submarine.MainSub.Info.RequiredContentPackages.Add((string)tickBox.UserData);
                     }
                     else
                     {
-                        Submarine.MainSub.RequiredContentPackages.Remove((string)tickBox.UserData);
+                        Submarine.MainSub.Info.RequiredContentPackages.Remove((string)tickBox.UserData);
                     }
                     return true;
                 };
@@ -1363,7 +1475,7 @@ namespace Barotrauma
             };
             paddedSaveFrame.Recalculate();
             leftColumn.Recalculate();
-            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Description;
+            descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Info.Description;
             submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
         }
 
@@ -1513,7 +1625,7 @@ namespace Barotrauma
 #if DEBUG
                         deleteBtn.Enabled = true;
 #else
-                        deleteBtn.Enabled = userData is Submarine sub && !sub.IsVanillaSubmarine();
+                        deleteBtn.Enabled = userData is Submarine sub && !sub.Info.IsVanillaSubmarine();
 #endif
                     }
                     return true;
@@ -1524,7 +1636,7 @@ namespace Barotrauma
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
 
-            foreach (Submarine sub in Submarine.SavedSubmarines)
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
                     ToolBox.LimitString(sub.Name, GUI.Font, subList.Rect.Width - 80))
@@ -1554,7 +1666,7 @@ namespace Barotrauma
             {
                 if (subList.SelectedComponent != null)
                 {
-                    TryDeleteSub(subList.SelectedComponent.UserData as Submarine);
+                    TryDeleteSub(subList.SelectedComponent.UserData as SubmarineInfo);
                 }
                 deleteButton.Enabled = false;
                 return true;
@@ -1586,7 +1698,7 @@ namespace Barotrauma
             foreach (GUIComponent child in subList.Content.Children)
             {
                 if (!(child.UserData is Submarine sub)) { return; }
-                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Name.ToLower().Contains(filter.ToLower());
+                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.Info.Name.ToLower().Contains(filter.ToLower());
             }
         }
 
@@ -1606,14 +1718,14 @@ namespace Barotrauma
             }
 
             if (subList.SelectedComponent == null) { return false; }
-            if (!(subList.SelectedComponent.UserData is Submarine selectedSub)) { return false; }
+            if (!(subList.SelectedComponent.UserData is SubmarineInfo selectedSubInfo)) { return false; }
 
-            selectedSub.Load(true);
+            Submarine.Unload();
+            var selectedSub = new Submarine(selectedSubInfo);
             Submarine.MainSub = selectedSub;
-            Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-            Submarine.MainSub.UpdateTransform();
+            Submarine.MainSub.UpdateTransform(interpolate: false);
 
-            string name = Submarine.MainSub.Name;
+            string name = Submarine.MainSub.Info.Name;
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
@@ -1624,10 +1736,13 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 var lightComponent = item.GetComponent<LightComponent>();
-                if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
+                if (lightComponent != null)
+                {
+                    lightComponent.Light.Enabled = item.ParentInventory == null;
+                }
             }
 
-            if (selectedSub.GameVersion < new Version("0.8.9.0"))
+            if (selectedSub.Info.GameVersion < new Version("0.8.9.0"))
             {
                 var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
                     new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
@@ -1649,7 +1764,7 @@ namespace Barotrauma
             return true;
         }
 
-        private void TryDeleteSub(Submarine sub)
+        private void TryDeleteSub(SubmarineInfo sub)
         {
             if (sub == null) { return; }
 
@@ -1674,9 +1789,9 @@ namespace Barotrauma
             {
                 try
                 {
-                    sub.Remove();
+                    sub.Dispose();
                     File.Delete(sub.FilePath);
-                    Submarine.RefreshSavedSubs();
+                    SubmarineInfo.RefreshSavedSubs();
                     CreateLoadScreen();
                 }
                 catch (Exception e)
@@ -1754,18 +1869,20 @@ namespace Barotrauma
             return true;
         }
 
-        public void SetMode(Mode mode)
+        public void SetMode(Mode newMode)
         {
-            if (mode == this.mode) { return; }
-            this.mode = mode;
+            if (newMode == mode) { return; }
+            mode = newMode;
 
-            defaultModeTickBox.Selected = mode == Mode.Default;
+            lockMode = true;
+            defaultModeTickBox.Selected = newMode == Mode.Default;
             defaultModeTickBox.CanBeFocused = !defaultModeTickBox.Selected;
 
-            characterModeTickBox.Selected = mode == Mode.Character;
-            wiringModeTickBox.Selected = mode == Mode.Wiring;
-
-            switch (mode)
+            characterModeTickBox.Selected = newMode == Mode.Character;
+            wiringModeTickBox.Selected = newMode == Mode.Wiring;
+            lockMode = false;
+            
+            switch (newMode)
             {
                 case Mode.Character:
                     CreateDummyCharacter();
@@ -1790,6 +1907,7 @@ namespace Barotrauma
             }
 
             MapEntity.DeselectAll();
+            MapEntity.FilteredSelectedList.Clear();
         }
 
         private void RemoveDummyCharacter()
@@ -1954,7 +2072,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (Submarine.MainSub != null) Submarine.MainSub.Name = text;
+            if (Submarine.MainSub != null) Submarine.MainSub.Info.Name = text;
             textBox.Deselect();
 
             textBox.Text = text;
@@ -1968,7 +2086,7 @@ namespace Barotrauma
         {
             if (Submarine.MainSub != null)
             {
-                Submarine.MainSub.Description = text;
+                Submarine.MainSub.Info.Description = text;
             }
             else
             {
@@ -1994,6 +2112,7 @@ namespace Barotrauma
                 {
                     previouslyUsedPanel.Visible = false;
                     showEntitiesPanel.Visible = true;
+                    showEntitiesPanel.RectTransform.AbsoluteOffset = new Point(Math.Max(entityCountPanel.Rect.Right, saveAssemblyFrame.Rect.Right), TopPanel.Rect.Height);
                     matchingTickBox.Selected = true;
                     matchingTickBox.Flash(GUI.Style.Green);
                 }
@@ -2004,12 +2123,10 @@ namespace Barotrauma
             return false;
         }
 
-        private bool GenerateWaypoints(GUIButton button, object obj)
+        private bool GenerateWaypoints()
         {
-            if (Submarine.MainSub == null) return false;
-
-            WayPoint.GenerateSubWaypoints(Submarine.MainSub);
-            return true;
+            if (Submarine.MainSub == null) { return false; }
+            return WayPoint.GenerateSubWaypoints(Submarine.MainSub);
         }
 
         private void AddPreviouslyUsed(MapEntityPrefab mapEntityPrefab)
@@ -2406,12 +2523,53 @@ namespace Barotrauma
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
 
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Tab))
+            if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                entityFilterBox.Select();
+                // TODO adjust when the new inventory stuff rolls in
+                if (PlayerInput.KeyHit(Keys.Q) && mode == Mode.Default)
+                {
+                    toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
+                }
+                
+                if (PlayerInput.KeyHit(Keys.Tab))
+                {
+                    entityFilterBox.Select();
+                }
+
+                if (PlayerInput.KeyDown(Keys.LeftControl))
+                {
+                    // Save menu
+                    if (PlayerInput.KeyHit(Keys.S))
+                    {
+                        if (PlayerInput.KeyDown(Keys.LeftShift))
+                        {
+                            // Save the sub without a menu
+                            if (subNameLabel != null)
+                            {
+                                SaveSubToFile(subNameLabel.Text);
+                            } 
+                        }
+                        else
+                        {
+                            // Save menu
+                            if (saveFrame == null)
+                            {
+                                CreateSaveScreen();
+                            }
+                        }
+                    }
+
+                    // 1-3 keys on the keyboard for switching modes
+                    if (PlayerInput.KeyHit(Keys.D1)) { SetMode(Mode.Default); }
+                    if (PlayerInput.KeyHit(Keys.D2)) { SetMode(Mode.Character); }
+                    if (PlayerInput.KeyHit(Keys.D3)) { SetMode(Mode.Wiring); }
+                }
+                else
+                {
+                    cam.MoveCamera((float) deltaTime, true);
+                }
             }
-            
-            cam.MoveCamera((float)deltaTime, true);       
+
             if (PlayerInput.MidButtonHeld())
             {
                 Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 100.0f / cam.Zoom;
@@ -2647,10 +2805,29 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
+                Vector2 position = Submarine.MainSub.SubBody != null ? Submarine.MainSub.WorldPosition : Submarine.MainSub.HiddenSubPosition;
+
                 GUI.DrawIndicator(
-                    spriteBatch, Submarine.MainSub.WorldPosition, cam,
+                    spriteBatch, position, cam,
                     cam.WorldView.Width,
                     GUI.SubmarineIcon, Color.LightBlue * 0.5f);
+            }
+
+            var notificationIcon = GUI.Style.GetComponentStyle("GUINotificationButton");
+            var tooltipStyle = GUI.Style.GetComponentStyle("GUIToolTip");
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.linkedTo.Count == 2 && gap.linkedTo[0] == gap.linkedTo[1])
+                {
+                    Vector2 screenPos = Cam.WorldToScreen(gap.WorldPosition);
+                    Rectangle rect = new Rectangle(screenPos.ToPoint() - new Point(20), new Point(40));
+                    tooltipStyle.Sprites[GUIComponent.ComponentState.None][0].Draw(spriteBatch, rect, Color.White);
+                    notificationIcon.Sprites[GUIComponent.ComponentState.None][0].Draw(spriteBatch, rect, GUI.Style.Orange);
+                    if (Vector2.Distance(PlayerInput.MousePosition, screenPos) < 30 * Cam.Zoom)
+                    {
+                        GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("gapinsidehullwarning"), new Rectangle(screenPos.ToPoint(), new Point(10)));
+                    }
+                }
             }
             
             if ((CharacterMode || WiringMode) && dummyCharacter != null)

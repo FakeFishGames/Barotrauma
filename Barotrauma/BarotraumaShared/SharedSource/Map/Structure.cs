@@ -322,7 +322,7 @@ namespace Barotrauma
             : base(sp, submarine)
         {
             System.Diagnostics.Debug.Assert(rectangle.Width > 0 && rectangle.Height > 0);
-            if (rectangle.Width == 0 || rectangle.Height == 0) return;
+            if (rectangle.Width == 0 || rectangle.Height == 0) { return; }
             defaultRect = rectangle;
 
             rect = rectangle;
@@ -358,27 +358,30 @@ namespace Barotrauma
 
             InitProjSpecific();
 
-            if (Prefab.Body)
+            if (!HiddenInGame)
             {
-                Bodies = new List<Body>();
-                WallList.Add(this);
-
-                CreateSections();
-                UpdateSections();
-            }
-            else
-            {
-                Sections = new WallSection[1];
-                Sections[0] = new WallSection(rect);
-
-                if (StairDirection != Direction.None)
+                if (Prefab.Body)
                 {
-                    CreateStairBodies();
+                    Bodies = new List<Body>();
+                    WallList.Add(this);
+
+                    CreateSections();
+                    UpdateSections();
+                }
+                else
+                {
+                    Sections = new WallSection[1];
+                    Sections[0] = new WallSection(rect);
+
+                    if (StairDirection != Direction.None)
+                    {
+                        CreateStairBodies();
+                    }
                 }
             }
 
             // Only add ai targets automatically to submarine/outpost walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !Prefab.NoAITarget)
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !Prefab.NoAITarget)
             {
                 aiTarget = new AITarget(this)
                 {
@@ -1216,9 +1219,9 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(s, element);
 
-            if (submarine?.GameVersion != null)
+            if (submarine?.Info.GameVersion != null)
             {
-                SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.GameVersion);
+                SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
             }
 
             foreach (XElement subElement in element.Elements())
@@ -1322,6 +1325,8 @@ namespace Barotrauma
         public virtual void Reset()
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
+            Sprite.ReloadXML();
+            SpriteDepth = Sprite.Depth;
         }
 
         public override void Update(float deltaTime, Camera cam)

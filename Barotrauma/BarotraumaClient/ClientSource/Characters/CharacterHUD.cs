@@ -61,7 +61,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
@@ -90,9 +90,9 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) { return; }
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
-                if (character.Info != null && !character.ShouldLockHud())
+                if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
@@ -154,6 +154,7 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
                     if (!item.Repairables.Any(r => item.ConditionPercentage <= r.AIRepairThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
@@ -201,7 +202,7 @@ namespace Barotrauma
                     Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
             }
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
@@ -309,7 +310,7 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)));
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2((int)(-4 * GUI.Scale), (int)(2 * GUI.Scale)), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
                     }
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
@@ -327,7 +328,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {

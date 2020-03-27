@@ -236,15 +236,7 @@ namespace Barotrauma.Items.Components
             DeteriorateAlways = msg.ReadBoolean();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
-
-            if (currentFixerID == 0)
-            {
-                CurrentFixer = null;
-            }
-            else
-            {
-                CurrentFixer = Entity.FindEntityByID(currentFixerID) as Character;
-            }
+            CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

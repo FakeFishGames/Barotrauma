@@ -6,7 +6,15 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
-            item.WriteSpawnData(msg, item.ID);
+            msg.Write(usedExistingItem);
+            if (usedExistingItem)
+            {
+                msg.Write(item.ID);
+            }
+            else
+            {
+                item.WriteSpawnData(msg, item.ID);
+            }
         }
     }
 }

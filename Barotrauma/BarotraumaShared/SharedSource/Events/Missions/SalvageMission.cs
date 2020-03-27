@@ -13,6 +13,14 @@ namespace Barotrauma
         private Item item;
 
         private readonly Level.PositionType spawnPositionType;
+                
+        private readonly string containerTag;
+
+        private readonly string existingItemTag;
+
+        private bool usedExistingItem;
+
+        private readonly bool showMessageWhenPickedUp;
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -24,7 +32,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    yield return ConvertUnits.ToDisplayUnits(item.SimPosition);
+                    yield return item.WorldPosition;
                 }
             }
         }
@@ -32,6 +40,8 @@ namespace Barotrauma
         public SalvageMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
+            containerTag = prefab.ConfigElement.GetAttributeString("containertag", "");
+
             if (prefab.ConfigElement.Attribute("itemname") != null)
             {
                 DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
@@ -52,6 +62,9 @@ namespace Barotrauma
                 }
             }
 
+            existingItemTag = prefab.ConfigElement.GetAttributeString("existingitemtag", "");
+            showMessageWhenPickedUp = prefab.ConfigElement.GetAttributeBool("showmessagewhenpickedup", false);
+
             string spawnPositionTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPositionTypeStr) ||
                 !Enum.TryParse(spawnPositionTypeStr, true, out spawnPositionType))
@@ -64,20 +77,66 @@ namespace Barotrauma
         {
             if (!IsClient)
             {
-                //ruin items are allowed to spawn close to the sub
-                float minDistance = spawnPositionType == Level.PositionType.Ruin ? 0.0f : Level.Loaded.Size.X * 0.3f;
+                //ruin/wreck items are allowed to spawn close to the sub
+                float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Wreck ?
+                    0.0f : Level.Loaded.Size.X * 0.3f;
                 Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
-                item = new Item(itemPrefab, position, null);
-                item.body.FarseerBody.BodyType = BodyType.Kinematic;
-
-                if (item.HasTag("alien"))
+                if (!string.IsNullOrEmpty(existingItemTag))
                 {
-                    //try to find an artifact holder and place the artifact inside it
+                    var suitableItems = Item.ItemList.Where(it => it.HasTag(existingItemTag));
+                    switch (spawnPositionType)
+                    {
+                        case Level.PositionType.Cave:
+                        case Level.PositionType.MainPath:
+                            item = suitableItems.FirstOrDefault(it => Vector2.DistanceSquared(it.WorldPosition, position) < 1000.0f);
+                            break;
+                        case Level.PositionType.Ruin:
+                            item = suitableItems.FirstOrDefault(it => it.ParentRuin != null && it.ParentRuin.Area.Contains(position));
+                            break;
+                        case Level.PositionType.Wreck:
+                            foreach (Item it in suitableItems)
+                            {
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Wreck) { continue; }
+                                Rectangle worldBorders = it.Submarine.Borders;
+                                worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
+                                if (Submarine.RectContains(worldBorders, it.WorldPosition))
+                                {
+                                    item = it;
+                                    usedExistingItem = true;
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                }
+
+                if (item == null)
+                {
+                    item = new Item(itemPrefab, position, null);
+                    item.body.FarseerBody.BodyType = BodyType.Kinematic;
+                    item.FindHull();
+                }
+
+                //try to find a container and place the item inside it
+                if (!string.IsNullOrEmpty(containerTag) && item.ParentInventory == null)
+                {
                     foreach (Item it in Item.ItemList)
                     {
-                        if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
-
+                        if (!it.HasTag(containerTag)) { continue; }
+                        switch (spawnPositionType)
+                        {
+                            case Level.PositionType.Cave:
+                            case Level.PositionType.MainPath:
+                                if (it.Submarine != null || it.ParentRuin != null) { continue; }
+                                break;
+                            case Level.PositionType.Ruin:
+                                if (it.ParentRuin == null) { continue; }
+                                break;
+                            case Level.PositionType.Wreck:
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Wreck) { continue; }
+                                break;
+                        }
                         var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                         if (itemContainer == null) { continue; }
                         if (itemContainer.Combine(item, user: null)) { break; } // Placement successful
@@ -97,14 +156,21 @@ namespace Barotrauma
             {
                 case 0:
                     if (item.ParentInventory != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
-                    if (item.CurrentHull?.Submarine == null) { return; }
+                    if (showMessageWhenPickedUp)
+                    {
+                        if (!(item.ParentInventory?.Owner is Character)) { return; }
+                    }
+                    else
+                    {
+                        if (item.CurrentHull?.Submarine == null || item.CurrentHull.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { return; }
+                    }
                     State = 1;
                     break;
                 case 1:
                     if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
                     State = 2;
                     break;
-            }    
+            }
         }
 
         public override void End()

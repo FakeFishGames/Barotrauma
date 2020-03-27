@@ -208,15 +208,15 @@ namespace Barotrauma
             private set;
         }
 
-        public Submarine SelectedSub
+        public SubmarineInfo SelectedSub
         {
-            get { return subList.SelectedData as Submarine; }
+            get { return subList.SelectedData as SubmarineInfo; }
             set { subList.Select(value); }
         }
 
-        public Submarine SelectedShuttle
+        public SubmarineInfo SelectedShuttle
         {
-            get { return shuttleList.SelectedData as Submarine; }
+            get { return shuttleList.SelectedData as SubmarineInfo; }
         }
 
         public bool UsingShuttle
@@ -443,7 +443,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!(userdata is FileReceiver.FileTransferIn transfer)) { return false; }
+                    if (!(FileTransferFrame.UserData is FileReceiver.FileTransferIn transfer)) { return false; }
                     GameMain.Client?.CancelFileTransfer(transfer);
                     GameMain.Client.FileReceiver.StopTransfer(transfer);
                     return true;
@@ -658,7 +658,7 @@ namespace Barotrauma
                 OnClicked = (btn, obj) =>
                 {
                     GameMain.Client.RequestStartRound();
-                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: true), "WaitForStartRound");
+                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: false), "WaitForStartRound");
                     return true;
                 }
             };
@@ -1147,6 +1147,22 @@ namespace Barotrauma
             clientDisabledElements.AddRange(botSpawnModeButtons);
         }
 
+        public void StopWaitingForStartRound()
+        {
+            CoroutineManager.StopCoroutines("WaitForStartRound");
+
+            GUIMessageBox.CloseAll();
+            if (StartButton != null)
+            {
+                StartButton.Enabled = true;
+            }
+            if (campaignUI?.StartButton != null)
+            {
+                campaignUI.StartButton.Enabled = true;
+            }
+            GUI.ClearCursorWait();
+        }
+
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
         {
             GUI.SetCursorWaiting();
@@ -1173,7 +1189,8 @@ namespace Barotrauma
             }
 
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (Selected == GameMain.NetLobbyScreen && DateTime.Now < timeOut)
+            while (Selected == GameMain.NetLobbyScreen &&
+                   DateTime.Now < timeOut)
             {
                 msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
                 yield return CoroutineStatus.Running;
@@ -1322,6 +1339,8 @@ namespace Barotrauma
             if (GameMain.Client == null) return;
             spectateButton.Visible = true;
             spectateButton.Enabled = true;
+
+            StartButton.Visible = false;
         }
 
         public void SetCampaignCharacterInfo(CharacterInfo newCampaignCharacterInfo)
@@ -1609,19 +1628,19 @@ namespace Barotrauma
             MissionType = missionType;
         }
 
-        public void UpdateSubList(GUIComponent subList, List<Submarine> submarines)
+        public void UpdateSubList(GUIComponent subList, List<SubmarineInfo> submarines)
         {
             if (subList == null) { return; }
 
             subList.ClearChildren();
             
-            foreach (Submarine sub in submarines)
+            foreach (SubmarineInfo sub in submarines)
             {
                 AddSubmarine(subList, sub);
             }
         }
 
-        private void AddSubmarine(GUIComponent subList, Submarine sub)
+        private void AddSubmarine(GUIComponent subList, SubmarineInfo sub)
         {
             if (subList is GUIListBox)
             {
@@ -1646,8 +1665,8 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            var matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
-            if (matchingSub == null) matchingSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
+            var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
+            if (matchingSub == null) matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
 
             if (matchingSub == null)
             {
@@ -1704,7 +1723,7 @@ namespace Barotrauma
             {
                 if (!GameMain.Client.ServerSettings.Voting.AllowSubVoting)
                 {
-                    var selectedSub = component.UserData as Submarine;
+                    var selectedSub = component.UserData as SubmarineInfo;
                     if (!selectedSub.RequiredContentPackagesInstalled)
                     {
                         var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
@@ -1729,7 +1748,7 @@ namespace Barotrauma
                     }
                     return false;
                 }
-                if (component.UserData is Submarine sub)
+                if (component.UserData is SubmarineInfo sub)
                 {
                     CreateSubPreview(sub);
                 }
@@ -1761,7 +1780,7 @@ namespace Barotrauma
                         }
                         GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
                         HighlightMode(SelectedModeIndex);
-                        return (presetName.ToLowerInvariant() != "multiplayercampaign");
+                        return !presetName.Equals("multiplayercampaign", StringComparison.OrdinalIgnoreCase);
                     }
                     return false;
                 }
@@ -1793,6 +1812,7 @@ namespace Barotrauma
                 SelectedColor = Color.White * 0.85f,
                 OutlineColor = Color.White * 0.5f,
                 TextColor = Color.White,
+                SelectedTextColor = Color.Black,
                 UserData = client
             };
             var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
@@ -1884,7 +1904,7 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) ClosePlayerFrame(btn, userdata); return true; }
             };
 
-            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.24f, .5f) : new Vector2(.24f, .24f);
+            Vector2 frameSize = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions) ? new Vector2(.28f, .5f) : new Vector2(.28f, .24f);
 
             var playerFrameInner = new GUIFrame(new RectTransform(frameSize, playerFrame.RectTransform, Anchor.Center) { MinSize = new Point(550, 0) });
             var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.88f), playerFrameInner.RectTransform, Anchor.Center))
@@ -2111,7 +2131,7 @@ namespace Barotrauma
             {
                 if (GameMain.Client.HasPermission(ClientPermissions.Ban))
                 {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaTop.RectTransform),
+                    var banButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
                         TextManager.Get("Ban"))
                     {
                         UserData = selectedClient
@@ -2119,7 +2139,7 @@ namespace Barotrauma
                     banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
 
-                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaTop.RectTransform),
+                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
                         TextManager.Get("BanRange"))
                     {
                         UserData = selectedClient
@@ -2132,7 +2152,7 @@ namespace Barotrauma
                 if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
                     selectedClient != null && selectedClient.AllowKicking)
                 {
-                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("VoteToKick"))
                     {
                         Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
@@ -2144,7 +2164,7 @@ namespace Barotrauma
                 if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
                     selectedClient != null && selectedClient.AllowKicking)
                 {
-                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform),
+                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
                         TextManager.Get("Kick"))
                     {
                         UserData = selectedClient
@@ -2152,6 +2172,9 @@ namespace Barotrauma
                     kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
                     kickButton.OnClicked += ClosePlayerFrame;
                 }
+
+                GUITextBlock.AutoScaleAndNormalize(
+                    buttonAreaTop.Children.Select(c => ((GUIButton)c).TextBlock).Concat(buttonAreaLower.Children.Select(c => ((GUIButton)c).TextBlock)));
 
                 new GUITickBox(new RectTransform(new Vector2(0.25f, 1.0f), buttonAreaTop.RectTransform, Anchor.TopRight),
                     TextManager.Get("Mute"))
@@ -2162,7 +2185,7 @@ namespace Barotrauma
                 };
             }
 
-            var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.BottomRight),
+            var closeButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonAreaLower.RectTransform, Anchor.TopRight),
                 TextManager.Get("Close"))
             {
                 IgnoreLayoutGroups = true,
@@ -2241,7 +2264,7 @@ namespace Barotrauma
                 targetMicStyle = "GUIMicrophoneDisabled";
             }
 
-            if (targetMicStyle.ToLowerInvariant() != currMicStyle.ToLowerInvariant())
+            if (!targetMicStyle.Equals(currMicStyle, StringComparison.OrdinalIgnoreCase))
             {
                 GUI.Style.Apply(micIcon, targetMicStyle);
             }
@@ -2597,7 +2620,7 @@ namespace Barotrauma
             GUILayoutGroup row = null;
             int itemsInRow = 0;
 
-            XElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e => e.GetAttributeString("type", "").ToLowerInvariant() == "head");
+            XElement headElement = info.Ragdoll.MainElement.Elements().FirstOrDefault(e => e.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase));
             XElement headSpriteElement = headElement.Element("sprite");
             string spritePathWithTags = headSpriteElement.Attribute("texture").Value;
 
@@ -2655,8 +2678,11 @@ namespace Barotrauma
 
         private bool SwitchJob(GUIButton button, object obj)
         {
+            if (JobList == null) { return false; }
+
             int childIndex = JobList.SelectedIndex;
             var child = JobList.SelectedComponent;
+            if (child == null) { return false; }
 
             bool moveToNext = obj != null;
 
@@ -2745,11 +2771,11 @@ namespace Barotrauma
 
             availableJobs = availableJobs.ToList();
 
-            int itemsInRow = 1;
+            int itemsInRow = 0;
 
             foreach (var jobPrefab in availableJobs)
             {
-                if (itemsInRow >= 4)
+                if (itemsInRow >= 3)
                 {
                     row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
                     itemsInRow = 0;
@@ -3025,7 +3051,7 @@ namespace Barotrauma
             }*/
         }
 
-        public void TryDisplayCampaignSubmarine(Submarine submarine)
+        public void TryDisplayCampaignSubmarine(SubmarineInfo submarine)
         {
             string name = submarine?.Name;
             bool displayed = false;
@@ -3034,13 +3060,13 @@ namespace Barotrauma
             subPreviewContainer.ClearChildren();
             foreach (GUIComponent child in subList.Content.Children)
             {
-                if (!(child.UserData is Submarine sub)) { continue; }
+                if (!(child.UserData is SubmarineInfo sub)) { continue; }
                 //just check the name, even though the campaign sub may not be the exact same version
                 //we're selecting the sub just for show, the selection is not actually used for anything
                 if (sub.Name == name)
                 {
                     subList.Select(sub);
-                    if (Submarine.SavedSubmarines.Contains(sub))
+                    if (SubmarineInfo.SavedSubmarines.Contains(sub))
                     {
                         CreateSubPreview(sub);
                         displayed = true;
@@ -3200,10 +3226,10 @@ namespace Barotrauma
             {
                 return false;
             }
-            
-            Submarine sub = subList.Content.Children
-                .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName && s.MD5Hash?.Hash == md5Hash)?
-                .UserData as Submarine;
+
+            SubmarineInfo sub = subList.Content.Children
+                .FirstOrDefault(c => c.UserData is SubmarineInfo s && s.Name == subName && s.MD5Hash?.Hash == md5Hash)?
+                .UserData as SubmarineInfo;
 
             //matching sub found and already selected, all good
             if (sub != null)   
@@ -3212,7 +3238,7 @@ namespace Barotrauma
                 {
                     CreateSubPreview(sub);
                 }
-                if (subList.SelectedData is Submarine selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
+                if (subList.SelectedData is SubmarineInfo selectedSub && selectedSub.MD5Hash?.Hash == md5Hash && System.IO.File.Exists(sub.FilePath))
                 {
                     return true;
                 }
@@ -3222,8 +3248,8 @@ namespace Barotrauma
             if (sub == null)
             {
                 sub = subList.Content.Children
-                    .FirstOrDefault(c => c.UserData is Submarine s && s.Name == subName)?
-                    .UserData as Submarine;
+                    .FirstOrDefault(c => c.UserData is SubmarineInfo s && s.Name == subName)?
+                    .UserData as SubmarineInfo;
             }
 
             //found a sub that at least has the same name, select it
@@ -3246,7 +3272,7 @@ namespace Barotrauma
                     FailedSelectedShuttle = null;
                 
                 //hashes match, all good
-                if (sub.MD5Hash?.Hash == md5Hash && Submarine.SavedSubmarines.Contains(sub))
+                if (sub.MD5Hash?.Hash == md5Hash && SubmarineInfo.SavedSubmarines.Contains(sub))
                 {
                     return true;
                 }
@@ -3261,7 +3287,7 @@ namespace Barotrauma
                 FailedSelectedShuttle = new Pair<string, string>(subName, md5Hash);
 
             string errorMsg = "";
-            if (sub == null || !Submarine.SavedSubmarines.Contains(sub))
+            if (sub == null || !SubmarineInfo.SavedSubmarines.Contains(sub))
             {
                 errorMsg = TextManager.GetWithVariable("SubNotFoundError", "[subname]", subName) + " ";
             }
@@ -3303,7 +3329,7 @@ namespace Barotrauma
             return false;            
         }
 
-        private void CreateSubPreview(Submarine sub)
+        private void CreateSubPreview(SubmarineInfo sub)
         {
             subPreviewContainer?.ClearChildren();
             sub.CreatePreviewWindow(subPreviewContainer);

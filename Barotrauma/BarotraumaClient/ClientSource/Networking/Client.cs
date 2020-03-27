@@ -15,6 +15,7 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt16 CharacterID;
         public bool Muted;
+        public bool InGame;
         public bool AllowKicking;
     }
 
@@ -71,7 +72,8 @@ namespace Barotrauma.Networking
             else
             {
                 VoipSound.SetPosition(null);
-            }            
+                VoipSound.Gain = 1.0f;
+            }
         }
 
         partial void InitProjSpecific()

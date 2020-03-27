@@ -89,9 +89,6 @@ namespace Barotrauma
         private readonly float memoryFadeTime = 0.5f;
         private readonly float avoidTime = 3;
 
-        //Has the character been attacked since the last Update.
-        private bool wasAttacked;
-
         private float avoidTimer;
 
         public LatchOntoAI LatchOntoAI { get; private set; }
@@ -234,13 +231,6 @@ namespace Barotrauma
         
         public override void Update(float deltaTime)
         {
-            if (wasAttacked)
-            {
-                LatchOntoAI?.DeattachFromBody();
-                Character.AnimController.ReleaseStuckLimbs();
-                wasAttacked = false;
-            }
-
             if (DisableEnemyAI) { return; }
 
             base.Update(deltaTime);
@@ -305,7 +295,8 @@ namespace Barotrauma
                 FadeMemories(updateMemoriesInverval);
                 updateMemoriesTimer = updateMemoriesInverval;
             }
-            if (Character.HealthPercentage <= FleeHealthThreshold)
+            if (Character.HealthPercentage <= FleeHealthThreshold && SelectedAiTarget != null && 
+                SelectedAiTarget.Entity is Character target && (target.IsPlayer || IsBeingChasedBy(target)))
             {
                 State = AIState.Flee;
                 wallTarget = null;
@@ -384,9 +375,9 @@ namespace Barotrauma
                         State = AIState.Idle;
                         return;
                     }
-                    float distance = Vector2.DistanceSquared(WorldPosition, SelectedAiTarget.WorldPosition);
+                    float squaredDistance = Vector2.DistanceSquared(WorldPosition, SelectedAiTarget.WorldPosition);
                     var attackLimb = GetAttackLimb(SelectedAiTarget.WorldPosition);
-                    if (attackLimb != null && distance <= Math.Pow(attackLimb.attack.Range, 2))
+                    if (attackLimb != null && squaredDistance <= Math.Pow(attackLimb.attack.Range, 2))
                     {
                         run = true;
                         if (State == AIState.Avoid)
@@ -402,17 +393,18 @@ namespace Barotrauma
                     {
                         bool isBeingChased = IsBeingChased;
                         float reactDistance = !isBeingChased && selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
-                        if (distance <= Math.Pow(reactDistance + escapeMargin, 2))
+                        if (squaredDistance <= Math.Pow(reactDistance + escapeMargin, 2))
                         {
                             float halfReactDistance = reactDistance / 2;
-                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && distance < Math.Pow(halfReactDistance, 2))
+                            float attackDistance = selectedTargetingParams != null && selectedTargetingParams.AttackDistance > 0 ? selectedTargetingParams.AttackDistance : halfReactDistance;
+                            if (State == AIState.Aggressive || State == AIState.PassiveAggressive && squaredDistance < Math.Pow(attackDistance, 2))
                             {
                                 run = true;
                                 UpdateAttack(deltaTime);
                             }
                             else
                             {
-                                run = isBeingChased ? true : distance < Math.Pow(halfReactDistance, 2);
+                                run = isBeingChased ? true : squaredDistance < Math.Pow(halfReactDistance, 2);
                                 if (escapeMargin <= 0)
                                 {
                                     escapeMargin = halfReactDistance;
@@ -440,13 +432,14 @@ namespace Barotrauma
                 SwarmBehavior.Refresh();
                 SwarmBehavior.UpdateSteering(deltaTime);
             }
-            float speed = Character.AnimController.GetCurrentSpeed(run);
+            float speed = Character.AnimController.GetCurrentSpeed(run && Character.CanRun);
+            steeringManager.Update(speed);
+            Character.AnimController.TargetMovement = Character.ApplyMovementLimits(Steering, State == AIState.Idle && Character.AnimController.InWater ? Steering.Length() : speed);
             if (Character.CurrentHull != null && Character.AnimController.InWater)
             {
                 // Halve the swimming speed inside the sub
-                speed /= 2;
+                Character.AnimController.TargetMovement *= 0.5f;
             }
-            steeringManager.Update(speed);
         }
 
         #region Idle
@@ -577,7 +570,7 @@ namespace Barotrauma
                 else if (SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.CurrentHull == Character.CurrentHull)
                 {
                     // Steer away from the target if in the same room
-                    Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.GetTargetMovement());
+                    Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
                     if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                     SteeringManager.SteeringManual(deltaTime, escapeDir);
                 }
@@ -615,7 +608,7 @@ namespace Barotrauma
             {
                 escapeTarget = null;
                 allGapsSearched = false;
-                Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.GetTargetMovement());
+                Vector2 escapeDir = Vector2.Normalize(SelectedAiTarget != null ? WorldPosition - SelectedAiTarget.WorldPosition : Character.AnimController.TargetMovement);
                 if (!MathUtils.IsValid(escapeDir)) escapeDir = Vector2.UnitY;
                 SteeringManager.SteeringManual(deltaTime, escapeDir);
                 if (Character.CurrentHull == null)
@@ -758,6 +751,10 @@ namespace Barotrauma
             bool pursue = false;
             if (IsCoolDownRunning)
             {
+                if (AttackingLimb.attack.CoolDownTimer >= AttackingLimb.attack.CoolDown + AttackingLimb.attack.CurrentRandomCoolDown - AttackingLimb.attack.AfterAttackDelay)
+                {
+                    return;
+                }
                 switch (AttackingLimb.attack.AfterAttack)
                 {
                     case AIBehaviorAfterAttack.Pursue:
@@ -1017,58 +1014,63 @@ namespace Barotrauma
                 return;
             }
 
-            Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
-            // Offset so that we don't overshoot the movement
-            Vector2 steerPos = attackSimPos + offset;
-
-            if (SteeringManager is IndoorsSteeringManager pathSteering)
+            if (AttackingLimb != null && AttackingLimb.attack.Retreat)
             {
-                if (pathSteering.CurrentPath != null)
+                UpdateFallBack(attackWorldPos, deltaTime, false);
+            }
+            else
+            {
+                Vector2 offset = Character.SimPosition - steeringLimb.SimPosition;
+                // Offset so that we don't overshoot the movement
+                Vector2 steerPos = attackSimPos + offset;
+                if (SteeringManager is IndoorsSteeringManager pathSteering)
                 {
-                    // Attack doors
-                    if (canAttackSub)
+                    if (pathSteering.CurrentPath != null)
                     {
-                        // If the target is in the same hull, there shouldn't be any doors blocking the path
-                        if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
+                        // Attack doors
+                        if (canAttackSub)
                         {
-                            var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
-                            if (door != null && !door.IsOpen)
+                            // If the target is in the same hull, there shouldn't be any doors blocking the path
+                            if (targetCharacter == null || targetCharacter.CurrentHull != Character.CurrentHull)
                             {
-                                if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
+                                var door = pathSteering.CurrentPath.CurrentNode?.ConnectedDoor ?? pathSteering.CurrentPath.NextNode?.ConnectedDoor;
+                                if (door != null && !door.IsOpen)
                                 {
-                                    SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
-                                    return;
+                                    if (door.Item.AiTarget != null && SelectedAiTarget != door.Item.AiTarget)
+                                    {
+                                        SelectTarget(door.Item.AiTarget, selectedTargetMemory.Priority);
+                                        return;
+                                    }
                                 }
                             }
                         }
-                    }
-                    // Steer towards the target if in the same room and swimming
-                    if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
-                    {
-                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
+                        // Steer towards the target if in the same room and swimming
+                        if ((Character.AnimController.InWater || pursue) && targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull))
+                        {
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(attackSimPos - steeringLimb.SimPosition));
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringSeek(steerPos, 2);
+                            // Switch to Idle when cannot reach the target and if cannot damage the walls
+                            if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                            {
+                                State = AIState.Idle;
+                                return;
+                            }
+                        }
                     }
                     else
                     {
-                        SteeringManager.SteeringSeek(steerPos, 2);
-                        // Switch to Idle when cannot reach the target and if cannot damage the walls
-                        if ((!canAttackSub || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
-                        {
-                            State = AIState.Idle;
-                            return;
-                        }
+                        SteeringManager.SteeringSeek(steerPos, 5);
                     }
                 }
                 else
                 {
-                    SteeringManager.SteeringSeek(steerPos, 5);
+                    SteeringManager.SteeringSeek(steerPos, 10);
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
                 }
             }
-            else
-            {
-                SteeringManager.SteeringSeek(steerPos, 10);
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
-            }
-
             if (canAttack)
             {
                 if (!UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb))
@@ -1110,31 +1112,11 @@ namespace Barotrauma
             return false;
         }
 
-        private bool CanAttack(Entity target)
-        {
-            if (target == null) { return false; }
-            if (target is Character c)
-            {
-                if (Character.CurrentHull == null && c.CurrentHull != null || Character.CurrentHull != null && c.CurrentHull == null)
-                {
-                    return false;
-                }
-            }
-            else if (target is Item i && i.GetComponent<Door>() == null)
-            {
-                if (Character.CurrentHull == null && i.CurrentHull != null || Character.CurrentHull != null && i.CurrentHull == null)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-
         private Limb GetAttackLimb(Vector2 attackWorldPos, Limb ignoredLimb = null)
         {
             var currentContexts = Character.GetAttackContexts();
             Entity target = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity;
-            if (!CanAttack(target)) { return null; }
+            if (target == null) { return null; }
             Limb selectedLimb = null;
             float currentPriority = -1;
             foreach (Limb limb in Character.AnimController.Limbs)
@@ -1174,13 +1156,17 @@ namespace Barotrauma
         {
             wallTarget = null;
             if (SelectedAiTarget == null) { return; }
+            if (SelectedAiTarget.Entity == null) { return; }
             //check if there's a wall between the target and the Character   
             Vector2 rayStart = SimPosition;
             Vector2 rayEnd = SelectedAiTarget.SimPosition;
-            bool offset = SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null;
-            if (offset)
+            if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
             {
                 rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+            }
+            else if (SelectedAiTarget.Entity.Submarine == null && Character.Submarine != null)
+            {
+                rayEnd -= Character.Submarine.SimPosition;
             }
             Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true, ignoreSensors: CanEnterSubmarine, ignoreDisabledWalls: CanEnterSubmarine);
             if (Submarine.LastPickedFraction != 1.0f && closestBody != null)
@@ -1259,9 +1245,16 @@ namespace Barotrauma
             float reactionTime = Rand.Range(0.1f, 0.3f);
             updateTargetsTimer = Math.Min(updateTargetsTimer, reactionTime);
 
-            wasAttacked = true;
-
+            bool wasLatched = IsLatchedOnSub;
+            Character.AnimController.ReleaseStuckLimbs();
+            LatchOntoAI?.DeattachFromBody();
             if (attacker == null || attacker.AiTarget == null) { return; }
+            if (wasLatched)
+            {
+                avoidTimer = avoidTime * Rand.Range(0.75f, 1.25f);
+                SelectTarget(attacker.AiTarget);
+                return;
+            }
 
             if (State == AIState.Flee)
             {
@@ -1272,22 +1265,30 @@ namespace Barotrauma
             if (attackResult.Damage > 0.0f)
             {
                 bool canAttack = attacker.Submarine == Character.Submarine && canAttackCharacters || attacker.Submarine != null && canAttackSub;
-                if (Character.Params.AI.AttackWhenProvoked)
+                if (Character.Params.AI.AttackWhenProvoked && canAttack)
                 {
-                    if (canAttack)
+                    if (attacker.IsHusk)
+                    {
+                        ChangeTargetState("husk", AIState.Attack, 100);
+                    }
+                    else
                     {
                         ChangeTargetState(attacker, AIState.Attack, 100);
                     }
                 }
                 else if (!AIParams.HasTag(attacker.SpeciesName))
                 {
-                    if (attacker.AIController is EnemyAIController enemyAI)
+                    if (attacker.IsHusk)
+                    {
+                        ChangeTargetState("husk", canAttack ? AIState.Attack : AIState.Escape, 100);
+                    }
+                    else if (attacker.AIController is EnemyAIController enemyAI)
                     {
                         if (enemyAI.CombatStrength > CombatStrength)
                         {
                             if (!AIParams.HasTag("stronger"))
                             {
-                                ChangeTargetState(attacker, AIState.Escape, 100);
+                                ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                             }
                         }
                         else if (enemyAI.CombatStrength < CombatStrength)
@@ -1305,7 +1306,14 @@ namespace Barotrauma
                     }
                     else
                     {
-                        ChangeTargetState(attacker, AIState.Escape, 100);
+                        ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
+                    }
+                }
+                else if (canAttack && attacker.IsHuman && AIParams.TryGetTarget(attacker.SpeciesName, out CharacterParams.TargetParams targetingParams))
+                {
+                    if (targetingParams.State == AIState.Aggressive)
+                    {
+                        ChangeTargetState(attacker, AIState.Attack, 100);
                     }
                 }
             }
@@ -1502,7 +1510,7 @@ namespace Barotrauma
                 if (aiTarget.Type == AITarget.TargetType.HumanOnly) { continue; }
                 if (!TargetOutposts)
                 {
-                    if (aiTarget.Entity.Submarine != null && aiTarget.Entity.Submarine.IsOutpost) { continue; }
+                    if (aiTarget.Entity.Submarine != null && aiTarget.Entity.Submarine.Info.IsOutpost) { continue; }
                 }
                 Character targetCharacter = aiTarget.Entity as Character;
                 //ignore the aitarget if it is the Character itself
@@ -1512,29 +1520,6 @@ namespace Barotrauma
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
-                    if (targetCharacter.Submarine != Character.Submarine)
-                    {
-                        // In a different sub or the target is outside when we are inside or vice versa.
-                        if (State == AIState.Avoid && State == AIState.Escape & State == AIState.Flee)
-                        {
-                            // If we are escaping, let's not ignore the target entirely, because there can be a gaps where we or they can go freely
-                            if (targetCharacter.Submarine != null)
-                            {
-                                // Target is inside -> reduce the priority
-                                valueModifier *= 0.5f;
-                                if (Character.Submarine != null)
-                                {
-                                    // Both inside different submarines -> can ignore safely
-                                    continue;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Don't attack targets that are not in the same submarine
-                            continue;
-                        }
-                    }
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
@@ -1550,38 +1535,47 @@ namespace Barotrauma
                             // Ignore targets that are in the same group (treat them like they were of the same species)
                             continue;
                         }
-                        if (enemy.CombatStrength > CombatStrength)
+                        if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
                         {
-                            targetingTag = "stronger";
+                            targetingTag = "husk";
                         }
-                        else if (enemy.CombatStrength < CombatStrength)
+                        else
                         {
-                            targetingTag = "weaker";
-                        }
-                        if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
-                        {
-                            if (SelectedAiTarget == aiTarget)
+                            if (enemy.CombatStrength > CombatStrength)
                             {
-                                // Freightened -> hold on to the target
-                                valueModifier *= 2;
+                                targetingTag = "stronger";
                             }
-                            if (IsBeingChasedBy(targetCharacter))
+                            else if (enemy.CombatStrength < CombatStrength)
                             {
-                                valueModifier *= 2;
+                                targetingTag = "weaker";
                             }
-                            if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
+                            if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
                             {
-                                // Inside but in a different room
-                                valueModifier /= 2;
+                                if (SelectedAiTarget == aiTarget)
+                                {
+                                    // Freightened -> hold on to the target
+                                    valueModifier *= 2;
+                                }
+                                if (IsBeingChasedBy(targetCharacter))
+                                {
+                                    valueModifier *= 2;
+                                }
+                                if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
+                                {
+                                    // Inside but in a different room
+                                    valueModifier /= 2;
+                                }
                             }
                         }
                     }
                 }
                 else if (aiTarget.Entity != null)
                 {
+                    // Ignore all structures and items inside wrecks
+                    if (aiTarget.Entity.Submarine != null && aiTarget.Entity.Submarine.Info.IsWreck) { continue; }
                     // Ignore the target if it's a room and the character is already inside a sub
                     if (character.CurrentHull != null && aiTarget.Entity is Hull) { continue; }
-                    
+
                     Door door = null;
                     if (aiTarget.Entity is Item item)
                     {
@@ -1619,13 +1613,11 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        if (character.CurrentHull != null)
+                        bool isCharacterOutside = s.Submarine == null || character.CurrentHull == null;
+                        bool targetInnerWalls = AIParams.TargetInnerWalls;
+                        if (!isCharacterOutside && !targetInnerWalls)
                         {
                             // Ignore walls when inside (walltargets still work)
-                            continue;
-                        }
-                        if (s.Submarine == null)
-                        {
                             continue;
                         }
                         valueModifier = 1;
@@ -1640,30 +1632,37 @@ namespace Barotrauma
                             bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;
                             if (Character.AnimController.CanEnterSubmarine)
                             {
-                                if (CanPassThroughHole(s, i))
+                                if (isCharacterOutside)
                                 {
-                                    valueModifier *= leadsInside ? (AggressiveBoarding ? 5 : 1) : 0;
+                                    if (CanPassThroughHole(s, i))
+                                    {
+                                        valueModifier *= leadsInside ? (AggressiveBoarding ? 5 : 1) : (targetInnerWalls ? 1 : 0);
+                                    }
+                                    else
+                                    {
+                                        // Ignore holes that cannot be passed through if cannot attack items/structures. Holes that are big enough should be targeted, so that we can get in
+                                        if (!canAttackSub)
+                                        {
+                                            continue;
+                                        }
+                                        if (AggressiveBoarding && leadsInside)
+                                        {
+                                            // Up to 100% priority increase for every gap in the wall when an aggressive boarder is outside
+                                            valueModifier *= 1 + section.gap.Open;
+                                        }
+                                    }
                                 }
-                                else
+                                else if (!canAttackSub || CanPassThroughHole(s, i))
                                 {
-                                    // Ignore holes that cannot be passed through if cannot attack items/structures. Holes that are big enough should be targeted, so that we can get in
-                                    if (!canAttackSub)
-                                    {
-                                        valueModifier = 0;
-                                        break;
-                                    }
-                                    if (AggressiveBoarding)
-                                    {
-                                        // Up to 100% priority increase for every gap in the wall
-                                        valueModifier *= 1 + section.gap.Open;
-                                    }
+                                    // Already inside -> ignore holes in the walls and ignore walls if cannot attack the sub.
+                                    continue;
                                 }
                             }
-                            else if (!leadsInside)
+                            else if (!leadsInside || !canAttackSub)
                             {
-                                // Ignore inner walls
-                                valueModifier = 0;
-                                break;
+                                // Can't get in, ignore inner walls
+                                // Also ignore all walls if cannot attack the sub
+                                continue;
                             }
                         }
                     }
@@ -1746,6 +1745,53 @@ namespace Barotrauma
 
                 if (valueModifier > targetValue)
                 {
+                    // Don't target items that we own. 
+                    // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
+                    if (aiTarget.Entity is Item i && i.IsOwnedBy(character)) { continue; }
+                    if (targetCharacter != null)
+                    {
+                        if (targetCharacter.Submarine != Character.Submarine)
+                        {
+                            if (targetCharacter.Submarine != null)
+                            {
+                                // Target is inside -> reduce the priority
+                                valueModifier *= 0.5f;
+                                if (Character.Submarine != null)
+                                {
+                                    // Both inside different submarines -> can ignore safely
+                                    continue;
+                                }
+                            }
+                            else if (Character.CurrentHull != null)
+                            {
+                                // Target outside, but we are inside -> Check if we can get to the target.
+                                // Only check if we are not already targeting the character.
+                                // If we are, keep the target (unless we choose another).
+                                if (SelectedAiTarget?.Entity != targetCharacter)
+                                {
+                                    foreach (var gap in Character.CurrentHull.ConnectedGaps)
+                                    {
+                                        var door = gap.ConnectedDoor;
+                                        if (door == null || !door.IsOpen)
+                                        {
+                                            var wall = gap.ConnectedWall;
+                                            if (wall != null)
+                                            {
+                                                for (int j = 0; j < wall.Sections.Length; j++)
+                                                {
+                                                    WallSection section = wall.Sections[j];
+                                                    if (!CanPassThroughHole(wall, j) && section?.gap != null)
+                                                    {
+                                                        continue;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                     newTarget = aiTarget;
                     selectedTargetMemory = targetMemory;
                     targetValue = valueModifier;
@@ -1867,6 +1913,39 @@ namespace Barotrauma
         private readonly Dictionary<string, CharacterParams.TargetParams> modifiedParams = new Dictionary<string, CharacterParams.TargetParams>();
         private readonly Dictionary<string, CharacterParams.TargetParams> tempParams = new Dictionary<string, CharacterParams.TargetParams>();
 
+        private void ChangeParams(string tag, AIState state, float? priority = null, bool onlyExisting = false)
+        {
+            if (!AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
+            {
+                if (!onlyExisting && !tempParams.ContainsKey(tag))
+                {
+                    if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
+                    {
+                        tempParams.Add(tag, targetParams);
+                    }
+                }
+            }
+            if (targetParams != null)
+            {
+                if (priority.HasValue)
+                {
+                    targetParams.Priority = priority.Value;
+                }
+                targetParams.State = state;
+                if (!modifiedParams.ContainsKey(tag))
+                {
+                    modifiedParams.Add(tag, targetParams);
+                }
+            }
+        }
+
+        private void ChangeTargetState(string tag, AIState state, float? priority = null)
+        {
+            isStateChanged = true;
+            SetStateResetTimer();
+            ChangeParams(tag, state, priority);
+        }
+
         /// <summary>
         /// Temporarily changes the predefined state for a target. Eg. Idle -> Attack.
         /// </summary>
@@ -1874,50 +1953,27 @@ namespace Barotrauma
         {
             isStateChanged = true;
             SetStateResetTimer();
-            ChangeParams(target.SpeciesName);
-            // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items
-            if (state == AIState.Attack || state == AIState.Escape)
+            ChangeParams(target.SpeciesName, state, priority);
+            if (target.IsHuman)
             {
-                ChangeParams("weapon");
-                ChangeParams("tool");
-            }
-            if (state == AIState.Attack)
-            {
-                // If the target is shooting from the submarine, we might not perceive it because it doesn't move.
-                // --> Target the submarine too.
-                if (target.Submarine != null && canAttackSub)
+                // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items
+                if (state == AIState.Attack || state == AIState.Escape)
                 {
-                    ChangeParams("room");
-                    ChangeParams("wall");
-                    ChangeParams("door");
+                    ChangeParams("weapon", state, priority);
+                    ChangeParams("tool", state, priority);
                 }
-                ChangeParams("provocative", onlyExisting: true);
-                ChangeParams("light", onlyExisting: true);
-            }
-
-            void ChangeParams(string tag, bool onlyExisting = false)
-            {
-                if (!AIParams.TryGetTarget(tag, out CharacterParams.TargetParams targetParams))
+                if (state == AIState.Attack)
                 {
-                    if (!onlyExisting && !tempParams.ContainsKey(tag))
+                    // If the target is shooting from the submarine, we might not perceive it because it doesn't move.
+                    // --> Target the submarine too.
+                    if (target.Submarine != null && canAttackSub)
                     {
-                        if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
-                        {
-                            tempParams.Add(tag, targetParams);
-                        }
+                        ChangeParams("room", state, priority);
+                        ChangeParams("wall", state, priority);
+                        ChangeParams("door", state, priority);
                     }
-                }
-                if (targetParams != null)
-                {
-                    if (priority.HasValue)
-                    {
-                        targetParams.Priority = priority.Value;
-                    }
-                    targetParams.State = state;
-                    if (!modifiedParams.ContainsKey(tag))
-                    {
-                        modifiedParams.Add(tag, targetParams);
-                    }
+                    ChangeParams("provocative", state, priority, onlyExisting: true);
+                    ChangeParams("light", state, priority, onlyExisting: true);
                 }
             }
         }

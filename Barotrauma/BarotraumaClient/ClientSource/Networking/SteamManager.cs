@@ -15,6 +15,8 @@ namespace Barotrauma.Steam
 {
     static partial class SteamManager
     {
+        private static Dictionary<Steamworks.Data.PublishedFileId, Task> modCopiesInProgress = new Dictionary<Steamworks.Data.PublishedFileId, Task>();
+
         private static void InitializeProjectSpecific()
         {
             if (isInitialized) { return; }
@@ -63,20 +65,6 @@ namespace Barotrauma.Steam
 
         private static void UpdateProjectSpecific(float deltaTime)
         {
-            for (int i=0;i<(ugcResultPageTasks?.Count ?? 0);i++)
-            {
-                var task = ugcResultPageTasks[i];
-                if (task.IsCompleted)
-                {
-                    if (!task.IsCompletedSuccessfully)
-                    {
-                        DebugConsole.ThrowError("Failed to retrieve Steam Workshop page info: TaskStatus = "+task.Status.ToString());
-                    }
-                    ugcResultPageTasks.RemoveAt(i);
-                    i--;
-                }
-            }
-
             if (ugcSubscriptionTasks != null)
             {
                 var ugcSubscriptionKeys = ugcSubscriptionTasks.Keys.ToList();
@@ -525,7 +513,37 @@ namespace Barotrauma.Steam
             }
         }
 
-        private static List<Task> ugcResultPageTasks;
+        private static async Task<List<Steamworks.Ugc.Item>> GetWorkshopItemsAsync(Steamworks.Ugc.Query query, int clampResults = 0, Predicate<Steamworks.Ugc.Item> itemPredicate=null)
+        {
+            await Task.Yield();
+
+            int pageIndex = 1;
+            Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
+
+            List<Steamworks.Ugc.Item> retVal = new List<Steamworks.Ugc.Item>();
+            while (resultPage.HasValue && resultPage?.ResultCount > 0)
+            {
+                if (itemPredicate != null)
+                {
+                    retVal.AddRange(resultPage.Value.Entries.Where(it => itemPredicate(it)));
+                }
+                else
+                {
+                    retVal.AddRange(resultPage.Value.Entries);
+                }
+
+                if (clampResults > 0 && retVal.Count >= clampResults)
+                {
+                    retVal = retVal.Take(clampResults).ToList();
+                    break;
+                }
+
+                pageIndex++;
+                resultPage = await query.GetPageAsync(pageIndex);
+            }
+
+            return retVal;
+        }
 
         public static void GetSubscribedWorkshopItems(Action<IList<Steamworks.Ugc.Item>> onItemsFound, List<string> requireTags = null)
         {
@@ -535,30 +553,9 @@ namespace Barotrauma.Steam
                 .RankedByTotalUniqueSubscriptions()
                 .WhereUserSubscribed()
                 .WithLongDescription();
-            if (requireTags != null) query.WithTags(requireTags);
+            if (requireTags != null) { query = query.WithTags(requireTags); }
 
-            ugcResultPageTasks ??= new List<Task>();
-            ugcResultPageTasks.Add(Task.Run(async () =>
-            {
-                int processedResults = 0; int pageIndex = 1;
-                Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
-
-                while (resultPage.HasValue && resultPage?.ResultCount > 0)
-                {
-                    onItemsFound?.Invoke(resultPage.Value.Entries.ToList());
-                        
-                    processedResults += resultPage.Value.ResultCount;
-                    pageIndex++;
-                    if (processedResults < resultPage?.TotalCount)
-                    {
-                        resultPage = await query.GetPageAsync(pageIndex);
-                    }
-                    else
-                    {
-                        resultPage = null;
-                    }
-                }
-            }));
+            TaskPool.Add(GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(task.Result); });
         }
 
         public static void GetPopularWorkshopItems(Action<IList<Steamworks.Ugc.Item>> onItemsFound, int amount, List<string> requireTags = null)
@@ -570,65 +567,40 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            ugcResultPageTasks ??= new List<Task>();
-            ugcResultPageTasks.Add(Task.Run(async () =>
-            {
-                int processedResults = 0; int pageIndex = 1;
-                Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
+            TaskPool.Add(GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => {
+                var entries = task.Result;
 
-                while (resultPage.HasValue && resultPage?.ResultCount > 0)
+                //count the number of each unique tag
+                foreach (var item in entries)
                 {
-                    var entries = resultPage.Value.Entries.ToList();
-                    //count the number of each unique tag
-                    foreach (var item in entries)
+                    foreach (string tag in item.Tags)
                     {
-                        foreach (string tag in item.Tags)
+                        if (string.IsNullOrEmpty(tag)) { continue; }
+                        string caseInvariantTag = tag.ToLowerInvariant();
+                        if (!tagCommonness.ContainsKey(caseInvariantTag))
                         {
-                            if (string.IsNullOrEmpty(tag)) { continue; }
-                            string caseInvariantTag = tag.ToLowerInvariant();
-                            if (!tagCommonness.ContainsKey(caseInvariantTag))
-                            {
-                                tagCommonness[caseInvariantTag] = 1;
-                            }
-                            else
-                            {
-                                tagCommonness[caseInvariantTag]++;
-                            }
+                            tagCommonness[caseInvariantTag] = 1;
                         }
-                    }
-                    //populate the popularTags list with tags sorted by commonness
-                    popularTags.Clear();
-                    foreach (KeyValuePair<string, int> tagCommonnessKVP in tagCommonness)
-                    {
-                        int i = 0;
-                        while (i < popularTags.Count &&
-                                tagCommonness[popularTags[i]] > tagCommonnessKVP.Value)
+                        else
                         {
-                            i++;
+                            tagCommonness[caseInvariantTag]++;
                         }
-                        popularTags.Insert(i, tagCommonnessKVP.Key);
-                    }
-
-                    var nonSubscribedItems = entries.Where(it => !it.IsSubscribed);
-                    if (nonSubscribedItems.Count() > (amount-processedResults))
-                    {
-                        nonSubscribedItems = nonSubscribedItems.Take(amount - processedResults);
-                    }
-
-                    onItemsFound?.Invoke(nonSubscribedItems.ToList());
-                    
-                    processedResults += resultPage.Value.ResultCount;
-                    pageIndex++;
-                    if (processedResults < resultPage?.TotalCount && processedResults < amount)
-                    {
-                        resultPage = await query.GetPageAsync(pageIndex);
-                    }
-                    else
-                    {
-                        resultPage = null;
                     }
                 }
-            }));
+                //populate the popularTags list with tags sorted by commonness
+                popularTags.Clear();
+                foreach (KeyValuePair<string, int> tagCommonnessKVP in tagCommonness)
+                {
+                    int i = 0;
+                    while (i < popularTags.Count &&
+                            tagCommonness[popularTags[i]] > tagCommonnessKVP.Value)
+                    {
+                        i++;
+                    }
+                    popularTags.Insert(i, tagCommonnessKVP.Key);
+                }
+                onItemsFound?.Invoke(task.Result);
+            });
         }
 
         public static void GetPublishedWorkshopItems(Action<IList<Steamworks.Ugc.Item>> onItemsFound, List<string> requireTags = null)
@@ -641,28 +613,7 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            ugcResultPageTasks ??= new List<Task>();
-            ugcResultPageTasks.Add(Task.Run(async () =>
-            {
-                int processedResults = 0; int pageIndex = 1;
-                Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
-
-                while (resultPage.HasValue && resultPage?.ResultCount > 0)
-                {
-                    onItemsFound?.Invoke(resultPage.Value.Entries.ToList());
-                    
-                    processedResults += resultPage.Value.ResultCount;
-                    pageIndex++;
-                    if (processedResults < resultPage?.TotalCount)
-                    {
-                        resultPage = await query.GetPageAsync(pageIndex);
-                    }
-                    else
-                    {
-                        resultPage = null;
-                    }
-                }
-            }));
+            TaskPool.Add(GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(task.Result); });
         }
 
         private static Dictionary<ulong, Task> ugcSubscriptionTasks;
@@ -926,7 +877,7 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Enables a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool EnableWorkShopItem(Steamworks.Ugc.Item? item, bool allowFileOverwrite, out string errorMsg)
+        public static bool EnableWorkShopItem(Steamworks.Ugc.Item? item, bool allowFileOverwrite, out string errorMsg, bool selectContentPackage = false, bool suppressInstallNotif = false)
         {
             if (!(item?.IsInstalled ?? false))
             {
@@ -972,57 +923,116 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            GameMain.Config.SuppressModFolderWatcher = true;
+            Task<string> newTask = null;
 
-            CopyWorkShopItem(item, contentPackage, newContentPackagePath, metaDataFilePath, allowFileOverwrite, out errorMsg);
-
-            var newPackage = new ContentPackage(contentPackage.Path, newContentPackagePath)
+            lock (modCopiesInProgress)
             {
-                SteamWorkshopUrl = item?.Url,
-                InstallTime = item?.Updated > item?.Created ? item?.Updated : item?.Created
-            };
-
-            foreach (ContentFile contentFile in newPackage.Files)
-            {
-                contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage, true);
+                if (modCopiesInProgress.ContainsKey(item.Value.Id))
+                {
+                    if (!modCopiesInProgress[item.Value.Id].IsCompleted &&
+                        !modCopiesInProgress[item.Value.Id].IsFaulted &&
+                        !modCopiesInProgress[item.Value.Id].IsCanceled)
+                    {
+                        errorMsg = ""; return true;
+                    }
+                    modCopiesInProgress.Remove(item.Value.Id);
+                }
+                newTask = CopyWorkShopItemAsync(item, contentPackage, newContentPackagePath, metaDataFilePath, allowFileOverwrite);
+                modCopiesInProgress.Add(item.Value.Id, newTask);
             }
+            
+            TaskPool.Add(newTask,
+                contentPackage,
+                (task, cp) =>
+                {
+                    if (task.IsFaulted || task.IsCanceled)
+                    {
+                        DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\"", task.Exception);
+                        GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
+                        return;
+                    }
+                    if (!string.IsNullOrWhiteSpace(task.Result))
+                    {
+                        DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\": {task.Result}");
+                        GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
+                        return;
+                    }
 
-            if (!Directory.Exists(Path.GetDirectoryName(newContentPackagePath)))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(newContentPackagePath));
-            }
-            newPackage.Save(newContentPackagePath);
-            ContentPackage.List.Add(newPackage);
-            if (newPackage.CorePackage)
-            {
-                GameMain.Config.SelectCorePackage(newPackage);
-            }
-            else
-            {
-                GameMain.Config.SelectContentPackage(newPackage);
-            }
-            GameMain.Config.SaveNewPlayerConfig();
+                    GameMain.Config.SuppressModFolderWatcher = true;
 
-            GameMain.Config.WarnIfContentPackageSelectionDirty();
+                    var newPackage = new ContentPackage(cp.Path, newContentPackagePath)
+                    {
+                        SteamWorkshopUrl = item?.Url,
+                        InstallTime = item?.Updated > item?.Created ? item?.Updated : item?.Created
+                    };
 
-            GameMain.Config.SuppressModFolderWatcher = false;
+                    foreach (ContentFile contentFile in newPackage.Files)
+                    {
+                        contentFile.Path = CorrectContentFilePath(contentFile.Path, cp, true);
+                    }
 
-            if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
-            {
-                Submarine.RefreshSavedSubs();
-            }
+                    if (!Directory.Exists(Path.GetDirectoryName(newContentPackagePath)))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(newContentPackagePath));
+                    }
+                    newPackage.Save(newContentPackagePath);
+                    ContentPackage.List.Add(newPackage);
 
+                    if (selectContentPackage)
+                    {
+                        if (newPackage.CorePackage)
+                        {
+                            GameMain.Config.SelectCorePackage(newPackage);
+                        }
+                        else
+                        {
+                            GameMain.Config.SelectContentPackage(newPackage);
+                        }
+                        GameMain.Config.SaveNewPlayerConfig();
+
+                        GameMain.Config.WarnIfContentPackageSelectionDirty();
+
+                        if (newPackage.Files.Any(f => f.Type == ContentType.Submarine))
+                        {
+                            SubmarineInfo.RefreshSavedSubs();
+                        }
+                    }
+                    else if (!suppressInstallNotif)
+                    {
+                        GameMain.MainMenuScreen?.SetEnableModsNotification(true);
+                    }
+
+                    GameMain.Config.SuppressModFolderWatcher = false;
+
+                    GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Green);
+
+                });
+            
             errorMsg = "";
             return true;
         }
 
-        private static bool CopyWorkShopItem(Steamworks.Ugc.Item? item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath, bool allowFileOverwrite, out string errorMsg)
+        /// <summary>
+        /// Asynchronously copies a Workshop item into the Mods folder.
+        /// </summary>
+        /// <returns>Returns an empty string on success, otherwise returns an error message.</returns>
+        private async static Task<string> CopyWorkShopItemAsync(Steamworks.Ugc.Item? item, ContentPackage contentPackage, string newContentPackagePath, string metaDataFilePath, bool allowFileOverwrite)
         {
-            errorMsg = "";
+            await Task.Yield();
+
+            string targetPath = Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage));
+            string copyingPath = Path.Combine(targetPath, CopyIndicatorFileName);
+
+            string errorMsg = "";
             if (contentPackage.GameVersion > new Version(0, 9, 1, 0))
             {
-                SaveUtil.CopyFolder(item?.Directory, Path.GetDirectoryName(GetWorkshopItemContentPackagePath(contentPackage)), copySubDirs: true, overwriteExisting: true);
-                return true;
+                Directory.CreateDirectory(targetPath);
+                File.WriteAllText(copyingPath, "TEMPORARY FILE");
+
+                SaveUtil.CopyFolder(item?.Directory, targetPath, copySubDirs: true, overwriteExisting: true);
+
+                File.Delete(copyingPath);
+                return "";
             }
 
             var allPackageFiles = Directory.GetFiles(item?.Directory, "*", SearchOption.AllDirectories);
@@ -1042,7 +1052,7 @@ namespace Barotrauma.Steam
                 {
                     errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item?.Title, newContentPackagePath });
                     DebugConsole.NewMessage(errorMsg, Color.Red);
-                    return false;
+                    return errorMsg;
                 }
 
                 foreach (ContentFile contentFile in contentPackage.Files)
@@ -1053,84 +1063,79 @@ namespace Barotrauma.Steam
                     {
                         errorMsg = TextManager.GetWithVariables("WorkshopErrorOverwriteOnEnable", new string[2] { "[itemname]", "[filename]" }, new string[2] { item?.Title, contentFile.Path });
                         DebugConsole.NewMessage(errorMsg, Color.Red);
-                        return false;
+                        return errorMsg;
                     }
                 }
             }
 
-            try
+            Directory.CreateDirectory(targetPath);
+            File.WriteAllText(copyingPath, "TEMPORARY FILE");
+
+            foreach (ContentFile contentFile in contentPackage.Files)
             {
-                foreach (ContentFile contentFile in contentPackage.Files)
+                contentFile.Path = contentFile.Path.CleanUpPath();
+                string sourceFile = Path.Combine(item?.Directory, contentFile.Path);
+                if (!File.Exists(sourceFile))
                 {
-                    contentFile.Path = contentFile.Path.CleanUpPath();
-                    string sourceFile = Path.Combine(item?.Directory, contentFile.Path);
-                    if (!File.Exists(sourceFile))
+                    string[] splitPath = contentFile.Path.Split('/');
+                    if (splitPath.Length >= 2 && splitPath[0] == "Mods")
                     {
-                        string[] splitPath = contentFile.Path.Split('/');
-                        if (splitPath.Length >= 2 && splitPath[0] == "Mods")
-                        {
-                            sourceFile = Path.Combine(item?.Directory, string.Join("/", splitPath.Skip(2)));
-                        }
+                        sourceFile = Path.Combine(item?.Directory, string.Join("/", splitPath.Skip(2)));
                     }
+                }
 
-                    contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage, false);
+                contentFile.Path = CorrectContentFilePath(contentFile.Path, contentPackage,
+                    contentFile.Type != ContentType.Submarine);
 
-
-                    //path not allowed -> the content file must be a reference to an external file (such as some vanilla file outside the Mods folder)
-                    if (!ContentPackage.IsModFilePathAllowed(contentFile))
+                //path not allowed -> the content file must be a reference to an external file (such as some vanilla file outside the Mods folder)
+                if (!ContentPackage.IsModFilePathAllowed(contentFile))
+                {
+                    //the content package is trying to copy a file to a prohibited path, which is not allowed
+                    if (File.Exists(sourceFile))
                     {
-                        //the content package is trying to copy a file to a prohibited path, which is not allowed
-                        if (File.Exists(sourceFile))
-                        {
-                            errorMsg = TextManager.GetWithVariable("WorkshopErrorIllegalPathOnEnable", "[filename]", contentFile.Path);
-                            return false;
-                        }
-                        //not trying to copy anything, so this is a reference to an external file
-                        //if the external file doesn't exist, we cannot enable the package
-                        else if (!File.Exists(contentFile.Path))
-                        {
-                            errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
-                            return false;
-                        }
+                        errorMsg = TextManager.GetWithVariable("WorkshopErrorIllegalPathOnEnable", "[filename]", contentFile.Path);
+                        return errorMsg;
+                    }
+                    //not trying to copy anything, so this is a reference to an external file
+                    //if the external file doesn't exist, we cannot enable the package
+                    else if (!File.Exists(contentFile.Path))
+                    {
+                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
+                        return errorMsg;
+                    }
+                    continue;
+                }
+                else if (!File.Exists(sourceFile))
+                {
+                    if (File.Exists(contentFile.Path))
+                    {
+                        //the file is already present in the game folder, all good
                         continue;
                     }
-                    else if (!File.Exists(sourceFile))
+                    else
                     {
-                        if (File.Exists(contentFile.Path))
-                        {
-                            //the file is already present in the game folder, all good
-                            continue;
-                        }
-                        else
-                        {
-                            //file not present in either the mod or the game folder -> cannot enable the package
-                            errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
-                            return false;
-                        }
+                        //file not present in either the mod or the game folder -> cannot enable the package
+                        errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " " + TextManager.GetWithVariable("WorkshopFileNotFound", "[path]", "\"" + contentFile.Path + "\"");
+                        return errorMsg;
                     }
-
-                    //make sure the destination directory exists
-                    Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
-                    CorrectContentFileCopy(contentPackage, sourceFile, contentFile.Path, overwrite: true);
                 }
 
-                foreach (string nonContentFile in nonContentFiles)
-                {
-                    string sourceFile = Path.Combine(item?.Directory, nonContentFile);
-                    if (!File.Exists(sourceFile)) { continue; }
-                    string destinationPath = CorrectContentFilePath(nonContentFile, contentPackage, false);
-                    Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                    CorrectContentFileCopy(contentPackage, sourceFile, destinationPath, overwrite: true);
-                }
+                //make sure the destination directory exists
+                Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
+                CorrectContentFileCopy(contentPackage, sourceFile, contentFile.Path, overwrite: true);
             }
-            catch (Exception e)
+
+            foreach (string nonContentFile in nonContentFiles)
             {
-                errorMsg = TextManager.GetWithVariable("WorkshopErrorEnableFailed", "[itemname]", item?.Title) + " {" + e.Message + "}";
-                DebugConsole.NewMessage(errorMsg, Color.Red);
-                return false;
+                string sourceFile = Path.Combine(item?.Directory, nonContentFile);
+                if (!File.Exists(sourceFile)) { continue; }
+                string destinationPath = CorrectContentFilePath(nonContentFile, contentPackage, false);
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
+                CorrectContentFileCopy(contentPackage, sourceFile, destinationPath, overwrite: true);
             }
 
-            return true;
+            File.Delete(copyingPath);
+            return "";
         }
 
         private static bool CheckFileEquality(string filePath1, string filePath2)
@@ -1147,6 +1152,44 @@ namespace Barotrauma.Steam
                 Md5Hash hash2 = new Md5Hash(fs2);
                 return hash1.Hash == hash2.Hash;
             }
+        }
+
+        private static void RemoveMods(Func<ContentPackage, bool> predicate)
+        {
+            var toRemove = ContentPackage.List.Where(predicate).ToList();
+            var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
+            foreach (var cp in packagesToDeselect)
+            {
+                if (cp.CorePackage)
+                {
+                    GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                }
+                else
+                {
+                    GameMain.Config.DeselectContentPackage(cp);
+                }
+            }
+
+            foreach (var cp in toRemove)
+            {
+                try
+                {
+                    string path = Path.GetDirectoryName(cp.Path);
+                    if (Directory.Exists(path)) { Directory.Delete(path, true); }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"An error occurred while attempting to delete {Path.GetDirectoryName(cp.Path)}", e);
+                }
+            }
+
+            ContentPackage.List.RemoveAll(cp => toRemove.Contains(cp));
+            GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
+
+            ContentPackage.SortContentPackages();
+            GameMain.Config.SaveNewPlayerConfig();
+
+            GameMain.Config.WarnIfContentPackageSelectionDirty();
         }
 
         /// <summary>
@@ -1173,44 +1216,11 @@ namespace Barotrauma.Steam
             GameMain.Config.SuppressModFolderWatcher = true;
             try
             {
-
-                var toRemove = ContentPackage.List.Where(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl).ToList();
-                var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
-                foreach (var cp in packagesToDeselect)
-                {
-                    if (cp.CorePackage)
-                    {
-                        GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
-                    }
-                    else
-                    {
-                        GameMain.Config.DeselectContentPackage(cp);
-                    }
-                }
-
-                foreach (var cp in toRemove)
-                {
-                    try
-                    {
-                        Directory.Delete(Path.GetDirectoryName(cp.Path), true);
-                    }
-                    catch (Exception e)
-                    {
-                        DebugConsole.ThrowError($"An error occurred while attempting to delete {Path.GetDirectoryName(cp.Path)}", e);
-                    }
-                }
-
-                ContentPackage.List.RemoveAll(cp => toRemove.Contains(cp));
-                GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
-
-                ContentPackage.SortContentPackages();
-                GameMain.Config.SaveNewPlayerConfig();
-
-                GameMain.Config.WarnIfContentPackageSelectionDirty();
+                RemoveMods(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl);
             }
             catch (Exception e)
             {
-                errorMsg = "Disabling the workshop item \"" + item?.Title + "\" failed. " + e.Message;
+                errorMsg = "Disabling the workshop item \"" + item?.Title + "\" failed. " + e.Message + "\n" + e.StackTrace;
                 if (!noLog)
                 {
                     DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
@@ -1218,6 +1228,8 @@ namespace Barotrauma.Steam
                 return false;
             }
             GameMain.Config.SuppressModFolderWatcher = false;
+
+            GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, false, null);
 
             errorMsg = "";
             return true;
@@ -1314,79 +1326,77 @@ namespace Barotrauma.Steam
             return upToDate;
         }
 
-        public static bool AutoUpdateWorkshopItems()
+        public static async Task<bool> AutoUpdateWorkshopItemsAsync()
         {
             if (!isInitialized) { return false; }
 
             var query = new Steamworks.Ugc.Query(Steamworks.UgcType.All)
                 .WhereUserSubscribed()
                 .WithLongDescription();
-            //ugcResultPageTasks ??= new List<Task>();
-            //ugcResultPageTasks.Add();
-            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            CancellationToken cancelToken = cancelTokenSource.Token;
-            Task task = Task.Factory.StartNew(async () =>
-            {
-                int processedResults = 0; int pageIndex = 1;
-                Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
 
-                while (resultPage.HasValue && resultPage?.ResultCount > 0)
+            List<Steamworks.Ugc.Item> items = await GetWorkshopItemsAsync(query);
+
+            GameMain.Config.SuppressModFolderWatcher = true;
+
+            //remove mods that the player is no longer subscribed to
+            RemoveMods(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && !items.Any(it => it.Id == GetWorkshopItemIDFromUrl(cp.SteamWorkshopUrl)));
+
+            GameMain.Config.SuppressModFolderWatcher = false;
+
+            foreach (var item in items)
+            {
+                try
                 {
-                    foreach (var item in resultPage.Value.Entries)
+                    if (!item.IsInstalled) { continue; }
+
+                    bool installedSuccessfully = false;
+                    string errorMsg;
+                    if (!CheckWorkshopItemEnabled(item))
                     {
-                        if (cancelToken.IsCancellationRequested)
-                        {
-                            cancelToken.ThrowIfCancellationRequested();
-                        }
-                        try
-                        {
-                            if (!item.IsInstalled || !CheckWorkshopItemEnabled(item) || CheckWorkshopItemUpToDate(item)) { continue; }
-                            if (!UpdateWorkshopItem(item, out string errorMsg))
-                            {
-                                DebugConsole.ThrowError(errorMsg);
-                                new GUIMessageBox(
-                                    TextManager.Get("Error"),
-                                    TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
-                            }
-                            else
-                            {
-                                //TODO: potential race condition
-                                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            new GUIMessageBox(
-                                TextManager.Get("Error"),
-                                TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
-                            GameAnalyticsManager.AddErrorEventOnce(
-                                "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
-                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                                "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
-                        }
+                        installedSuccessfully = EnableWorkShopItem(item, true, out errorMsg);
                     }
-                    
-                    processedResults += resultPage.Value.ResultCount;
-                    pageIndex++;
-                    if (processedResults < resultPage?.TotalCount)
+                    else if (!CheckWorkshopItemUpToDate(item))
                     {
-                        resultPage = await query.GetPageAsync(pageIndex);
+                        installedSuccessfully = UpdateWorkshopItem(item, out errorMsg);
                     }
                     else
                     {
-                        resultPage = null;
+                        continue;
+                    }
+
+                    if (!installedSuccessfully)
+                    {
+                        DebugConsole.ThrowError(errorMsg);
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
+                    }
+                    else
+                    {
+                        //TODO: potential race condition
+                        new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
                     }
                 }
-            }, cancelToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
-
-            task.Wait(10000);
-            if (!task.IsCompleted)
-            {
-                cancelTokenSource.Cancel();
-                task.Wait();
+                catch (Exception e)
+                {
+                    new GUIMessageBox(
+                        TextManager.Get("Error"),
+                        TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
+                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
+                }
             }
-            
-            return task.Status == TaskStatus.RanToCompletion;
+
+            List<Task> tasks;
+            lock (modCopiesInProgress)
+            {
+                tasks = modCopiesInProgress.Values.ToList();
+            }
+            await Task.WhenAll(tasks);
+
+            return true;
         }
 
         public static bool UpdateWorkshopItem(Steamworks.Ugc.Item? item, out string errorMsg)
@@ -1431,7 +1441,7 @@ namespace Barotrauma.Steam
 
         private static void CorrectContentFileCopy(ContentPackage package, string src, string dest, bool overwrite)
         {
-            if (Path.GetExtension(src).ToLowerInvariant() == ".xml")
+            if (Path.GetExtension(src).Equals(".xml", StringComparison.OrdinalIgnoreCase))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(src);
                 if (doc != null)
@@ -1481,7 +1491,7 @@ namespace Barotrauma.Steam
                 {
                     if (checkIfFileExists)
                     {
-                        ContentPackage otherContentPackage = ContentPackage.List.Find(cp => cp.Name.ToLowerInvariant() == splitPath[1].ToLowerInvariant());
+                        ContentPackage otherContentPackage = ContentPackage.List.Find(cp => cp.Name.Equals(splitPath[1], StringComparison.OrdinalIgnoreCase));
                         if (otherContentPackage != null)
                         {
                             string otherPackageName = Path.GetDirectoryName(otherContentPackage.Path);
@@ -1493,7 +1503,8 @@ namespace Barotrauma.Steam
                             }
                         }
                     }
-                    newPath = Path.Combine(packageName, string.Join("/", splitPath.Skip(2)));
+                    splitPath = splitPath.Skip(Math.Clamp(splitPath.Length-1, 0, 2)).ToArray();
+                    newPath = Path.Combine(packageName, string.Join("/", splitPath));
                 }
                 else
                 {

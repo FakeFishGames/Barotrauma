@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private float blinkTimer;
 
-        private bool itemLoaded;
+        private double lastToggleSignalTime;
 
         public PhysicsBody ParentBody;
 
@@ -78,9 +78,7 @@ namespace Barotrauma.Items.Components
                 if (IsActive == value) { return; }
 
                 IsActive = value;
-#if SERVER
-                if (GameMain.Server != null && itemLoaded) { item.CreateServerEvent(this); }
-#endif
+                OnStateChanged();
             }
         }
 
@@ -115,6 +113,13 @@ namespace Barotrauma.Items.Components
                 if (light != null) light.Color = IsActive ? lightColor : Color.Transparent;
 #endif
             }
+        }
+
+        [Serialize(false, false, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
+        public bool IgnoreContinuousToggle
+        {
+            get;
+            set;
         }
 
         public override void Move(Vector2 amount)
@@ -158,14 +163,7 @@ namespace Barotrauma.Items.Components
             IsActive = IsOn;
             item.AddTag("light");
         }
-
-        public override void OnItemLoaded()
-        {
-            base.OnItemLoaded();
-            itemLoaded = true;
-            SetLightSourceState(IsActive, lightBrightness);
-        }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.AiTarget != null)
@@ -249,15 +247,21 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        partial void OnStateChanged();
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
                 case "toggle":
-                    IsActive = !IsActive;
+                    if (IgnoreContinuousToggle && lastToggleSignalTime < Timing.TotalTime - 0.1)
+                    {
+                        IsOn = !IsOn;
+                    }
+                    lastToggleSignalTime = Timing.TotalTime;
                     break;
                 case "set_state":
-                    IsActive = (signal != "0");
+                    IsOn = signal != "0";
                     break;
                 case "set_color":
                     LightColor = XMLExtensions.ParseColor(signal, false);
@@ -265,20 +269,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            msg.Write(IsOn);
-        }
-
         private void UpdateAITarget(AITarget target)
         {
-            target.Enabled = IsActive;
             if (!IsActive) { return; }
             if (target.MaxSightRange <= 0)
             {
                 target.MaxSightRange = Range * 5;
             }
-            target.SightRange = target.MaxSightRange * lightBrightness;
+            target.SightRange = Math.Max(target.SightRange, target.MaxSightRange * lightBrightness);
         }
 
         partial void SetLightSourceState(bool enabled, float brightness);

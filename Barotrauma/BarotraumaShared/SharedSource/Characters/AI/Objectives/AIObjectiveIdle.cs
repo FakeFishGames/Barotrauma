@@ -45,19 +45,16 @@ namespace Barotrauma
         private float randomUpdateInterval = 5;
         public float Random { get; private set; }
 
-        public void SetRandom()
+        public void CalculatePriority()
         {
             Random = Rand.Range(0.5f, 1.5f);
             randomTimer = randomUpdateInterval;
-        }
-
-        public override float GetPriority()
-        {
             float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
             float initiative = character.GetSkillLevel("initiative");
             Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
-            return Priority;
         }
+
+        public override float GetPriority() => Priority;
 
         public override void Update(float deltaTime)
         {
@@ -69,7 +66,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SetRandom();
+                    CalculatePriority();
                 }
             }
         }
@@ -182,7 +179,7 @@ namespace Barotrauma
             if (!character.IsClimbing)
             {
                 if (SteeringManager != PathSteering || (PathSteering.CurrentPath != null &&
-                    (PathSteering.CurrentPath.NextNode == null || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
+                    (PathSteering.CurrentPath.Finished || PathSteering.CurrentPath.Unreachable || PathSteering.CurrentPath.HasOutdoorsNodes)))
                 {
                     Wander(deltaTime);
                     return;
@@ -264,9 +261,9 @@ namespace Barotrauma
         public static bool IsForbidden(Hull hull)
         {
             if (hull == null) { return true; }
-            string hullName = hull.RoomName?.ToLowerInvariant();
+            string hullName = hull.RoomName;
             if (hullName == null) { return false; }
-            return hullName.Contains("ballast") || hullName.Contains("airlock");
+            return hullName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || hullName.Contains("airlock", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

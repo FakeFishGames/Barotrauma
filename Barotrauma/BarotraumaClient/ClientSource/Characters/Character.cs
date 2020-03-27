@@ -365,7 +365,7 @@ namespace Barotrauma
             }
         }
 
-        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction)
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
@@ -466,7 +466,7 @@ namespace Barotrauma
                     //modify the distance based on the size of the trigger (preferring smaller items)
                     distanceToItem *= MathHelper.Lerp(0.05f, 2.0f, (transformedTrigger.Width + transformedTrigger.Height) / 250.0f);
                 }
-                else
+                else if (!item.Prefab.RequireCursorInsideTrigger)
                 {
                     Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 
@@ -551,7 +551,7 @@ namespace Barotrauma
         {
             if (!enabled) { return; }
 
-            if (!IsDead && !IsUnconscious)
+            if (!IsDead && !IsIncapacitated)
             {
                 if (soundTimer > 0)
                 {
@@ -603,6 +603,11 @@ namespace Barotrauma
             }
         }
 
+        partial void SetOrderProjSpecific(Order order, string orderOption)
+        {
+            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
+        }
+
         public static void AddAllToGUIUpdateList()
         {
             for (int i = 0; i < CharacterList.Count; i++)
@@ -638,8 +643,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) return;
-
+            if (!Enabled) { return; }
             AnimController.Draw(spriteBatch, cam);
         }
 
@@ -656,8 +660,6 @@ namespace Barotrauma
             if (GameMain.DebugDraw)
             {
                 AnimController.DebugDraw(spriteBatch);
-
-                if (aiTarget != null) aiTarget.Draw(spriteBatch);
             }
             
             if (GUI.DisableHUD) return;

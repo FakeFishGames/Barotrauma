@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -209,7 +210,7 @@ namespace Barotrauma.Items.Components
             
             return true;
         }
-        
+                
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
             if (this.user != character)

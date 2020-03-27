@@ -19,6 +19,8 @@ namespace Barotrauma.Steam
 
         public const string MetadataFileName = "filelist.xml";
 
+        public const string CopyIndicatorFileName = ".copying";
+
         private static readonly Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
             { "submarine", 10 },
@@ -70,27 +72,28 @@ namespace Barotrauma.Steam
             return Steamworks.SteamClient.Name;
         }
 
-        public static void OverlayCustomURL(string url)
-        {
-            if (!isInitialized || !Steamworks.SteamClient.IsValid)
-            {
-                return;
-            }
-
-            Steamworks.SteamFriends.OpenWebOverlay(url);
-        }
-        
-        public static bool UnlockAchievement(string achievementName)
+        public static bool OverlayCustomURL(string url)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid)
             {
                 return false;
             }
 
-            DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
+            Steamworks.SteamFriends.OpenWebOverlay(url);
+            return true;
+        }
+        
+        public static bool UnlockAchievement(string achievementIdentifier)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid)
+            {
+                return false;
+            }
+
+            DebugConsole.Log("Unlocked achievement \"" + achievementIdentifier + "\"");
 
             var achievements = Steamworks.SteamUserStats.Achievements.ToList();
-            int achIndex = achievements.FindIndex(ach => ach.Name == achievementName);
+            int achIndex = achievements.FindIndex(ach => ach.Identifier == achievementIdentifier);
             bool unlocked = achIndex >= 0 ? achievements[achIndex].Trigger() : false;
             if (!unlocked)
             {
@@ -99,7 +102,7 @@ namespace Barotrauma.Steam
                 //(discovered[whateverbiomewasentered], kill[withwhateveritem], kill[somemonster] etc) so that we can add
                 //some types of new achievements without the need for client-side changes.
 #if DEBUG
-                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementName + "\".");
+                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementIdentifier + "\".");
 #endif
             }
 
@@ -159,8 +162,9 @@ namespace Barotrauma.Steam
         {
             if (string.IsNullOrWhiteSpace(str)) { return 0; }
             UInt64 retVal;
+            if (str.StartsWith("STEAM64_", StringComparison.InvariantCultureIgnoreCase)) { str = str.Substring(8); }
             if (UInt64.TryParse(str, out retVal) && retVal >(1<<52)) { return retVal; }
-            if (str.ToUpper().IndexOf("STEAM_") != 0) { return 0; }
+            if (!str.StartsWith("STEAM_", StringComparison.InvariantCultureIgnoreCase)) { return 0; }
             string[] split = str.Substring(6).Split(':');
             if (split.Length != 3) { return 0; }
 
@@ -179,7 +183,11 @@ namespace Barotrauma.Steam
             UInt64 accountNumber = (uint64 >> 1) & 0x7fffffff;
             UInt64 universe = (uint64 >> 56) & 0xff;
 
-            return "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
+            string retVal = "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
+
+            if (SteamIDStringToUInt64(retVal) != uint64) { return "STEAM64_" + uint64.ToString(); }
+
+            return retVal;
         }
     }
 }

@@ -977,7 +977,7 @@ namespace Barotrauma.Lights
                     origin, -Rotation, SpriteScale, LightSpriteEffect);
             }
 
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
                 Vector2 drawPos = position;
                 if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }

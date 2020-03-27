@@ -66,6 +66,9 @@ namespace Barotrauma.Items.Components
 
             if (!CheckCharacterSuccess(c.Character))
             {
+                item.CreateServerEvent(this);
+                c.Character.SelectedItems[0]?.GetComponent<Wire>()?.CreateNetworkEvent(); 
+                c.Character.SelectedItems[1]?.GetComponent<Wire>()?.CreateNetworkEvent();
                 GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
                 return;
             }

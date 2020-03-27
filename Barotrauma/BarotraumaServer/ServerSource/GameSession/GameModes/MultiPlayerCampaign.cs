@@ -15,7 +15,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
 
-            GameMain.GameSession = new GameSession(new Submarine(subPath, ""), savePath, 
+            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath, ""), savePath, 
                 GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
             var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
             campaign.GenerateMap(seed);
@@ -46,7 +46,7 @@ namespace Barotrauma
             DebugConsole.NewMessage("********* CAMPAIGN SETUP *********", Color.White);
             DebugConsole.ShowQuestionPrompt("Do you want to start a new campaign? Y/N", (string arg) =>
             {
-                if (arg.ToLowerInvariant() == "y" || arg.ToLowerInvariant() == "yes")
+                if (arg.Equals("y", StringComparison.OrdinalIgnoreCase) || arg.Equals("yes", StringComparison.OrdinalIgnoreCase))
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {

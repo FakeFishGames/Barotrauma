@@ -39,6 +39,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
+
+        [Serialize(false, false, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.")]
+        public bool AllowCrossTeamCommunication
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
             "as chat messages in the chatbox of the player holding the item.")]
         public bool LinkToChat
@@ -84,7 +92,7 @@ namespace Barotrauma.Items.Components
         {
             if (sender == null || sender.channel != channel) { return false; }
 
-            if (sender.TeamID != TeamID)
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication)
             {
                 return false;
             }            

@@ -123,7 +123,7 @@ namespace Barotrauma
             string filePathB = b.GetAttributeString("file", "").CleanUpPath();
             float baseGainB = b.GetAttributeFloat("volume", 1.0f);
             float rangeB = b.GetAttributeFloat("range", 1000.0f);
-            return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&
+            return a.Name.ToString().Equals(b.Name.ToString(), StringComparison.OrdinalIgnoreCase) &&
                    filePathA == filePathB && MathUtils.NearlyEqual(baseGainA, baseGainB) &&
                    MathUtils.NearlyEqual(rangeA, rangeB);
         }
@@ -151,7 +151,7 @@ namespace Barotrauma
             
             SoundCount = 1 + soundElements.Count();
 
-            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().ToLowerInvariant() == "startupsound");
+            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().Equals("startupsound", StringComparison.OrdinalIgnoreCase));
             if (startUpSoundElement != null)
             {
                 startUpSound = GameMain.SoundManager.LoadSound(startUpSoundElement, false);
@@ -182,7 +182,7 @@ namespace Barotrauma
                             musicClips.AddIfNotNull(newMusicClip);
                             if (loadedSoundElements != null)
                             {
-                                if (newMusicClip.Type.ToLowerInvariant() == "menu")
+                                if (newMusicClip.Type.Equals("menu", StringComparison.OrdinalIgnoreCase))
                                 {
                                     targetMusic[0] = newMusicClip;
                                 }
@@ -742,22 +742,30 @@ namespace Barotrauma
                 Screen.Selected == GameMain.LevelEditorScreen ||
                 Screen.Selected == GameMain.ParticleEditorScreen ||
                 Screen.Selected == GameMain.SpriteEditorScreen ||
-                Screen.Selected == GameMain.SubEditorScreen)
+                Screen.Selected == GameMain.SubEditorScreen ||
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is SubTestMode))
             {
                 return "editor";
             }
 
             if (Screen.Selected != GameMain.GameScreen) { return "menu"; }
 
-            if (Character.Controlled != null &&
-                Level.Loaded != null && Level.Loaded.Ruins != null &&
-                Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+
+            if (Character.Controlled != null)
             {
-                return "ruins";
+                if (Level.Loaded != null && Level.Loaded.Ruins != null &&
+                    Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+                {
+                    return "ruins";
+                }
+
+                if (Character.Controlled.Submarine?.Info?.IsWreck ?? false)
+                {
+                    return "wreck";
+                }
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
-
             if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
                 (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
             {

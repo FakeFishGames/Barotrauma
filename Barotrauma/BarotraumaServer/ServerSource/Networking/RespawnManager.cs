@@ -258,6 +258,9 @@ namespace Barotrauma.Networking
             {
                 bool bot = i >= clients.Count;
 
+                characterInfos[i].CurrentOrder = null;
+                characterInfos[i].CurrentOrderOption = null;
+
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !bot, bot);
                 character.TeamID = Character.TeamType.Team1;
 

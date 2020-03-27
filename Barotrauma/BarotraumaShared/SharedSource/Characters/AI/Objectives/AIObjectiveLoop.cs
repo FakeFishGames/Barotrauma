@@ -45,6 +45,7 @@ namespace Barotrauma
         public override bool CanBeCompleted => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowSubObjectiveSorting => true;
+        public virtual bool InverseTargetEvaluation => false;
 
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
@@ -107,21 +108,46 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (character.LockHands) { return 0; }
-            if (character.Submarine == null) { return 0; }
-            if (Targets.None()) { return 0; }
-            // Allow the target value to be more than 100.
-            float targetValue = TargetEvaluation();
-            // If the target value is less than 1% of the max value, let's just treat it as zero.
-            if (targetValue < 1) { return 0; }
-            if (objectiveManager.CurrentOrder == this)
+            if (character.LockHands || character.Submarine == null || Targets.None())
             {
-                return AIObjectiveManager.OrderPriority;
+                Priority = 0;
             }
-            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-            float devotion = MathHelper.Min(10, Priority);
-            float value = MathHelper.Clamp((devotion + targetValue * PriorityModifier) / 100, 0, 1);
-            return MathHelper.Lerp(0, max, value);
+            else
+            {
+                // Allow the target value to be more than 100.
+                float targetValue = TargetEvaluation();
+                if (InverseTargetEvaluation)
+                {
+                    targetValue = 100 - targetValue;
+                }
+                var currentSubObjective = CurrentSubObjective;
+                if (currentSubObjective != null && currentSubObjective.Priority > targetValue)
+                {
+                    // If the priority is higher than the target value, let's just use it.
+                    // The priority calculation is more precise, but it takes into account things like distances,
+                    // so it's better not to use it if it's lower than the rougher targetValue.
+                    targetValue = Priority;
+                }
+                // If the target value is less than 1% of the max value, let's just treat it as zero.
+                if (targetValue < 1)
+                {
+                    Priority = 0;
+                }
+                else
+                {
+                    if (objectiveManager.CurrentOrder == this)
+                    {
+                        Priority = AIObjectiveManager.OrderPriority;
+                    }
+                    else
+                    {
+                        float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+                        float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
+                        Priority = MathHelper.Lerp(0, max, value);
+                    }
+                }
+            }
+            return Priority;
         }
 
         protected void UpdateTargets()

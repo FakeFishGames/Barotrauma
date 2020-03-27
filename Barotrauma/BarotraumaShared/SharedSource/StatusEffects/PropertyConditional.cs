@@ -21,7 +21,8 @@ namespace Barotrauma
             HasTag,
             HasStatusTag,
             Affliction,
-            EntityType
+            EntityType,
+            LimbType
         }
 
         public enum Comparison
@@ -51,7 +52,8 @@ namespace Barotrauma
         // Only used by attacks
         public readonly bool TargetSelf;
 
-        private readonly string[] afflictionNames = new string[] { "internaldamage", "bleeding", "burn", "oxygenlow", "bloodloss", "pressure", "stun", "husk", "afflictionhusk", "huskinfection" };
+        // Only used by conditionals targeting an item (makes the conditional check the item/character whose inventory this item is inside)
+        public readonly bool TargetContainer;
 
         private readonly int cancelStatusEffect;
 
@@ -62,6 +64,7 @@ namespace Barotrauma
             {
                 case "targetitemcomponent":
                 case "targetself":
+                case "targetcontainer":
                     return false;
                 default:
                     return true;
@@ -132,6 +135,7 @@ namespace Barotrauma
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
+            TargetContainer = attribute.Parent.GetAttributeBool("targetcontainer", false);
             TargetSelf = attribute.Parent.GetAttributeBool("targetself", false);
 
             foreach (XElement subElement in attribute.Parent.Elements())
@@ -150,13 +154,9 @@ namespace Barotrauma
 
             if (!Enum.TryParse(AttributeName, true, out Type))
             {
-                if (afflictionNames.Any(n => n == AttributeName))
+                if (AfflictionPrefab.Prefabs.Any(p => p.Identifier.Equals(AttributeName, StringComparison.OrdinalIgnoreCase)))
                 {
                     Type = ConditionType.Affliction;
-                    if (AttributeName == "husk" || AttributeName == "huskaffliction")
-                    {
-                        AttributeName = "huskinfection";
-                    }
                 }
                 else
                 {
@@ -173,8 +173,7 @@ namespace Barotrauma
 
         public bool Matches(ISerializableEntity target)
         {
-            string valStr = AttributeValue.ToString();
-
+            string valStr = AttributeValue.ToString();            
             switch (Type)
             {
                 case ConditionType.PropertyValue:
@@ -264,34 +263,47 @@ namespace Barotrauma
                         default:
                             return false;
                     }
-                case ConditionType.Affliction:
-                    if (target == null) { return Operator == OperatorType.NotEquals; }
-
-                    Character targetChar = target as Character;
-                    if (target is Limb limb) { targetChar = limb.character;  }
-                    if (targetChar != null)
+                case ConditionType.LimbType:
                     {
-                        var health = targetChar.CharacterHealth;
-                        if (health == null) { return false; }
-                        var affliction = health.GetAffliction(AttributeName);
-                        float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
-                        if (FloatValue.HasValue)
+                        if (!(target is Limb limb))
                         {
-                            float value = FloatValue.Value;
-                            switch (Operator)
+                            return false;
+                        }
+                        else
+                        {
+                            return limb.type.ToString().Equals(valStr, StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                case ConditionType.Affliction:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+
+                        Character targetChar = target as Character;
+                        if (target is Limb limb) { targetChar = limb.character; }
+                        if (targetChar != null)
+                        {
+                            var health = targetChar.CharacterHealth;
+                            if (health == null) { return false; }
+                            var affliction = health.GetAffliction(AttributeName);
+                            float afflictionStrength = affliction == null ? 0.0f : affliction.Strength;
+                            if (FloatValue.HasValue)
                             {
-                                case OperatorType.Equals:
-                                    return afflictionStrength == value;
-                                case OperatorType.GreaterThan:
-                                    return afflictionStrength > value;
-                                case OperatorType.GreaterThanEquals:
-                                    return afflictionStrength >= value;
-                                case OperatorType.LessThan:
-                                    return afflictionStrength < value;
-                                case OperatorType.LessThanEquals:
-                                    return afflictionStrength <= value;
-                                case OperatorType.NotEquals:
-                                    return afflictionStrength != value;
+                                float value = FloatValue.Value;
+                                switch (Operator)
+                                {
+                                    case OperatorType.Equals:
+                                        return afflictionStrength == value;
+                                    case OperatorType.GreaterThan:
+                                        return afflictionStrength > value;
+                                    case OperatorType.GreaterThanEquals:
+                                        return afflictionStrength >= value;
+                                    case OperatorType.LessThan:
+                                        return afflictionStrength < value;
+                                    case OperatorType.LessThanEquals:
+                                        return afflictionStrength <= value;
+                                    case OperatorType.NotEquals:
+                                        return afflictionStrength != value;
+                                }
                             }
                         }
                     }

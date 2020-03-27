@@ -91,7 +91,7 @@ namespace Barotrauma
                 if (Character.Controlled.Submarine != outpost) { return null; }
                 
                 //if there's a sub docked to the outpost, we can leave the level
-                if (outpost.DockedTo.Count > 0)
+                if (outpost.DockedTo.Any())
                 {
                     var dockedSub = outpost.DockedTo.FirstOrDefault();
                     return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
@@ -277,6 +277,9 @@ namespace Barotrauma
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
                 }
+
+                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 

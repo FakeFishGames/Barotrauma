@@ -39,7 +39,10 @@ namespace Barotrauma
         TraitorMissions,
         EventManagerSettings,
         Orders,
-        SkillSettings
+        SkillSettings,
+        Wreck,
+        Corpses,
+        WreckAIConfig
     }
 
     public class ContentPackage
@@ -63,8 +66,10 @@ namespace Barotrauma
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Outpost,
+            ContentType.Wreck,
             ContentType.Afflictions,
-            ContentType.Orders
+            ContentType.Orders,
+            ContentType.Corpses
         };
 
         //at least one file of each these types is required in core content packages
@@ -75,6 +80,7 @@ namespace Barotrauma
             ContentType.Character,
             ContentType.Structure,
             ContentType.Outpost,
+            ContentType.Wreck,
             ContentType.Text,
             ContentType.Executable,
             ContentType.ServerExecutable,
@@ -87,7 +93,8 @@ namespace Barotrauma
             ContentType.Afflictions,
             ContentType.UIStyle,
             ContentType.EventManagerSettings,
-            ContentType.Orders
+            ContentType.Orders,
+            ContentType.Corpses
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -284,6 +291,7 @@ namespace Barotrauma
                     case ContentType.None:
                     case ContentType.Outpost:
                     case ContentType.Submarine:
+                    case ContentType.Wreck:
                         break;
                     default:
                         try
@@ -364,7 +372,10 @@ namespace Barotrauma
         {
             if (Files.Find(file => file.Path == path && file.Type == type) != null) return null;
 
-            ContentFile cf = new ContentFile(path, type);
+            ContentFile cf = new ContentFile(path, type)
+            {
+                ContentPackage = this
+            };
             Files.Add(cf);
 
             return cf;
@@ -460,12 +471,12 @@ namespace Barotrauma
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                         var rootElement = doc.Root;
                         var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path);
+                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
                         if (Directory.Exists(ragdollFolder))
                         {
                             Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
-                        var animationFolder = AnimationParams.GetFolder(doc, file.Path);
+                        var animationFolder = AnimationParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
                         if (Directory.Exists(animationFolder))
                         {
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
@@ -508,14 +519,22 @@ namespace Barotrauma
             return IsModFilePathAllowed(path);
         }
         /// <summary>
-        /// Are mods allowed to install a file into the specified path. If a content package XML includes files
-        /// with a prohibited path, they are treated as references to external files. For example, a mod could include
-        /// some vanilla files in the XML, in which case the game will simply use the vanilla files present in the game folder.
+        /// Returns whether mods are allowed to install a file into the specified path.
+        /// Currently mods are only allowed to install files into the Mods folder.
+        /// The only exception to this rule is the Vanilla content package.
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
         public static bool IsModFilePathAllowed(string path)
         {
+            if (GameMain.VanillaContent.Files.Any(f => string.Equals(System.IO.Path.GetFullPath(f.Path).CleanUpPath(),
+                                                                     System.IO.Path.GetFullPath(path).CleanUpPath(),
+                                                                     StringComparison.InvariantCultureIgnoreCase)))
+            {
+                //file is in vanilla package, this is allowed
+                return true;
+            }
+
             while (true)
             {
                 string temp = System.IO.Path.GetDirectoryName(path);
@@ -573,7 +592,13 @@ namespace Barotrauma
             {
                 if (System.IO.Path.GetFileName(modDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
                 string modFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
-                if (File.Exists(modFilePath))
+                string copyingFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.CopyIndicatorFileName);
+                if (File.Exists(copyingFilePath))
+                {
+                    //this mod didn't clean up its copying file; assume it's corrupted and delete it
+                    Directory.Delete(modDirectory, true);
+                }
+                else if (File.Exists(modFilePath))
                 {
                     List.Add(new ContentPackage(modFilePath));
                 }

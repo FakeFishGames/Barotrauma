@@ -27,18 +27,24 @@ namespace Barotrauma
         [Flags]
         public enum PositionType
         {
-            MainPath = 1, Cave = 2, Ruin = 4
+            MainPath = 1, Cave = 2, Ruin = 4, Wreck = 8
         }
 
         public struct InterestingPosition
         {
             public Point Position;
             public readonly PositionType PositionType;
+            public bool IsValid;
+            public Submarine Submarine;
+            public Ruin Ruin;
 
-            public InterestingPosition(Point position, PositionType positionType)
+            public InterestingPosition(Point position, PositionType positionType, bool isValid = true, Submarine submarine = null, Ruin ruin = null)
             {
                 Position = position;
                 PositionType = positionType;
+                IsValid = isValid;
+                Submarine = submarine;
+                Ruin = ruin;
             }
         }
 
@@ -67,6 +73,8 @@ namespace Barotrauma
         private List<InterestingPosition> positionsOfInterest;
 
         private List<Ruin> ruins;
+
+        private List<Submarine> wrecks;
 
         private LevelGenerationParams generationParams;
 
@@ -133,11 +141,13 @@ namespace Barotrauma
             get { return positionsOfInterest; }
         }
 
+        public readonly List<InterestingPosition> UsedPositions = new List<InterestingPosition>();
+
         public Submarine StartOutpost { get; private set; }
         public Submarine EndOutpost { get; private set; }
 
-        private Submarine preSelectedStartOutpost;
-        private Submarine preSelectedEndOutpost;
+        private SubmarineInfo preSelectedStartOutpost;
+        private SubmarineInfo preSelectedEndOutpost;
 
         public string Seed
         {
@@ -210,7 +220,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="difficulty">A scalar between 0-100</param>
         /// <param name="sizeFactor">A scalar between 0-1 (0 = the minimum width defined in the generation params is used, 1 = the max width is used)</param>
-        public Level(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome, Submarine startOutpost = null, Submarine endOutPost = null)
+        public Level(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome, SubmarineInfo startOutpost = null, SubmarineInfo endOutPost = null)
             : base(null)
         {
 
@@ -310,6 +320,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null)
             {
                 Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
+                dockedSubBorders.Inflate(dockedSubBorders.Size.ToVector2() * 0.05f);
                 minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
                 minWidth = Math.Min(minWidth, maxWidth);
             }
@@ -668,7 +679,6 @@ namespace Barotrauma
             renderer.SetWallVertices(CaveGenerator.GenerateWallShapes(cellsWithBody, this), generationParams.WallColor);
 #endif
 
-
             //----------------------------------------------------------------------------------
             // create (placeholder) outposts at the start and end of the level
             //----------------------------------------------------------------------------------
@@ -690,6 +700,12 @@ namespace Barotrauma
             bodies.Add(TopBarrier);
 
             GenerateSeaFloor(mirror);
+
+            //----------------------------------------------------------------------------------
+            // create wrecks
+            //----------------------------------------------------------------------------------
+
+            CreateWrecks();
 
             levelObjectManager.PlaceObjects(this, generationParams.LevelObjectAmount);
 
@@ -1163,7 +1179,7 @@ namespace Barotrauma
                         return;
                     }
                     string errorMsg = "Failed to find a suitable position for ruins. Level seed: " + seed +
-                        ", ruin size: " + ruinSize + ", selected sub " + (Submarine.MainSub == null ? "none" : Submarine.MainSub.Name);
+                        ", ruin size: " + ruinSize + ", selected sub " + (Submarine.MainSub == null ? "none" : Submarine.MainSub.Info.Name);
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("Level.GenerateRuins:PosNotFound", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     break;
@@ -1200,13 +1216,15 @@ namespace Barotrauma
             ruins.Add(ruin);
             
             ruin.RuinShapes.Sort((shape1, shape2) => shape2.DistanceFromEntrance.CompareTo(shape1.DistanceFromEntrance));
+            // TODO: autogenerate waypoints inside the ruins and connect them to the main path in multiple places.
+            // We need the waypoints for the AI navigation and we could use them for spawning the creatures too.
             int waypointCount = 0;
             foreach (WayPoint wp in WayPoint.WayPointList)
             {
                 if (wp.SpawnType != SpawnType.Enemy || wp.Submarine != null) { continue; }
                 if (ruin.RuinShapes.Any(rs => rs.Rect.Contains(wp.WorldPosition)))
                 {
-                    positionsOfInterest.Add(new InterestingPosition(new Point((int)wp.WorldPosition.X, (int)wp.WorldPosition.Y), PositionType.Ruin));
+                    positionsOfInterest.Add(new InterestingPosition(new Point((int)wp.WorldPosition.X, (int)wp.WorldPosition.Y), PositionType.Ruin, ruin: ruin));
                     waypointCount++;
                 }
             }
@@ -1214,7 +1232,7 @@ namespace Barotrauma
             //not enough waypoints inside ruins -> create some spawn positions manually            
             for (int i = 0; i < 4 - waypointCount && i < ruin.RuinShapes.Count; i++)
             {
-                positionsOfInterest.Add(new InterestingPosition(ruin.RuinShapes[i].Rect.Center, PositionType.Ruin));
+                positionsOfInterest.Add(new InterestingPosition(ruin.RuinShapes[i].Rect.Center, PositionType.Ruin, ruin: ruin));
             }
 
             foreach (RuinShape ruinShape in ruin.RuinShapes)
@@ -1327,8 +1345,6 @@ namespace Barotrauma
 
             Vector2 position = Vector2.Zero;
 
-            offsetFromWall = ConvertUnits.ToSimUnits(offsetFromWall);
-
             int tries = 0;
             do
             {
@@ -1397,7 +1413,7 @@ namespace Barotrauma
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
-                    if (sub.IsOutpost) { continue; }
+                    if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                     farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), sub.WorldPosition) < minDistFromSubs * minDistFromSubs);
                 }
             }
@@ -1483,8 +1499,10 @@ namespace Barotrauma
             return cells;
         }
 
+        private readonly List<VoronoiCell> tempCells = new List<VoronoiCell>();
         public List<VoronoiCell> GetCells(Vector2 worldPos, int searchDepth = 2)
         {
+            tempCells.Clear();
             int gridPosX = (int)Math.Floor(worldPos.X / GridCellSize);
             int gridPosY = (int)Math.Floor(worldPos.Y / GridCellSize);
 
@@ -1494,12 +1512,11 @@ namespace Barotrauma
             int startY = Math.Max(gridPosY - searchDepth, 0);
             int endY = Math.Min(gridPosY + searchDepth, cellGrid.GetLength(1) - 1);
 
-            List<VoronoiCell> cells = new List<VoronoiCell>();
             for (int y = startY; y <= endY; y++)
             {
                 for (int x = startX; x <= endX; x++)
                 {
-                    cells.AddRange(cellGrid[x, y]);
+                    tempCells.AddRange(cellGrid[x, y]);
                 }
             }
             
@@ -1507,11 +1524,310 @@ namespace Barotrauma
             {
                 foreach (VoronoiCell cell in wall.Cells)
                 {
-                    cells.Add(cell);
+                    tempCells.Add(cell);
                 }
             }
             
-            return cells;
+            return tempCells;
+        }
+
+        // For debugging
+        private readonly Dictionary<Submarine, List<Vector2>> wreckPositions = new Dictionary<Submarine, List<Vector2>>();
+        private readonly Dictionary<Submarine, List<Rectangle>> blockedRects = new Dictionary<Submarine, List<Rectangle>>();
+        private void CreateWrecks()
+        {
+            var totalSW = new Stopwatch();
+            var tempSW = new Stopwatch();
+            totalSW.Start();
+            var wreckFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Wreck).ToList();
+            if (wreckFiles.None())
+            {
+                DebugConsole.ThrowError("No wreck files found in the selected content packages!");
+                return;
+            }
+            wreckFiles.Shuffle(Rand.RandSync.Server);
+            int wreckCount = Math.Min(Loaded.GenerationParams.WreckCount, wreckFiles.Count);
+            // Min distance between a wreck and the start/end/other wreck.
+            float minDistance = Sonar.DefaultSonarRange;
+            float squaredMinDistance = minDistance * minDistance;
+            Vector2 start = startPosition.ToVector2();
+            Vector2 end = endPosition.ToVector2();
+            var waypoints = WayPoint.WayPointList.Where(wp => 
+                wp.Submarine == null &&
+                wp.SpawnType == SpawnType.Path && 
+                Vector2.DistanceSquared(wp.WorldPosition, start) > squaredMinDistance && 
+                Vector2.DistanceSquared(wp.WorldPosition, end) > squaredMinDistance).ToList();
+            wrecks = new List<Submarine>(wreckCount);
+            for (int i = 0; i < wreckCount; i++)
+            {
+                ContentFile contentFile = wreckFiles[i];
+                if (contentFile == null) { continue; }                
+                var subDoc = SubmarineInfo.OpenFile(contentFile.Path);
+                Rectangle borders = Submarine.GetBorders(subDoc.Root);
+                string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
+                // Add some vertical margin so that the wreck doesn't block the path entirely. It's still possible that some larger subs can't pass by.
+                Point paddedDimensions = new Point(borders.Width, borders.Height + 3000);
+                tempSW.Restart();
+                // For storing the translations. Used only for debugging.
+                var positions = new List<Vector2>();
+                var rects = new List<Rectangle>();
+                int maxAttempts = 50;
+                int attemptsLeft = maxAttempts;
+                bool success = false;
+                Vector2 spawnPoint = Vector2.Zero;
+                while (attemptsLeft > 0)
+                {
+                    if (attemptsLeft < maxAttempts)
+                    {
+                        Debug.WriteLine($"Failed to position the wreck {wreckName}. Trying again.");
+                    }
+                    attemptsLeft--;
+                    if (TryGetSpawnPoint(out spawnPoint))
+                    {
+                        success = TryPositionWreck(borders, wreckName, ref spawnPoint);
+                        if (success)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            positions.Clear();
+                        }
+                    }
+                    else
+                    {
+                        DebugConsole.NewMessage($"Failed to find any spawn point for the wreck: {wreckName} (No valid waypoints left).", Color.Red);
+                        break;
+                    }
+                }
+                tempSW.Stop();
+                if (success)
+                {
+                    Debug.WriteLine($"Wreck {wreckName} successfully positioned to {spawnPoint} in {tempSW.ElapsedMilliseconds.ToString()} (ms)");
+                    tempSW.Restart();
+                    SubmarineInfo info = new SubmarineInfo(contentFile.Path)
+                    {
+                        Type = SubmarineInfo.SubmarineType.Wreck
+                    };
+                    Submarine wreck = new Submarine(info);
+                    //wreck.Load(unloadPrevious: false);
+                    wreck.MakeWreck();
+                    tempSW.Stop();
+                    Debug.WriteLine($"Wreck {wreck.Info.Name} loaded in { tempSW.ElapsedMilliseconds.ToString()} (ms)");
+                    wrecks.Add(wreck);
+                    wreck.SetPosition(spawnPoint);
+                    wreckPositions.Add(wreck, positions);
+                    blockedRects.Add(wreck, rects);
+                    positionsOfInterest.Add(new InterestingPosition(spawnPoint.ToPoint(), PositionType.Wreck, submarine: wreck));
+                    foreach (Hull hull in wreck.GetHulls(false))
+                    {
+                        if (Rand.Value(Rand.RandSync.Server) <= Loaded.GenerationParams.WreckHullFloodingChance)
+                        {
+                            hull.WaterVolume = hull.Volume * Rand.Range(Loaded.GenerationParams.WreckFloodingHullMinWaterPercentage, Loaded.GenerationParams.WreckFloodingHullMaxWaterPercentage, Rand.RandSync.Server);
+                        }
+                    }
+                    if (Rand.Value(Rand.RandSync.Server) <= Loaded.GenerationParams.ThalamusProbability)
+                    {
+                        if (!wreck.CreateThalamus())
+                        {
+                            DebugConsole.NewMessage($"Failed to create thalamus inside {wreckName}.", Color.Red);
+                            wreck.DisableThalamus();
+                        }
+                    }
+                    else
+                    {
+                        wreck.DisableThalamus();
+                    }
+                }
+                else
+                {
+                    DebugConsole.NewMessage($"Failed to position wreck {wreckName}. Used {tempSW.ElapsedMilliseconds.ToString()} (ms).", Color.Red);
+                }
+
+                bool TryPositionWreck(Rectangle borders, string wreckName, ref Vector2 spawnPoint)
+                {
+                    positions.Add(spawnPoint);
+                    bool bottomFound = TryRaycastToBottom(borders, ref spawnPoint);
+                    positions.Add(spawnPoint);
+
+                    bool leftSideBlocked = IsSideBlocked(borders, false);
+                    bool rightSideBlocked = IsSideBlocked(borders, true);
+                    int step = 5;
+                    if (rightSideBlocked && !leftSideBlocked)
+                    {
+                        bottomFound = TryMove(borders, ref spawnPoint, -step);
+                    }
+                    else if (leftSideBlocked && !rightSideBlocked)
+                    {
+                        bottomFound = TryMove(borders, ref spawnPoint, step);
+                    }
+                    else if (!bottomFound)
+                    {
+                        if (!leftSideBlocked)
+                        {
+                            bottomFound = TryMove(borders, ref spawnPoint, -step);
+                        }
+                        else if (!rightSideBlocked)
+                        {
+                            bottomFound = TryMove(borders, ref spawnPoint, step);
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"Invalid position {spawnPoint}. Does not touch the ground.");
+                            return false;
+                        }
+                    }
+                    positions.Add(spawnPoint);
+                    bool isBlocked = IsBlocked(spawnPoint, borders.Size - new Point(step + 50));
+                    if (isBlocked)
+                    {
+                        rects.Add(ToolBox.GetWorldBounds(spawnPoint.ToPoint(), borders.Size));
+                        Debug.WriteLine($"Invalid position {spawnPoint}. Blocked by level walls.");
+                    }
+                    else if (!bottomFound)
+                    {
+                        Debug.WriteLine($"Invalid position {spawnPoint}. Does not touch the ground.");
+                    }
+                    else
+                    {
+                        var sp = spawnPoint;
+                        if (wrecks.Any(w => Vector2.DistanceSquared(w.WorldPosition, sp) < squaredMinDistance))
+                        {
+                            Debug.WriteLine($"Invalid position {spawnPoint}. Too close to other wreck(s).");
+                            return false;
+                        }
+                    }
+                    return !isBlocked && bottomFound;
+
+                    bool TryMove(Rectangle borders, ref Vector2 spawnPoint, float amount)
+                    {
+                        float maxMovement = 5000;
+                        float totalAmount = 0;
+                        bool foundBottom = TryRaycastToBottom(borders, ref spawnPoint);
+                        while (!IsSideBlocked(borders, amount > 0))
+                        {
+                            foundBottom = TryRaycastToBottom(borders, ref spawnPoint);
+                            totalAmount += amount;
+                            spawnPoint = new Vector2(spawnPoint.X + amount, spawnPoint.Y);
+                            if (Math.Abs(totalAmount) > maxMovement)
+                            {
+                                Debug.WriteLine($"Moving the wreck {wreckName} failed.");
+                                break;
+                            }
+                        }
+                        return foundBottom;
+                    }
+                }
+
+                bool TryGetSpawnPoint(out Vector2 spawnPoint)
+                {
+                    spawnPoint = Vector2.Zero;
+                    while (waypoints.Any())
+                    {
+                        var wp = waypoints.GetRandom(Rand.RandSync.Server);
+                        waypoints.Remove(wp);
+                        if (!IsBlocked(wp.WorldPosition, paddedDimensions))
+                        {
+                            spawnPoint = wp.WorldPosition;
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                static bool TryRaycastToBottom(Rectangle borders, ref Vector2 spawnPoint)
+                {
+                    // Shoot five rays and pick the highest hit point.
+                    int rayCount = 5;
+                    var positions = new Vector2[rayCount];
+                    bool hit = false;
+                    for (int i = 0; i < rayCount; i++)
+                    {
+                        float quarterWidth = borders.Width * 0.25f;
+                        Vector2 rayStart = spawnPoint;
+                        switch (i)
+                        {
+                            case 1:
+                                rayStart = new Vector2(spawnPoint.X - quarterWidth, spawnPoint.Y);
+                                break;
+                            case 2:
+                                rayStart = new Vector2(spawnPoint.X + quarterWidth, spawnPoint.Y);
+                                break;
+                            case 3:
+                                rayStart = new Vector2(spawnPoint.X - quarterWidth / 2, spawnPoint.Y);
+                                break;
+                            case 4:
+                                rayStart = new Vector2(spawnPoint.X + quarterWidth / 2, spawnPoint.Y);
+                                break;
+                        }
+                        var simPos = ConvertUnits.ToSimUnits(rayStart);
+                        var body = Submarine.PickBody(simPos, new Vector2(simPos.X, -1), 
+                            customPredicate: f => f.Body?.UserData is VoronoiCell cell && cell.Body.BodyType == BodyType.Static, 
+                            collisionCategory: Physics.CollisionLevel | Physics.CollisionWall);
+                        if (body != null)
+                        {
+                            positions[i] = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + new Vector2(0, borders.Height / 2);
+                            hit = true;
+                        }
+                    }
+                    float highestPoint = positions.Max(p => p.Y);
+                    spawnPoint = new Vector2(spawnPoint.X, highestPoint);
+                    return hit;
+                }
+
+                bool IsSideBlocked(Rectangle borders, bool front)
+                {
+                    // Shoot three rays and check whether any of them hits.
+                    int rayCount = 3;
+                    Vector2 halfSize = borders.Size.ToVector2() / 2;
+                    Vector2 quarterSize = halfSize / 2;
+                    var positions = new Vector2[rayCount];
+                    for (int i = 0; i < rayCount; i++)
+                    {
+                        float dir = front ? 1 : -1;
+                        Vector2 rayStart;
+                        Vector2 to;
+                        switch (i)
+                        {
+                            case 1:
+                                rayStart = new Vector2(spawnPoint.X + halfSize.X * dir, spawnPoint.Y + quarterSize.Y);
+                                to = new Vector2(spawnPoint.X + (halfSize.X - quarterSize.X) * dir, rayStart.Y);
+                                break;
+                            case 2:
+                                rayStart = new Vector2(spawnPoint.X + halfSize.X * dir, spawnPoint.Y - quarterSize.Y);
+                                to = new Vector2(spawnPoint.X + (halfSize.X - quarterSize.X) * dir, rayStart.Y);
+                                break;
+                            case 0:
+                            default:
+                                rayStart = spawnPoint;
+                                to = new Vector2(spawnPoint.X + halfSize.X * dir, rayStart.Y);
+                                break;
+                        }
+                        Vector2 simPos = ConvertUnits.ToSimUnits(rayStart);
+                        if (Submarine.PickBody(simPos, ConvertUnits.ToSimUnits(to), 
+                            customPredicate: f => f.Body?.UserData is VoronoiCell cell, 
+                            collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
+                bool IsBlocked(Vector2 pos, Point size, float maxDistanceMultiplier = 1)
+                {
+                    float maxDistance = size.Multiply(maxDistanceMultiplier).ToVector2().LengthSquared();
+                    Rectangle bounds = ToolBox.GetWorldBounds(pos.ToPoint(), size);
+                    if (ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).IntersectsWorld(bounds)))
+                    {
+                        return true;
+                    }
+                    var cells = Loaded.GetAllCells().Where(c => c.Body != null && Vector2.DistanceSquared(pos, c.Center) <= maxDistance);
+                    return cells.Any(c => c.BodyVertices.Any(v => bounds.ContainsWorld(v)));
+                }
+            }
+            totalSW.Stop();
+            Debug.WriteLine($"{wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds.ToString()} (ms)");
         }
 
         private void CreateOutposts()
@@ -1536,20 +1852,20 @@ namespace Barotrauma
                     continue;
                 }
 
-                Submarine outpost = null;
-
+                SubmarineInfo outpostInfo = null;
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
                     string outpostFile = outpostFiles.GetRandom(Rand.RandSync.Server).Path;
-                    outpost = new Submarine(outpostFile, tryLoad: false);
+                    outpostInfo = new SubmarineInfo(outpostFile);
                 }
                 else
                 {
-                    outpost = (i == 0) ? preSelectedStartOutpost : preSelectedEndOutpost;
+                    outpostInfo = (i == 0) ? preSelectedStartOutpost : preSelectedEndOutpost;
                 }
 
-                outpost.Load(unloadPrevious: false);
-                outpost.MakeOutpost();
+                outpostInfo.Type = SubmarineInfo.SubmarineType.Outpost;
+
+                var outpost = new Submarine(outpostInfo);
 
                 Point? minSize = null;
                 DockingPort subPort = null;
@@ -1596,9 +1912,9 @@ namespace Barotrauma
                 if (Math.Abs(subDockingPortOffset) > 5000.0f)
                 {
                     subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -5000.0f, 5000.0f);
-                    string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
+                    string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Info.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                     DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Info.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
                 }
 
                 float outpostDockingPortOffset = subPort == null ? 0.0f : outpostPort.Item.WorldPosition.X - outpost.WorldPosition.X;
@@ -1606,23 +1922,23 @@ namespace Barotrauma
                 if (Math.Abs(outpostDockingPortOffset) > 5000.0f)
                 {
                     outpostDockingPortOffset = MathHelper.Clamp(outpostDockingPortOffset, -5000.0f, 5000.0f);
-                    string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
+                    string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Info.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                     DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Info.Name, GameAnalyticsSDK.Net.EGAErrorSeverity.Warning, warningMsg);
                 }
 
                 outpost.SetPosition(outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, subDockingPortOffset - outpostDockingPortOffset));
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
-                    if (GameMain.GameSession?.StartLocation != null) { outpost.Name = GameMain.GameSession.StartLocation.Name; }
+                    if (GameMain.GameSession?.StartLocation != null) { outpost.Info.Name = GameMain.GameSession.StartLocation.Name; }
                 }
                 else
                 {
                     EndOutpost = outpost;
-                    if (GameMain.GameSession?.EndLocation != null) { outpost.Name = GameMain.GameSession.EndLocation.Name; }
+                    if (GameMain.GameSession?.EndLocation != null) { outpost.Info.Name = GameMain.GameSession.EndLocation.Name; }
                 }
-            }            
+            }
         }
 
         private bool IsModeStartOutpostCompatible()
@@ -1632,6 +1948,90 @@ namespace Barotrauma
 #else
             return GameMain.GameSession?.GameMode as CampaignMode != null;
 #endif
+        }
+
+        public void SpawnCorpses()
+        {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+            foreach (Submarine wreck in wrecks)
+            {
+                int corpseCount = Rand.Range(Loaded.GenerationParams.MinCorpseCount, Loaded.GenerationParams.MaxCorpseCount);
+                var allSpawnPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == wreck && wp.CurrentHull != null);
+                var pathPoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Path);
+                var corpsePoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Corpse);
+                var spawnPoints = corpsePoints.Union(pathPoints).ToList();
+                spawnPoints.Shuffle(Rand.RandSync.Unsynced);
+                int spawnCounter = 0;
+                for (int j = 0; j < corpseCount; j++)
+                {
+                    WayPoint sp = spawnPoints.FirstOrDefault();
+                    JobPrefab job = sp?.AssignedJob;
+                    CorpsePrefab selectedPrefab;
+                    if (job == null)
+                    {
+                        // Deduce the job from the selected prefab
+                        selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck);
+                        job = GetJobPrefab();
+                    }
+                    else
+                    {
+                        selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck && (p.Job == "any" || p.Job == job.Identifier));
+                        if (selectedPrefab == null)
+                        {
+                            spawnPoints.Remove(sp);
+                            sp = spawnPoints.FirstOrDefault(sp => sp.AssignedJob == null);
+                            // Deduce the job from the selected prefab
+                            selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck);
+                            job = GetJobPrefab();
+                        }
+                    }
+                    if (selectedPrefab == null) { continue; }
+                    Vector2 pos;
+                    if (sp == null)
+                    {
+                        if (!TryGetExtraSpawnPoint(out pos))
+                        {
+                            break;
+                        }
+                        job = GetJobPrefab();
+                    }
+                    else
+                    {
+                        pos = sp.WorldPosition;
+                        spawnPoints.Remove(sp);
+                    }
+                    if (job == null) { continue; }
+                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job);
+                    var corpse = Character.Create(CharacterPrefab.HumanConfigFile, pos, ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
+                    corpse.TeamID = Character.TeamType.None;
+                    corpse.EnableDespawn = false;
+                    selectedPrefab.GiveItems(corpse);
+                    corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
+                    spawnCounter++;
+
+                    static CorpsePrefab GetCorpsePrefab(Func<CorpsePrefab, bool> predicate)
+                    {
+                        IEnumerable<CorpsePrefab> filteredPrefabs = CorpsePrefab.Prefabs.Where(predicate);
+                        return ToolBox.SelectWeightedRandom(filteredPrefabs.ToList(), filteredPrefabs.Select(p => p.Commonness).ToList(), Rand.RandSync.Unsynced);
+                    }
+
+                    JobPrefab GetJobPrefab() => selectedPrefab.Job != null && selectedPrefab.Job != "any" ? JobPrefab.Get(selectedPrefab.Job) : JobPrefab.Random();
+                }
+
+                DebugConsole.NewMessage($"{spawnCounter}/{corpseCount} corpses spawned in {wreck.Info.Name}.", spawnCounter == corpseCount ? Color.Green : Color.Yellow);
+
+                bool TryGetExtraSpawnPoint(out Vector2 point)
+                {
+                    point = Vector2.Zero;
+                    var hull = Hull.hullList.FindAll(h => h.Submarine == wreck).GetRandom();
+                    if (hull != null)
+                    {
+                        point = hull.WorldPosition;
+                    }
+                    return hull != null;
+                }
+            }
         }
 
         public override void Remove()

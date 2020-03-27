@@ -223,11 +223,14 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
-            if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
+            if (item.Submarine != null)
+            {
+                drawPos += item.Submarine.DrawPosition;
+            }
             drawPos.Y = -drawPos.Y;
 
             float recoilOffset = 0.0f;
-            if (RecoilDistance > 0.0f && recoilTimer > 0.0f)
+            if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
             {
                 //move the barrel backwards 0.1 seconds after launching
                 if (recoilTimer >= Math.Max(Reload, 0.1f) - 0.1f)
@@ -369,11 +372,24 @@ namespace Barotrauma.Items.Components
                     tooltipOffset = new Vector2(size / 2 + 5, -10),
                     inputAreaMargin = 20,
                     RequireMouseOn = false
-                };               
+                };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
             }
             return widget;
+        }
+
+        private void GetAvailablePower(out float availableCharge, out float availableCapacity)
+        {
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+
+            availableCharge = 0.0f;
+            availableCapacity = 0.0f;
+            foreach (PowerContainer battery in batteries)
+            {
+                availableCharge += battery.Charge;
+                availableCapacity += battery.Capacity;
+            }
         }
 
         /// <summary>
@@ -488,11 +504,17 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
-            //projectile removed, do nothing
-            if (projectileID == 0) return;
+            float newTargetRotation = msg.ReadRangedSingle(minRotation, maxRotation, 8);
 
-            Item projectile = Entity.FindEntityByID(projectileID) as Item;
-            if (projectile == null)
+            if (Character.Controlled == null || user != Character.Controlled)
+            {
+                targetRotation = newTargetRotation;
+            }
+
+            //projectile removed, do nothing
+            if (projectileID == 0) { return; }
+
+            if (!(Entity.FindEntityByID(projectileID) is Item projectile))
             {
                 DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
                 return;

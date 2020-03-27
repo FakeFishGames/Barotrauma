@@ -43,7 +43,7 @@
   endvoterequiredratio="0.6"
   kickvoterequiredratio="0.6"
   killdisconnectedtime="120"
-  kickafktime="120"
+  kickafktime="600"
   traitoruseratio="True"
   traitorratio="0.2"
   karmaenabled="False"

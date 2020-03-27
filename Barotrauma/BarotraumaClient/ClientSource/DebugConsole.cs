@@ -195,6 +195,34 @@ namespace Barotrauma
             }
         }
 
+        private static bool IsCommandPermitted(string command, GameClient client)
+        {
+            switch (command)
+            {
+                case "kick":
+                    return client.HasPermission(ClientPermissions.Kick);
+                case "ban":
+                case "banip":
+                case "banendpoint":
+                    return client.HasPermission(ClientPermissions.Ban);
+                case "unban":
+                case "unbanip":
+                    return client.HasPermission(ClientPermissions.Unban);
+                case "netstats":
+                case "help":
+                case "dumpids":
+                case "admin":
+                case "entitylist":
+                case "togglehud":
+                case "toggleupperhud":
+                case "togglecharacternames":
+                case "fpscounter":
+                    return true;
+                default:
+                    return client.HasConsoleCommandPermission(command);
+            }
+        }
+
         public static void DequeueMessages()
         {
             while (queuedMessages.Count > 0)
@@ -367,6 +395,7 @@ namespace Barotrauma
                 NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
 #endif
             }));
+            AssignRelayToServer("enablecheats", true);
 
             commands.Add(new Command("mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
             {
@@ -394,7 +423,8 @@ namespace Barotrauma
             {
                 if (args.Length > 0)
                 {
-                    Submarine.Load(string.Join(" ", args), true);
+                    var subInfo = new SubmarineInfo(string.Join(" ", args));
+                    Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
                 GameMain.SubEditorScreen.Select();
             }, isCheat: true));
@@ -440,6 +470,7 @@ namespace Barotrauma
             AssignRelayToServer("ban", false);
             AssignRelayToServer("banid", false);
             AssignRelayToServer("dumpids", false);
+            AssignRelayToServer("dumptofile", false);
             AssignRelayToServer("findentityids", false);
             AssignRelayToServer("campaigninfo", false);
             AssignRelayToServer("help", false);
@@ -805,7 +836,7 @@ namespace Barotrauma
                     return;
                 }
 
-                if (Submarine.SaveCurrent(System.IO.Path.Combine(Submarine.SavePath, fileName + ".sub")))
+                if (Submarine.MainSub.SaveAs(System.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
                 {
                     NewMessage("Sub saved", Color.Green);
                 }
@@ -814,7 +845,8 @@ namespace Barotrauma
             commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
             {
                 if (args.Length == 0) return;
-                Submarine.Load(string.Join(" ", args), true);
+                SubmarineInfo subInfo = new SubmarineInfo(string.Join(" ", args));
+                Submarine.Load(subInfo, true);
             }));
 
             commands.Add(new Command("cleansub", "", (string[] args) =>
@@ -1057,23 +1089,69 @@ namespace Barotrauma
                 if (args.Length != 2 || Screen.Selected != GameMain.SubEditorScreen) { return; }
                 foreach (MapEntity me in MapEntity.SelectedList)
                 {
-                    if (me is ISerializableEntity serializableEntity)
+                    bool propertyFound = false;
+                    if (!(me is ISerializableEntity serializableEntity)) { continue; }                    
+                    if (serializableEntity.SerializableProperties == null) { continue; }
+
+                    if (serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
                     {
-                        if (serializableEntity.SerializableProperties == null)
+                        propertyFound = true;
+                        object prevValue = property.GetValue(me);
+                        if (property.TrySetValue(me, args[1]))
                         {
-                            continue;
+                            NewMessage($"Changed the value \"{args[0]}\" from {(prevValue?.ToString() ?? null)} to {args[1]} on entity \"{me.ToString()}\".", Color.LightGreen);
                         }
-                        if (!serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                        else
                         {
-                            NewMessage("Property \"" + args[0] + "\" not found in the entity \"" + me.ToString() + "\".", Color.Orange);
-                            continue;
+                            NewMessage($"Failed to set the value of \"{args[0]}\" to \"{args[1]}\" on the entity \"{me.ToString()}\".", Color.Orange);
                         }
-                        if (!property.TrySetValue(me, args[1]))
+                    }
+                    if (me is Item item)
+                    {
+                        foreach (ItemComponent ic in item.Components)
                         {
-                            NewMessage("Failed to set the value of \"" + args[0] + "\" to \"" + args[1] + "\" on the entity \"" + me.ToString() + "\".", Color.Orange);
+                            ic.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty componentProperty);
+                            if (componentProperty == null) { continue; }
+                            propertyFound = true;
+                            object prevValue = componentProperty.GetValue(ic);
+                            if (componentProperty.TrySetValue(ic, args[1]))
+                            {
+                                NewMessage($"Changed the value \"{args[0]}\" from {prevValue} to {args[1]} on item \"{me.ToString()}\", component \"{ic.GetType().Name}\".", Color.LightGreen);
+                            }
+                            else
+                            {
+                                NewMessage($"Failed to set the value of \"{args[0]}\" to \"{args[1]}\" on the item \"{me.ToString()}\", component \"{ic.GetType().Name}\".", Color.Orange);
+                            }
+                        }
+                    }
+                    if (!propertyFound)
+                    {
+                        NewMessage($"Property \"{args[0]}\" not found in the entity \"{me.ToString()}\".", Color.Orange);
+                    }
+                }
+            },
+            () =>
+            {
+                List<string> propertyList = new List<string>();
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (!(me is ISerializableEntity serializableEntity)) { continue; }
+                    if (serializableEntity.SerializableProperties == null) { continue; }
+                    propertyList.AddRange(serializableEntity.SerializableProperties.Select(p => p.Key));
+                    if (me is Item item)
+                    {
+                        foreach (ItemComponent ic in item.Components)
+                        {
+                            propertyList.AddRange(ic.SerializableProperties.Select(p => p.Key));
                         }
                     }
                 }
+
+                return new string[][]
+                {
+                    propertyList.Distinct().ToArray(),
+                    new string[0]
+                };
             }));
 
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
@@ -1106,7 +1184,7 @@ namespace Barotrauma
                         }
                     }
 
-                    foreach (Submarine sub in Submarine.SavedSubmarines)
+                    foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
                     {
                         string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
                         if (!tags[language].Contains(nameIdentifier))
@@ -2113,6 +2191,11 @@ namespace Barotrauma
 
             commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
             {
+                if (GameMain.NetworkMember != null)
+                {
+                    ThrowError("Cannot use the flipx command while playing online.");
+                    return;
+                }
                 Submarine.MainSub?.FlipX();
             }, isCheat: true));
 
@@ -2235,7 +2318,8 @@ namespace Barotrauma
                 }
                 try
                 {
-                    Submarine spawnedSub = Submarine.Load(args[0], false);
+                    SubmarineInfo subInfo = new SubmarineInfo(args[0]);
+                    Submarine spawnedSub = Submarine.Load(subInfo, false);
                     spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
                 }
                 catch (Exception e)
@@ -2313,7 +2397,7 @@ namespace Barotrauma
             switch (firstArg)
             {
                 case "name":
-                    var sprites = Sprite.LoadedSprites.Where(s => s.Name?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    var sprites = Sprite.LoadedSprites.Where(s => s.Name != null && s.Name.Equals(secondArg, StringComparison.OrdinalIgnoreCase));
                     if (sprites.Any())
                     {
                         foreach (var s in sprites)
@@ -2329,7 +2413,7 @@ namespace Barotrauma
                     }
                 case "identifier":
                 case "id":
-                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID?.ToLowerInvariant() == secondArg.ToLowerInvariant());
+                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID != null && s.EntityID.Equals(secondArg, StringComparison.OrdinalIgnoreCase));
                     if (sprites.Any())
                     {
                         foreach (var s in sprites)

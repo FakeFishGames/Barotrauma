@@ -578,13 +578,7 @@ namespace Barotrauma.Items.Components
                 {
                     character.SetInput(InputType.Aim, false, true);
                 }
-                bool isAiming = false;
-                var holdable = item.GetComponent<Holdable>();
-                if (holdable != null)
-                {
-                    isAiming = holdable.ControlPose;
-                }
-                sinTime = isAiming ? sinTime + deltaTime * 5 : 0;
+                sinTime += deltaTime * 5;
             }
             // Press the trigger only when the tool is approximately facing the target.
             Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
