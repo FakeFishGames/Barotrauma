@@ -57,6 +57,10 @@ namespace Barotrauma
         public Hull CurrentHull = null;
 
         public bool IsRemotePlayer;
+
+        public bool IsPlayer => Controlled == this || IsRemotePlayer;
+        public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
+
         public readonly Dictionary<string, SerializableProperty> Properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -126,6 +130,12 @@ namespace Barotrauma
         {
             get => Params.Noise;
             set => Params.Noise = value;
+        }
+
+        public float Visibility
+        {
+            get => Params.Visibility;
+            set => Params.Visibility = value;
         }
 
         public bool IsTraitor;
@@ -201,7 +211,7 @@ namespace Barotrauma
                 {
                     displayName = TextManager.Get($"Character.{SpeciesName}", returnNull: true);
                 }
-                return displayName ?? Name;
+                return string.IsNullOrWhiteSpace(displayName) ? Name : displayName;
             }
         }
 
@@ -770,10 +780,14 @@ namespace Barotrauma
                 {
                     nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
-                ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(nonHuskedSpeciesName) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(nonHuskedSpeciesName) as RagdollParams;
-                if (info == null)
+                if (ragdollParams == null)
                 {
-                    info = new CharacterInfo(nonHuskedSpeciesName, ragdollParams.FileName);
+                    string name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
+                    ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;
+                }
+                if (Params.HasInfo && info == null)
+                {
+                    info = new CharacterInfo(nonHuskedSpeciesName);
                 }
             }
 
@@ -844,7 +858,7 @@ namespace Barotrauma
             Info.HairElement?.Elements("sprite").ForEach(s => head.OtherWearables.Add(new WearableSprite(s, WearableType.Hair)));
 
 #if CLIENT
-            head.LoadHuskSprite();
+            head.EnableHuskSprite = Params.Husk;
             head.LoadHerpesSprite();
             head.UpdateWearableTypesToHide();
 #endif
@@ -1010,59 +1024,55 @@ namespace Barotrauma
             }
             else
             {
-                if (IsKeyDown(InputType.Left)) targetMovement.X -= 1.0f;
-                if (IsKeyDown(InputType.Right)) targetMovement.X += 1.0f;
-                if (IsKeyDown(InputType.Up)) targetMovement.Y += 1.0f;
-                if (IsKeyDown(InputType.Down)) targetMovement.Y -= 1.0f;
+                if (IsKeyDown(InputType.Left)) { targetMovement.X -= 1.0f; }
+                if (IsKeyDown(InputType.Right)) { targetMovement.X += 1.0f; }
+                if (IsKeyDown(InputType.Up)) { targetMovement.Y += 1.0f; }
+                if (IsKeyDown(InputType.Down)) { targetMovement.Y -= 1.0f; }
             }
+            bool run = false;
+            if ((IsKeyDown(InputType.Run) && AnimController.ForceSelectAnimationType == AnimationType.NotDefined) || ForceRun)
+            {
 
+                run = CanRun;
+            }
+            return ApplyMovementLimits(targetMovement, AnimController.GetCurrentSpeed(run));
+        }
+
+        //can't run if
+        //  - dragging someone
+        //  - crouching
+        //  - moving backwards
+        public bool CanRun => (SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
+                    (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
+                    !AnimController.IsMovingBackwards;
+
+        public Vector2 ApplyMovementLimits(Vector2 targetMovement, float currentSpeed)
+        {
             //the vertical component is only used for falling through platforms and climbing ladders when not in water,
             //so the movement can't be normalized or the Character would walk slower when pressing down/up
             if (AnimController.InWater)
             {
                 float length = targetMovement.Length();
-                if (length > 0.0f) targetMovement /= length;
+                if (length > 0.0f)
+                {
+                    targetMovement /= length;
+                }
             }
-
-            bool run = false;
-            if ((IsKeyDown(InputType.Run) && AnimController.ForceSelectAnimationType == AnimationType.NotDefined) || ForceRun)
-            {
-                //can't run if
-                //  - dragging someone
-                //  - crouching
-                //  - moving backwards
-                run = (SelectedCharacter == null || !SelectedCharacter.CanBeDragged) &&
-                    (!(AnimController is HumanoidAnimController) || !((HumanoidAnimController)AnimController).Crouching) &&
-                    !AnimController.IsMovingBackwards;
-            }
-
-            float currentSpeed = AnimController.GetCurrentSpeed(run);
             targetMovement *= currentSpeed;
             float maxSpeed = ApplyTemporarySpeedLimits(currentSpeed);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-
-            //apply speed multiplier if 
-            //  a. it's boosting the movement speed and the character is trying to move fast (= running)
-            //  b. it's a debuff that decreases movement speed
-            float speedMultiplier = SpeedMultiplier;
-            if (run || speedMultiplier <= 0.0f) targetMovement *= speedMultiplier;
-
-            ResetSpeedMultiplier(); // Reset, items will set the value before the next update
-
+            SpeedMultiplier = greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier);
+            targetMovement *= SpeedMultiplier;
+            // Reset, status effects will set the value before the next update
+            ResetSpeedMultiplier();
             return targetMovement;
         }
 
         /// <summary>
         /// Can be used to modify the character's speed via StatusEffects
         /// </summary>
-        public float SpeedMultiplier
-        {
-            get
-            {
-                return greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier);
-            }
-        }
+        public float SpeedMultiplier { get; private set; }
 
         public void StackSpeedMultiplier(float val)
         {
@@ -1915,7 +1925,7 @@ namespace Barotrauma
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        if (c == Controlled || c.IsRemotePlayer)
+                        if (c.IsPlayer || c.IsBot)
                         {
                             c.Enabled = true;
                         }
@@ -2012,8 +2022,8 @@ namespace Barotrauma
             HideFace = false;
 
 
-            UpdateSightRange();
-            UpdateSoundRange();
+            UpdateSightRange(deltaTime);
+            UpdateSoundRange(deltaTime);
 
             if (IsDead) { return; }
 
@@ -2290,18 +2300,39 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateSightRange()
+        private readonly float maxAIRange = 10000;
+        private readonly float aiTargetChangeSpeed = 5;
+
+        private void UpdateSightRange(float deltaTime)
         {
             if (aiTarget == null) { return; }
-            float range = (float)Math.Sqrt(Mass) * 250 + AnimController.Collider.LinearVelocity.Length() * 500;
-            aiTarget.SightRange = MathHelper.Clamp(range, 0, 10000);
+            float minRange = Math.Clamp((float)Math.Sqrt(Mass) * Visibility, 250, 1000);
+            float massFactor = (float)Math.Sqrt(Mass / 20);
+            float targetRange = Math.Min(minRange + massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Visibility, maxAIRange);
+            float newRange = MathHelper.SmoothStep(aiTarget.SightRange, targetRange, deltaTime * aiTargetChangeSpeed);
+            if (!float.IsNaN(newRange))
+            {
+                aiTarget.SightRange = newRange;
+            }
         }
 
-        private void UpdateSoundRange()
+        private void UpdateSoundRange(float deltaTime)
         {
             if (aiTarget == null) { return; }
-            float range = ((float)Math.Sqrt(Mass) / 3) * (AnimController.TargetMovement.Length() * 2) * Noise;
-            aiTarget.SoundRange = MathHelper.Clamp(range, 0, 10000);
+            if (IsDead)
+            {
+                aiTarget.SoundRange = 0;
+            }
+            else
+            {
+                float massFactor = (float)Math.Sqrt(Mass / 10);
+                float targetRange = Math.Min(massFactor * AnimController.Collider.LinearVelocity.Length() * 2 * Noise, maxAIRange);
+                float newRange = MathHelper.SmoothStep(aiTarget.SoundRange, targetRange, deltaTime * aiTargetChangeSpeed);
+                if (!float.IsNaN(newRange))
+                {
+                    aiTarget.SoundRange = newRange;
+                }
+            }
         }
 
         public bool CanHearCharacter(Character speaker)
@@ -2316,21 +2347,16 @@ namespace Barotrauma
 
         public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
         {
-            if (orderGiver != null)
-            {
-                //set the character order only if the character is close enough to hear the message
-                if (!CanHearCharacter(orderGiver)) { return; }
-            }
+            //set the character order only if the character is close enough to hear the message
+            if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
             if (AIController is HumanAIController humanAI)
             {
                 humanAI.SetOrder(order, orderOption, orderGiver, speak);
             }
+
 #if CLIENT
-            else
-            {
-                GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
-            }
+            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
 #endif
 
             CurrentOrder = order;
@@ -2469,13 +2495,17 @@ namespace Barotrauma
                 DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker);
 
             if (limbHit == null) { return new AttackResult(); }
-
-            limbHit.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
+            if (attacker != null)
+            {
+                forceWorld.X *= attacker.AnimController.Dir;
+            }
+            limbHit.body?.ApplyLinearImpulse(forceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             var mainLimb = limbHit.character.AnimController.MainLimb;
             if (limbHit != mainLimb)
             {
                 // Always add force to mainlimb
-                mainLimb.body?.ApplyLinearImpulse(attack.TargetImpulseWorld + attack.TargetForceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                mainLimb.body?.ApplyLinearImpulse(forceWorld * deltaTime, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 #if SERVER
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)

@@ -32,6 +32,18 @@ namespace Barotrauma
         public virtual bool UnequipItems => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
+        private float _cumulatedDevotion;
+        protected float CumulatedDevotion
+        {
+            get { return _cumulatedDevotion; }
+            set { _cumulatedDevotion = MathHelper.Clamp(value, 0, MaxDevotion); }
+        }
+
+        protected virtual float MaxDevotion => 10;
+
+        /// <summary>
+        /// Final priority value after all calculations.
+        /// </summary>
         public float Priority { get; set; }
         public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
@@ -59,6 +71,7 @@ namespace Barotrauma
         /// </summary>
         public virtual bool IsLoop { get; set; }
         public IEnumerable<AIObjective> SubObjectives => subObjectives;
+        public AIObjective CurrentSubObjective => subObjectives.FirstOrDefault();
 
         private readonly List<AIObjective> all = new List<AIObjective>();
         public IEnumerable<AIObjective> GetSubObjectivesRecursive(bool includingSelf = false)
@@ -86,7 +99,7 @@ namespace Barotrauma
 
         public AIObjective GetActiveObjective()
         {
-            var subObjective = SubObjectives.FirstOrDefault();
+            var subObjective = CurrentSubObjective;
             return subObjective == null ? this : subObjective.GetActiveObjective();
         }
 
@@ -157,7 +170,8 @@ namespace Barotrauma
         {
             if (!AllowSubObjectiveSorting) { return; }
             if (subObjectives.None()) { return; }
-            subObjectives.Sort((x, y) => y.GetPriority().CompareTo(x.GetPriority()));
+            subObjectives.ForEach(so => so.GetPriority());
+            subObjectives.Sort((x, y) => y.Priority.CompareTo(x.Priority));
             if (ConcurrentObjectives)
             {
                 subObjectives.ForEach(so => so.SortSubObjectives());
@@ -168,26 +182,38 @@ namespace Barotrauma
             }
         }
 
-        public virtual float GetPriority() => Priority * PriorityModifier;
-
-        public virtual bool IsDuplicate<T>(T otherObjective) where T : AIObjective => otherObjective.Option == Option;
-
-        public virtual void Update(float deltaTime)
+        /// <summary>
+        /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
+        /// </summary>
+        public virtual float GetPriority()
         {
             if (objectiveManager.CurrentOrder == this)
             {
                 Priority = AIObjectiveManager.OrderPriority;
             }
-            else if (objectiveManager.WaitTimer <= 0)
+            else
             {
-                if (objectiveManager.CurrentObjective != null)
-                {
-                    if (objectiveManager.CurrentObjective == this || objectiveManager.CurrentObjective.subObjectives.Any(so => so == this))
-                    {
-                        Priority += Devotion * PriorityModifier * deltaTime;
-                    }
-                }
-                Priority = MathHelper.Clamp(Priority, 0, 100);
+                Priority = CumulatedDevotion * PriorityModifier;
+            }
+            return Priority;
+        }
+
+        private void UpdateDevotion(float deltaTime)
+        {
+            var currentObjective = objectiveManager.CurrentObjective;
+            if (currentObjective != null && (currentObjective == this || currentObjective.subObjectives.Any(so => so == this)))
+            {
+                CumulatedDevotion += Devotion * PriorityModifier * deltaTime;
+            }
+        }
+
+        public virtual bool IsDuplicate<T>(T otherObjective) where T : AIObjective => otherObjective.Option == Option;
+
+        public virtual void Update(float deltaTime)
+        {
+            if (objectiveManager.CurrentOrder != this && objectiveManager.WaitTimer <= 0)
+            {
+                UpdateDevotion(deltaTime);
             }
             subObjectives.ForEach(so => so.Update(deltaTime));
         }
@@ -264,6 +290,7 @@ namespace Barotrauma
 
         public virtual void OnDeselected()
         {
+            CumulatedDevotion = 0;
             Deselected?.Invoke();
         }
 
@@ -282,6 +309,7 @@ namespace Barotrauma
             isCompleted = false;
             hasBeenChecked = false;
             _abandon = false;
+            CumulatedDevotion = 0;
         }
 
         protected abstract void Act(float deltaTime);

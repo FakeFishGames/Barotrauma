@@ -1314,79 +1314,69 @@ namespace Barotrauma.Steam
             return upToDate;
         }
 
-        public static bool AutoUpdateWorkshopItems()
+        public static async Task<bool> AutoUpdateWorkshopItems()
         {
             if (!isInitialized) { return false; }
 
             var query = new Steamworks.Ugc.Query(Steamworks.UgcType.All)
                 .WhereUserSubscribed()
                 .WithLongDescription();
-            //ugcResultPageTasks ??= new List<Task>();
-            //ugcResultPageTasks.Add();
-            CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-            CancellationToken cancelToken = cancelTokenSource.Token;
-            Task task = Task.Factory.StartNew(async () =>
-            {
-                int processedResults = 0; int pageIndex = 1;
-                Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
 
-                while (resultPage.HasValue && resultPage?.ResultCount > 0)
+            DateTime startTime = DateTime.Now;
+            DateTime endTime = startTime + new TimeSpan(0, 0, 30);
+
+            int processedResults = 0; int pageIndex = 1;
+            Steamworks.Ugc.ResultPage? resultPage = await query.GetPageAsync(pageIndex);
+
+            while (resultPage.HasValue && resultPage?.ResultCount > 0)
+            {
+                if (DateTime.Now > endTime)
                 {
-                    foreach (var item in resultPage.Value.Entries)
+                    return false;
+                }
+                foreach (var item in resultPage.Value.Entries)
+                {
+                    try
                     {
-                        if (cancelToken.IsCancellationRequested)
+                        if (!item.IsInstalled || !CheckWorkshopItemEnabled(item) || CheckWorkshopItemUpToDate(item)) { continue; }
+                        if (!UpdateWorkshopItem(item, out string errorMsg))
                         {
-                            cancelToken.ThrowIfCancellationRequested();
-                        }
-                        try
-                        {
-                            if (!item.IsInstalled || !CheckWorkshopItemEnabled(item) || CheckWorkshopItemUpToDate(item)) { continue; }
-                            if (!UpdateWorkshopItem(item, out string errorMsg))
-                            {
-                                DebugConsole.ThrowError(errorMsg);
-                                new GUIMessageBox(
-                                    TextManager.Get("Error"),
-                                    TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
-                            }
-                            else
-                            {
-                                //TODO: potential race condition
-                                new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
-                            }
-                        }
-                        catch (Exception e)
-                        {
+                            DebugConsole.ThrowError(errorMsg);
                             new GUIMessageBox(
                                 TextManager.Get("Error"),
-                                TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
-                            GameAnalyticsManager.AddErrorEventOnce(
-                                "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
-                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                                "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
+                                TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, errorMsg }));
+                        }
+                        else
+                        {
+                            //TODO: potential race condition
+                            new GUIMessageBox("", TextManager.GetWithVariable("WorkshopItemUpdated", "[itemname]", item.Title));
                         }
                     }
-                    
-                    processedResults += resultPage.Value.ResultCount;
-                    pageIndex++;
-                    if (processedResults < resultPage?.TotalCount)
+                    catch (Exception e)
                     {
-                        resultPage = await query.GetPageAsync(pageIndex);
-                    }
-                    else
-                    {
-                        resultPage = null;
+                        new GUIMessageBox(
+                            TextManager.Get("Error"),
+                            TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item.Title, e.Message + ", " + e.TargetSite }));
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
                     }
                 }
-            }, cancelToken, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
-
-            task.Wait(10000);
-            if (!task.IsCompleted)
-            {
-                cancelTokenSource.Cancel();
-                task.Wait();
+                    
+                processedResults += resultPage.Value.ResultCount;
+                pageIndex++;
+                if (processedResults < resultPage?.TotalCount)
+                {
+                    resultPage = await query.GetPageAsync(pageIndex);
+                }
+                else
+                {
+                    resultPage = null;
+                }
             }
-            
-            return task.Status == TaskStatus.RanToCompletion;
+
+            return true;
         }
 
         public static bool UpdateWorkshopItem(Steamworks.Ugc.Item? item, out string errorMsg)

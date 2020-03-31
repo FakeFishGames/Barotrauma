@@ -222,7 +222,7 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
-                    if (sub.subBody.PositionBuffer.Count < 2) continue;
+                    if (sub.subBody == null || sub.subBody.PositionBuffer.Count < 2) continue;
 
                     Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[0].Position);
                     prevPos.Y = -prevPos.Y;

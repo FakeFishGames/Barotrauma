@@ -741,6 +741,11 @@ namespace Barotrauma
         {
             base.Select();
 
+            GameMain.LightManager.AmbientLight = 
+                Level.Loaded?.GenerationParams?.AmbientLightColor ??
+                LevelGenerationParams.LevelParams?.FirstOrDefault()?.AmbientLightColor ??
+                new Color(20, 20, 20, 255); 
+
             UpdateEntityList();
 
             string name = (Submarine.MainSub == null) ? TextManager.Get("unspecifiedsubfilename") : Submarine.MainSub.Name;
@@ -1624,7 +1629,10 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 var lightComponent = item.GetComponent<LightComponent>();
-                if (lightComponent != null) lightComponent.Light.Enabled = item.ParentInventory == null;
+                if (lightComponent != null)
+                {
+                    lightComponent.Light.Enabled = item.ParentInventory == null;
+                }
             }
 
             if (selectedSub.GameVersion < new Version("0.8.9.0"))
@@ -1790,6 +1798,7 @@ namespace Barotrauma
             }
 
             MapEntity.DeselectAll();
+            MapEntity.FilteredSelectedList.Clear();
         }
 
         private void RemoveDummyCharacter()

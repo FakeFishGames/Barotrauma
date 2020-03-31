@@ -21,16 +21,27 @@ namespace Barotrauma.Networking
         private Character character;
         public Character Character
         {
-            get { return character; }
+            get
+            {
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && (character?.ID ?? 0) != CharacterID)
+                {
+                    Character = Entity.FindEntityByID(CharacterID) as Character;
+                }
+                return character;
+            }
             set
             {
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                 {
                     GameMain.NetworkMember.LastClientListUpdateID++;
+                    if (value != null)
+                    {
+                        CharacterID = value.ID;
+                    }
                 }
                 else
                 {
-                    if (value!=null)
+                    if (value != null)
                     {
                         DebugConsole.NewMessage(value.Name, Microsoft.Xna.Framework.Color.Yellow);
                     }
@@ -51,6 +62,8 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        public UInt16 CharacterID;
 
         private Vector2 spectate_position;
         public Vector2? SpectatePos
@@ -98,7 +111,22 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public bool InGame;
+        private bool inGame;
+        public bool InGame
+        {
+            get
+            {
+                return inGame;
+            }
+            set
+            {
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.LastClientListUpdateID++;
+                }
+                inGame = value;
+            }
+        }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
         private List<Client> kickVoters;

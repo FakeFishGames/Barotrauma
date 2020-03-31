@@ -53,7 +53,9 @@ namespace Barotrauma.Items.Components
         private PrismaticJoint stickJoint;
         private Body stickTarget;
 
-        private Attack attack;
+        private readonly Attack attack;
+
+        private Vector2 launchPos;
 
         public List<Body> IgnoredBodies;
 
@@ -219,6 +221,8 @@ namespace Barotrauma.Items.Components
             }
 
             item.Drop(null);
+
+            launchPos = item.SimPosition;
 
             item.body.Enabled = true;            
             item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
@@ -415,7 +419,9 @@ namespace Barotrauma.Items.Components
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
-                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure structure)
+                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure structure &&
+                    //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
+                    Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0) 
                 {
                     target = wallBody.FixtureList.First();
                 }

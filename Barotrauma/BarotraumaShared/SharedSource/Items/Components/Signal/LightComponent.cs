@@ -272,13 +272,12 @@ namespace Barotrauma.Items.Components
 
         private void UpdateAITarget(AITarget target)
         {
-            target.Enabled = IsActive;
             if (!IsActive) { return; }
             if (target.MaxSightRange <= 0)
             {
                 target.MaxSightRange = Range * 5;
             }
-            target.SightRange = target.MaxSightRange * lightBrightness;
+            target.SightRange = Math.Max(target.SightRange, target.MaxSightRange * lightBrightness);
         }
 
         partial void SetLightSourceState(bool enabled, float brightness);

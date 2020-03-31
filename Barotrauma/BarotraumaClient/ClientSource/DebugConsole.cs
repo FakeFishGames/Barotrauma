@@ -195,6 +195,34 @@ namespace Barotrauma
             }
         }
 
+        private static bool IsCommandPermitted(string command, GameClient client)
+        {
+            switch (command)
+            {
+                case "kick":
+                    return client.HasPermission(ClientPermissions.Kick);
+                case "ban":
+                case "banip":
+                case "banendpoint":
+                    return client.HasPermission(ClientPermissions.Ban);
+                case "unban":
+                case "unbanip":
+                    return client.HasPermission(ClientPermissions.Unban);
+                case "netstats":
+                case "help":
+                case "dumpids":
+                case "admin":
+                case "entitylist":
+                case "togglehud":
+                case "toggleupperhud":
+                case "togglecharacternames":
+                case "fpscounter":
+                    return true;
+                default:
+                    return client.HasConsoleCommandPermission(command);
+            }
+        }
+
         public static void DequeueMessages()
         {
             while (queuedMessages.Count > 0)
@@ -367,6 +395,7 @@ namespace Barotrauma
                 NewMessage("Steam achievements have been disabled during this play session.", Color.Red);
 #endif
             }));
+            AssignRelayToServer("enablecheats", true);
 
             commands.Add(new Command("mainmenu|menu", "mainmenu/menu: Go to the main menu.", (string[] args) =>
             {
@@ -2113,6 +2142,11 @@ namespace Barotrauma
 
             commands.Add(new Command("flipx", "flipx: mirror the main submarine horizontally", (string[] args) =>
             {
+                if (GameMain.NetworkMember != null)
+                {
+                    ThrowError("Cannot use the flipx command while playing online.");
+                    return;
+                }
                 Submarine.MainSub?.FlipX();
             }, isCheat: true));
 

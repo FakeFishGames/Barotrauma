@@ -105,15 +105,20 @@ namespace Barotrauma
         {
             LinkedSubmarine sl = new LinkedSubmarine(mainSub);
             sl.GenerateWallVertices(element);
+            if (sl.wallVertices.Any())
+            {
+                sl.Rect = new Rectangle(
+                    (int)sl.wallVertices.Min(v => v.X + position.X),
+                    (int)sl.wallVertices.Max(v => v.Y + position.Y),
+                    (int)sl.wallVertices.Max(v => v.X + position.X),
+                    (int)sl.wallVertices.Min(v => v.Y + position.Y));
 
-            sl.Rect = new Rectangle(
-                (int)sl.wallVertices.Min(v => v.X + position.X),
-                (int)sl.wallVertices.Max(v => v.Y + position.Y),
-                (int)sl.wallVertices.Max(v => v.X + position.X),
-                (int)sl.wallVertices.Min(v => v.Y + position.Y));
-            
-            sl.rect = new Rectangle((int)position.X, (int)position.Y, 1, 1);
-
+                sl.Rect = new Rectangle(sl.rect.X, sl.rect.Y, sl.rect.Width - sl.rect.X, sl.rect.Y - sl.rect.Height);
+            }
+            else
+            {
+                sl.Rect = new Rectangle((int)position.X, (int)position.Y, 10, 10);
+            }
             return sl;
         }
 

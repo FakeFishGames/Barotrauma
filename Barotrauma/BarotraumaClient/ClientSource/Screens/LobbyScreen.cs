@@ -79,8 +79,7 @@ namespace Barotrauma
         private IEnumerable<object> LoadRound()
         {
             GameMain.GameSession.StartRound(campaignUI.SelectedLevel, 
-                reloadSub: true, 
-                loadSecondSub: false,
+                reloadSub: true,
                 mirrorLevel: GameMain.GameSession.Map.CurrentLocation != GameMain.GameSession.Map.SelectedConnection.Locations[0]);
             GameMain.GameScreen.Select();
 

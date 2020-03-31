@@ -135,31 +135,33 @@ namespace Barotrauma
                 }
             }
 
+            Color textColor = textBox.Color;
             switch (command)
             {
                 case "r":
                 case "radio":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
+                    textColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
                     break;
                 case "d":
                 case "dead":
-                    textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                    textColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     break;
                 default:
                     if (Character.Controlled != null && (Character.Controlled.IsDead || Character.Controlled.SpeechImpediment >= 100.0f))
                     {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
+                        textColor = ChatMessage.MessageColor[(int)ChatMessageType.Dead];
                     }
                     else if (command != "") //PMing
                     {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                        textColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
                     }
                     else
                     {
-                        textBox.TextColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
+                        textColor = ChatMessage.MessageColor[(int)ChatMessageType.Default];
                     }
                     break;
             }
+            textBox.TextColor = textBox.TextBlock.SelectedTextColor = textColor;
 
             return true;
         }
@@ -252,21 +254,29 @@ namespace Barotrauma
                     Visible = false,
                     CanBeFocused = false
                 };
-                var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), popupMsg.RectTransform, Anchor.TopRight),
-                    senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopRight)
+                var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), popupMsg.RectTransform, Anchor.Center));
+                Vector2 senderTextSize = Vector2.Zero;
+                if (!string.IsNullOrEmpty(senderName))
+                {
+                    var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
+                        senderName, textColor: senderColor, style: null, font: GUI.SmallFont)
+                    {
+                        CanBeFocused = false
+                    };
+                    senderTextSize = senderText.Font.MeasureString(senderText.WrappedText);
+                    senderText.RectTransform.MinSize = new Point(0, senderText.Rect.Height);
+                }
+                var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
+                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true)
                 {
                     CanBeFocused = false
                 };
-                var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), popupMsg.RectTransform, Anchor.TopRight)
-                    { AbsoluteOffset = new Point(0, senderText.Rect.Height) },
-                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopRight, style: null, wrap: true)
-                {
-                    CanBeFocused = false
-                };
-                int textWidth = (int)Math.Max(
-                    msgPopupText.Font.MeasureString(msgPopupText.WrappedText).X,
-                    senderText.Font.MeasureString(senderText.WrappedText).X);
-                popupMsg.RectTransform.Resize(new Point(textWidth + 20, msgPopupText.Rect.Bottom - senderText.Rect.Y), resizeChildren: false);
+                msgPopupText.RectTransform.MinSize = new Point(0, msgPopupText.Rect.Height);
+                Vector2 msgSize = msgPopupText.Font.MeasureString(msgPopupText.WrappedText);
+                int textWidth = (int)Math.Max(msgSize.X + msgPopupText.Padding.X + msgPopupText.Padding.Z, senderTextSize.X) + 10;
+                popupMsg.RectTransform.Resize(new Point((int)(textWidth / content.RectTransform.RelativeSize.X) , (int)((senderTextSize.Y + msgSize.Y) / content.RectTransform.RelativeSize.Y)), resizeChildren: true);
+                popupMsg.RectTransform.IsFixedSize = true;
+                content.Recalculate();
                 popupMessages.Enqueue(popupMsg);
             }
 

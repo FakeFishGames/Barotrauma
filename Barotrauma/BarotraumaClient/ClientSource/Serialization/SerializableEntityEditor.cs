@@ -569,15 +569,13 @@ namespace Barotrauma
                 Font = GUI.SmallFont,
                 Text = value,
                 OverflowClip = true,
-                OnEnterPressed = (textBox, text) =>
+            };
+            propertyBox.OnDeselected += (textBox, keys) =>
+            {
+                if (property.TrySetValue(entity, textBox.Text))
                 {
-                    if (property.TrySetValue(entity, text))
-                    {
-                        TrySendNetworkUpdate(entity, property);
-                        textBox.Text = (string)property.GetValue(entity);
-                        textBox.Deselect();
-                    }
-                    return true;
+                    TrySendNetworkUpdate(entity, property);
+                    textBox.Text = (string)property.GetValue(entity);
                 }
             };
             if (translationTextTag != null)

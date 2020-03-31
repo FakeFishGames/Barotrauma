@@ -443,7 +443,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!(userdata is FileReceiver.FileTransferIn transfer)) { return false; }
+                    if (!(FileTransferFrame.UserData is FileReceiver.FileTransferIn transfer)) { return false; }
                     GameMain.Client?.CancelFileTransfer(transfer);
                     GameMain.Client.FileReceiver.StopTransfer(transfer);
                     return true;
@@ -658,7 +658,7 @@ namespace Barotrauma
                 OnClicked = (btn, obj) =>
                 {
                     GameMain.Client.RequestStartRound();
-                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: true), "WaitForStartRound");
+                    CoroutineManager.StartCoroutine(WaitForStartRound(StartButton, allowCancel: false), "WaitForStartRound");
                     return true;
                 }
             };
@@ -1147,6 +1147,22 @@ namespace Barotrauma
             clientDisabledElements.AddRange(botSpawnModeButtons);
         }
 
+        public void StopWaitingForStartRound()
+        {
+            CoroutineManager.StopCoroutines("WaitForStartRound");
+
+            GUIMessageBox.CloseAll();
+            if (StartButton != null)
+            {
+                StartButton.Enabled = true;
+            }
+            if (campaignUI?.StartButton != null)
+            {
+                campaignUI.StartButton.Enabled = true;
+            }
+            GUI.ClearCursorWait();
+        }
+
         public IEnumerable<object> WaitForStartRound(GUIButton startButton, bool allowCancel)
         {
             GUI.SetCursorWaiting();
@@ -1173,7 +1189,8 @@ namespace Barotrauma
             }
 
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (Selected == GameMain.NetLobbyScreen && DateTime.Now < timeOut)
+            while (Selected == GameMain.NetLobbyScreen &&
+                   DateTime.Now < timeOut)
             {
                 msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
                 yield return CoroutineStatus.Running;
@@ -1322,6 +1339,8 @@ namespace Barotrauma
             if (GameMain.Client == null) return;
             spectateButton.Visible = true;
             spectateButton.Enabled = true;
+
+            StartButton.Visible = false;
         }
 
         public void SetCampaignCharacterInfo(CharacterInfo newCampaignCharacterInfo)
@@ -2745,11 +2764,11 @@ namespace Barotrauma
 
             availableJobs = availableJobs.ToList();
 
-            int itemsInRow = 1;
+            int itemsInRow = 0;
 
             foreach (var jobPrefab in availableJobs)
             {
-                if (itemsInRow >= 4)
+                if (itemsInRow >= 3)
                 {
                     row = new GUILayoutGroup(new RectTransform(Vector2.One, rows.RectTransform), true);
                     itemsInRow = 0;

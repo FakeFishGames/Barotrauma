@@ -392,16 +392,17 @@ namespace Barotrauma
                 {
                     nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
                     XDocument doc = SaveUtil.LoadGameSessionDoc(saveFile);
-                    if (doc.Root.GetChildElement("multiplayercampaign") != null)
-                    {
-                        //multiplayer campaign save in the wrong folder -> don't show the save
-                        saveList.Content.RemoveChild(saveFrame);
-                        continue;
-                    }
+
                     if (doc?.Root == null)
                     {
                         DebugConsole.ThrowError("Error loading save file \"" + saveFile + "\". The file may be corrupted.");
                         nameText.TextColor = GUI.Style.Red;
+                        continue;
+                    }
+                    if (doc.Root.GetChildElement("multiplayercampaign") != null)
+                    {
+                        //multiplayer campaign save in the wrong folder -> don't show the save
+                        saveList.Content.RemoveChild(saveFrame);
                         continue;
                     }
                     subName =  doc.Root.GetAttributeString("submarine", "");

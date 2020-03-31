@@ -5,16 +5,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public enum TransitionMode
-    {
-        Linear,
-        Smooth,
-        Smoother,
-        EaseIn,
-        EaseOut,
-        Exponential
-    }
-
     public enum SpriteFallBackState
     {
         None, 

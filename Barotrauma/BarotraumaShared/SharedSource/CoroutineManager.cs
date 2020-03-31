@@ -186,6 +186,7 @@ namespace Barotrauma
 #endif
                 if (handle.Thread == null)
                 {
+                    if (handle.AbortRequested) { return true; }
                     if (handle.Coroutine.Current != null)
                     {
                         WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;

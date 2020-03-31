@@ -7,6 +7,7 @@ using System.Text;
 using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 #if WINDOWS
 using SharpDX;
@@ -22,42 +23,56 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
+
+#if LINUX
+        /// <summary>
+        /// Sets the required environment variables for the game to initialize Steamworks correctly.
+        /// </summary>
+        [DllImport("linux_steam_env", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        private static extern void setLinuxEnv();
+#endif
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
-            GameMain game = null;
             string executableDir = "";
+
 #if !DEBUG
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
+#endif
+
+#if LINUX
+            setLinuxEnv();
+#endif
+
+            Game = null;
+            executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            Directory.SetCurrentDirectory(executableDir);
+            SteamManager.Initialize();
+            Game = new GameMain(args);
+            Game.Run();
+            Game.Dispose();
+        }
+
+        private static GameMain Game;
+
+        private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
+        {
             try
             {
-#endif
-                executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                Directory.SetCurrentDirectory(executableDir);
-                SteamManager.Initialize();
-                game = new GameMain(args);
-                game.Run();
-                game.Dispose();
-#if !DEBUG
+                Game?.Exit();
+                CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
+                Game?.Dispose();
             }
-            catch (Exception e)
+            catch
             {
-                try
-                {
-                    CrashDump(game, Path.Combine(executableDir,"crashreport.log"), e);
-                }
-                catch (Exception e2)
-                {
-                    CrashMessageBox("Barotrauma seems to have crashed, and failed to generate a crash report: "
-                        + e2.Message + "\n" + e2.StackTrace.ToString(),
-                        null);
-                }
-                game?.Dispose();
+                //exception handler is broken, we have a serious problem here!!
                 return;
             }
-#endif
         }
 
         public static void CrashMessageBox(string message, string filePath)
@@ -83,16 +98,9 @@ namespace Barotrauma
             string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
             var md5 = System.Security.Cryptography.MD5.Create();
             Md5Hash exeHash = null;
-            try
+            using (var stream = File.OpenRead(exePath))
             {
-                using (var stream = File.OpenRead(exePath))
-                {
-                    exeHash = new Md5Hash(stream);
-                }
-            }
-            catch
-            {
-                //gotta catch them all, we don't want to throw an exception while writing a crash report
+                exeHash = new Md5Hash(stream);
             }
 
             StreamWriter sw = new StreamWriter(filePath);
@@ -217,4 +225,4 @@ namespace Barotrauma
         }
     }
 #endif
-}
+        }

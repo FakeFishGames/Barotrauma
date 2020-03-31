@@ -250,7 +250,9 @@ namespace Barotrauma
         /// <summary>
         /// Takes flipping (Dir) into account.
         /// </summary>
-        public float TransformedRotation => Dir < 0 ? Rotation - MathHelper.Pi : Rotation;
+        public float TransformedRotation => TransformRotation(Rotation, Dir);
+
+        public static float TransformRotation(float rot, float dir) => dir < 0 ? rot - MathHelper.Pi : rot;
 
         public Vector2 LinearVelocity
         {
@@ -351,9 +353,9 @@ namespace Barotrauma
 
         public PhysicsBody(LimbParams limbParams, Vector2 position)
         {
-            float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Ragdoll.LimbScale;
-            float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Ragdoll.LimbScale;
-            float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Ragdoll.LimbScale;
+            float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
+            float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
+            float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
             density = limbParams.Density;
             CreateBody(width, height, radius, density);
             FarseerBody.BodyType = BodyType.Dynamic;

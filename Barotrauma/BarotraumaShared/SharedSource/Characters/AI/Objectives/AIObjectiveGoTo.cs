@@ -51,14 +51,23 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (followControlledCharacter && Character.Controlled == null) { return 0.0f; }
-            if (Target is Entity e && e.Removed) { return 0.0f; }
-            if (IgnoreIfTargetDead && Target is Character character && character.IsDead) { return 0.0f; }                     
-            if (objectiveManager.CurrentOrder == this)
+            if (followControlledCharacter && Character.Controlled == null)
             {
-                return AIObjectiveManager.OrderPriority;
+                Priority = 0;
             }
-            return 1.0f;
+            if (Target is Entity e && e.Removed)
+            {
+                Priority = 0;
+            }
+            if (IgnoreIfTargetDead && Target is Character character && character.IsDead)
+            {
+                Priority = 0;
+            }
+            else
+            {
+                return base.GetPriority();
+            }
+            return Priority;
         }
 
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0) 

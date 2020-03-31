@@ -31,15 +31,6 @@ namespace Barotrauma
 
         public bool AllowToFindDivingGear { get; set; } = true;
 
-        public override float GetPriority()
-        {
-            if (objectiveManager.CurrentOrder == this)
-            {
-                return AIObjectiveManager.OrderPriority;
-            }
-            return 1.0f;
-        }
-
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {

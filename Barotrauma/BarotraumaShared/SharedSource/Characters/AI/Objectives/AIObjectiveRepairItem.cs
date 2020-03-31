@@ -30,21 +30,28 @@ namespace Barotrauma
         {
             // TODO: priority list?
             // Ignore items that are being repaired by someone else.
-            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character)) { return 0; }
-            float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
-            yDist = yDist > 100 ? yDist * 5 : 0;
-            float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
-            float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
-            if (Item.CurrentHull == character.CurrentHull)
+            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character))
             {
-                distanceFactor = 1;
+                Priority = 0;
             }
-            float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
-            float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
-            float isSelected = IsRepairing ? 50 : 0;
-            float devotion = (Math.Min(Priority, 10) + isSelected) / 100;
-            float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-            return MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + damagePriority * distanceFactor * successFactor * PriorityModifier, 0, 1));
+            else
+            {
+                float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
+                yDist = yDist > 100 ? yDist * 5 : 0;
+                float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
+                float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
+                if (Item.CurrentHull == character.CurrentHull)
+                {
+                    distanceFactor = 1;
+                }
+                float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
+                float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+                float isSelected = IsRepairing ? 50 : 0;
+                float devotion = (CumulatedDevotion + isSelected) / 100;
+                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (damagePriority * distanceFactor * successFactor * PriorityModifier), 0, 1));
+            }
+            return Priority;
         }
 
         protected override bool Check()

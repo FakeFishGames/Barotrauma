@@ -118,6 +118,10 @@ namespace Barotrauma
 
             for (int i = 0; i < subDirs.Length; i++)
             {
+                if (i == subDirs.Length - 1 && string.IsNullOrEmpty(subDirs[i]))
+                {
+                    break;
+                }
                 string enumPath = string.IsNullOrEmpty(filename) ? "./" : filename;
                 List<string> filePaths = Directory.GetFileSystemEntries(enumPath).Select(s => Path.GetFileName(s)).ToList();
                 if (filePaths.Any(s => s.Equals(subDirs[i], StringComparison.Ordinal)))
@@ -570,6 +574,20 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(correctedPath)) { path = correctedPath; }
 #endif
             return path;
+        }
+
+        public static float GetEasing(TransitionMode easing, float t)
+        {
+            return easing switch
+            {
+                TransitionMode.Smooth => MathUtils.SmoothStep(t),
+                TransitionMode.Smoother => MathUtils.SmootherStep(t),
+                TransitionMode.EaseIn => MathUtils.EaseIn(t),
+                TransitionMode.EaseOut => MathUtils.EaseOut(t),
+                TransitionMode.Exponential => t * t,
+                TransitionMode.Linear => t,
+                _ => t,
+            };
         }
     }
 }

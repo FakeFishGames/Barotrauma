@@ -284,6 +284,7 @@ namespace Barotrauma
         }
 
         protected static HashSet<SlotReference> highlightedSubInventorySlots = new HashSet<SlotReference>();
+        private static List<SlotReference> subInventorySlotsToDraw = new List<SlotReference>();
 
         protected static SlotReference selectedSlot;
 
@@ -1048,11 +1049,14 @@ namespace Barotrauma
             return hoverArea;
         }
 
+
         public static void DrawFront(SpriteBatch spriteBatch)
         {
-            if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) return;
+            if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) { return; }
 
-            foreach (var slot in highlightedSubInventorySlots)
+            subInventorySlotsToDraw.Clear();
+            subInventorySlotsToDraw.AddRange(highlightedSubInventorySlots);
+            foreach (var slot in subInventorySlotsToDraw)
             {
                 int slotIndex = Array.IndexOf(slot.ParentInventory.slots, slot.Slot);
                 if (slotIndex > -1 && slotIndex < slot.ParentInventory.slots.Length)

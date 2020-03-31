@@ -376,6 +376,15 @@ namespace Microsoft.Xna.Framework
         }
 
         /// <summary>
+        /// Adjusts the edges of this <see cref="Rectangle"/> by specified horizontal and vertical amounts. 
+        /// </summary>
+        /// <param name="amount">Value to adjust the edges.</param>
+        public void Inflate(Vector2 amount)
+        {
+            Inflate(amount.X, amount.Y);
+        }
+
+        /// <summary>
         /// Gets whether or not the other <see cref="Rectangle"/> intersects with this rectangle.
         /// </summary>
         /// <param name="value">The other rectangle for testing.</param>

@@ -31,7 +31,7 @@ namespace Barotrauma
         
         private readonly ConstructorInfo constructor;
 
-        public readonly MissionType type;
+        public readonly MissionType Type;
 
         public readonly bool MultiplayerOnly, SingleplayerOnly;
 
@@ -154,18 +154,18 @@ namespace Barotrauma
             }
 
             string missionTypeName = element.GetAttributeString("type", "");
-            if (!Enum.TryParse(missionTypeName, out type))
+            if (!Enum.TryParse(missionTypeName, out Type))
             {
                 DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
                 return;
             }
-            if (type == MissionType.None)
+            if (Type == MissionType.None)
             {
                 DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - mission type cannot be none.");
                 return;
             }
 
-            constructor = missionClasses[type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            constructor = missionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
 
             InitProjSpecific(element);
         }
@@ -189,7 +189,7 @@ namespace Barotrauma
 
             return false;
         }
-        
+
         public Mission Instantiate(Location[] locations)
         {
             return constructor?.Invoke(new object[] { this, locations }) as Mission;

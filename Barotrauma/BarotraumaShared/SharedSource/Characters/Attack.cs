@@ -13,11 +13,12 @@ namespace Barotrauma
 
     public enum AttackContext
     {
-        NotDefined,
+        Any,
         Water,
         Ground,
         Inside,
-        Outside
+        Outside,
+        NotDefined
     }
 
     public enum AttackTarget
@@ -72,13 +73,13 @@ namespace Barotrauma
 
     partial class Attack : ISerializableEntity
     {
-        [Serialize(AttackContext.NotDefined, true, description: "The attack will be used only in this context."), Editable]
+        [Serialize(AttackContext.Any, true, description: "The attack will be used only in this context."), Editable]
         public AttackContext Context { get; private set; }
 
         [Serialize(AttackTarget.Any, true, description: "Does the attack target only specific targets?"), Editable]
         public AttackTarget TargetType { get; private set; }
 
-        [Serialize(LimbType.None, true, description: "If not defined or set to none, the closest limb is used (default)."), Editable]
+        [Serialize(LimbType.None, true, description: "To which limb is the attack aimed at? If not defined or set to none, the closest limb is used (default)."), Editable]
         public LimbType TargetLimbType { get; private set; }
 
         [Serialize(HitDetection.Distance, true, description: "Collision detection is more accurate, but it only affects targets that are in contact with the limb."), Editable]
@@ -87,8 +88,14 @@ namespace Barotrauma
         [Serialize(AIBehaviorAfterAttack.FallBack, true, description: "The preferred AI behavior after the attack."), Editable]
         public AIBehaviorAfterAttack AfterAttack { get; set; }
 
-        [Serialize(false, true, description: "Should the AI try to reverse when aiming with this attack?"), Editable]
+        [Serialize(0f, true, description: "A delay before reacting after performing an attack."), Editable]
+        public float AfterAttackDelay { get; set; }
+
+        [Serialize(false, true, description: "Should the AI try to turn around when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
+
+        [Serialize(false, true, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
+        public bool Retreat { get; private set; }
 
         [Serialize(0.0f, true, description: "The min distance from the attack limb to the target before the AI tries to attack."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2000.0f)]
         public float Range { get; set; }
@@ -147,7 +154,19 @@ namespace Barotrauma
         [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs). The direction of the force is towards the target that's being attacked."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; private set; }
 
-        [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)"), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize("0.0, 0.0", true, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
+        public Vector2 RootForceWorldStart { get; private set; }
+        
+        [Serialize("0.0, 0.0", true, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
+        public Vector2 RootForceWorldMiddle { get; private set; }
+        
+        [Serialize("0.0, 0.0", true, description: "Applied to the main limb. In world space coordinates(i.e. 0, 1 pushes the character upwards a bit). The attacker's facing direction is taken into account."), Editable]
+        public Vector2 RootForceWorldEnd { get; private set; }
+        
+        [Serialize(TransitionMode.Linear, true, description:""), Editable]
+        public TransitionMode RootTransitionEasing { get; private set; }
+
+        [Serialize(0.0f, true, description: "Applied to the attacking limb (or limbs defined using ApplyForceOnLimbs)"), Editable(MinValueFloat = -10000.0f, MaxValueFloat = 10000.0f)]
         public float Torque { get; private set; }
 
         [Serialize(false, true), Editable]
@@ -156,13 +175,13 @@ namespace Barotrauma
         [Serialize(0.0f, true, description: "Applied to the target the attack hits. The direction of the impulse is from this limb towards the target (use negative values to pull the target closer)."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float TargetImpulse { get; private set; }
 
-        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards)."), Editable]
+        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards). The attacker's facing direction is taken into account."), Editable]
         public Vector2 TargetImpulseWorld { get; private set; }
 
         [Serialize(0.0f, true, description: "Applied to the target the attack hits. The direction of the force is from this limb towards the target (use negative values to pull the target closer)."), Editable(-1000.0f, 1000.0f)]
         public float TargetForce { get; private set; }
 
-        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards)."), Editable]
+        [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards). The attacker's facing direction is taken into account."), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
         [Serialize(0.0f, true, description: "How likely the attack causes target limbs to be severed when the target is dead."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
@@ -419,7 +438,10 @@ namespace Barotrauma
 
         public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true)
         {
-            if (targetLimb == null) return new AttackResult();
+            if (targetLimb == null)
+            {
+                return new AttackResult();
+            }
 
             if (OnlyHumans)
             {
@@ -461,6 +483,7 @@ namespace Barotrauma
 
         public float AttackTimer { get; private set; }
         public float CoolDownTimer { get; set; }
+        public float CurrentRandomCoolDown { get; private set; }
         public float SecondaryCoolDownTimer { get; set; }
         public bool IsRunning { get; private set; }
 
@@ -492,7 +515,8 @@ namespace Barotrauma
         public void SetCoolDown()
         {
             float randomFraction = CoolDown * CoolDownRandomFactor;
-            CoolDownTimer = CoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            CurrentRandomCoolDown = MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            CoolDownTimer = CoolDown + CurrentRandomCoolDown;
             randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
             SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
         }
@@ -501,11 +525,12 @@ namespace Barotrauma
         {
             CoolDownTimer = 0;
             SecondaryCoolDownTimer = 0;
+            CurrentRandomCoolDown = 0;
         }
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition);
 
-        public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.NotDefined;
+        public bool IsValidContext(AttackContext context) => Context == context || Context == AttackContext.Any || Context == AttackContext.NotDefined;
 
         public bool IsValidContext(IEnumerable<AttackContext> contexts)
         {
@@ -558,6 +583,12 @@ namespace Barotrauma
                 default:
                     return true;
             }
+        }
+
+        public Vector2 CalculateAttackPhase(TransitionMode easing = TransitionMode.Linear)
+        {
+            float t = AttackTimer / Duration;
+            return MathUtils.Bezier(RootForceWorldStart, RootForceWorldMiddle, RootForceWorldEnd, ToolBox.GetEasing(easing, t));
         }
     }
 }

@@ -132,7 +132,7 @@ namespace Barotrauma
         private List<HeartratePosition> heartratePositions;
         private float currentHeartrateTime;
         private float heartbeatTimer;
-        private Texture2D heartrateFade;
+        private static Texture2D heartrateFade;
 
         private readonly HeartratePosition[] heartbeatPattern = 
         {
@@ -478,7 +478,7 @@ namespace Barotrauma
 
             cprFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 1.0f), cprLayout.RectTransform), style: "GUIFrameListBox");
 
-            heartrateFade = TextureLoader.FromFile("Content/UI/Health/HeartrateFade.png");
+            heartrateFade ??= TextureLoader.FromFile("Content/UI/Health/HeartrateFade.png");
 
             new GUICustomComponent(new RectTransform(Vector2.One * 0.95f, cprFrame.RectTransform, Anchor.Center), DrawHeartrate, UpdateHeartrate);
 
@@ -816,9 +816,7 @@ namespace Barotrauma
                 if (highlightedLimbIndex < 0 && selectedLimbIndex < 0)
                 {
                     // If no limb is selected or highlighted, select the one with the most critical afflictions.
-                    var affliction = GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)
-                        .OrderByDescending(a => a.DamagePerSecond)
-                        .ThenByDescending(a => a.Strength).FirstOrDefault();
+                    var affliction = SortAfflictionsBySeverity(GetAllAfflictions(a => a.Prefab.IndicatorLimb != LimbType.None)).FirstOrDefault();
                     if (affliction.DamagePerSecond > 0 || affliction.Strength > 0)
                     {
                         var limbHealth = GetMatchingLimbHealth(affliction);
@@ -1185,7 +1183,8 @@ namespace Barotrauma
             Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
             GetSuitableTreatments(treatmentSuitability, normalize: true, randomization: randomVariance);
 
-            Affliction mostSevereAffliction = afflictions.FirstOrDefault(a => !a.Prefab.IsBuff && !afflictions.Any(a2 => !a2.Prefab.IsBuff && a2.Strength > a.Strength)) ?? afflictions.FirstOrDefault();
+            //Affliction mostSevereAffliction = afflictions.FirstOrDefault(a => !a.Prefab.IsBuff && !afflictions.Any(a2 => !a2.Prefab.IsBuff && a2.Strength > a.Strength)) ?? afflictions.FirstOrDefault();
+            Affliction mostSevereAffliction = SortAfflictionsBySeverity(afflictions).FirstOrDefault();
             GUIButton buttonToSelect = null;
 
             foreach (Affliction affliction in afflictions)
@@ -1811,8 +1810,8 @@ namespace Barotrauma
                 float iconScale = 0.25f * scale;
                 Vector2 iconPos = highlightArea.Center.ToVector2();
 
-                Affliction mostSevereAffliction = thisAfflictions.FirstOrDefault(a => !a.Prefab.IsBuff && !thisAfflictions.Any(a2 => !a2.Prefab.IsBuff && a2.Strength > a.Strength)) ?? thisAfflictions.FirstOrDefault();
-                
+                //Affliction mostSevereAffliction = thisAfflictions.FirstOrDefault(a => !a.Prefab.IsBuff && !thisAfflictions.Any(a2 => !a2.Prefab.IsBuff && a2.Strength > a.Strength)) ?? thisAfflictions.FirstOrDefault();
+                Affliction mostSevereAffliction = SortAfflictionsBySeverity(thisAfflictions).FirstOrDefault();
                 if (mostSevereAffliction != null) { DrawLimbAfflictionIcon(spriteBatch, mostSevereAffliction, iconScale, ref iconPos); }
 
                 if (thisAfflictions.Count() > 1)
@@ -1991,6 +1990,9 @@ namespace Barotrauma
                     limbHealth.IndicatorSprite = null;
                 }
             }
+
+            medUIExtra?.Remove();
+            medUIExtra = null;
 
             limbIndicatorOverlay?.Remove();
             limbIndicatorOverlay = null;

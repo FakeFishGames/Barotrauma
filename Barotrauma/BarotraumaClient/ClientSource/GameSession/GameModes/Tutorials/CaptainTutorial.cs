@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
@@ -221,7 +222,7 @@ namespace Barotrauma.Tutorials
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f, false);
-            } while (Submarine.MainSub.DockedTo.Count > 0);
+            } while (Submarine.MainSub.DockedTo.Any());
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(5); // Navigate to destination
@@ -245,7 +246,7 @@ namespace Barotrauma.Tutorials
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f, false);
-            } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Count == 0);
+            } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Any());
             RemoveCompletedObjective(segments[6]);
             yield return new WaitForSeconds(3f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.GetWithVariable("Captain.Radio.Complete", "[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);

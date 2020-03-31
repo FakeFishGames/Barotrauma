@@ -37,23 +37,10 @@ namespace Barotrauma.Items.Components
         private float currFlow;
         public float CurrFlow
         {
-            get 
+            get
             {
                 if (!IsActive) { return 0.0f; }
-                return Math.Abs(currFlow); 
-            }
-        }
-
-        public override bool IsActive 
-        { 
-            get => base.IsActive;
-            set
-            {
-                base.IsActive = value;
-                if (!IsActive)
-                {
-                    powerConsumption = 0;
-                }
+                return Math.Abs(currFlow);
             }
         }
 

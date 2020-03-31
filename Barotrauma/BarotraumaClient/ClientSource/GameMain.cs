@@ -189,6 +189,11 @@ namespace Barotrauma
 
             Instance = this;
 
+            if (!Directory.Exists(Content.RootDirectory))
+            {
+                throw new Exception("Content folder not found. If you are trying to compile the game from the source code and own a legal copy of the game, you can copy the Content folder from the game's files to BarotraumaShared/Content.");
+            }
+
             Config = new GameSettings();
 
             Md5Hash.LoadCache();
@@ -421,17 +426,27 @@ namespace Barotrauma
             GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
             DebugConsole.Init();
 
-            CrossThread.RequestExecutionOnMainThread(() =>
+            if (Config.AutoUpdateWorkshopItems)
             {
-                if (Config.AutoUpdateWorkshopItems)
+                bool waitingForWorkshopUpdates = true;
+                bool result = false;
+                TaskPool.Add(SteamManager.AutoUpdateWorkshopItems(), (task) =>
                 {
-                    if (SteamManager.AutoUpdateWorkshopItems())
+                    result = task.Result;
+                    waitingForWorkshopUpdates = false;
+                });
+
+                while (waitingForWorkshopUpdates) { yield return CoroutineStatus.Running; }
+
+                if (result)
+                {
+                    CrossThread.RequestExecutionOnMainThread(() =>
                     {
                         ContentPackage.LoadAll();
                         Config.ReloadContentPackages();
-                    }
+                    });
                 }
-            });
+            }
             
 
             if (SelectedPackages.None())

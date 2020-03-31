@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -113,7 +110,25 @@ namespace Barotrauma
 
         private void InitializeMonsters(IEnumerable<Character> monsters)
         {
-            monsters.ForEach(m => m.Enabled = false);
+            foreach (var monster in monsters)
+            {
+                monster.Enabled = false;
+                if (monster.Params.AI.EnforceAggressiveBehaviorForMissions)
+                {
+                    foreach (var targetParam in monster.Params.AI.Targets)
+                    {
+                        switch (targetParam.State)
+                        {
+                            case AIState.Avoid:
+                            case AIState.Escape:
+                            case AIState.Flee:
+                            case AIState.PassiveAggressive:
+                                targetParam.State = AIState.Attack;
+                                break;
+                        }
+                    }
+                }
+            }
             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
             foreach (Character monster in monsters)
             {
@@ -191,7 +206,10 @@ namespace Barotrauma
             completed = true;
         }
 
-        public bool IsEliminated(Character enemy) => enemy.Removed || enemy.IsDead || enemy.AIController is EnemyAIController ai && ai.State == AIState.Flee;
-
+        public bool IsEliminated(Character enemy) =>
+            enemy == null ||
+            enemy.Removed || 
+            enemy.IsDead || 
+            enemy.AIController is EnemyAIController ai && ai.State == AIState.Flee;
     }
 }

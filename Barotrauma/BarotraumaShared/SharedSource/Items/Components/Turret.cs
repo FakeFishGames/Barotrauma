@@ -374,8 +374,9 @@ namespace Barotrauma.Items.Components
             reload = reloadTime;
 
             projectile.Drop(null);
-            projectile.body.Dir = 1.0f;
+            if (projectile.body == null) { return; }
 
+            projectile.body.Dir = 1.0f;
             projectile.body.ResetDynamics();
             projectile.body.Enabled = true;
             projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), -rotation);
@@ -591,7 +592,7 @@ namespace Barotrauma.Items.Components
             foreach (MapEntity e in item.linkedTo)
             {
                 if (e is Item projectileContainer) { CheckProjectileContainer(projectileContainer, projectiles, returnFirst); }
-                if (returnFirst && projectiles.Any()) return projectiles;
+                if (returnFirst && projectiles.Any()) { return projectiles; }
             }
 
             return projectiles;
@@ -600,15 +601,15 @@ namespace Barotrauma.Items.Components
         private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, bool returnFirst)
         {
             var containedItems = projectileContainer.ContainedItems;
-            if (containedItems == null) return;
+            if (containedItems == null) { return; }
 
             foreach (Item containedItem in containedItems)
             {
                 var projectileComponent = containedItem.GetComponent<Projectile>();
-                if (projectileComponent != null)
+                if (projectileComponent != null && projectileComponent.Item.body != null)
                 {
                     projectiles.Add(projectileComponent);
-                    if (returnFirst) return;
+                    if (returnFirst) { return; }
                 }
                 else
                 {
@@ -617,10 +618,10 @@ namespace Barotrauma.Items.Components
                     foreach (Item subContainedItem in containedItem.ContainedItems)
                     {
                         projectileComponent = subContainedItem.GetComponent<Projectile>();
-                        if (projectileComponent != null)
+                        if (projectileComponent != null && projectileComponent.Item.body != null)
                         {
                             projectiles.Add(projectileComponent);
-                            if (returnFirst) return;
+                            if (returnFirst) { return; }
                         }
                     }
                 }

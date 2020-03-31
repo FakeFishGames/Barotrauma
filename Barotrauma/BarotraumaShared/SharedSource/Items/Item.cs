@@ -1343,7 +1343,7 @@ namespace Barotrauma
                     UpdateTransform();
                     if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
                     {
-                        Spawner.AddToRemoveQueue(this);
+                        Spawner?.AddToRemoveQueue(this);
                         return;
                     }
                 }

@@ -15,6 +15,7 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt16 CharacterID;
         public bool Muted;
+        public bool InGame;
         public bool AllowKicking;
     }
 

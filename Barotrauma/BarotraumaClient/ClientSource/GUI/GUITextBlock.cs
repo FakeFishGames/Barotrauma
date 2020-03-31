@@ -328,11 +328,7 @@ namespace Barotrauma
         {
             if (text == null) { return; }
 
-            censoredText = "";
-            for (int i = 0; i < text.Length; i++)
-            {
-                censoredText += "\u2022";
-            }
+            censoredText = string.IsNullOrEmpty(text) ? "" : new string('\u2022', text.Length);
 
             var rect = Rect;
 
@@ -446,9 +442,10 @@ namespace Barotrauma
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
-                spriteBatch.End();
                 Rectangle scissorRect = new Rectangle(rect.X + (int)padding.X, rect.Y, rect.Width - (int)padding.X - (int)padding.Z, rect.Height);
-                spriteBatch.GraphicsDevice.ScissorRectangle = scissorRect;
+                if (!scissorRect.Intersects(prevScissorRect)) { return; }
+                spriteBatch.End();
+                spriteBatch.GraphicsDevice.ScissorRectangle = Rectangle.Intersect(prevScissorRect, scissorRect);
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 

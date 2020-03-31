@@ -12,10 +12,10 @@ namespace Barotrauma
     {
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!editing || wallVertices == null) return;
+            if (!editing || wallVertices == null) { return; }
 
-            Color color = (IsHighlighted) ? GUI.Style.Orange : GUI.Style.Green;
-            if (IsSelected) color = GUI.Style.Red;
+            Color color = IsHighlighted ? GUI.Style.Orange : GUI.Style.Green;
+            if (IsSelected) { color = GUI.Style.Red; }
 
             Vector2 pos = Position;
 
@@ -37,11 +37,7 @@ namespace Barotrauma
             GUI.DrawLine(spriteBatch, pos + Vector2.UnitY * 50.0f, pos - Vector2.UnitY * 50.0f, color, 0.0f, 5);
             GUI.DrawLine(spriteBatch, pos + Vector2.UnitX * 50.0f, pos - Vector2.UnitX * 50.0f, color, 0.0f, 5);
 
-            Rectangle drawRect = rect;
-            drawRect.Y = -rect.Y;
-            GUI.DrawRectangle(spriteBatch, drawRect, GUI.Style.Red, true);
-
-            if (!Item.ShowLinks) return;
+            if (!Item.ShowLinks) { return; }
 
             foreach (MapEntity e in linkedTo)
             {

@@ -206,6 +206,12 @@ namespace Barotrauma
         {
             lock (mutex)
             {
+                if (textPacks == null)
+                {
+                    DebugConsole.ThrowError($"Failed to get the text \"{textTag}\" (no text packs loaded).");
+                    return textTag;
+                }
+
                 if (!textPacks.ContainsKey(Language))
                 {
                     DebugConsole.ThrowError("No text packs available for the selected language (" + Language + ")! Switching to English...");

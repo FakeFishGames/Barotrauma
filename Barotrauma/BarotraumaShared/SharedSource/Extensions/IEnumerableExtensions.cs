@@ -90,6 +90,11 @@ namespace Barotrauma.Extensions
                 return source.Count(predicate) > 1;
             }
         }
+        
+        public static IEnumerable<T> ToEnumerable<T>(this T item)
+        {
+            yield return item;
+        }
 
         // source: https://stackoverflow.com/questions/19237868/get-all-children-to-one-list-recursive-c-sharp
         public static IEnumerable<T> SelectManyRecursive<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> selector)

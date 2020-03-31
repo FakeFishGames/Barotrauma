@@ -241,7 +241,7 @@ namespace Barotrauma
         }
         
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => p.Identifier != "watchman", sync);
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {

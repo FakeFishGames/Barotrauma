@@ -92,7 +92,7 @@ namespace Barotrauma
             
             if (!character.IsUnconscious && character.Stun <= 0.0f)
             {
-                if (character.Info != null && !character.ShouldLockHud())
+                if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())

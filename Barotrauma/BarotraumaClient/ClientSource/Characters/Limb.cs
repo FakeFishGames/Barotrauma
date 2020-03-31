@@ -220,9 +220,18 @@ namespace Barotrauma
             }
             set
             {
-                if (HuskSprite != null && value != enableHuskSprite)
+                if (enableHuskSprite == value) { return; }
+                enableHuskSprite = value;
+                if (enableHuskSprite)
                 {
-                    if (value)
+                    if (HuskSprite == null)
+                    {
+                        LoadHuskSprite();
+                    }
+                }
+                if (HuskSprite != null)
+                {
+                    if (enableHuskSprite)
                     {
                         List<WearableSprite> otherWearablesWithHusk = new List<WearableSprite>() { HuskSprite };
                         otherWearablesWithHusk.AddRange(OtherWearables);
@@ -235,7 +244,6 @@ namespace Barotrauma
                         UpdateWearableTypesToHide();
                     }
                 }
-                enableHuskSprite = value;
             }
         }
 

@@ -383,7 +383,7 @@ namespace Barotrauma
                 }
             }
 
-            if (character.IsHusk)
+            if (character.IsHusk && character.Params.UseHuskAppendage)
             {
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
                 if (characterPrefab?.XDocument != null)
@@ -1626,7 +1626,7 @@ namespace Barotrauma
             float sin = (float)Math.Sin(mouthLimb.Rotation);
             Vector2 bodySize = mouthLimb.body.GetSize();
             Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
-            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * RagdollParams.LimbScale;
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * mouthLimb.Scale * RagdollParams.LimbScale;
         }
 
         public Vector2 GetColliderBottom()

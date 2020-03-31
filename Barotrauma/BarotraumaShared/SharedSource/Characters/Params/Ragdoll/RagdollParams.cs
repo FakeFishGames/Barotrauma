@@ -489,6 +489,9 @@ namespace Barotrauma
             [Serialize(0.25f, true), Editable]
             public float Stiffness { get; set; }
 
+            [Serialize(1f, true, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
+            public float Scale { get; set; }
+
             public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
 
@@ -590,6 +593,18 @@ namespace Barotrauma
 
             [Serialize("", true), Editable]
             public string Notes { get; set; }
+
+            [Serialize(0f, true), Editable]
+            public float ConstantTorque { get; set; }
+
+            [Serialize(0f, true), Editable]
+            public float ConstantAngle { get; set; }
+
+            [Serialize(1f, true), Editable]
+            public float Scale { get; set; }
+
+            [Serialize(1f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
+            public float AttackForceMultiplier { get; set; }
 
             // Non-editable ->
             [Serialize(0, true)]

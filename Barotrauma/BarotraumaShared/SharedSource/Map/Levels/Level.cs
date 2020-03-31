@@ -310,6 +310,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null)
             {
                 Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
+                dockedSubBorders.Inflate(dockedSubBorders.Size.ToVector2() * 0.05f);
                 minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
                 minWidth = Math.Min(minWidth, maxWidth);
             }
@@ -1622,7 +1623,7 @@ namespace Barotrauma
                     EndOutpost = outpost;
                     if (GameMain.GameSession?.EndLocation != null) { outpost.Name = GameMain.GameSession.EndLocation.Name; }
                 }
-            }            
+            }
         }
 
         private bool IsModeStartOutpostCompatible()

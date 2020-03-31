@@ -173,8 +173,8 @@ namespace Barotrauma.Items.Components
             if (!item.linkedTo.Contains(target.item)) item.linkedTo.Add(target.item);
             if (!target.item.linkedTo.Contains(item)) target.item.linkedTo.Add(item);
 
-            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.DockedTo.Add(item.Submarine);
-            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.DockedTo.Add(target.item.Submarine);
+            if (!target.item.Submarine.DockedTo.Contains(item.Submarine)) target.item.Submarine.ConnectedDockingPorts.Add(item.Submarine, target);
+            if (!item.Submarine.DockedTo.Contains(target.item.Submarine)) item.Submarine.ConnectedDockingPorts.Add(target.item.Submarine, this);
 
             DockingTarget = target;
             DockingTarget.DockingTarget = this;
@@ -703,8 +703,8 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnSecondaryUse, 1.0f);
 
-            DockingTarget.item.Submarine.DockedTo.Remove(item.Submarine);
-            item.Submarine.DockedTo.Remove(DockingTarget.item.Submarine);
+            DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
+            item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
 
             if (door != null && DockingTarget.door != null)
             {

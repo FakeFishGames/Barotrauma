@@ -4,6 +4,7 @@ using Barotrauma.SpriteDeformations;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -120,7 +121,7 @@ namespace Barotrauma
 
             SerializableProperty.SerializeProperties(this, element);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (XElement subElement in element.Elements().ToList())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -139,7 +140,7 @@ namespace Barotrauma
                         break;
                 }
             }
-            
+
             foreach (LightSourceParams lightSourceParams in LightSourceParams)
             {
                 var lightElement = new XElement("LightSource");

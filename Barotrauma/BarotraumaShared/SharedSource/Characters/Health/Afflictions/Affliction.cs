@@ -14,8 +14,13 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
+        protected float _strength;
         [Serialize(0f, true), Editable]
-        public float Strength { get; set; }
+        public virtual float Strength
+        {
+            get { return _strength; }
+            set { _strength = value; }
+        }
 
         [Serialize("", true), Editable]
         public string Identifier { get; private set; }
@@ -38,7 +43,7 @@ namespace Barotrauma
         public Affliction(AfflictionPrefab prefab, float strength)
         {
             Prefab = prefab;
-            Strength = strength;
+            _strength = strength;
             Identifier = prefab?.Identifier;
         }
 
@@ -173,11 +178,11 @@ namespace Barotrauma
 
             if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
             {
-                Strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
+                _strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
             }
             else // Reduce strengthening of afflictions if resistant
             {
-                Strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
+                _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
             }
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)

@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
                         };
                             // === POWER WARNING === //
                             inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
-                                TextManager.Get("FabricatorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
+                                TextManager.Get("FabricatorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
                             {
                                 HoverColor = Color.Black,
                                 IgnoreLayoutGroups = true,
@@ -584,15 +584,20 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            FabricatorState newState = (FabricatorState)msg.ReadByte();
+            float newTimeUntilReady = msg.ReadSingle();
             int itemIndex = msg.ReadRangedInteger(-1, fabricationRecipes.Count - 1);
             UInt16 userID = msg.ReadUInt16();
             Character user = Entity.FindEntityByID(userID) as Character;
 
-            if (itemIndex == -1 || user == null)
+            State = newState;
+            timeUntilReady = newTimeUntilReady;
+
+            if (newState == FabricatorState.Stopped || itemIndex == -1 || user == null)
             {
                 CancelFabricating();
             }
-            else
+            else if (newState == FabricatorState.Active || newState == FabricatorState.Paused)
             {
                 //if already fabricating the selected item, return
                 if (fabricatedItem != null && fabricationRecipes.IndexOf(fabricatedItem) == itemIndex) { return; }

@@ -43,7 +43,6 @@ namespace Barotrauma
 
         protected string originalName;
         protected string identifier;
-        protected ContentPackage contentPackage;
 
         public Sprite sprite;
 

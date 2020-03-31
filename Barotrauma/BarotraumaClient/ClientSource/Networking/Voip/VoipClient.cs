@@ -119,7 +119,7 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen?.SetPlayerSpeaking(client);
                 GameMain.GameSession?.CrewManager?.SetClientSpeaking(client);
 
-                if (client.VoipSound.CurrentAmplitude > 0.1f) //TODO: might need to tweak
+                if ((client.VoipSound.CurrentAmplitude * client.VoipSound.Gain * GameMain.SoundManager.GetCategoryGainMultiplier("voip")) > 0.1f) //TODO: might need to tweak
                 {
                     if (client.Character != null && !client.Character.Removed)
                     {

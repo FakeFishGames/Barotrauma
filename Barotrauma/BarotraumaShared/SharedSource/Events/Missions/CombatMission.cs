@@ -44,6 +44,11 @@ namespace Barotrauma
             }
         }
 
+        public override int TeamCount
+        {
+            get { return 2; }
+        }
+
         public CombatMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
@@ -113,7 +118,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < 2; i++)
                 {
-                    if (wifiComponent.Item.Submarine == subs[i] || subs[i].DockedTo.Contains(wifiComponent.Item.Submarine))
+                    if (wifiComponent.Item.Submarine == subs[i] || subs[i].ConnectedDockingPorts.ContainsKey(wifiComponent.Item.Submarine))
                     {
                         wifiComponent.TeamID = subs[i].TeamID;
                     }

@@ -150,14 +150,14 @@ namespace Barotrauma
             SaveUtil.LoadGame(SavePath);
         }
 
-        public void StartRound(string levelSeed, float? difficulty = null, bool loadSecondSub = false)
+        public void StartRound(string levelSeed, float? difficulty = null)
         {
             Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
 
-            StartRound(randomLevel, true, loadSecondSub);
+            StartRound(randomLevel, true);
         }
 
-        public void StartRound(Level level, bool reloadSub = true, bool loadSecondSub = false, bool mirrorLevel = false)
+        public void StartRound(Level level, bool reloadSub = true, bool mirrorLevel = false)
         {
             //make sure no status effects have been carried on from the next round
             //(they should be stopped in EndRound, this is a safeguard against cases where the round is ended ungracefully)
@@ -177,7 +177,7 @@ namespace Barotrauma
 
             if (reloadSub || Submarine.MainSub != Submarine) { Submarine.Load(true); }
             Submarine.MainSub = Submarine;
-            if (loadSecondSub)
+            if (GameMode.Mission != null && GameMode.Mission.TeamCount > 1)
             {
                 if (Submarine.MainSubs[1] == null)
                 {

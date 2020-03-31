@@ -106,11 +106,10 @@ namespace Barotrauma.Items.Components
         {
             if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) { return; }
 
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(
-                    item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale,
-                    -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale),
-                indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.00001f);
+            Vector2 itemSize = new Vector2(item.Sprite.SourceRect.Width, item.Sprite.SourceRect.Height) * item.Scale;
+            Vector2 indicatorPos = -itemSize / 2 + indicatorPosition * item.Scale;
+            if (item.FlippedX && item.Prefab.CanSpriteFlipX) { indicatorPos.X = -indicatorPos.X - indicatorSize.X * item.Scale; }
+            if (item.FlippedY && item.Prefab.CanSpriteFlipY) { indicatorPos.Y = -indicatorPos.Y - indicatorSize.Y * item.Scale; }
 
             if (charge > 0)
             {
@@ -118,25 +117,23 @@ namespace Barotrauma.Items.Components
                 if (!isHorizontal)
                 {
                     GUI.DrawRectangle(spriteBatch,
-                    new Vector2(
-                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1,
-                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1 + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))),
-                    new Vector2(indicatorSize.X * item.Scale - 2, (indicatorSize.Y * item.Scale - 2) * (charge / capacity)), indicatorColor, true, 
-                    depth: item.SpriteDepth - 0.00001f);
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + ((indicatorSize.Y * item.Scale) * (1.0f - charge / capacity))) + indicatorPos,
+                        new Vector2(indicatorSize.X * item.Scale, (indicatorSize.Y * item.Scale) * (charge / capacity)), indicatorColor, true,
+                        depth: item.SpriteDepth - 0.00001f);
                 }
                 else
                 {
                     GUI.DrawRectangle(spriteBatch,
-                    new Vector2(
-                        item.DrawPosition.X - item.Sprite.SourceRect.Width / 2 * item.Scale + indicatorPosition.X * item.Scale + 1 ,
-                        -item.DrawPosition.Y - item.Sprite.SourceRect.Height / 2 * item.Scale + indicatorPosition.Y * item.Scale + 1),
-                    new Vector2((indicatorSize.X * item.Scale - 2) * (charge / capacity), indicatorSize.Y * item.Scale - 2), indicatorColor, true, 
-                    depth: item.SpriteDepth - 0.00001f);
+                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y) + indicatorPos,
+                        new Vector2((indicatorSize.X * item.Scale) * (charge / capacity), indicatorSize.Y * item.Scale), indicatorColor, true, 
+                        depth: item.SpriteDepth - 0.00001f);
                 }
             }
-
+            GUI.DrawRectangle(spriteBatch,
+                new Vector2(item.DrawPosition.X, -item.DrawPosition.Y) + indicatorPos,
+                indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.00001f);
         }
-        
+
         public void ClientWrite(IWriteMessage msg, object[] extraData)
         {
             msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);

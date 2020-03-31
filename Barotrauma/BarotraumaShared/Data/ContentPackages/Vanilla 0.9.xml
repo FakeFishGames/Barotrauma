@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9" corepackage="true" hideinworkshopmenu="true" gameversion="0.9.0.0">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<contentpackage name="Vanilla 0.9" path="Data/ContentPackages/Vanilla 0.9.xml" corepackage="true" gameversion="0.9.0.0">
   <Item file="Content/Items/idcard.xml" />
   <Item file="Content/Items/Alien/alienitems.xml" />
   <Item file="Content/Items/Button/button.xml" />
@@ -55,6 +55,7 @@
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
+  <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
@@ -73,7 +74,6 @@
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
-  <Character file="Content/Characters/Molochboss/Molochboss.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
@@ -106,34 +106,34 @@
   <Text file="Content/Texts/Japanese/JapaneseVanilla.xml" />
   <Text file="Content/Texts/Turkish/TurkishVanilla.xml" />
   <Text file="Content/Texts/Korean/KoreanVanilla.xml" />
-  <UIStyle file="Content/UI/style.xml"/>  
-  <Afflictions file="Content/Afflictions.xml"/>
+  <UIStyle file="Content/UI/style.xml" />
+  <Afflictions file="Content/Afflictions.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <RuinConfig file="Content/Map/RuinConfig.xml" />
-  <BackgroundCreaturePrefabs file="Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml"/>
+  <BackgroundCreaturePrefabs file="Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml" />
   <LevelObjectPrefabs file="Content/LevelObjects/LevelObjectPrefabs.xml" />
-  <Particles file="Content/Particles/ParticlePrefabs.xml"/>
-  <Decals file="Content/Particles/DecalPrefabs.xml"/>
+  <Particles file="Content/Particles/ParticlePrefabs.xml" />
+  <Decals file="Content/Particles/DecalPrefabs.xml" />
   <RandomEvents file="Content/randomevents.xml" />
   <EventManagerSettings file="Content/EventManagerSettings.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
-  <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />  
+  <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />
   <Missions file="Content/Missions.xml" />
   <TraitorMissions file="Content/TraitorMissions.xml" />
-  <NPCConversations file="Content/NPCConversations/English/NpcConversations_English.xml"/>
-  <NPCConversations file="Content/NPCConversations/German/NpcConversations_German.xml"/>
-  <NPCConversations file="Content/NPCConversations/French/NpcConversations_French.xml"/>
-  <NPCConversations file="Content/NPCConversations/Russian/NpcConversations_Russian.xml"/>
-  <NPCConversations file="Content/NPCConversations/Polish/NpcConversations_Polish.xml"/>
-  <NPCConversations file="Content/NPCConversations/BrazilianPortuguese/NpcConversations_BrazilianPortuguese.xml"/>
-  <NPCConversations file="Content/NPCConversations/CastilianSpanish/NpcConversations_CastilianSpanish.xml"/>
-  <NPCConversations file="Content/NPCConversations/LatinamericanSpanish/NpcConversations_LatinamericanSpanish.xml"/>
-  <NPCConversations file="Content/NPCConversations/SimplifiedChinese/NpcConversations_SimplifiedChinese.xml"/>
-  <NPCConversations file="Content/NPCConversations/TraditionalChinese/NpcConversations_TraditionalChinese.xml"/>
-  <NPCConversations file="Content/NPCConversations/Japanese/NpcConversations_Japanese.xml"/>
-  <NPCConversations file="Content/NPCConversations/Turkish/NpcConversations_Turkish.xml"/>
-  <NPCConversations file="Content/NPCConversations/Korean/NpcConversations_Korean.xml"/>
+  <NPCConversations file="Content/NPCConversations/English/NpcConversations_English.xml" />
+  <NPCConversations file="Content/NPCConversations/German/NpcConversations_German.xml" />
+  <NPCConversations file="Content/NPCConversations/French/NpcConversations_French.xml" />
+  <NPCConversations file="Content/NPCConversations/Russian/NpcConversations_Russian.xml" />
+  <NPCConversations file="Content/NPCConversations/Polish/NpcConversations_Polish.xml" />
+  <NPCConversations file="Content/NPCConversations/BrazilianPortuguese/NpcConversations_BrazilianPortuguese.xml" />
+  <NPCConversations file="Content/NPCConversations/CastilianSpanish/NpcConversations_CastilianSpanish.xml" />
+  <NPCConversations file="Content/NPCConversations/LatinamericanSpanish/NpcConversations_LatinamericanSpanish.xml" />
+  <NPCConversations file="Content/NPCConversations/SimplifiedChinese/NpcConversations_SimplifiedChinese.xml" />
+  <NPCConversations file="Content/NPCConversations/TraditionalChinese/NpcConversations_TraditionalChinese.xml" />
+  <NPCConversations file="Content/NPCConversations/Japanese/NpcConversations_Japanese.xml" />
+  <NPCConversations file="Content/NPCConversations/Turkish/NpcConversations_Turkish.xml" />
+  <NPCConversations file="Content/NPCConversations/Korean/NpcConversations_Korean.xml" />
   <Jobs file="Content/Jobs.xml" />
   <Orders file="Content/Orders.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />

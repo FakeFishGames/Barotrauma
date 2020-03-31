@@ -330,17 +330,6 @@ namespace Barotrauma
             }
 
             AddCharacterToCrewList(character);
-
-            if (character is AICharacter)
-            {
-                var ai = character.AIController as HumanAIController;
-                if (ai == null)
-                {
-                    DebugConsole.ThrowError("Error in crewmanager - attempted to give orders to a character with no HumanAIController");
-                    return;
-                }
-                character.SetOrder(ai.CurrentOrder, "", null, false);
-            }
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -788,11 +777,11 @@ namespace Barotrauma
             characterFrame.SetAsFirstChild();
         }
 
-        private void DisplayPreviousCharacterOrder(Character character, GUILayoutGroup characterComponent, OrderInfo currentOrderInfo)
+        private void DisplayPreviousCharacterOrder(Character character, GUILayoutGroup characterComponent, OrderInfo orderInfo)
         {
-            if (currentOrderInfo.Order == null || currentOrderInfo.Order.Identifier == dismissedOrderPrefab.Identifier) { return; }
+            if (orderInfo.Order == null || orderInfo.Order.Identifier == dismissedOrderPrefab.Identifier) { return; }
 
-            var previousOrderInfo = new OrderInfo(currentOrderInfo);
+            var previousOrderInfo = new OrderInfo(orderInfo);
             var prevOrderFrame = new GUIButton(
                 new RectTransform(
                     characterComponent.GetChildByUserData("job").RectTransform.RelativeSize,
@@ -835,12 +824,12 @@ namespace Barotrauma
 
         private GUIComponent GetCurrentOrderComponent(GUILayoutGroup characterComponent)
         {
-            return characterComponent.FindChild(c => c.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "currentorder");
+            return characterComponent?.FindChild(c => c?.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "currentorder");
         }
 
         private GUIComponent GetPreviousOrderComponent(GUILayoutGroup characterComponent)
         {
-            return characterComponent.FindChild(c => c.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "previousorder");
+            return characterComponent?.FindChild(c => c?.UserData is OrderInfo orderInfo && orderInfo.ComponentIdentifier == "previousorder");
         }
 
         private struct OrderInfo
@@ -910,7 +899,18 @@ namespace Barotrauma
                 {
                     if (!(c.UserData is Character character) || character.IsDead || character.Removed) { continue; }
                     AddCharacter(character);
-                    DisplayCharacterOrder(character, character.CurrentOrder, (character.AIController as HumanAIController)?.CurrentOrderOption);
+                    if (c.GetChild<GUILayoutGroup>() is GUILayoutGroup oldLayoutGroup)
+                    {
+                        if (GetCurrentOrderComponent(oldLayoutGroup)?.UserData is OrderInfo currInfo)
+                        {
+                            DisplayCharacterOrder(character, currInfo.Order, currInfo.OrderOption);
+                        }
+                        if (GetPreviousOrderComponent(oldLayoutGroup)?.UserData is OrderInfo prevInfo &&
+                            crewList.Content.Children.FirstOrDefault(c => c?.UserData == character)?.GetChild<GUILayoutGroup>() is GUILayoutGroup newLayoutGroup)
+                        {
+                            DisplayPreviousCharacterOrder(character, newLayoutGroup, prevInfo);
+                        }
+                    }
                 }
             }
 
@@ -944,6 +944,7 @@ namespace Barotrauma
             {
                 Character.Controlled.AIController.ObjectiveManager.WaitTimer = CharacterWaitOnSwitch;
             }
+            DisableCommandUI();
             Character.Controlled = character;
         }
 
@@ -1176,19 +1177,22 @@ namespace Barotrauma
 
                     if (PlayerInput.KeyHit(InputType.RadioChat) && !ChatBox.InputBox.Selected)
                     {
-                        ChatBox.InputBox.AddToGUIUpdateList();
-                        ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                        if (!ChatBox.ToggleOpen)
+                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100)
                         {
-                            ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                            ChatBox.ToggleOpen = true;
-                        }
+                            ChatBox.InputBox.AddToGUIUpdateList();
+                            ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                            if (!ChatBox.ToggleOpen)
+                            {
+                                ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
+                                ChatBox.ToggleOpen = true;
+                            }
 
-                        if (!ChatBox.InputBox.Text.StartsWith(ChatBox.RadioChatString))
-                        {
-                            ChatBox.InputBox.Text = ChatBox.RadioChatString;
+                            if (!ChatBox.InputBox.Text.StartsWith(ChatBox.RadioChatString))
+                            {
+                                ChatBox.InputBox.Text = ChatBox.RadioChatString;
+                            }
+                            ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
                         }
-                        ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
                     }
                 }
             }
@@ -1293,13 +1297,21 @@ namespace Barotrauma
         {
             get
             {
+#if DEBUG
+                return Character.Controlled == null || Character.Controlled.Info != null && Character.Controlled.SpeechImpediment < 100.0f;
+#else
                 return Character.Controlled != null && Character.Controlled.SpeechImpediment < 100.0f;
+#endif
             }
         }
 
         private bool CanSomeoneHearCharacter()
         {
+#if DEBUG
+            return true;
+#else
             return Character.Controlled != null && characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled));
+#endif
         }
 
         private void CreateCommandUI(Character characterContext = null)
@@ -1505,17 +1517,7 @@ namespace Barotrauma
                 shortcutCenterNode = null;
             }
             CreateNodes(userData);
-            if (returnNode != null && returnNode.Visible)
-            {
-                var hotkey = optionNodes.Count + 1;
-                if (expandNode != null && expandNode.Visible) { hotkey += 1; }
-                CreateHotkeyIcon(returnNode.RectTransform, hotkey % 10, true);
-                returnNodeHotkey = Keys.D0 + hotkey % 10;
-            }
-            else
-            {
-                returnNodeHotkey = Keys.None;
-            }
+            CreateReturnNodeHotkey();
             return true;
         }
 
@@ -1539,10 +1541,20 @@ namespace Barotrauma
                 returnNode = null;
             }
             CreateNodes(userData);
+            CreateReturnNodeHotkey();
+            return true;
+        }
+
+        private void CreateReturnNodeHotkey()
+        {
             if (returnNode != null && returnNode.Visible)
             {
-                var hotkey = optionNodes.Count + 1;
-                if (expandNode != null && expandNode.Visible) { hotkey += 1; }
+                var hotkey = 1;
+                if (targetFrame == null || !targetFrame.Visible)
+                {
+                    hotkey = optionNodes.Count + 1;
+                    if (expandNode != null && expandNode.Visible) { hotkey += 1; }
+                }
                 CreateHotkeyIcon(returnNode.RectTransform, hotkey % 10, true);
                 returnNodeHotkey = Keys.D0 + hotkey % 10;
             }
@@ -1550,7 +1562,6 @@ namespace Barotrauma
             {
                 returnNodeHotkey = Keys.None;
             }
-            return true;
         }
 
         private void SetCenterNode(GUIButton node)
@@ -2148,7 +2159,11 @@ namespace Barotrauma
                 ToolTip = character.Info.DisplayName + " (" + character.Info.Job.Name + ")"
             };
 
+#if DEBUG
+            bool canHear = true;
+#else
             bool canHear = character.CanHearCharacter(Character.Controlled);
+#endif
             if (!canHear)
             {
                 node.CanBeFocused = icon.CanBeFocused = false;
@@ -2271,8 +2286,14 @@ namespace Barotrauma
 
         private Character GetBestCharacterForOrder(Order order)
         {
+#if !DEBUG
             if (Character.Controlled == null) { return null; }
-            return characters.FindAll(c => c != Character.Controlled && c.TeamID == Character.Controlled.TeamID)
+#endif
+            if (order.Category == OrderCategory.Operate && AIObjectiveOperateItem.IsOperatedByAnother(null, order.TargetItemComponent, out Character operatingCharacter))
+            {
+                return operatingCharacter;
+            }
+            return characters.FindAll(c => Character.Controlled == null || (c != Character.Controlled && c.TeamID == Character.Controlled.TeamID))
                 .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                 .ThenByDescending(c => order.HasAppropriateJob(c))
                 .ThenBy(c => c.CurrentOrder?.Weight)
@@ -2281,16 +2302,18 @@ namespace Barotrauma
 
         private List<Character> GetCharactersSortedForOrder(Order order)
         {
+#if !DEBUG
             if (Character.Controlled == null) { return new List<Character>(); }
+#endif
             if (order.Identifier == "follow")
             {
-                return characters.FindAll(c => c != Character.Controlled && c.TeamID == Character.Controlled.TeamID)
+                return characters.FindAll(c => Character.Controlled == null || (c != Character.Controlled && c.TeamID == Character.Controlled.TeamID))
                     .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                     .ToList();
             }
             else
             {
-                return characters.FindAll(c => c.TeamID == Character.Controlled.TeamID)
+                return characters.FindAll(c => Character.Controlled == null || c.TeamID == Character.Controlled.TeamID)
                     .OrderByDescending(c => c.CurrentOrder == null || c.CurrentOrder.Identifier == dismissedOrderPrefab.Identifier)
                     .ThenByDescending(c => order.HasAppropriateJob(c))
                     .ThenBy(c => c.CurrentOrder?.Weight)
@@ -2298,9 +2321,9 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
         /// <summary>
         /// Creates a listbox that includes all the characters in the crew, can be used externally (round info menus etc)
@@ -2387,7 +2410,7 @@ namespace Barotrauma
             return true;
         }
 
-        #region Reports
+#region Reports
 
         /// <summary>
         /// Enables/disables report buttons when needed
@@ -2447,7 +2470,7 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
         public void InitSinglePlayerRound()
         {

@@ -91,7 +91,13 @@ namespace Barotrauma
                 c.DoVisibilityCheck(cam);
                 if (c.IsVisible != wasVisible)
                 {
-                    c.AnimController.Limbs.ForEach(l => { if (l.LightSource != null) l.LightSource.Enabled = c.IsVisible; });
+                    c.AnimController.Limbs.ForEach(l =>
+                    {
+                        if (l.LightSource != null)
+                        {
+                            l.LightSource.Enabled = c.IsVisible;
+                        }
+                    });
                 }
             }
 
@@ -282,14 +288,23 @@ namespace Barotrauma
 			}
 
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
-			foreach (Character c in Character.CharacterList) c.DrawFront(spriteBatch, cam);
-
-			if (Level.Loaded != null) Level.Loaded.DrawFront(spriteBatch, cam);
-            if (GameMain.DebugDraw && GameMain.GameSession?.EventManager != null)
+            foreach (Character c in Character.CharacterList)
             {
-                GameMain.GameSession.EventManager.DebugDraw(spriteBatch);
+                c.DrawFront(spriteBatch, cam);
             }
-
+            if (Level.Loaded != null)
+            {
+                Level.Loaded.DrawFront(spriteBatch, cam);
+            }
+            if (GameMain.DebugDraw)
+            {
+                MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
+                Character.CharacterList.ForEach(c => c.AiTarget?.Draw(spriteBatch));
+                if (GameMain.GameSession?.EventManager != null)
+                {
+                    GameMain.GameSession.EventManager.DebugDraw(spriteBatch);
+                }
+            }
             spriteBatch.End();
 
             if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Character.Controlled != null)

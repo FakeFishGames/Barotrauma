@@ -152,7 +152,7 @@ namespace Barotrauma
         public void Save(XElement element)
         {
             element.Add(
-                new XAttribute("identifiers", JoinedIdentifiers),
+                new XAttribute("items", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()),
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor));

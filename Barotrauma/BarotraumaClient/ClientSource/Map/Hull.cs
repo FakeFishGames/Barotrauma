@@ -248,8 +248,6 @@ namespace Barotrauma
 
             if (!editing && !GameMain.DebugDraw) return;
 
-            if (aiTarget != null) aiTarget.Draw(spriteBatch);
-
            Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 

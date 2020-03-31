@@ -159,8 +159,9 @@ namespace Barotrauma.Steam
         {
             if (string.IsNullOrWhiteSpace(str)) { return 0; }
             UInt64 retVal;
+            if (str.StartsWith("STEAM64_", StringComparison.InvariantCultureIgnoreCase)) { str = str.Substring(8); }
             if (UInt64.TryParse(str, out retVal) && retVal >(1<<52)) { return retVal; }
-            if (str.ToUpper().IndexOf("STEAM_") != 0) { return 0; }
+            if (!str.StartsWith("STEAM_", StringComparison.InvariantCultureIgnoreCase)) { return 0; }
             string[] split = str.Substring(6).Split(':');
             if (split.Length != 3) { return 0; }
 
@@ -179,7 +180,11 @@ namespace Barotrauma.Steam
             UInt64 accountNumber = (uint64 >> 1) & 0x7fffffff;
             UInt64 universe = (uint64 >> 56) & 0xff;
 
-            return "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
+            string retVal = "STEAM_" + universe.ToString() + ":" + y.ToString() + ":" + accountNumber.ToString();
+
+            if (SteamIDStringToUInt64(retVal) != uint64) { return "STEAM64_" + uint64.ToString(); }
+
+            return retVal;
         }
     }
 }

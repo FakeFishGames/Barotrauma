@@ -22,6 +22,30 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
 
+        private enum FabricatorState
+        {
+            Active = 1,
+            Paused = 2,
+            Stopped = 0
+        }
+
+        private FabricatorState state;
+        private FabricatorState State
+        {
+            get
+            {
+                return state;
+            }
+            set
+            {
+                if (state == value) { return; }
+                state = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
+
         public ItemContainer InputContainer
         {
             get { return inputContainer; }
@@ -60,6 +84,8 @@ namespace Barotrauma.Items.Components
                     fabricationRecipes.Add(recipe);
                 }
             }
+
+            state = FabricatorState.Stopped;
 
             InitProjSpecific();
         }
@@ -147,12 +173,15 @@ namespace Barotrauma.Items.Components
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
 
+            if (GameMain.NetworkMember?.IsServer ?? true)
+            {
+                State = FabricatorState.Active;
+            }
 #if SERVER
             if (user != null)
             {
                 GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
-            item.CreateServerEvent(this);
 #endif
         }
 
@@ -180,12 +209,15 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
 
+            if (GameMain.NetworkMember?.IsServer ?? true)
+            {
+                State = FabricatorState.Stopped;
+            }
 #if SERVER
             if (user != null)
             {
                 GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
-            item.CreateServerEvent(this);
 #endif
         }
 
@@ -199,8 +231,25 @@ namespace Barotrauma.Items.Components
 
             progressState = fabricatedItem == null ? 0.0f : (requiredTime - timeUntilReady) / requiredTime;
 
-            hasPower = Voltage >= MinVoltage;
-            if (!hasPower) { return; }
+            if (GameMain.NetworkMember?.IsClient ?? false)
+            {
+                hasPower = State != FabricatorState.Paused;
+                if (!hasPower)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                hasPower = Voltage >= MinVoltage;
+
+                if (!hasPower)
+                {
+                    State = FabricatorState.Paused;
+                    return;
+                }
+                State = FabricatorState.Active;
+            }
             
             var repairable = item.GetComponent<Repairable>();
             if (repairable != null)

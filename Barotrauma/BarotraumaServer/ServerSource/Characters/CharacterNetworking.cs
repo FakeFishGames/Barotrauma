@@ -52,7 +52,7 @@ namespace Barotrauma
                     if (memInput.Count > 0)
                     {
                         prevDequeuedInput = dequeuedInput;
-                        dequeuedInput = memInput[memInput.Count - 1].states;
+                        dequeuedInput = memInput[memInput.Count - 1].states & InputNetFlags.Ragdoll;
                         memInput.RemoveAt(memInput.Count - 1);
                     }
                 }
@@ -332,6 +332,14 @@ namespace Barotrauma
                         use     = dequeuedInput.HasFlag(InputNetFlags.Use);
                         attack  = dequeuedInput.HasFlag(InputNetFlags.Attack);
                         shoot   = dequeuedInput.HasFlag(InputNetFlags.Shoot);
+                    }
+                    else if (keys != null)
+                    {
+                        aiming  = keys[(int)InputType.Aim].GetHeldQueue;
+                        use     = keys[(int)InputType.Use].GetHeldQueue;
+                        attack  = keys[(int)InputType.Attack].GetHeldQueue;
+                        shoot   = keys[(int)InputType.Shoot].GetHeldQueue;
+                        networkUpdateSent = true;
                     }
 
                     tempBuffer.Write(aiming);

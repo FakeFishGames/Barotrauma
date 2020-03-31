@@ -791,8 +791,7 @@ namespace Barotrauma
         /// </summary>
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>
-        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>
-        
+        /// <param name="randomization">Amount of randomization to apply to the values (0 = the values are accurate, 1 = the values are completely random)</param>        
         public void GetSuitableTreatments(Dictionary<string, float> treatmentSuitability, bool normalize, float randomization = 0.0f)
         {
             //key = item identifier
@@ -873,5 +872,11 @@ namespace Barotrauma
         }
 
         partial void RemoveProjSpecific();
+
+        /// <summary>
+        /// Automatically filters out buffs.
+        /// </summary>
+        public static IEnumerable<Affliction> SortAfflictionsBySeverity(IEnumerable<Affliction> afflictions) =>
+            afflictions.Where(a => !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength);
     }
 }

@@ -870,6 +870,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "requireditem":
+                    case "requireditems":
                         RelatedItem newRequiredItem = RelatedItem.Load(subElement, returnEmptyRequirements, item.Name);
                         if (newRequiredItem == null) continue;
 

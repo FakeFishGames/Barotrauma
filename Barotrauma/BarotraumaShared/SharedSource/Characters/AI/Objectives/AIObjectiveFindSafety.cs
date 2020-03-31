@@ -26,12 +26,34 @@ namespace Barotrauma
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveFindDivingGear divingGearObjective;
 
-        public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) {  }
+        public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
         private bool resetPriority;
+
+        public override float GetPriority()
+        {
+            if (character.CurrentHull == null)
+            {
+                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
+            }
+            else
+            {
+                if (HumanAIController.NeedsDivingGear(character, character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
+                {
+                    Priority = 100;
+                }
+                Priority = MathHelper.Clamp(Priority, 0, 100);
+                if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
+                {
+                    // Boost the priority while seeking the diving gear
+                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
+                }
+            }
+            return Priority;
+        }
 
         public override void Update(float deltaTime)
         {
@@ -44,28 +66,19 @@ namespace Barotrauma
             if (character.CurrentHull == null)
             {
                 currenthullSafety = 0;
-                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
-                return;
-            }
-            if (HumanAIController.NeedsDivingGear(character, character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
-            {
-                Priority = 100;
-            }
-            currenthullSafety = HumanAIController.CurrentHullSafety;
-            if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
-            {
-                Priority -= priorityDecrease * deltaTime;
             }
             else
             {
-                float dangerFactor = (100 - currenthullSafety) / 100;
-                Priority += dangerFactor * priorityIncrease * deltaTime;
-            }
-            Priority = MathHelper.Clamp(Priority, 0, 100);
-            if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
-            {
-                // Boost the priority while seeking the diving gear
-                Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
+                currenthullSafety = HumanAIController.CurrentHullSafety;
+                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD)
+                {
+                    Priority -= priorityDecrease * deltaTime;
+                }
+                else
+                {
+                    float dangerFactor = (100 - currenthullSafety) / 100;
+                    Priority += dangerFactor * priorityIncrease * deltaTime;
+                }
             }
         }
 

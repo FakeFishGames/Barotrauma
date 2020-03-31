@@ -517,8 +517,21 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != genParams.Name.ToLowerInvariant()) continue;
-                        SerializableProperty.SerializeProperties(genParams, element, true);
+                        XElement levelParamElement = element;
+                        if (element.IsOverride())
+                        {
+                            foreach (XElement subElement in element.Elements())
+                            {
+                                if (subElement.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
+                                { 
+                                    SerializableProperty.SerializeProperties(genParams, subElement, true);
+                                }
+                            }
+                        }
+                        else if (element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
+                        { 
+                            SerializableProperty.SerializeProperties(genParams, element, true);
+                        }                        
                         break;
                     }
                 }

@@ -1249,6 +1249,13 @@ namespace Barotrauma
                     }
                     return;
                 }
+#if !DEBUG
+                if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
+                {
+                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+                    return;
+                }
+#endif
             }
 #endif
 
@@ -1610,8 +1617,26 @@ namespace Barotrauma
                 }
             }
             System.Diagnostics.Debug.WriteLine(error);
-            NewMessage(error, Color.Red);
 #if CLIENT
+            if (listBox == null) { NewMessage(error, Color.Red); return; }
+
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                style: "InnerFrame", color: Color.White)
+            {
+                CanBeFocused = false
+            };
+            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
+                error, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false,
+                TextColor = Color.Red
+            };
+            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+            textBlock.SetTextPos();
+
+            listBox.UpdateScrollBarSize();
+            listBox.BarScroll = 1.0f;
+
             if (createMessageBox)
             {
                 CoroutineManager.StartCoroutine(CreateMessageBox(error));
@@ -1620,6 +1645,8 @@ namespace Barotrauma
             {
                 isOpen = true;
             }
+#else
+            NewMessage(error, Color.Red);
 #endif
         }
 

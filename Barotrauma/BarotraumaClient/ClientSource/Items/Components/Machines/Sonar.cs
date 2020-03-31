@@ -490,7 +490,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
-                    if (t.SoundRange <= 0.0f || !t.Enabled || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
+                    if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }

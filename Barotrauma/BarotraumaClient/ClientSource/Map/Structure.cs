@@ -350,8 +350,6 @@ namespace Barotrauma
                         }
                     }
                 }
-
-                AiTarget?.Draw(spriteBatch);
             }
         }
 

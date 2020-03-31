@@ -74,6 +74,11 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual int TeamCount
+        {
+            get { return 1; }
+        }
+
         public virtual IEnumerable<Vector2> SonarPositions
         {
             get { return Enumerable.Empty<Vector2>(); }
@@ -136,7 +141,7 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.Type)) != 0));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
@@ -168,10 +173,9 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual bool AssignTeamIDs(List<Networking.Client> clients)
+        public virtual void AssignTeamIDs(List<Networking.Client> clients)
         {
             clients.ForEach(c => c.TeamID = Character.TeamType.Team1);
-            return false; 
         }
 
         protected void ShowMessage(int missionState)

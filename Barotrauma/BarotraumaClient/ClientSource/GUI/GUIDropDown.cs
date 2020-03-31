@@ -95,6 +95,15 @@ namespace Barotrauma
             set { button.TextColor = value; }
         }
 
+        public override ScalableFont Font 
+        {
+            get { return button?.Font ?? base.Font; }
+            set 
+            {
+                if (button != null) { button.Font = value;  }               
+            }
+        }
+
         public void ReceiveTextInput(char inputChar)
         {
             GUI.KeyboardDispatcher.Subscriber = null;
@@ -168,12 +177,11 @@ namespace Barotrauma
             Anchor listAnchor = dropAbove ? Anchor.TopCenter : Anchor.BottomCenter;
             Pivot listPivot = dropAbove ? Pivot.BottomCenter : Pivot.TopCenter;
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
-
             { IsFixedSize = false }, style: null)
             {
-                Enabled = !selectMultiple,
-                OnSelected = SelectItem
+                Enabled = !selectMultiple
             };
+            if (!selectMultiple) { listBox.OnSelected = SelectItem; }           
             GUI.Style.Apply(listBox, "GUIListBox", this);
             GUI.Style.Apply(listBox.ContentBackground, "GUIListBox", this);
 
@@ -245,7 +253,7 @@ namespace Barotrauma
                     ToolTip = toolTip
                 };
 
-                new GUITickBox(new RectTransform(new Point((int)(button.Rect.Height * 0.8f)), frame.RectTransform, anchor: Anchor.CenterLeft), text)
+                new GUITickBox(new RectTransform(new Vector2(1.0f, 0.8f), frame.RectTransform, anchor: Anchor.CenterLeft) { MaxSize = new Point(int.MaxValue, (int)(button.Rect.Height * 0.8f)) }, text)
                 {
                     UserData = userData,
                     ToolTip = toolTip,
