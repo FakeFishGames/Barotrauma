@@ -419,26 +419,26 @@ namespace Barotrauma.Networking
 
                         //steam auth cannot be done (SteamManager not initialized or no ticket given),
                         //but it's not required either -> let the client join without auth
-                        if ((!Steam.SteamManager.IsInitialized || (ticket?.Length??0) == 0) &&
-                            !requireSteamAuth)
-                        {
-                            pendingClient.Name = name;
-                            pendingClient.OwnerKey = ownKey;
-                            pendingClient.InitializationStep = ConnectionInitialization.ContentPackageOrder;
-                        }
-                        else
-                        {
-                            Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
-                            if (authSessionStartState != Steamworks.BeginAuthResult.OK)
-                            {
-                                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
-                                return;
-                            }
-                            pendingClient.SteamID = steamId;
-                            pendingClient.Name = name;
-                            pendingClient.OwnerKey = ownKey;
-                            pendingClient.AuthSessionStarted = true;
-                        }
+                        //if ((!Steam.SteamManager.IsInitialized || (ticket?.Length??0) == 0) &&
+                        //    !requireSteamAuth)
+                        //{
+                        pendingClient.Name = name;
+                        pendingClient.OwnerKey = ownKey;
+                        pendingClient.InitializationStep = ConnectionInitialization.ContentPackageOrder;
+                        //}
+                        //else
+                        //{
+                        //    Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
+                        //    if (authSessionStartState != Steamworks.BeginAuthResult.OK)
+                        //    {
+                        //        RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
+                        //        return;
+                        //    }
+                        //    pendingClient.SteamID = steamId;
+                        //    pendingClient.Name = name;
+                        //    pendingClient.OwnerKey = ownKey;
+                        //    pendingClient.AuthSessionStarted = true;
+                        //}
                     }
                     else //TODO: could remove since this seems impossible
                     {

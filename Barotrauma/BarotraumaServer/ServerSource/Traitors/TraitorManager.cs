@@ -103,11 +103,11 @@ namespace Barotrauma
                             default:
                                 break;
                         }
-                        gameShouldEnd = true;
+                        //gameShouldEnd = true;
                     });
                     if (!gameShouldEnd && mission.Value.IsCompleted)
                     {
-                        missionCompleted = true;
+                        //missionCompleted = true;
                         foreach (var traitor in mission.Value.Traitors.Values)
                         {
                             traitor.UpdateCurrentObjective("", mission.Value.Identifier);

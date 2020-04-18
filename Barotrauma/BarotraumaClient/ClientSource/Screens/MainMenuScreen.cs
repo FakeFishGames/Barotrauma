@@ -903,22 +903,8 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-#if !DEBUG
-#if USE_STEAM
-            if (GameMain.Config.UseSteamMatchmaking)
-            {
-                joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
-            }
-            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;            
-#endif
-#else
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-#if USE_STEAM
-            steamWorkshopButton.Enabled = true;
-#endif
-#endif
         }
 
         public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)

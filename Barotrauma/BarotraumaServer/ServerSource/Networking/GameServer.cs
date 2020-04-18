@@ -116,6 +116,7 @@ namespace Barotrauma.Networking
 
         public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null, UInt64? steamId = null)
         {
+            DebugConsole.NewMessage("TEST");
             name = name.Replace(":", "");
             name = name.Replace(";", "");
             if (name.Length > NetConfig.ServerNameMaxLength)
@@ -1742,6 +1743,8 @@ namespace Barotrauma.Networking
 
         private IEnumerable<object> StartGame(Submarine selectedSub, Submarine selectedShuttle, bool usingShuttle, GameModePreset selectedMode)
         {
+            //track how many times the respawn shuttle has been called
+            //respawn_count = 
             entityEventManager.Clear();
 
             roundStartSeed = DateTime.Now.Millisecond;

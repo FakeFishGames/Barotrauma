@@ -204,6 +204,10 @@ namespace Barotrauma
             {
                 ClientNameBox.Text = SteamManager.GetUsername();
             }
+            if (string.IsNullOrEmpty(ClientNameBox.Text))
+            {
+                ClientNameBox.Text = "NutBurger";
+            }
             ClientNameBox.OnTextChanged += (textbox, text) =>
             {
                 GameMain.Config.PlayerName = text;
@@ -1041,6 +1045,7 @@ namespace Barotrauma
             okButton.Enabled = false;
             okButton.OnClicked = (btn, userdata) =>
             {
+                DebugConsole.NewMessage("Clicked Join!");
                 JoinServer(endpointBox.Text, "");
                 msgBox.Close();
                 return true;
@@ -1892,15 +1897,16 @@ namespace Barotrauma
 
         private bool JoinServer(string endpoint, string serverName)
         {
+            DebugConsole.NewMessage("HELP");
             if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
             {
                 ClientNameBox.Flash();
                 return false;
             }
-
+            DebugConsole.NewMessage("Getting player name");
             GameMain.Config.PlayerName = ClientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
-
+            DebugConsole.NewMessage("Starting Coroutine");
             CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName), "ConnectToServer");
 
             return true;
@@ -1909,21 +1915,23 @@ namespace Barotrauma
         private IEnumerable<object> ConnectToServer(string endpoint, string serverName)
         {
             string serverIP = null;
+            DebugConsole.NewMessage("Getting Steam ID");
             UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
-            if (serverSteamID == 0) { serverIP = endpoint; }
+            DebugConsole.NewMessage("server steam ID " + serverSteamID);
+            if (serverSteamID == 0) 
+            {
+                DebugConsole.NewMessage("ip address targe " + endpoint);
+                serverIP = endpoint; 
+            }
 
-#if !DEBUG
             try
             {
-#endif
                 GameMain.Client = new GameClient(GameMain.Config.PlayerName, serverIP, serverSteamID, serverName);
-#if !DEBUG
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start the client", e);
             }
-#endif
 
             yield return CoroutineStatus.Success;
         }

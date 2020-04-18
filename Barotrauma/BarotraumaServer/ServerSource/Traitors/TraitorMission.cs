@@ -245,74 +245,75 @@ namespace Barotrauma
 
             public void Update(float deltaTime, TraitorWinHandler winHandler)
             {
-                if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
-                {
-                    return;
-                }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
-                {
-                    Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
-                    pendingObjectives.Clear();
-                    Traitors.Clear();
-                    return;
-                }
-                var startedObjectives = new List<Objective>();
-                foreach (var traitor in Traitors.Values)
-                {
-                    startedObjectives.Clear();
-                    while (pendingObjectives.Count > 0)
+                    if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                     {
-                        var objective = GetCurrentObjective(traitor);
-                        if (objective == null)
+                        return;
+                    }
+                    if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
+                    {
+                        //Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
+                        //pendingObjectives.Clear();
+                        //Traitors.Clear();
+                        //return;
+                    }
+                    var startedObjectives = new List<Objective>();
+                    foreach (var traitor in Traitors.Values)
+                    {
+                        startedObjectives.Clear();
+                        while (pendingObjectives.Count > 0)
                         {
-                            // No more objectives left for traitor or waiting for another traitor's objective.
-                            break;
-                        }
-                        if (!objective.IsStarted)
-                        {
-                            if (!objective.Start(traitor))
+                            var objective = GetCurrentObjective(traitor);
+                            if (objective == null)
                             {
-                                //the mission fails if an objective cannot be started
-                                if (completedObjectives.Count > 0)
+                                // No more objectives left for traitor or waiting for another traitor's objective.
+                                break;
+                            }
+                            if (!objective.IsStarted)
+                            {
+                                if (!objective.Start(traitor))
+                                {
+                                    //the mission fails if an objective cannot be started
+                                    if (completedObjectives.Count > 0)
+                                    {
+                                        objective.EndMessage();
+                                    }
+                                    pendingObjectives.Clear();
+                                    break;
+                                }
+                                startedObjectives.Add(objective);
+                            }
+                            objective.Update(deltaTime);
+                            if (objective.IsCompleted)
+                            {
+                                pendingObjectives.Remove(objective);
+                                completedObjectives.Add(objective);
+                                if (pendingObjectives.Count > 0)
                                 {
                                     objective.EndMessage();
                                 }
-                                pendingObjectives.Clear();
-                                break;
+                                continue;
                             }
-                            startedObjectives.Add(objective);
-                        }
-                        objective.Update(deltaTime);
-                        if (objective.IsCompleted)
-                        {
-                            pendingObjectives.Remove(objective);
-                            completedObjectives.Add(objective);
-                            if (pendingObjectives.Count > 0)
+                            if (objective.IsStarted && !objective.CanBeCompleted)
                             {
                                 objective.EndMessage();
+                                pendingObjectives.Clear();
                             }
-                            continue;
+                            break;
                         }
-                        if (objective.IsStarted && !objective.CanBeCompleted)
+                        if (pendingObjectives.Count > 0)
                         {
-                            objective.EndMessage();
-                            pendingObjectives.Clear();
+                            startedObjectives.ForEach(objective => objective.StartMessage());
                         }
-                        break;
                     }
-                    if (pendingObjectives.Count > 0)
+                    if (completedObjectives.Count >= allObjectives.Count)
                     {
-                        startedObjectives.ForEach(objective => objective.StartMessage());
+                        foreach (var traitor in Traitors)
+                        {
+                            SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
+                        }
+                        //winHandler();
                     }
-                }
-                if (completedObjectives.Count >= allObjectives.Count)
-                {
-                    foreach (var traitor in Traitors)
-                    {
-                        SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
-                    }
-                    winHandler();
-                }
+                
             }
 
             public delegate bool CharacterFilter(Character character);
