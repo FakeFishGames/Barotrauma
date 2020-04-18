@@ -52,4 +52,5 @@
   missiontype="Random"
   autobantime="3600"
   maxautobantime="86400"
+  maxrespawncount="1"
   />

@@ -837,6 +837,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(1, true)]
+        public int MaxRespawnCount
+        {
+            get;
+            private set;
+        }
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))
