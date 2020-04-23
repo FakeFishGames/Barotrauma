@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
+        public bool MainDockingPort
+        {
+            get;
+            set;
+        }
+
         public DockingPort DockingTarget { get; private set; }
 
         public bool Docked
@@ -234,12 +241,12 @@ namespace Barotrauma.Items.Components
 
                 Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
                 if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                    DockingTarget.item.Submarine.IsOutpost)
+                    DockingTarget.item.Submarine.Info.IsOutpost)
                 {
                     item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
                 }
                 else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                   item.Submarine.IsOutpost)
+                   item.Submarine.Info.IsOutpost)
                 {
                     DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
                 }
@@ -873,12 +880,12 @@ namespace Barotrauma.Items.Components
             float closestDist = 30.0f * 30.0f;
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != item.Submarine) continue;
+                if (it.Submarine != item.Submarine) { continue; }
 
                 var doorComponent = it.GetComponent<Door>();
-                if (doorComponent == null) continue;
+                if (doorComponent == null || doorComponent.IsHorizontal == IsHorizontal) { continue; }
 
-                float distSqr = Vector2.Distance(item.Position, it.Position);
+                float distSqr = Vector2.DistanceSquared(item.Position, it.Position);
                 if (distSqr < closestDist)
                 {
                     door = doorComponent;
@@ -951,12 +958,12 @@ namespace Barotrauma.Items.Components
                 if (docked)
                 {
                     if (item.Submarine != null && DockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.LogName + " docked " + item.Submarine.Name + " to " + DockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(sender) + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else
                 {
                     if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
-                        GameServer.Log(sender.LogName + " undocked " + item.Submarine.Name + " from " + prevDockingTarget.item.Submarine.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(sender) + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
 #endif

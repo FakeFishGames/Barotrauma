@@ -40,7 +40,11 @@ namespace Barotrauma
             if (target.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            if (character.Submarine != null)
+            {
+                if (target.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            }
             return true;
         }
     }

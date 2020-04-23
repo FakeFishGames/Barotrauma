@@ -220,7 +220,11 @@ namespace Barotrauma
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                if (character.Submarine != null)
+                {
+                    if (item.Submarine.Info.Type != character.Submarine.Info.Type) { continue; }
+                    if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
@@ -276,6 +280,7 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
+            if (item.NonInteractable) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }

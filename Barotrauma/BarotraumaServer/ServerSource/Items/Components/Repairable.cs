@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
-            if (c.Character == null) return;
+            if (c.Character == null) { return; }
             var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
             if (requestedFixAction != FixActions.None)
             {

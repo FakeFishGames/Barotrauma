@@ -122,7 +122,10 @@ namespace Barotrauma
             if (GameMain.GameSession != null)
             {
 #if CLIENT
-                if (Character.Controlled != null) { CheckMidRoundAchievements(Character.Controlled); }
+                if (Character.Controlled != null && !(GameMain.GameSession.GameMode is SubTestMode)) 
+                { 
+                    CheckMidRoundAchievements(Character.Controlled); 
+                }
 #else
                 foreach (Client client in GameMain.Server.ConnectedClients)
                 {
@@ -222,7 +225,7 @@ namespace Barotrauma
                     1);
             }
 
-            roundData.Casualties.Add(character);
+            roundData?.Casualties.Add(character);
 
             UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName);
             if (character.CurrentHull != null)
@@ -288,7 +291,7 @@ namespace Barotrauma
         public static void OnRoundEnded(GameSession gameSession)
         {
             //made it to the destination
-            if (gameSession.Submarine.AtEndPosition && Level.Loaded != null)
+            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndPosition)
             {
                 float levelLengthMeters = Physics.DisplayToRealWorldRatio * Level.Loaded.Size.X;
                 float levelLengthKilometers = levelLengthMeters / 1000.0f;

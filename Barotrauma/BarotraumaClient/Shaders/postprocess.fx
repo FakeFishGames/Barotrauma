@@ -1,3 +1,27 @@
+struct VertexShaderInput
+{
+    float4 Position : POSITION0;
+    float2 TexCoords: TEXCOORD0;
+};
+
+struct VertexShaderOutput
+{
+    float4 Position : POSITION0;
+    float2 TexCoords: TEXCOORD0;
+}; 
+
+float4x4 MatrixTransform;
+
+VertexShaderOutput mainVS(in VertexShaderInput input)
+{
+    VertexShaderOutput output = (VertexShaderOutput)0;
+
+    output.Position = mul(input.Position, MatrixTransform);
+    output.TexCoords = input.TexCoords;
+
+    return output;
+}
+
 Texture2D xTexture;
 sampler TextureSampler = sampler_state { Texture = <xTexture>; };
 
@@ -32,84 +56,84 @@ float2 radialDistortion(float2 coord, float distortion)
 /*float4 sampleWithChromaticAberration(float2 samplePos)
 {
     return float4(
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.r)).r,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.g)).g,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.b)).b,
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.r)).r,
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.g)).g,
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.b)).b,
         1);
 }*/
 float3 sampleChannelsSeparately(float2 samplePosR, float2 samplePosG, float2 samplePosB)
 {
     return float3(
-        tex2D(TextureSampler, samplePosR).r,
-        tex2D(TextureSampler, samplePosG).g,
-        tex2D(TextureSampler, samplePosB).b);
+        xTexture.Sample(TextureSampler, samplePosR).r,
+        xTexture.Sample(TextureSampler, samplePosG).g,
+        xTexture.Sample(TextureSampler, samplePosB).b);
 }
 
 float3 sampleWithChromaticAberration(float2 samplePos)
 {
     return float3(
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.r)).r,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.g)).g,
-        tex2D(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.b)).b);
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.r)).r,
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.g)).g,
+        xTexture.Sample(TextureSampler, radialDistortion(samplePos, chromaticAberrationStrength.b)).b);
 }
  
-float4 blur(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 blur(VertexShaderOutput input) : COLOR0
 {
     float4 sample;
-    sample = tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y + blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x + blurDistance, texCoord.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(texCoord.x - blurDistance, texCoord.y + blurDistance));	
+    sample = xTexture.Sample(TextureSampler, float2(input.TexCoords.x + blurDistance, input.TexCoords.y + blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(input.TexCoords.x - blurDistance, input.TexCoords.y - blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(input.TexCoords.x + blurDistance, input.TexCoords.y - blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(input.TexCoords.x - blurDistance, input.TexCoords.y + blurDistance));	
     sample = sample * 0.25f;
 	
     return sample;
 }
 
-float4 distort(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 distort(VertexShaderOutput input) : COLOR0
 {
-    float4 bumpColor = tex2D(DistortSampler, texCoord + distortUvOffset);
-    bumpColor = (bumpColor + tex2D(DistortSampler, texCoord - distortUvOffset * 2.0f)) * 0.5f;
+    float4 bumpColor = xDistortTexture.Sample(DistortSampler, input.TexCoords + distortUvOffset);
+    bumpColor = (bumpColor + xDistortTexture.Sample(DistortSampler, input.TexCoords - distortUvOffset * 2.0f)) * 0.5f;
 	
-    float2 samplePos = texCoord;
+    float2 samplePos = input.TexCoords;
 	
     samplePos.x += (bumpColor.r - 0.5f) * distortScale.x;
     samplePos.y += (bumpColor.g - 0.5f) * distortScale.y;
     
-    return tex2D(TextureSampler, samplePos);
+    return xTexture.Sample(TextureSampler, samplePos);
 }
 
-float4 blurDistort(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 blurDistort(VertexShaderOutput input) : COLOR0
 {
-    float4 bumpColor = tex2D(DistortSampler, texCoord + distortUvOffset);
-    bumpColor = (bumpColor + tex2D(DistortSampler, texCoord - distortUvOffset * 2.0f)) * 0.5f;
+    float4 bumpColor = xDistortTexture.Sample(DistortSampler, input.TexCoords + distortUvOffset);
+    bumpColor = (bumpColor + xDistortTexture.Sample(DistortSampler, input.TexCoords - distortUvOffset * 2.0f)) * 0.5f;
 	
-    float2 samplePos = texCoord;
+    float2 samplePos = input.TexCoords;
 	
     samplePos.x += (bumpColor.r - 0.5f) * distortScale.x;
     samplePos.y += (bumpColor.g - 0.5f) * distortScale.y;
 
     float4 sample;
-    sample = tex2D(TextureSampler, float2(samplePos.x + blurDistance, samplePos.y + blurDistance));
-    sample += tex2D(TextureSampler, float2(samplePos.x - blurDistance, samplePos.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(samplePos.x + blurDistance, samplePos.y - blurDistance));
-    sample += tex2D(TextureSampler, float2(samplePos.x - blurDistance, samplePos.y + blurDistance));
+    sample = xTexture.Sample(TextureSampler, float2(samplePos.x + blurDistance, samplePos.y + blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x - blurDistance, samplePos.y - blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x + blurDistance, samplePos.y - blurDistance));
+    sample += xTexture.Sample(TextureSampler, float2(samplePos.x - blurDistance, samplePos.y + blurDistance));
 	
     sample = sample * 0.25f;
 	
     return sample;
 }
  
-float4 chromaticAberration(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 chromaticAberration(VertexShaderOutput input) : COLOR0
 {
-    return float4(sampleWithChromaticAberration(texCoord), 1);
+    return float4(sampleWithChromaticAberration(input.TexCoords), 1);
 }
 
-float4 chromaticAberrationDistort(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 chromaticAberrationDistort(VertexShaderOutput input) : COLOR0
 {
-    float4 bumpColor = tex2D(DistortSampler, texCoord + distortUvOffset);
-    bumpColor = (bumpColor + tex2D(DistortSampler, texCoord - distortUvOffset * 2.0f)) * 0.5f;
+    float4 bumpColor = xDistortTexture.Sample(DistortSampler, input.TexCoords + distortUvOffset);
+    bumpColor = (bumpColor + xDistortTexture.Sample(DistortSampler, input.TexCoords - distortUvOffset * 2.0f)) * 0.5f;
 	
-    float2 samplePos = texCoord;
+    float2 samplePos = input.TexCoords;
 	
     samplePos.x += (bumpColor.r - 0.5f) * distortScale.x;
     samplePos.y += (bumpColor.g - 0.5f) * distortScale.y;
@@ -117,11 +141,11 @@ float4 chromaticAberrationDistort(float4 position : SV_Position, float4 color : 
     return float4(sampleWithChromaticAberration(samplePos), 1);
 }
 
-float4 blurChromaticAberration(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 blurChromaticAberration(VertexShaderOutput input) : COLOR0
 {
-    float2 samplePosR = radialDistortion(texCoord, chromaticAberrationStrength.r);
-    float2 samplePosG = radialDistortion(texCoord, chromaticAberrationStrength.g);
-    float2 samplePosB = radialDistortion(texCoord, chromaticAberrationStrength.b);
+    float2 samplePosR = radialDistortion(input.TexCoords, chromaticAberrationStrength.r);
+    float2 samplePosG = radialDistortion(input.TexCoords, chromaticAberrationStrength.g);
+    float2 samplePosB = radialDistortion(input.TexCoords, chromaticAberrationStrength.b);
 
     float2 blurTopLeft = -blurDistance;
     float2 blurTopRight = float2(blurDistance, -blurDistance);
@@ -139,12 +163,12 @@ float4 blurChromaticAberration(float4 position : SV_Position, float4 color : COL
     return float4(sample, 1);
 }
 
-float4 blurChromaticAberrationDistort(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 blurChromaticAberrationDistort(VertexShaderOutput input) : COLOR0
 {
-    float4 bumpColor = tex2D(DistortSampler, texCoord + distortUvOffset);
-    bumpColor = (bumpColor + tex2D(DistortSampler, texCoord - distortUvOffset * 2.0f)) * 0.5f;
+    float4 bumpColor = xDistortTexture.Sample(DistortSampler, input.TexCoords + distortUvOffset);
+    bumpColor = (bumpColor + xDistortTexture.Sample(DistortSampler, input.TexCoords - distortUvOffset * 2.0f)) * 0.5f;
 	
-    float2 samplePos = texCoord;
+    float2 samplePos = input.TexCoords;
 	
     samplePos.x += (bumpColor.r - 0.5f) * distortScale.x;
     samplePos.y += (bumpColor.g - 0.5f) * distortScale.y;
@@ -173,6 +197,7 @@ technique Distort
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 distort();
     }
 }
@@ -181,6 +206,7 @@ technique Blur
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 blur();
     }
 }
@@ -189,6 +215,7 @@ technique BlurDistort
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 blurDistort();
     }
 }
@@ -197,6 +224,7 @@ technique BlurChromaticAberration
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 blurChromaticAberration();
     }
 }
@@ -206,6 +234,7 @@ technique ChromaticAberration
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 chromaticAberration();
     }
 }
@@ -214,6 +243,7 @@ technique ChromaticAberrationDistort
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 chromaticAberrationDistort();
     }
 }
@@ -222,6 +252,7 @@ technique BlurChromaticAberrationDistort
 {
     pass Pass1
     {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 blurChromaticAberrationDistort();
     }
 }

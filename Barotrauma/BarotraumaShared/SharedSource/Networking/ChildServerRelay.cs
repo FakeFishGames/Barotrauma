@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
                     {
                         writeStream?.Write(msg, 0, msg.Length);
                     }
-                    catch (IOException e)
+                    catch (IOException)
                     {
                         shutDown = true;
                         break;
@@ -263,7 +263,7 @@ namespace Barotrauma.Networking
                             lengthBytes[1] = (byte)0;
                             writeStream?.Write(lengthBytes, 0, 2);
                         }
-                        catch (IOException e)
+                        catch (IOException)
                         {
                             shutDown = true;
                             break;

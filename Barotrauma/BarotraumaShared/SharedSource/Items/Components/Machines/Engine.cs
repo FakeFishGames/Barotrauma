@@ -55,6 +55,15 @@ namespace Barotrauma.Items.Components
             get { return Math.Abs((force / 100.0f) * (MinVoltage <= 0.0f ? 1.0f : Math.Min(prevVoltage / MinVoltage, 1.0f))); }
         }
 
+        public float CurrentBrokenVolume
+        {
+            get 
+            {
+                if (item.ConditionPercentage > 10.0f) { return 0.0f; }
+                return Math.Abs(targetForce / 100.0f) * (1.0f - item.ConditionPercentage / 10.0f); 
+            }
+        }
+
         public Engine(Item item, XElement element)
             : base(item, element)
         {

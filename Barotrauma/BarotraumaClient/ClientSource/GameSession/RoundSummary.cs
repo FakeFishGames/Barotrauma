@@ -24,7 +24,7 @@ namespace Barotrauma
         public GUIFrame CreateSummaryFrame(string endMessage)
         {
             bool singleplayer = GameMain.NetworkMember == null;
-            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead || c.IsUnconscious);
+            bool gameOver = gameSession.CrewManager.GetCharacters().All(c => c.IsDead || c.IsIncapacitated);
             bool progress = Submarine.MainSub.AtEndPosition;
             if (!singleplayer)
             {
@@ -55,7 +55,7 @@ namespace Barotrauma
 
             string summaryText = TextManager.GetWithVariables(gameOver ? "RoundSummaryGameOver" :
                 (progress ? "RoundSummaryProgress" : "RoundSummaryReturn"), new string[2] { "[sub]", "[location]" },
-                new string[2] { Submarine.MainSub.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
+                new string[2] { Submarine.MainSub.Info.Name, progress ? GameMain.GameSession.EndLocation.Name : GameMain.GameSession.StartLocation.Name });
 
             var infoText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoTextBox.Content.RectTransform),
                 summaryText, wrap: true);

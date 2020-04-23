@@ -44,6 +44,9 @@ namespace Barotrauma
         public bool AllowGoingOutside { get; set; }
 
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
+
+        public override bool AllowOutsideSubmarine => AllowGoingOutside;
+
         public string DialogueIdentifier { get; set; }
         public string TargetName { get; set; }
 
@@ -65,13 +68,13 @@ namespace Barotrauma
             }
             else
             {
-                return base.GetPriority();
+                Priority = objectiveManager.CurrentOrder == this ? AIObjectiveManager.OrderPriority : 10;
             }
             return Priority;
         }
 
-        public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0) 
-            : base (character, objectiveManager, priorityModifier)
+        public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0)
+            : base(character, objectiveManager, priorityModifier)
         {
             this.Target = target;
             this.repeat = repeat;
@@ -204,7 +207,7 @@ namespace Barotrauma
                     }
                     if (needsEquipment)
                     {
-                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager), 
+                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                             onAbandon: () => Abandon = true,
                             onCompleted: () => RemoveSubObjective(ref findDivingGear));
                         return;

@@ -66,6 +66,9 @@ namespace Barotrauma.Items.Components
 
             if (!CheckCharacterSuccess(c.Character))
             {
+                item.CreateServerEvent(this);
+                c.Character.SelectedItems[0]?.GetComponent<Wire>()?.CreateNetworkEvent(); 
+                c.Character.SelectedItems[1]?.GetComponent<Wire>()?.CreateNetworkEvent();
                 GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
                 return;
             }
@@ -85,7 +88,7 @@ namespace Barotrauma.Items.Components
                         if (existingWire.Locked)
                         {
                             //this should not be possible unless the client is running a modified version of the game
-                            GameServer.Log(c.Character.LogName + " attempted to disconnect a locked wire from " +
+                            GameServer.Log(GameServer.CharacterLogName(c.Character) + " attempted to disconnect a locked wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Error);
                             continue;
                         }
@@ -103,7 +106,7 @@ namespace Barotrauma.Items.Components
 
                         if (existingWire.Connections[0] == null && existingWire.Connections[1] == null)
                         {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
+                            GameServer.Log(GameServer.CharacterLogName(c.Character) + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ")", ServerLog.MessageType.Wiring);
 
                             if (existingWire.Item.ParentInventory != null)
@@ -119,7 +122,7 @@ namespace Barotrauma.Items.Components
                         }
                         else if (existingWire.Connections[0] != null)
                         {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
+                            GameServer.Log(GameServer.CharacterLogName(c.Character) + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[0].Item.Name + " (" + existingWire.Connections[0].Name + ")", ServerLog.MessageType.Wiring);
 
                             //wires that are not in anyone's inventory (i.e. not currently being rewired) 
@@ -134,7 +137,7 @@ namespace Barotrauma.Items.Components
                         }
                         else if (existingWire.Connections[1] != null)
                         {
-                            GameServer.Log(c.Character.LogName + " disconnected a wire from " +
+                            GameServer.Log(GameServer.CharacterLogName(c.Character) + " disconnected a wire from " +
                                 Connections[i].Item.Name + " (" + Connections[i].Name + ") to " + existingWire.Connections[1].Item.Name + " (" + existingWire.Connections[1].Name + ")", ServerLog.MessageType.Wiring);
 
                             /*if (existingWire.Item.ParentInventory == null && !wires.Any(w => w.Contains(existingWire)))
@@ -158,7 +161,7 @@ namespace Barotrauma.Items.Components
                     disconnectedWire.Item.ParentInventory == null)
                 {
                     disconnectedWire.Item.Drop(c.Character);
-                    GameServer.Log(c.Character.LogName + " dropped " + disconnectedWire.Name, ServerLog.MessageType.Inventory);
+                    GameServer.Log(GameServer.CharacterLogName(c.Character) + " dropped " + disconnectedWire.Name, ServerLog.MessageType.Inventory);
                 }
             }
 
@@ -177,13 +180,13 @@ namespace Barotrauma.Items.Components
 
                     if (otherConnection == null)
                     {
-                        GameServer.Log(c.Character.LogName + " connected a wire to " +
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " connected a wire to " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ")",
                             ServerLog.MessageType.Wiring);
                     }
                     else
                     {
-                        GameServer.Log(c.Character.LogName + " connected a wire from " +
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " connected a wire from " +
                             Connections[i].Item.Name + " (" + Connections[i].Name + ") to " +
                             (otherConnection == null ? "none" : otherConnection.Item.Name + " (" + (otherConnection.Name) + ")"),
                             ServerLog.MessageType.Wiring);

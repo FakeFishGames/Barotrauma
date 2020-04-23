@@ -418,6 +418,16 @@ namespace Barotrauma
             return AllowInput && keyboardState.IsKeyUp(button);
         }
 
+        public static bool IsShiftDown()
+        {
+            return KeyDown(Keys.LeftShift) || KeyDown(Keys.RightShift);
+        }
+        
+        public static bool IsCtrlDown()
+        {
+            return KeyDown(Keys.LeftControl) || KeyDown(Keys.RightControl);
+        }
+
         public static void Update(double deltaTime)
         {
             timeSinceClick += deltaTime;
@@ -448,6 +458,7 @@ namespace Barotrauma
 
             MouseSpeedPerSecond = MouseSpeed / (float)deltaTime;
 
+            // Split into two to not accept drag & drop releasing as part of a double-click
             doubleClicked = false;
             if (PrimaryMouseButtonClicked())
             {
@@ -455,9 +466,22 @@ namespace Barotrauma
                     (mouseState.Position - lastClickPosition).ToVector2().Length() < MaxDoubleClickDistance)
                 {
                     doubleClicked = true;
+                    timeSinceClick = DoubleClickDelay;
                 }
-                lastClickPosition = mouseState.Position;
+                else if (timeSinceClick < DoubleClickDelay)
+                {
+                    lastClickPosition = mouseState.Position;
+                }
+
                 timeSinceClick = 0.0;
+            }           
+
+            if (PrimaryMouseButtonDown())
+            {
+                if (timeSinceClick > DoubleClickDelay)
+                {
+                    lastClickPosition = mouseState.Position;
+                }
             }
         }
 

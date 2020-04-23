@@ -228,7 +228,7 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GameMain.DebugDraw && cam.Zoom > 0.05f)
+            if (GameMain.DebugDraw && cam.Zoom > 0.1f)
             {
                 var cells = level.GetCells(cam.WorldViewCenter, 2);
                 foreach (VoronoiCell cell in cells)

@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
             public bool ContinuousSignal;
             public bool State;
             public string ConnectionName;
+            public string PropertyName;
             public Connection Connection;
             [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
@@ -28,11 +29,12 @@ namespace Barotrauma.Items.Components
             {
                 Label = element.GetAttributeString("text", "");
                 ConnectionName = element.GetAttributeString("connection", "");
+                PropertyName = element.GetAttributeString("propertyname", "").ToLowerInvariant();
                 Signal = element.GetAttributeString("signal", "1");
 
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "statuseffect")
+                    if (subElement.Name.ToString().Equals("statuseffect", System.StringComparison.OrdinalIgnoreCase))
                     {
                         StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName: "custom interface element (label " + Label + ")"));
                     }
@@ -89,6 +91,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "button":
+                    case "textbox":
                         var button = new CustomInterfaceElement(subElement)
                         {
                             ContinuousSignal = false
@@ -106,7 +109,7 @@ namespace Barotrauma.Items.Components
                         };
                         if (string.IsNullOrEmpty(tickBox.Label))
                         {
-                            tickBox.Label = "Signal out " + customInterfaceElementList.Count(e => !e.ContinuousSignal);
+                            tickBox.Label = "Signal out " + customInterfaceElementList.Count(e => e.ContinuousSignal);
                         }
                         customInterfaceElementList.Add(tickBox);
                         break;
@@ -166,6 +169,18 @@ namespace Barotrauma.Items.Components
         {
             if (tickBoxElement == null) { return; }
             tickBoxElement.State = state;
+        }
+
+        private void TextChanged(CustomInterfaceElement textElement, string text)
+        {
+            textElement.Signal = text;
+            foreach (ISerializableEntity e in item.AllPropertyObjects)
+            {
+                if (e.SerializableProperties.ContainsKey(textElement.PropertyName))
+                {
+                    e.SerializableProperties[textElement.PropertyName].TrySetValue(e, text);
+                }
+            }            
         }
 
         public override void Update(float deltaTime, Camera cam)

@@ -177,7 +177,8 @@ namespace Barotrauma
                 StaticSight = true;
             }
             SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
-            SonarLabel          = element.GetAttributeString("sonarlabel", "");
+            string label        = element.GetAttributeString("sonarlabel", "");
+            SonarLabel          = TextManager.Get(label, returnNull: true) ?? label;
             SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
             string typeString   = element.GetAttributeString("type", "Any");
             if (Enum.TryParse(typeString, out TargetType t))

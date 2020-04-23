@@ -39,7 +39,10 @@ namespace Barotrauma.Networking
 
             contentPackageOrderReceived = false;
 
-            netPeerConfiguration = new NetPeerConfiguration("barotrauma");
+            netPeerConfiguration = new NetPeerConfiguration("barotrauma")
+            {
+                UseDualModeSockets = GameMain.Config.UseDualModeSockets
+            };
 
             netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);

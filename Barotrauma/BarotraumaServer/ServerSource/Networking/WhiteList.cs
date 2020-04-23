@@ -181,7 +181,7 @@ namespace Barotrauma.Networking
                     WhiteListedPlayer whitelistedPlayer = whitelistedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (whitelistedPlayer != null)
                     {
-                        GameServer.Log(c.Name + " removed " + whitelistedPlayer.Name + " from whitelist (" + whitelistedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        GameServer.Log(GameServer.ClientLogName(c) + " removed " + whitelistedPlayer.Name + " from whitelist (" + whitelistedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
                         RemoveFromWhiteList(whitelistedPlayer);
                     }
                 }
@@ -192,7 +192,7 @@ namespace Barotrauma.Networking
                     string name = incMsg.ReadString();
                     string ip = incMsg.ReadString();
 
-                    GameServer.Log(c.Name + " added " + name + " to whitelist (" + ip + ")", ServerLog.MessageType.ConsoleUsage);
+                    GameServer.Log(GameServer.ClientLogName(c) + " added " + name + " to whitelist (" + ip + ")", ServerLog.MessageType.ConsoleUsage);
                     AddToWhiteList(name, ip);
                 }
 

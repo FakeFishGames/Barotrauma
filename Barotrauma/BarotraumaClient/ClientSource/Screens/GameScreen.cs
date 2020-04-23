@@ -17,7 +17,7 @@ namespace Barotrauma
         private RenderTarget2D renderTargetFinal;
 
         private Effect damageEffect;
-        private Texture2D damageStencil;       
+        private Texture2D damageStencil;
         private Texture2D distortTexture;
 
         public Effect PostProcessEffect { get; private set; }
@@ -122,10 +122,12 @@ namespace Barotrauma
                 {
                     if (Submarine.MainSubs[i] == null) continue;
                     if (Level.Loaded != null && Submarine.MainSubs[i].WorldPosition.Y < Level.MaxEntityDepth) continue;
-                    
+
+                    Vector2 position = Submarine.MainSubs[i].SubBody != null ? Submarine.MainSubs[i].WorldPosition : Submarine.MainSubs[i].HiddenSubPosition;
+
                     Color indicatorColor = i == 0 ? Color.LightBlue * 0.5f : GUI.Style.Red * 0.5f;
                     GUI.DrawIndicator(
-                        spriteBatch, Submarine.MainSubs[i].WorldPosition, cam, 
+                        spriteBatch, position, cam, 
                         Math.Max(Submarine.MainSub.Borders.Width, Submarine.MainSub.Borders.Height), 
                         GUI.SubmarineIcon, indicatorColor); 
                 }
@@ -202,9 +204,12 @@ namespace Barotrauma
 
             //Start drawing to the normal render target (stuff that can't be seen through the LOS effect)
             graphics.SetRenderTarget(renderTarget);
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, null);
-            spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-            spriteBatch.End();
+
+            graphics.BlendState = BlendState.NonPremultiplied;
+            graphics.SamplerStates[0] = SamplerState.LinearWrap;
+            Quad.UseBasicEffect(renderTargetBackground);
+            Quad.Render();
+
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => !(e is Structure) || e.SpriteDepth < 0.9f);
@@ -230,11 +235,12 @@ namespace Barotrauma
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
 
-			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque);
-            spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);// waterColor);
-			spriteBatch.End();
+            graphics.BlendState = BlendState.Opaque;
+            graphics.SamplerStates[0] = SamplerState.LinearWrap;
+            Quad.UseBasicEffect(renderTarget);
+            Quad.Render();
 
-			//draw alpha blended particles that are inside a sub
+            //draw alpha blended particles that are inside a sub
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.DepthRead, null, null, cam.Transform);
 			GameMain.ParticleManager.Draw(spriteBatch, true, true, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
@@ -282,10 +288,12 @@ namespace Barotrauma
             spriteBatch.End();
 			if (GameMain.LightManager.LightingEnabled)
 			{
-				spriteBatch.Begin(SpriteSortMode.Deferred, Lights.CustomBlendStates.Multiplicative, null, DepthStencilState.None, null, null, null);
-				spriteBatch.Draw(GameMain.LightManager.LightMap, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-				spriteBatch.End();
-			}
+                graphics.DepthStencilState = DepthStencilState.None;
+                graphics.SamplerStates[0] = SamplerState.LinearWrap;
+                graphics.BlendState = Lights.CustomBlendStates.Multiplicative;
+                Quad.UseBasicEffect(GameMain.LightManager.LightMap);
+                Quad.Render();
+            }
 
 			spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.None, null, null, cam.Transform);
             foreach (Character c in Character.CharacterList)
@@ -331,9 +339,12 @@ namespace Barotrauma
                     losColor = Color.Black;
                 }
 
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, GameMain.LightManager.LosEffect, null);
-                spriteBatch.Draw(renderTargetBackground, new Rectangle(0, 0, spriteBatch.GraphicsDevice.Viewport.Width, spriteBatch.GraphicsDevice.Viewport.Height), losColor);
-                spriteBatch.End();
+                GameMain.LightManager.LosEffect.Parameters["xColor"].SetValue(losColor.ToVector4());
+
+                graphics.BlendState = BlendState.NonPremultiplied;
+                graphics.SamplerStates[0] = SamplerState.PointClamp;
+                GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
+                Quad.Render();
             }
             graphics.SetRenderTarget(null);
 
@@ -371,29 +382,23 @@ namespace Barotrauma
                 postProcessTechnique += "Distort";
                 PostProcessEffect.Parameters["distortScale"].SetValue(Vector2.One * DistortStrength);
                 PostProcessEffect.Parameters["distortUvOffset"].SetValue(WaterRenderer.Instance.WavePos * 0.001f);
-#if LINUX || OSX
-                PostProcessEffect.Parameters["xTexture"].SetValue(distortTexture);
-#else
-                PostProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
-#endif
             }
 
+            graphics.BlendState = BlendState.Opaque;
+            graphics.SamplerStates[0] = SamplerState.LinearClamp;
+            graphics.DepthStencilState = DepthStencilState.None;
             if (string.IsNullOrEmpty(postProcessTechnique))
             {
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None);
+                Quad.UseBasicEffect(renderTargetFinal);
             }
             else
             {
+                PostProcessEffect.Parameters["MatrixTransform"].SetValue(Matrix.Identity);
+                PostProcessEffect.Parameters["xTexture"].SetValue(renderTargetFinal);
                 PostProcessEffect.CurrentTechnique = PostProcessEffect.Techniques[postProcessTechnique];
                 PostProcessEffect.CurrentTechnique.Passes[0].Apply();
-                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.PointClamp, DepthStencilState.None, effect: PostProcessEffect);
             }
-#if LINUX || OSX
-            spriteBatch.Draw(renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#else
-            spriteBatch.Draw(DistortStrength > 0.0f ? distortTexture : renderTargetFinal, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
-#endif
-            spriteBatch.End();            
+            Quad.Render();
         }
     }
 }

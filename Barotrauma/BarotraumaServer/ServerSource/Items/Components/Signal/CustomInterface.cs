@@ -10,9 +10,17 @@ namespace Barotrauma.Items.Components
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
             bool[] elementStates = new bool[customInterfaceElementList.Count];
+            string[] elementValues = new string[customInterfaceElementList.Count];
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                elementStates[i] = msg.ReadBoolean();
+                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                {
+                    elementValues[i] = msg.ReadString();
+                }
+                else
+                {
+                    elementStates[i] = msg.ReadBoolean();
+                }
             }
 
             CustomInterfaceElement clickedButton = null;
@@ -20,7 +28,11 @@ namespace Barotrauma.Items.Components
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
-                    if (customInterfaceElementList[i].ContinuousSignal)
+                    if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                    {
+                        TextChanged(customInterfaceElementList[i], elementValues[i]);
+                    }
+                    else if (customInterfaceElementList[i].ContinuousSignal)
                     {
                         TickBoxToggled(customInterfaceElementList[i], elementStates[i]);
                     }
@@ -48,7 +60,11 @@ namespace Barotrauma.Items.Components
             //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].ContinuousSignal)
+                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                {
+                    msg.Write(customInterfaceElementList[i].Signal);
+                }
+                else if(customInterfaceElementList[i].ContinuousSignal)
                 {
                     msg.Write(customInterfaceElementList[i].State);
                 }

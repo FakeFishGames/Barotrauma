@@ -76,7 +76,7 @@ namespace Lidgren.Network
 			MethodInfo[] methods = typeof(NetIncomingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
 			foreach (MethodInfo mi in methods)
 			{
-				if (mi.GetParameters().Length == 0 && mi.Name.StartsWith("Read", StringComparison.InvariantCulture) && mi.Name.Substring(4) == mi.ReturnType.Name)
+				if (mi.GetParameters().Length == 0 && mi.Name.StartsWith("Read", StringComparison.OrdinalIgnoreCase) && mi.Name.Substring(4) == mi.ReturnType.Name)
 				{
 					s_readMethods[mi.ReturnType] = mi;
 				}
@@ -86,7 +86,7 @@ namespace Lidgren.Network
 			methods = typeof(NetOutgoingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
 			foreach (MethodInfo mi in methods)
 			{
-				if (mi.Name.Equals("Write", StringComparison.InvariantCulture))
+				if (mi.Name.Equals("Write", StringComparison.OrdinalIgnoreCase))
 				{
 					ParameterInfo[] pis = mi.GetParameters();
 					if (pis.Length == 1)

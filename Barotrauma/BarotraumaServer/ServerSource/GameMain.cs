@@ -61,7 +61,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
                 }
                 return vanillaContent;
             }
@@ -111,6 +111,7 @@ namespace Barotrauma
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
             ItemAssemblyPrefab.LoadAll();
             LevelObjectPrefab.LoadAll();
@@ -118,7 +119,7 @@ namespace Barotrauma
             GameModePreset.Init();
             LocationType.Init();
 
-            Submarine.RefreshSavedSubs();
+            SubmarineInfo.RefreshSavedSubs();
 
             Screen.SelectNull();
 

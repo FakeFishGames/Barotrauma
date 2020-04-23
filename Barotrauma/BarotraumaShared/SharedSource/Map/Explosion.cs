@@ -30,9 +30,9 @@ namespace Barotrauma
 
         public float EmpStrength { get; set; }
 
-        public Explosion(float range, float force, float damage, float structureDamage, float empStrength = 0.0f)
+        public Explosion(float range, float force, float damage, float structureDamage, float itemDamage, float empStrength = 0.0f)
         {
-            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, range)
+            attack = new Attack(damage, 0.0f, 0.0f, structureDamage, itemDamage, range)
             {
                 SeverLimbsProbability = 1.0f
             };
@@ -220,7 +220,7 @@ namespace Barotrauma
                 Vector2 explosionPos = worldPosition;
                 if (c.Submarine != null) { explosionPos -= c.Submarine.Position; }
 
-                Hull hull = Hull.FindHull(ConvertUnits.ToDisplayUnits(explosionPos), null, false);
+                Hull hull = Hull.FindHull(explosionPos, null, false);
                 bool underWater = hull == null || explosionPos.Y < hull.Surface;
 
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);

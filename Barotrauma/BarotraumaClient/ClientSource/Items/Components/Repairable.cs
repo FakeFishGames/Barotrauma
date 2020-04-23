@@ -117,9 +117,18 @@ namespace Barotrauma.Items.Components
                     case "emitter":
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
-                        particleEmitterConditionRanges.Add(new Vector2(
-                            subElement.GetAttributeFloat("mincondition", 0.0f), 
-                            subElement.GetAttributeFloat("maxcondition", 100.0f)));
+                        float minCondition = subElement.GetAttributeFloat("mincondition", 0.0f);
+                        float maxCondition = subElement.GetAttributeFloat("maxcondition", 100.0f);
+
+                        if (maxCondition < minCondition)
+                        {
+                            DebugConsole.ThrowError("Invalid damage particle configuration in the Repairable component of " + item.Name + ". MaxCondition needs to be larger than MinCondition.");
+                            float temp = maxCondition;
+                            maxCondition = minCondition;
+                            minCondition = temp;
+                        }
+                        particleEmitterConditionRanges.Add(new Vector2(minCondition, maxCondition));
+
                         break;
                 }
             }
@@ -236,15 +245,7 @@ namespace Barotrauma.Items.Components
             DeteriorateAlways = msg.ReadBoolean();
             ushort currentFixerID = msg.ReadUInt16();
             currentFixerAction = (FixActions)msg.ReadRangedInteger(0, 2);
-
-            if (currentFixerID == 0)
-            {
-                CurrentFixer = null;
-            }
-            else
-            {
-                CurrentFixer = Entity.FindEntityByID(currentFixerID) as Character;
-            }
+            CurrentFixer = currentFixerID != 0 ? Entity.FindEntityByID(currentFixerID) as Character : null;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

@@ -15,12 +15,23 @@ namespace Barotrauma
         /// </summary>
         public bool RequireAdequateSkills;
 
+        /// <summary>
+        /// If set, only fix items where required skill matches this.
+        /// </summary>
+        public string RelevantSkill;
+
+        private readonly Item prioritizedItem;
+
         public override bool AllowMultipleInstances => true;
 
         public override bool IsDuplicate<T>(T otherObjective) => 
             (otherObjective as AIObjective) is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
 
-        public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
+        public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Item prioritizedItem = null)
+            : base(character, objectiveManager, priorityModifier)
+        {
+            this.prioritizedItem = prioritizedItem;
+        }
 
         protected override void CreateObjectives()
         {
@@ -71,6 +82,10 @@ namespace Barotrauma
             {
                 if (item.Repairables.Any(r => !r.HasRequiredSkills(character))) { return false; }
             }
+            if (!string.IsNullOrWhiteSpace(RelevantSkill))
+            {
+                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier.Equals(RelevantSkill, StringComparison.OrdinalIgnoreCase)))) { return false; }
+            }
             return true;
         }
 
@@ -103,7 +118,7 @@ namespace Barotrauma
         protected override IEnumerable<Item> GetList() => Item.ItemList;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
-            => new AIObjectiveRepairItem(character, item, objectiveManager, PriorityModifier);
+            => new AIObjectiveRepairItem(character, item, objectiveManager, priorityModifier: PriorityModifier, isPriority: item == prioritizedItem);
 
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveRepairItems, Item>(character, target);
@@ -116,7 +131,11 @@ namespace Barotrauma
             if (item.Submarine == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
             if (item.Repairables.None()) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            if (character.Submarine != null)
+            {
+                if (item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (!character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            }
             return true;
         }
     }

@@ -19,11 +19,6 @@
 /processorParam:DebugMode=Auto
 /build:blurshader_opengl.fx
 
-#begin Content_opengl.mgcb
-/importer:
-/processor:
-/build:Content_opengl.mgcb
-
 #begin damageshader_opengl.fx
 /importer:EffectImporter
 /processor:EffectProcessor

@@ -1,7 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Linq;
-using Barotrauma.Extensions;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -11,8 +9,12 @@ namespace Barotrauma
         public override string DebugTag => "fix leaks";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        private Hull PrioritizedHull { get; set; }
 
-        public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
+        public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Hull prioritizedHull = null) : base(character, objectiveManager, priorityModifier)
+        {
+            PrioritizedHull = prioritizedHull;
+        }
 
         protected override bool Filter(Gap gap) => IsValidTarget(gap, character);
 
@@ -60,7 +62,7 @@ namespace Barotrauma
 
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) 
-            => new AIObjectiveFixLeak(gap, character, objectiveManager, PriorityModifier);
+            => new AIObjectiveFixLeak(gap, character, objectiveManager, priorityModifier: PriorityModifier, ignoreSeverityAndDistance: gap.FlowTargetHull == PrioritizedHull);
 
         protected override void OnObjectiveCompleted(AIObjective objective, Gap target)
             => HumanAIController.RemoveTargets<AIObjectiveFixLeaks, Gap>(character, target);
@@ -71,7 +73,11 @@ namespace Barotrauma
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
             if (gap.Submarine == null) { return false; }
             if (gap.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
+            if (character.Submarine != null)
+            {
+                if (gap.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (!character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
+            }
             return true;
         }
     }

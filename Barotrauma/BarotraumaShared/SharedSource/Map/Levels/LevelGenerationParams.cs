@@ -9,7 +9,6 @@ namespace Barotrauma
 {
     class Biome
     {
-
         public readonly string Identifier;
         public readonly string DisplayName;
         public readonly string Description;
@@ -104,8 +103,6 @@ namespace Barotrauma
         private int mountainCountMin, mountainCountMax;
 
         private int mountainHeightMin, mountainHeightMax;
-
-        private int ruinCount;
 
         private float waterParticleScale;
 
@@ -338,12 +335,32 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 50)]
-        public int RuinCount
-        {
-            get { return ruinCount; }
-            set { ruinCount = MathHelper.Clamp(value, 0, 10); }
-        }
+        [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int RuinCount { get; set; }
+
+        [Serialize(1, true, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int WreckCount { get; set; }
+
+        // TODO: Move the wreck parameters under a separate class?
+#region Wreck parameters
+        [Serialize(1, true, description: "The minimum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        public int MinCorpseCount { get; set; }
+
+        [Serialize(5, true, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        public int MaxCorpseCount { get; set; }
+
+        [Serialize(0.0f, true, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float ThalamusProbability { get; set; }
+
+        [Serialize(0.5f, true, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float WreckHullFloodingChance { get; set; }
+
+        [Serialize(0.1f, true, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float WreckFloodingHullMinWaterPercentage { get; set; }
+
+        [Serialize(1.0f, true, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float WreckFloodingHullMaxWaterPercentage { get; set; }
+#endregion
 
         [Serialize(0.4f, true, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
         public float BottomHoleProbability
@@ -415,10 +432,10 @@ namespace Barotrauma
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
                     if (biomeName == "none") { continue; }
 
-                    Biome matchingBiome = biomes.Find(b => b.Identifier.ToLowerInvariant() == biomeName);
+                    Biome matchingBiome = biomes.Find(b => b.Identifier.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
                     if (matchingBiome == null)
                     {
-                        matchingBiome = biomes.Find(b => b.DisplayName.ToLowerInvariant() == biomeName);
+                        matchingBiome = biomes.Find(b => b.DisplayName.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
                         if (matchingBiome == null)
                         {
                             DebugConsole.ThrowError("Error in level generation parameters: biome \"" + biomeName + "\" not found.");
@@ -487,7 +504,7 @@ namespace Barotrauma
                     mainElement = doc.Root.FirstElement();
                     biomeElements.Clear();
                     levelParamElements.Clear();
-                    DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding the level generation parameters and biomes with '{file.Path}'", Color.Yellow);
                 }
                 else if (biomeElements.Any() || levelParamElements.Any())
                 {
@@ -497,7 +514,22 @@ namespace Barotrauma
 
                 foreach (XElement element in mainElement.Elements())
                 {
-                    if (element.Name.ToString().ToLowerInvariant() == "biomes")
+                    if (element.IsOverride())
+                    {
+                        if (element.FirstElement().Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
+                        {
+                            biomeElements.Clear();
+                            biomeElements.AddRange(element.FirstElement().Elements());
+                            DebugConsole.NewMessage($"Overriding biomes with '{file.Path}'", Color.Yellow);
+                        }
+                        else
+                        {
+                            levelParamElements.Clear();
+                            DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
+                            levelParamElements.AddRange(element.Elements());
+                        }
+                    }                    
+                    else if (element.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
                     {
                         biomeElements.AddRange(element.Elements());
                     }

@@ -33,7 +33,9 @@ namespace Barotrauma
             foreach (Pair<MapEntityPrefab, Rectangle> entity in DisplayEntities)
             {
                 Rectangle drawRect = entity.Second;
-                drawRect.Location += Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
+
+                drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
+                
                 entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale);
             }
         }

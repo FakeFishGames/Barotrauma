@@ -1,6 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Barotrauma.RuinGeneration;
+using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -21,20 +21,11 @@ namespace Barotrauma
         None = 0, Left = 1, Right = 2
     }
 
-    [Flags]
-    public enum SubmarineTag
-    {
-        [Description("Shuttle")]
-        Shuttle = 1,
-        [Description("Hide in menus")]
-        HideInMenus = 2
-    }
-
     partial class Submarine : Entity, IServerSerializable
     {
-        public Character.TeamType TeamID = Character.TeamType.None;
+        public SubmarineInfo Info { get; private set; }
 
-        public const string SavePath = "Submarines";
+        public Character.TeamType TeamID = Character.TeamType.None;
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
@@ -52,12 +43,6 @@ namespace Barotrauma
         }
 
         public static bool LockX, LockY;
-
-        private static List<Submarine> savedSubmarines = new List<Submarine>();
-        public static IEnumerable<Submarine> SavedSubmarines
-        {
-            get { return savedSubmarines; }
-        }
 
         public static readonly Vector2 GridSize = new Vector2(16.0f, 16.0f);
 
@@ -94,60 +79,16 @@ namespace Barotrauma
         private static float lastPickedFraction;
         private static Vector2 lastPickedNormal;
 
-        private Task hashTask;
-        private Md5Hash hash;
-        
-        private string filePath;
-        private string name;
-        public readonly DateTime LastModifiedTime;
-
-        private SubmarineTag tags;
-
         private Vector2 prevPosition;
 
         private float networkUpdateTimer;
 
         private EntityGrid entityGrid = null;
 
-        public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
-        public string RecommendedCrewExperience;
-
-        public HashSet<string> RequiredContentPackages = new HashSet<string>();
-        
         //properties ----------------------------------------------------
-
-        public string Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
-        private string displayName;
-        public string DisplayName
-        {
-            get { return displayName; }
-        }
 
         public bool ShowSonarMarker = true;
 
-        public string Description
-        {
-            get; 
-            set; 
-        }
-
-        public Version GameVersion
-        {
-            get;
-            private set;
-        }
-
-        public bool IsOutpost
-        {
-            get;
-            private set;
-        }
-        
         public static Vector2 LastPickedPosition
         {
             get { return lastPickedPosition; }
@@ -175,22 +116,6 @@ namespace Barotrauma
             set;
         }
 
-        public Md5Hash MD5Hash
-        {
-            get
-            {
-                if (hash == null)
-                {
-                    XDocument doc = OpenFile(filePath);
-                    StartHashDocTask(doc);
-                    hashTask.Wait();
-                    hashTask = null;
-                }
-
-                return hash;
-            }
-        }
-        
         public static List<Submarine> Loaded
         {
             get { return loaded; }
@@ -203,7 +128,7 @@ namespace Barotrauma
 
         public PhysicsBody PhysicsBody
         {
-            get { return subBody.Body; }
+            get { return subBody?.Body; }
         }
 
         public Rectangle Borders
@@ -212,12 +137,6 @@ namespace Barotrauma
             {
                 return subBody == null ? Rectangle.Empty : subBody.Borders;
             }
-        }
-
-        public Vector2 Dimensions
-        {
-            get;
-            private set;
         }
 
         public override Vector2 Position
@@ -259,22 +178,6 @@ namespace Barotrauma
             }
         }
 
-        private bool? subsLeftBehind;
-        public bool SubsLeftBehind
-        {
-            get
-            {
-                if (subsLeftBehind.HasValue) { return subsLeftBehind.Value; }
-                
-                CheckSubsLeftBehind();
-                return subsLeftBehind.Value;
-            }
-            //set { subsLeftBehind = value; }
-        }
-        public bool LeftBehindSubDockingPortOccupied
-        {
-            get; private set;
-        }
 
         public new Vector2 DrawPosition
         {
@@ -302,14 +205,7 @@ namespace Barotrauma
 
         public List<Vector2> HullVertices
         {
-            get { return subBody.HullVertices; }
-        }
-
-
-        public string FilePath
-        {
-            get { return filePath; }
-            set { filePath = value; }
+            get { return subBody?.HullVertices; }
         }
 
         public bool AtDamageDepth
@@ -319,7 +215,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "Barotrauma.Submarine (" + name + ")";
+            return "Barotrauma.Submarine (" + Info?.Name ?? "[NULL INFO]" + ")";
         }
 
         public override bool Removed
@@ -330,256 +226,88 @@ namespace Barotrauma
             }
         }
 
-        public bool IsFileCorrupted
+        public void MakeWreck()
         {
-            get;
-            private set;
-        }
-
-        private bool? requiredContentPackagesInstalled;
-        public bool RequiredContentPackagesInstalled
-        {
-            get
-            {
-                if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
-                return RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
-            }
-            set
-            {
-                requiredContentPackagesInstalled = value;
-            }
-        }
-
-        //constructors & generation ----------------------------------------------------
-
-        public Submarine(string filePath, string hash = "", bool tryLoad = true) : base(null)
-        {
-            this.filePath = filePath;
-            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
-            {
-                LastModifiedTime = File.GetLastWriteTime(filePath);
-            }
-            try
-            {
-                name = displayName = Path.GetFileNameWithoutExtension(filePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error loading submarine " + filePath + "!", e);
-            }
-
-            if (!string.IsNullOrWhiteSpace(hash))
-            {
-                this.hash = new Md5Hash(hash);
-            }
-
-            IsFileCorrupted = false;
-
-            if (tryLoad)
-            {
-                XDocument doc = null;
-                int maxLoadRetries = 4;
-                for (int i = 0; i <= maxLoadRetries; i++)
-                {
-                    doc = OpenFile(filePath, out Exception e);
-                    if (e != null && !(e is IOException)) { break; }
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
-                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
-                    Thread.Sleep(250);
-                }
-                if (doc == null || doc.Root == null)
-                {
-                    IsFileCorrupted = true;
-                    return;
-                }
-
-                if (doc != null && doc.Root != null)
-                {
-                    if (string.IsNullOrWhiteSpace(hash))
-                    {
-                        StartHashDocTask(doc);
-                    }
-
-                    displayName = TextManager.Get("Submarine.Name." + name, true);
-                    if (displayName == null || displayName.Length == 0) displayName = name;
-
-                    Description = TextManager.Get("Submarine.Description." + name, true);
-                    if (Description == null || Description.Length == 0) Description = doc.Root.GetAttributeString("description", "");
-
-                    GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
-                    Enum.TryParse(doc.Root.GetAttributeString("tags", ""), out tags);
-                    Dimensions = doc.Root.GetAttributeVector2("dimensions", Vector2.Zero);
-                    RecommendedCrewSizeMin = doc.Root.GetAttributeInt("recommendedcrewsizemin", 0);
-                    RecommendedCrewSizeMax = doc.Root.GetAttributeInt("recommendedcrewsizemax", 0);
-                    RecommendedCrewExperience = doc.Root.GetAttributeString("recommendedcrewexperience", "Unknown");
-
-                    //backwards compatibility (use text tags instead of the actual text)
-                    if (RecommendedCrewExperience == "Beginner")
-                        RecommendedCrewExperience = "CrewExperienceLow";
-                    else if (RecommendedCrewExperience == "Intermediate")
-                        RecommendedCrewExperience = "CrewExperienceMid";
-                    else if (RecommendedCrewExperience == "Experienced")
-                        RecommendedCrewExperience = "CrewExperienceHigh";
-                    
-                    string[] contentPackageNames = doc.Root.GetAttributeStringArray("requiredcontentpackages", new string[0]);
-                    foreach (string contentPackageName in contentPackageNames)
-                    {
-                        RequiredContentPackages.Add(contentPackageName);
-                    }
-
-                    CheckSubsLeftBehind(doc.Root);
-#if CLIENT                    
-                    string previewImageData = doc.Root.GetAttributeString("previewimage", "");
-                    if (!string.IsNullOrEmpty(previewImageData))
-                    {
-                        try
-                        {
-                            using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
-                            {
-                                var texture = TextureLoader.FromStream(mem, path: filePath);
-                                if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
-                                PreviewImage = new Sprite(texture, null, null);
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError("Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.", e);
-                            GameAnalyticsManager.AddErrorEventOnce("Submarine..ctor:PreviewImageLoadingFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, 
-                                "Loading the preview image of the submarine \"" + Name + "\" failed. The file may be corrupted.");
-                            PreviewImage = null;
-                        }
-                    }
-#endif
-                }
-            }
-
-            ConnectedDockingPorts = new Dictionary<Submarine, DockingPort>();
-
-            FreeID();
-        }
-
-        public void StartHashDocTask(XDocument doc)
-        {
-            if (hash != null) { return; }
-            if (hashTask != null) { return; }
-
-            hashTask = new Task(() =>
-            {
-                hash = new Md5Hash(doc, filePath);
-            });
-            hashTask.Start();
-        }
-
-        public bool HasTag(SubmarineTag tag)
-        {
-            return tags.HasFlag(tag);
-        }
-
-        public void AddTag(SubmarineTag tag)
-        {
-            if (tags.HasFlag(tag)) return;
-
-            tags |= tag;
-        }
-
-        public void RemoveTag(SubmarineTag tag)
-        {
-            if (!tags.HasFlag(tag)) return;
-
-            tags &= ~tag;
-        }
-
-        public void CheckSubsLeftBehind(XElement element = null)
-        {
-            if (element == null)
-            {
-                XDocument doc = null;
-                int maxLoadRetries = 4;
-                for (int i = 0; i <= maxLoadRetries; i++)
-                {
-                    doc = OpenFile(filePath, out Exception e);
-                    if (e != null && !(e is IOException)) { break; }
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
-                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
-                    Thread.Sleep(250);
-                }
-                if (doc?.Root == null) { return; }
-                element = doc.Root;
-            }
-
-            subsLeftBehind = false;
-            LeftBehindSubDockingPortOccupied = false;
-            foreach (XElement subElement in element.Elements())
-            {
-                if (subElement.Name.ToString().ToLowerInvariant() != "linkedsubmarine") { continue; }
-                if (subElement.Attribute("location") == null) { continue; }
-                
-                subsLeftBehind = true;
-                ushort targetDockingPortID = (ushort)subElement.GetAttributeInt("originallinkedto", 0);
-                XElement targetPortElement = targetDockingPortID == 0 ? null :
-                    element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
-                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
-                {
-                    LeftBehindSubDockingPortOccupied = true;
-                }
-            }
-        }
-
-        public void MakeOutpost()
-        {
-            IsOutpost = true;
+            Info.Type = SubmarineInfo.SubmarineType.Wreck;
             ShowSonarMarker = false;
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-            TeamID = Character.TeamType.FriendlyNPC;
+            TeamID = Character.TeamType.None;
 
-            foreach (MapEntity me in MapEntity.mapEntityList)
+            string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
+            ReplaceIDCardTagRequirements("wreck_id", defaultTag);
+
+            foreach (Item item in Item.ItemList)
             {
-                if (me.Submarine != this) { continue; }
-                if (me is Item item)
+                if (item.Submarine != this) { continue; }
+                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard") 
                 {
-                    if (item.GetComponent<Repairable>() != null)
+                    foreach (string tag in item.GetTags().ToList())
                     {
-                        item.Indestructible = true;
-                    }
+                        if (tag == "smallitem") { continue; }
+                        string newTag = Level.Loaded.GetWreckIDTag(tag, this);
+                        item.ReplaceTag(tag, newTag);
+                        ReplaceIDCardTagRequirements(tag, newTag);
+                    } 
+                }
+            }
+
+            void ReplaceIDCardTagRequirements(string oldTag, string newTag)
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != this) { continue; }
                     foreach (ItemComponent ic in item.Components)
                     {
-                        if (ic is ConnectionPanel connectionPanel)
-                        {
-                            //prevent rewiring
-                            connectionPanel.Locked = true;
-                        }
-                        else if (ic is Holdable holdable && holdable.Attached)
-                        {
-                            //prevent deattaching items from walls
-#if CLIENT
-                            if (GameMain.GameSession?.GameMode is TutorialMode)
-                            {
-                                continue;
-                            }
-#endif
-                            holdable.CanBePicked = false;
-                            holdable.CanBeSelected = false;
-                        }
+                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Picked, oldTag, newTag);
+                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Equipped, oldTag, newTag);
                     }
                 }
-                else if (me is Structure structure)
+            }
+
+            static void ReplaceIDCardTagRequirement(ItemComponent ic, RelatedItem.RelationType relationType, string oldTag, string newTag)
+            {
+                if (!ic.requiredItems.ContainsKey(relationType)) { return; }
+                foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
                 {
-                    structure.Indestructible = true;
+                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
+                    if (index == -1) { continue; }
+                    requiredItem.Identifiers[index] = newTag;
                 }
+            }
+        }
+
+        public WreckAI WreckAI { get; private set; }
+        public bool CreateWreckAI()
+        {
+            MakeWreck();
+            WreckAI = new WreckAI(this);
+            return WreckAI != null;
+        }
+
+        public void DisableWreckAI()
+        {
+            if (WreckAI == null)
+            {
+                WreckAI.RemoveThalamusItems(this);
+            }
+            else
+            {
+                WreckAI?.Remove();
+                WreckAI = null;
             }
         }
 
         /// <summary>
         /// Returns a rect that contains the borders of this sub and all subs docked to it
         /// </summary>
-        public Rectangle GetDockedBorders(List<Submarine> checkd=null)
+        public Rectangle GetDockedBorders(List<Submarine> checkd = null)
         {
             if (checkd == null) { checkd = new List<Submarine>(); }
             checkd.Add(this);
 
             Rectangle dockedBorders = Borders;
 
-            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.IsOutpost).ToList();
+            var connectedSubs = DockedTo.Where(s => !checkd.Contains(s) && !s.Info.IsOutpost).ToList();
 
             foreach (Submarine dockedSub in connectedSubs)
             {
@@ -628,6 +356,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Attempt to find a spawn position close to the specified position where the sub doesn't collide with walls/ruins
+        /// </summary>
         public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f)
         {
             Rectangle dockedBorders = GetDockedBorders();
@@ -693,9 +424,11 @@ namespace Barotrauma
             return spawnPos - diffFromDockedBorders;
         }
 
-        public void UpdateTransform()
+        public void UpdateTransform(bool interpolate = true)
         {
-            DrawPosition = Timing.Interpolate(prevPosition, Position);
+            DrawPosition = interpolate ?
+                Timing.Interpolate(prevPosition, Position) :
+                Position;
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -786,9 +519,9 @@ namespace Barotrauma
 
         public static Body PickBody(Vector2 rayStart, Vector2 rayEnd, IEnumerable<Body> ignoredBodies = null, Category? collisionCategory = null, bool ignoreSensors = true, Predicate<Fixture> customPredicate = null, bool allowInsideFixture = false)
         {
-            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.00001f)
+            if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.0001f)
             {
-                rayEnd += Vector2.UnitX * 0.001f;
+                return null;
             }
 
             float closestFraction = 1.0f;
@@ -1085,7 +818,12 @@ namespace Barotrauma
         {
             //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
-            if (Level.Loaded == null || subBody == null) return;
+            if (Level.Loaded == null || subBody == null) { return; }
+
+            if (Info.IsWreck)
+            {
+                WreckAI?.Update(deltaTime);
+            }
 
             if (WorldPosition.Y < Level.MaxEntityDepth &&
                 subBody.Body.Enabled &&
@@ -1134,7 +872,6 @@ namespace Barotrauma
             {
                 networkUpdateTimer = 1.0f;
             }
-
         }
 
         public void ApplyForce(Vector2 force)
@@ -1157,16 +894,23 @@ namespace Barotrauma
             checkd.Add(this);
 
             subBody.SetPosition(position);
+            UpdateTransform(interpolate: false);
 
             foreach (Submarine dockedSub in DockedTo)
             {
+                if (dockedSub.Info.IsOutpost)
+                {
+                    if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
+                    {
+                        port.Undock();
+                        continue;
+                    }
+                }
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
-
                 dockedSub.SetPosition(position + expectedLocation.Value, checkd);
+                dockedSub.UpdateTransform(interpolate: false);
             }
-            //Level.Loaded.SetPosition(-position);
-            //prevPosition = position;
         }
 
         public static Vector2? CalculateDockOffset(Submarine sub, Submarine dockedSub)
@@ -1183,8 +927,6 @@ namespace Barotrauma
             if (amount == Vector2.Zero || !MathUtils.IsValid(amount)) return;
 
             subBody.SetPosition(subBody.Position + amount);
-
-            //Level.Loaded.Move(-amount);
         }
 
         public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true)
@@ -1193,7 +935,7 @@ namespace Barotrauma
             float closestDist = 0.0f;
             foreach (Submarine sub in loaded)
             {
-                if (ignoreOutposts && sub.IsOutpost) { continue; }
+                if (ignoreOutposts && sub.Info.IsOutpost) { continue; }
                 if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
@@ -1214,10 +956,17 @@ namespace Barotrauma
         public List<Hull> GetHulls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Hull.hullList);
         public List<Gap> GetGaps(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Gap.GapList);
         public List<Item> GetItems(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Item.ItemList);
+        public List<WayPoint> GetWaypoints(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, WayPoint.WayPointList);
+        public List<Structure> GetWalls(bool alsoFromConnectedSubs) => GetEntities(alsoFromConnectedSubs, Structure.WallList);
 
         public List<T> GetEntities<T>(bool includingConnectedSubs, List<T> list) where T : MapEntity
         {
             return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
+        }
+
+        public IEnumerable<T> GetEntities<T>(bool includingConnectedSubs, IEnumerable<T> list) where T : MapEntity
+        {
+            return list.Where(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
         }
 
         public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
@@ -1227,7 +976,7 @@ namespace Barotrauma
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)
             {
-                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID);
+                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID && entity.Submarine.Info.Type == Info.Type);
             }
             return false;
         }
@@ -1237,7 +986,7 @@ namespace Barotrauma
         /// </summary>
         public static Submarine FindContaining(Vector2 position)
         {
-            foreach (Submarine sub in Submarine.Loaded)
+            foreach (Submarine sub in Loaded)
             {
                 Rectangle subBorders = sub.Borders;
                 subBorders.Location += MathUtils.ToPoint(sub.HiddenSubPosition) - new Microsoft.Xna.Framework.Point(0, sub.Borders.Height);
@@ -1249,255 +998,37 @@ namespace Barotrauma
 
             return null;
         }
-
-        //saving/loading ----------------------------------------------------
-
-        public static void AddToSavedSubs(Submarine sub)
+        public static Rectangle GetBorders(XElement submarineElement)
         {
-            savedSubmarines.Add(sub);
+            Vector4 bounds = Vector4.Zero;
+            foreach (XElement element in submarineElement.Elements())
+            {
+                if (element.Name != "Structure") { continue; }
+
+                string name = element.GetAttributeString("name", "");
+                string identifier = element.GetAttributeString("identifier", "");
+                StructurePrefab prefab = Structure.FindPrefab(name, identifier);
+                if (prefab == null || !prefab.Body) { continue; }
+
+                var rect = element.GetAttributeRect("rect", Rectangle.Empty);
+                bounds = new Vector4(
+                    Math.Min(rect.X, bounds.X),
+                    Math.Max(rect.Y, bounds.Y),
+                    Math.Max(rect.Right, bounds.Z),
+                    Math.Min(rect.Y - rect.Height, bounds.W));
+            }
+
+            return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
         }
 
-        public static void RefreshSavedSub(string filePath)
+        public Submarine(SubmarineInfo info, bool showWarningMessages = true) : base(null)
         {
-            string fullPath = Path.GetFullPath(filePath);
-            for (int i = savedSubmarines.Count - 1; i >= 0; i--)
-            {
-                if (Path.GetFullPath(savedSubmarines[i].filePath) == fullPath)
-                {
-                    savedSubmarines[i].Dispose();
-                }
-            }
-            if (File.Exists(filePath))
-            {
-                var sub = new Submarine(filePath);
-                if (!sub.IsFileCorrupted)
-                {
-                    savedSubmarines.Add(sub);
-                }
-                savedSubmarines = savedSubmarines.OrderBy(s => s.filePath ?? "").ToList();
-            }
-        }
-
-        public static void RefreshSavedSubs()
-        {
-            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
-
-            for (int i = savedSubmarines.Count - 1; i>= 0; i--)
-            {
-                if (File.Exists(savedSubmarines[i].FilePath) &&
-                    savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) &&
-                    (Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath) ||
-                    contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath())))
-                {
-                    continue;
-                }
-                savedSubmarines[i].Dispose();
-            }
-
-            if (!Directory.Exists(SavePath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Directory \"" + SavePath + "\" not found and creating the directory failed.", e);
-                    return;
-                }
-            }
-
-            List<string> filePaths;
-            string[] subDirectories;
-
-            try
-            {
-                filePaths = Directory.GetFiles(SavePath).ToList();
-                subDirectories = Directory.GetDirectories(SavePath);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Couldn't open directory \"" + SavePath + "\"!", e);
-                return;
-            }
-
-            foreach (string subDirectory in subDirectories)
-            {
-                try
-                {
-                    filePaths.AddRange(Directory.GetFiles(subDirectory).ToList());
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Couldn't open subdirectory \"" + subDirectory + "\"!", e);
-                    return;
-                }
-            }
-
-            foreach (ContentFile subFile in contentPackageSubs)
-            {
-                if (!filePaths.Any(fp => Path.GetFullPath(fp) == Path.GetFullPath(subFile.Path)))
-                {
-                    filePaths.Add(subFile.Path);
-                }
-            }
-
-            filePaths.RemoveAll(p => savedSubmarines.Any(sub => sub.FilePath == p));
-
-            foreach (string path in filePaths)
-            {
-                var sub = new Submarine(path);
-                if (sub.IsFileCorrupted)
-                {
-#if CLIENT
-                    if (DebugConsole.IsOpen) { DebugConsole.Toggle(); }
-                    var deleteSubPrompt = new GUIMessageBox(
-                        TextManager.Get("Error"), 
-                        TextManager.GetWithVariable("SubLoadError", "[subname]", sub.name) +"\n"+
-                        TextManager.GetWithVariable("DeleteFileVerification", "[filename]", sub.name),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-
-                    string filePath = path;
-                    deleteSubPrompt.Buttons[0].OnClicked += (btn, userdata) =>
-                    {
-                        try
-                        {
-                            File.Delete(filePath);
-                        }
-                        catch (Exception e)
-                        {
-                            DebugConsole.ThrowError($"Failed to delete file \"{filePath}\".", e);
-                        }
-                        deleteSubPrompt.Close();
-                        return true;
-                    };
-                    deleteSubPrompt.Buttons[1].OnClicked += deleteSubPrompt.Close;
-#endif
-                }
-                else
-                {
-                    savedSubmarines.Add(sub);
-                }
-            }
-        }
-
-        static readonly string TempFolder = Path.Combine("Submarine", "Temp");
-
-        public static XDocument OpenFile(string file)
-        {
-            return OpenFile(file, out _);
-        }
-
-        public static XDocument OpenFile(string file, out Exception exception)
-        {
-            XDocument doc = null;
-            string extension = "";
-            exception = null;
-
-            try
-            {
-                extension = System.IO.Path.GetExtension(file);
-            }
-            catch
-            {
-                //no file extension specified: try using the default one
-                file += ".sub";
-            }
-
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                extension = ".sub";
-                file += ".sub";
-            }
-
-            if (extension == ".sub")
-            {
-                Stream stream = null;
-                try
-                {
-                    stream = SaveUtil.DecompressFiletoStream(file);
-                }
-                catch (FileNotFoundException e)
-                {
-                    exception = e;
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found)");
-                    return null;
-                }
-                catch (Exception e) 
-                {
-                    exception = e;
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed!", e);
-                    return null;
-                }                
-
-                try
-                {
-                    stream.Position = 0;
-                    doc = XDocument.Load(stream); //ToolBox.TryLoadXml(file);
-                    stream.Close();
-                    stream.Dispose();
-                }
-
-                catch (Exception e)
-                {
-                    exception = e;
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
-                    return null;
-                }
-            }
-            else if (extension == ".xml")
-            {
-                try
-                {
-                    ToolBox.IsProperFilenameCase(file);
-                    doc = XDocument.Load(file, LoadOptions.SetBaseUri);
-                }
-
-                catch (Exception e)
-                {
-                    exception = e;
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (" + e.Message + ")");
-                    return null;
-                }
-            }
-            else
-            {
-                DebugConsole.ThrowError("Couldn't load submarine \"" + file + "! (Unrecognized file extension)");
-                return null;
-            }
-
-            return doc;
-        }
-
-        public void Load(bool unloadPrevious, XElement submarineElement = null, bool showWarningMessages = true)
-        {
-            if (unloadPrevious) Unload();
-
             Loading = true;
 
-            if (submarineElement == null)
-            {
-                XDocument doc = null;
-                int maxLoadRetries = 4;
-                for (int i = 0; i <= maxLoadRetries; i++)
-                {
-                    doc = OpenFile(filePath);
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
-                    DebugConsole.NewMessage("Loading the submarine \"" + Name + "\" failed, retrying in 250 ms...");
-                    Thread.Sleep(250);
-                }
-                if (doc == null || doc.Root == null)
-                {
-                    IsFileCorrupted = true;
-                    return;
-                }
-                submarineElement = doc.Root;
-            }
+            Info = new SubmarineInfo(info);
 
-            GameVersion = GameVersion ?? new Version(submarineElement.GetAttributeString("gameversion", "0.0.0.0"));
-            Description = submarineElement.GetAttributeString("description", "");
-            Enum.TryParse(submarineElement.GetAttributeString("tags", ""), out tags);
-            
+            ConnectedDockingPorts = new Dictionary<Submarine, DockingPort>();
+
             //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
@@ -1515,8 +1046,12 @@ namespace Barotrauma
             {
                 IdOffset = Math.Max(IdOffset, me.ID);
             }
-            
-            var newEntities = MapEntity.LoadAll(this, submarineElement, filePath);
+
+            List<MapEntity> newEntities = new List<MapEntity>();
+            if (Info.SubmarineElement != null)
+            {
+                newEntities = MapEntity.LoadAll(this, Info.SubmarineElement, Info.FilePath);
+            }
 
             Vector2 center = Vector2.Zero;
             var matchingHulls = Hull.hullList.FindAll(h => h.Submarine == this);
@@ -1558,10 +1093,53 @@ namespace Barotrauma
                         MapEntity.mapEntityList[i].Move(-center);
                     }
                 }
-            }
 
-            subBody = new SubmarineBody(this, showWarningMessages);
-            subBody.SetPosition(HiddenSubPosition);
+                subBody = new SubmarineBody(this, showWarningMessages);
+                subBody.SetPosition(HiddenSubPosition);
+
+                if (info.IsOutpost)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                    TeamID = Character.TeamType.FriendlyNPC;
+
+                    foreach (MapEntity me in MapEntity.mapEntityList)
+                    {
+                        if (me.Submarine != this) { continue; }
+                        if (me is Item item)
+                        {
+                            if (item.GetComponent<Repairable>() != null)
+                            {
+                                item.Indestructible = true;
+                            }
+                            foreach (ItemComponent ic in item.Components)
+                            {
+                                if (ic is ConnectionPanel connectionPanel)
+                                {
+                                    //prevent rewiring
+                                    connectionPanel.Locked = true;
+                                }
+                                else if (ic is Holdable holdable && holdable.Attached)
+                                {
+                                    //prevent deattaching items from walls
+#if CLIENT
+                                if (GameMain.GameSession?.GameMode is TutorialMode)
+                                {
+                                    continue;
+                                }
+#endif
+                                    holdable.CanBePicked = false;
+                                    holdable.CanBeSelected = false;
+                                }
+                            }
+                        }
+                        else if (me is Structure structure)
+                        {
+                            structure.Indestructible = true;
+                        }
+                    }
+                }
+            }
 
             loaded.Add(this);
 
@@ -1581,10 +1159,17 @@ namespace Barotrauma
             Loading = false;
 
             MapEntity.MapLoaded(newEntities, true);
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
+                {
+                    linkedSub.LinkDummyToMainSubmarine();
+                }
+            }
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.ToLowerInvariant().Contains("roomname."))
+                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
@@ -1595,9 +1180,9 @@ namespace Barotrauma
 #endif
             //if the sub was made using an older version, 
             //halve the brightness of the lights to make them look (almost) right on the new lighting formula
-            if (showWarningMessages && Screen.Selected != GameMain.SubEditorScreen && (GameVersion == null || GameVersion < new Version("0.8.9.0")))
+            if (showWarningMessages && Screen.Selected != GameMain.SubEditorScreen && (Info.GameVersion == null || Info.GameVersion < new Version("0.8.9.0")))
             {
-                DebugConsole.ThrowError("The submarine \"" + Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
+                DebugConsole.ThrowError("The submarine \"" + Info.Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
                     + "The game automatically adjusts the lights make them look better with the new formula, but it's recommended to open the submarine in the submarine editor and make sure everything looks right after the automatic conversion.");
                 foreach (Item item in Item.ItemList)
                 {
@@ -1608,91 +1193,51 @@ namespace Barotrauma
                 }
             }
 
-
             ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
-        public static Submarine Load(XElement element, bool unloadPrevious)
+        public static Submarine Load(SubmarineInfo info, bool unloadPrevious)
         {
             if (unloadPrevious) Unload();
 
-            //tryload -> false
-
-            Submarine sub = new Submarine(element.GetAttributeString("name", ""), "", false);
-            sub.Load(unloadPrevious, element);
+            Submarine sub = new Submarine(info, false);
 
             return sub;
         }
 
-        public static Submarine Load(string fileName, bool unloadPrevious)
-        {
-            return Load(fileName, SavePath, unloadPrevious);
-        }
-
-        public static Submarine Load(string fileName, string folder, bool unloadPrevious)
-        {
-            if (unloadPrevious) Unload();
-
-            string path = string.IsNullOrWhiteSpace(folder) ? fileName : System.IO.Path.Combine(SavePath, fileName);
-
-            Submarine sub = new Submarine(path);
-            sub.Load(unloadPrevious);
-
-            return sub;            
-        }
-        
-        public bool SaveAs(string filePath, MemoryStream previewImage = null)
-        {
-            name = Path.GetFileNameWithoutExtension(filePath);
-
-            XDocument doc = new XDocument(new XElement("Submarine"));
-            SaveToXElement(doc.Root);
-
-            if (previewImage != null)
-            {
-                doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
-            }
-
-            try
-            {
-                SaveUtil.CompressStringToFile(filePath, doc.ToString());
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e);
-                return false;
-            }
-
-            hash = null;
-            hashTask = null;
-            Md5Hash.RemoveFromCache(filePath);
-
-            return true;
-        }
-
         public void SaveToXElement(XElement element)
         {
-            element.Add(new XAttribute("name", name));
-            element.Add(new XAttribute("description", Description ?? ""));
-            element.Add(new XAttribute("tags", tags.ToString()));
+            element.Add(new XAttribute("name", Info.Name));
+            element.Add(new XAttribute("description", Info.Description ?? ""));
+            element.Add(new XAttribute("tags", Info.Tags.ToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
             Rectangle dimensions = CalculateDimensions();
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
-            element.Add(new XAttribute("recommendedcrewsizemin", RecommendedCrewSizeMin));
-            element.Add(new XAttribute("recommendedcrewsizemax", RecommendedCrewSizeMax));
-            element.Add(new XAttribute("recommendedcrewexperience", RecommendedCrewExperience ?? ""));
-            element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", RequiredContentPackages)));
+            element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
+            element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
+            element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
+            element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", Info.RequiredContentPackages)));
             
-            foreach (MapEntity e in MapEntity.mapEntityList)
+            foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
             {
                 if (e.Submarine != this || !e.ShouldBeSaved) continue;
+                if (e is Item item && item.FindParentInventory(inv => inv is CharacterInventory) != null) continue;
                 e.Save(element);
             }
 
-            CheckSubsLeftBehind(element);
+            Info.CheckSubsLeftBehind(element);
         }
 
+        public bool SaveAs(string filePath, MemoryStream previewImage = null)
+        {
+            var newInfo = new SubmarineInfo(this);
+            newInfo.FilePath = filePath;
+            newInfo.Name = Path.GetFileNameWithoutExtension(filePath);
+            Info.Dispose(); Info = newInfo;
+
+            return newInfo.SaveAs(filePath, previewImage);
+        }
 
         public static bool Unloading
         {
@@ -1710,7 +1255,8 @@ namespace Barotrauma
             if (GameMain.LightManager != null) GameMain.LightManager.ClearLights();
 #endif
 
-            foreach (Submarine sub in loaded)
+            var _loaded = new List<Submarine>(loaded);
+            foreach (Submarine sub in _loaded)
             {
                 sub.Remove();
             }
@@ -1756,21 +1302,25 @@ namespace Barotrauma
 
             subBody = null;
 
+            if (entityGrid != null)
+            {
+                Hull.EntityGrids.Remove(entityGrid);
+                entityGrid = null;
+            }
+
             visibleEntities = null;
 
             if (MainSub == this) MainSub = null;
             if (MainSubs[1] == this) MainSubs[1] = null;
 
             ConnectedDockingPorts?.Clear();
+
+            loaded.Remove(this);
         }
 
         public void Dispose()
         {
-            savedSubmarines.Remove(this);
-#if CLIENT
-            PreviewImage?.Remove();
-            PreviewImage = null;
-#endif
+            Remove();
         }
 
         private List<PathNode> outdoorNodes;
@@ -1785,6 +1335,7 @@ namespace Barotrauma
                 return outdoorNodes;
             }
         }
+
         private HashSet<PathNode> obstructedNodes = new HashSet<PathNode>();
 
         /// <summary>
@@ -1859,5 +1410,4 @@ namespace Barotrauma
             obstructedNodes.Clear();
         }
     }
-
 }

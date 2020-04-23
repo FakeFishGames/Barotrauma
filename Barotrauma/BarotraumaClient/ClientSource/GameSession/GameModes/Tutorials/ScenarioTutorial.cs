@@ -21,8 +21,8 @@ namespace Barotrauma.Tutorials
         private string levelSeed;
         private string levelParams;
 
-        private Submarine startOutpost = null;
-        private Submarine endOutpost = null;
+        private SubmarineInfo startOutpost = null;
+        private SubmarineInfo endOutpost = null;
         private bool currentTutorialCompleted = false;
         private float fadeOutTime = 3f;
         protected float waitBeforeFade = 4f;
@@ -56,13 +56,13 @@ namespace Barotrauma.Tutorials
 
         private IEnumerable<object> Loading()
         {
-            Submarine.MainSub = Submarine.Load(submarinePath, "", true);
+            SubmarineInfo subInfo = new SubmarineInfo(submarinePath);
 
             LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Name == levelParams);
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(Submarine.MainSub, "",
+            GameMain.GameSession = new GameSession(subInfo, "",
                 GameModePreset.List.Find(g => g.Identifier == "tutorial"));
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
@@ -72,12 +72,12 @@ namespace Barotrauma.Tutorials
 
                 if (startOutpostPath != string.Empty)
                 {
-                    startOutpost = Submarine.Load(startOutpostPath, "", false);
+                    startOutpost = new SubmarineInfo(startOutpostPath);
                 }
 
                 if (endOutpostPath != string.Empty)
                 {
-                    endOutpost = Submarine.Load(endOutpostPath, "", false);
+                    endOutpost = new SubmarineInfo(endOutpostPath);
                 }
 
                 Level tutorialLevel = new Level(levelSeed, 0, 0, generationParams, biome, startOutpost, endOutpost);
@@ -160,11 +160,11 @@ namespace Barotrauma.Tutorials
                 switch (this.spawnSub)
                 {
                     case "startoutpost":
-                        spawnSub = startOutpost;
+                        spawnSub = Level.Loaded.StartOutpost;
                         break;
 
                     case "endoutpost":
-                        spawnSub = endOutpost;
+                        spawnSub = Level.Loaded.EndOutpost;
                         break;
 
                     default:

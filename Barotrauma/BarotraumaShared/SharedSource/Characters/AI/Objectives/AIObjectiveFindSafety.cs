@@ -12,6 +12,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
         public override bool ConcurrentObjectives => true;
+        public override bool AllowOutsideSubmarine => true;
         public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
         // TODO: expose?
@@ -35,6 +36,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (character.CurrentHull == null)
             {
                 Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
@@ -77,7 +83,7 @@ namespace Barotrauma
                 else
                 {
                     float dangerFactor = (100 - currenthullSafety) / 100;
-                    Priority += dangerFactor * priorityIncrease * deltaTime;
+                    Priority = Math.Min(Priority + dangerFactor * priorityIncrease * deltaTime, 100);
                 }
             }
         }
@@ -100,7 +106,7 @@ namespace Barotrauma
             if (needsEquipment && divingGearObjective == null && !character.LockHands)
             {
                 RemoveSubObjective(ref goToObjective);
-                TryAddSubObjective(ref divingGearObjective, 
+                TryAddSubObjective(ref divingGearObjective,
                     constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                     onAbandon: () =>
                     {
@@ -139,14 +145,14 @@ namespace Barotrauma
                         {
                             RemoveSubObjective(ref goToObjective);
                         }
-                        TryAddSubObjective(ref goToObjective, 
+                        TryAddSubObjective(ref goToObjective,
                             constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
                             {
                                 AllowGoingOutside = HumanAIController.HasDivingSuit(character, conditionPercentage: 50)
                             },
                             onCompleted: () =>
                             {
-                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD || 
+                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD ||
                                     HumanAIController.NeedsDivingGear(character, currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
                                 {
                                     resetPriority = true;
@@ -244,10 +250,8 @@ namespace Barotrauma
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
                     // Don't allow to go outside if not already outside.
-                    var path = character.CurrentHull != null ? 
-                        PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null) : 
-                        PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition);
-                    if (path.Unreachable && character.CurrentHull != null)
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    if (path.Unreachable)
                     {
                         HumanAIController.UnreachableHulls.Add(hull);
                         continue;
@@ -265,7 +269,7 @@ namespace Barotrauma
                 else
                 {
                     // Outside
-                    if (hull.RoomName != null && hull.RoomName.ToLowerInvariant().Contains("airlock"))
+                    if (hull.RoomName != null && hull.RoomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
                     {
                         hullSafety = 100;
                     }
@@ -287,6 +291,7 @@ namespace Barotrauma
                     float distanceFactor = MathHelper.Lerp(1, 0.2f, MathUtils.InverseLerp(0, MathUtils.Pow(100000, 2), distance));
                     hullSafety *= distanceFactor;
                     // If the target is not inside a friendly submarine, considerably reduce the hull safety.
+                    // Intentionally exclude wrecks from this check
                     if (hull.Submarine.TeamID != character.TeamID && hull.Submarine.TeamID != Character.TeamType.FriendlyNPC)
                     {
                         hullSafety /= 10;

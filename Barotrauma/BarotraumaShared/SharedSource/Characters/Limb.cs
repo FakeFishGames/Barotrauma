@@ -366,6 +366,8 @@ namespace Barotrauma
 
         public string Name => Params.Name;
 
+        public bool IsDead => character.IsDead;
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -471,43 +473,59 @@ namespace Barotrauma
             return AddDamage(simPosition, afflictions, playSound);
         }
 
+        private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+        private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
         public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
         {
-            List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
-            //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
-            var afflictionsCopy = afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.Probability).ToList();
-            for (int i = 0; i < afflictionsCopy.Count; i++)
+            appliedDamageModifiers.Clear();
+            afflictionsCopy.Clear();
+            foreach (var affliction in afflictions)
             {
+                var newAffliction = affliction;
+                float random = Rand.Value(Rand.RandSync.Unsynced);
+                if (random > affliction.Probability) { continue; }
+                bool applyAffliction = true;
                 foreach (DamageModifier damageModifier in DamageModifiers)
                 {
-                    if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                    if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                    if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
+                    {
+                        applyAffliction = false;
+                        continue;
+                    }
                     if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                     {
-                        afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                        newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
                     }
                 }
-
                 foreach (WearableSprite wearable in wearingItems)
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
-                        if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                        if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                        if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
+                        {
+                            applyAffliction = false;
+                            continue;
+                        }
                         if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                         {
-                            afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                            newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
                         }
                     }
                 }
+                if (applyAffliction)
+                {
+                    afflictionsCopy.Add(newAffliction);
+                }
             }
-
-            AddDamageProjSpecific(simPosition, afflictionsCopy, playSound, appliedDamageModifiers);
-
+            AddDamageProjSpecific(afflictionsCopy, playSound, appliedDamageModifiers);
             return new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
         }
 
-        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
+        partial void AddDamageProjSpecific(IEnumerable<Affliction> afflictions, bool playSound, IEnumerable<DamageModifier> appliedDamageModifiers);
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
@@ -646,33 +664,19 @@ namespace Barotrauma
 
             if (wasHit)
             {
-                bool playSound = false;
-#if CLIENT
-                playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
-                if (playSound)
+                if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    LastAttackSoundTime = SoundInterval;
+                    ExecuteAttack(damageTarget, targetLimb, out attackResult);
                 }
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(character, new object[] 
+                { 
+                    NetEntityEvent.Type.ExecuteAttack, 
+                    this, 
+                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
+                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0
+                });   
 #endif
-                if (damageTarget is Character targetCharacter && targetLimb != null)
-                {
-                    attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
-                }
-                else
-                {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
-                }
-                if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
-                {
-                    // TODO: use the hit pos?
-                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
-                    var from = body.FarseerBody.GetWorldPoint(localFront);
-                    var to = from;
-                    var drawPos = body.DrawPosition;
-                    StickTo(structureBody, from, to);
-                }
-                attack.ResetAttackTimer();
-                attack.SetCoolDown();
             }
 
             Vector2 diff = attackSimPos - SimPosition;
@@ -705,9 +709,47 @@ namespace Barotrauma
             if (!attack.IsRunning)
             {
                 // Set the main collider where the body lands after the attack
-                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: 0);
+                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
             }
             return wasHit;
+        }
+
+        public void ExecuteAttack(IDamageable damageTarget, Limb targetLimb, out AttackResult attackResult)
+        {
+            bool playSound = false;
+#if CLIENT
+            playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
+            if (playSound)
+            {
+                LastAttackSoundTime = SoundInterval;
+            }
+#endif
+            if (damageTarget is Character targetCharacter && targetLimb != null)
+            {
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
+            }
+            else
+            {
+                if (damageTarget is Item targetItem && !targetItem.Prefab.DamagedByMonsters)
+                {
+                    attackResult = new AttackResult();
+                }
+                else
+                {
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                }
+            }
+            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+            {
+                // TODO: use the hit pos?
+                var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
+                var from = body.FarseerBody.GetWorldPoint(localFront);
+                var to = from;
+                var drawPos = body.DrawPosition;
+                StickTo(structureBody, from, to);
+            }*/
+            attack.ResetAttackTimer();
+            attack.SetCoolDown();
         }
 
         private WeldJoint attachJoint;

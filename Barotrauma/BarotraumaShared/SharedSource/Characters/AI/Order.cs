@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,7 @@ namespace Barotrauma
         Movement,
         Power,
         Maintenance,
-        Operate,
-        Undefined
+        Operate
     }
 
     class Order
@@ -31,11 +31,7 @@ namespace Barotrauma
             return order;
         }
         
-        public Order Prefab
-        {
-            get;
-            private set;
-        }
+        public Order Prefab { get; private set; }
 
         public readonly string Name;
 
@@ -55,7 +51,7 @@ namespace Barotrauma
                 {
                     return color.Value;
                 }
-                else if (OrderCategoryIcons.TryGetValue(Category, out Tuple<Sprite, Color> sprite))
+                else if (Category.HasValue && OrderCategoryIcons.TryGetValue((OrderCategory)Category, out Tuple<Sprite, Color> sprite))
                 {
                     return sprite.Item2;
                 }
@@ -83,7 +79,8 @@ namespace Barotrauma
 
         public Character OrderGiver;
 
-        public readonly OrderCategory Category;
+        private readonly OrderCategory? category;
+        public OrderCategory? Category => category;
 
         //legacy support
         public readonly string[] AppropriateJobs;
@@ -93,6 +90,25 @@ namespace Barotrauma
         public readonly Dictionary<string, Sprite> OptionSprites;
 
         public readonly float Weight;
+        public readonly bool MustSetTarget;
+        public readonly string AppropriateSkill;
+
+        public bool HasOptions
+        {
+            get
+            {
+                if (IsPrefab)
+                {
+                    return MustSetTarget || Options.Length > 1;
+                }
+                else
+                {
+                    return Prefab.MustSetTarget || Prefab.Options.Length > 1;
+                }
+            }
+        }
+        public bool IsPrefab { get; private set; }
+        public readonly bool MustManuallyAssign;
 
         static Order()
         {
@@ -197,8 +213,11 @@ namespace Barotrauma
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
-            Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), orderElement.GetAttributeString("category", "undefined"), true);
+            var category = orderElement.GetAttributeString("category", null);
+            if (!string.IsNullOrWhiteSpace(category)) { this.category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             Weight = orderElement.GetAttributeFloat(0.0f, "weight");
+            MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
+            AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
 
             string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
             if (translatedOptionNames == null)
@@ -241,6 +260,9 @@ namespace Barotrauma
                     }
                 }
             }
+
+            IsPrefab = true;
+            MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
         }
         
         /// <summary>
@@ -253,6 +275,7 @@ namespace Barotrauma
             Name                = prefab.Name;
             Identifier          = prefab.Identifier;
             ItemComponentType   = prefab.ItemComponentType;
+            ItemIdentifiers     = prefab.ItemIdentifiers;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
             Color               = prefab.Color;
@@ -261,22 +284,35 @@ namespace Barotrauma
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
             Weight              = prefab.Weight;
-            Category            = prefab.Category;
-            OrderGiver          = orderGiver;
+            MustSetTarget       = prefab.MustSetTarget;
+            AppropriateSkill    = prefab.AppropriateSkill;
+            category            = prefab.Category;
+            MustManuallyAssign  = prefab.MustManuallyAssign;
 
+            OrderGiver = orderGiver;
             TargetEntity = targetEntity;
             if (targetItem != null)
             {
-                if (UseController)
-                {
-                    //try finding the controller with the simpler non-recursive method first
-                    ConnectedController = 
-                        targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault() ?? 
-                        targetItem.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
-                }
+                if (UseController) { ConnectedController = FindController(targetItem); }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
             }
+
+            IsPrefab = false;
+        }
+
+        private Controller FindController(ItemComponent targetComponent)
+        {
+            if (targetComponent?.Item == null) { return null; }
+            //try finding the controller with the simpler non-recursive method first
+            return targetComponent.Item.GetConnectedComponents<Controller>().FirstOrDefault() ??
+                targetComponent.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
+        }
+
+        private bool TryFindController(ItemComponent targetComponent, out Controller controller)
+        {
+            controller = FindController(targetComponent);
+            return controller != null;
         }
         
         public bool HasAppropriateJob(Character character)
@@ -291,7 +327,7 @@ namespace Barotrauma
             }
             for (int i = 0; i < AppropriateJobs.Length; i++)
             {
-                if (character.Info.Job.Prefab.Identifier.ToLowerInvariant() == AppropriateJobs[i].ToLowerInvariant()) { return true; }
+                if (character.Info.Job.Prefab.Identifier.Equals(AppropriateJobs[i], StringComparison.OrdinalIgnoreCase)) { return true; }
             }
             return false;
         }
@@ -309,6 +345,41 @@ namespace Barotrauma
             if (msg == null) { return ""; }
 
             return msg;
+        }
+
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub)
+        {
+            List<Item> matchingItems = new List<Item>();
+            if (submarine == null) { return matchingItems; }
+            if (ItemComponentType != null || ItemIdentifiers.Length > 0)
+            {
+                matchingItems = ItemIdentifiers.Length > 0 ?
+                    Item.ItemList.FindAll(it => ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == ItemComponentType));
+                if (mustBelongToPlayerSub)
+                {
+                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player);
+                    matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                }
+                else
+                {
+                    matchingItems.RemoveAll(it => it.Submarine != submarine);
+                }
+                matchingItems.RemoveAll(it => it.NonInteractable);
+                if (UseController)
+                {
+                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType && TryFindController(c, out _)));
+                }
+            }
+            return matchingItems;
+        }
+
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub)
+        {
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] :
+                Submarine.MainSub;
+            return GetMatchingItems(submarine, mustBelongToPlayerSub);
         }
     }
 }

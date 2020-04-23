@@ -1,6 +1,6 @@
 ﻿namespace Steamworks.Data
 {
-	enum DebugOutputType : int
+	public enum DebugOutputType : int
 	{
 		None = 0,
 		Bug = 1, // You used the API incorrectly, or an internal error happened

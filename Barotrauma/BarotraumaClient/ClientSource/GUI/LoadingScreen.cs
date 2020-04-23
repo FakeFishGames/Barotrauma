@@ -338,6 +338,8 @@ namespace Barotrauma
                     PendingSplashScreens.Clear();
                     currSplashScreen = null;
                 }
+
+                if (currSplashScreen == null) { return; }
             }
 
             if (currSplashScreen.IsPlaying)

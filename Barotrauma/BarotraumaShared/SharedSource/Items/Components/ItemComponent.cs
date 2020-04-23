@@ -68,7 +68,6 @@ namespace Barotrauma.Items.Components
 
         protected const float CorrectionDelay = 1.0f;
         protected CoroutineHandle delayedCorrectionCoroutine;
-        protected float correctionTimer;
 
         [Editable, Serialize(0.0f, false, description: "How long it takes to pick up the item (in seconds).")]
         public float PickingTime
@@ -81,7 +80,6 @@ namespace Barotrauma.Items.Components
 
         public Action<bool> OnActiveStateChanged;
 
-        public float IsActiveTimer;
         public virtual bool IsActive
         {
             get { return isActive; }
@@ -221,7 +219,6 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-
 
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
@@ -632,7 +629,7 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
-        /// Only checks the id card(s). Much simpler and a bit different than HasRequiredItems.
+        /// Only checks if any of the Picked requirements are matched (used for checking id card(s)). Much simpler and a bit different than HasRequiredItems.
         /// </summary>
         public bool HasAccess(Character character)
         {
@@ -641,7 +638,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Item item in character.Inventory.Items)
             {
-                if (item?.Prefab.Identifier == "idcard" && requiredItems.Any(ri => ri.Value.Any(r => r.MatchesItem(item))))
+                if (requiredItems.Any(ri => ri.Value.Any(r => r.Type == RelatedItem.RelationType.Picked && r.MatchesItem(item))))
                 {
                     return true;
                 }
@@ -741,14 +738,14 @@ namespace Barotrauma.Items.Components
             { 
                 foreach (XAttribute attribute in componentElement.Attributes())
                 {
-                    if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) continue;
+                    if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
                     property.TrySetValue(this, attribute.Value);
                 }
                 ParseMsg();
                 OverrideRequiredItems(componentElement);
             }
 
-            if (item.Submarine != null) { SerializableProperty.UpgradeGameVersion(this, originalElement, item.Submarine.GameVersion); }
+            if (item.Submarine != null) { SerializableProperty.UpgradeGameVersion(this, originalElement, item.Submarine.Info.GameVersion); }
         }
 
         /// <summary>

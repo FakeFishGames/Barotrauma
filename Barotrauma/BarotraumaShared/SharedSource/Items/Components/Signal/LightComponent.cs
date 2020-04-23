@@ -15,13 +15,13 @@ namespace Barotrauma.Items.Components
         private float lightBrightness;
         private float blinkFrequency;
         private float range;
-        private float flicker;
+        private float flicker, flickerState;
         private bool castShadows;
         private bool drawBehindSubs;
 
         private float blinkTimer;
 
-        private bool itemLoaded;
+        private double lastToggleSignalTime;
 
         public PhysicsBody ParentBody;
 
@@ -34,6 +34,7 @@ namespace Barotrauma.Items.Components
             {
                 range = MathHelper.Clamp(value, 0.0f, 4096.0f);
 #if CLIENT
+                item.ResetCachedVisibleSize();
                 if (light != null) { light.Range = range; }
 #endif
             }
@@ -78,13 +79,11 @@ namespace Barotrauma.Items.Components
                 if (IsActive == value) { return; }
 
                 IsActive = value;
-#if SERVER
-                if (GameMain.Server != null && itemLoaded) { item.CreateServerEvent(this); }
-#endif
+                OnStateChanged();
             }
         }
 
-        [Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
+        [Editable, Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -92,6 +91,13 @@ namespace Barotrauma.Items.Components
             {
                 flicker = MathHelper.Clamp(value, 0.0f, 1.0f);
             }
+        }
+
+        [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
+        public float FlickerSpeed
+        {
+            get;
+            set;
         }
 
         [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
@@ -115,6 +121,13 @@ namespace Barotrauma.Items.Components
                 if (light != null) light.Color = IsActive ? lightColor : Color.Transparent;
 #endif
             }
+        }
+
+        [Serialize(false, false, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
+        public bool IgnoreContinuousToggle
+        {
+            get;
+            set;
         }
 
         public override void Move(Vector2 amount)
@@ -158,14 +171,7 @@ namespace Barotrauma.Items.Components
             IsActive = IsOn;
             item.AddTag("light");
         }
-
-        public override void OnItemLoaded()
-        {
-            base.OnItemLoaded();
-            itemLoaded = true;
-            SetLightSourceState(IsActive, lightBrightness);
-        }
-
+        
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.AiTarget != null)
@@ -219,7 +225,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                lightBrightness = MathHelper.Lerp(lightBrightness, Math.Min(Voltage, 1.0f), 0.1f);
+                lightBrightness = MathHelper.Lerp(lightBrightness, powerConsumption <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f), 0.1f);
             }
 
             if (blinkFrequency > 0.0f)
@@ -233,7 +239,10 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                SetLightSourceState(true, lightBrightness * (1.0f - Rand.Range(0.0f, flicker)));
+                flickerState += deltaTime * FlickerSpeed;
+                flickerState %= 255;
+                float noise = PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * flicker;
+                SetLightSourceState(true, lightBrightness * (1.0f - noise));
             }
 
             if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
@@ -249,25 +258,26 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        partial void OnStateChanged();
+
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             switch (connection.Name)
             {
                 case "toggle":
-                    IsActive = !IsActive;
+                    if (!IgnoreContinuousToggle || lastToggleSignalTime < Timing.TotalTime - 0.1)
+                    {
+                        IsOn = !IsOn;
+                    }
+                    lastToggleSignalTime = Timing.TotalTime;
                     break;
                 case "set_state":
-                    IsActive = (signal != "0");
+                    IsOn = signal != "0";
                     break;
                 case "set_color":
                     LightColor = XMLExtensions.ParseColor(signal, false);
                     break;
             }
-        }
-
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            msg.Write(IsOn);
         }
 
         private void UpdateAITarget(AITarget target)

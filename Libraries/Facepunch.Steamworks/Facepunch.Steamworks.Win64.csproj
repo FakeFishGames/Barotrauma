@@ -31,6 +31,22 @@
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|x64'">
+	  <NoWarn>1701;1702;1591;1587</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|x64'">
+	  <NoWarn>1701;1702;1591;1587</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.1|AnyCPU'">
+	  <NoWarn>1701;1702;1591;1587</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.1|AnyCPU'">
+	  <NoWarn>1701;1702;1591;1587</NoWarn>
+	</PropertyGroup>
+
 	<Import Project="Facepunch.Steamworks.targets" />
 
 </Project>

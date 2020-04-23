@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +38,9 @@ namespace Barotrauma
             }
         }
 
+        private static bool shouldRecreateHudTexts = true;
+        private static bool heldDownShiftWhenGotHudTexts;
+
         private static bool ShouldDrawInventory(Character character)
         {
             return 
@@ -61,7 +65,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.Inventory != null)
                 {
@@ -90,7 +94,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) { return; }
             
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
                 {
@@ -140,7 +144,11 @@ namespace Barotrauma
                 else
                 {
                     focusedItemOverlayTimer = Math.Max(focusedItemOverlayTimer - deltaTime, 0.0f);
-                    if (focusedItemOverlayTimer <= 0.0f) focusedItem = null;
+                    if (focusedItemOverlayTimer <= 0.0f)
+                    {
+                        focusedItem = null;
+                        shouldRecreateHudTexts = true;
+                    }
                 }
             }
 
@@ -154,6 +162,7 @@ namespace Barotrauma
                 brokenItemsCheckTimer = 1.0f;
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
                     if (!item.Repairables.Any(r => item.ConditionPercentage <= r.AIRepairThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
@@ -201,27 +210,27 @@ namespace Barotrauma
                     Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
             }
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
                     DrawCharacterHoverTexts(spriteBatch, cam, character);
                 }
 
-                float circleSize;
                 if (character.FocusedItem != null)
                 {
                     if (focusedItem != character.FocusedItem)
                     {
                         focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
+                        shouldRecreateHudTexts = true;
                     }
-                    focusedItem = character.FocusedItem;                    
+                    focusedItem = character.FocusedItem;
                 }
 
                 if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
                 {
                     Vector2 circlePos = cam.WorldToScreen(focusedItem.DrawPosition);
-                    circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
+                    float circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
                     circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
                     if (circleSize > 0.0f)
                     {
@@ -237,7 +246,14 @@ namespace Barotrauma
 
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
-                        var hudTexts = focusedItem.GetHUDTexts(character);
+                        bool shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+                        if(shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        {
+                            shouldRecreateHudTexts = true;
+                            heldDownShiftWhenGotHudTexts = shiftDown;
+                        }
+                        var hudTexts = focusedItem.GetHUDTexts(character, shouldRecreateHudTexts);
+                        shouldRecreateHudTexts = false;
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
@@ -309,7 +325,7 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)));
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2((int)(-4 * GUI.Scale), (int)(2 * GUI.Scale)), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
                     }
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
@@ -327,7 +343,7 @@ namespace Barotrauma
                 }
             }
 
-            if (!character.IsUnconscious && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f)
             {
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
                 {

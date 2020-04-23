@@ -286,7 +286,7 @@ namespace Barotrauma
             {
                 bool inWater = limb.inWater;
                 if (character.CurrentHull != null &&
-                    character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height &&
+                    character.CurrentHull.Surface > character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height + 5.0f &&
                     limb.SimPosition.Y < ConvertUnits.ToSimUnits(character.CurrentHull.Rect.Y - character.CurrentHull.Rect.Height) + limb.body.GetMaxExtent())
                 {
                     inWater = true;
@@ -370,6 +370,7 @@ namespace Barotrauma
             foreach (var deformation in SpriteDeformations)
             {
                 if (character.IsDead && deformation.Params.StopWhenHostIsDead) { continue; }
+                if (!character.AnimController.InWater && deformation.Params.OnlyInWater) { continue; }
                 if (deformation.Params.UseMovementSine)
                 {
                     if (this is AnimController animator)

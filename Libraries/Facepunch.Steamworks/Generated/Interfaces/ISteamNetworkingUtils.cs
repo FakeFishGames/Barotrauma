@@ -204,11 +204,11 @@ namespace Steamworks
 		
 		#region FunctionMeta
 		[UnmanagedFunctionPointer( Platform.MemberConvention )]
-		private delegate void FSetDebugOutputFunction( IntPtr self, DebugOutputType eDetailLevel, FSteamNetworkingSocketsDebugOutput pfnFunc );
+		private delegate void FSetDebugOutputFunction( IntPtr self, DebugOutputType eDetailLevel, IntPtr pfnFunc );
 		private FSetDebugOutputFunction _SetDebugOutputFunction;
 		
 		#endregion
-		internal void SetDebugOutputFunction( DebugOutputType eDetailLevel, FSteamNetworkingSocketsDebugOutput pfnFunc )
+		internal void SetDebugOutputFunction( DebugOutputType eDetailLevel, IntPtr pfnFunc )
 		{
 			_SetDebugOutputFunction( Self, eDetailLevel, pfnFunc );
 		}

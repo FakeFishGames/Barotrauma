@@ -62,7 +62,7 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "skill") { continue; }
+                if (!subElement.Name.ToString().Equals("skill", System.StringComparison.OrdinalIgnoreCase)) { continue; }
                 string skillIdentifier = subElement.GetAttributeString("identifier", "");
                 if (string.IsNullOrEmpty(skillIdentifier)) { continue; }
                 skills.Add(
@@ -80,8 +80,8 @@ namespace Barotrauma
 
         public float GetSkillLevel(string skillIdentifier)
         {
+            if (string.IsNullOrWhiteSpace(skillIdentifier)) { return 0.0f; }
             skills.TryGetValue(skillIdentifier, out Skill skill);
-
             return (skill == null) ? 0.0f : skill.Level;
         }
 

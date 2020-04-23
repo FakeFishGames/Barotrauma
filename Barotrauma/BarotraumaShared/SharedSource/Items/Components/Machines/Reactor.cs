@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
@@ -189,7 +190,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
                 {
-                    GameServer.Log(lastUser.LogName + " adjusted reactor settings: " +
+                    GameServer.Log(GameServer.CharacterLogName(lastUser) + " adjusted reactor settings: " +
                             "Temperature: " + (int)(temperature * 100.0f) +
                             ", Fission rate: " + (int)targetFissionRate +
                             ", Turbine output: " + (int)targetTurbineOutput +
@@ -648,6 +649,20 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
+                        unsentChanges = true;
+                    }
+                    break;
+                case "set_fissionrate":
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
+                    {
+                        FissionRate = newFissionRate;
+                        unsentChanges = true;
+                    }
+                    break;
+                case "set_turbineoutput":
+                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
+                    {
+                        TurbineOutput = newTurbineOutput;
                         unsentChanges = true;
                     }
                     break;

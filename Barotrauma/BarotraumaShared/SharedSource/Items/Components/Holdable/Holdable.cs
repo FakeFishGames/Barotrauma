@@ -344,7 +344,7 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
 
 #if SERVER
-                if (!alreadyEquipped) GameServer.Log(character.LogName + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (!alreadyEquipped) GameServer.Log(GameServer.CharacterLogName(character) + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
             }
         }
@@ -355,7 +355,7 @@ namespace Barotrauma.Items.Components
 
             picker.DeselectItem(item);
 #if SERVER
-            GameServer.Log(character.LogName + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+            GameServer.Log(GameServer.CharacterLogName(character) + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
 
             item.body.PhysEnabled = true;
@@ -419,7 +419,7 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                     if (picker != null)
                     {
-                        GameServer.Log(picker.LogName + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(picker) + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
                 }
 #endif

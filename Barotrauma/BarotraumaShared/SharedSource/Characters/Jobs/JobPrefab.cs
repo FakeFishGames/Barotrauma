@@ -146,6 +146,7 @@ namespace Barotrauma
             private set;
         }
 
+        // TODO: not used
         [Serialize(10.0f, false)]
         public float Commonness
         {
@@ -262,7 +263,7 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().ToLowerInvariant() == "nojob") { continue; }
+                if (element.Name.ToString().Equals("nojob", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)

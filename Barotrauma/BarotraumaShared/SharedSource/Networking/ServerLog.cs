@@ -11,7 +11,9 @@ namespace Barotrauma.Networking
         private struct LogMessage
         {
             public readonly string Text;
+            public readonly string SanitizedText;
             public readonly MessageType Type;
+            public readonly List<RichTextData> RichData;
 
             public LogMessage(string text, MessageType type)
             {
@@ -23,6 +25,7 @@ namespace Barotrauma.Networking
                 {
                     Text = $"[{DateTime.Now.ToString()}]\n  {TextManager.GetServerMessage(text)}";
                 }
+                RichData = RichTextData.GetRichTextData(Text, out SanitizedText);
 
                 Type = type;
             }
@@ -38,6 +41,7 @@ namespace Barotrauma.Networking
             Wiring,
             ServerMessage,
             ConsoleUsage,
+            Karma,
             Error,
         }
 
@@ -51,6 +55,7 @@ namespace Barotrauma.Networking
             { MessageType.Wiring, new Color(255, 157, 85) },
             { MessageType.ServerMessage, new Color(157, 225, 160) },
             { MessageType.ConsoleUsage, new Color(0, 162, 232) },
+            { MessageType.Karma, new Color(75, 88, 255) },
             { MessageType.Error, Color.Red },
         };
 
@@ -64,6 +69,7 @@ namespace Barotrauma.Networking
             { MessageType.Wiring, "Wiring" },
             { MessageType.ServerMessage, "ServerMessage" },
             { MessageType.ConsoleUsage, "ConsoleUsage" },
+            { MessageType.Karma, "Karma" },
             { MessageType.Error, "Error" }
         };
 
@@ -101,12 +107,12 @@ namespace Barotrauma.Networking
         {
             //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
 
+            var newText = new LogMessage(line, messageType);
+
 #if SERVER
-            DebugConsole.NewMessage(line, messageColor[messageType]); //TODO: REMOVE
+            DebugConsole.NewMessage(newText.SanitizedText, messageColor[messageType]); //TODO: REMOVE
 #endif
 
-            var newText = new LogMessage(line, messageType);
-            
             lines.Enqueue(newText);
 
 #if CLIENT
@@ -134,7 +140,7 @@ namespace Barotrauma.Networking
 #if CLIENT
             while (listBox != null && listBox.Content.CountChildren > LinesPerFile)
             {
-                listBox.RemoveChild(listBox.Content.Children.First());
+                listBox.RemoveChild(reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
             }
 #endif
         }
@@ -167,7 +173,7 @@ namespace Barotrauma.Networking
 
             try
             {
-                File.WriteAllLines(filePath, lines.Select(l => l.Text));
+                File.WriteAllLines(filePath, lines.Select(l => l.SanitizedText));
             }
             catch (Exception e)
             {

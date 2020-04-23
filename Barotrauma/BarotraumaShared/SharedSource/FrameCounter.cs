@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Barotrauma
@@ -42,7 +43,7 @@ namespace Barotrauma
         public float GetAverageElapsedMillisecs(string identifier)
         {
             if (!avgTicksPerFrame.ContainsKey(identifier)) return 0.0f;
-            return avgTicksPerFrame[identifier] / (float)TimeSpan.TicksPerMillisecond;
+            return avgTicksPerFrame[identifier]  * 1000.0f / (float)Stopwatch.Frequency;
         }
 
         public bool Update(double deltaTime)

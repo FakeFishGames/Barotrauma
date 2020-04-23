@@ -1,7 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using FarseerPhysics.Dynamics;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using FarseerPhysics;
@@ -54,7 +54,7 @@ namespace Barotrauma
             if (renderer == null) return;
             renderer.Draw(spriteBatch, cam);
 
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
                 foreach (InterestingPosition pos in positionsOfInterest)
                 {
@@ -77,6 +77,35 @@ namespace Barotrauma
                     ruinArea.Y = -ruinArea.Y - ruinArea.Height;
 
                     GUI.DrawRectangle(spriteBatch, ruinArea, Color.DarkSlateBlue, false, 0, 5);
+                }
+
+                foreach (var positions in wreckPositions.Values)
+                {
+                    for (int i = 0; i < positions.Count; i++)
+                    {
+                        float t = (i + 1) / (float)positions.Count;
+                        float multiplier = MathHelper.Lerp(0, 1, t);
+                        Color color = Color.Red * multiplier;
+                        var pos = positions[i];
+                        pos.Y = -pos.Y;
+                        var size = new Vector2(100);
+                        GUI.DrawRectangle(spriteBatch, pos - size / 2, size, color, thickness: 10);
+                        if (i < positions.Count - 1)
+                        {
+                            var nextPos = positions[i + 1];
+                            nextPos.Y = -nextPos.Y;
+                            GUI.DrawLine(spriteBatch, pos, nextPos, color, width: 10);
+                        }
+                    }
+                }
+                foreach (var rects in blockedRects.Values)
+                {
+                    foreach (var rect in rects)
+                    {
+                        Rectangle newRect = rect;
+                        newRect.Y = -newRect.Y;
+                        GUI.DrawRectangle(spriteBatch, newRect, Color.Red, thickness: 5);
+                    }
                 }
             }
         }

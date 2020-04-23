@@ -66,7 +66,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).ToLowerInvariant() == "vanilla 0.9.xml");
+                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
                 }
                 return vanillaContent;
             }
@@ -112,6 +112,8 @@ namespace Barotrauma
 
         public event Action OnResolutionChanged;
 
+        private bool exiting;
+
         public static GameMain Instance
         {
             get;
@@ -144,7 +146,17 @@ namespace Barotrauma
 
         public static bool WindowActive
         {
-            get { return Instance == null || Instance.IsActive; }
+            get
+            {
+                try
+                {
+                    return Instance != null && !Instance.exiting && Instance.IsActive;
+                }
+                catch (NullReferenceException)
+                {
+                    return false;
+                }
+            }
         }
 
         public static GameClient Client;
@@ -179,10 +191,14 @@ namespace Barotrauma
         {
             Content.RootDirectory = "Content";
 
-            GraphicsDeviceManager = new GraphicsDeviceManager(this);
-
-            GraphicsDeviceManager.IsFullScreen = false;
-            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
+#if DEBUG && WINDOWS
+            GraphicsAdapter.UseDebugLayers = true;
+#endif
+            GraphicsDeviceManager = new GraphicsDeviceManager(this)
+            {
+                IsFullScreen = false,
+                GraphicsProfile = GfxProfile
+            };
             GraphicsDeviceManager.ApplyChanges();
 
             Window.Title = "Barotrauma";
@@ -329,6 +345,8 @@ namespace Barotrauma
             //do this here because we need it for the loading screen
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
 
+            Quad.Init(GraphicsDevice);
+
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice)
             {
@@ -385,6 +403,13 @@ namespace Barotrauma
             }
         }
 
+        public class LoadingException : Exception
+        {
+            public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
+            {
+            }
+        }
+
         private IEnumerable<object> Load(bool isSeparateThread)
         {
             if (GameSettings.VerboseLogging)
@@ -402,7 +427,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume * 20.0f, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Math.Min(Config.VoiceChatVolume, 1.0f), 0);
 
             if (Config.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
             {
@@ -430,7 +455,7 @@ namespace Barotrauma
             {
                 bool waitingForWorkshopUpdates = true;
                 bool result = false;
-                TaskPool.Add(SteamManager.AutoUpdateWorkshopItems(), (task) =>
+                TaskPool.Add(SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
                     result = task.Result;
                     waitingForWorkshopUpdates = false;
@@ -503,6 +528,7 @@ namespace Barotrauma
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            WreckAIConfig.LoadAll();
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
@@ -518,6 +544,7 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
+            CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
 
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
 
@@ -527,7 +554,7 @@ namespace Barotrauma
             
             GameModePreset.Init();
 
-            Submarine.RefreshSavedSubs();
+            SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 65.0f;
         yield return CoroutineStatus.Running;
@@ -664,6 +691,8 @@ namespace Barotrauma
             {
 #if DEBUG
                 DebugConsole.ThrowError($"Failed to parse a Steam friend's connect invitation command ({connectCommand})", e);
+#else
+                DebugConsole.Log($"Failed to parse a Steam friend's connect invitation command ({connectCommand})\n" + e.StackTrace);
 #endif
                 ConnectName = null;
                 ConnectEndpoint = null;
@@ -756,12 +785,7 @@ namespace Barotrauma
 
                     if (!hasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
-                        string errMsg = "Loading was interrupted due to an error";
-                        if (loadingCoroutine.Exception != null)
-                        {
-                            errMsg += ": " + loadingCoroutine.Exception.Message + "\n" + loadingCoroutine.Exception.StackTrace;
-                        }
-                        throw new Exception(errMsg);
+                        throw new LoadingException(loadingCoroutine.Exception);
                     }
                 }
                 else if (hasLoaded)
@@ -823,6 +847,10 @@ namespace Barotrauma
                         {
                             (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
                         }
+                        else if (GameSession.IsTabMenuOpen)
+                        {
+                            gameSession.ToggleTabMenu();
+                        }
                         else if (GUI.PauseMenuOpen)
                         {
                             GUI.TogglePauseMenu();
@@ -831,7 +859,8 @@ namespace Barotrauma
                         else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
                             && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
-                            && !CrewManager.IsCommandInterfaceOpen)
+                            && !CrewManager.IsCommandInterfaceOpen
+                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled.SelectedConstruction != null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -922,7 +951,7 @@ namespace Barotrauma
 
                 sw.Stop();
                 PerformanceCounter.AddElapsedTicks("Update total", sw.ElapsedTicks);
-                PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+                PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
                 PerformanceCounter.UpdateIterationsGraph.Update(updateIterations);
             }
 
@@ -944,10 +973,13 @@ namespace Barotrauma
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
-            double step = 1.0 / Timing.FrameLimit;
-            while (!Config.VSyncEnabled && sw.Elapsed.TotalSeconds + deltaTime < step)
+            if (Timing.FrameLimit > 0)
             {
-                Thread.Sleep(1);
+                double step = 1.0 / Timing.FrameLimit;
+                while (!Config.VSyncEnabled && sw.Elapsed.TotalSeconds + deltaTime < step)
+                {
+                    Thread.Sleep(1);
+                }
             }
 
             PerformanceCounter.Update(sw.Elapsed.TotalSeconds + deltaTime);
@@ -972,7 +1004,7 @@ namespace Barotrauma
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
-            PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+            PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
         }
 
 
@@ -1101,7 +1133,10 @@ namespace Barotrauma
                 UserData = "https://steamcommunity.com/app/602960/discussions/1/",
                 OnClicked = (btn, userdata) =>
                 {
-                    SteamManager.OverlayCustomURL(userdata as string);
+                    if (!SteamManager.OverlayCustomURL(userdata as string))
+                    {
+                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
+                    }
                     msgBox.Close();
                     return true;
                 }
@@ -1138,7 +1173,9 @@ namespace Barotrauma
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            if (NetworkMember != null) NetworkMember.Disconnect();
+            exiting = true;
+            DebugConsole.NewMessage("Exiting...");
+            NetworkMember?.Disconnect();
             SteamManager.ShutDown();
 
             try

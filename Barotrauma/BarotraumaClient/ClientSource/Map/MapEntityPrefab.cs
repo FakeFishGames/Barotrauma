@@ -8,6 +8,12 @@ namespace Barotrauma
     {
         public virtual void UpdatePlacing(Camera cam)
         {
+            if (PlayerInput.SecondaryMouseButtonClicked())
+            {
+                selected = null;
+                return;
+            }
+            
             Vector2 placeSize = Submarine.GridSize;
 
             if (placePosition == Vector2.Zero)
@@ -40,12 +46,6 @@ namespace Barotrauma
                 }
 
                 newRect.Y = -newRect.Y;
-            }
-
-            if (PlayerInput.SecondaryMouseButtonHeld())
-            {
-                placePosition = Vector2.Zero;
-                selected = null;
             }
         }
 

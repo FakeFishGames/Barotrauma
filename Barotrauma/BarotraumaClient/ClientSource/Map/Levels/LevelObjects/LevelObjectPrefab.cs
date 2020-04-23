@@ -161,7 +161,7 @@ namespace Barotrauma
                 bool elementFound = false;
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "overridecommonness"
+                    if (subElement.Name.ToString().Equals("overridecommonness", System.StringComparison.OrdinalIgnoreCase)
                         && subElement.GetAttributeString("leveltype", "") == overrideCommonness.Key)
                     {
                         subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);

@@ -222,6 +222,13 @@ namespace Barotrauma
                     }
                 }
 
+#if DEBUG
+                if (GameMain.Config != null && GameMain.Config.TextManagerDebugModeEnabled)
+                {
+                    return textTag;
+                }
+#endif
+
                 foreach (TextPack textPack in textPacks[Language])
                 {
                     string text = textPack.Get(textTag);
@@ -297,6 +304,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < variableTags.Length; i++)
                 {
+                    if (string.IsNullOrEmpty(variableValues[i])) { continue; }
                     if (formatCapitals[i])
                     {
                         variableValues[i] = HandleVariableCapitalization(text, variableTags[i], variableValues[i]);
@@ -306,6 +314,13 @@ namespace Barotrauma
 
             for (int i = 0; i < variableTags.Length; i++)
             {
+                if (variableValues[i] == null) 
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Error in TextManager.GetWithVariables (variable " + i + " was null).\n" + Environment.StackTrace);
+#endif
+                    continue; 
+                }
                 text = text.Replace(variableTags[i], variableValues[i]);
             }
 
@@ -634,6 +649,37 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("TextManager.GetServerMessage:" + serverMessage, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return errorMsg;
             }
+        }
+
+        /// <summary>
+        /// Fetches a single variable from a servermessage
+        /// </summary>
+        public static string GetServerMessageVariable(string message, string variable)
+        {
+            int variableIndex = message.IndexOf(variable);
+            if (variableIndex == -1)
+            {
+#if DEBUG
+                DebugConsole.ThrowError($"Server message variable: '{variable}' not found in message: '{message}'");
+#endif
+                return string.Empty;
+            }
+
+            int startIndex = message.IndexOf('=', variableIndex) + 1;
+            int endIndex = startIndex;
+
+            for (int i = startIndex; i < message.Length; i++)
+            {
+                if (message[i] == '/' || message[i] == '~')
+                {
+                    endIndex = i;
+                    break;
+                }
+            }
+
+            if (endIndex == startIndex) endIndex = message.Length;
+
+            return message.Substring(startIndex, endIndex - startIndex);
         }
 
         public static bool IsServerMessageWithVariables(string message)

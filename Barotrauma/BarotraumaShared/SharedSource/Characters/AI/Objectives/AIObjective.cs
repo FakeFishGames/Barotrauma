@@ -30,6 +30,7 @@ namespace Barotrauma
 
         public virtual bool KeepDivingGearOn => false;
         public virtual bool UnequipItems => false;
+        public virtual bool AllowOutsideSubmarine => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -182,11 +183,18 @@ namespace Barotrauma
             }
         }
 
+        protected bool IsAllowed => AllowOutsideSubmarine || character.Submarine != null && character.Submarine.TeamID == character.TeamID && character.Submarine.Info.IsPlayer;
+
         /// <summary>
         /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
         /// </summary>
         public virtual float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (objectiveManager.CurrentOrder == this)
             {
                 Priority = AIObjectiveManager.OrderPriority;

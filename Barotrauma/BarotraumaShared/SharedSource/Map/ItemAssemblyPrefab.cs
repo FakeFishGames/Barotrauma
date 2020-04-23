@@ -89,7 +89,7 @@ namespace Barotrauma
             CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
         }
 
-        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub)
+        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)
         {
             List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
             if (entities.Count == 0) return entities;
@@ -107,10 +107,10 @@ namespace Barotrauma
 
             MapEntity.MapLoaded(entities, true);
 #if CLIENT
-            if (Screen.Selected == GameMain.SubEditorScreen)
+            if (Screen.Selected == GameMain.SubEditorScreen && selectPrefabs)
             {
                 MapEntity.SelectedList.Clear();
-                entities.ForEach(e => MapEntity.AddSelection(e));
+                entities.ForEach(MapEntity.AddSelection);
             }
 #endif   
             return entities;

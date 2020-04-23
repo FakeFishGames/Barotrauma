@@ -64,7 +64,7 @@ namespace Barotrauma
             return Submarine.Loaded.FindAll(s =>
                 s != leavingSub &&
                 !leavingSub.DockedTo.Contains(s) &&
-                s != Level.Loaded.StartOutpost && s != Level.Loaded.EndOutpost &&
+                s.Info.Type == SubmarineInfo.SubmarineType.Player &&
                 (s.AtEndPosition != leavingSub.AtEndPosition || s.AtStartPosition != leavingSub.AtStartPosition));
         }
 
@@ -80,7 +80,7 @@ namespace Barotrauma
             {
                 foreach (Structure wall in Structure.WallList)
                 {
-                    if (wall.Submarine == null || wall.Submarine.IsOutpost) { continue; }
+                    if (wall.Submarine == null || wall.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                     if (wall.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(wall.Submarine))
                     {
                         for (int i = 0; i < wall.SectionCount; i++)
@@ -95,7 +95,7 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Submarine == null || item.Submarine.IsOutpost) { continue; }
+                    if (item.Submarine == null || item.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                     if (item.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(item.Submarine))
                     {
                         if (item.GetComponent<Items.Components.Repairable>() != null)

@@ -1,17 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using Barotrauma.Items.Components;
-using System.Linq;
 
 namespace Barotrauma
 {
     partial class WayPoint : MapEntity
     {
-        private static Texture2D iconTexture;
-        private const int IconSize = 32;
-        private static int[] iconIndices = { 3, 0, 1, 2 };
+        private static Dictionary<SpawnType, Sprite> iconSprites;
+        private const int WaypointSize = 12, SpawnPointSize = 32;
 
         public override bool IsVisible(Rectangle worldView)
         {
@@ -23,64 +22,72 @@ namespace Barotrauma
             get { return !IsHidden(); }
         }
 
+
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (!editing && !GameMain.DebugDraw) { return; }
-
+            if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) { return; }
             if (IsHidden()) { return; }
 
-            //Rectangle drawRect =
-            //    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
-
             Vector2 drawPos = Position;
-            if (Submarine != null) drawPos += Submarine.DrawPosition;
+            if (Submarine != null) { drawPos += Submarine.DrawPosition; }
             drawPos.Y = -drawPos.Y;
 
-            Color clr = currentHull == null ? Color.Blue : Color.White;
+            Draw(spriteBatch, drawPos);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 drawPos)
+        {
+            Color clr = currentHull == null ? Color.CadetBlue : GUI.Style.Green;
+            if (spawnType != SpawnType.Path) { clr = Color.Gray; }
             if (isObstructed)
             {
                 clr = Color.Black;
             }
-            if (IsSelected) clr = GUI.Style.Red;
-            if (IsHighlighted) clr = Color.DarkRed;
+            if (IsHighlighted || IsHighlighted) { clr = Color.Lerp(clr, Color.White, 0.8f); }
 
-            int iconX = iconIndices[(int)spawnType] * IconSize % iconTexture.Width;
-            int iconY = (int)(Math.Floor(iconIndices[(int)spawnType] * IconSize / (float)iconTexture.Width)) * IconSize;
+            int iconSize = spawnType == SpawnType.Path ? WaypointSize : SpawnPointSize;
+            if (ConnectedGap != null || Ladders != null || Stairs != null || SpawnType != SpawnType.Path) { iconSize = (int)(iconSize * 1.5f); }
 
-            int iconSize = IconSize;
-            if (ConnectedGap != null)
+            if (IsSelected || IsHighlighted)
             {
-                iconSize = (int)(iconSize * 1.5f);
-            }
-            if (Ladders != null)
-            {
-                iconSize = (int)(iconSize * 1.5f);
-            }
-            if (Stairs != null)
-            {
-                iconSize = (int)(iconSize * 1.5f);
+                int glowSize = (int)(iconSize * 1.5f);
+                GUI.Style.UIGlowCircular.Draw(spriteBatch,
+                    new Rectangle((int)(drawPos.X - glowSize / 2), (int)(drawPos.Y - glowSize / 2), glowSize, glowSize),
+                    Color.White);
             }
 
-            spriteBatch.Draw(iconTexture,
-                new Rectangle((int)(drawPos.X - iconSize / 2), (int)(drawPos.Y - iconSize / 2), iconSize, iconSize),
-                new Rectangle(iconX, iconY, IconSize, IconSize), clr);
-
-            //GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height), clr, true);
-
-            //GUI.SmallFont.DrawString(spriteBatch, Position.ToString(), new Vector2(Position.X, -Position.Y), Color.White);
+            Sprite sprite = iconSprites[SpawnType];
+            if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
+            {
+                sprite = iconSprites[SpawnType.Path];
+            }
+            sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
+            sprite.RelativeOrigin = Vector2.One * 0.5f;
+            if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
+            {
+                AssignedJob.Icon.Draw(spriteBatch, drawPos, AssignedJob.UIColor, scale: iconSize / (float)AssignedJob.Icon.SourceRect.Width * 0.8f, depth: 0.0f);
+            }
 
             foreach (MapEntity e in linkedTo)
             {
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    isObstructed ? Color.Gray : GUI.Style.Green, width: 5);
+                    (isObstructed ? Color.Gray : GUI.Style.Green) * 0.7f, width: 5, depth: 0.002f);
             }
 
             GUI.SmallFont.DrawString(spriteBatch,
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
                 Color.WhiteSmoke);
+        }
+
+        public override bool IsMouseOn(Vector2 position)
+        {
+            if (IsHidden()) { return false; }
+            float dist = Vector2.DistanceSquared(position, WorldPosition);
+            float radius = (SpawnType == SpawnType.Path ? WaypointSize : SpawnPointSize) * 0.6f;
+            return dist < radius * radius;
         }
 
         private bool IsHidden()
@@ -101,59 +108,72 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD();
             }
-            
+
             if (IsSelected && PlayerInput.PrimaryMouseButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-                // Update gaps, ladders, and stairs
-                UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
+                if (PlayerInput.KeyDown(Keys.Space))
                 {
-                    if (ConnectedGap == gap)
+                    foreach (MapEntity e in mapEntityList)
                     {
-                        ConnectedGap = null;
-                    }
-                });
-                UpdateLinkedEntity(position, Item.ItemList, i =>
-                {
-                    var ladder = i?.GetComponent<Ladder>();
-                    if (ladder != null)
-                    {
-                        Ladders = ladder;
-                    }
-                }, i =>
-                {
-                    var ladder = i?.GetComponent<Ladder>();
-                    if (ladder != null)
-                    {
-                        if (Ladders == ladder)
+                        if (e.GetType() != typeof(WayPoint)) continue;
+                        if (e == this) continue;
+
+                        if (!Submarine.RectContains(e.Rect, position)) continue;
+
+                        if (linkedTo.Contains(e))
                         {
-                            Ladders = null;
+                            linkedTo.Remove(e);
+                            e.linkedTo.Remove(this);
+                        }
+                        else
+                        {
+                            linkedTo.Add(e);
+                            e.linkedTo.Add(this);
                         }
                     }
-                }, inflate: 5);
-                // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
-                //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
-                //UpdateLinkedEntity(position, stairList, s =>
-                //{
-                //    Stairs = s;
-                //}, s =>
-                //{
-                //    if (Stairs == s)
-                //    {
-                //        Stairs = null;
-                //    }
-                //});
-
-                foreach (MapEntity e in mapEntityList)
+                }
+                else
                 {
-                    if (e.GetType() != typeof(WayPoint)) continue;
-                    if (e == this) continue;
-
-                    if (!Submarine.RectContains(e.Rect, position)) continue;
-
-                    linkedTo.Add(e);
-                    e.linkedTo.Add(this);
+                    // Update gaps, ladders, and stairs
+                    UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
+                    {
+                        if (ConnectedGap == gap)
+                        {
+                            ConnectedGap = null;
+                        }
+                    });
+                    UpdateLinkedEntity(position, Item.ItemList, i =>
+                    {
+                        var ladder = i?.GetComponent<Ladder>();
+                        if (ladder != null)
+                        {
+                            Ladders = ladder;
+                        }
+                    }, i =>
+                    {
+                        var ladder = i?.GetComponent<Ladder>();
+                        if (ladder != null)
+                        {
+                            if (Ladders == ladder)
+                            {
+                                Ladders = null;
+                            }
+                        }
+                    }, inflate: 5);
+                    // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
+                    //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
+                    //UpdateLinkedEntity(position, stairList, s =>
+                    //{
+                    //    Stairs = s;
+                    //}, s =>
+                    //{
+                    //    if (Stairs == s)
+                    //    {
+                    //        Stairs = null;
+                    //    }
+                    //});
                 }
             }
         }
@@ -178,14 +198,19 @@ namespace Barotrauma
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
             GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
-
             spawnType += (int)button.UserData;
-
-            if (spawnType > SpawnType.Cargo) spawnType = SpawnType.Human;
-            if (spawnType < SpawnType.Human) spawnType = SpawnType.Cargo;
-
+            var values = Enum.GetValues(typeof(SpawnType));
+            int firstIndex = 1;
+            int lastIndex = values.Length - 1;
+            if ((int)spawnType > lastIndex)
+            {
+                spawnType = (SpawnType)firstIndex;
+            }
+            if ((int)spawnType < firstIndex)
+            {
+                spawnType = (SpawnType)values.GetValue(lastIndex);
+            }
             spawnTypeText.Text = spawnType.ToString();
-
             return true;
         }
 

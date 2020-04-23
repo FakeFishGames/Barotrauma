@@ -13,6 +13,7 @@ namespace Barotrauma
         SelectNextCharacter,
         SelectPreviousCharacter,
         Voice,
+        LocalVoice,
         Deselect,
         Shoot,
         Command,

@@ -5,6 +5,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+#if CLIENT
+using Microsoft.Xna.Framework.Input;
+#endif
 
 namespace Barotrauma.Items.Components
 {
@@ -39,7 +42,7 @@ namespace Barotrauma.Items.Components
 
         const float MaxAttachDistance = 150.0f;
 
-        const float MinNodeDistance = 15.0f;
+        const float MinNodeDistance = 7.0f;
 
         const int MaxNodeCount = 255;
         const int MaxNodesPerNetworkEvent = 30;
@@ -176,6 +179,8 @@ namespace Barotrauma.Items.Components
                 Vector2 nodePos = refSub == null ? 
                     newConnection.Item.Position : 
                     newConnection.Item.Position - refSub.HiddenSubPosition;
+
+                nodePos = RoundNode(nodePos);
 
                 if (nodes.Count > 0 && nodes[0] == nodePos) { break; }
                 if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { break; }
@@ -334,7 +339,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+#if CLIENT
+                bool disableGrid = SubEditorScreen.IsSubEditor() && (PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift));
+                newNodePos = disableGrid ? item.Position : RoundNode(item.Position);
+#else
                 newNodePos = RoundNode(item.Position);
+#endif
                 if (sub != null) { newNodePos -= sub.HiddenSubPosition; }
                 canPlaceNode = true;
             }
@@ -497,6 +507,9 @@ namespace Barotrauma.Items.Components
                     sectionExtents.Y = Math.Max(Math.Abs(nodes[i].Y - item.Position.Y), sectionExtents.Y);
                 }
             }
+#if CLIENT
+            item.ResetCachedVisibleSize();
+#endif
         }
 
         public void ClearConnections(Character user = null)
@@ -507,7 +520,7 @@ namespace Barotrauma.Items.Components
             foreach (Item item in Item.ItemList)
             {
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(this))
+                if (connectionPanel != null && connectionPanel.DisconnectedWires.Contains(this) && !item.Removed)
                 {
 #if SERVER
                     item.CreateServerEvent(connectionPanel);
@@ -526,18 +539,18 @@ namespace Barotrauma.Items.Components
 
                 if (connections[0] != null && connections[1] != null)
                 {
-                    GameServer.Log(user.LogName + " disconnected a wire from " + 
+                    GameServer.Log(GameServer.CharacterLogName(user) + " disconnected a wire from " + 
                         connections[0].Item.Name + " (" + connections[0].Name + ") to "+
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[0] != null)
                 {
-                    GameServer.Log(user.LogName + " disconnected a wire from " +
+                    GameServer.Log(GameServer.CharacterLogName(user) + " disconnected a wire from " +
                         connections[0].Item.Name + " (" + connections[0].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
                 else if (connections[1] != null)
                 {
-                    GameServer.Log(user.LogName + " disconnected a wire from " +
+                    GameServer.Log(GameServer.CharacterLogName(user) + " disconnected a wire from " +
                         connections[1].Item.Name + " (" + connections[1].Name + ")", ServerLog.MessageType.ItemInteraction);
                 }
             }

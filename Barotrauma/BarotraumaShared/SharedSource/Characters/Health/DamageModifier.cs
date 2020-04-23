@@ -19,6 +19,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(1.0f, false), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 1)]
+        public float ProbabilityMultiplier
+        {
+            get;
+            private set;
+        }
+
         [Serialize("0.0,360", false), Editable]
         public Vector2 ArmorSector
         {

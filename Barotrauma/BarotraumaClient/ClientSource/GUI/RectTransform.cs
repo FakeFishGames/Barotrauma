@@ -651,6 +651,13 @@ namespace Barotrauma
             Parent.ChildrenChanged?.Invoke(this);
         }
 
+        public void ReverseChildren()
+        {
+            children.Reverse();
+            RecalculateAll(false, false, true);
+            Parent.ChildrenChanged?.Invoke(this);
+        }
+
         public void SetAsLastChild()
         {
             if (IsLastChild) { return; }

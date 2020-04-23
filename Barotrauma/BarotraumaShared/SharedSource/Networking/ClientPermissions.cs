@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
             {
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() != "command") continue;
+                    if (!subElement.Name.ToString().Equals("command", StringComparison.OrdinalIgnoreCase)) { continue; }
                     string commandName = subElement.GetAttributeString("name", "");
 
                     DebugConsole.Command command = DebugConsole.FindCommand(commandName);

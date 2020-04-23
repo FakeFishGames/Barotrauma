@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 #if USE_STEAM
 namespace Barotrauma.Steam
@@ -18,6 +20,8 @@ namespace Barotrauma.Steam
         }
 
         public const string MetadataFileName = "filelist.xml";
+
+        public const string CopyIndicatorFileName = ".copying";
 
         private static readonly Dictionary<string, int> tagCommonness = new Dictionary<string, int>()
         {
@@ -45,7 +49,7 @@ namespace Barotrauma.Steam
        
         private static bool isInitialized;
         public static bool IsInitialized => isInitialized;
-        
+
         public static void Initialize()
         {
             InitializeProjectSpecific();
@@ -70,27 +74,28 @@ namespace Barotrauma.Steam
             return Steamworks.SteamClient.Name;
         }
 
-        public static void OverlayCustomURL(string url)
-        {
-            if (!isInitialized || !Steamworks.SteamClient.IsValid)
-            {
-                return;
-            }
-
-            Steamworks.SteamFriends.OpenWebOverlay(url);
-        }
-        
-        public static bool UnlockAchievement(string achievementName)
+        public static bool OverlayCustomURL(string url)
         {
             if (!isInitialized || !Steamworks.SteamClient.IsValid)
             {
                 return false;
             }
 
-            DebugConsole.Log("Unlocked achievement \"" + achievementName + "\"");
+            Steamworks.SteamFriends.OpenWebOverlay(url);
+            return true;
+        }
+        
+        public static bool UnlockAchievement(string achievementIdentifier)
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid)
+            {
+                return false;
+            }
+
+            DebugConsole.Log("Unlocked achievement \"" + achievementIdentifier + "\"");
 
             var achievements = Steamworks.SteamUserStats.Achievements.ToList();
-            int achIndex = achievements.FindIndex(ach => ach.Name == achievementName);
+            int achIndex = achievements.FindIndex(ach => ach.Identifier == achievementIdentifier);
             bool unlocked = achIndex >= 0 ? achievements[achIndex].Trigger() : false;
             if (!unlocked)
             {
@@ -99,7 +104,7 @@ namespace Barotrauma.Steam
                 //(discovered[whateverbiomewasentered], kill[withwhateveritem], kill[somemonster] etc) so that we can add
                 //some types of new achievements without the need for client-side changes.
 #if DEBUG
-                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementName + "\".");
+                DebugConsole.NewMessage("Failed to unlock achievement \"" + achievementIdentifier + "\".");
 #endif
             }
 

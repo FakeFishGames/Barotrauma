@@ -18,14 +18,14 @@ float4 solidColor;
 
 struct VertexShaderInput
 {
-	float4 Position : SV_POSITION;
+	float4 Position : POSITION0;
 	float4 Color : COLOR0;
 	float2 TexCoords: TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
-	float4 Position : SV_POSITION;
+	float4 Position : POSITION0;
 	float4 Color : COLOR0;
 	float2 TexCoords: TEXCOORD0;
 }; 

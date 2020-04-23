@@ -75,8 +75,8 @@ namespace Barotrauma
             }
             else
             {
-                teamDead[0] = crews[0].All(c => c.IsDead || c.IsUnconscious);
-                teamDead[1] = crews[1].All(c => c.IsDead || c.IsUnconscious);
+                teamDead[0] = crews[0].All(c => c.IsDead || c.IsIncapacitated);
+                teamDead[1] = crews[1].All(c => c.IsDead || c.IsIncapacitated);
             }
 
             if (state == 0)

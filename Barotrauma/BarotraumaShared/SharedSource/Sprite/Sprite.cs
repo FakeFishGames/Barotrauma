@@ -47,7 +47,11 @@ namespace Barotrauma
         //the offset used when drawing the sprite
         protected Vector2 offset;
 
-        private bool lazyLoad;
+        public bool LazyLoad
+        {
+            get;
+            private set;
+        }
 
         protected Vector2 origin;
 
@@ -135,7 +139,7 @@ namespace Barotrauma
         public Sprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
         {
             if (element == null) { return; }
-            this.lazyLoad = lazyLoad;
+            this.LazyLoad = lazyLoad;
             SourceElement = element;
             if (!ParseTexturePath(path, file)) { return; }
             Name = SourceElement.GetAttributeString("name", null);
@@ -329,10 +333,10 @@ namespace Barotrauma
         {
             foreach (XElement subElement in SourceElement.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "override")
+                if (subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
                 {
                     string language = subElement.GetAttributeString("language", "");
-                    if (TextManager.Language.ToLower() == language.ToLower())
+                    if (TextManager.Language.Equals(language, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return subElement;
                     }

@@ -15,7 +15,8 @@ namespace Barotrauma.Networking
             ChangeProperty,
             Control,
             UpdateSkills,
-            Combine
+            Combine,
+            ExecuteAttack
         }
 
         public readonly Entity Entity;

@@ -570,7 +570,7 @@ namespace Barotrauma
             {
                 bool hexFailed = true;
                 stringColor = stringColor.Trim();
-                if (stringColor[0]=='#')
+                if (stringColor.Length > 0 && stringColor[0] == '#')
                 {
                     stringColor = stringColor.Substring(1);
 

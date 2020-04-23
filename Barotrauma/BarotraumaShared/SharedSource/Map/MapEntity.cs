@@ -36,8 +36,6 @@ namespace Barotrauma
         //is the mouse inside the rect
         private bool isHighlighted;
 
-        public event Action<Rectangle> Resized;
-
         public bool IsHighlighted
         {
             get { return isHighlighted || ExternalHighlight; }
@@ -115,6 +113,40 @@ namespace Barotrauma
             }
         }
 
+        // We could use NaN or nullables, but in this case the first is not preferable, because it needs to be checked every time the value is used.
+        // Nullable on the other requires boxing that we don't want to do too often, since it generates garbage.
+        public bool SpriteDepthOverrideIsSet { get; private set; }
+        public float SpriteOverrideDepth => SpriteDepth;
+        private float _spriteOverrideDepth = float.NaN;
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
+        public float SpriteDepth
+        {
+            get
+            {
+                if (SpriteDepthOverrideIsSet) { return _spriteOverrideDepth; }
+                return Sprite != null ? Sprite.Depth : 0;
+            }
+            set
+            {
+                if (!float.IsNaN(value))
+                {
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    if (this is Item) { _spriteOverrideDepth = Math.Min(_spriteOverrideDepth, 0.9f); }
+                    SpriteDepthOverrideIsSet = true;
+                }
+            }
+        }
+
+        [Serialize(1f, true), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+        public virtual float Scale { get; set; } = 1;
+
+        [Editable, Serialize(false, true)]
+        public bool HiddenInGame
+        {
+            get;
+            set;
+        }
+
         public override Vector2 Position
         {
             get
@@ -174,9 +206,6 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-
-        // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
-        private Memento<Rectangle> rectMemento;
 
         public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine)
         {
@@ -560,34 +589,5 @@ namespace Barotrauma
                 }
             }
         }
-
-        #region Serialized properties
-        // We could use NaN or nullables, but in this case the first is not preferable, because it needs to be checked every time the value is used.
-        // Nullable on the other requires boxing that we don't want to do too often, since it generates garbage.
-        public bool SpriteDepthOverrideIsSet { get; private set; }
-        public float SpriteOverrideDepth => SpriteDepth;
-        private float _spriteOverrideDepth = float.NaN;
-        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
-        public float SpriteDepth
-        {
-            get
-            {
-                if (SpriteDepthOverrideIsSet) { return _spriteOverrideDepth; }
-                return Sprite != null ? Sprite.Depth : 0;
-            }
-            set
-            {
-                if (!float.IsNaN(value))
-                {
-                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
-                    if (this is Item) { _spriteOverrideDepth = Math.Min(_spriteOverrideDepth, 0.9f); }
-                    SpriteDepthOverrideIsSet = true;
-                }
-            }
-        }
-        
-        [Serialize(1f, true), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
-        public virtual float Scale { get; set; } = 1;
-        #endregion
     }
 }

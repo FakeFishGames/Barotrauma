@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -35,7 +36,6 @@ namespace Barotrauma
 
     partial class Submarine : Entity, IServerSerializable
     {
-        public Sprite PreviewImage;
         public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
         {
             Vector2 position = PlayerInput.MousePosition;
@@ -56,6 +56,8 @@ namespace Barotrauma
         private static List<RoundSound> roundSounds = null;
         public static RoundSound LoadRoundSound(XElement element, bool stream = false)
         {
+            if (GameMain.SoundManager?.Disabled ?? true) { return null; }
+
             string filename = element.GetAttributeString("file", "");
             if (string.IsNullOrEmpty(filename)) filename = element.GetAttributeString("sound", "");
 
@@ -222,7 +224,7 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
-                    if (sub.subBody == null || sub.subBody.PositionBuffer.Count < 2) continue;
+                    if (sub.SubBody == null || sub.subBody.PositionBuffer.Count < 2) continue;
 
                     Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[0].Position);
                     prevPos.Y = -prevPos.Y;
@@ -245,7 +247,7 @@ namespace Barotrauma
         public static Color DamageEffectColor;
 
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
-        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
 
@@ -256,6 +258,10 @@ namespace Barotrauma
             {
                 if (e is Structure structure && structure.DrawDamageEffect)
                 {
+                    if (predicate != null)
+                    {
+                        if (!predicate(e)) continue;
+                    }
                     float drawDepth = structure.GetDrawDepth();
                     int i = 0;
                     while (i < depthSortedDamageable.Count)
@@ -329,125 +335,6 @@ namespace Barotrauma
             }
         }
 
-        public static bool SaveCurrent(string filePath, MemoryStream previewImage = null)
-        {
-            if (MainSub == null)
-            {
-                MainSub = new Submarine(filePath);
-            }
-
-            MainSub.filePath = filePath;
-            return MainSub.SaveAs(filePath, previewImage);
-        }
-
-        public void CreatePreviewWindow(GUIComponent parent)
-        {
-            var content = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform), style: null);
-
-            if (PreviewImage == null)
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
-            }
-            else
-            {
-                var submarinePreviewBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), style: null) { Color = Color.Black };
-                new GUIImage(new RectTransform(new Vector2(0.98f), submarinePreviewBackground.RectTransform, Anchor.Center), PreviewImage, scaleToFit: true);
-                new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black);
-            }
-            var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.5f), content.RectTransform, Anchor.BottomCenter))
-            {
-                UserData = "descriptionbox",
-                ScrollBarVisible = true,
-                Spacing = 5
-            };
-
-            //space
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.03f), descriptionBox.Content.RectTransform), style: null);
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), TextManager.Get("submarine.name." + Name, true) ?? Name, font: GUI.LargeFont, wrap: true) { ForceUpperCase = true, CanBeFocused = false };
-
-            float leftPanelWidth = 0.6f;
-            float rightPanelWidth = 0.4f / leftPanelWidth;
-
-            ScalableFont font = descriptionBox.Rect.Width < 350 ? GUI.SmallFont : GUI.Font;
-
-            Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
-            if (realWorldDimensions != Vector2.Zero)
-            {
-                string dimensionsStr = TextManager.GetWithVariables("DimensionsFormat", new string[2] { "[width]", "[height]" }, new string[2] { ((int)realWorldDimensions.X).ToString(), ((int)realWorldDimensions.Y).ToString() });
-
-                var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), dimensionsText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                    dimensionsStr, textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                dimensionsText.RectTransform.MinSize = new Point(0, dimensionsText.Children.First().Rect.Height);
-            }
-
-            if (RecommendedCrewSizeMax > 0)
-            {
-                var crewSizeText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RecommendedCrewSize"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crewSizeText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                    RecommendedCrewSizeMin + " - " + RecommendedCrewSizeMax, textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                crewSizeText.RectTransform.MinSize = new Point(0, crewSizeText.Children.First().Rect.Height);
-            }
-
-            if (!string.IsNullOrEmpty(RecommendedCrewExperience))
-            {
-                var crewExperienceText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RecommendedCrewExperience"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                    TextManager.Get(RecommendedCrewExperience), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                crewExperienceText.RectTransform.MinSize = new Point(0, crewExperienceText.Children.First().Rect.Height);
-            }
-
-            if (RequiredContentPackages.Any())
-            {
-                var contentPackagesText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("RequiredContentPackages"), textAlignment: Alignment.TopLeft, font: font)
-                { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), contentPackagesText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                    string.Join(", ", RequiredContentPackages), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                { CanBeFocused = false };
-                contentPackagesText.RectTransform.MinSize = new Point(0, contentPackagesText.Children.First().Rect.Height);
-            }
-            
-            // show what game version the submarine was created on
-            if (!IsVanillaSubmarine() && GameVersion != null)
-            {
-                var versionText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), descriptionBox.Content.RectTransform),
-                        TextManager.Get("serverlistversion"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                    { CanBeFocused = false };
-                new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), versionText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                        GameVersion.ToString(), textAlignment: Alignment.TopLeft, font: font, wrap: true)
-                    { CanBeFocused = false };
-                
-                versionText.RectTransform.MinSize = new Point(0, versionText.Children.First().Rect.Height);
-            }
-
-            GUITextBlock.AutoScaleAndNormalize(descriptionBox.Content.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>());
-
-            //space
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
-
-            if (!string.IsNullOrEmpty(Description))
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), 
-                    TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true) { CanBeFocused = false, ForceUpperCase = true };
-            }
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: font, wrap: true)
-            {
-                CanBeFocused = false
-            };
-        }
-        
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
         {
             Rectangle worldBorders = GetDockedBorders();
@@ -496,21 +383,6 @@ namespace Barotrauma
             }
         }
 
-        public bool IsVanillaSubmarine()
-        {
-            var vanilla = GameMain.VanillaContent;
-            if (vanilla != null)
-            {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
-                string pathToCompare = filePath.Replace(@"\", @"/").ToLowerInvariant();
-                if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public void CheckForErrors()
         {
             List<string> errorMsgs = new List<string>();
@@ -529,6 +401,11 @@ namespace Barotrauma
                     errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
                     break;
                 }
+            }
+
+            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human))
+            {
+                errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning"));
             }
 
             if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
@@ -605,7 +482,7 @@ namespace Barotrauma
         
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Name);
+            var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Info.Name);
             msg.ReadPadBits();
 
             if (posInfo != null)

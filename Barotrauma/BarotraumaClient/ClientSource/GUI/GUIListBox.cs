@@ -70,6 +70,11 @@ namespace Barotrauma
                 scrollBarNeedsRecalculation = true;
             }
         }
+        
+        /// <summary>
+        /// true if mouse down should select elements instead of mouse up
+        /// </summary>
+        private bool useMouseDownToSelect = false;
 
         private Vector4? overridePadding;
         public Vector4 Padding
@@ -80,7 +85,11 @@ namespace Barotrauma
                 if (Style == null) { return Vector4.Zero; }
                 return Style.Padding;
             }
-            set { overridePadding = value; }
+            set 
+            {
+                dimensionsNeedsRecalculation = true;
+                overridePadding = value; 
+            }
         }
 
         public GUIComponent SelectedComponent
@@ -182,10 +191,11 @@ namespace Barotrauma
         public GUIComponent DraggedElement => draggedElement;
 
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
-        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true) : base(style, rectT)
+        public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
             CanBeFocused = true;
             selected = new List<GUIComponent>();
+            this.useMouseDownToSelect = useMouseDownToSelect;
             ContentBackground = new GUIFrame(new RectTransform(Vector2.One, rectT), style)
             {
                 CanBeFocused = false                
@@ -237,7 +247,7 @@ namespace Barotrauma
             UpdateDimensions();
         }
 
-        private void UpdateDimensions()
+        public void UpdateDimensions()
         {
             dimensionsNeedsRecalculation = false;
             ContentBackground.RectTransform.Resize(Rect.Size);
@@ -403,7 +413,10 @@ namespace Barotrauma
                 if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
                 {
                     child.State = ComponentState.Hover;
-                    if (PlayerInput.PrimaryMouseButtonClicked())
+
+                    var mouseDown = useMouseDownToSelect ? PlayerInput.PrimaryMouseButtonDown() : PlayerInput.PrimaryMouseButtonClicked();
+                    
+                    if (mouseDown)
                     {
                         Select(i, autoScroll: false);
                     }
@@ -426,7 +439,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    child.State = ComponentState.None;
+                    child.State = !child.ExternalHighlight ? ComponentState.None : ComponentState.Hover;
                 }
             }
         }

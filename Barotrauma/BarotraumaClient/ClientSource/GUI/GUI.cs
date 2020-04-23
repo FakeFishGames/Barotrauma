@@ -26,7 +26,8 @@ namespace Barotrauma
         Click,
         PickItem,
         PickItemFail,
-        DropItem
+        DropItem,
+        PopupMenu
     }
 
     public enum CursorState
@@ -82,6 +83,9 @@ namespace Barotrauma
         public static float Scale => (GameMain.GraphicsWidth / ReferenceResolution.X + GameMain.GraphicsHeight / ReferenceResolution.Y) / 2.0f * GameSettings.HUDScale;
         public static float xScale => GameMain.GraphicsWidth / ReferenceResolution.X * GameSettings.HUDScale;
         public static float yScale => GameMain.GraphicsHeight / ReferenceResolution.Y * GameSettings.HUDScale;
+        public static int IntScale(float f) => (int)(f * Scale);
+        public static int IntScaleFloor(float f) => (int)Math.Floor(f * Scale);
+        public static int IntScaleCeiling(float f) => (int) Math.Ceiling(f * Scale);
         public static float HorizontalAspectRatio => GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight;
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
@@ -242,6 +246,7 @@ namespace Barotrauma
                 sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/RadioMsg.ogg", false);
                 sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/DeadMsg.ogg", false);
                 sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/Click.ogg", false);
+                sounds[(int)GUISoundType.PopupMenu] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/PopupMenu.ogg", false);
 
                 sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItem.ogg", false);
                 sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItemFail.ogg", false);
@@ -494,9 +499,27 @@ namespace Barotrauma
 
                 if (MouseOn != null)
                 {
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - 500, 20),
-                        $"Selected UI Element: {MouseOn.GetType().Name} ({ (MouseOn.Style?.Element.Name.LocalName ?? "no style") }, {MouseOn.Rect})",
-                        Color.LightGreen, Color.Black * 0.5f, 0, SmallFont);
+                    RectTransform mouseOnRect = MouseOn.RectTransform;
+                    bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
+
+                    string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
+                    string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
+                    string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
+                    Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
+                    Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
+                    Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
+
+                    int padding = IntScale(10);
+                    int yPos = padding;
+                    
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)selectedStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)offsetStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)anchorPivotStringSize.Y + padding / 2;
                 }
             }
 
@@ -519,6 +542,34 @@ namespace Barotrauma
                 MouseOn.DrawToolTip(spriteBatch);
             }
 
+            if (SubEditorScreen.IsSubEditor())
+            {
+                // Draw our "infinite stack" on the cursor
+                switch (SubEditorScreen.DraggedItemPrefab) 
+                {
+                    case ItemPrefab itemPrefab: 
+                    {
+                        var sprite = itemPrefab.InventoryIcon ?? itemPrefab.sprite;
+                        sprite?.Draw(spriteBatch, PlayerInput.MousePosition, scale: Math.Min(64 / sprite.size.X, 64 / sprite.size.Y) * Scale);
+                        break;
+                    }
+                    case ItemAssemblyPrefab iPrefab: 
+                    {
+                        var (x, y) = PlayerInput.MousePosition;
+                        foreach (var pair in iPrefab.DisplayEntities)
+                        {
+                            Rectangle dRect = pair.Second;
+                            dRect = new Rectangle(x:      (int)(dRect.X      * iPrefab.Scale + x), 
+                                                  y:      (int)(dRect.Y      * iPrefab.Scale - y), 
+                                                  width:  (int)(dRect.Width  * iPrefab.Scale), 
+                                                  height: (int)(dRect.Height * iPrefab.Scale));
+                            pair.First.DrawPlacing(spriteBatch, dRect, pair.First.Scale * iPrefab.Scale);
+                        }
+                        break;
+                    }
+                }
+            }
+
             if (GameMain.WindowActive && !HideCursor)
             {
                 spriteBatch.End();
@@ -539,6 +590,10 @@ namespace Barotrauma
             GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
             GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
                 (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f) * aberrationStrength);
+
+            Matrix.CreateOrthographicOffCenter(0, GameMain.GraphicsWidth, GameMain.GraphicsHeight, 0, 0, -1, out Matrix projection);
+
+            GameMain.GameScreen.PostProcessEffect.Parameters["MatrixTransform"].SetValue(projection);
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
             GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
 
@@ -778,6 +833,8 @@ namespace Barotrauma
             if (MouseCursor == CursorState.Waiting) { return CursorState.Waiting; }
             if (GUIScrollBar.DraggingBar != null) { return GUIScrollBar.DraggingBar.Bar.HoverCursor; }
 
+            if (SubEditorScreen.IsSubEditor() && SubEditorScreen.DraggedItemPrefab != null) { return CursorState.Hand; }
+
             // Wire cursors
             if (Character.Controlled != null)
             {
@@ -814,8 +871,7 @@ namespace Barotrauma
                     case SubEditorScreen editor:
                     {
                         // Portrait area
-                        if ((editor.CharacterMode || editor.WiringMode) && 
-                            HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
+                        if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
                         {
                             return CursorState.Hand;
                         }
@@ -1135,7 +1191,7 @@ namespace Barotrauma
             font.DrawString(sb, text, pos, color);
         }
 
-        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<ColorData> colorData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
+        public static void DrawStringWithColors(SpriteBatch sb, Vector2 pos, string text, Color color, List<RichTextData> richTextData, Color? backgroundColor = null, int backgroundPadding = 0, ScalableFont font = null, float depth = 0.0f)
         {
             if (font == null) font = Font;
             if (backgroundColor != null)
@@ -1144,7 +1200,7 @@ namespace Barotrauma
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true, depth, 5);
             }
 
-            font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, colorData);
+            font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, richTextData);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
@@ -1921,6 +1977,19 @@ namespace Barotrauma
                             };
                             return true;
                         };
+                    }
+                    else if (GameMain.GameSession.GameMode is SubTestMode)
+                    {
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
+                        {
+                            OnClicked = (btn, userdata) =>
+                            {
+                                GameMain.GameSession.GameMode.End("");
+
+                                return true;
+                            }
+                        };
+                        button.OnClicked += TogglePauseMenu;
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {

@@ -19,6 +19,8 @@ namespace Barotrauma.Items.Components
 
         private float recoilTimer;
 
+        private float RetractionTime => Math.Max(Reload * RetractionDurationMultiplier, RecoilTime);
+
         private RoundSound startMoveSound, endMoveSound, moveSound;
 
         private SoundChannel moveSoundChannel;
@@ -83,6 +85,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Sprite BarrelSprite
+        {
+            get { return barrelSprite; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -126,13 +133,19 @@ namespace Barotrauma.Items.Components
 
         partial void LaunchProjSpecific()
         {
-            recoilTimer = Math.Max(Reload, 0.1f);
+            recoilTimer = RetractionTime;
             PlaySound(ActionType.OnUse);
             Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
             }
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            base.UpdateBroken(deltaTime, cam);
+            recoilTimer -= deltaTime;
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -223,21 +236,30 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
-            if (item.Submarine != null) drawPos += item.Submarine.DrawPosition;
+            if (item.Submarine != null)
+            {
+                drawPos += item.Submarine.DrawPosition;
+            }
             drawPos.Y = -drawPos.Y;
 
             float recoilOffset = 0.0f;
-            if (RecoilDistance > 0.0f && recoilTimer > 0.0f)
+            if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
             {
-                //move the barrel backwards 0.1 seconds after launching
-                if (recoilTimer >= Math.Max(Reload, 0.1f) - 0.1f)
+                float diff = RetractionTime - RecoilTime;
+                if (recoilTimer >= diff)
                 {
-                    recoilOffset = RecoilDistance * (1.0f - (recoilTimer - (Math.Max(Reload, 0.1f) - 0.1f)) / 0.1f);
+                    //move the barrel backwards 0.1 seconds (defined by RecoilTime) after launching
+                    recoilOffset = RecoilDistance * (1.0f - (recoilTimer - diff) / RecoilTime);
                 }
-                //move back to normal position while reloading
+                else if (recoilTimer <= diff - RetractionDelay)
+                {
+                    //move back to normal position while reloading
+                    float t = diff - RetractionDelay;
+                    recoilOffset = RecoilDistance * recoilTimer / t;
+                }
                 else
                 {
-                    recoilOffset = RecoilDistance * recoilTimer / (Math.Max(Reload, 0.1f) - 0.1f);
+                    recoilOffset = RecoilDistance;
                 }
             }
 
@@ -369,11 +391,24 @@ namespace Barotrauma.Items.Components
                     tooltipOffset = new Vector2(size / 2 + 5, -10),
                     inputAreaMargin = 20,
                     RequireMouseOn = false
-                };               
+                };
                 widgets.Add(id, widget);
                 initMethod?.Invoke(widget);
             }
             return widget;
+        }
+
+        private void GetAvailablePower(out float availableCharge, out float availableCapacity)
+        {
+            var batteries = item.GetConnectedComponents<PowerContainer>();
+
+            availableCharge = 0.0f;
+            availableCapacity = 0.0f;
+            foreach (PowerContainer battery in batteries)
+            {
+                availableCharge += battery.Charge;
+                availableCapacity += battery.Capacity;
+            }
         }
 
         /// <summary>
@@ -488,17 +523,31 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
-            //projectile removed, do nothing
-            if (projectileID == 0) return;
+            float newTargetRotation = msg.ReadRangedSingle(minRotation, maxRotation, 16);
 
-            Item projectile = Entity.FindEntityByID(projectileID) as Item;
-            if (projectile == null)
+            if (Character.Controlled == null || user != Character.Controlled)
             {
-                DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
-                return;
+                targetRotation = newTargetRotation;
             }
 
-            Launch(projectile);
+            //projectile removed, do nothing
+            if (projectileID == 0) { return; }
+
+            //ID ushort.MaxValue = launched without a projectile
+            if (projectileID == ushort.MaxValue)
+            {
+                Launch(null);
+            }
+            else
+            {
+                if (!(Entity.FindEntityByID(projectileID) is Item projectile))
+                {
+                    DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
+                    return;
+                }
+                Launch(projectile, launchRotation: newTargetRotation);
+            }
+
         }
     }
 }

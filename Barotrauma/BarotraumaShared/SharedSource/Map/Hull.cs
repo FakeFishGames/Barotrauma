@@ -26,8 +26,9 @@ namespace Barotrauma
         public static float WaveSpread = 0.05f;
         public static float WaveDampening = 0.05f;
         
-        //how much excess water the room can contain  (= more than the volume of the room)
-        public const float MaxCompress = 10000f;
+        //how much excess water the room can contain, relative to the volume of the room.
+        //needed to make it possible for pressure to "push" water up through U-shaped hull configurations
+        public const float MaxCompress = 1.05f;
         
         public readonly Dictionary<string, SerializableProperty> properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -154,7 +155,7 @@ namespace Barotrauma
             set
             {
                 if (!MathUtils.IsValid(value)) return;
-                waterVolume = MathHelper.Clamp(value, 0.0f, Volume + MaxCompress);
+                waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
                 if (waterVolume < Volume) Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
                 if (waterVolume > 0.0f) update = true;
             }
@@ -228,7 +229,7 @@ namespace Barotrauma
 
             surface = rect.Y - rect.Height;
 
-            if (submarine != null)
+            if (submarine?.Info != null && !submarine.Info.IsWreck)
             {
                 aiTarget = new AITarget(this)
                 {
@@ -321,6 +322,7 @@ namespace Barotrauma
                     CeilingHeight = ConvertUnits.ToDisplayUnits(upperPickedPos.Y - lowerPickedPos.Y);
                 }
             }
+            Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
         }
 
         public void AddToGrid(Submarine submarine)
@@ -444,15 +446,23 @@ namespace Barotrauma
                 lethalPressure = 0.0f;
                 return;
             }
+
+            float waterDepth = WaterVolume / rect.Width;
+            if (waterDepth < 1.0f)
+            {
+                //if there's only a minuscule amount of water, consider the surface to be at the bottom of the hull
+                //otherwise unnoticeable amounts of water can for example cause magnesium to explode
+                waterDepth = 0.0f;
+            }
             
             surface = Math.Max(MathHelper.Lerp(
                 surface, 
-                rect.Y - rect.Height + WaterVolume / rect.Width, 
+                rect.Y - rect.Height + waterDepth,
                 deltaTime * 10.0f), rect.Y - rect.Height);
             //interpolate the position of the rendered surface towards the "target surface"
             drawSurface = Math.Max(MathHelper.Lerp(
                 drawSurface, 
-                rect.Y - rect.Height + WaterVolume / rect.Width, 
+                rect.Y - rect.Height + waterDepth, 
                 deltaTime * 10.0f), rect.Y - rect.Height);
 
             for (int i = 0; i < waveY.Length; i++)
@@ -873,7 +883,7 @@ namespace Barotrauma
 
             var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
             {
-                waterVolume = element.GetAttributeFloat("pressure", 0.0f),
+                WaterVolume = element.GetAttributeFloat("pressure", 0.0f),
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
 

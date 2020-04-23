@@ -11,6 +11,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "idle";
         public override bool UnequipItems => true;
+        public override bool AllowOutsideSubmarine => true;
 
         private readonly float newTargetIntervalMin = 10;
         private readonly float newTargetIntervalMax = 20;
@@ -231,9 +232,11 @@ namespace Barotrauma
             {
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
-                if (hull.Submarine.TeamID != character.TeamID) { continue; }
-                // If the character is inside, only take connected hulls into account.
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (character.Submarine == null) { break; }
+                if (hull.Submarine.TeamID != character.Submarine.TeamID) { continue; }
+                if (hull.Submarine.Info.Type != character.Submarine.Info.Type) { continue; }
+                // If the character is inside, only take connected subs into account.
+                if (!character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
                 if (IsForbidden(hull)) { continue; }
                 // Ignore hulls that are too low to stand inside
                 if (character.AnimController is HumanoidAnimController animController)
@@ -261,9 +264,9 @@ namespace Barotrauma
         public static bool IsForbidden(Hull hull)
         {
             if (hull == null) { return true; }
-            string hullName = hull.RoomName?.ToLowerInvariant();
+            string hullName = hull.RoomName;
             if (hullName == null) { return false; }
-            return hullName.Contains("ballast") || hullName.Contains("airlock");
+            return hullName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || hullName.Contains("airlock", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

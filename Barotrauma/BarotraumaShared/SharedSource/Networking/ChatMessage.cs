@@ -11,6 +11,8 @@ namespace Barotrauma.Networking
         Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox
     }
 
+    public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
+
     partial class ChatMessage
     {
         public const int MaxLength = 150;
@@ -58,8 +60,10 @@ namespace Barotrauma.Networking
         }
 
         public ChatMessageType Type;
+        public PlayerConnectionChangeType ChangeType;
 
         public readonly Character Sender;
+        public readonly Client SenderClient;
 
         public readonly string SenderName;
 
@@ -89,19 +93,21 @@ namespace Barotrauma.Networking
             set;
         }
 
-        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender)
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
             Text = text;
             Type = type;
 
             Sender = sender;
+            SenderClient = client;
 
             SenderName = senderName;
+            ChangeType = changeType;
         }        
 
-        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender)
+        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
-            return new ChatMessage(senderName, text, type, sender);
+            return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character == sender), changeType);
         }
 
         public static string GetChatMessageCommand(string message, out string messageWithoutCommand)

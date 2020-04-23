@@ -21,6 +21,11 @@ namespace Barotrauma
             }
         }
 
+        public bool Loaded
+        {
+            get { return texture != null && !cannotBeLoaded; }
+        }
+
         public Sprite(Texture2D texture, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f)
         {
             this.texture = texture;
@@ -42,7 +47,12 @@ namespace Barotrauma
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
         {
-            texture = LoadTexture(this.FilePath);
+            texture = LoadTexture(this.FilePath, out Sprite reusedSprite);
+            if (reusedSprite != null)
+            {
+                FilePath = string.Intern(reusedSprite.FilePath);
+                FullPath = string.Intern(reusedSprite.FullPath);
+            }
 
             if (texture == null)
             {
@@ -56,7 +66,7 @@ namespace Barotrauma
 
         public void EnsureLazyLoaded()
         {
-            if (!lazyLoad || texture != null || cannotBeLoaded) { return; }
+            if (!LazyLoad || texture != null || cannotBeLoaded) { return; }
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
@@ -68,11 +78,6 @@ namespace Barotrauma
                 size.X *= sourceRect.Width;
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
-            }
-            foreach (Sprite s in LoadedSprites)
-            {
-                if (s == this) { continue; }
-                if (s.FullPath == FullPath && s.texture != null) { s.texture = texture; }
             }
             if (texture == null)
             {
@@ -99,6 +104,12 @@ namespace Barotrauma
 
         public static Texture2D LoadTexture(string file)
         {
+            return LoadTexture(file, out _);
+        }
+
+        public static Texture2D LoadTexture(string file, out Sprite reusedSprite)
+        {
+            reusedSprite = null;
             if (string.IsNullOrWhiteSpace(file))
             {
                 Texture2D t = null;
@@ -111,7 +122,11 @@ namespace Barotrauma
             file = Path.GetFullPath(file);
             foreach (Sprite s in LoadedSprites)
             {
-                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) { return s.texture; }
+                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) 
+                {
+                    reusedSprite = s;
+                    return s.texture; 
+                }
             }
 
             if (File.Exists(file))

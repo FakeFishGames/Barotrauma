@@ -192,9 +192,10 @@ namespace Barotrauma.Items.Components
             {
                 RelativeOffset = new Vector2(0, fissionMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
             },
-                style: "DeviceSlider", barSize: 0.1f)
+                style: "DeviceSlider", barSize: 0.15f)
             {
                 Enabled = false,
+                Step = 1.0f / 255,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -209,9 +210,10 @@ namespace Barotrauma.Items.Components
             {
                 RelativeOffset = new Vector2(0, turbineMeter.RectTransform.RelativeOffset.Y + meterSize.Y)
             },
-                style: "DeviceSlider", barSize: 0.1f, isHorizontal: true)
+                style: "DeviceSlider", barSize: 0.15f, isHorizontal: true)
             {
                 Enabled = false,
+                Step = 1.0f / 255,
                 OnMoved = (GUIScrollBar bar, float scrollAmount) =>
                 {
                     LastUser = Character.Controlled;
@@ -715,8 +717,14 @@ namespace Barotrauma.Items.Components
             targetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
 
-            FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
-            TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+            if (Math.Abs(FissionRateScrollBar.BarScroll - targetFissionRate / 100.0f) > 0.01f)
+            {
+                FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+            }
+            if (Math.Abs(TurbineOutputScrollBar.BarScroll - targetTurbineOutput / 100.0f) > 0.01f)
+            {
+                TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+            }
 
             IsActive = true;
         }

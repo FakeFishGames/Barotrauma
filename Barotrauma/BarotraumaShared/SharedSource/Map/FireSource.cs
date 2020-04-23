@@ -14,7 +14,7 @@ namespace Barotrauma
     partial class FireSource : ISpatialEntity
     {
         const float OxygenConsumption = 50.0f;
-        const float GrowSpeed = 5.0f;
+        const float GrowSpeed = 20.0f;
 
         protected Hull hull;
 

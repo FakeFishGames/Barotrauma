@@ -7,24 +7,23 @@ namespace Barotrauma.Extensions
     public static class IEnumerableExtensions
     {
         /// <summary>
-        /// Randomizes the collection and returns it.
+        /// Randomizes the collection (using OrderBy) and returns it.
         /// </summary>
-        public static IOrderedEnumerable<T> Randomize<T>(this IEnumerable<T> source)
+        public static IOrderedEnumerable<T> Randomize<T>(this IEnumerable<T> source, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            return source.OrderBy(i => Rand.Value());
+            return source.OrderBy(i => Rand.Value(randSync));
         }
 
         /// <summary>
-        /// Randomizes the list in place.
+        /// Randomizes the list in place without creating a new collection, using a Fisher-Yates-based algorithm.
         /// </summary>
-        public static void RandomizeList<T>(this List<T> list)
+        public static void Shuffle<T>(this IList<T> list, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            //Fisher-Yates shuffle
             int n = list.Count;
             while (n > 1)
             {
                 n--;
-                int k = Rand.Int(n + 1);
+                int k = Rand.Int(n + 1, randSync);
                 T value = list[k];
                 list[k] = list[n];
                 list[n] = value;

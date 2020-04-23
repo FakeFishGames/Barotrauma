@@ -55,7 +55,11 @@ namespace Barotrauma
             {
                 if (limbs == null)
                 {
-                    DebugConsole.ThrowError("Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                    string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
+#if DEBUG || UNSTABLE
+                    errorMsg += '\n' + Environment.StackTrace;
+#endif
+                    DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Ragdoll.Limbs:AccessRemoved",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
@@ -80,7 +84,7 @@ namespace Barotrauma
                 frozen = value;
 
                 Collider.FarseerBody.LinearDamping = frozen ? (1.5f / (float)Timing.Step) : 0.0f;
-                Collider.FarseerBody.AngularDamping = frozen ? (1.5f / (float)Timing.Step) : 0.0f;
+                Collider.FarseerBody.AngularDamping = frozen ? (1.5f / (float)Timing.Step) : PhysicsBody.DefaultAngularDamping;
                 Collider.FarseerBody.IgnoreGravity = frozen;
 
                 //Collider.PhysEnabled = !frozen;
@@ -96,8 +100,6 @@ namespace Barotrauma
         protected Character character;
 
         protected float strongestImpact;
-
-        protected double onFloorTimer;
 
         private float splashSoundTimer;
 
@@ -635,10 +637,7 @@ namespace Barotrauma
             Vector2 colliderBottom = GetColliderBottom();
             if (structure.IsPlatform)
             {
-                if (IgnorePlatforms) { return false; }
-
-                //the collision is ignored if the lowest limb is under the platform
-                //if (lowestLimb==null || lowestLimb.Position.Y < structure.Rect.Y) return false;
+                if (IgnorePlatforms || currentHull == null) { return false; }
 
                 if (colliderBottom.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
                 if (f1.Body.Position.Y < ConvertUnits.ToSimUnits(structure.Rect.Y - 5)) { return false; }
@@ -732,14 +731,20 @@ namespace Barotrauma
             limbJoint.IsSevered = true;
             limbJoint.Enabled = false;
 
+            Vector2 limbDiff = limbJoint.LimbA.SimPosition - limbJoint.LimbB.SimPosition;
+            if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
+            limbDiff = Vector2.Normalize(limbDiff);
+            float mass = limbJoint.BodyA.Mass + limbJoint.BodyB.Mass;
+            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+
             List<Limb> connectedLimbs = new List<Limb>();
             List<LimbJoint> checkedJoints = new List<LimbJoint>();
 
             GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
             foreach (Limb limb in Limbs)
             {
-                if (connectedLimbs.Contains(limb)) continue;
-
+                if (connectedLimbs.Contains(limb)) { continue; }
                 limb.IsSevered = true;
             }
 
@@ -962,8 +967,8 @@ namespace Barotrauma
                 else
                 {
                     if (character.Position.X < gap.Rect.X || character.Position.X > gap.Rect.Right) continue;
-                    if (Math.Sign((gap.Rect.Y - gap.Rect.Height / 2) - (currentHull.Rect.Center.Y - currentHull.Rect.Height / 2)) !=
-                        Math.Sign(character.Position.Y - (currentHull.Rect.Center.Y - currentHull.Rect.Height / 2)))
+                    if (Math.Sign((gap.Rect.Y - gap.Rect.Height / 2) - (currentHull.Rect.Y - currentHull.Rect.Height / 2)) !=
+                        Math.Sign(character.Position.Y - (currentHull.Rect.Y - currentHull.Rect.Height / 2)))
                     {
                         continue;
                     }
@@ -1224,6 +1229,8 @@ namespace Barotrauma
 
         private void CheckBodyInRest(float deltaTime)
         {
+            if (SimplePhysicsEnabled) { return; }
+
             if (InWater || Collider.LinearVelocity.LengthSquared() > 0.01f || character.SelectedBy != null || !character.IsDead)
             {
                 bodyInRestTimer = 0.0f;
@@ -1633,7 +1640,7 @@ namespace Barotrauma
         {
             float offset = 0.0f;
 
-            if (!character.IsUnconscious && !character.IsDead && character.Stun <= 0.0f)
+            if (!character.IsDead && character.Stun <= 0.0f && !character.IsIncapacitated)
             {
                 offset = -ColliderHeightFromFloor;
             }

@@ -1,9 +1,9 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -20,15 +20,23 @@ namespace Barotrauma
         private AIObjectiveGoTo gotoObjective;
         private AIObjectiveOperateItem operateObjective;
 
-        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base (character, objectiveManager, priorityModifier)
+        public bool IgnoreSeverityAndDistance { get; private set; }
+
+        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool ignoreSeverityAndDistance = false) : base (character, objectiveManager, priorityModifier)
         {
             Leak = leak;
+            IgnoreSeverityAndDistance = ignoreSeverityAndDistance;
         }
 
         protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (Leak.Removed || Leak.Open <= 0)
             {
                 Priority = 0;
@@ -39,8 +47,8 @@ namespace Barotrauma
                 float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
                 // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
                 // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                float distanceFactor = xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
-                float severity = AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+                float distanceFactor = IgnoreSeverityAndDistance || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
+                float severity = IgnoreSeverityAndDistance ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
                 float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
                 float devotion = CumulatedDevotion / 100;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));

@@ -52,6 +52,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false)]
+        public bool AccessOnlyWhenBroken { get; set; }
+
         [Serialize(5, false, description: "How many inventory slots the inventory has per row.")]
         public int SlotsPerRow { get; set; }
 
@@ -197,10 +200,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
+        {
+            return (!AccessOnlyWhenBroken || Item.Condition <= 0) && base.HasRequiredItems(character, addMessage, msg);
+        }
+
         public override bool Select(Character character)
         {
             if (item.Container != null) { return false; }
-
+            if (AccessOnlyWhenBroken)
+            {
+                if (item.Condition > 0)
+                {
+                    return false;
+                }
+            }
             if (AutoInteractWithContained && character.SelectedConstruction == null)
             {
                 foreach (Item contained in Inventory.Items)
@@ -218,6 +232,13 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
+            if (AccessOnlyWhenBroken)
+            {
+                if (item.Condition > 0)
+                {
+                    return false;
+                }
+            }
             if (AutoInteractWithContained)
             {
                 foreach (Item contained in Inventory.Items)

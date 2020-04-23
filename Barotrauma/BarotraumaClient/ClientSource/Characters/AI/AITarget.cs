@@ -44,7 +44,7 @@ namespace Barotrauma
                 else
                 {
                     //color = Color.WhiteSmoke;
-                    // disable the indicators for structures, because they clutter the debug view
+                    // disable the indicators for structures and hulls, because they clutter the debug view
                     return;
                 }
                 ShapeExtensions.DrawCircle(spriteBatch, pos, SightRange, 100, color, thickness: 1 / Screen.Selected.Cam.Zoom);

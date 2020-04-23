@@ -228,14 +228,7 @@ namespace Barotrauma.Particles
                 if (inSub.HasValue)
                 {
                     bool isOutside = particle.CurrentHull == null;
-                    if (particle.DrawOnTop)
-                    {
-                        if (isOutside != inSub.Value)
-                        {
-                            continue;
-                        }
-                    }
-                    else if (isOutside == inSub.Value)
+                    if (!particle.DrawOnTop && isOutside == inSub.Value)
                     {
                         continue;
                     }

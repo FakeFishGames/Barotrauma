@@ -276,7 +276,11 @@ namespace Barotrauma
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
+                    c.ResetCurrentOrder();
                 }
+
+                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 

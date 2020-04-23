@@ -119,9 +119,12 @@ namespace Barotrauma.CharacterEditor
             if (Submarine.MainSub == null)
             {
                 ResetVariables();
-                Submarine.MainSub = new Submarine("Content/AnimEditor.sub");
-                Submarine.MainSub.Load(unloadPrevious: false, showWarningMessages: false);
-                Submarine.MainSub.PhysicsBody.Enabled = false;
+                var subInfo = new SubmarineInfo("Content/AnimEditor.sub");
+                Submarine.MainSub = new Submarine(subInfo);
+                if (Submarine.MainSub.PhysicsBody != null)
+                {
+                    Submarine.MainSub.PhysicsBody.Enabled = false;
+                }
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
                 CloneWalls();
                 CalculateMovementLimits();
@@ -476,9 +479,16 @@ namespace Barotrauma.CharacterEditor
                 if (character.IsHumanoid)
                 {
                     animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
-                    if (animTestPoseToggle.Enabled && PlayerInput.KeyHit(Keys.X))
+                    if (animTestPoseToggle.Enabled)
                     {
-                        SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
+                        if (PlayerInput.KeyHit(Keys.X))
+                        {
+                            SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
+                        }
+                    }
+                    else
+                    {
+                        animTestPoseToggle.Selected = false;
                     }
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
@@ -2117,7 +2127,7 @@ namespace Barotrauma.CharacterEditor
                 CreateTextures();
                 return true;
             };
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.BottomCenter), GetCharacterEditorTranslation("RecreateRagdoll"))
+            var recreateButton = new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.BottomCenter), GetCharacterEditorTranslation("RecreateRagdoll"))
             {
                 ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
                 OnClicked = (button, data) =>
@@ -2127,6 +2137,7 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
+            GUITextBlock.AutoScaleAndNormalize(reloadTexturesButton.TextBlock, recreateButton.TextBlock);
             buttonsPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), buttonsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
             buttonsPanel.RectTransform.MinSize = new Point(0, (int)(parent.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.5f));
         }
@@ -3116,6 +3127,8 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
+
+            GUITextBlock.AutoScaleAndNormalize(layoutGroup.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
 
             fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
 

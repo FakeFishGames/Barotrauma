@@ -8,10 +8,10 @@ namespace Barotrauma
 {
     partial class NetLobbyScreen : Screen
     {
-        private Submarine selectedSub;
-        private Submarine selectedShuttle;
+        private SubmarineInfo selectedSub;
+        private SubmarineInfo selectedShuttle;
 
-        public Submarine SelectedSub
+        public SubmarineInfo SelectedSub
         {
             get { return selectedSub; }
             set
@@ -24,7 +24,7 @@ namespace Barotrauma
                 }
             }
         }
-        public Submarine SelectedShuttle
+        public SubmarineInfo SelectedShuttle
         {
             get { return selectedShuttle; }
             set { selectedShuttle = value; lastUpdateID++; }
@@ -121,7 +121,7 @@ namespace Barotrauma
         {
             LevelSeed = ToolBox.RandomSeed(8);
 
-            subs = Submarine.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+            subs = SubmarineInfo.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
             if (subs == null || subs.Count() == 0)
             {
@@ -150,8 +150,8 @@ namespace Barotrauma
             GameModes = GameModePreset.List.ToArray();
         }
         
-        private List<Submarine> subs;
-        public List<Submarine> GetSubList()
+        private List<SubmarineInfo> subs;
+        public List<SubmarineInfo> GetSubList()
         {
             return subs;
         }
@@ -198,7 +198,7 @@ namespace Barotrauma
 
             if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = Submarine.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
+                var nonShuttles = SubmarineInfo.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
             if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)

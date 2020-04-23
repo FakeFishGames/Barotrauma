@@ -440,17 +440,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Item targetItem)
             {
-                targetItem.IsHighlighted = true;
                 
-                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
-
-                if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
-                {
-                    Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
-                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
-                    targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
-                }
-
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
                     levelResource.requiredItems.Any() &&
@@ -464,7 +454,22 @@ namespace Barotrauma.Items.Components
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
                         GUI.Style.Red, GUI.Style.Green);
 #endif
+                    return true;
                 }
+                
+                if (!targetItem.Prefab.DamagedByRepairTools) { return false; }
+
+                targetItem.IsHighlighted = true;
+                
+                ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, targetItem.AllPropertyObjects);
+
+                if (targetItem.body != null && !MathUtils.NearlyEqual(TargetForce, 0.0f))
+                {
+                    Vector2 dir = targetItem.WorldPosition - item.WorldPosition;
+                    dir = dir.LengthSquared() < 0.0001f ? Vector2.UnitY : Vector2.Normalize(dir);
+                    targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
+                }
+
                 FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
             }

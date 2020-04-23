@@ -474,7 +474,7 @@ namespace Barotrauma
                 };
                 btn.Color *= 0.5f;
                 labelTexts.Add(btn.TextBlock);
-                
+
                 new GUIImage(new RectTransform(new Vector2(0.5f, 0.3f), btn.RectTransform, Anchor.BottomCenter, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonVerticalArrow", scaleToFit: true)
                 {
                     CanBeFocused = false,
@@ -567,7 +567,18 @@ namespace Barotrauma
             var directJoinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("serverlistdirectjoin"))
             {
-                OnClicked = (btn, userdata) => { ShowDirectJoinPrompt(); return true; }
+                OnClicked = (btn, userdata) => 
+                {
+                    if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
+                    {
+                        ClientNameBox.Flash();
+                        ClientNameBox.Select();
+                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                        return false;
+                    }
+                    ShowDirectJoinPrompt(); 
+                    return true; 
+                }
             };
 
             joinButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
@@ -909,6 +920,12 @@ namespace Barotrauma
 
             Steamworks.SteamMatchmaking.ResetActions();
 
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
+            }
+
             RefreshServers();
         }
 
@@ -965,7 +982,7 @@ namespace Barotrauma
 
                     child.Visible =
                         serverInfo.OwnerVerified &&
-                        serverInfo.ServerName.ToLowerInvariant().Contains(searchBox.Text.ToLowerInvariant()) &&
+                        serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase) &&
                         (!filterSameVersion.Selected || (remoteVersion != null && NetworkMember.IsCompatible(remoteVersion, GameMain.Version))) &&
                         (!filterPassword.Selected || !serverInfo.HasPassword) &&
                         (!filterIncompatible.Selected || !incompatible) &&
@@ -996,7 +1013,7 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in gameModeTickBoxes)
                 {
                     var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && (serverInfo.GameMode == gameMode.ToLowerInvariant() || serverInfo.GameMode == gameMode))
+                    if (!tickBox.Selected && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
                     {
                         child.Visible = false;
                         break;
@@ -1304,6 +1321,8 @@ namespace Barotrauma
                     {
 #if DEBUG
                         DebugConsole.ThrowError($"Failed to parse a Steam friend's connect command ({connectCommand})", e);
+#else
+                        DebugConsole.Log($"Failed to parse a Steam friend's connect command ({connectCommand})\n" + e.StackTrace);
 #endif
                         info.ConnectName = null;
                         info.ConnectEndpoint = null;
@@ -1512,7 +1531,7 @@ namespace Barotrauma
         {
             serverList.ClearChildren();
                         
-            if (masterServerData.Substring(0, 5).ToLowerInvariant() == "error")
+            if (masterServerData.Substring(0, 5).Equals("error", StringComparison.OrdinalIgnoreCase))
             {
                 DebugConsole.ThrowError("Error while connecting to master server (" + masterServerData + ")!");
                 return;
@@ -1895,6 +1914,8 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
             {
                 ClientNameBox.Flash();
+                ClientNameBox.Select();
+                GUI.PlayUISound(GUISoundType.PickItemFail);
                 return false;
             }
 

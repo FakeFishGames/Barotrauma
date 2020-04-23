@@ -18,6 +18,9 @@ namespace Barotrauma
 
         public CursorState HoverCursor = CursorState.Default;
         
+        public delegate bool SecondaryButtonDownHandler(GUIComponent component, object userData);
+        public SecondaryButtonDownHandler OnSecondaryClicked;
+        
         public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
 
         public T GetChild<T>() where T : GUIComponent
@@ -202,12 +205,12 @@ namespace Barotrauma
             set
             {
                 RawToolTip = value;
-                TooltipColorData = ColorData.GetColorData(value, out value);
+                TooltipRichTextData = RichTextData.GetRichTextData(value, out value);
                 toolTip = value;
             }
         }
 
-        public List<ColorData> TooltipColorData = null;
+        public List<RichTextData> TooltipRichTextData = null;
 
         public GUIComponentStyle Style
         {
@@ -451,6 +454,15 @@ namespace Barotrauma
         protected virtual void Update(float deltaTime)
         {
             if (!Visible) return;
+            
+            if (CanBeFocused && OnSecondaryClicked != null)
+            {
+                if (GUI.IsMouseOn(this) && PlayerInput.SecondaryMouseButtonClicked())
+                {
+                    OnSecondaryClicked?.Invoke(this, userData);
+                }
+            }
+            
             if (flashTimer > 0.0f)
             {
                 flashTimer -= deltaTime;
@@ -638,10 +650,10 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipColorData);
+            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipRichTextData);
         }
 
-        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<ColorData> colorData = null)
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<RichTextData> richTextData = null)
         {
             if (Tutorials.Tutorial.ContentRunning) { return; }
 
@@ -651,7 +663,7 @@ namespace Barotrauma
 
             if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), colorData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
@@ -787,8 +799,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "conditional" &&
-                    !CheckConditional(subElement))
+                if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase) && !CheckConditional(subElement))
                 {
                     return null;
                 }
@@ -837,7 +848,7 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "conditional") { continue; }
+                    if (subElement.Name.ToString().Equals("conditional", StringComparison.OrdinalIgnoreCase)) { continue; }
                     FromXML(subElement, component is GUIListBox listBox ? listBox.Content.RectTransform : component.RectTransform);
                 }
 
@@ -1005,7 +1016,7 @@ namespace Barotrauma
 
         private static GUIFrame LoadGUIFrame(XElement element, RectTransform parent)
         {
-            string style = element.GetAttributeString("style", element.Name.ToString().ToLowerInvariant() == "spacing" ? null : "");
+            string style = element.GetAttributeString("style", element.Name.ToString().Equals("spacing", StringComparison.OrdinalIgnoreCase) ? null : "");
             if (style == "null") { style = null; }
             return new GUIFrame(RectTransform.Load(element, parent), style: style);
         }

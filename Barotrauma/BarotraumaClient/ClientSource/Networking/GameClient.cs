@@ -28,6 +28,8 @@ namespace Barotrauma.Networking
             get { return name; }
         }
 
+        public string PendingName = string.Empty;
+
         public void SetName(string value)
         {
             value = value.Replace(":", "").Replace(";", "");
@@ -78,7 +80,7 @@ namespace Barotrauma.Networking
 
         private List<Client> otherClients;
 
-        private readonly List<Submarine> serverSubmarines = new List<Submarine>();
+        private readonly List<SubmarineInfo> serverSubmarines = new List<SubmarineInfo>();
 
         private string serverIP, serverName;
 
@@ -112,6 +114,7 @@ namespace Barotrauma.Networking
 
         public bool SpawnAsTraitor;
         public string TraitorFirstObjective;
+        public TraitorMissionPrefab TraitorMission = null;
 
         public byte ID
         {
@@ -482,18 +485,23 @@ namespace Barotrauma.Networking
                 
                 if (requiresPw && !canStart && !connectCancelled)
                 {
+                    GUI.ClearCursorWait();
                     reconnectBox?.Close(); reconnectBox = null;
 
                     string pwMsg = TextManager.Get("PasswordRequired");
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
-                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, 170));
-                    var passwordHolder = new GUILayoutGroup(new RectTransform(Vector2.One, msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
-                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f) , passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
+                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, (int)(170 * Math.Max(1.0f, GUI.Scale))));
+                    var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
                         UserData = "password",
                         Censor = true
                     };
+
+                    msgBox.Content.Recalculate();
+                    msgBox.Content.RectTransform.MinSize = new Point(0, msgBox.Content.RectTransform.Children.Sum(c => c.Rect.Height));
+                    msgBox.Content.Parent.RectTransform.MinSize = new Point(0, (int)(msgBox.Content.RectTransform.MinSize.Y / msgBox.Content.RectTransform.RelativeSize.Y));
 
                     var okButton = msgBox.Buttons[0];
                     var cancelButton = msgBox.Buttons[1];
@@ -509,6 +517,7 @@ namespace Barotrauma.Networking
                     {
                         requiresPw = false;
                         connectCancelled = true;
+                        GameMain.ServerListScreen.Select();
                         return true;
                     };
 
@@ -540,6 +549,7 @@ namespace Barotrauma.Networking
 
             foreach (Client c in ConnectedClients)
             {
+                if (c.Character != null && c.Character.Removed) { c.Character = null; }
                 c.UpdateSoundPosition();
             }
 
@@ -664,6 +674,7 @@ namespace Barotrauma.Networking
 
             if (header != ServerPacketHeader.STARTGAMEFINALIZE &&
                 header != ServerPacketHeader.ENDGAME &&
+                header != ServerPacketHeader.PING_REQUEST &&
                 roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize)
             {
                 //rewind the header byte we just read
@@ -674,6 +685,31 @@ namespace Barotrauma.Networking
 
             switch (header)
             {
+                case ServerPacketHeader.PING_REQUEST:
+                    IWriteMessage response = new WriteOnlyMessage();
+                    response.Write((byte)ClientPacketHeader.PING_RESPONSE);
+                    byte requestLen = inc.ReadByte();
+                    response.Write(requestLen);
+                    for (int i=0;i<requestLen;i++)
+                    {
+                        byte b = inc.ReadByte();
+                        response.Write(b);
+                    }
+                    clientPeer.Send(response, DeliveryMethod.Unreliable);
+                    break;
+                case ServerPacketHeader.CLIENT_PINGS:
+                    byte clientCount = inc.ReadByte();
+                    for (int i=0;i<clientCount;i++)
+                    {
+                        byte clientId = inc.ReadByte();
+                        UInt16 clientPing = inc.ReadUInt16();
+                        Client client = ConnectedClients.Find(c => c.ID == clientId);
+                        if (client != null)
+                        {
+                            client.Ping = clientPing;
+                        }
+                    }
+                    break;
                 case ServerPacketHeader.UPDATE_LOBBY:
                     ReadLobbyUpdate(inc);
                     break;
@@ -837,7 +873,7 @@ namespace Barotrauma.Networking
             if (Level.Loaded.EqualityCheckVal != levelEqualityCheckVal)
             {
                 string errorMsg = "Level equality check failed. The level generated at your end doesn't match the level generated by the server (seed: " + Level.Loaded.Seed +
-                    ", sub: " + Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash.ShortHash + ")" +
+                    ", sub: " + Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash.ShortHash + ")" +
                     ", mirrored: " + Level.Loaded.Mirrored + ").";
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:LevelsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 throw new Exception(errorMsg);
@@ -1051,11 +1087,13 @@ namespace Barotrauma.Networking
             var missionPrefab = TraitorMissionPrefab.List.Find(t => t.Identifier == missionIdentifier);
             Sprite icon = missionPrefab?.Icon;
 
-            switch(messageType) {
+            switch(messageType) 
+            {
                 case TraitorMessageType.Objective:
                     var isTraitor = !string.IsNullOrEmpty(message); 
                     SpawnAsTraitor = isTraitor;
                     TraitorFirstObjective = message;
+                    TraitorMission = missionPrefab;
                     if (Character != null)
                     {
                         Character.IsTraitor = isTraitor;
@@ -1326,7 +1364,6 @@ namespace Barotrauma.Networking
                         mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
                 });*/
                 GameMain.GameSession.StartRound(campaign.Map.SelectedConnection.Level,
-                        reloadSub: true,
                         mirrorLevel: campaign.Map.CurrentLocation != campaign.Map.SelectedConnection.Locations[0]);
             }
 
@@ -1406,9 +1443,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (GameMain.GameSession.Submarine.IsFileCorrupted)
+            if (GameMain.GameSession.Submarine.Info.IsFileCorrupted)
             {
-                DebugConsole.ThrowError($"Failed to start a round. Could not load the submarine \"{GameMain.GameSession.Submarine.Name}\".");
+                DebugConsole.ThrowError($"Failed to start a round. Could not load the submarine \"{GameMain.GameSession.Submarine.Info.Name}\".");
                 yield return CoroutineStatus.Failure;
             }
 
@@ -1498,8 +1535,8 @@ namespace Barotrauma.Networking
                 bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
                 var matchingSub =
-                    Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
-                    new Submarine(Path.Combine(Submarine.SavePath, subName) + ".sub", subHash, false);
+                    SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash) ??
+                    new SubmarineInfo(Path.Combine(SubmarineInfo.SavePath, subName) + ".sub", subHash, tryLoad: false);
 
                 matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
                 serverSubmarines.Add(matchingSub);
@@ -1533,9 +1570,11 @@ namespace Barotrauma.Networking
                 string name         = inc.ReadString();
                 string preferredJob = inc.ReadString();
                 UInt16 characterID  = inc.ReadUInt16();
+                float karma         = inc.ReadSingle();
                 bool muted          = inc.ReadBoolean();
                 bool inGame         = inc.ReadBoolean();
-                bool allowKicking   = inc.ReadBoolean();
+                bool hasPermissions = inc.ReadBoolean();
+                bool allowKicking   = inc.ReadBoolean() || IsServerOwner;
                 inc.ReadPadBits();
 
                 tempClients.Add(new TempClient
@@ -1546,8 +1585,10 @@ namespace Barotrauma.Networking
                     Name = name,
                     PreferredJob = preferredJob,
                     CharacterID = characterID,
+                    Karma = karma,
                     Muted = muted,
                     InGame = inGame,
+                    HasPermissions = hasPermissions,
                     AllowKicking = allowKicking
                 });
             }
@@ -1575,7 +1616,9 @@ namespace Barotrauma.Networking
                     existingClient.NameID = tc.NameID;
                     existingClient.PreferredJob = tc.PreferredJob;
                     existingClient.Character = null;
+                    existingClient.Karma = tc.Karma;
                     existingClient.Muted = tc.Muted;
+                    existingClient.HasPermissions = tc.HasPermissions;
                     existingClient.InGame = tc.InGame;
                     existingClient.AllowKicking = tc.AllowKicking;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
@@ -2028,15 +2071,15 @@ namespace Barotrauma.Networking
             {
                 case FileTransferType.Submarine:
                     new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
-                    var newSub = new Submarine(transfer.FilePath);
+                    var newSub = new SubmarineInfo(transfer.FilePath);
                     if (newSub.IsFileCorrupted) { return; }
 
-                    var existingSubs = Submarine.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
-                    foreach (Submarine existingSub in existingSubs)
+                    var existingSubs = SubmarineInfo.SavedSubmarines.Where(s => s.Name == newSub.Name && s.MD5Hash.Hash == newSub.MD5Hash.Hash).ToList();
+                    foreach (SubmarineInfo existingSub in existingSubs)
                     {
                         existingSub.Dispose();
                     }
-                    Submarine.AddToSavedSubs(newSub);
+                    SubmarineInfo.AddToSavedSubs(newSub);
 
                     for (int i = 0; i < 2; i++)
                     {
@@ -2045,8 +2088,8 @@ namespace Barotrauma.Networking
                             GameMain.NetLobbyScreen.SubList.Content.Children;
 
                         var subElement = subListChildren.FirstOrDefault(c =>
-                            ((Submarine)c.UserData).Name == newSub.Name &&
-                            ((Submarine)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
+                            ((SubmarineInfo)c.UserData).Name == newSub.Name &&
+                            ((SubmarineInfo)c.UserData).MD5Hash.Hash == newSub.MD5Hash.Hash);
                         if (subElement == null) continue;
 
                         subElement.GetChild<GUITextBlock>().TextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
@@ -2074,17 +2117,17 @@ namespace Barotrauma.Networking
                     if (campaign == null) { return; }
 
                     GameMain.GameSession.SavePath = transfer.FilePath;
-                    if (GameMain.GameSession.Submarine == null)
+                    if (GameMain.GameSession.SubmarineInfo == null)
                     {
                         var gameSessionDoc = SaveUtil.LoadGameSessionDoc(GameMain.GameSession.SavePath);
                         string subPath = Path.Combine(SaveUtil.TempPath, gameSessionDoc.Root.GetAttributeString("submarine", "")) + ".sub";
-                        GameMain.GameSession.Submarine = new Submarine(subPath, "");
+                        GameMain.GameSession.SubmarineInfo = new SubmarineInfo(subPath, "");
                     }
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
-                    GameMain.GameSession?.Submarine?.CheckSubsLeftBehind();
-                    if (GameMain.GameSession?.Submarine?.Name != null)
+                    GameMain.GameSession?.SubmarineInfo?.CheckSubsLeftBehind();
+                    if (GameMain.GameSession?.SubmarineInfo?.Name != null)
                     {
-                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.Submarine);
+                        GameMain.NetLobbyScreen.TryDisplayCampaignSubmarine(GameMain.GameSession.SubmarineInfo);
                     }
                     campaign.LastSaveID = campaign.PendingSaveID;
 
@@ -2119,8 +2162,7 @@ namespace Barotrauma.Networking
         {
             if (!permissions.HasFlag(ClientPermissions.ConsoleCommands)) { return false; }
 
-            commandName = commandName.ToLowerInvariant();
-            if (permittedConsoleCommands.Any(c => c.ToLowerInvariant() == commandName)) { return true; }
+            if (permittedConsoleCommands.Any(c => c.Equals(commandName, StringComparison.OrdinalIgnoreCase))) { return true; }
 
             //check aliases
             foreach (DebugConsole.Command command in DebugConsole.Commands)
@@ -2371,7 +2413,7 @@ namespace Barotrauma.Networking
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
-        public void SetupNewCampaign(Submarine sub, string saveName, string mapSeed)
+        public void SetupNewCampaign(SubmarineInfo sub, string saveName, string mapSeed)
         {
             GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
 
@@ -2537,6 +2579,11 @@ namespace Barotrauma.Networking
                 inGameHUD.AddToGUIUpdateList();
                 GameMain.NetLobbyScreen.FileTransferFrame?.AddToGUIUpdateList();
             }
+
+            serverSettings.AddToGUIUpdateList();
+            if (serverSettings.ServerLog.LogFrame != null) serverSettings.ServerLog.LogFrame.AddToGUIUpdateList();
+
+            GameMain.NetLobbyScreen?.PlayerFrame?.AddToGUIUpdateList();
         }
 
         public void UpdateHUD(float deltaTime)
@@ -2580,7 +2627,7 @@ namespace Barotrauma.Networking
                 if (GUI.KeyboardDispatcher.Subscriber == null)                
                 {
                     bool chatKeyHit = PlayerInput.KeyHit(InputType.Chat);
-                    bool radioKeyHit = PlayerInput.KeyHit(InputType.RadioChat) && (Character.Controlled == null || Character.Controlled.SpeechImpediment < 0);
+                    bool radioKeyHit = PlayerInput.KeyHit(InputType.RadioChat) && (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100);
 
                     if (chatKeyHit || radioKeyHit)
                     {
@@ -2626,8 +2673,6 @@ namespace Barotrauma.Networking
                     }
                 }
             }
-            serverSettings.AddToGUIUpdateList();
-            if (serverSettings.ServerLog.LogFrame != null) serverSettings.ServerLog.LogFrame.AddToGUIUpdateList();
         }
 
         public virtual void Draw(Microsoft.Xna.Framework.Graphics.SpriteBatch spriteBatch)
@@ -2740,73 +2785,106 @@ namespace Barotrauma.Networking
             }*/
         }
 
-        public virtual bool SelectCrewCharacter(Character character, GUIComponent characterFrame)
+        public virtual bool SelectCrewCharacter(Character character, GUIComponent frame)
         {
-            if (character == null) { return false; }
+            if (character == null) return false;
 
             if (character != myCharacter)
             {
                 var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client == null) { return false; }
+                if (client == null) return false;
 
-                var content = new GUIFrame(new RectTransform(new Vector2(0.9f, 1.0f - characterFrame.RectTransform.RelativeSize.Y), characterFrame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter), 
-                    style: null);
-
-                var mute = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, Anchor.TopCenter),
-                    TextManager.Get("Mute"))
-                {
-                    Selected = client.MutedLocally,
-                    OnSelected = (tickBox) => { client.MutedLocally = tickBox.Selected; return true; }
-                };
-
-                var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, Anchor.BottomCenter), isHorizontal: true)
-                {
-                    RelativeSpacing = 0.05f,
-                    ChildAnchor = Anchor.CenterLeft,
-                    Stretch = true
-                };
-
-                if (HasPermission(ClientPermissions.Ban))
-                {
-                    var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("Ban"), style: "GUIButtonSmall")
-                    {
-                        UserData = client,
-                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
-                    };
-                }
-                if (HasPermission(ClientPermissions.Kick))
-                {
-                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("Kick"), style: "GUIButtonSmall")
-                    {
-                        UserData = client,
-                        OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
-                    };
-                }
-                else if (serverSettings.Voting.AllowVoteKick)
-                {
-                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
-                        TextManager.Get("VoteToKick"), style: "GUIButtonSmall")
-                    {
-                        UserData = client,
-                        OnClicked = (btn, userdata) => { VoteForKick(client); btn.Enabled = false; return true; }
-                    };
-                    if (GameMain.NetworkMember.ConnectedClients != null)
-                    {
-                        kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
-                    }
-                }
+                CreateSelectionRelatedButtons(client, frame);
             }
 
             return true;
+        }
+
+        public virtual bool SelectCrewClient(Client client, GUIComponent frame)
+        {
+            if (client == null || client.ID == ID) return false;
+            CreateSelectionRelatedButtons(client, frame);
+            return true;
+        }
+
+        private void CreateSelectionRelatedButtons(Client client, GUIComponent frame)
+        {
+            var content = new GUIFrame(new RectTransform(new Vector2(1f, 1.0f - frame.RectTransform.RelativeSize.Y), frame.RectTransform, Anchor.BottomCenter, Pivot.TopCenter),
+                    style: null);
+
+            var mute = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform, Anchor.TopCenter),
+                TextManager.Get("Mute"))
+            {
+                Selected = client.MutedLocally,
+                OnSelected = (tickBox) => { client.MutedLocally = tickBox.Selected; return true; }
+            };
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), content.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomLeft)
+            {
+                RelativeSpacing = 0.05f,
+                Stretch = true
+            };
+
+            if (!GameMain.Client.GameStarted || (GameMain.Client.Character == null || GameMain.Client.Character.IsDead) && (client.Character == null || client.Character.IsDead))
+            {
+                var messageButton = new GUIButton(new RectTransform(new Vector2(1f, 0.2f), content.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0f, buttonContainer.RectTransform.RelativeSize.Y) },
+                    TextManager.Get("message"), style: "GUIButtonSmall")
+                {
+                    UserData = client,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        chatBox.InputBox.Text = $"{client.Name}; ";
+                        CoroutineManager.StartCoroutine(selectCoroutine());
+                        return false;
+                    }
+                };
+            }
+
+            // Need a delayed selection due to the inputbox being deselected when a left click occurs outside of it
+            IEnumerable<object> selectCoroutine()
+            {
+                yield return new WaitForSeconds(0.01f, true);
+                chatBox.InputBox.Select(chatBox.InputBox.Text.Length);
+            }
+
+            if (HasPermission(ClientPermissions.Ban) && client.AllowKicking)
+            {
+                var banButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
+                    TextManager.Get("Ban"), style: "GUIButtonSmall")
+                {
+                    UserData = client,
+                    OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
+                };
+            }
+            if (HasPermission(ClientPermissions.Kick) && client.AllowKicking)
+            {
+                var kickButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
+                    TextManager.Get("Kick"), style: "GUIButtonSmall")
+                {
+                    UserData = client,
+                    OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
+                };
+            }
+            else if (serverSettings.Voting.AllowVoteKick && client.AllowKicking)
+            {
+                var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.9f), buttonContainer.RectTransform),
+                    TextManager.Get("VoteToKick"), style: "GUIButtonSmall")
+                {
+                    UserData = client,
+                    OnClicked = (btn, userdata) => { VoteForKick(client); btn.Enabled = false; return true; }
+                };
+                if (GameMain.NetworkMember.ConnectedClients != null)
+                {
+                    kickVoteButton.Enabled = !client.HasKickVoteFromID(myID);
+                }
+            }
         }
 
         public void CreateKickReasonPrompt(string clientName, bool ban, bool rangeBan = false)
         {
             var banReasonPrompt = new GUIMessageBox(
                 TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
-                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, new Vector2(0.25f, 0.2f), new Point(400, 200));
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, new Vector2(0.25f, 0.22f), new Point(400, 220));
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
             var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
@@ -2820,14 +2898,16 @@ namespace Barotrauma.Networking
 
             if (ban)
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), TextManager.Get("BanDuration"));
-                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                    TextManager.Get("BanPermanent"))
+                
+                var labelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), content.RectTransform), isHorizontal: false);
+                new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), labelContainer.RectTransform), TextManager.Get("BanDuration")) { Padding = Vector4.Zero };
+                var buttonContent = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), labelContainer.RectTransform), isHorizontal: true);
+                permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.15f), buttonContent.RectTransform), TextManager.Get("BanPermanent"))
                 {
                     Selected = true
                 };
 
-                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.15f), content.RectTransform), isHorizontal: true)
+                var durationContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1f), buttonContent.RectTransform), isHorizontal: true)
                 {
                     Visible = false
                 };
@@ -2930,7 +3010,7 @@ namespace Barotrauma.Networking
             }
             if (GameMain.GameSession?.Submarine != null)
             {
-                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Name);
+                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
             }
             if (Level.Loaded != null)
             {
@@ -2952,8 +3032,8 @@ namespace Barotrauma.Networking
                 errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
             }
 
-            string filePath = "event_error_log_client_" + Name + "_" + ToolBox.RemoveInvalidFileNameChars(DateTime.UtcNow.ToShortTimeString() + ".log");
-            filePath = Path.Combine(ServerLog.SavePath, filePath);
+            string filePath = "event_error_log_client_" + Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
+            filePath = Path.Combine(ServerLog.SavePath, ToolBox.RemoveInvalidFileNameChars(filePath));
 
             if (!Directory.Exists(ServerLog.SavePath))
             {

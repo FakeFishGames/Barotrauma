@@ -56,15 +56,6 @@ namespace Barotrauma.Items.Components
             };
         }
 
-        public override void OnItemLoaded()
-        {
-            base.OnItemLoaded();
-            if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
-            {
-                ShowOnDisplay(DisplayedWelcomeMessage);
-            }
-        }
-
         private void SendOutput(string input)
         {
             if (input.Length > MaxMessageLength)
@@ -123,6 +114,11 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
+            if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
+            {
+                ShowOnDisplay(DisplayedWelcomeMessage);
+                DisplayedWelcomeMessage = "";
+            }
             if (shouldSelectInputBox)
             {
                 inputBox.Select();

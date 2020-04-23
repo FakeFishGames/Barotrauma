@@ -297,11 +297,11 @@ namespace Barotrauma.Sounds
             return newSound;
         }
 
-        public Sound LoadSound(XElement element, bool stream = false)
+        public Sound LoadSound(XElement element, bool stream = false, string overrideFilePath = null)
         {
             if (Disabled) { return null; }
 
-            string filePath = element.GetAttributeString("file", "");
+            string filePath = overrideFilePath ?? element.GetAttributeString("file", "");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
@@ -621,7 +621,10 @@ namespace Barotrauma.Sounds
             }
             if (streamingThread == null || streamingThread.ThreadState.HasFlag(ThreadState.Stopped) || isStreamThreadDying)
             {
-                streamingThread?.Join();
+                if (streamingThread != null && !streamingThread.Join(1000))
+                {
+                    DebugConsole.ThrowError("Sound stream thread join timed out!");
+                }
                 areStreamsPlaying = true;
                 streamingThread = new Thread(UpdateStreaming)
                 {
@@ -639,10 +642,7 @@ namespace Barotrauma.Sounds
             bool killThread = false;
             while (!killThread)
             {
-                lock (threadDeathMutex)
-                {
-                    areStreamsPlaying = false;
-                }
+                killThread = true;
                 for (int i = 0; i < playingChannels.Length; i++)
                 {
                     lock (playingChannels[i])
@@ -654,10 +654,7 @@ namespace Barotrauma.Sounds
                             {
                                 if (playingChannels[i][j].IsPlaying)
                                 {
-                                    lock (threadDeathMutex)
-                                    {
-                                        areStreamsPlaying = true;
-                                    }
+                                    killThread = false;
                                     playingChannels[i][j].UpdateStream();
                                 }
                                 else
@@ -678,7 +675,7 @@ namespace Barotrauma.Sounds
                 }
                 lock (threadDeathMutex)
                 {
-                    killThread = !areStreamsPlaying;
+                    areStreamsPlaying = !killThread;
                 }
                 Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }

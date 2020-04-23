@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             if (!picker.IsKeyDown(InputType.Aim) && !throwing) { throwPos = 0.0f; }
             bool aim = picker.IsKeyDown(InputType.Aim) && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
 
-            if (picker.IsUnconscious || picker.IsDead || !picker.AllowInput)
+            if (picker.IsDead || !picker.AllowInput)
             {
                 throwing = false;
                 aim = false;
@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
                     if (!MathUtils.IsValid(throwVector)) { throwVector = Vector2.UnitY; }
 
 #if SERVER
-                    GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(GameServer.CharacterLogName(picker) + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
                     Character thrower = picker;
                     item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);

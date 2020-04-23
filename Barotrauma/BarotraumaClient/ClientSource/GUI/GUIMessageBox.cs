@@ -249,7 +249,10 @@ namespace Barotrauma
                     InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
                     openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
 
-                    inGameCloseTimer += deltaTime;
+                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn))
+                    {
+                        inGameCloseTimer += deltaTime;
+                    }
 
                     if (inGameCloseTimer >= inGameCloseTime)
                     {

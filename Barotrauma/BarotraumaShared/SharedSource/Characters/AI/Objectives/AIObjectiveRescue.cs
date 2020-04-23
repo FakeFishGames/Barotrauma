@@ -22,6 +22,8 @@ namespace Barotrauma
         private AIObjectiveGetItem getItemObjective;
         private float treatmentTimer;
         private Hull safeHull;
+        private float findHullTimer;
+        private readonly float findHullInterval = 1.0f;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -56,14 +58,17 @@ namespace Barotrauma
 
             if (targetCharacter != character)
             {
-                // Unconcious target is not in a safe place -> Move to a safe place first
-                if (targetCharacter.IsUnconscious && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+                // Incapacitated target is not in a safe place -> Move to a safe place first
+                if (targetCharacter.IsIncapacitated && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {
                     if (character.SelectedCharacter != targetCharacter)
                     {
-                        character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
-                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                            null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                        if (targetCharacter.CurrentHull.DisplayName != null)
+                        {
+                            character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
+                                new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                                null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                        }
 
                         // Go to the target and select it
                         if (!character.CanInteractWith(targetCharacter))
@@ -92,9 +97,17 @@ namespace Barotrauma
                         // Drag the character into safety
                         if (safeHull == null)
                         {
-                            safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
+                            if (findHullTimer > 0)
+                            {
+                                findHullTimer -= deltaTime;
+                            }
+                            else
+                            {
+                                safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
+                                findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
+                            }
                         }
-                        if (character.CurrentHull != safeHull)
+                        if (safeHull != null && character.CurrentHull != safeHull)
                         {
                             RemoveSubObjective(ref goToObjective);
                             TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager),
@@ -132,10 +145,13 @@ namespace Barotrauma
             {
                 // We can start applying treatment
                 if (character != targetCharacter && character.SelectedCharacter != targetCharacter)
-                {                
-                    character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
-                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                        null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                {
+                    if (targetCharacter.CurrentHull.DisplayName != null)
+                    {
+                        character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
+                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                            null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                    }
 
                     character.SelectCharacter(targetCharacter);
                 }
@@ -151,7 +167,7 @@ namespace Barotrauma
             if (!targetCharacter.IsPlayer)
             {
                 // If the target is a bot, don't let it move
-                targetCharacter.AIController.SteeringManager.Reset();
+                targetCharacter.AIController?.SteeringManager.Reset();
             }
             if (treatmentTimer > 0.0f)
             {
@@ -278,6 +294,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
                 Priority = 0;

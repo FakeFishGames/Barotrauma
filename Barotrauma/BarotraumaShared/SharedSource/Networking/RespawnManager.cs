@@ -63,15 +63,14 @@ namespace Barotrauma.Networking
 
         public Submarine RespawnShuttle { get; private set; }
 
-        public RespawnManager(NetworkMember networkMember, Submarine shuttle)
-            : base(shuttle)
+        public RespawnManager(NetworkMember networkMember, SubmarineInfo shuttleInfo)
+            : base(null)
         {
             this.networkMember = networkMember;
 
-            if (shuttle != null)
+            if (shuttleInfo != null)
             {
-                RespawnShuttle = new Submarine(shuttle.FilePath, shuttle.MD5Hash.Hash, true);
-                RespawnShuttle.Load(false);
+                RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
 
                 //prevent wifi components from communicating between the respawn shuttle and other subs

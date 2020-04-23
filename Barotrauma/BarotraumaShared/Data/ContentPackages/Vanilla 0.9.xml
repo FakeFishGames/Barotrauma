@@ -51,7 +51,8 @@
   <Item file="Content/Items/Legacy/legacypump.xml" />
   <Item file="Content/Items/Legacy/legacyrailgun.xml" />
   <Item file="Content/Items/Legacy/legacysearchlight.xml" />
-  <Character file="Content/Characters/Carrier/Carrier.xml" />
+  <Item file="Content/Items/Shipwrecks/wreckeditems.xml" />
+  <Item file="Content/Map/Thalamus/thalamusitems.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
@@ -77,9 +78,16 @@
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
+  <Character file="Content/Characters/Leucocyte/Leucocyte.xml" />
+  <Character file="Content/Characters/Terminalcell/Terminalcell.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />
   <Outpost file="Content/Map/Outposts/Outpost2.sub" />
   <Outpost file="Content/Map/Outposts/Outpost3.sub" />
+  <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
+  <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />
+  <Wreck file="Content/Map/Wrecks/Berilia_Wrecked1.sub" />
+  <Wreck file="Content/Map/Wrecks/Wreck1.sub" />
+  <Wreck file="Content/Map/Wrecks/Hemulen_Wrecked.sub" />
   <Submarine file="Submarines/Berilia.sub" />
   <Submarine file="Submarines/Dugong.sub" />
   <Submarine file="Submarines/Hemulen.sub" />
@@ -93,6 +101,7 @@
   <Submarine file="Submarines/Typhon.sub" />
   <Submarine file="Submarines/Typhon2.sub" />
   <Submarine file="Submarines/Venture.sub" />
+  <Submarine file="Submarines/Azimuth.sub" />
   <Text file="Content/Texts/English/EnglishVanilla.xml" />
   <Text file="Content/Texts/German/GermanVanilla.xml" />
   <Text file="Content/Texts/French/FrenchVanilla.xml" />
@@ -109,7 +118,10 @@
   <UIStyle file="Content/UI/style.xml" />
   <Afflictions file="Content/Afflictions.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
+  <Structure file="Content/Items/Shipwrecks/StructurePrefabsWrecked.xml" />
+  <Structure file="Content/Map/Thalamus/thalamusstructures.xml" />
   <RuinConfig file="Content/Map/RuinConfig.xml" />
+  <WreckAIConfig file ="Content/Map/Thalamus/ThalamusAI.xml"/>
   <BackgroundCreaturePrefabs file="Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml" />
   <LevelObjectPrefabs file="Content/LevelObjects/LevelObjectPrefabs.xml" />
   <Particles file="Content/Particles/ParticlePrefabs.xml" />
@@ -136,6 +148,7 @@
   <NPCConversations file="Content/NPCConversations/Korean/NpcConversations_Korean.xml" />
   <Jobs file="Content/Jobs.xml" />
   <Orders file="Content/Orders.xml" />
+  <Corpses file="Content/Corpses.xml" />
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <SkillSettings file="Content/SkillSettings.xml" />

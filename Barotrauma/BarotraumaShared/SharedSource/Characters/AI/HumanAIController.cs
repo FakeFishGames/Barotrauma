@@ -74,7 +74,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
-            if (DisableCrewAI || Character.IsUnconscious || Character.Removed) { return; }
+            if (DisableCrewAI || Character.IsIncapacitated || Character.Removed) { return; }
             base.Update(deltaTime);
 
             if (unreachableClearTimer > 0)
@@ -139,7 +139,10 @@ namespace Barotrauma
                 }
                 if (Character.SpeechImpediment < 100.0f)
                 {
-                    ReportProblems();
+                    if (Character.Submarine != null && Character.Submarine.TeamID == Character.TeamID && !Character.Submarine.Info.IsWreck)
+                    {
+                        ReportProblems();
+                    }
                     UpdateSpeaking();
                 }
                 UnequipUnnecessaryItems();
@@ -1049,12 +1052,59 @@ namespace Barotrauma
 
         private static bool FilterCrewMember(Character self, Character other) => other != null && !other.IsDead && !other.Removed && other.AIController is HumanAIController humanAi && humanAi.IsFriendly(self);
 
+        public static bool IsItemOperatedByAnother(Character character, ItemComponent target, out Character operatingCharacter)
+        {
+            operatingCharacter = null;
+            if (target?.Item == null) { return false; }
+            foreach (var c in Character.CharacterList)
+            {
+                if (character != null && c == character) { continue; }
+                if (character?.AIController is HumanAIController humanAi && !humanAi.IsFriendly(c)) { continue; }
+                if (c.SelectedConstruction != target.Item) { continue; }
+                operatingCharacter = c;
+                // If the other character is player, don't try to operate
+                if (c.IsRemotePlayer || Character.Controlled == c) { return true; }
+                if (c.AIController is HumanAIController controllingHumanAi)
+                {
+                    // If the other character is ordered to operate the item, let him do it
+                    if (controllingHumanAi.ObjectiveManager.IsCurrentOrder<AIObjectiveOperateItem>())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        if (character == null)
+                        {
+                            return true;
+                        }
+                        else if (target is Steering)
+                        {
+                            // Steering is hard-coded -> cannot use the required skills collection defined in the xml
+                            return character.GetSkillLevel("helm") <= c.GetSkillLevel("helm");
+                        }
+                        else
+                        {
+                            return target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c);
+                        }
+                    }
+                }
+                else
+                {
+                    // Shouldn't go here, unless we allow non-humans to operate items
+                    return false;
+                }
+
+            }
+            return false;
+        }
+
         #region Wrappers
         public bool IsFriendly(Character other) => IsFriendly(Character, other);
         public void DoForEachCrewMember(Action<HumanAIController> action) => DoForEachCrewMember(Character, action);
         public bool IsTrueForAnyCrewMember(Func<HumanAIController, bool> predicate) => IsTrueForAnyCrewMember(Character, predicate);
         public bool IsTrueForAllCrewMembers(Func<HumanAIController, bool> predicate) => IsTrueForAllCrewMembers(Character, predicate);
         public int CountCrew(Func<HumanAIController, bool> predicate = null, bool onlyActive = true, bool onlyBots = false) => CountCrew(Character, predicate, onlyActive, onlyBots);
+        public bool IsItemOperatedByAnother(ItemComponent target, out Character operatingCharacter) => IsItemOperatedByAnother(Character, target, out operatingCharacter);
         #endregion
     }
 }

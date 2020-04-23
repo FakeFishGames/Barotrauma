@@ -134,7 +134,7 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.Write((UInt16)pi.Quantity);
+                msg.WriteRangedInteger(pi.Quantity, 0, 100);
             }
         }
 
@@ -162,7 +162,7 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 string itemPrefabIdentifier = msg.ReadString();
-                UInt16 itemQuantity = msg.ReadUInt16();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
                 purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 

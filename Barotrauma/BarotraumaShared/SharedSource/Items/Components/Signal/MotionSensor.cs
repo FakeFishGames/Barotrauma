@@ -40,6 +40,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 rangeX = MathHelper.Clamp(value, 0.0f, 1000.0f);
+#if CLIENT
+                item.ResetCachedVisibleSize();
+#endif
             }
         }
         [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.")]
