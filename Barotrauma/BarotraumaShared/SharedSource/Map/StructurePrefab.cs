@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.IO;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -231,6 +232,23 @@ namespace Barotrauma
             sp.name = sp.originalName;
             sp.ConfigElement = element;
             sp.identifier = element.GetAttributeString("identifier", "");
+            
+            var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
+            
+            string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+            
+            if (string.IsNullOrEmpty(sp.originalName))
+            {
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    sp.name = TextManager.Get("EntityName." + sp.identifier, true) ?? string.Empty;
+                }
+                else
+                {
+                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                }
+            }
+            
             if (string.IsNullOrEmpty(sp.name))
             {
                 sp.name = TextManager.Get("EntityName." + sp.identifier, returnNull: true) ?? $"Not defined ({sp.identifier})";
@@ -258,17 +276,15 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + sp.name + "\"!");
                         }
-
 #if CLIENT
-                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
+                        if (subElement.GetAttributeBool("fliphorizontal", false))
                             sp.sprite.effects = SpriteEffects.FlipHorizontally;
-                        if (subElement.GetAttributeBool("flipvertical", false)) 
+                        if (subElement.GetAttributeBool("flipvertical", false))
                             sp.sprite.effects = SpriteEffects.FlipVertically;
 #endif
-                        
                         sp.canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         sp.canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
-                        
+
                         if (subElement.Attribute("name") == null && !string.IsNullOrWhiteSpace(sp.Name))
                         {
                             sp.sprite.Name = sp.Name;
@@ -286,19 +302,52 @@ namespace Barotrauma
                             sp.BackgroundSprite.RelativeOrigin = subElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                         }
 #if CLIENT
-                        if (subElement.GetAttributeBool("fliphorizontal", false)) 
-                            sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally;
-                        if (subElement.GetAttributeBool("flipvertical", false)) 
-                            sp.BackgroundSprite.effects = SpriteEffects.FlipVertically;
+                        if (subElement.GetAttributeBool("fliphorizontal", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipHorizontally; }
+                        if (subElement.GetAttributeBool("flipvertical", false)) { sp.BackgroundSprite.effects = SpriteEffects.FlipVertically; }
+                        sp.BackgroundSpriteColor = subElement.GetAttributeColor("color", Color.White);
 #endif
-
                         break;
+                    case "decorativesprite":
+#if CLIENT
+                        string decorativeSpriteFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            decorativeSpriteFolder = Path.GetDirectoryName(file.Path);
+                        }
+
+                        int groupID = 0;
+                        DecorativeSprite decorativeSprite = null;
+                        if (subElement.Attribute("texture") == null)
+                        {
+                            groupID = subElement.GetAttributeInt("randomgroupid", 0);
+                        }
+                        else
+                        {
+                            decorativeSprite = new DecorativeSprite(subElement, decorativeSpriteFolder, lazyLoad: true);
+                            sp.DecorativeSprites.Add(decorativeSprite);
+                            groupID = decorativeSprite.RandomGroupID;
+                        }
+                        if (!sp.DecorativeSpriteGroups.ContainsKey(groupID))
+                        {
+                            sp.DecorativeSpriteGroups.Add(groupID, new List<DecorativeSprite>());
+                        }
+                        sp.DecorativeSpriteGroups[groupID].Add(decorativeSprite);
+#endif
+                        break;
+                }
+            }
+            
+            if (string.Equals(parentType, "wrecked", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrEmpty(sp.Name))
+                {
+                    sp.name = TextManager.GetWithVariable("wreckeditemformat", "[name]", sp.name);
                 }
             }
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out MapEntityCategory category))
             {
-                category = MapEntityCategory.Structure;
+                category = MapEntityCategory.Structure; 
             }
             sp.Category = category;
 
@@ -325,7 +374,14 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(sp.Description))
             {
-                sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
+                if (string.IsNullOrEmpty(nameIdentifier))
+                {
+                    sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
+                }
+                else
+                {
+                    sp.Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
             }
 
             //backwards compatibility

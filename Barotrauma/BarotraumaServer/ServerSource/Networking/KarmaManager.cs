@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -12,7 +13,17 @@ namespace Barotrauma
         {
             public List<Pair<Wire, float>> WireDisconnectTime = new List<Pair<Wire, float>>();
 
+            public struct TimeAmount
+            {
+                public double Time;
+                public float Amount;
+            }
+
+            public List<TimeAmount> KarmaDecreasesInPastMinute = new List<TimeAmount>();
+
             public float PreviousNotifiedKarma;
+
+            public double PreviousKarmaNotificationTime;
 
             public float StructureDamageAccumulator;
             
@@ -22,6 +33,9 @@ namespace Barotrauma
                 get { return Math.Max(StructureDamageAccumulator, structureDamagePerSecond); }
                 set { structureDamagePerSecond = value; }
             }
+
+            public List<TimeAmount> StunsInPastMinute = new List<TimeAmount>();
+            public float StunKarmaDecreaseMultiplier;
 
             //when did a given character last attack this one
             public Dictionary<Character, double> LastAttackTime
@@ -52,6 +66,13 @@ namespace Barotrauma
                     var clientMemory = GetClientMemory(client);
                     clientMemory.StructureDamagePerSecond = clientMemory.StructureDamageAccumulator;
                     clientMemory.StructureDamageAccumulator = 0.0f;
+
+                    clientMemory.StunsInPastMinute.RemoveAll(s => s.Time + 60.0f < Timing.TotalTime);
+
+                    if (!clientMemory.StunsInPastMinute.Any())
+                    {
+                        clientMemory.StunKarmaDecreaseMultiplier = 1.0f;
+                    }
 
                     var toRemove = clientMemory.LastAttackTime.Where(pair => pair.Value < Timing.TotalTime - AllowedRetaliationTime).Select(pair => pair.Key).ToList();
                     foreach (var lastAttacker in toRemove)
@@ -89,28 +110,26 @@ namespace Barotrauma
 
             var clientMemory = GetClientMemory(client);
             float karmaChange = client.Karma - clientMemory.PreviousNotifiedKarma;
-            if (Math.Abs(karmaChange) > 1.0f &&
-                (TestMode || Math.Abs(karmaChange) / clientMemory.PreviousNotifiedKarma > KarmaNotificationInterval / 100.0f))
+            if (Math.Abs(karmaChange) > 1.0f && TestMode)
             {
-                if (TestMode)
+                string msg =
+                    karmaChange < 0 ? $"Your karma has decreased to {client.Karma}" : $"Your karma has increased to {client.Karma}";
+                if (!string.IsNullOrEmpty(debugKarmaChangeReason))
                 {
-                    string msg =
-                        karmaChange < 0 ? $"Your karma has decreased to {client.Karma}" : $"Your karma has increased to {client.Karma}";
-                    if (!string.IsNullOrEmpty(debugKarmaChangeReason))
-                    {
-                        msg += $". Reason: {debugKarmaChangeReason}";
-                    }
-                    GameMain.Server.SendDirectChatMessage(msg, client);
+                    msg += $". Reason: {debugKarmaChangeReason}";
                 }
-                else if (Math.Abs(KickBanThreshold - client.Karma) < KarmaNotificationInterval)
-                {
-                    GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
-                }
-                else
-                {
-                    GameMain.Server.SendDirectChatMessage(TextManager.Get(karmaChange < 0 ? "KarmaDecreasedUnknownAmount" : "KarmaIncreasedUnknownAmount"), client);
-                }
-                clientMemory.PreviousNotifiedKarma = client.Karma;                
+                GameMain.Server.SendDirectChatMessage(msg, client);
+                clientMemory.PreviousNotifiedKarma = client.Karma;
+                clientMemory.PreviousKarmaNotificationTime = Timing.TotalTime;
+            }
+            else if (Timing.TotalTime >= clientMemory.PreviousKarmaNotificationTime + 5.0f &&
+                     clientMemory.PreviousNotifiedKarma >= KickBanThreshold + KarmaNotificationInterval &&
+                     client.Karma < KickBanThreshold + KarmaNotificationInterval)
+            {
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
+                GameServer.Log(GameServer.ClientLogName(client) + " has been warned for having dangerously low karma.", ServerLog.MessageType.Karma);
+                clientMemory.PreviousNotifiedKarma = client.Karma;
+                clientMemory.PreviousKarmaNotificationTime = Timing.TotalTime;
             }
         }
 
@@ -130,10 +149,10 @@ namespace Barotrauma
                 //increase the strength of the herpes affliction in steps instead of linearly
                 //otherwise clients could determine their exact karma value from the strength
                 float herpesStrength = 0.0f;
-                if (client.Karma < 20)                
-                    herpesStrength = 100.0f;                
-                else if (client.Karma < 30)                
-                    herpesStrength = 60.0f;                
+                if (client.Karma < 20)
+                    herpesStrength = 100.0f;
+                else if (client.Karma < 30)
+                    herpesStrength = 60.0f;
                 else if (client.Karma < 40.0f)
                     herpesStrength = 30.0f;
                 
@@ -141,6 +160,8 @@ namespace Barotrauma
                 if (existingAffliction == null && herpesStrength > 0.0f)
                 {
                     client.Character.CharacterHealth.ApplyAffliction(null, new Affliction(herpesAffliction, herpesStrength));
+                    GameServer.Log($"{GameServer.ClientLogName(client)} has contracted space herpes due to low karma.", ServerLog.MessageType.Karma);
+                    GameMain.NetworkMember.LastClientListUpdateID++;
                 }
                 else if (existingAffliction != null)
                 {
@@ -205,7 +226,84 @@ namespace Barotrauma
             clientMemories.Remove(client);
         }
 
-        public void OnCharacterHealthChanged(Character target, Character attacker, float damage, IEnumerable<Affliction> appliedAfflictions = null)
+        // ReSharper disable once UseNegatedPatternMatching, LoopCanBeConvertedToQuery
+        public void OnItemTakenFromPlayer(CharacterInventory inventory, Client yoinker, Item item)
+        {
+            Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == inventory.Owner);
+            
+            Character yoinkerCharacter = yoinker?.Character;
+            Character targetCharacter = inventory.Owner as Character;
+
+            if (yoinker == null || item == null || yoinkerCharacter == null || targetCharacter == null || yoinkerCharacter == targetCharacter) { return; }
+            
+            if (targetClient == null && (!DangerousItemStealBots || targetCharacter.AIController == null)) { return; }
+
+            // Only if the target is alive and they are stunned, unconscious or handcuffed
+            if (targetCharacter.IsDead || targetCharacter.Removed || !(targetCharacter.Stun > 0) && !targetCharacter.IsUnconscious && !targetCharacter.LockHands) { return; }
+            
+            if (GameMain.Server.TraitorManager?.Traitors != null)
+            {
+                if (GameMain.Server.TraitorManager.Traitors.Any(t => t.Character == targetCharacter ||  t.Character == yoinkerCharacter))
+                {
+                    // Don't penalize traitors
+                    return;
+                }
+            }
+            
+            var foundItem = Inventory.FindItemRecursive(item, it => it.Prefab.Identifier == "idcard" || it.GetComponent<RangedWeapon>() != null || it.GetComponent<MeleeWeapon>() != null);
+
+            if (foundItem == null) { return; }
+
+            bool isIdCard = foundItem.prefab.Identifier == "idcard";
+            bool isWeapon = foundItem.GetComponent<RangedWeapon>() != null || foundItem.GetComponent<MeleeWeapon>() != null;
+
+            if (isIdCard)
+            {
+                string name = string.Empty;
+
+                foreach (var tag in foundItem.Tags.Split(','))
+                {
+                    string[] split = tag.Split(':');
+                    string key = split.Length > 0 ? split[0] : string.Empty;
+                    string value = split.Length > 1 ? split[1] : string.Empty;
+                    if (key == "name") { name = value; }
+                }
+
+                // Name tag doesn't belong to anyone in particular or we own the ID card
+                if (name == null || name == yoinkerCharacter.Name) { return; }
+            }
+
+            if (MathUtils.NearlyEqual(DangerousItemStealKarmaDecrease, 0)) { return; }
+
+            const float calcUpper = 1, calcLower = -1;
+
+            float upper = DangerousItemStealKarmaDecrease + 10.0f;
+            float lower = DangerousItemStealKarmaDecrease - 10.0f;
+
+            if (lower < 0)
+            {
+                upper += Math.Abs(lower);
+                lower = 0;
+            }
+
+            // If we're stealing from a bot assume the bot has 50 karma
+            var targetKarma = targetClient?.Karma ?? 50;
+
+            float karmaDifference = Math.Clamp((targetKarma - yoinker.Karma) / 50.0f, calcLower, calcUpper);
+            float karmaDecrease = lower + (karmaDifference - calcLower) * (upper - lower) / (calcUpper - calcLower);
+
+            JobPrefab clientJob = yoinker.CharacterInfo?.Job?.Prefab;
+
+            // security officers receive less karma penalty
+            if (clientJob != null && clientJob.Identifier == "securityofficer" && isWeapon)
+            {
+                karmaDecrease *= 0.5f;
+            }
+
+            AdjustKarma(yoinkerCharacter, -karmaDecrease, "Stolen dangerous item");
+        }
+
+        public void OnCharacterHealthChanged(Character target, Character attacker, float damage, float stun, IEnumerable<Affliction> appliedAfflictions = null)
         {
             if (target == null || attacker == null) { return; }
             if (target == attacker) { return; }
@@ -238,11 +336,11 @@ namespace Barotrauma
 
             if (appliedAfflictions != null)
             {
-                foreach (Affliction affliction in appliedAfflictions)
-                {
-                    if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
-                    damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
-                }
+               foreach (Affliction affliction in appliedAfflictions)
+               {
+                   if (MathUtils.NearlyEqual(affliction.Prefab.KarmaChangeOnApplied, 0.0f)) { continue; }
+                   damage -= affliction.Prefab.KarmaChangeOnApplied * affliction.Strength;
+               }
             }
 
             Client targetClient = GameMain.Server.ConnectedClients.Find(c => c.Character == target);
@@ -253,15 +351,16 @@ namespace Barotrauma
             }            
 
             Client attackerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == attacker);
-            if (attackerClient != null)
+            ClientMemory attackerMemory = GetClientMemory(attackerClient);
+            if (attackerMemory != null)
             {
                 //if the attacker has been attacked by the target within the last x seconds, ignore the damage
                 //(= no karma penalty from retaliating against someone who attacked you)
-                var attackerMemory = GetClientMemory(attackerClient);
                 if (attackerMemory.LastAttackTime.ContainsKey(target) &&
                     attackerMemory.LastAttackTime[target] > Timing.TotalTime - AllowedRetaliationTime)
                 {
                     damage = Math.Min(damage, 0);
+                    stun = 0.0f;
                 }
             }
 
@@ -270,6 +369,7 @@ namespace Barotrauma
                 target.HasEquippedItem("clowncostume"))
             {
                 damage *= 0.5f;
+                stun *= 0.5f;
             }
 
             //smaller karma penalty for attacking someone who's aiming with a weapon
@@ -278,6 +378,7 @@ namespace Barotrauma
                 target.SelectedItems.Any(it => it != null && (it.GetComponent<MeleeWeapon>() != null || it.GetComponent<RangedWeapon>() != null)))
             {
                 damage *= 0.5f;
+                stun *= 0.5f;
             }
 
             //damage scales according to the karma of the target
@@ -298,6 +399,30 @@ namespace Barotrauma
             }
             else
             {
+                if (stun > 0 && attackerMemory != null)
+                {
+                    //GameServer.Log(GameServer.CharacterLogName(attacker) + " stunned " + GameServer.CharacterLogName(target) + $" ({stun})", ServerLog.MessageType.Karma);
+                    attackerMemory.StunsInPastMinute.Add(new ClientMemory.TimeAmount() { Time = Timing.TotalTime, Amount = stun });
+
+                    if (attackerMemory.StunsInPastMinute.Count > 1)
+                    {
+                        float avgStunsInflicted = attackerMemory.StunsInPastMinute[0].Amount / (float)(attackerMemory.StunsInPastMinute[1].Time - attackerMemory.StunsInPastMinute[0].Time);
+                        for (int i = 1; i < attackerMemory.StunsInPastMinute.Count; i++)
+                        {
+                            avgStunsInflicted += attackerMemory.StunsInPastMinute[i].Amount / (float)(attackerMemory.StunsInPastMinute[i].Time - attackerMemory.StunsInPastMinute[i - 1].Time);
+                        }
+
+                        //GameServer.Log(avgStunsInflicted.ToString(), ServerLog.MessageType.Karma);
+
+                        if (avgStunsInflicted > StunFriendlyKarmaDecreaseThreshold ||
+                            attackerMemory.StunKarmaDecreaseMultiplier > 1.0f)
+                        {
+                            AdjustKarma(attacker, -StunFriendlyKarmaDecrease * attackerMemory.StunKarmaDecreaseMultiplier, "Stunned friendly");
+                            attackerMemory.StunKarmaDecreaseMultiplier *= 2.0f;
+                        }
+                    }
+                }
+
                 if (damage > 0)
                 {
                     AdjustKarma(attacker, -damage * DamageFriendlyKarmaDecrease, "Damaged friendly");
@@ -395,6 +520,7 @@ namespace Barotrauma
 
         private ClientMemory GetClientMemory(Client client)
         {
+            if (client == null) { return null; }
             if (!clientMemories.ContainsKey(client))
             {
                 clientMemories[client] = new ClientMemory()
@@ -429,6 +555,21 @@ namespace Barotrauma
             }
 
             client.Karma += amount;
+
+            if (amount < 0.0f)
+            {
+                float? herpesStrength = client.Character?.CharacterHealth.GetAfflictionStrength("spaceherpes");
+                var clientMemory = GetClientMemory(client);
+                clientMemory.KarmaDecreasesInPastMinute.RemoveAll(ta => ta.Time + 60.0f < Timing.TotalTime);
+                float aggregate = clientMemory.KarmaDecreasesInPastMinute.Select(ta => ta.Amount).DefaultIfEmpty().Aggregate((a, b) => a + b);
+                clientMemory.KarmaDecreasesInPastMinute.Add(new ClientMemory.TimeAmount() { Time = Timing.TotalTime, Amount = -amount });
+
+                if (herpesStrength.HasValue && herpesStrength <= 0.0f && aggregate - amount > 25.0f && aggregate <= 25.0f)
+                {
+                    GameServer.Log($"{GameServer.ClientLogName(client)} has lost more than 25 karma in the past minute.", ServerLog.MessageType.Karma);
+                }
+            }
+
             if (TestMode)
             {
                 SendKarmaNotifications(client, debugKarmaChangeReason);

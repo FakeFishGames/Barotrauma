@@ -15,7 +15,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrWhiteSpace(savePath)) return;
 
-            GameMain.GameSession = new GameSession(new Submarine(subPath, ""), savePath, 
+            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath, ""), savePath, 
                 GameModePreset.List.Find(g => g.Identifier == "multiplayercampaign"));
             var campaign = ((MultiPlayerCampaign)GameMain.GameSession.GameMode);
             campaign.GenerateMap(seed);
@@ -46,7 +46,7 @@ namespace Barotrauma
             DebugConsole.NewMessage("********* CAMPAIGN SETUP *********", Color.White);
             DebugConsole.ShowQuestionPrompt("Do you want to start a new campaign? Y/N", (string arg) =>
             {
-                if (arg.ToLowerInvariant() == "y" || arg.ToLowerInvariant() == "yes")
+                if (arg.Equals("y", StringComparison.OrdinalIgnoreCase) || arg.Equals("yes", StringComparison.OrdinalIgnoreCase))
                 {
                     DebugConsole.ShowQuestionPrompt("Enter a save name for the campaign:", (string saveName) =>
                     {
@@ -189,7 +189,7 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.Write((UInt16)pi.Quantity);
+                msg.WriteRangedInteger(pi.Quantity, 0, 100);
             }
 
             var characterData = GetClientCharacterData(c);
@@ -217,7 +217,7 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 string itemPrefabIdentifier = msg.ReadString();
-                UInt16 itemQuantity = msg.ReadUInt16();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
                 purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 
@@ -255,8 +255,8 @@ namespace Barotrauma
             }
             if (purchasedLostShuttles != this.PurchasedLostShuttles)
             {
-                if (GameMain.GameSession?.Submarine != null &&
-                    GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                if (GameMain.GameSession?.SubmarineInfo != null &&
+                    GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }

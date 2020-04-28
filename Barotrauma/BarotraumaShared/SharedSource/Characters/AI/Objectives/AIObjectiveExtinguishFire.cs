@@ -27,6 +27,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
                 && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
             {

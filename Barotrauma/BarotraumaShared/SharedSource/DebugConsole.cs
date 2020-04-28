@@ -475,10 +475,7 @@ namespace Barotrauma
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
             () =>
             {
-                return new string[][]
-                {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
-                };
+                return new string[][] { ListCharacterNames() };
             }, isCheat: true));
 
             commands.Add(new Command("godmode", "godmode: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
@@ -531,18 +528,17 @@ namespace Barotrauma
 
             commands.Add(new Command("findentityids", "findentityids [entityname]", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                args[0] = args[0].ToLowerInvariant();
+                if (args.Length == 0) { return; }
                 foreach (MapEntity mapEntity in MapEntity.mapEntityList)
                 {
-                    if (mapEntity.Name.ToLowerInvariant() == args[0])
+                    if (mapEntity.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase))
                     {
                         ThrowError(mapEntity.ID + ": " + mapEntity.Name.ToString());
                     }
                 }
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.Name.ToLowerInvariant() == args[0] || character.SpeciesName.ToLowerInvariant() == args[0])
+                    if (character.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) || character.SpeciesName.Equals(args[0], StringComparison.OrdinalIgnoreCase))
                     {
                         ThrowError(character.ID + ": " + character.Name.ToString());
                     }
@@ -554,8 +550,8 @@ namespace Barotrauma
                 if (args.Length < 2) return;
 
                 AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
-                    a.Name.ToLowerInvariant() == args[0].ToLowerInvariant() ||
-                    a.Identifier.ToLowerInvariant() == args[0].ToLowerInvariant());
+                    a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                    a.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                 if (afflictionPrefab == null)
                 {
                     ThrowError("Affliction \"" + args[0] + "\" not found.");
@@ -682,7 +678,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
+            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [item damage] [emp strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
 
             commands.Add(new Command("showseed|showlevelseed", "showseed: Show the seed of the current level.", (string[] args) =>
             {
@@ -695,18 +691,20 @@ namespace Barotrauma
                     NewMessage("Level seed: " + Level.Loaded.Seed);
                 }
             },null));
-
-#if DEBUG
-            commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
-            {
-                throw new Exception("crash command issued");
-            }));
-
+            
             commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
 
-                if (args.Length > 0 && args[0].ToLowerInvariant() == "start")
+                if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
+                {
+#if SERVER
+                    ThrowError("Cannot teleport the sub to the position of the cursor. Use \"start\" or \"end\", or execute the command as a client.");
+#else
+                    Submarine.MainSub.SetPosition(Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition));
+#endif
+                }
+                else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
                     Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
@@ -714,7 +712,20 @@ namespace Barotrauma
                 {
                     Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
                 }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    new string[] { "start", "end", "cursor" }
+                };
             }, isCheat: true));
+
+#if DEBUG
+            commands.Add(new Command("crash", "crash: Crashes the game.", (string[] args) =>
+            {
+                throw new Exception("crash command issued");
+            }));
 
             commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>
             {
@@ -751,18 +762,18 @@ namespace Barotrauma
 
             IEnumerable<object> TestLevels()
             {
-                Submarine selectedSub = null;
+                SubmarineInfo selectedSub = null;
                 string subName = GameMain.Config.QuickStartSubmarineName;
                 if (!string.IsNullOrEmpty(subName))
                 {
-                    selectedSub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
                 }
 
                 int count = 0;
                 while (true)
                 {
                     var gamesession = new GameSession(
-                        Submarine.SavedSubmarines.GetRandom(s => !s.HasTag(SubmarineTag.HideInMenus)),
+                        SubmarineInfo.SavedSubmarines.GetRandom(s => !s.HasTag(SubmarineTag.HideInMenus)),
                         "Data/Saves/test.xml",
                         GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
                         missionPrefab: null);
@@ -776,7 +787,7 @@ namespace Barotrauma
                     {
                         if (ruin.Area.Intersects(subWorldRect))
                         {
-                            ThrowError("Ruins intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            ThrowError("Ruins intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Info.Name);
                             yield return CoroutineStatus.Success;
                         }
                     }
@@ -797,7 +808,7 @@ namespace Barotrauma
                             (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
                         if (cellRect.Intersects(subWorldRect))
                         {
-                            ThrowError("Level cells intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Name);
+                            ThrowError("Level cells intersect with the sub. Seed: " + seed + ", Submarine: " + Submarine.MainSub.Info.Name);
                             yield return CoroutineStatus.Success;
                         }
                     }
@@ -816,7 +827,7 @@ namespace Barotrauma
             }
 #endif
 
-            commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
+                    commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
                 foreach (Item it in Item.ItemList)
                 {
@@ -1097,10 +1108,7 @@ namespace Barotrauma
             //TODO: alphabetical order?
             commands.Add(new Command("control", "control [character name]: Start controlling the specified character (client-only).", null, () =>
             {
-                return new string[][]
-                {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
-                };
+                return new string[][] { ListCharacterNames() };
             }));
             commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
@@ -1220,15 +1228,17 @@ namespace Barotrauma
                 return;
             }
 
-            if (!splitCommand[0].ToLowerInvariant().Equals("admin"))
+            string firstCommand = splitCommand[0].ToLowerInvariant();
+
+            if (!firstCommand.Equals("admin", StringComparison.OrdinalIgnoreCase))
             {
                 NewMessage(command, Color.White, true);
             }
-            
+
 #if CLIENT
             if (GameMain.Client != null)
             {
-                Command matchingCommand = commands.Find(c => c.names.Contains(splitCommand[0].ToLowerInvariant()));
+                Command matchingCommand = commands.Find(c => c.names.Contains(firstCommand));
                 if (matchingCommand == null)
                 {
                     //if the command is not defined client-side, we'll relay it anyway because it may be a custom command at the server's side
@@ -1236,7 +1246,7 @@ namespace Barotrauma
                     NewMessage("Server command: " + command, Color.Cyan);
                     return;
                 }
-                else if (GameMain.Client.HasConsoleCommandPermission(splitCommand[0].ToLowerInvariant()))
+                else if (GameMain.Client.HasConsoleCommandPermission(firstCommand))
                 {
                     if (matchingCommand.RelayToServer)
                     {
@@ -1262,7 +1272,7 @@ namespace Barotrauma
             bool commandFound = false;
             foreach (Command c in commands)
             {
-                if (!c.names.Contains(splitCommand[0].ToLowerInvariant())) continue;                
+                if (!c.names.Contains(firstCommand)) { continue; }                
                 c.Execute(splitCommand.Skip(1).ToArray());
                 commandFound = true;
                 break;                
@@ -1273,7 +1283,9 @@ namespace Barotrauma
                 ThrowError("Command \"" + splitCommand[0] + "\" not found.");
             }
         }
-        
+
+        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).Select(c => c.Name).Distinct().ToArray();
+
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
             if (args.Length == 0) return null;
@@ -1290,7 +1302,7 @@ namespace Barotrauma
             }
 
             var matchingCharacters = Character.CharacterList.FindAll(c => 
-                c.Name.ToLowerInvariant() == characterName &&
+                c.Name.Equals(characterName, StringComparison.OrdinalIgnoreCase) &&
                 (!c.IsRemotePlayer || !ignoreRemotePlayers || allowedRemotePlayer?.Character == c));
 
             if (!matchingCharacters.Any())
@@ -1336,7 +1348,7 @@ namespace Barotrauma
             JobPrefab job = null;
             if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
             {
-                job = JobPrefab.Prefabs.Find(jp => jp.Name?.ToLowerInvariant() == characterLowerCase);
+                job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
             }
             else
             {
@@ -1594,12 +1606,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static Command FindCommand(string commandName)
-        {
-            commandName = commandName.ToLowerInvariant();
-            return commands.Find(c => c.names.Any(n => n.ToLowerInvariant() == commandName));
-        }
-
+        public static Command FindCommand(string commandName) => commands.Find(c => c.names.Any(n => n.Equals(commandName, StringComparison.OrdinalIgnoreCase)));
 
         public static void Log(string message)
         {
@@ -1620,8 +1627,7 @@ namespace Barotrauma
 #if CLIENT
             if (listBox == null) { NewMessage(error, Color.Red); return; }
 
-            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                style: "InnerFrame", color: Color.White)
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
             {
                 CanBeFocused = false
             };
@@ -1635,7 +1641,7 @@ namespace Barotrauma
             textBlock.SetTextPos();
 
             listBox.UpdateScrollBarSize();
-            listBox.BarScroll = 1.0f;
+            listBox.BarScroll = 1.0f;            
 
             if (createMessageBox)
             {

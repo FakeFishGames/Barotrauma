@@ -39,6 +39,7 @@ namespace Steamworks
             ItemInstalled_t.Install(x => {
                 if (x.AppID == SteamClient.AppId) 
                 {
+					GlobalOnItemInstalled?.Invoke(x.PublishedFileId);
                     if (onItemInstalled?.ContainsKey(x.PublishedFileId) ?? false)
                     {
                         onItemInstalled[x.PublishedFileId]?.Invoke();
@@ -92,5 +93,9 @@ namespace Steamworks
 		}
 
         private static Dictionary<PublishedFileId, Action> onItemInstalled;
+
+		public static event Action<ulong> GlobalOnItemInstalled;
+
+		public static uint NumSubscribedItems { get { return Internal.GetNumSubscribedItems(); } }
     }
 }

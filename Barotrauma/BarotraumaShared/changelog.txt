@@ -1,4 +1,149 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.9.0
+---------------------------------------------------------------------------------------------------------
+
+- Added wrecked submarines to levels.
+- Reimplemented carrier (now called Thalamus).
+- New submarine, Azimuth.
+- Miscellaneous performance optimizations.
+- Improvements to traitor missions (slightly simpler, with clearer instructions).
+- Reduced the skill requirements for mechanical repairs.
+- Reduced the damage when a mechanical repair fails.
+- Rebalanced mission rewards.
+- New water ambience sounds.
+- Speed up despawning when there are lots of bodies inside the sub, enemies despawn x2 faster.
+- Salvage missions can be completed by taking the artifact to the start outpost (the descriptions don't specify which outpost to return it to).
+- Characters with insufficient skills can fail at mechanical repairs, causing minor injuries.
+- Gaps that are inside a hull don't flood the sub, a warning icon is displayed on those gaps in the sub editor.
+- Added submarine test mode to the sub editor.
+- Moved the entity filter panel and "previously used" panel in the sub editor to the top left corner of the screen.
+- Pressing enter after modifying the value of a text field in the sub editor is no longer required.
+- "teleportsub" console command can be used to teleport the sub to the position of the cursor.
+- The engine vibrates and plays a loud sound when it's damaged to indicate more clearly that it needs repairs.
+- Added animated lights to alarm buzzers and sirens.
+- Sonar beacon's label can be edited in-game.
+- Assistants gain skills faster than other characters.
+- Skills increase faster during non-campaign rounds.
+- More noticeable particle effects on damaged devices.
+- Added "itemdamage" parameter to the explosion command.
+- Huskified characters turn to the final stage faster.
+- Using the "dumptofile" and "findentityids" commands doesn't require a permission from the server.
+- Added Scale and Color properties to DecorativeSprites.
+- Added OnDamaged status effect type.
+- Added lights that indicate the state of a docking port.
+- Significantly increased the item damages of all explosives.
+- Replaced the old husk stinger with tentacles (similar to Husked Crawler).
+- Minor adjustments to Husk, Human Husk, and Husked Crawler.
+- Modding: Added "probabilitymultiplier" attribute for damagemodifiers. Can be used to make items/armor affect the probability of getting an affliction.
+- Diving suits now give some protection against husk infections.
+- Light components can be set to flicker in the sub editor.
+- Fixed odd movements when pressing the ragdoll button while stunned.
+- Made it easier to interact with doors that are overlapping with a docking port/hatch.
+- Option to disable bot conversations in multiplayer in the server config file.
+
+Submarine editor improvements:
+- Removed character mode. All the functionality of the character mode is now supported in the default mode.
+- It's possible to modify the properties of multiple selected entities at the same time.
+- Autosaving (the submarine is automatically saved to a temporary file which can be recovered if the game crashes).
+- Added hotkeys for a bunch of actions (the hotkeys are visible in the tooltips).
+- Pressing F focuses the camera on the selected entities.
+- Control + A to select/deselect everything.
+- Hold shift to ignore the grid when placing / resizing.
+- The outlines of all wires are shown in wiring mode.
+- Orphaned wires are deleted automatically.
+- The content of the search box isn't reset when switching entity categories.
+- Mouse middle mouse dragging is now 1:1, previously the view moved too fast.
+- Linked submarines now have visuals when dragging.
+- Holding down arrow keys now continues to move the entity after a small delay.
+- Changing the background color by shift right clicking.
+
+Antigriefing improvements:
+- Players can be kicked/banned/muted/votekicked and their ranks changed by right clicking the name in the crew list or chat.
+- Karma penalty for stunning: gets progressively more severe the more stuns a player causes.
+- Stealing weapons or ID cards from stunned/unconscious characters reduces karma.
+- Added karma category to server log.
+
+Tab menu improvements:
+- Improved layout.
+- Show the roles of the players (moderator, admin, host) in the player list.
+- Characters can be muted/kicked/banned from the player list.
+- List the players who have joined/left the server.
+- Display spectators in the list.
+- Show player pings in the list.
+
+Command interface improvements:
+- Contextual commands: characters can be ordered to operate/repair/use specific items by holding shift while enabling the command interface.
+- Job icons are shown in the command interface to make it a little faster to differentiate between characters.
+- Added separate orders for repairing electrical and mechanical devices.
+
+VOIP improvements:
+- Added a keybind for local voice chat (= it's possible to only speak to players next to you without everyone within headset range hearing it).
+- Added an adjustable delay for cutting audio capture after the push-to-talk key has been released.
+- Fixed audio being suppressed when someone speaks even if VOIP volume is low or completely muted.
+
+Workshop improvements:
+- "Enabling" a mod through the ingame Workshop screen is no longer a thing; subscribing to a mod is all you need to do for the game to install it once it's downloaded.
+- Loading preview images and installing mods is done asynchronously (= no lag spikes).
+- Added notifications to the main menu to indicate when mods are being downloaded and have been installed.
+- Files are automatically added to the Workshop item publish menu as they're added to a to-be-published content package's directory.
+
+Bugfixes:
+- Fixed achievements not unlocking.
+- Fixed positions of artifacts spawning in caves and on level walls getting desynced between the server and clients.
+- Fixed new wire node being created at an item client-side if connecting the wire fails due to an electric shock server-side.
+- Fixed clients executing console commands they don't have permission to use.
+- Fixed enablecheats command not being relayed to server.
+- Fixed light component and alarm siren/buzzer states occasionally getting desynced.
+- Fixed inability to enter the sub through very small hulls.
+- Fixed antibiotics not giving husk infection resistance when shot from a syringe gun. 
+- Fixed text overflows in the player management panel in the server lobby in languages other than English.
+- Fixed searchlight toggle doing nothing.
+- Fixed hulls that have minuscule amounts of water in them (too small to be even rendered) being able to trigger InWater effects and water footstep sounds.
+- Fixed pumps dicarding the previously received set_targetlevel signal after 0.1 seconds, preventing manual control systems from working if the pumps aren't receiving a continuous set_targetlevel signal.
+- Fixes to occasional crashes when rendering alien artifacts.
+- Fixed radio chat key not working.
+- Fixed reconnected clients not gaining XP.
+- Fixes to sprite depth issues in Berilia's decorative fin structures.
+- Fixed bots with an active order not switching to idle state when they have nothing to do, causing them to stand in place or walk against a wall.
+- Fixed docking ports without a door sometimes getting linked to an incorrect door, preventing the door's linked gap from working correctly.
+- Fixed monsters not spawning in ruins if the submarine hasn't left the starting outpost.
+- Fixed freezing caused by SoundManager.InitStreamThread.
+- Fixed generic Powered components (= charging dock) always using the default power consumption value defined in XML even if the power consumption is changed in the sub editor.
+- Fixed last traitor objective's end message not being shown.
+- Fixed command interface showing non-interactable devices as valid targets.
+- Fixed dragged characters sometimes getting stuck on staircases.
+- Fixed serious performance issues triggered by bot's combat and rescue objectives when there are no safe hulls left.
+- Fixed characters being grabbable through walls.
+- Potentially fixed a crash in GameMain.WindowActive caused by voice chat capture when the game is exiting.
+- Spawn cargo above the floor structure of the cargo room, not above the bottom of the cargo hull. Fixes items spawning partially inside structures where the hull extends below the floor.
+- Fixed all monsters bleeding red blood.
+- Fixed light sprite's scale not being taken into account in light culling, causing lights with a large scaled-up light sprite to disappear before they're off-screen.
+- Fixed damageable items not taking damage from repair tools.
+- Fixed hitscan projectiles not hitting items.
+- Fixed the short freeze when switching to the sub editor.
+- Fixed sprites not being included in the xml element when using "copy to clipboard" in the particle editor.
+- Fixed clients being able to use the number inputs in the multiplayer campaign store without the appropriate permissions.
+- Fixed ability to buy more than 100 items of a kind despite 100 being the limit of how many purchased items of a kind can spawn.
+- Fixed handheld sonar pinging when LMB is held, quickly draining the battery.
+- Added some checks to prevent character sounds from crashing the game when audio playback is disabled.
+- Fixed character collider's angular damping getting set to 0 if the character gets frozen, which caused the character's swimming animation to get wobbly.
+- Fixed private messages not having the [PM] tag when dead.
+- Fixed inability to open the health interface when hovering the cursor over another character, even if the character's health interface is inaccessible.
+- Fixed bots being inactive when far away from all player characters.
+- Fixed some particles (like muzzle flash) not being drawn on top of structures that are outside hulls.
+- Fixed enemies being unable to target entities outside the submarine if they are inside it.
+- Fixed oxygenite shards and tanks causing characters to move at turbo speed.
+- Fixed waypoint links to gaps, doors, and ladders etc being removed when linking waypoint to another in the sub editor. Allow to remove links between waypoints.
+- Fixed "teleportsub" console command teleporting also the connected outposts.
+- Fixed characters getting stuck on platforms that extend outside the sub.
+- Fixed diving suit lockers that have been recolored in the sub editor switching back to the default color when a suit is placed inside them.
+- Coilgun/railgun loaders don't deteriorate if launching the turret fails. Fixes loaders deteriorating rapidly if the turret is receiving a continuous signal.
+- Fixed rendering glitches on the surface of water when there's steep angles on the surface.
+- Fixed inability to fire ranged reapons from sub to another through docking ports.
+- Fixed inability drag characters from sub to another through docking ports.
+- Fixed bots trying to shoot targets inside the alien ruins.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.8.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -50,7 +195,6 @@ Bugfixes:
 - Fixed crashing if the selected core content package contains errors (missing files, invalid XML files).
 - Fixed splash screen causing a crash on some Mac systems.
 - Fixed corrupted save files causing the game to crash during loading.
-- Fixed a memory leak in the health interface that may have caused crashes on very long game sessions.
 - Fixed clients being able to run the "enablecheats" command client-side without the permission to use the command.
 - Fixed AI inputs not being synced with clients, preventing clients from seeing when the bots aim/shoot/attack.
 - Don't allow using the "flipx" console command while playing online.

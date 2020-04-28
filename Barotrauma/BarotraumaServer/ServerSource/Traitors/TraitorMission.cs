@@ -235,7 +235,7 @@ namespace Barotrauma
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
-                    GameServer.Log($"{traitor.Character.Name} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
+                    GameServer.Log($"{GameServer.CharacterLogName(traitor.Character)} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
                 }
 #endif
                 return true;
@@ -245,75 +245,71 @@ namespace Barotrauma
 
             public void Update(float deltaTime, TraitorWinHandler winHandler)
             {
-                    if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
+                if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
+                {
+                    return;
+                }
+                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
+                {
+                    Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
+                    pendingObjectives.Clear();
+                    Traitors.Clear();
+                    return;
+                }
+                var startedObjectives = new List<Objective>();
+                foreach (var traitor in Traitors.Values)
+                {
+                    startedObjectives.Clear();
+                    while (pendingObjectives.Count > 0)
                     {
-                        return;
-                    }
-                    if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
-                    {
-                        //Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
-                        //pendingObjectives.Clear();
-                        //Traitors.Clear();
-                        //return;
-                    }
-                    var startedObjectives = new List<Objective>();
-                    foreach (var traitor in Traitors.Values)
-                    {
-                        startedObjectives.Clear();
-                        while (pendingObjectives.Count > 0)
+                        var objective = GetCurrentObjective(traitor);
+                        if (objective == null)
                         {
-                            var objective = GetCurrentObjective(traitor);
-                            if (objective == null)
+                            // No more objectives left for traitor or waiting for another traitor's objective.
+                            break;
+                        }
+                        if (!objective.IsStarted)
+                        {
+                            if (!objective.Start(traitor))
                             {
-                                // No more objectives left for traitor or waiting for another traitor's objective.
-                                break;
-                            }
-                            if (!objective.IsStarted)
-                            {
-                                if (!objective.Start(traitor))
-                                {
-                                    //the mission fails if an objective cannot be started
-                                    if (completedObjectives.Count > 0)
-                                    {
-                                        objective.EndMessage();
-                                    }
-                                    pendingObjectives.Clear();
-                                    break;
-                                }
-                                startedObjectives.Add(objective);
-                            }
-                            objective.Update(deltaTime);
-                            if (objective.IsCompleted)
-                            {
-                                pendingObjectives.Remove(objective);
-                                completedObjectives.Add(objective);
-                                if (pendingObjectives.Count > 0)
+                                //the mission fails if an objective cannot be started
+                                if (completedObjectives.Count > 0)
                                 {
                                     objective.EndMessage();
                                 }
-                                continue;
-                            }
-                            if (objective.IsStarted && !objective.CanBeCompleted)
-                            {
-                                objective.EndMessage();
                                 pendingObjectives.Clear();
+                                break;
                             }
-                            break;
+                            startedObjectives.Add(objective);
                         }
-                        if (pendingObjectives.Count > 0)
+                        objective.Update(deltaTime);
+                        if (objective.IsCompleted)
                         {
-                            startedObjectives.ForEach(objective => objective.StartMessage());
+                            pendingObjectives.Remove(objective);
+                            completedObjectives.Add(objective);
+                            objective.EndMessage();
+                            continue;
                         }
+                        if (objective.IsStarted && !objective.CanBeCompleted)
+                        {
+                            objective.EndMessage();
+                            pendingObjectives.Clear();
+                        }
+                        break;
                     }
-                    if (completedObjectives.Count >= allObjectives.Count)
+                    if (pendingObjectives.Count > 0)
                     {
-                        foreach (var traitor in Traitors)
-                        {
-                            SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
-                        }
-                        //winHandler();
+                        startedObjectives.ForEach(objective => objective.StartMessage());
                     }
-                
+                }
+                if (completedObjectives.Count >= allObjectives.Count)
+                {
+                    foreach (var traitor in Traitors)
+                    {
+                        SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
+                    }
+                    winHandler();
+                }
             }
 
             public delegate bool CharacterFilter(Character character);

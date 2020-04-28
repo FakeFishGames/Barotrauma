@@ -20,14 +20,14 @@ float4x4 xUvTransform;
 
 struct VertexShaderInput
 {
-    float4 Position : SV_POSITION;
+    float4 Position : POSITION0;
     float4 Color : COLOR0;
     float2 TexCoords: TEXCOORD0; // added
 };
 
 struct VertexShaderOutput
 {
-    float4 Position : SV_POSITION;
+    float4 Position : POSITION0;
     float4 Color : COLOR0;
     float2 TexCoords: TEXCOORD0; // added
 }; 
@@ -95,7 +95,7 @@ float4 mainPSBlurred(VertexShaderOutput input) : COLOR
     return sample;
 }
 
-float4 mainPostProcess(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 mainPostProcess(float4 position : POSITION0, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
     float4 bumpColor = tex2D(WaterBumpSampler, texCoord + xUvOffset + xBumpPos);
     bumpColor = (bumpColor + tex2D(WaterBumpSampler, texCoord - xUvOffset * 2.0f + xBumpPos)) * 0.5f;

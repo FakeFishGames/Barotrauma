@@ -91,6 +91,7 @@ namespace Barotrauma.Items.Components
             if ((item.Submarine == null && displayedSubs.Count > 0) ||              //item not inside a sub anymore, but display is still showing subs
                 !displayedSubs.Contains(item.Submarine) ||                          //current sub not displayer
                 item.Submarine.DockedTo.Any(s => !displayedSubs.Contains(s)) ||     //some of the docked subs not diplayed
+                !submarineContainer.Children.Any() ||                                        // We lack a GUI
                 displayedSubs.Any(s => s != item.Submarine && !item.Submarine.DockedTo.Contains(s))) //displaying a sub that shouldn't be displayed
             {
                 CreateHUD();
@@ -116,21 +117,23 @@ namespace Barotrauma.Items.Components
         private void DrawHUDFront(SpriteBatch spriteBatch, GUICustomComponent container)
         {
             if (Voltage < MinVoltage)
-        {
+            {
                 Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
 
                 GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip,
-                    GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f, font: GUI.SubHeadingFont);
+                               GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime)), Color.Black * 0.8f, font: GUI.SubHeadingFont);
                 return;
             }
+
+            if (!submarineContainer.Children.Any()) { return; }
 
             foreach (GUIComponent child in submarineContainer.Children.First().Children)
             {
                 if (child.UserData is Hull hull)
                 {
-                    if (hull.Submarine == null || !hull.Submarine.IsOutpost) { continue; }
-                    string text = TextManager.GetWithVariable("MiniMapOutpostDockingInfo", "[outpost]", hull.Submarine.Name);
+                    if (hull.Submarine == null || !hull.Submarine.Info.IsOutpost) { continue; }
+                    string text = TextManager.GetWithVariable("MiniMapOutpostDockingInfo", "[outpost]", hull.Submarine.Info.Name);
                     Vector2 textSize = GUI.Font.MeasureString(text);
                     Vector2 textPos = child.Center;
                     if (textPos.X + textSize.X / 2 > submarineContainer.Rect.Right)
@@ -151,7 +154,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Hull hull in Hull.hullList)
             {
-                var hullFrame = submarineContainer.Children.First().FindChild(hull);
+                var hullFrame = submarineContainer.Children.FirstOrDefault()?.FindChild(hull);
                 if (hullFrame == null) { continue; }
 
                 if (GUI.MouseOn == hullFrame || hullFrame.IsParentOf(GUI.MouseOn))
@@ -175,7 +178,7 @@ namespace Barotrauma.Items.Components
             foreach (Hull hull in Hull.hullList)
             {
                 if (hull.Submarine == null) continue;
-                var hullFrame = submarineContainer.Children.First().FindChild(hull);
+                var hullFrame = submarineContainer.Children.FirstOrDefault()?.FindChild(hull);
                 if (hullFrame == null) continue;
 
                 hullDatas.TryGetValue(hull, out HullData hullData);

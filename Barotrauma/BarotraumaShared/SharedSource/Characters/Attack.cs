@@ -260,7 +260,7 @@ namespace Barotrauma
             return totalDamage;
         }
 
-        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float range = 0.0f)
+        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)
         {
             if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null);
             if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null);
@@ -269,6 +269,7 @@ namespace Barotrauma
             Range = range;
             DamageRange = range;
             StructureDamage = structureDamage;
+            ItemDamage = itemDamage;
         }
 
         public Attack(XElement element, string parentDebugName)
@@ -298,7 +299,7 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
                             string afflictionName = subElement.GetAttributeString("name", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.ToLowerInvariant() == afflictionName);
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Name.Equals(afflictionName, System.StringComparison.OrdinalIgnoreCase));
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionName + "\" not found.");
@@ -308,7 +309,7 @@ namespace Barotrauma
                         else
                         {
                             string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                            afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
                             if (afflictionPrefab == null)
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
@@ -343,7 +344,7 @@ namespace Barotrauma
                 AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.ToLowerInvariant() == afflictionIdentifier);
+                afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
                 if (afflictionPrefab != null)
                 {
                     float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
@@ -515,10 +516,10 @@ namespace Barotrauma
         public void SetCoolDown()
         {
             float randomFraction = CoolDown * CoolDownRandomFactor;
-            CurrentRandomCoolDown = MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            CurrentRandomCoolDown = MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
             CoolDownTimer = CoolDown + CurrentRandomCoolDown;
             randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
-            SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value(Rand.RandSync.Server));
+            SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
         }
 
         public void ResetCoolDown()

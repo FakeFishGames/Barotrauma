@@ -53,8 +53,20 @@ namespace Barotrauma
         [Serialize(0.25f, true)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 
+        [Serialize(0.25f, true)]
+        public float StunFriendlyKarmaDecrease { get; set; }
+
+        [Serialize(0.3f, true)]
+        public float StunFriendlyKarmaDecreaseThreshold { get; set; }
+
         [Serialize(1.0f, true)]
         public float ExtinguishFireKarmaIncrease { get; set; }
+        
+        [Serialize(defaultValue: 15.0f, true)]
+        public float DangerousItemStealKarmaDecrease { get; set; }
+        
+        [Serialize(defaultValue: false, true)]
+        public bool DangerousItemStealBots { get; set; }
 
 
         private int allowedWireDisconnectionsPerMinute;

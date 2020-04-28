@@ -348,17 +348,24 @@ namespace Barotrauma
                 }
 
                 IEnumerable<string> files = null;
-                foreach (string pattern in currentFileTypePattern.Split(','))
+                if (currentFileTypePattern == null)
                 {
-                    string patternTrimmed = pattern.Trim();
-                    patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
-                    if (files == null)
+                    files = Directory.GetFiles(currentDirectory);
+                }
+                else
+                {
+                    foreach (string pattern in currentFileTypePattern.Split(','))
                     {
-                        files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
-                    }
-                    else
-                    {
-                        files = files.Concat(Directory.EnumerateFiles(currentDirectory, patternTrimmed));
+                        string patternTrimmed = pattern.Trim();
+                        patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
+                        if (files == null)
+                        {
+                            files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
+                        }
+                        else
+                        {
+                            files = files.Concat(Directory.EnumerateFiles(currentDirectory, patternTrimmed));
+                        }
                     }
                 }
 

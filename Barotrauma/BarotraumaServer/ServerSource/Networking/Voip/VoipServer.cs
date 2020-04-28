@@ -89,7 +89,8 @@ namespace Barotrauma.Networking
             if (sender.Character != null && sender.Character.SpeechImpediment >= 100.0f) { return false; }
 
             //check if the message can be sent via radio
-            if (ChatMessage.CanUseRadio(sender.Character, out WifiComponent senderRadio) && 
+            if (!sender.VoipQueue.ForceLocal &&
+                ChatMessage.CanUseRadio(sender.Character, out WifiComponent senderRadio) && 
                 ChatMessage.CanUseRadio(recipient.Character, out WifiComponent recipientRadio))
             {
                 if (recipientRadio.CanReceive(senderRadio)) { return true; }

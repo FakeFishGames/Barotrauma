@@ -60,7 +60,7 @@ namespace Barotrauma
             Directory.CreateDirectory(TempPath);
             try
             {
-                ClearFolder(TempPath, new string[] { GameMain.GameSession.Submarine.FilePath });
+                ClearFolder(TempPath, new string[] { GameMain.GameSession.SubmarineInfo.FilePath });
             }
             catch (Exception e)
             {
@@ -69,23 +69,10 @@ namespace Barotrauma
 
             try
             {
-                if (Submarine.MainSub != null)
+                if (GameMain.GameSession.SubmarineInfo != null)
                 {
-                    string subPath = Path.Combine(TempPath, Submarine.MainSub.Name + ".sub");
-                    if (Submarine.Loaded.Contains(Submarine.MainSub))
-                    {
-                        Submarine.MainSub.FilePath = subPath;
-                        Submarine.MainSub.SaveAs(Submarine.MainSub.FilePath);
-                    }
-                    else if (Submarine.MainSub.FilePath != subPath)
-                    {
-                        if (File.Exists(subPath))
-                        {
-                            File.Delete(subPath);
-                        }
-                        File.Copy(Submarine.MainSub.FilePath, subPath);
-                        Submarine.MainSub.FilePath = subPath;
-                    }
+                    string subPath = Path.Combine(TempPath, GameMain.GameSession.SubmarineInfo.Name + ".sub");
+                    GameMain.GameSession.SubmarineInfo.SaveAs(subPath);
                 }
             }
             catch (Exception e)
@@ -123,7 +110,7 @@ namespace Barotrauma
             if (doc == null) { return; }
 
             string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
-            Submarine selectedSub = new Submarine(subPath, "");
+            SubmarineInfo selectedSub = new SubmarineInfo(subPath, "");
             GameMain.GameSession = new GameSession(selectedSub, filePath, doc);
         }
 

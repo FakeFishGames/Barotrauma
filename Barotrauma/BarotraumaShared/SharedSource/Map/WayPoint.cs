@@ -4,13 +4,14 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.RuinGeneration;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    public enum SpawnType { Path, Human, Enemy, Cargo };
+    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 3, Corpse = 4 };
     partial class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
@@ -121,9 +122,16 @@ namespace Barotrauma
             idCardTags = new string[0];
 
 #if CLIENT
-            if (iconTexture == null)
+            if (iconSprites == null)
             {
-                iconTexture = Sprite.LoadTexture("Content/Map/waypointIcons.png");
+                iconSprites = new Dictionary<SpawnType, Sprite>()
+                {
+                    { SpawnType.Path, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,0,128,128)) },
+                    { SpawnType.Human, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,0,128,128)) },
+                    { SpawnType.Enemy, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256,0,128,128)) },
+                    { SpawnType.Cargo, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384,0,128,128)) },
+                    { SpawnType.Corpse, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512,0,128,128)) }
+                };
             }
 #endif
 
@@ -148,21 +156,12 @@ namespace Barotrauma
             return clone;
         }
 
-        public override bool IsMouseOn(Vector2 position)
-        {
-#if CLIENT
-            if (IsHidden()) return false;
-#endif
-
-            return base.IsMouseOn(position);
-        }
-
-        public static void GenerateSubWaypoints(Submarine submarine)
+        public static bool GenerateSubWaypoints(Submarine submarine)
         {
             if (!Hull.hullList.Any())
             {
                 DebugConsole.ThrowError("Couldn't generate waypoints: no hulls found.");
-                return;
+                return false;
             }
 
             List<WayPoint> existingWaypoints = WayPointList.FindAll(wp => wp.spawnType == SpawnType.Path);
@@ -465,6 +464,8 @@ namespace Barotrauma
             {
                 door.Body.Enabled = false;
             }
+
+            return true;
         }
 
         private WayPoint FindClosest(int dir, bool horizontalSearch, Vector2 tolerance, Body ignoredBody = null)
@@ -520,22 +521,14 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) wayPoint2.linkedTo.Add(this);
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, bool useSyncedRand = false)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
         {
-            List<WayPoint> wayPoints = new List<WayPoint>();
-
-            foreach (WayPoint wp in WayPointList)
-            {
-                if (sub != null && wp.Submarine != sub) continue;
-                if (wp.spawnType != spawnType) continue;
-                if (assignedJob != null && wp.assignedJob != assignedJob.Prefab) continue;
-
-                wayPoints.Add(wp);
-            }
-
-            if (!wayPoints.Any()) return null;
-
-            return wayPoints[Rand.Int(wayPoints.Count, (useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced))];
+            return WayPointList.GetRandom(wp =>
+                wp.Submarine == sub && 
+                wp.ParentRuin == ruin &&
+                wp.spawnType == spawnType &&
+                (assignedJob == null || (assignedJob != null && wp.assignedJob == assignedJob.Prefab))
+                , useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
@@ -584,7 +577,7 @@ namespace Barotrauma
                 if (assignedWayPoints[i] != null) continue;
 
                 //everything else failed -> just give a random spawnpoint inside the sub
-                assignedWayPoints[i] = GetRandom(SpawnType.Human, null, submarine, true);
+                assignedWayPoints[i] = GetRandom(SpawnType.Human, null, submarine, useSyncedRand: true);
             }
 
             for (int i = 0; i < assignedWayPoints.Length; i++)
@@ -654,7 +647,7 @@ namespace Barotrauma
             {
                 w.assignedJob = 
                     JobPrefab.Get(jobIdentifier) ??
-                    JobPrefab.Prefabs.Find(jp => jp.Name.ToLowerInvariant() == jobIdentifier);                
+                    JobPrefab.Prefabs.Find(jp => jp.Name.Equals(jobIdentifier, StringComparison.OrdinalIgnoreCase));                
             }
 
             w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);

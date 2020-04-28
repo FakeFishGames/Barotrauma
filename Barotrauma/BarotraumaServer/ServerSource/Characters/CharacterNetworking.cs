@@ -243,7 +243,7 @@ namespace Barotrauma
                                 return;
                             }
 
-                            if (IsUnconscious)
+                            if (IsIncapacitated)
                             {
                                 var causeOfDeath = CharacterHealth.GetCauseOfDeath();
                                 Kill(causeOfDeath.First, causeOfDeath.Second);
@@ -264,21 +264,21 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 3);
+                        msg.WriteRangedInteger(0, 0, 4);
                         msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                         Inventory.ServerWrite(msg, c);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(1, 0, 3);
+                        msg.WriteRangedInteger(1, 0, 4);
                         Client owner = (Client)extraData[1];
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 3);
+                        msg.WriteRangedInteger(2, 0, 4);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(3, 0, 3);
+                        msg.WriteRangedInteger(3, 0, 4);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -292,6 +292,15 @@ namespace Barotrauma
                                 msg.Write(skill.Level);
                             }
                         }
+                        break;
+                    case NetEntityEvent.Type.ExecuteAttack:
+                        Limb attackLimb = extraData[1] as Limb;
+                        UInt16 targetEntityID = (UInt16)extraData[2];
+                        int targetLimbIndex = extraData.Length > 3 ? (int)extraData[3] : 0;
+                        msg.WriteRangedInteger(4, 0, 4);
+                        msg.Write((byte)(Removed ? 0 : Array.IndexOf(AnimController.Limbs, attackLimb)));
+                        msg.Write(targetEntityID);
+                        msg.Write((byte)targetLimbIndex);
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -354,7 +363,7 @@ namespace Barotrauma
                     Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
                     tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
                     
-                    tempBuffer.Write(IsRagdolled || IsUnconscious || Stun > 0.0f || IsDead);
+                    tempBuffer.Write(IsRagdolled || Stun > 0.0f || IsDead || IsIncapacitated);
 
                     tempBuffer.Write(AnimController.Dir > 0.0f);
                 }
@@ -497,6 +506,31 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
+
+            // Current order
+            if (info.CurrentOrder != null)
+            {
+                msg.Write(true);
+                msg.Write((byte)Order.PrefabList.IndexOf(info.CurrentOrder.Prefab));
+                msg.Write(info.CurrentOrder.TargetEntity == null ? (UInt16)0 :
+                    info.CurrentOrder.TargetEntity.ID);
+                if (info.CurrentOrder.OrderGiver != null)
+                {
+                    msg.Write(true);
+                    msg.Write(info.CurrentOrder.OrderGiver.ID);
+                }
+                else
+                {
+                    msg.Write(false);
+                }
+                msg.Write((byte)(string.IsNullOrWhiteSpace(info.CurrentOrderOption) ? 0 :
+                    Array.IndexOf(info.CurrentOrder.Prefab.Options, info.CurrentOrderOption)));
+            }
+            else
+            {
+                msg.Write(false);
+            }
+
             TryWriteStatus(msg);
 
             void TryWriteStatus(IWriteMessage msg)

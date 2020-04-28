@@ -335,7 +335,8 @@ namespace Barotrauma
                 //an ad-hoc way of allowing the players to have roughly the same maximum view distance regardless of the resolution,
                 //while still keeping the zoom around 1.0 when not looking further away (because otherwise we'd always be downsampling 
                 //on lower resolutions, which doesn't look that good)
-                float newZoom = MathHelper.Lerp(unscaledZoom, scaledZoom, (float)Math.Sqrt(zoomOutAmount));
+                float newZoom = MathHelper.Lerp(unscaledZoom, scaledZoom,
+                    (GameMain.Config == null || GameMain.Config.EnableMouseLook) ? (float)Math.Sqrt(zoomOutAmount) : 0.3f);
 
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 

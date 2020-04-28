@@ -108,7 +108,7 @@ namespace Barotrauma.Networking
                         netProperties[key].Read(incMsg);
                         if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
                         {
-                            GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                            GameServer.Log(GameServer.ClientLogName(c) + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
                         }
                         changed = true;
                     }
@@ -367,7 +367,7 @@ namespace Barotrauma.Networking
                 if (clientElement.Attribute("preset") == null)
                 {
                     string permissionsStr = clientElement.GetAttributeString("permissions", "");
-                    if (permissionsStr.ToLowerInvariant() == "all")
+                    if (permissionsStr.Equals("all", StringComparison.OrdinalIgnoreCase))
                     {
                         foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
                         {
@@ -384,7 +384,7 @@ namespace Barotrauma.Networking
                     {
                         foreach (XElement commandElement in clientElement.Elements())
                         {
-                            if (commandElement.Name.ToString().ToLowerInvariant() != "command") continue;
+                            if (!commandElement.Name.ToString().Equals("command", StringComparison.OrdinalIgnoreCase)) { continue; }
 
                             string commandName = commandElement.GetAttributeString("name", "");
                             DebugConsole.Command command = DebugConsole.FindCommand(commandName);

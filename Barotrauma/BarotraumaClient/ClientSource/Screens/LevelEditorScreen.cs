@@ -170,14 +170,6 @@ namespace Barotrauma
         {
             base.Select();
 
-            foreach (LevelObjectPrefab levelObjPrefab in LevelObjectPrefab.List)
-            {
-                foreach (Sprite sprite in levelObjPrefab.Sprites)
-                {
-                    sprite?.EnsureLazyLoaded();
-                }
-            }
-
             pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
             GameMain.LightManager.AddLight(pointerLightSource);
             topPanel.ClearChildren();
@@ -253,9 +245,10 @@ namespace Barotrauma
                 };
 
                 Sprite sprite = levelObjPrefab.Sprites.FirstOrDefault() ?? levelObjPrefab.DeformableSprite?.Sprite;
-                GUIImage img = new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
+                new GUIImage(new RectTransform(new Point(paddedFrame.Rect.Height, paddedFrame.Rect.Height - textBlock.Rect.Height),
                     paddedFrame.RectTransform, Anchor.TopCenter), sprite, scaleToFit: true)
                 {
+                    LoadAsynchronously = true,
                     CanBeFocused = false
                 };
             }
@@ -466,6 +459,7 @@ namespace Barotrauma
                 Submarine.Draw(spriteBatch, false);
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(new Point(0, -Level.Loaded.Size.Y), Level.Loaded.Size), Color.White, thickness: (int)(1.0f / cam.Zoom));
                 spriteBatch.End();
 
                 if (lightingEnabled.Selected)
@@ -531,7 +525,7 @@ namespace Barotrauma
                         else if (element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
                         { 
                             SerializableProperty.SerializeProperties(genParams, element, true);
-                        }                        
+                        }
                         break;
                     }
                 }
@@ -552,7 +546,7 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != levelObjPrefab.Name.ToLowerInvariant()) continue;
+                        if (!element.Name.ToString().Equals(levelObjPrefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                         levelObjPrefab.Save(element);
                         break;
                     }
@@ -577,7 +571,7 @@ namespace Barotrauma
                 bool elementFound = false;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (element.Name.ToString().ToLowerInvariant() != genParams.Name.ToLowerInvariant()) continue;
+                    if (!element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                     SerializableProperty.SerializeProperties(genParams, element, true);
                     elementFound = true;
                 }                

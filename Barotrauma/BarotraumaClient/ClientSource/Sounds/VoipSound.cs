@@ -44,13 +44,15 @@ namespace Barotrauma.Sounds
             new BandpassFilter(VoipConfig.FREQUENCY, 2000)
         };
 
+        private float gain;
         public float Gain
         {
-            get { return soundChannel == null ? 0.0f : soundChannel.Gain; }
+            get { return soundChannel == null ? 0.0f : gain; }
             set
             {
                 if (soundChannel == null) { return; }
-                soundChannel.Gain = value;
+                gain = value;
+                soundChannel.Gain = value * GameMain.Config.VoiceChatVolume;
             }
         }
 
@@ -59,8 +61,10 @@ namespace Barotrauma.Sounds
             get { return soundChannel?.CurrentAmplitude ?? 0.0f; }
         }
 
-        public VoipSound(SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
+        public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
         {
+            Filename = $"VoIP ({name})";
+
             VoipConfig.SetupEncoding();
 
             ALFormat = Al.FormatMono16;
@@ -73,6 +77,7 @@ namespace Barotrauma.Sounds
 
             SoundChannel chn = new SoundChannel(this, 1.0f, null, 0.4f, 1.0f, "voip", false);
             soundChannel = chn;
+            Gain = 1.0f;
         }
 
         public override float GetAmplitudeAtPlaybackPos(int playbackPos)
@@ -93,25 +98,28 @@ namespace Barotrauma.Sounds
 
         public void ApplyFilters(short[] buffer, int readSamples)
         {
-            if (UseMuffleFilter)
-            {
-                ApplyFilters(radioFilters, buffer, readSamples);
-            }
-
-            if (UseRadioFilter)
-            {
-                ApplyFilters(radioFilters, buffer, readSamples);
-            }
-        }
-
-        private void ApplyFilters(IEnumerable<BiQuad> filters, short[] buffer, int readSamples)
-        {
             for (int i = 0; i < readSamples; i++)
             {
                 float fVal = ShortToFloat(buffer[i]);
-                foreach (var filter in filters)
+
+                if (gain * GameMain.Config.VoiceChatVolume > 1.0f) //TODO: take distance into account?
                 {
-                    fVal = filter.Process(fVal);
+                    fVal = Math.Clamp(fVal * gain * GameMain.Config.VoiceChatVolume, -1.0f, 1.0f);
+                }
+
+                if (UseMuffleFilter)
+                {                
+                    foreach (var filter in muffleFilters)
+                    {
+                        fVal = filter.Process(fVal);
+                    }
+                }
+                if (UseRadioFilter)
+                {
+                    foreach (var filter in radioFilters)
+                    {
+                        fVal = filter.Process(fVal);
+                    }
                 }
                 buffer[i] = FloatToShort(fVal);
             }
@@ -140,13 +148,21 @@ namespace Barotrauma.Sounds
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
             queue.RetrieveBuffer(bufferID, out int compressedSize, out byte[] compressedBuffer);
-            if (compressedSize > 0)
+            try
             {
-                VoipConfig.Decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
-                bufferID++;
-                return VoipConfig.BUFFER_SIZE * 2;
+                if (compressedSize > 0)
+                {
+                    VoipConfig.Decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
+                    bufferID++;
+                    return VoipConfig.BUFFER_SIZE * 2;
+                }
+                if (bufferID < queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1)) bufferID = queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1);
             }
-            if (bufferID < queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1)) bufferID = queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1);
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to decode Opus buffer (buffer size {compressedBuffer.Length}, packet size {compressedSize})", e);
+                bufferID = queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1);
+            }
 
             return 0;
         }

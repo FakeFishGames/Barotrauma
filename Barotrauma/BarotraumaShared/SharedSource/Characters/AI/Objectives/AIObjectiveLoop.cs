@@ -108,6 +108,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (character.LockHands || character.Submarine == null || Targets.None())
             {
                 Priority = 0;

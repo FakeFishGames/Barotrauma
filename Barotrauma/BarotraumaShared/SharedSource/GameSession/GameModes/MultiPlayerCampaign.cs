@@ -69,9 +69,18 @@ namespace Barotrauma
 #if CLIENT
             if (GameMain.Client != null)
             {
+                bool success =
+                    GameMain.Client.ConnectedClients.Any(c => c.Character != null && !c.Character.IsDead);
+                
                 GameMain.GameSession.EndRound("");
                 GameMain.GameSession.CrewManager.EndRound();
-                return;                
+
+                if (success)
+                {
+                    GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+                }
+
+                return;
             }
 #endif
 
@@ -104,17 +113,12 @@ namespace Barotrauma
             {
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
+                    c.Character.ResetCurrentOrder();
                     c.CharacterInfo = c.Character.Info;
                     characterData.Add(new CharacterCampaignData(c));
                 }
             }
 
-            //remove all items that are in someone's inventory
-            foreach (Character c in Character.CharacterList)
-            {
-                c.Inventory?.DeleteAllItems();
-            }
-            
             if (success)
             {
                 bool atEndPosition = Submarine.MainSub.AtEndPosition;
@@ -142,6 +146,8 @@ namespace Barotrauma
                 }
                 map.ProgressWorld();
 
+                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+            
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
 #endif

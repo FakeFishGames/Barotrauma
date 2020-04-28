@@ -13,7 +13,7 @@ namespace Microsoft.Xna.Framework.Graphics
     /// batched and will process them into short.MaxValue groups (strided by 6 for the number of vertices
     /// sent to the GPU). 
     /// </summary>
-	internal class SpriteBatcher
+	internal class SpriteBatcher : IDisposable
 	{
         /*
          * Note that this class is fundamental to high performance for SpriteBatch games. Please exercise
@@ -53,6 +53,9 @@ namespace Microsoft.Xna.Framework.Graphics
         private short[] _index;
 
         private VertexPositionColorTexture[] _vertexArray;
+
+        private VertexBuffer vertexBuffer;
+        private IndexBuffer indexBuffer;
 
 		public SpriteBatcher (GraphicsDevice device)
 		{
@@ -136,6 +139,12 @@ namespace Microsoft.Xna.Framework.Graphics
             _index = newIndex;
 
             _vertexArray = new VertexPositionColorTexture[4 * numBatchItems];
+
+            indexBuffer?.Dispose();
+            vertexBuffer?.Dispose();
+            indexBuffer = new IndexBuffer(_device, IndexElementSize.SixteenBits, _index.Length, BufferUsage.WriteOnly);
+            indexBuffer.SetData(_index);
+            vertexBuffer = new VertexBuffer(_device, VertexPositionColorTexture.VertexDeclaration, _vertexArray.Length, BufferUsage.WriteOnly);
         }
                 
         /// <summary>
@@ -225,7 +234,8 @@ namespace Microsoft.Xna.Framework.Graphics
             }
             // return items to the pool.  
             _batchItemCount = 0;
-		}
+            _device.Textures[0] = null;
+        }
 
         /// <summary>
         /// Sends the triangle list to the graphics device. Here is where the actual drawing starts.
@@ -241,6 +251,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
             var vertexCount = end - start;
 
+            _device.Indices = indexBuffer;
             // If the effect is not null, then apply each pass and render the geometry
             if (effect != null)
             {
@@ -252,31 +263,26 @@ namespace Microsoft.Xna.Framework.Graphics
                     // Whatever happens in pass.Apply, make sure the texture being drawn
                     // ends up in Textures[0].
                     _device.Textures[0] = texture;
-
-                    _device.DrawUserIndexedPrimitives(
-                        PrimitiveType.TriangleList,
-                        _vertexArray,
-                        0,
-                        vertexCount,
-                        _index,
-                        0,
-                        (vertexCount / 4) * 2,
-                        VertexPositionColorTexture.VertexDeclaration);
+                    vertexBuffer.SetData(_vertexArray, start, vertexCount);
+                    _device.SetVertexBuffer(vertexBuffer);
+                    _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, (vertexCount / 4) * 2);
                 }
             }
             else
             {
                 // If no custom effect is defined, then simply render.
-                _device.DrawUserIndexedPrimitives(
-                    PrimitiveType.TriangleList,
-                    _vertexArray,
-                    0,
-                    vertexCount,
-                    _index,
-                    0,
-                    (vertexCount / 4) * 2,
-                    VertexPositionColorTexture.VertexDeclaration);
+                vertexBuffer.SetData(_vertexArray, start, vertexCount);
+                _device.SetVertexBuffer(vertexBuffer);
+                _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, (vertexCount / 4) * 2);
             }
+            
+            _device.Indices = null;
+        }
+
+        public void Dispose()
+        {
+            indexBuffer?.Dispose();
+            vertexBuffer?.Dispose();
         }
 	}
 }

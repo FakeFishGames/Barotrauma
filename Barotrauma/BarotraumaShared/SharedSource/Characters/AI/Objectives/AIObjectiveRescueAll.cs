@@ -73,6 +73,7 @@ namespace Barotrauma
         public static float GetVitalityFactor(Character character)
         {
             float vitality = character.HealthPercentage - character.Bleeding - character.Bloodloss + Math.Min(character.Oxygen, 0);
+            vitality -= character.CharacterHealth.GetAfflictionStrength("paralysis");
             return Math.Clamp(vitality, 0, 100);
         }
 
@@ -105,7 +106,11 @@ namespace Barotrauma
             if (target.Submarine == null || character.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            if (character.Submarine != null)
+            {
+                if (target.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            }
             if (!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
                 // Ignore all concious targets that are currently fighting, fleeing or treating characters

@@ -40,6 +40,9 @@ namespace Barotrauma
         [Serialize(false, true), Editable]
         public bool NeedsAir { get; set; }
 
+        [Serialize(false, true, description: "Can the creature live without water or does it die on dry land?"), Editable]
+        public bool NeedsWater { get; set; }
+
         [Serialize(false, true), Editable]
         public bool CanSpeak { get; set; }
 
@@ -52,11 +55,20 @@ namespace Barotrauma
         [Serialize("blood", true), Editable]
         public string BloodDecal { get; private set; }
 
+        [Serialize("blooddrop", true), Editable]
+        public string BleedParticleAir { get; private set; }
+
+        [Serialize("waterblood", true), Editable]
+        public string BleedParticleWater { get; private set; }
+
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
         [Serialize(1f, true, "Decreases the intensive path finding call frequency. Set to a lower value for insignificant creatures to improve performance."), Editable(minValue: 0f, maxValue: 1f)]
         public float PathFinderPriority { get; set; }
+
+        [Serialize(false, true), Editable]
+        public bool HideInSonar { get; set; }
 
         public readonly string File;
 
@@ -461,6 +473,12 @@ namespace Barotrauma
 
             [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable()]
             public bool EnforceAggressiveBehaviorForMissions { get; private set; }
+
+            [Serialize(false, true, description: "Should the character target or ignore walls when it's inside the submarine. Doesn't have any effect if no target priority for walls is defined."), Editable()]
+            public bool TargetInnerWalls { get; private set; }
+
+            [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable()]
+            public bool RandomAttack { get; private set; }
 
             // TODO: latchonto, swarming
 

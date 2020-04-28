@@ -199,6 +199,9 @@ namespace Barotrauma.Particles
         [Editable, Serialize(DrawTargetType.Air, false, description: "Should the particle be rendered in air, water or both.")]
         public DrawTargetType DrawTarget { get; private set; }
 
+        [Editable, Serialize(false, false, description: "Should the particle be always rendered on top of entities?")]
+        public bool DrawOnTop { get; private set; }
+
         [Editable, Serialize(ParticleBlendState.AlphaBlend, false, description: "The type of blending to use when rendering the particle.")]
         public ParticleBlendState BlendState { get; private set; }
 

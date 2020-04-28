@@ -8,6 +8,7 @@ using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 #if WINDOWS
 using SharpDX;
@@ -110,6 +111,33 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
+
+            try
+            {
+                if (exception is GameMain.LoadingException)
+                {
+                    //exception occurred in loading screen:
+                    //assume content packages are the culprit and reset them
+                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerSavePath);
+                    XDocument baseDoc = XMLExtensions.TryLoadXml(GameSettings.SavePath);
+                    if (doc != null && baseDoc != null)
+                    {
+                        XElement newElement = new XElement(doc.Root.Name);
+                        newElement.Add(doc.Root.Attributes());
+                        newElement.Add(doc.Root.Elements().Where(e => !e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        newElement.Add(baseDoc.Root.Elements().Where(e => e.Name.LocalName.Equals("contentpackage", StringComparison.InvariantCultureIgnoreCase)));
+                        XDocument newDoc = new XDocument(newElement);
+                        newDoc.Save(GameSettings.PlayerSavePath);
+                        sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");
+                        sb.AppendLine("\n");
+                    }
+                }
+            }
+            catch
+            {
+                //welp i guess we couldn't reset the config!
+            }
+
             if (exeHash?.Hash != null)
             {
                 sb.AppendLine(exeHash.Hash);
@@ -127,7 +155,7 @@ namespace Barotrauma
                 sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
-            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Name + " (" + Submarine.MainSub.MD5Hash + ")"));
+            sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
             sb.AppendLine("Selected screen: " + (Screen.Selected == null ? "None" : Screen.Selected.ToString()));
             if (SteamManager.IsInitialized)
             {

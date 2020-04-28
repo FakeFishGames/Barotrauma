@@ -26,7 +26,13 @@ namespace Barotrauma.Items.Components
         public float Range
         {
             get { return range; }
-            set { range = Math.Max(value, 0.0f); }
+            set
+            {
+                range = Math.Max(value, 0.0f);
+#if CLIENT
+                item.ResetCachedVisibleSize();
+#endif
+            }
         }
 
         [InGameEditable, Serialize(1, true, description: "WiFi components can only communicate with components that use the same channel.")]
@@ -37,6 +43,14 @@ namespace Barotrauma.Items.Components
             {
                 channel = MathHelper.Clamp(value, 0, 10000);
             }
+        }
+
+
+        [Serialize(false, false, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.")]
+        public bool AllowCrossTeamCommunication
+        {
+            get;
+            set;
         }
 
         [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
@@ -84,7 +98,7 @@ namespace Barotrauma.Items.Components
         {
             if (sender == null || sender.channel != channel) { return false; }
 
-            if (sender.TeamID != TeamID)
+            if (sender.TeamID != TeamID && !AllowCrossTeamCommunication)
             {
                 return false;
             }            
@@ -97,6 +111,10 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             chatMsgCooldown -= deltaTime;
+            if (chatMsgCooldown <= 0.0f)
+            {
+                IsActive = false;
+            }
         }
 
         public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
@@ -164,7 +182,11 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (chatMsgSent) chatMsgCooldown = MinChatMessageInterval;
+            if (chatMsgSent) 
+            { 
+                chatMsgCooldown = MinChatMessageInterval;
+                IsActive = true;
+            }
 
             prevSignal = signal;
         }

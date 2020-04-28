@@ -83,22 +83,22 @@ namespace Barotrauma
             //    pos.Y = -pos.Y;
             //    ShapeExtensions.DrawPoint(spriteBatch, pos, GUI.Style.Red, size: 5);
             //}
-            return;
+            
             // A debug visualisation on the bezier curve between limbs.
-            var start = LimbA.WorldPosition;
+            /*var start = LimbA.WorldPosition;
             var end = LimbB.WorldPosition;
             var jointAPos = ConvertUnits.ToDisplayUnits(LocalAnchorA);
             var control = start + Vector2.Transform(jointAPos, Matrix.CreateRotationZ(LimbA.Rotation));
             start.Y = -start.Y;
             end.Y = -end.Y;
             control.Y = -control.Y;
-            //GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
-            //GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
-            //GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
-            //GUI.DrawLine(spriteBatch, start, end, Color.White);
-            //GUI.DrawLine(spriteBatch, start, control, Color.Black);
-            //GUI.DrawLine(spriteBatch, control, end, Color.Black);
-            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, GUI.Style.Red);
+            GUI.DrawRectangle(spriteBatch, start, Vector2.One * 5, Color.White, true);
+            GUI.DrawRectangle(spriteBatch, end, Vector2.One * 5, Color.Black, true);
+            GUI.DrawRectangle(spriteBatch, control, Vector2.One * 5, Color.Black, true);
+            GUI.DrawLine(spriteBatch, start, end, Color.White);
+            GUI.DrawLine(spriteBatch, start, control, Color.Black);
+            GUI.DrawLine(spriteBatch, control, end, Color.Black);
+            GUI.DrawBezierWithDots(spriteBatch, start, end, control, 1000, GUI.Style.Red);*/
         }
     }
 
@@ -110,6 +110,7 @@ namespace Barotrauma
 
         private float wetTimer;
         private float dripParticleTimer;
+        private float deadTimer;
 
         /// <summary>
         /// Note that different limbs can share the same deformations.
@@ -418,14 +419,23 @@ namespace Barotrauma
             }
         }
 
-        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(IEnumerable<Affliction> afflictions, bool playSound, IEnumerable<DamageModifier> appliedDamageModifiers)
         {
-            float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
-            float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
+            float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.Where(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
+            float damage = afflictions.Where(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
             float damageMultiplier = 1;
             foreach (DamageModifier damageModifier in appliedDamageModifiers)
             {
-                damageMultiplier *= damageModifier.DamageMultiplier;
+                foreach (var afflictionPrefab in AfflictionPrefab.List)
+                {
+                    if (damageModifier.MatchesAffliction(afflictionPrefab.Identifier, afflictionPrefab.AfflictionType))
+                    {
+                        if (afflictionPrefab.Effects.Any(e => e.MaxVitalityDecrease > 0))
+                        {
+                            damageMultiplier *= damageModifier.DamageMultiplier;
+                        }
+                    }
+                }
             }
             if (playSound)
             {
@@ -477,12 +487,20 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (!body.Enabled) return;
+            if (!body.Enabled) { return; }
 
             if (!character.IsDead)
             {
                 DamageOverlayStrength -= deltaTime;
                 BurnOverlayStrength -= deltaTime;
+            }
+            else
+            {
+                var spriteParams = Params.GetSprite();
+                if (spriteParams.DeadColorTime > 0 && deadTimer < spriteParams.DeadColorTime)
+                {
+                    deadTimer += deltaTime;
+                }
             }
 
             if (inWater)
@@ -524,7 +542,12 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
-            Color color = new Color(brightness, brightness, brightness);
+            var spriteParams = Params.GetSprite();
+            Color color = new Color(spriteParams.Color.R / 255f * brightness, spriteParams.Color.G / 255f * brightness, spriteParams.Color.B / 255f * brightness, spriteParams.Color.A / 255f);
+            if (deadTimer > 0)
+            {
+                color = Color.Lerp(color, spriteParams.DeadColor, MathUtils.InverseLerp(0, spriteParams.DeadColorTime, deadTimer));
+            }
 
             color = overrideColor ?? color;
 
@@ -594,13 +617,19 @@ namespace Barotrauma
             foreach (var decorativeSprite in DecorativeSprites)
             {
                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                Color c = new Color(decorativeSprite.Color.R / 255f * brightness, decorativeSprite.Color.G / 255f * brightness, decorativeSprite.Color.B / 255f * brightness, decorativeSprite.Color.A / 255f);
+                if (deadTimer > 0)
+                {
+                    c = Color.Lerp(c, spriteParams.DeadColor, MathUtils.InverseLerp(0, Params.GetSprite().DeadColorTime, deadTimer));
+                }
+                c = overrideColor ?? c;
                 float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                 var ca = (float)Math.Cos(-body.Rotation);
                 var sa = (float)Math.Sin(-body.Rotation);
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), color,
-                    -body.Rotation + rotation, Scale, spriteEffect,
+                decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
+                    -body.Rotation + rotation, decorativeSprite.Scale * Scale, spriteEffect,
                     depth: decorativeSprite.Sprite.Depth);
             }
             float depthStep = 0.000001f;

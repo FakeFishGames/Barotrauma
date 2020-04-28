@@ -74,7 +74,10 @@ namespace Microsoft.Xna.Framework.Graphics
                 lock (d3dContext)
                 {
                     d3dContext.UpdateSubresource(GetTexture(), subresourceIndex, region, dataPtr, GetPitch(w), 0);
-                    d3dContext.GenerateMips(GetShaderResourceView());
+                    if (_mipmap)
+                    {
+                        d3dContext.GenerateMips(GetShaderResourceView());
+                    }
                 }
             }
             finally

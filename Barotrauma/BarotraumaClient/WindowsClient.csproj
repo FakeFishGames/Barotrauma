@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>0.9.8.0</Version>
+    <Version>0.9.9.0</Version>
     <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -25,6 +25,8 @@
     <DefineConstants>TRACE;DEBUG;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -40,7 +42,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;CLIENT;WINDOWS;X64;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>

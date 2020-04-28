@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Graphics;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -9,8 +11,18 @@ namespace Barotrauma.Networking
     {
         public GUIButton LogFrame;
         private GUIListBox listBox;
+        private GUIButton reverseButton;
 
         private string msgFilter;
+
+        private bool reverseOrder = false;
+
+        private bool OnReverseClicked(GUIButton btn, object obj)
+        {
+            SetMessageReversal(!reverseOrder);
+
+            return false;
+        }
 
         public void CreateLogFrame()
         {
@@ -80,7 +92,17 @@ namespace Barotrauma.Networking
             GUI.KeyboardDispatcher.Subscriber = searchBox;
             filterArea.RectTransform.MinSize = new Point(0, filterArea.RectTransform.Children.Max(c => c.MinSize.Y));
 
-            listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), rightColumn.RectTransform));
+            GUILayoutGroup listBoxLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f), rightColumn.RectTransform))
+            {
+                Stretch = true,
+                RelativeSpacing = 0.0f
+            };
+
+            reverseButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), listBoxLayout.RectTransform), style: "UIToggleButtonVertical");
+            reverseButton.Children.ForEach(c => c.SpriteEffects = reverseOrder ? SpriteEffects.FlipVertically : SpriteEffects.None);
+            reverseButton.OnClicked = OnReverseClicked;
+
+            listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), listBoxLayout.RectTransform));
 
             GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.05f), rightColumn.RectTransform), TextManager.Get("Close"))
             {
@@ -107,7 +129,7 @@ namespace Barotrauma.Networking
             msgFilter = "";
         }
 
-        public void AssignLogFrame(GUIListBox inListBox, GUIComponent tickBoxContainer, GUITextBox searchBox)
+        public void AssignLogFrame(GUIButton inReverseButton, GUIListBox inListBox, GUIComponent tickBoxContainer, GUITextBox searchBox)
         {
             searchBox.OnTextChanged += (textBox, text) =>
             {
@@ -144,6 +166,10 @@ namespace Barotrauma.Networking
             inListBox.ClearChildren();
             listBox = inListBox;
 
+            reverseButton = inReverseButton;
+            reverseButton.Children.ForEach(c => c.SpriteEffects = reverseOrder ? SpriteEffects.FlipVertically : SpriteEffects.None);
+            reverseButton.OnClicked = OnReverseClicked;
+
             var currLines = lines.ToList();
             foreach (LogMessage line in currLines)
             {
@@ -158,14 +184,72 @@ namespace Barotrauma.Networking
         {
             float prevSize = listBox.BarSize;
 
-            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                line.Text, wrap: true, font: GUI.SmallFont)
+            GUIFrame textContainer = null;
+
+            Anchor anchor = Anchor.TopLeft;
+            Pivot pivot = Pivot.TopLeft;
+            if (line.RichData != null)
+            {
+                foreach (var data in line.RichData)
+                {
+                    UInt64 id = 0;
+                    if (!UInt64.TryParse(data.Metadata, out id)) { return; }
+                    Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id);
+                    client ??= GameMain.Client.ConnectedClients.Find(c => c.ID == id);
+                    if (client != null && client.Karma < 40.0f)
+                    {
+                        textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                                style: null, color: new Color(0xff111155))
+                        {
+                            CanBeFocused = false
+                        };
+                        anchor = Anchor.CenterLeft;
+                        pivot = Pivot.CenterLeft;
+                        break;
+                    }
+                }
+            }
+
+            var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), (textContainer ?? listBox.Content).RectTransform, anchor, pivot),
+                line.RichData, line.SanitizedText, wrap: true, font: GUI.SmallFont)
             {
                 TextColor = messageColor[line.Type],
                 Visible = !msgTypeHidden[(int)line.Type],
                 CanBeFocused = false,
                 UserData = line
             };
+
+            if (textContainer != null)
+            {
+                textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+                textBlock.SetTextPos();
+                textBlock.RectTransform.Resize(textContainer.RectTransform.NonScaledSize);
+            }
+
+            if (reverseOrder)
+            {
+                textBlock.RectTransform.SetAsFirstChild();
+            }
+
+            if (line.RichData != null)
+            {
+                foreach (var data in line.RichData)
+                {
+                    textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    {
+                        Data = data,
+                        OnClick = (component, area) =>
+                        {
+                            UInt64 id = 0;
+                            if (!UInt64.TryParse(area.Data.Metadata, out id)) { return; }
+                            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id);
+                            client ??= GameMain.Client.ConnectedClients.Find(c => c.ID == id);
+                            if (client == null) { return; }
+                            GameMain.NetLobbyScreen.SelectPlayer(client);
+                        }
+                    });
+                }
+            }
 
             if ((prevSize == 1.0f && listBox.BarScroll == 0.0f) || (prevSize < 1.0f && listBox.BarScroll == 1.0f)) listBox.BarScroll = 1.0f;
         }
@@ -193,6 +277,16 @@ namespace Barotrauma.Networking
             listBox.BarScroll = 0.0f;
 
             return true;
+        }
+
+        private void SetMessageReversal(bool reverse)
+        {
+            if (reverseOrder == reverse) { return; }
+
+            reverseOrder = reverse;
+            reverseButton.Children.ForEach(c => c.SpriteEffects = reverseOrder ? SpriteEffects.FlipVertically : SpriteEffects.None);
+
+            listBox.Content.RectTransform.ReverseChildren();
         }
 
         public bool ClearFilter(GUIComponent button, object obj)

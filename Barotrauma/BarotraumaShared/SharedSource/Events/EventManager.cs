@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -219,13 +218,44 @@ namespace Barotrauma
 
         private void CreateEvents(ScriptedEventSet eventSet)
         {
-            if (eventSet.ChooseRandom)
+            int applyCount = 1;
+            if (eventSet.PerRuin)
             {
-                if (eventSet.EventPrefabs.Count > 0)
+                applyCount = Level.Loaded.Ruins.Count();
+            }
+            else if (eventSet.PerWreck)
+            {
+                applyCount = Submarine.Loaded.Count(s => s.Info.IsWreck && (s.WreckAI == null || !s.WreckAI.IsAlive));
+            }
+            for (int i = 0; i < applyCount; i++)
+            {
+                if (eventSet.ChooseRandom)
                 {
-                    MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
-                    var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
-                    if (eventPrefab != null)
+                    if (eventSet.EventPrefabs.Count > 0)
+                    {
+                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                        var eventPrefab = ToolBox.SelectWeightedRandom(eventSet.EventPrefabs, eventSet.EventPrefabs.Select(e => e.Commonness).ToList(), rand);
+                        if (eventPrefab != null)
+                        {
+                            var newEvent = eventPrefab.CreateInstance();
+                            newEvent.Init(true);
+                            DebugConsole.Log("Initialized event " + newEvent.ToString());
+                            if (!selectedEvents.ContainsKey(eventSet))
+                            {
+                                selectedEvents.Add(eventSet, new List<ScriptedEvent>());
+                            }
+                            selectedEvents[eventSet].Add(newEvent);
+                        }
+                    }
+                    if (eventSet.ChildSets.Count > 0)
+                    {
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
+                        if (newEventSet != null) { CreateEvents(newEventSet); }
+                    }
+                }
+                else
+                {
+                    foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
                     {
                         var newEvent = eventPrefab.CreateInstance();
                         newEvent.Init(true);
@@ -236,30 +266,11 @@ namespace Barotrauma
                         }
                         selectedEvents[eventSet].Add(newEvent);
                     }
-                }
-                if (eventSet.ChildSets.Count > 0)
-                {
-                    var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                    if (newEventSet != null) { CreateEvents(newEventSet); }
-                }
-            }
-            else
-            {
-                foreach (ScriptedEventPrefab eventPrefab in eventSet.EventPrefabs)
-                {
-                    var newEvent = eventPrefab.CreateInstance();
-                    newEvent.Init(true);
-                    DebugConsole.Log("Initialized event " + newEvent.ToString());
-                    if (!selectedEvents.ContainsKey(eventSet))
-                    {
-                        selectedEvents.Add(eventSet, new List<ScriptedEvent>());
-                    }
-                    selectedEvents[eventSet].Add(newEvent);
-                }
 
-                foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
-                {
-                    CreateEvents(childEventSet);
+                    foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
+                    {
+                        CreateEvents(childEventSet);
+                    }
                 }
             }
         }
@@ -296,11 +307,14 @@ namespace Barotrauma
                 0.0f, 1.0f);
 
             //don't create new events if within 50 meters of the start/end of the level
-            if (distanceTraveled <= 0.0f ||
-                distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+            if (!eventSet.AllowAtStart)
             {
-                return false;
+                if (distanceTraveled <= 0.0f ||
+                    distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
+                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                {
+                    return false;
+                }
             }
 
             if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
@@ -368,17 +382,15 @@ namespace Barotrauma
 
                     pendingEventSets.RemoveAt(i);
 
-                    if (!selectedEvents.ContainsKey(eventSet))
+                    if (selectedEvents.ContainsKey(eventSet))
                     {
-                        //no events selected from this event set
-                        continue;
+                        //start events in this set
+                        foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])
+                        {
+                            activeEvents.Add(scriptedEvent);
+                        }
                     }
 
-                    //start events in this set
-                    foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])
-                    {
-                        activeEvents.Add(scriptedEvent);
-                    }
                     //add child event sets to pending
                     foreach (ScriptedEventSet childEventSet in eventSet.ChildSets)
                     {
@@ -431,7 +443,7 @@ namespace Barotrauma
             enemyDanger = 0.0f;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.IsUnconscious || !character.Enabled) continue;
+                if (character.IsDead || character.IsIncapacitated || !character.Enabled) continue;
 
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
@@ -458,7 +470,7 @@ namespace Barotrauma
             int hullCount = 0;
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine == null || hull.Submarine.IsOutpost) { continue; }
+                if (hull.Submarine == null || hull.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
                 hullCount++;
                 foreach (Gap gap in hull.ConnectedGaps)
                 {

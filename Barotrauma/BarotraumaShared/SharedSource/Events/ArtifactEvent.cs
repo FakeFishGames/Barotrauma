@@ -1,6 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -53,7 +51,7 @@ namespace Barotrauma
         public override void Init(bool affectSubImmediately)
         {
             spawnPos = Level.Loaded.GetRandomItemPos(
-                (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < 0.5f) ? Level.PositionType.MainPath : Level.PositionType.Cave | Level.PositionType.Ruin,
+                (Rand.Value(Rand.RandSync.Server) < 0.5f) ? Level.PositionType.MainPath : Level.PositionType.Cave | Level.PositionType.Ruin,
                 500.0f, 10000.0f, 30.0f);
 
             spawnPending = true;

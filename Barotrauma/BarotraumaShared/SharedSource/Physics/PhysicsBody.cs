@@ -88,6 +88,8 @@ namespace Barotrauma
             Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
+        public const float DefaultAngularDamping = 5.0f;
+
         private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
         public static List<PhysicsBody> List
         {
@@ -342,7 +344,7 @@ namespace Barotrauma
             FarseerBody.BodyType = BodyType.Dynamic;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
             FarseerBody.CollisionCategories = Physics.CollisionCharacter;
-            FarseerBody.AngularDamping = 5.0f;
+            FarseerBody.AngularDamping = DefaultAngularDamping;
             FarseerBody.FixedRotation = true;
             FarseerBody.Friction = 0.05f;
             FarseerBody.Restitution = 0.05f;
@@ -370,15 +372,15 @@ namespace Barotrauma
             list.Add(this);
         }
         
-        public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
+        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
             density = element.GetAttributeFloat("density", 10.0f);
             CreateBody(width, height, radius, density);
-            //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            FarseerBody.BodyType = BodyType.Dynamic;
+            Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
+            FarseerBody.BodyType = bodyType;
             FarseerBody.CollisionCategories = Physics.CollisionItem;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.3f);

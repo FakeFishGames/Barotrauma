@@ -7,76 +7,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    public class ColorData
-    {
-        public int StartIndex, EndIndex;
-        public Color Color;
-
-        private const char colorDefinitionIndicator = '‖';
-        private const char lineChangeIndicator = '\n';
-        private const string colorDefinitionStartString = "‖color:";
-        private const string coloringEndDefinition = "‖color:end‖";
-
-        public static List<ColorData> GetColorData(string text, out string sanitizedText)
-        {
-            List<ColorData> textColors = null;
-            if (text != null && text.IndexOf(colorDefinitionIndicator) != -1 && text.Contains(colorDefinitionStartString))
-            {
-                textColors = new List<ColorData>();
-                List<int> lineChangeIndexes = null;
-
-                int currentIndex = text.IndexOf(lineChangeIndicator);
-                if (currentIndex != -1)
-                {
-                    lineChangeIndexes = new List<int>();
-                    lineChangeIndexes.Add(currentIndex);
-                    int startIndex = currentIndex + 1;
-
-                    while (true)
-                    {
-                        if (startIndex >= text.Length) break;
-                        currentIndex = text.IndexOf(lineChangeIndicator, startIndex);
-                        if (currentIndex == -1) break;
-                        lineChangeIndexes.Add(currentIndex);
-                        startIndex = currentIndex + 1;
-                    }
-                }
-
-                while (text.IndexOf(colorDefinitionStartString) != -1)
-                {
-                    ColorData colorData = new ColorData();
-
-                    int colorDefinitionStartIndex = text.IndexOf(colorDefinitionStartString);
-                    int colorDefinitionEndIndex = text.IndexOf(colorDefinitionIndicator, colorDefinitionStartIndex + 1);
-
-                    string[] colorDefinition = text.Substring(colorDefinitionStartIndex + colorDefinitionStartString.Length, colorDefinitionEndIndex - colorDefinitionStartIndex - colorDefinitionStartString.Length).Split(',');
-
-                    colorData.StartIndex = colorDefinitionStartIndex;
-                    colorData.Color = new Color(int.Parse(colorDefinition[0]), int.Parse(colorDefinition[1]), int.Parse(colorDefinition[2]));
-                    text = text.Remove(colorDefinitionStartIndex, colorDefinitionEndIndex - colorDefinitionStartIndex + 1);
-                    colorData.EndIndex = text.IndexOf(coloringEndDefinition);
-                    text = text.Remove(colorData.EndIndex, coloringEndDefinition.Length);
-
-                    if (lineChangeIndexes != null)
-                    {
-                        for (int i = 0; i < lineChangeIndexes.Count; i++)
-                        {
-                            if (colorData.StartIndex > lineChangeIndexes[i])
-                            {
-                                colorData.StartIndex--;
-                                colorData.EndIndex--;
-                            }
-                        }
-                    }
-
-                    textColors.Add(colorData);
-                }
-            }
-
-            sanitizedText = text;
-            return textColors;
-        }
-    }
     public class ScalableFont : IDisposable
     {
         private static List<ScalableFont> FontList = new List<ScalableFont>();
@@ -492,12 +422,12 @@ namespace Barotrauma
             }
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData)
         {
-            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, colorData);
+            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData);
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<ColorData> colorData)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
 
@@ -505,8 +435,8 @@ namespace Barotrauma
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
-            int colorDataIndex = 0;
-            ColorData currentColorData = colorData[colorDataIndex];
+            int richTextDataIndex = 0;
+            RichTextData currentRichTextData = richTextData[richTextDataIndex];
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -527,15 +457,19 @@ namespace Barotrauma
 
                 Color currentTextColor;
 
-                if (currentColorData != null && i > currentColorData.EndIndex + lineNum)
+                if (currentRichTextData != null && i > currentRichTextData.EndIndex + lineNum)
                 {
-                    colorDataIndex++;
-                    currentColorData = colorDataIndex < colorData.Count ? colorData[colorDataIndex] : null;
+                    richTextDataIndex++;
+                    currentRichTextData = richTextDataIndex < richTextData.Count ? richTextData[richTextDataIndex] : null;
                 }
 
-                if (currentColorData != null && currentColorData.StartIndex + lineNum <= i && i <= currentColorData.EndIndex + lineNum)
+                if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i && i <= currentRichTextData.EndIndex + lineNum)
                 {
-                    currentTextColor = currentColorData.Color;
+                    currentTextColor = currentRichTextData.Color ?? color;
+                    if (!string.IsNullOrEmpty(currentRichTextData.Metadata))
+                    {
+                        currentTextColor = Color.Lerp(currentTextColor, Color.White, 0.5f);
+                    }
                 }
                 else
                 {

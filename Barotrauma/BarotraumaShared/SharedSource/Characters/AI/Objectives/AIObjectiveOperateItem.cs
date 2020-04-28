@@ -32,6 +32,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (component.Item.ConditionPercentage <= 0)
             {
                 Priority = 0;
@@ -42,11 +47,21 @@ namespace Barotrauma
                 {
                     Priority = AIObjectiveManager.OrderPriority;
                 }
-                if (component.Item.CurrentHull == null || component.Item.CurrentHull.FireSources.Any() || IsOperatedByAnother(character, GetTarget(), out _))
+                Item targetItem = GetTarget()?.Item;
+                if (targetItem == null)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Item or component of AI Objective Operate item wass null. This shouldn't happen.");
+#endif
+                    Abandon = true;
+                    Priority = 0;
+                    return 0.0f;
+                }
+                if (targetItem.CurrentHull == null || targetItem.CurrentHull.FireSources.Any() || HumanAIController.IsItemOperatedByAnother(GetTarget(), out _))
                 {
                     Priority = 0;
                 }
-                else if (Character.CharacterList.Any(c => c.CurrentHull == component.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+                else if (Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
                 {
                     Priority = 0;
                 }
@@ -60,8 +75,8 @@ namespace Barotrauma
             return Priority;
         }
 
-        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1) 
-            : base (character, objectiveManager, priorityModifier, option)
+        public AIObjectiveOperateItem(ItemComponent item, Character character, AIObjectiveManager objectiveManager, string option, bool requireEquip, Entity operateTarget = null, bool useController = false, float priorityModifier = 1)
+            : base(character, objectiveManager, priorityModifier, option)
         {
             this.component = item ?? throw new System.ArgumentNullException("item", "Attempted to create an AIObjectiveOperateItem with a null target.");
             this.requireEquip = requireEquip;
@@ -74,51 +89,6 @@ namespace Barotrauma
                         component.Item.GetConnectedComponents<Controller>().FirstOrDefault() ??
                         component.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
             }
-        }
-
-        public static bool IsOperatedByAnother(Character character, ItemComponent target, out Character operatingCharacter)
-        {
-            operatingCharacter = null;
-            foreach (var c in Character.CharacterList)
-            {
-                if (character != null && c == character) { continue; }
-                if (character?.AIController is HumanAIController humanAi && !humanAi.IsFriendly(c)) { continue; }
-                if (c.SelectedConstruction != target.Item) { continue; }
-                operatingCharacter = c;
-                // If the other character is player, don't try to operate
-                if (c.IsRemotePlayer || Character.Controlled == c) { return true; }
-                if (c.AIController is HumanAIController controllingHumanAi)
-                {
-                    // If the other character is ordered to operate the item, let him do it
-                    if (controllingHumanAi.ObjectiveManager.IsCurrentOrder<AIObjectiveOperateItem>())
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        if (character == null)
-                        {
-                            return true;
-                        }
-                        else if (target is Steering)
-                        {
-                            // Steering is hard-coded -> cannot use the required skills collection defined in the xml
-                            return character.GetSkillLevel("helm") <= c.GetSkillLevel("helm");
-                        }
-                        else
-                        {
-                            return target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c);
-                        }
-                    }
-                }
-                else
-                {
-                    // Shouldn't go here, unless we allow non-humans to operate items
-                    return false;
-                }
-
-            }
-            return false;
         }
 
         protected override void Act(float deltaTime)
@@ -136,7 +106,7 @@ namespace Barotrauma
                 return;
             }
             // Don't allow to operate an item that someone with a better skills already operates, unless this is an order
-            if (objectiveManager.CurrentOrder != this && IsOperatedByAnother(character, target, out _))
+            if (objectiveManager.CurrentOrder != this && HumanAIController.IsItemOperatedByAnother(target, out _))
             {
                 // Don't abandon
                 return;
@@ -161,7 +131,7 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = target.Item.Name
-                    }, 
+                    },
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
@@ -176,7 +146,7 @@ namespace Barotrauma
                 }
                 else if (!character.Inventory.Items.Contains(component.Item))
                 {
-                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true), 
+                    TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true),
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref getItemObjective));
                 }

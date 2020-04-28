@@ -35,7 +35,7 @@ namespace Barotrauma
             Identifier = element.GetAttributeString("identifier", "");
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() == "icon")
+                if (subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase))
                 {
                     Icon = new Sprite(subElement);
                     IconColor = subElement.GetAttributeColor("color", Color.White);

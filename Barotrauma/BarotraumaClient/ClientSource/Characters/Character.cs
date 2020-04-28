@@ -233,7 +233,7 @@ namespace Barotrauma
                             pressureParticleTimer += pressure * deltaTime;
                             if (pressureParticleTimer > 10.0f)
                             {
-                                Particle p = GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
+                                GameMain.ParticleManager.CreateParticle(Params.BleedParticleWater, WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
                                 pressureParticleTimer = 0.0f;
                             }
                         }
@@ -355,7 +355,7 @@ namespace Barotrauma
             }
         }
         
-        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
             if (attackResult.Damage <= 1.0f || IsDead) { return; }
             if (soundTimer < soundInterval * 0.5f)
@@ -365,7 +365,7 @@ namespace Barotrauma
             }
         }
 
-        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction)
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
             if (GameMain.NetworkMember != null && controlled == this)
             {
@@ -444,6 +444,7 @@ namespace Barotrauma
                 if (item.body != null && !item.body.Enabled) continue;
                 if (item.ParentInventory != null) continue;
                 if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 
                 if (draggingItemToWorld)
                 {
@@ -466,7 +467,7 @@ namespace Barotrauma
                     //modify the distance based on the size of the trigger (preferring smaller items)
                     distanceToItem *= MathHelper.Lerp(0.05f, 2.0f, (transformedTrigger.Width + transformedTrigger.Height) / 250.0f);
                 }
-                else
+                else if (!item.Prefab.RequireCursorInsideTrigger)
                 {
                     Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 
@@ -551,7 +552,7 @@ namespace Barotrauma
         {
             if (!enabled) { return; }
 
-            if (!IsDead && !IsUnconscious)
+            if (!IsDead && !IsIncapacitated)
             {
                 if (soundTimer > 0)
                 {
@@ -601,6 +602,11 @@ namespace Barotrauma
             {
                 CharacterHealth.UpdateHUD(deltaTime);
             }
+        }
+
+        partial void SetOrderProjSpecific(Order order, string orderOption)
+        {
+            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -812,6 +818,7 @@ namespace Barotrauma
         {
             if (sounds == null || sounds.Count == 0) { return; }
             if (soundChannel != null && soundChannel.IsPlaying) { return; }
+            if (GameMain.SoundManager?.Disabled ?? true) { return; }
 
             var matchingSounds = sounds.Where(s => 
                 s.Type == soundType && 
@@ -820,6 +827,7 @@ namespace Barotrauma
 
             var matchingSoundsList = matchingSounds.ToList();
             var selectedSound = matchingSoundsList[Rand.Int(matchingSoundsList.Count)];
+            if (selectedSound?.Sound == null) { return; }
             soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, CurrentHull);
             soundTimer = soundInterval;
         }

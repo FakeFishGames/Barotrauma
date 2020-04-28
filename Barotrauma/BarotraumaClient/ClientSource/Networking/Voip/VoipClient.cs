@@ -85,20 +85,20 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (queue.Read(msg))
+            Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
+            if (queue.Read(msg, discardData: client.Muted || client.MutedLocally))
             {
-                Client client = gameClient.ConnectedClients.Find(c => c.VoipQueue == queue);
                 if (client.Muted || client.MutedLocally) { return; }
-
                 if (client.VoipSound == null)
                 {
                     DebugConsole.Log("Recreating voipsound " + queueId);
-                    client.VoipSound = new VoipSound(GameMain.SoundManager, client.VoipQueue);
+                    client.VoipSound = new VoipSound(client.Name, GameMain.SoundManager, client.VoipQueue);
                 }
 
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
-                    var messageType = ChatMessage.CanUseRadio(client.Character, out WifiComponent radio) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    WifiComponent radio = null;
+                    var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio;

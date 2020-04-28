@@ -150,8 +150,8 @@ namespace Barotrauma.Items.Components
                 if (joint == null)
                 {
                     string errorMsg = "Error while reading a docking port network event (Dock method did not create a joint between the ports)." +
-                        " Submarine: " + (item.Submarine?.Name ?? "null") +
-                        ", target submarine: " + (DockingTarget.item.Submarine?.Name ?? "null");
+                        " Submarine: " + (item.Submarine?.Info.Name ?? "null") +
+                        ", target submarine: " + (DockingTarget.item.Submarine?.Info.Name ?? "null");
                     if (item.Submarine?.ConnectedDockingPorts.ContainsKey(DockingTarget.item.Submarine) ?? false)
                     {
                         errorMsg += "\nAlready docked.";

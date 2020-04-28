@@ -131,7 +131,7 @@ namespace Barotrauma
                 farseerBody.UserData = this;
                 foreach (Structure wall in Structure.WallList)
                 {
-                    if (wall.Submarine != submarine) continue;
+                    if (wall.Submarine != submarine || wall.IsPlatform) { continue; }
 
                     Rectangle rect = wall.Rect;
 
@@ -150,7 +150,7 @@ namespace Barotrauma
 
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != submarine) continue;
+                    if (hull.Submarine != submarine) { continue; }
 
                     Rectangle rect = hull.Rect;
                     farseerBody.CreateRectangle(
@@ -167,7 +167,7 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.StaticBodyConfig == null || item.Submarine != submarine) continue;
+                    if (item.StaticBodyConfig == null || item.Submarine != submarine) { continue; }
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
@@ -180,7 +180,7 @@ namespace Barotrauma
 
                     if (width > 0.0f && height > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos));
 
                         minExtents.X = Math.Min(item.Position.X - width / 2, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2, minExtents.Y);
@@ -189,9 +189,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2));
                         minExtents.X = Math.Min(item.Position.X - width / 2 - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + width / 2 + radius, maxExtents.X);
@@ -199,9 +199,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2));
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
@@ -209,12 +209,13 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f)
                     {
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos));
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
                         maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
                     }
+                    item.StaticFixtures.ForEach(f => f.UserData = item);
                 }
 
                 Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
@@ -521,9 +522,16 @@ namespace Barotrauma
             Vector2 normalizedVel = character.AnimController.Collider.LinearVelocity == Vector2.Zero ?
                 Vector2.Zero : Vector2.Normalize(character.AnimController.Collider.LinearVelocity);
 
-            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
+            //try to find the hull right next to the contact point
+            Vector2 targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal * 0.1f);
             Hull newHull = Hull.FindHull(targetPos, null);
-
+            //not found, try searching a bit further
+            if (newHull == null)
+            {
+                targetPos = ConvertUnits.ToDisplayUnits(points[0] - contactNormal);
+                newHull = Hull.FindHull(targetPos, null);
+            }
+            //still not found, try searching in the direction the character is heading to
             if (newHull == null)
             {
                 targetPos = ConvertUnits.ToDisplayUnits(points[0] + normalizedVel);
@@ -771,7 +779,7 @@ namespace Barotrauma
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-                if (!submarine.IsOutpost && !submarine.DockedTo.Any(s => s.IsOutpost))
+                if (submarine.Info.Type == SubmarineInfo.SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineInfo.SubmarineType.Player))
                 {
                     float angularVelocity = 
                         (impactPos.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 

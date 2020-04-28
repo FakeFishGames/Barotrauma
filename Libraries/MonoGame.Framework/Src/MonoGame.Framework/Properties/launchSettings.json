@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MonoGame.Framework.Windows.NetStandard": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

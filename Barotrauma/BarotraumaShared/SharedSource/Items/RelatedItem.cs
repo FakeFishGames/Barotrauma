@@ -219,7 +219,10 @@ namespace Barotrauma
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {
-                if (element.Name.ToString().ToLowerInvariant() == "containable") typeStr = "Contained";
+                if (element.Name.ToString().Equals("containable", StringComparison.OrdinalIgnoreCase))
+                {
+                    typeStr = "Contained";
+                }
             }
             if (!Enum.TryParse(typeStr, true, out ri.type))
             {
@@ -246,7 +249,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "statuseffect") continue;
+                if (!subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase)) { continue; }
                 ri.statusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
             }
 

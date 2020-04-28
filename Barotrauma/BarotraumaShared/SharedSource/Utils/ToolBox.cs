@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Xna.Framework;
-using Barotrauma.Networking;
-using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -151,7 +152,7 @@ namespace Barotrauma
 
         public static string RemoveInvalidFileNameChars(string fileName)
         {
-            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidChars = Path.GetInvalidFileNameChars().Concat(new char[] {':', ';'});
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");
@@ -588,6 +589,13 @@ namespace Barotrauma
                 TransitionMode.Linear => t,
                 _ => t,
             };
+        }
+
+        public static Rectangle GetWorldBounds(Point center, Point size)
+        {
+            Point halfSize = size.Divide(2);
+            Point topLeft = new Point(center.X - halfSize.X, center.Y + halfSize.Y);
+            return new Rectangle(topLeft, size);
         }
     }
 }

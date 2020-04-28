@@ -265,7 +265,8 @@ namespace Barotrauma
         public readonly Sprite Icon;
         public readonly Color[] IconColors;
 
-        private List<Effect> effects = new List<Effect>();
+        private readonly List<Effect> effects = new List<Effect>();
+        public IEnumerable<Effect> Effects => effects;
 
         private readonly string typeName;
 

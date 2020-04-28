@@ -140,11 +140,11 @@ namespace Barotrauma.Items.Components
                 var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1f), bottomFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomLeft);
                     
                     // === INPUT SLOTS === //
-                    inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.8f, 1f), inputArea.RectTransform), style: null);
+                    inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
                         new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
 
                     // === ACTIVATE BUTTON === //
-                    var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
+                    var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
                         activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
                             TextManager.Get("FabricatorCreate"), style: "DeviceButton")
                         {
@@ -356,6 +356,8 @@ namespace Barotrauma.Items.Components
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
+
+            if (outputContainer.Inventory.Items.First() != null) { return; }
             
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)

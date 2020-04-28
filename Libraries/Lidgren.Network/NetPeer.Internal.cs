@@ -132,7 +132,7 @@ namespace Lidgren.Network
 			m_socket.ReceiveBufferSize = m_configuration.ReceiveBufferSize;
 			m_socket.SendBufferSize = m_configuration.SendBufferSize;
 			m_socket.Blocking = false;
-            m_socket.DualMode = true;
+            m_socket.DualMode = m_configuration.UseDualModeSockets;
 
             var ep = (EndPoint)new NetEndPoint(m_configuration.LocalAddress.MapToIPv6(), reBind ? m_listenPort : m_configuration.Port);
             m_socket.Bind(ep);

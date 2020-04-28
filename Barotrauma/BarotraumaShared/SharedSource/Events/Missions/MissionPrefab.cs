@@ -176,11 +176,11 @@ namespace Barotrauma
         {
             foreach (Pair<string, string> allowedLocationType in AllowedLocationTypes)
             {
-                if (allowedLocationType.First.ToLowerInvariant() == "any" ||
-                    allowedLocationType.First.ToLowerInvariant() == from.Type.Identifier.ToLowerInvariant())
+                if (allowedLocationType.First.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                    allowedLocationType.First.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (allowedLocationType.Second.ToLowerInvariant() == "any" ||
-                        allowedLocationType.Second.ToLowerInvariant() == to.Type.Identifier.ToLowerInvariant())
+                    if (allowedLocationType.Second.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                        allowedLocationType.Second.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;
                     }

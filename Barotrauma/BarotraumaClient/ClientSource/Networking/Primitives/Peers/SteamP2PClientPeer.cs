@@ -137,8 +137,9 @@ namespace Barotrauma.Networking
             timeout -= deltaTime;
             heartbeatTimer -= deltaTime;
 
-            while (Steamworks.SteamNetworking.IsP2PPacketAvailable())
+            for (int i=0;i<100;i++)
             {
+                if (!Steamworks.SteamNetworking.IsP2PPacketAvailable()) { break; }
                 var packet = Steamworks.SteamNetworking.ReadP2PPacket();
                 if (packet.HasValue)
                 {

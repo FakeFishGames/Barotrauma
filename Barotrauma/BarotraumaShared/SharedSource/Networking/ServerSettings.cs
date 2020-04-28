@@ -138,7 +138,7 @@ namespace Barotrauma.Networking
                         {
                             return (a == null) == (b == null);
                         }
-                        return a.ToString().Equals(b.ToString(), StringComparison.InvariantCulture);
+                        return a.ToString().Equals(b.ToString(), StringComparison.OrdinalIgnoreCase);
                 }
             }
 
@@ -608,6 +608,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool DisableBotConversations
+        {
+            get;
+            set;
+        }
+
         public float SelectedLevelDifficulty
         {
             get { return selectedLevelDifficulty; }
@@ -759,7 +766,7 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(120.0f, true)]
+        [Serialize(600.0f, true)]
         public float KickAFKTime
         {
             get;
@@ -832,13 +839,6 @@ namespace Barotrauma.Networking
 
         [Serialize(60.0f * 60.0f * 24.0f, true)]
         public float MaxAutoBanTime
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(1, true)]
-        public int MaxRespawnCount
         {
             get;
             private set;

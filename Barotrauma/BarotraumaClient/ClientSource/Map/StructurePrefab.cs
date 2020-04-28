@@ -1,13 +1,29 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     partial class StructurePrefab : MapEntityPrefab
     {
+        public Color BackgroundSpriteColor
+        {
+            get;
+            private set;
+        }
+
+        public List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+
         public override void UpdatePlacing(Camera cam)
         {
+            if (PlayerInput.SecondaryMouseButtonClicked())
+            {
+                selected = null;
+                return;
+            }
+            
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
             Vector2 size = ScaledSize;
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
@@ -40,7 +56,7 @@ namespace Barotrauma
                 if (PlayerInput.PrimaryMouseButtonReleased())
                 {                    
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
-                    var structure = new Structure(newRect, this, Submarine.MainSub)
+                    new Structure(newRect, this, Submarine.MainSub)
                     {
                         Submarine = Submarine.MainSub
                     };                    
@@ -49,8 +65,6 @@ namespace Barotrauma
                     return;
                 }
             }
-            
-            if (PlayerInput.SecondaryMouseButtonHeld()) selected = null;
         }
         
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
@@ -60,9 +74,6 @@ namespace Barotrauma
 
             if (placePosition == Vector2.Zero)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld())
-                    placePosition = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
                 newRect.X = (int)position.X;
                 newRect.Y = (int)position.Y;
             }

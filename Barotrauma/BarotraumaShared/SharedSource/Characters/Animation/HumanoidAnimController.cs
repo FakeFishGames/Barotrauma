@@ -441,7 +441,7 @@ namespace Barotrauma
                 for (int i = -1; i < 2; i += 2)
                 {
                     Vector2 footPos = GetColliderBottom();
-                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(StepSize.Value.X * i) * Dir * 0.3f, footPos.Y - 0.1f * RagdollParams.JointScale);
+                    footPos = new Vector2(waist.SimPosition.X + Math.Sign(WalkParams.StepSize.X * i) * Dir * 0.3f, footPos.Y - 0.1f * RagdollParams.JointScale);
                     var foot = i == -1 ? rightFoot : leftFoot;
                     MoveLimb(foot, footPos, Math.Abs(foot.SimPosition.X - footPos.X) * 100.0f, true);
                 }
@@ -481,7 +481,7 @@ namespace Barotrauma
 
                     swimmingStateLockTimer -= deltaTime;
 
-                    if (forceStanding)
+                    if (forceStanding || character.AnimController.AnimationTestPose)
                     {
                         swimming = false;
                     }
@@ -1410,7 +1410,7 @@ namespace Barotrauma
                     SteamAchievementManager.OnCharacterRevived(target, character);
                     lastReviveTime = (float)Timing.TotalTime;
 #if SERVER
-                    GameMain.Server?.KarmaManager?.OnCharacterHealthChanged(target, character, damage: Math.Min(prevVitality - target.Vitality, 0.0f));
+                    GameMain.Server?.KarmaManager?.OnCharacterHealthChanged(target, character, damage: Math.Min(prevVitality - target.Vitality, 0.0f), stun: 0.0f);
 #endif
                     //reset attacker, we don't want the character to start attacking us
                     //because we caused a bit of damage to them during CPR
@@ -1540,6 +1540,11 @@ namespace Barotrauma
                         {
                             sourceSimPos -= character.SelectedCharacter.Submarine.SimPosition;
                         }
+                        else if (character.Submarine != null && character.SelectedCharacter.Submarine != null && character.Submarine != character.SelectedCharacter.Submarine)
+                        {
+                            targetSimPos += character.SelectedCharacter.Submarine.SimPosition;
+                            targetSimPos -= character.Submarine.SimPosition;
+                        }
                         var body = Submarine.CheckVisibility(sourceSimPos, targetSimPos, ignoreSubs: true);
                         if (body != null)
                         {
@@ -1553,8 +1558,8 @@ namespace Barotrauma
                     
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
-                    Vector2 targetAnchor = targetLimb.SimPosition;
-                    float targetForce = 0.0f;
+                    Vector2 targetAnchor;
+                    float targetForce;
                     pullLimb.PullJointEnabled = true;
                     if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
@@ -1624,6 +1629,7 @@ namespace Barotrauma
                 
                 if (!target.AllowInput)
                 {
+                    target.AnimController.Stairs = Stairs;
                     target.AnimController.IgnorePlatforms = IgnorePlatforms;
                     target.AnimController.TargetMovement = TargetMovement;
                 }
@@ -1652,7 +1658,10 @@ namespace Barotrauma
         //TODO: refactor this method, it's way too convoluted
         public override void HoldItem(float deltaTime, Item item, Vector2[] handlePos, Vector2 holdPos, Vector2 aimPos, bool aim, float holdAngle, float itemAngleRelativeToHoldAngle = 0.0f)
         {
-            if (character.IsUnconscious || character.Stun > 0.0f) aim = false;
+            if (character.Stun > 0.0f || character.IsIncapacitated)
+            {
+                aim = false;
+            }
 
             //calculate the handle positions
             Matrix itemTransfrom = Matrix.CreateRotationZ(item.body.Rotation);
@@ -1676,7 +1685,7 @@ namespace Barotrauma
 
             Holdable holdable = item.GetComponent<Holdable>();
 
-            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero)
+            if (!isClimbing && !usingController && character.Stun <= 0.0f && aim && itemPos != Vector2.Zero && !character.IsIncapacitated)
             {
                 Vector2 mousePos = ConvertUnits.ToSimUnits(character.SmoothedCursorPosition);
 
@@ -1763,7 +1772,7 @@ namespace Barotrauma
 
             if (holdable.Pusher != null)
             {
-                if (character.IsUnconscious || character.Stun > 0.0f)
+                if (character.Stun > 0.0f || character.IsIncapacitated)
                 {
                     holdable.Pusher.Enabled = false;
                 }
@@ -1778,7 +1787,7 @@ namespace Barotrauma
                     else
                     {
                         holdable.Pusher.TargetPosition = currItemPos;
-                        holdable.Pusher.TargetRotation = character.IsUnconscious || character.Stun > 0.0f ? itemAngle : holdAngle * Dir;
+                        holdable.Pusher.TargetRotation = holdAngle * Dir;
 
                         holdable.Pusher.MoveToTargetPosition(true);
 

@@ -126,6 +126,14 @@ namespace Barotrauma
             set => Params.NeedsAir = value;
         }
 
+        public bool NeedsWater
+        {
+            get => Params.NeedsWater;
+            set => Params.NeedsWater = value;
+        }
+
+        public bool NeedsOxygen => NeedsAir || NeedsWater && !AnimController.InWater;
+
         public float Noise
         {
             get => Params.Noise;
@@ -144,7 +152,28 @@ namespace Barotrauma
 
         private float attackCoolDown;
 
-        public Order CurrentOrder { get; private set; }
+        public Order CurrentOrder
+        {
+            get
+            {
+                return Info?.CurrentOrder;
+            }
+            private set
+            {
+                if (Info != null) { Info.CurrentOrder = value; }
+            }
+        }
+        public string CurrentOrderOption
+        {
+            get
+            {
+                return Info?.CurrentOrderOption;
+            }
+            private set
+            {
+                if (Info != null) { Info.CurrentOrderOption = value; }
+            }
+        }
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
         private readonly List<float> speedMultipliers = new List<float>();
@@ -170,7 +199,7 @@ namespace Barotrauma
                     if (turret != null)
                     {
                         viewTargetWorldPos = new Vector2(
-                            targetItem.WorldRect.X + turret.TransformedBarrelPos.X, 
+                            targetItem.WorldRect.X + turret.TransformedBarrelPos.X,
                             targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
                     }
                 }
@@ -255,7 +284,7 @@ namespace Barotrauma
         //text displayed when the character is highlighted if custom interact is set
         public string customInteractHUDText;
         private Action<Character, Character> onCustomInteract;
-        
+
         private float lockHandsTimer;
         public bool LockHands
         {
@@ -271,22 +300,22 @@ namespace Barotrauma
 
         public bool AllowInput
         {
-            get { return !IsUnconscious && Stun <= 0.0f && !IsDead; }
+            get { return Stun <= 0.0f && !IsDead && !IsIncapacitated; }
         }
 
         public bool CanMove
         {
             get
             {
-                if (!AllowInput) { return false; }
                 if (!AnimController.InWater && !AnimController.CanWalk) { return false; }
+                if (!AllowInput) { return false; }
                 return true;
             }
         }
 
         public bool CanInteract
         {
-            get { return AllowInput && IsHumanoid && !LockHands && !Removed; }
+            get { return AllowInput && IsHumanoid && !LockHands && !Removed && !IsIncapacitated; }
         }
 
         public Vector2 CursorPosition
@@ -372,11 +401,20 @@ namespace Barotrauma
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
-        
+
         private float ragdollingLockTimer;
         public bool IsRagdolled;
         public bool IsForceRagdolled;
         public bool dontFollowCursor;
+
+        public bool IsIncapacitated
+        {
+            get
+            {
+                if (IsUnconscious) { return true; }
+                return CharacterHealth.Afflictions.Any(a => a.Prefab.AfflictionType == "paralysis" && a.Strength >= a.Prefab.MaxStrength);
+            }
+        }
 
         public bool IsUnconscious
         {
@@ -501,6 +539,8 @@ namespace Barotrauma
 
         public bool IsDead { get; private set; }
 
+        public bool EnableDespawn { get; set; } = true;
+
         public CauseOfDeath CauseOfDeath
         {
             get;
@@ -523,7 +563,7 @@ namespace Barotrauma
             {
                 if (!canBeDragged) { return false; }
                 if (Removed || !AnimController.Draggable) { return false; }
-                return IsDead || Stun > 0.0f || LockHands || IsUnconscious;
+                return IsDead || Stun > 0.0f || LockHands || IsIncapacitated;
             }
             set { canBeDragged = value; }
         }
@@ -541,7 +581,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return (IsDead || Stun > 0.0f || LockHands || IsUnconscious);
+                    return (IsDead || Stun > 0.0f || LockHands || IsIncapacitated);
                 }
             }
             set { canInventoryBeAccessed = value; }
@@ -562,7 +602,9 @@ namespace Barotrauma
                     {
                         errorMsg += " AnimController.Collider == null";
                     }
-
+#if DEBUG || UNSTABLE
+                    errorMsg += '\n' + Environment.StackTrace;
+#endif
                     DebugConsole.NewMessage(errorMsg, Color.Red);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Character.SimPosition:AccessRemoved",
@@ -768,7 +810,7 @@ namespace Barotrauma
                 var matchingAffliction = AfflictionPrefab.List
                     .Where(p => p.AfflictionType == "huskinfection")
                     .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.InvariantCultureIgnoreCase)));
+                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.OrdinalIgnoreCase)));
                 string nonHuskedSpeciesName = string.Empty;
                 if (matchingAffliction == null)
                 {
@@ -1212,7 +1254,7 @@ namespace Barotrauma
             {
                 attackCoolDown -= deltaTime;
             }
-            else if (IsKeyDown(InputType.Attack))
+            else if (IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
                 var currentContexts = GetAttackContexts();
                 var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContexts));
@@ -1522,7 +1564,7 @@ namespace Barotrauma
         /// <summary>
         /// Finds the closest item seeking by identifiers or tags from the world.
         /// Ignores items that are outside or in another team's submarine or in a submarine that is not connected to this submarine.
-        /// Also ignores items that are taken by someone else.
+        /// Also ignores non-interactable items and items that are taken by someone else.
         /// The method is run in steps for performance reasons. So you'll have to provide the reference to the itemIndex.
         /// Returns false while running and true when done.
         /// </summary>
@@ -1539,12 +1581,17 @@ namespace Barotrauma
             {
                 itemIndex++;
                 var item = Item.ItemList[itemIndex];
+                if (item.NonInteractable) { continue; }
                 if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
                 if (item.Submarine.TeamID != TeamID) { continue; }
-                if (Submarine != null && !Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (item.CurrentHull == null) { continue; }
                 if (ignoreBroken && item.Condition <= 0) { continue; }
+                if (Submarine != null)
+                {
+                    if (item.Submarine.Info.Type != Submarine.Info.Type) { continue; }
+                    if (!Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                }
                 if (customPredicate != null && !customPredicate(item)) { continue; }
                 if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
@@ -1785,13 +1832,17 @@ namespace Barotrauma
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
                         FocusedCharacter = CanInteract ? FindCharacterAtPosition(mouseSimPos) : null;
+                        if (FocusedCharacter != null && !CanSeeCharacter(FocusedCharacter)) { FocusedCharacter = null; }
                         float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
                         if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
                         {
                             //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
                             aimAssist = 0.0f;
                         }
-                        focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, aimAssist) : null;
+
+                        var item = FindItemAtPosition(mouseSimPos, aimAssist);
+                        
+                        focusedItem = CanInteract ? item : null;
                         findFocusedTimer = 0.05f;
                     }
                 }
@@ -1925,7 +1976,7 @@ namespace Barotrauma
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        if (c.IsPlayer || c.IsBot)
+                        if (c.IsPlayer || (c.IsBot && !c.IsDead))
                         {
                             c.Enabled = true;
                         }
@@ -2094,12 +2145,17 @@ namespace Barotrauma
             UpdateControlled(deltaTime, cam);
 
             //Health effects
-            if (NeedsAir) { UpdateOxygen(deltaTime); }
+            if (NeedsOxygen)
+            {
+                UpdateOxygen(deltaTime);
+            }
             CharacterHealth.Update(deltaTime);
 
-            if (IsUnconscious)
+            if (IsIncapacitated)
             {
-                UpdateUnconscious();
+                Stun = Math.Max(5.0f, Stun);
+                AnimController.ResetPullJoints();
+                SelectedConstruction = null;
                 return;
             }
 
@@ -2138,11 +2194,12 @@ namespace Barotrauma
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
             //ragdoll button
-            if (IsRagdolled)
+            if (IsRagdolled || !CanMove)
             {
-                if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-                /*if(GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
+                if (AnimController is HumanoidAnimController) 
+                { 
+                    ((HumanoidAnimController)AnimController).Crouching = false; 
+                }
                 AnimController.ResetPullJoints();
                 SelectedConstruction = null;
                 return;
@@ -2165,39 +2222,50 @@ namespace Barotrauma
                 SelectedConstruction = null;
             }
 
-            if (!IsDead) LockHands = false;
+            if (!IsDead) { LockHands = false; }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
+        partial void SetOrderProjSpecific(Order order, string orderOption);
+
         private void UpdateOxygen(float deltaTime)
         {
-            PressureProtection -= deltaTime * 100.0f;
-            float hullAvailableOxygen = 0.0f;
-            if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
+            if (NeedsAir)
             {
-                //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
-                //(i.e. if the character has some external source of oxygen)
-                if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage)
+                PressureProtection -= deltaTime * 100.0f;
+            }
+            if (NeedsWater)
+            {
+                float waterAvailable = 100;
+                if (!AnimController.InWater && CurrentHull != null)
                 {
-                    AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
+                    waterAvailable = CurrentHull.WaterPercentage;
                 }
-                hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
+                OxygenAvailable += MathHelper.Clamp(waterAvailable - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
+            }
+            else
+            {
+                float hullAvailableOxygen = 0.0f;
+                if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
+                {
+                    //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
+                    //(i.e. if the character has some external source of oxygen)
+                    if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage)
+                    {
+                        AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
+                    }
+                    hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
+
+                }
+                OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
             }
 
-            OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
         }
+
         partial void UpdateOxygenProjSpecific(float prevOxygen);
-
-        private void UpdateUnconscious()
-        {
-            Stun = Math.Max(5.0f, Stun);
-
-            AnimController.ResetPullJoints();
-            SelectedConstruction = null;
-        }
 
         /// <summary>
         /// How far the character is from the closest human player (including spectators)
@@ -2231,23 +2299,44 @@ namespace Barotrauma
         }
 
         private float despawnTimer;
-        private const float DespawnDelay = 5.0f * 60.0f; //5 minutes
         private void UpdateDespawn(float deltaTime)
         {
+            if (!EnableDespawn) { return; }
+
             //clients don't despawn characters unless the server says so
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
 
             if (!IsDead) { return; }
 
+            int subCorpseCount = 0;
+
+            if (Submarine != null)
+            {
+                subCorpseCount = CharacterList.Count(c => c.IsDead && c.Submarine == Submarine);
+                if (subCorpseCount < GameMain.Config.CorpsesPerSubDespawnThreshold) { return; }
+            }
+
             float distToClosestPlayer = GetDistanceToClosestPlayer();
             if (distToClosestPlayer > NetConfig.DisableCharacterDist)
             {
-                //despawn in 1 second if very far from all human players
-                despawnTimer = Math.Max(despawnTimer, DespawnDelay - 1.0f);
+                //despawn in 1 minute if very far from all human players
+                despawnTimer = Math.Max(despawnTimer, GameMain.Config.CorpseDespawnDelay - 60.0f);
             }
 
-            despawnTimer += deltaTime;
-            if (despawnTimer < DespawnDelay) { return; }
+            float despawnPriority = 1.0f;
+            if (subCorpseCount > GameMain.Config.CorpsesPerSubDespawnThreshold)
+            {
+                //despawn faster if there are lots of corpses in the sub (twice as many as the threshold -> despawn twice as fast)
+                despawnPriority += (subCorpseCount - GameMain.Config.CorpsesPerSubDespawnThreshold) / (float)GameMain.Config.CorpsesPerSubDespawnThreshold;
+            }
+            if (AIController is EnemyAIController)
+            {
+                //enemies despawn faster
+                despawnPriority *= 2.0f;
+            }
+            
+            despawnTimer += deltaTime * despawnPriority;
+            if (despawnTimer < GameMain.Config.CorpseDespawnDelay) { return; }
 
             if (IsHuman)
             {
@@ -2274,7 +2363,12 @@ namespace Barotrauma
                     if (itemContainer == null) { return; }
                     foreach (Item inventoryItem in Inventory.Items)
                     {
-                        itemContainer.Inventory.TryPutItem(inventoryItem, user: null);
+                        if (inventoryItem == null) { continue; }
+                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null))
+                        {
+                            //if the item couldn't be put inside the despawn container, just drop it
+                            inventoryItem.Drop(dropper: this);
+                        }
                     }
                 }
             }
@@ -2284,7 +2378,7 @@ namespace Barotrauma
 
         public void DespawnNow()
         {
-            despawnTimer = DespawnDelay;
+            despawnTimer = GameMain.Config.CorpseDespawnDelay;
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
@@ -2350,17 +2444,28 @@ namespace Barotrauma
             //set the character order only if the character is close enough to hear the message
             if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
+            // If there's another character operating the same device, make them dismiss themself
+            if (order != null && order.Category == OrderCategory.Operate)
+            {
+                CharacterList.FindAll(c => c != this && c.TeamID == TeamID && c.CurrentOrder is Order characterOrder && characterOrder.Category == OrderCategory.Operate &&
+                                           characterOrder.Identifier.Equals(order.Identifier) && characterOrder.TargetEntity == order.TargetEntity)?
+                    .ForEach(c => c.SetOrder(Order.GetPrefab("dismissed"), null, c, speak: true));
+            }
+
             if (AIController is HumanAIController humanAI)
             {
                 humanAI.SetOrder(order, orderOption, orderGiver, speak);
             }
 
-#if CLIENT
-            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
-#endif
-
+            SetOrderProjSpecific(order, orderOption);
             CurrentOrder = order;
+            CurrentOrderOption = orderOption;
         }
+
+        /// <summary>
+        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
+        /// </summary>
+        public void ResetCurrentOrder() => Info?.ResetCurrentOrder();
 
         private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
 
@@ -2511,7 +2616,7 @@ namespace Barotrauma
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append(LogName + " attacked by " + attackingCharacter.LogName + ".");
+                sb.Append(GameServer.CharacterLogName(this) + " attacked by " + GameServer.CharacterLogName(attackingCharacter) + ".");
                 if (attackResult.Afflictions != null)
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
@@ -2632,13 +2737,19 @@ namespace Barotrauma
                     mainLimb.body.ApplyLinearImpulse(impulse, hitPos, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
+            bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
+            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
-                OnAttackedProjSpecific(attacker, attackResult);
+                OnAttackedProjSpecific(attacker, attackResult, stun);
+                if (!wasDead)
+                {
+                    TryAdjustAttackerSkill(attacker, -attackResult.Damage);
+                }
             };
 
             if (attacker != null && attackResult.Damage > 0.0f)
@@ -2649,7 +2760,31 @@ namespace Barotrauma
             return attackResult;
         }
 
-        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult);
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun);
+
+        public void TryAdjustAttackerSkill(Character attacker, float healthChange)
+        {
+            if (attacker == null) { return; }
+            
+            bool isEnemy = AIController is EnemyAIController || TeamID != attacker.TeamID;
+            if (isEnemy)
+            {
+                if (healthChange < 0.0f)
+                {
+                    float attackerSkillLevel = attacker.GetSkillLevel("weapons");
+                    attacker.Info?.IncreaseSkillLevel("weapons",
+                        -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f),
+                        attacker.WorldPosition + Vector2.UnitY * 100.0f);
+                }
+            }
+            else if (healthChange > 0.0f)
+            {
+                float attackerSkillLevel = attacker.GetSkillLevel("medical");
+                attacker.Info?.IncreaseSkillLevel("medical",
+                    healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f),
+                    attacker.WorldPosition + Vector2.UnitY * 100.0f);
+            }
+        }
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
@@ -2732,7 +2867,7 @@ namespace Barotrauma
 
         partial void ImplodeFX();
 
-        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false)
+        public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false, bool log = true)
         {
             if (IsDead || CharacterHealth.Unkillable) { return; }
 
@@ -2775,9 +2910,9 @@ namespace Barotrauma
 
             SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
 
-            KillProjSpecific(causeOfDeath, causeOfDeathAffliction);
+            KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 
-            if (info != null) info.CauseOfDeath = CauseOfDeath;
+            if (info != null) { info.CauseOfDeath = CauseOfDeath; }
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 
@@ -2800,7 +2935,7 @@ namespace Barotrauma
                 GameMain.GameSession.KillCharacter(this);
             }
         }
-        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction);
+        partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log);
 
         public void Revive()
         {
@@ -2930,13 +3065,13 @@ namespace Barotrauma
         public IEnumerable<AttackContext> GetAttackContexts()
         {
             currentContexts.Clear();
-            if (AnimController.CurrentAnimationParams.IsGroundedAnimation)
+            if (AnimController.InWater)
             {
-                currentContexts.Add(AttackContext.Ground);
+                currentContexts.Add(AttackContext.Water);
             }
             else
             {
-                currentContexts.Add(AttackContext.Water);
+                currentContexts.Add(AttackContext.Ground);
             }
             if (CurrentHull == null)
             {

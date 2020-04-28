@@ -23,11 +23,18 @@ namespace Barotrauma
                 {
                     if (Submarine.MainSubs[i] == null) { continue; }
                     List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
-                    subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.IsOutpost));
+                    subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.Info.IsOutpost));
                     Place(subs);
                 }
                 if (campaign != null) { campaign.InitialSuppliesSpawned = true; }
-            }            
+            }
+            foreach (var wreck in Submarine.Loaded)
+            {
+                if (wreck.Info.IsWreck)
+                {
+                    Place(wreck.ToEnumerable());
+                }
+            }
         }
 
         private static void Place(IEnumerable<Submarine> subs)
@@ -38,10 +45,10 @@ namespace Barotrauma
                 return;
             }
 
-            int sizeApprox = MapEntityPrefab.List.Count() / 3;
-            var containers = new List<ItemContainer>(100);
-            var prefabsWithContainer = new List<ItemPrefab>(sizeApprox / 3);
-            var prefabsWithoutContainer = new List<ItemPrefab>(sizeApprox);
+            int itemCountApprox = MapEntityPrefab.List.Count() / 3;
+            var containers = new List<ItemContainer>(70 + 30 * subs.Count());
+            var prefabsWithContainer = new List<ItemPrefab>(itemCountApprox / 3);
+            var prefabsWithoutContainer = new List<ItemPrefab>(itemCountApprox);
             var removals = new List<ItemPrefab>();
 
             foreach (Item item in Item.ItemList)
@@ -49,6 +56,7 @@ namespace Barotrauma
                 if (!subs.Contains(item.Submarine)) { continue; }
                 containers.AddRange(item.GetComponents<ItemContainer>());
             }
+            containers.Shuffle();
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -66,7 +74,7 @@ namespace Barotrauma
 
             spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
-            prefabsWithContainer.RandomizeList();
+            prefabsWithContainer.Shuffle();
             // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
             for (int i = 0; i < prefabsWithContainer.Count; i++)
             {
@@ -82,12 +90,13 @@ namespace Barotrauma
             // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
             prefabsWithContainer.ForEach(i => SpawnItems(i));
             // Spawn items that don't have containers last
-            prefabsWithoutContainer.RandomizeList();
+            prefabsWithoutContainer.Shuffle();
             prefabsWithoutContainer.ForEach(i => SpawnItems(i));
 
             if (OutputDebugInfo)
             {
-                DebugConsole.NewMessage("Automatically placed items: ");
+                var subNames = subs.Select(s => s.Info.Name).ToList();
+                DebugConsole.NewMessage($"Automatically placed items in { string.Join(", ", subNames) }:");
                 foreach (string itemName in spawnedItems.Select(it => it.Name).Distinct())
                 {
                     DebugConsole.NewMessage(" - " + itemName + " x" + spawnedItems.Count(it => it.Name == itemName));
@@ -149,7 +158,12 @@ namespace Barotrauma
         private static bool SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
             bool success = false;
-            if (Rand.Value() > validContainer.Value.SpawnProbability) { return success; }
+            if (Rand.Value() > validContainer.Value.SpawnProbability) { return false; }
+            // Don't add dangerously reactive materials in thalamus wrecks 
+            if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
+            {
+                return false;
+            }
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1);
             for (int i = 0; i < amount; i++)
             {

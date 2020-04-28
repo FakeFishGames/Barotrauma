@@ -229,7 +229,16 @@ namespace Barotrauma.Lights
                     light.Position = light.ParentBody.DrawPosition;
                     if (light.ParentSub != null) { light.Position -= light.ParentSub.DrawPosition; }
                 }
-                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, light.LightSourceParams.TextureRange, viewRect)) { continue; }
+
+                float range = light.LightSourceParams.TextureRange;
+                if (light.LightSprite != null)
+                {
+                    float spriteRange = Math.Max(
+                        light.LightSprite.size.X * light.SpriteScale.X * (0.5f + Math.Abs(light.LightSprite.RelativeOrigin.X - 0.5f)),
+                        light.LightSprite.size.Y * light.SpriteScale.Y * (0.5f + Math.Abs(light.LightSprite.RelativeOrigin.Y - 0.5f)));
+                    range = Math.Max(spriteRange, range);
+                }
+                if (!MathUtils.CircleIntersectsRectangle(light.WorldPosition, range, viewRect)) { continue; }
                 activeLights.Add(light);
             }
 

@@ -34,7 +34,15 @@ namespace Barotrauma.Items.Components
 
         private int failedLaunchAttempts;
 
+        private readonly List<Item> activeProjectiles = new List<Item>();
+        public IEnumerable<Item> ActiveProjectiles => activeProjectiles;
+
         private Character user;
+
+        public float Rotation
+        {
+            get { return rotation; }
+        }
         
         [Serialize("0,0", false, description: "The position of the barrel relative to the upper left corner of the base sprite (in pixels).")]
         public Vector2 BarrelPos
@@ -72,6 +80,41 @@ namespace Barotrauma.Items.Components
             set { reloadTime = value; }
         }
 
+        [Editable(0.1f, 10f), Serialize(1.0f, false, description: "Modifies the duration of retraction of the barrell after recoil to get back to the original position after shooting. Reload time affects this too.")]
+        public float RetractionDurationMultiplier
+        {
+            get;
+            set;
+        }
+
+        [Editable(0.1f, 10f), Serialize(0.1f, false, description: "How quickly the recoil moves the barrel after launching.")]
+        public float RecoilTime
+        {
+            get;
+            set;
+        }
+
+        [Editable(0f, 1000f), Serialize(0f, false, description: "How long the barrell stays in place after the recoil and before retracting back to the original position.")]
+        public float RetractionDelay
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
+        public int ProjectileCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false, description: "Can the turret be fired without projectiles (causing it just to execute the OnUse effects and the firing animation without actually firing anything).")]
+        public bool LaunchWithoutProjectile
+        {
+            get;
+            set;
+        }
+
         [Editable, Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate. TODO")]
         public Vector2 RotationLimits
         {
@@ -93,6 +136,13 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
+        }
+
+        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles (in degrees).")]
+        public float Spread
+        {
+            get;
+            set;
         }
 
         [Editable(0.0f, 1000.0f, DecimalCount = 2),
@@ -155,7 +205,21 @@ namespace Barotrauma.Items.Components
                 UpdateTransformedBarrelPos();
             }
         }
-        
+
+        [Serialize(3000.0f, true, description: "How close to a target the turret has to be for an AI character to fire it.")]
+        public float AIRange
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-1, true, description: "The turret won't fire additional projectiles if the number of previously fired, still active projectiles reaches this limit. If set to -1, there is no limit to the number of projectiles.")]
+        public int MaxActiveProjectiles
+        {
+            get;
+            set;
+        }
+
         public Turret(Item item, XElement element)
             : base(item, element)
         {
@@ -187,6 +251,7 @@ namespace Barotrauma.Items.Components
             //if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
             transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
 #if CLIENT
+            item.ResetCachedVisibleSize();
             item.SpriteRotation = MathHelper.ToRadians(flippedRotation);
 #endif
         }
@@ -213,13 +278,18 @@ namespace Barotrauma.Items.Components
         {
             this.cam = cam;
 
-            if (reload > 0.0f) reload -= deltaTime;
+            if (reload > 0.0f) { reload -= deltaTime; }
+
+            if (user != null && user.Removed)
+            {
+                user = null;
+            }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             UpdateProjSpecific(deltaTime);
 
-            if (minRotation == maxRotation) return;
+            if (minRotation == maxRotation) { return; }
 
             float targetMidDiff = MathHelper.WrapAngle(targetRotation - (minRotation + maxRotation) / 2.0f);
 
@@ -230,11 +300,18 @@ namespace Barotrauma.Items.Components
                 targetRotation = (targetMidDiff < 0.0f) ? minRotation : maxRotation;
             }
 
-            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);            
-            if (degreeOfSuccess < 0.5f) degreeOfSuccess *= degreeOfSuccess; //the ease of aiming drops quickly with insufficient skill levels
+            float degreeOfSuccess = user == null ? 0.5f : DegreeOfSuccess(user);
+            if (degreeOfSuccess < 0.5f) { degreeOfSuccess *= degreeOfSuccess; } //the ease of aiming drops quickly with insufficient skill levels
             float springStiffness = MathHelper.Lerp(SpringStiffnessLowSkill, SpringStiffnessHighSkill, degreeOfSuccess);
             float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
             float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
+
+            if (user?.Info != null)
+            {
+                user.Info.IncreaseSkillLevel("weapons",
+                    SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime / Math.Max(user.GetSkillLevel("weapons"), 1.0f),
+                    user.WorldPosition + Vector2.UnitY * 150.0f);
+            }
 
             angularVelocity += 
                 (MathHelper.WrapAngle(targetRotation - rotation) * springStiffness - angularVelocity * springDamping) * deltaTime;
@@ -265,95 +342,110 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!characterUsable && character != null) return false;
+            if (!characterUsable && character != null) { return false; }
             return TryLaunch(deltaTime, character);
         }
 
-        private bool TryLaunch(float deltaTime, Character character = null)
+        private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
         {
-#if CLIENT
-            if (GameMain.Client != null) return false;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
 
-            if (reload > 0.0f) return false;
+            if (reload > 0.0f) { return false; }
 
-            if (GetAvailableBatteryPower() < powerConsumption)
+            if (MaxActiveProjectiles >= 0)
             {
-#if CLIENT
-                if (!flashLowPower && character != null && character == Character.Controlled)
+                activeProjectiles.RemoveAll(it => it.Removed);
+                if (activeProjectiles.Count >= MaxActiveProjectiles)
                 {
-                    flashLowPower = true;
-                    GUI.PlayUISound(GUISoundType.PickItemFail);
+                    return false;
                 }
-#endif
-                return false;
             }
             
-            foreach (MapEntity e in item.linkedTo)
+            if (!ignorePower)
             {
-                //use linked projectile containers in case they have to react to the turret being launched somehow
-                //(play a sound, spawn more projectiles)
-                if (!(e is Item linkedItem)) continue;
-                ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
-                if (projectileContainer != null)
+                if (GetAvailableBatteryPower() < powerConsumption)
                 {
-                    linkedItem.Use(deltaTime, null);
-                    var repairable = linkedItem.GetComponent<Repairable>();
-                    if (repairable != null)
-                    {
-                        repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
-                    }
-                }
-            }
-
-            var projectiles = GetLoadedProjectiles(true);
-            if (projectiles.Count == 0)
-            {
-                //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
-                //causing a one frame delay before the gun can be launched (or more in multiplayer where there may be a longer delay)
-                //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
-                failedLaunchAttempts++;
 #if CLIENT
-                if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
-                {
-                    flashNoAmmo = true;
-                    failedLaunchAttempts = 0;
-                    GUI.PlayUISound(GUISoundType.PickItemFail);
-                }
-#endif
-                return false;
-            }
-
-            failedLaunchAttempts = 0;
-
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-            float neededPower = powerConsumption;
-
-            while (neededPower > 0.0001f && batteries.Count > 0)
-            {
-                batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
-                float takePower = neededPower / batteries.Count;
-                takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
-                foreach (PowerContainer battery in batteries)
-                {
-                    neededPower -= takePower;
-                    battery.Charge -= takePower / 3600.0f;
-#if SERVER
-                    if (GameMain.Server != null)
+                    if (!flashLowPower && character != null && character == Character.Controlled)
                     {
-                        battery.Item.CreateServerEvent(battery);
+                        flashLowPower = true;
+                        GUI.PlayUISound(GUISoundType.PickItemFail);
                     }
 #endif
+                    return false;
                 }
             }
 
-            Launch(projectiles[0].Item, character);
+            Projectile launchedProjectile = null;
+            for (int i = 0; i < ProjectileCount; i++)
+            {
+                foreach (MapEntity e in item.linkedTo)
+                {
+                    //use linked projectile containers in case they have to react to the turret being launched somehow
+                    //(play a sound, spawn more projectiles)
+                    if (!(e is Item linkedItem)) { continue; }
+                    ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                    if (projectileContainer != null)
+                    {
+                        linkedItem.Use(deltaTime, null);
+                        var repairable = linkedItem.GetComponent<Repairable>();
+                        if (repairable != null && failedLaunchAttempts < 2)
+                        {
+                            repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
+                        }
+                    }
+                }
+                var projectiles = GetLoadedProjectiles(true);
+                if (projectiles.Count == 0 && !LaunchWithoutProjectile)
+                {
+                    //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
+                    //causing a one frame delay before the gun can be launched (or more in multiplayer where there may be a longer delay)
+                    //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
+                    failedLaunchAttempts++;
+#if CLIENT
+                    if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
+                    {
+                        flashNoAmmo = true;
+                        failedLaunchAttempts = 0;
+                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                    }
+#endif
+                    return false;
+                }
+                failedLaunchAttempts = 0;
+                launchedProjectile = projectiles.FirstOrDefault();
+
+                if (!ignorePower)
+                {
+                    var batteries = item.GetConnectedComponents<PowerContainer>();
+                    float neededPower = powerConsumption;
+                    while (neededPower > 0.0001f && batteries.Count > 0)
+                    {
+                        batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                        float takePower = neededPower / batteries.Count;
+                        takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
+                        foreach (PowerContainer battery in batteries)
+                        {
+                            neededPower -= takePower;
+                            battery.Charge -= takePower / 3600.0f;
+#if SERVER
+                            battery.Item.CreateServerEvent(battery);                        
+#endif
+                        }
+                    }
+                }
+
+                if (launchedProjectile != null || LaunchWithoutProjectile)
+                {
+                    Launch(launchedProjectile?.Item, character);
+                }
+            }
 
 #if SERVER
-            if (character != null)
+            if (character != null && launchedProjectile != null)
             {
-                string msg = character.LogName + " launched " + item.Name + " (projectile: " + projectiles[0].Item.Name;
-                var containedItems = projectiles[0].Item.ContainedItems;
+                string msg = GameServer.CharacterLogName(character) + " launched " + item.Name + " (projectile: " + launchedProjectile.Item.Name;
+                var containedItems = launchedProjectile.Item.ContainedItems;
                 if (containedItems == null || !containedItems.Any())
                 {
                     msg += ")";
@@ -369,29 +461,38 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void Launch(Item projectile, Character user = null)
+        private void Launch(Item projectile, Character user = null, float? launchRotation = null)
         {
             reload = reloadTime;
 
-            projectile.Drop(null);
-            if (projectile.body == null) { return; }
-
-            projectile.body.Dir = 1.0f;
-            projectile.body.ResetDynamics();
-            projectile.body.Enabled = true;
-            projectile.SetTransform(ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), -rotation);
-            projectile.UpdateTransform();
-            projectile.Submarine = projectile.body.Submarine;
-
-            Projectile projectileComponent = projectile.GetComponent<Projectile>();
-            if (projectileComponent != null)
+            if (projectile != null)
             {
-                projectileComponent.Use((float)Timing.Step);
-                projectileComponent.User = user;
-            }
+                activeProjectiles.Add(projectile);
+                projectile.Drop(null);
+                if (projectile.body != null) 
+                {                 
+                    projectile.body.Dir = 1.0f;
+                    projectile.body.ResetDynamics();
+                    projectile.body.Enabled = true;
+                }
 
-            if (projectile.Container != null) projectile.Container.RemoveContained(projectile);
-            
+                float spread = MathHelper.ToRadians(Spread) * Rand.Range(-0.5f, 0.5f);
+                projectile.SetTransform(
+                    ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), 
+                    -(launchRotation ?? rotation) + spread);
+                projectile.UpdateTransform();
+                projectile.Submarine = projectile.body?.Submarine;
+
+                Projectile projectileComponent = projectile.GetComponent<Projectile>();
+                if (projectileComponent != null)
+                {
+                    projectileComponent.Use((float)Timing.Step);
+                    projectile.GetComponent<Rope>()?.Attach(item, projectile);
+                    projectileComponent.User = user;
+                }
+
+                if (projectile.Container != null) { projectile.Container.RemoveContained(projectile); }            
+            }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), projectile });
@@ -402,6 +503,196 @@ namespace Barotrauma.Items.Components
         }
 
         partial void LaunchProjSpecific();
+
+        private float waitTimer;
+        private float disorderTimer;
+
+        private float prevTargetRotation;
+        private float updateTimer;
+        private bool updatePending;
+        public void ThalamusOperate(WreckAI ai, float deltaTime, bool targetHumans, bool targetOtherCreatures, bool targetSubmarines, bool ignoreDelay)
+        {
+            if (ai == null) { return; }
+
+            IsActive = true;
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                return;
+            }
+
+            if (updatePending)
+            {
+                if (updateTimer < 0.0f)
+                {
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
+                    prevTargetRotation = targetRotation;
+                    updateTimer = 0.25f;
+                }
+                updateTimer -= deltaTime;
+            }
+
+            if (!ignoreDelay && waitTimer > 0)
+            {
+                waitTimer -= deltaTime;
+                return;
+            }
+            Submarine closestSub = null;
+            float maxDistance = 10000.0f;
+            float shootDistance = AIRange;
+            ISpatialEntity target = null;
+            float closestDist = shootDistance * shootDistance;
+            if (targetHumans || targetOtherCreatures)
+            {
+                foreach (var character in Character.CharacterList)
+                {
+                    if (character == null || character.Removed || character.IsDead) { continue; }
+                    if (character.Params.Group.Equals(ai.Config.Entity, StringComparison.OrdinalIgnoreCase)) { continue; }
+                    bool isHuman = character.IsHuman || character.Params.Group.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
+                    if (isHuman)
+                    {
+                        if (!targetHumans)
+                        {
+                            // Don't target humans if not defined to.
+                            continue;
+                        }
+                    }
+                    else if (!targetOtherCreatures)
+                    {
+                        // Don't target other creatures if not defined to.
+                        continue;
+                    }
+                    float dist = Vector2.DistanceSquared(character.WorldPosition, item.WorldPosition);
+                    if (dist > closestDist) { continue; }
+                    target = character;
+                    closestDist = dist;
+                }
+            }
+            if (targetSubmarines)
+            {
+                if (target == null || target.Submarine != null)
+                {
+                    closestDist = maxDistance * maxDistance;
+                    foreach (Submarine sub in Submarine.Loaded)
+                    {
+                        if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        float dist = Vector2.DistanceSquared(sub.WorldPosition, item.WorldPosition);
+                        if (dist > closestDist) { continue; }
+                        closestSub = sub;
+                        closestDist = dist;
+                    }
+                    closestDist = shootDistance * shootDistance;
+                    if (closestSub != null)
+                    {
+                        foreach (var hull in Hull.hullList)
+                        {
+                            if (!closestSub.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                            float dist = Vector2.DistanceSquared(hull.WorldPosition, item.WorldPosition);
+                            if (dist > closestDist) { continue; }
+                            target = hull;
+                            closestDist = dist;
+                        }
+                    }
+                }
+            }
+            if (!ignoreDelay)
+            {
+                if (target == null)
+                {
+                    // Random movement
+                    waitTimer = Rand.Value(Rand.RandSync.Unsynced) < 0.98f ? 0f : Rand.Range(5f, 20f);
+                    targetRotation = Rand.Range(minRotation, maxRotation);
+                    updatePending = true;
+                    return;
+                }
+                if (disorderTimer < 0)
+                {
+                    // Random disorder
+                    disorderTimer = Rand.Range(0f, 3f);
+                    waitTimer = Rand.Range(0.25f, 1f);
+                    targetRotation = MathUtils.WrapAngleTwoPi(targetRotation += Rand.Range(-1f, 1f));
+                    updatePending = true;
+                    return;
+                }
+                else
+                {
+                    disorderTimer -= deltaTime;
+                }
+            }
+            if (target == null) { return; }
+      
+            float angle = -MathUtils.VectorToAngle(target.WorldPosition - item.WorldPosition);
+            targetRotation = MathUtils.WrapAngleTwoPi(angle);
+
+            if (Math.Abs(targetRotation - prevTargetRotation) > 0.1f) { updatePending = true; }
+
+            if (target is Hull targetHull)
+            {
+                Vector2 barrelDir = new Vector2((float)Math.Cos(rotation), -(float)Math.Sin(rotation));
+                if (!MathUtils.GetLineRectangleIntersection(item.WorldPosition, item.WorldPosition + barrelDir * AIRange, targetHull.WorldRect, out _))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                float midRotation = (minRotation + maxRotation) / 2.0f;
+                while (midRotation - angle < -MathHelper.Pi) { angle -= MathHelper.TwoPi; }
+                while (midRotation - angle > MathHelper.Pi) { angle += MathHelper.TwoPi; }
+                if (angle < minRotation || angle > maxRotation) { return; }
+                float enemyAngle = MathUtils.VectorToAngle(target.WorldPosition - item.WorldPosition);
+                float turretAngle = -rotation;
+                if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return; }
+            }
+
+            Vector2 start = ConvertUnits.ToSimUnits(item.WorldPosition);
+            Vector2 end = ConvertUnits.ToSimUnits(target.WorldPosition);
+            if (target.Submarine != null)
+            {
+                start -= target.Submarine.SimPosition;
+                end -= target.Submarine.SimPosition;
+            }
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel;
+            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true);
+            if (pickedBody == null) { return; }
+            Character targetCharacter = null;
+            if (pickedBody.UserData is Character c)
+            {
+                targetCharacter = c;
+            }
+            else if (pickedBody.UserData is Limb limb)
+            {
+                targetCharacter = limb.character;
+            }
+            if (targetCharacter != null)
+            {
+                if (targetCharacter.Params.Group.Equals(ai.Config.Entity, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Don't shoot friendly characters
+                    return;
+                }
+            }
+            else
+            {
+                if (pickedBody.UserData is ISpatialEntity e)
+                {
+                    Submarine sub = e.Submarine;
+                    if (sub == null) { return; }
+                    if (!targetSubmarines) { return; }
+                    if (sub == Item.Submarine) { return; }
+                    // Don't shoot non-player submarines, i.e. wrecks or outposts.
+                    if (!sub.Info.IsPlayer) { return; }
+                }
+                else
+                {
+                    // Hit something else, probably a level wall
+                    return;
+                }
+            }
+            TryLaunch(deltaTime, ignorePower: true);
+        }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
@@ -484,7 +775,7 @@ namespace Barotrauma.Items.Components
 
             //enough shells and power
             Character closestEnemy = null;
-            float closestDist = 3000 * 3000;
+            float closestDist = AIRange * AIRange;
             foreach (Character enemy in Character.CharacterList)
             {
                 // Ignore dead, friendly, and those that are inside the same sub
@@ -526,7 +817,7 @@ namespace Barotrauma.Items.Components
                 end -= closestEnemy.Submarine.SimPosition;
             }
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel;
-            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories);
+            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true);
             if (pickedBody == null) { return false; }
             Character targetCharacter = null;
             if (pickedBody.UserData is Character c)
@@ -537,37 +828,38 @@ namespace Barotrauma.Items.Components
             {
                 targetCharacter = limb.character;
             }
-            if (targetCharacter != null && HumanAIController.IsFriendly(character, targetCharacter))
+            if (targetCharacter != null)
             {
-                // Don't shoot friendly characters
-                return false;
+                if (HumanAIController.IsFriendly(character, targetCharacter))
+                {
+                    // Don't shoot friendly characters
+                    return false;
+                }
             }
-            else if (targetCharacter == null && !(pickedBody.UserData is Structure) && !(pickedBody.UserData is Item))
+            else
             {
-                // Hit something else than a wall or an item (probably a level wall)
-                return false;
+                if (pickedBody.UserData is ISpatialEntity e)
+                {
+                    Submarine sub = e.Submarine;
+                    if (sub == null) { return false; }
+                    if (sub == Item.Submarine) { return false; }
+                    // Don't shoot non-player submarines, i.e. wrecks or outposts.
+                    if (!sub.Info.IsPlayer) { return false; }
+                    // Don't shoot friendly submarines.
+                    if (sub.TeamID == Item.Submarine.TeamID) { return false; }
+                }
+                else
+                {
+                    // Hit something else, probably a level wall
+                    return false;
+                }
             }
-
-            if (objective.Option.ToLowerInvariant() == "fireatwill")
+            if (objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase))
             {
                 character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
                 character.SetInput(InputType.Shoot, true, true);
             }
-
             return false;
-        }
-
-        private void GetAvailablePower(out float availableCharge, out float availableCapacity)
-        {
-            var batteries = item.GetConnectedComponents<PowerContainer>();
-
-            availableCharge = 0.0f;
-            availableCapacity = 0.0f;
-            foreach (PowerContainer battery in batteries)
-            {
-                availableCharge += battery.Charge;
-                availableCapacity += battery.Capacity;
-            }
         }
 
         protected override void RemoveComponentSpecific()
@@ -614,7 +906,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     //check if the contained item is another itemcontainer with projectiles inside it
-                    if (containedItem.ContainedItems == null) continue;
+                    if (containedItem.ContainedItems == null) { continue; }
                     foreach (Item subContainedItem in containedItem.ContainedItems)
                     {
                         projectileComponent = subContainedItem.GetComponent<Projectile>();
@@ -695,7 +987,6 @@ namespace Barotrauma.Items.Components
                         TryLaunch((float)Timing.Step, sender);
                     }
                     break;
-                case "toggle":
                 case "toggle_light":
                     if (lightComponent != null)
                     {
@@ -707,8 +998,25 @@ namespace Barotrauma.Items.Components
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            Item item = (Item)extraData[2];
-            msg.Write(item.Removed ? (ushort)0 : item.ID);
+            if (extraData.Length > 2)
+            {
+                msg.Write(!(extraData[2] is Item item) || item.Removed ? ushort.MaxValue : item.ID);
+                msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
+            }
+            else
+            {
+                msg.Write((ushort)0);
+                float wrappedTargetRotation = targetRotation;
+                while (wrappedTargetRotation < minRotation && MathUtils.IsValid(wrappedTargetRotation))
+                {
+                    wrappedTargetRotation += MathHelper.TwoPi;
+                }
+                while (wrappedTargetRotation > maxRotation && MathUtils.IsValid(wrappedTargetRotation))
+                {
+                    wrappedTargetRotation -= MathHelper.TwoPi;
+                }
+                msg.WriteRangedSingle(MathHelper.Clamp(wrappedTargetRotation, minRotation, maxRotation), minRotation, maxRotation, 16);
+            }
         }
     }
 }

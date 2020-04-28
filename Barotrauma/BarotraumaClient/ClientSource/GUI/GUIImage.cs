@@ -1,12 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     public class GUIImage : GUIComponent
     {
+        //paths of the textures that are being loaded asynchronously
+        private static readonly HashSet<string> activeTextureLoads = new HashSet<string>();
+
         public float Rotation;
 
         private Sprite sprite;
@@ -15,7 +20,11 @@ namespace Barotrauma
 
         private bool crop;
 
-        private bool scaleToFit;
+        private readonly bool scaleToFit;
+
+        private bool lazyLoaded, loading;
+
+        public bool LoadAsynchronously;
         
         public bool Crop
         {
@@ -75,7 +84,6 @@ namespace Barotrauma
         private GUIImage(RectTransform rectT, Sprite sprite, Rectangle? sourceRect, bool scaleToFit, string style) : base(style, rectT)
         {
             this.scaleToFit = scaleToFit;
-            sprite?.EnsureLazyLoaded();
             Sprite = sprite;
             if (sourceRect.HasValue)
             {
@@ -95,17 +103,43 @@ namespace Barotrauma
             }
             else
             {
-                rectT.SizeChanged += RecalculateScale;
+                if (Sprite != null && !Sprite.LazyLoad)
+                {
+                    rectT.SizeChanged += RecalculateScale;
+                }
             }
             Enabled = true;
         }
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            if (!Visible) return;
+            if (!Visible || loading) { return; }
 
             if (Parent != null) { State = Parent.State; }
             if (OverrideState != null) { State = OverrideState.Value; }
+
+            if (Sprite != null && Sprite.LazyLoad && !lazyLoaded)
+            {
+                if (LoadAsynchronously)
+                {
+                    loading = true;
+                    TaskPool.Add(LoadTextureAsync(), (Task) =>
+                    {
+                        loading = false;
+                        lazyLoaded = true;
+                        RectTransform.SizeChanged += RecalculateScale;
+                        RecalculateScale();
+                    });
+                    return;
+                }
+                else
+                {
+                    Sprite.EnsureLazyLoaded();
+                    RectTransform.SizeChanged += RecalculateScale;
+                    RecalculateScale();
+                    lazyLoaded = true;
+                }
+            }
 
             Color currentColor = GetColor(State);
 
@@ -146,9 +180,52 @@ namespace Barotrauma
 
         private void RecalculateScale()
         {
+            if (sourceRect == Rectangle.Empty && sprite != null)
+            {
+                sourceRect = sprite.SourceRect;
+            }
+
             Scale = sprite == null || sprite.SourceRect.Width == 0 || sprite.SourceRect.Height == 0 ?
                 1.0f :
                 Math.Min(RectTransform.Rect.Width / (float)sprite.SourceRect.Width, RectTransform.Rect.Height / (float)sprite.SourceRect.Height);
+        }
+
+        private async Task<bool> LoadTextureAsync()
+        {
+            await Task.Yield();
+            bool wait = true;
+            {
+                //if another GUIImage is already loading the same texture, wait for it to finish
+                while (wait)
+                {
+                    await Task.Delay(5);
+                    lock (activeTextureLoads)
+                    {
+                        wait = activeTextureLoads.Contains(Sprite.FullPath);
+                    }
+                }                
+            }
+            try
+            {
+                lock (activeTextureLoads)
+                {
+                    activeTextureLoads.Add(Sprite.FullPath);
+                }
+                Sprite.EnsureLazyLoaded();
+            }
+            finally
+            {
+                DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
+                while (!Sprite.Loaded && DateTime.Now < timeOut)
+                {
+                    await Task.Delay(5);
+                }
+                lock (activeTextureLoads)
+                {
+                    activeTextureLoads.Remove(Sprite.FullPath);
+                }
+            }
+            return true;
         }
     }
 }

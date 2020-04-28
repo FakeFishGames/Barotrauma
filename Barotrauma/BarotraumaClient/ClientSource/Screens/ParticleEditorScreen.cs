@@ -237,7 +237,7 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (element.Name.ToString().ToLowerInvariant() != prefab.Name.ToLowerInvariant()) continue;
+                        if (!element.Name.ToString().Equals(prefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                         SerializableProperty.SerializeProperties(prefab, element, true);
                     }
                 }
@@ -260,7 +260,7 @@ namespace Barotrauma
         private void SerializeToClipboard(ParticlePrefab prefab)
         {
 #if WINDOWS
-            if (prefab == null) return;
+            if (prefab == null) { return; }
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -269,18 +269,40 @@ namespace Barotrauma
                 NewLineOnAttributes = true
             };
 
-            XElement element = new XElement(prefab.Name);
-            SerializableProperty.SerializeProperties(prefab, element, true);
+            XElement originalElement = null;
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
+                if (doc == null) { continue; }
+
+                var prefabList = GameMain.ParticleManager.GetPrefabList();
+                foreach (ParticlePrefab otherPrefab in prefabList)
+                {
+                    foreach (XElement subElement in doc.Root.Elements())
+                    {
+                        if (!subElement.Name.ToString().Equals(prefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        SerializableProperty.SerializeProperties(prefab, subElement, true);
+                        originalElement = subElement;
+                        break;
+                    }
+                }
+            }
+
+            if (originalElement == null)
+            {
+                originalElement = new XElement(prefab.Name);
+                SerializableProperty.SerializeProperties(prefab, originalElement, true);
+            }
 
             StringBuilder sb = new StringBuilder();
             using (var writer = XmlWriter.Create(sb, settings))
             {
-                element.WriteTo(writer);
+                originalElement.WriteTo(writer);
                 writer.Flush();
             }
 
             Clipboard.SetText(sb.ToString());
-#endif
+#endif        
         }
 
         public override void Update(double deltaTime)

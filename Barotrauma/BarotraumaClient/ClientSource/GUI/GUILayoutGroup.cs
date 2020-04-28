@@ -76,7 +76,18 @@ namespace Barotrauma
 
         public GUILayoutGroup(RectTransform rectT, bool isHorizontal = false, Anchor childAnchor = Anchor.TopLeft) : base(null, rectT)
         {
-            CanBeFocused = false;
+#if DEBUG
+            if (GameMain.DebugDraw)
+            {
+                CanBeFocused = true;
+            }
+            else
+            {
+#endif
+                CanBeFocused = false;
+#if DEBUG
+            }
+#endif
 
             this.isHorizontal = isHorizontal;
             this.childAnchor = childAnchor;

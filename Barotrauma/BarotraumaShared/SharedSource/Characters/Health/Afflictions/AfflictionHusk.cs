@@ -101,9 +101,9 @@ namespace Barotrauma
             {
                 float random = Rand.Value(Rand.RandSync.Server);
                 huskInfection.Clear();
-                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * deltaTime / character.AnimController.Limbs.Length));
+                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / character.AnimController.Limbs.Length));
                 character.LastDamageSource = null;
-                float force = applyForce ? random * 0.1f * limb.Mass : 0;
+                float force = applyForce ? random * 0.5f * limb.Mass : 0;
                 character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, force);
             }
         }

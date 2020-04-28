@@ -149,9 +149,15 @@ namespace Barotrauma.Networking
             }
         }
 
+        short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        bool prevCaptured = true;
+        int captureTimer;
+
         void UpdateCapture()
         {
-            short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+            Array.Copy(uncompressedBuffer, 0, prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
+            Array.Clear(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
             while (capturing)
             {
                 int alcError;
@@ -202,6 +208,21 @@ namespace Barotrauma.Networking
                 bool allowEnqueue = false;
                 if (GameMain.WindowActive)
                 {
+                    ForceLocal = captureTimer > 0 ? ForceLocal : false;
+                    bool pttDown = false;
+                    if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
+                            GUI.KeyboardDispatcher.Subscriber == null)
+                    {
+                        pttDown = true;
+                        if (PlayerInput.KeyDown(InputType.LocalVoice))
+                        {
+                            ForceLocal = true;
+                        }
+                        else
+                        {
+                            ForceLocal = false;
+                        }
+                    }
                     if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Activity)
                     {
                         if (dB > GameMain.Config.NoiseGateThreshold)
@@ -211,25 +232,38 @@ namespace Barotrauma.Networking
                     }
                     else if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.PushToTalk)
                     {
-                        if (PlayerInput.KeyDown(InputType.Voice) && GUI.KeyboardDispatcher.Subscriber == null)
+                        if (pttDown)
                         {
                             allowEnqueue = true;
                         }
                     }
                 }
 
-                if (allowEnqueue)
+                if (allowEnqueue || captureTimer > 0)
                 {
                     LastEnqueueAudio = DateTime.Now;
                     //encode audio and enqueue it
                     lock (buffers)
                     {
+                        if (!prevCaptured) //enqueue the previous buffer if not sent to avoid cutoff
+                        {
+                            int compressedCountPrev = VoipConfig.Encoder.Encode(prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                            EnqueueBuffer(compressedCountPrev);
+                        }
                         int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
                         EnqueueBuffer(compressedCount);
                     }
+                    captureTimer -= (VoipConfig.BUFFER_SIZE * 1000) / VoipConfig.FREQUENCY;
+                    if (allowEnqueue)
+                    {
+                        captureTimer = GameMain.Config.VoiceChatCutoffPrevention;
+                    }
+                    prevCaptured = true;
                 }
                 else
                 {
+                    captureTimer = 0;
+                    prevCaptured = false;
                     //enqueue silence
                     lock (buffers)
                     {

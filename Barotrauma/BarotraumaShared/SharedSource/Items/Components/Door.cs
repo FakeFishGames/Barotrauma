@@ -594,7 +594,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (sender != null && wasOpen != isOpen)
             {
-                GameServer.Log(sender.LogName + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(sender) + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }

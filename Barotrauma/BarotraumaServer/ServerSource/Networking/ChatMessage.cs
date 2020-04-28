@@ -159,6 +159,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
             msg.Write((byte)Type);
+            msg.Write((byte)ChangeType);
             msg.Write(Text);
 
             msg.Write(SenderName);

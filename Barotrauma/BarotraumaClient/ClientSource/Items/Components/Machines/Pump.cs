@@ -99,6 +99,10 @@ namespace Barotrauma.Items.Components
                 Step = 0.05f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
                 {
+                    if (pumpSpeedLockTimer <= 0.0f)
+                    {
+                        targetLevel = null;
+                    }
                     float newValue = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) { return false; }
 

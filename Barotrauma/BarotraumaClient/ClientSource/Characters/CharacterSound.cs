@@ -14,8 +14,8 @@ namespace Barotrauma
 
         public SoundType Type => Params.State;
         public Gender Gender => Params.Gender;
-        public float Volume => roundSound.Volume;
-        public float Range => roundSound.Range;
+        public float Volume => roundSound == null ? 0.0f : roundSound.Volume;
+        public float Range => roundSound == null ? 0.0f : roundSound.Range;
         public Sound Sound => roundSound?.Sound;
 
         public CharacterSound(CharacterParams.SoundParams soundParams)

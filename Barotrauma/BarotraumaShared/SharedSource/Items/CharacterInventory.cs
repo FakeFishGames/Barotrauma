@@ -73,7 +73,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().ToLowerInvariant() != "item") continue;
+                if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
                 
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
                 ItemPrefab itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;

@@ -38,7 +38,7 @@ namespace Barotrauma
             {
                 case VoteType.Sub:
                     string subName = inc.ReadString();
-                    Submarine sub = Submarine.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                    SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                     sender.SetVote(voteType, sub);
                     break;
 
@@ -74,7 +74,7 @@ namespace Barotrauma
                     if (ready != sender.GetVote<bool>(VoteType.StartRound))
                     {
                         sender.SetVote(VoteType.StartRound, ready);
-                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+                        GameServer.Log(GameServer.ClientLogName(sender) + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
                     }
 
                     break;
@@ -97,7 +97,7 @@ namespace Barotrauma
                 foreach (Pair<object, int> vote in voteList)
                 {
                     msg.Write((byte)vote.Second);
-                    msg.Write(((Submarine)vote.First).Name);
+                    msg.Write(((SubmarineInfo)vote.First).Name);
                 }
             }
             msg.Write(AllowModeVoting);

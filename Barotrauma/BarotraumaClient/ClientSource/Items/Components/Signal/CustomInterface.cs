@@ -45,13 +45,48 @@ namespace Barotrauma.Items.Components
             float elementSize = Math.Min(1.0f / visibleElements.Count(), 1);
             foreach (CustomInterfaceElement ciElement in visibleElements)
             {
-                if (ciElement.ContinuousSignal)
+                if (!string.IsNullOrEmpty(ciElement.PropertyName))
+                {
+                   var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform), isHorizontal: true)
+                   {
+                       RelativeSpacing = 0.02f,
+                       UserData = ciElement
+                   };
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
+                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
+                    var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), "", style: "GUITextBoxNoIcon")
+                    {
+                        OverflowClip = true,
+                        UserData = ciElement
+                    };
+                    //reset size restrictions set by the Style to make sure the elements can fit the interface
+                    textBox.RectTransform.MinSize = textBox.Frame.RectTransform.MinSize = new Point(0, 0);
+                    textBox.RectTransform.MaxSize = textBox.Frame.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                    textBox.OnDeselected += (tb, key) =>
+                    {
+                        if (GameMain.Client == null)
+                        {
+                            TextChanged(tb.UserData as CustomInterfaceElement, textBox.Text);
+                        }
+                        else
+                        {
+                            item.CreateClientEvent(this);
+                        }
+                    };
+
+                    textBox.OnEnterPressed += (tb, text) =>
+                    {
+                        tb.Deselect();
+                        return true;
+                    };
+                    uiElements.Add(textBox);
+                }
+                else if (ciElement.ContinuousSignal)
                 {
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform)
                     {
                         MaxSize = ElementMaxSize
-                    },
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
+                    }, TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
                     {
                         UserData = ciElement
                     };
@@ -148,7 +183,7 @@ namespace Barotrauma.Items.Components
             foreach (var uiElement in uiElements)
             {
                 if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
-                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || !string.IsNullOrEmpty(element.PropertyName) || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
                 {
@@ -188,6 +223,22 @@ namespace Barotrauma.Items.Components
                         customInterfaceElementList[i].Label;
                     tickBox.TextBlock.Wrap = tickBox.Text.Contains(' ');
                 }
+                if (uiElements[i] is GUITextBox textBox)
+                {
+                    var textBlock = textBox.Parent.GetChild<GUITextBlock>();
+                    textBlock.Text = string.IsNullOrWhiteSpace(customInterfaceElementList[i].Label) ?
+                        TextManager.GetWithVariable("connection.signaloutx", "[num]", (i + 1).ToString()) :
+                        customInterfaceElementList[i].Label;
+                    textBlock.Wrap = textBlock.Text.Contains(' ');
+
+                    foreach (ISerializableEntity e in item.AllPropertyObjects)
+                    {
+                        if (e.SerializableProperties.ContainsKey(customInterfaceElementList[i].PropertyName))
+                        {
+                            textBox.Text = e.SerializableProperties[customInterfaceElementList[i].PropertyName].GetValue(e) as string;
+                        }
+                    }
+                }
             }
 
             uiElementContainer.Recalculate();
@@ -206,6 +257,10 @@ namespace Barotrauma.Items.Components
                 {
                     textBlocks.Add(tickBox.TextBlock);
                 }
+                else if (element is GUILayoutGroup)
+                {
+                    textBlocks.Add(element.GetChild<GUITextBlock>());
+                }
             }
             uiElementContainer.Recalculate();
             GUITextBlock.AutoScaleAndNormalize(textBlocks);
@@ -216,7 +271,11 @@ namespace Barotrauma.Items.Components
             //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].ContinuousSignal)
+                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                {
+                    msg.Write(((GUITextBox)uiElements[i]).Text);
+                }
+                else if (customInterfaceElementList[i].ContinuousSignal)
                 {
                     msg.Write(((GUITickBox)uiElements[i]).Selected);
                 }
@@ -231,15 +290,22 @@ namespace Barotrauma.Items.Components
         {
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                bool elementState = msg.ReadBoolean();
-                if (customInterfaceElementList[i].ContinuousSignal)
+                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
                 {
-                    ((GUITickBox)uiElements[i]).Selected = elementState;
-                    TickBoxToggled(customInterfaceElementList[i], elementState);
+                    TextChanged(customInterfaceElementList[i], msg.ReadString());
                 }
-                else if (elementState)
+                else
                 {
-                    ButtonClicked(customInterfaceElementList[i]);
+                    bool elementState = msg.ReadBoolean();
+                    if (customInterfaceElementList[i].ContinuousSignal)
+                    {
+                        ((GUITickBox)uiElements[i]).Selected = elementState;
+                        TickBoxToggled(customInterfaceElementList[i], elementState);
+                    }
+                    else if (elementState)
+                    {
+                        ButtonClicked(customInterfaceElementList[i]);
+                    }
                 }
             }
         }

@@ -44,6 +44,7 @@ namespace Barotrauma
         {
 #if CLIENT
             new GameModePreset("singleplayercampaign", typeof(SinglePlayerCampaign), true);
+            new GameModePreset("subtest", typeof(SubTestMode), true);
             new GameModePreset("tutorial", typeof(TutorialMode), true);
             new GameModePreset("devsandbox", typeof(GameMode), true);
 #endif

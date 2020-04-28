@@ -246,11 +246,13 @@ namespace Barotrauma
         }
 
         private GUIFrame healthBarHolder;
+
         private Point healthBarOffset
         {
             get
             {
-                return new Point(5 - (int)Math.Ceiling(1 - 1 * GUI.Scale), (int)Math.Min(Math.Ceiling(17 * GUI.Scale), 20));
+                // 0.38775510204f = percentage of offset before reaching the healthbar portion of the graphic going from bottom upwards
+                return new Point(2, (int)(HUDLayoutSettings.HealthBarArea.Size.Y * 0.38775510204f));
             }
         }
 
@@ -258,7 +260,7 @@ namespace Barotrauma
         {
             get
             {
-                return new Point(healthBarHolder.Rect.Width - (int)Math.Ceiling(Math.Min(46 * GUI.Scale, 53)), (int)(healthBarHolder.Rect.Height - Math.Min(23 * GUI.Scale, 25)) / 2);
+                return new Point((int)Math.Ceiling(HUDLayoutSettings.HealthBarArea.Size.X - 45 * GUI.Scale), (int)(healthBarHolder.Rect.Height - Math.Min(23 * GUI.Scale, 25)) / 2);
             }
         }
 
@@ -303,7 +305,7 @@ namespace Barotrauma
             healthShadowSize = 1.0f;
 
             healthBar = new GUIProgressBar(new RectTransform(healthBarSize, healthBarHolder.RectTransform, Anchor.BottomRight),
-                barSize: 1.0f, color: GUIColorSettings.HealthBarColorHigh, style: horizontal ? "CharacterHealthBarSlider" : "GUIProgressBarVertical", showFrame: false)
+                barSize: 1.0f, color: GUI.Style.HealthBarColorHigh, style: horizontal ? "CharacterHealthBarSlider" : "GUIProgressBarVertical", showFrame: false)
             {
                 HoverCursor = CursorState.Hand,
                 Enabled = true,
@@ -503,8 +505,6 @@ namespace Barotrauma
                     Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
                         AnimController.Animation.None : AnimController.Animation.CPR;
 
-                    button.Selected = Character.Controlled.AnimController.Anim == AnimController.Animation.CPR;
-
                     selectedCharacter.AnimController.ResetPullJoints();
 
                     if (GameMain.Client != null)
@@ -520,8 +520,10 @@ namespace Barotrauma
 
             UpdateAlignment();
 
-            suicideButton = new GUIButton(new RectTransform(new Vector2(0.06f, 0.02f), GUI.Canvas, Anchor.TopCenter)
-            { MinSize = new Point(150, 20), RelativeOffset = new Vector2(0.0f, 0.01f) },
+            suicideButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.02f), GUI.Canvas, Anchor.TopCenter)
+            {
+                MinSize = new Point(150, 20), RelativeOffset = new Vector2(0.0f, 0.01f)
+            },
                 TextManager.Get("GiveInButton"), style: "GUIButtonLarge")
             {
                 ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer"),
@@ -647,10 +649,14 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
+                bool inWater = Character.AnimController.InWater;
                 float bloodParticleSize = MathHelper.Lerp(0.5f, 1.0f, affliction.Strength / 100.0f);
-                if (!Character.AnimController.InWater) bloodParticleSize *= 2.0f;
+                if (!inWater)
+                {
+                    bloodParticleSize *= 2.0f;
+                }
                 var blood = GameMain.ParticleManager.CreateParticle(
-                    Character.AnimController.InWater ? "waterblood" : "blooddrop",
+                    inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
 
                 if (blood != null)
@@ -761,7 +767,8 @@ namespace Barotrauma
                 {
                     OpenHealthWindow = null;
                 }
-                else if (Character.Controlled == Character && Character.Controlled.FocusedCharacter == null)
+                else if (Character.Controlled == Character && 
+                    (Character.Controlled.FocusedCharacter?.CharacterHealth == null || !Character.Controlled.FocusedCharacter.CharacterHealth.UseHealthWindow))
                 {
                     OpenHealthWindow = this;
                     forceAfflictionContainerUpdate = true;
@@ -847,7 +854,7 @@ namespace Barotrauma
             }
             else
             {
-                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(DisplayedVitality / MaxVitality, GUIColorSettings.HealthBarColorLow, GUIColorSettings.HealthBarColorMedium, GUIColorSettings.HealthBarColorHigh);
+                healthBar.Color = healthWindowHealthBar.Color = ToolBox.GradientLerp(DisplayedVitality / MaxVitality, GUI.Style.HealthBarColorLow, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorHigh);
                 healthBar.HoverColor = healthWindowHealthBar.HoverColor = healthBar.Color * 2.0f;
                 healthBar.BarSize = healthWindowHealthBar.BarSize = 
                     (DisplayedVitality > 0.0f) ? 
@@ -934,7 +941,7 @@ namespace Barotrauma
                 healthBar.State = GUIComponent.ComponentState.None;
             }
 
-            suicideButton.Visible = Character == Character.Controlled && Character.IsUnconscious && !Character.IsDead;
+            suicideButton.Visible = Character == Character.Controlled && !Character.IsDead && Character.IsIncapacitated;
 
             cprButton.Visible =
                 Character == Character.Controlled?.SelectedCharacter
@@ -942,6 +949,10 @@ namespace Barotrauma
                 && !Character.IsDead
                 && openHealthWindow == this;
             cprButton.IgnoreLayoutGroups = !cprButton.Visible;
+            cprButton.Selected =  
+                Character.Controlled != null && 
+                Character == Character.Controlled.SelectedCharacter && 
+                Character.Controlled.AnimController.Anim == AnimController.Animation.CPR;
 
             cprFrame.RectTransform.Resize(new Vector2(0.7f, 1.0f));
             cprButton.RectTransform.Resize(new Vector2(1.0f, 1.0f));
@@ -1132,11 +1143,11 @@ namespace Barotrauma
             {
                 if (prefab.IsBuff)
                 {
-                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUIColorSettings.BuffColorLow, GUIColorSettings.BuffColorMedium, GUIColorSettings.BuffColorHigh);
+                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUI.Style.BuffColorLow, GUI.Style.BuffColorMedium, GUI.Style.BuffColorHigh);
                 }
                 else
                 {
-                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUIColorSettings.DebuffColorLow, GUIColorSettings.DebuffColorMedium, GUIColorSettings.DebuffColorHigh);
+                    return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, GUI.Style.DebuffColorLow, GUI.Style.DebuffColorMedium, GUI.Style.DebuffColorHigh);
                 }
             }
             else
@@ -1870,10 +1881,11 @@ namespace Barotrauma
             healthBarHolder.Visible = value;
         }
 
+        private readonly List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
+        private readonly List<Triplet<LimbHealth, AfflictionPrefab, float>> newLimbAfflictions = new List<Triplet<LimbHealth, AfflictionPrefab, float>>();
         public void ClientRead(IReadMessage inc)
         {
-            List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
-
+            newAfflictions.Clear();
             byte afflictionCount = inc.ReadByte();
             for (int i = 0; i < afflictionCount; i++)
             {
@@ -1913,7 +1925,7 @@ namespace Barotrauma
                 }
             }
 
-            List<Triplet<LimbHealth, AfflictionPrefab, float>> newLimbAfflictions = new List<Triplet<LimbHealth, AfflictionPrefab, float>>();
+            newLimbAfflictions.Clear();
             byte limbAfflictionCount = inc.ReadByte();
             for (int i = 0; i < limbAfflictionCount; i++)
             {

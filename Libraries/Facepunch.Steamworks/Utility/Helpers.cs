@@ -9,30 +9,35 @@ namespace Steamworks
 	{
 		public const int MaxStringSize = 1024 * 32;
 
+		private static object mutex = new object();
 		private static IntPtr[] MemoryPool;
 		private static int MemoryPoolIndex;
 
 		public static unsafe IntPtr TakeMemory()
 		{
-			if ( MemoryPool == null )
+			IntPtr take = IntPtr.Zero;
+			lock (mutex)
 			{
-				//
-				// The pool has 5 items. This should be safe because we shouldn't really
-				// ever be using more than 2 memory pools
-				//
-				MemoryPool = new IntPtr[5];
+				if (MemoryPool == null)
+				{
+					//
+					// The pool has 5 items. This should be safe because we shouldn't really
+					// ever be using more than 2 memory pools
+					//
+					MemoryPool = new IntPtr[5];
 
-				for ( int i = 0; i < MemoryPool.Length; i++ )
-					MemoryPool[i] = Marshal.AllocHGlobal( MaxStringSize );
+					for (int i = 0; i < MemoryPool.Length; i++)
+						MemoryPool[i] = Marshal.AllocHGlobal(MaxStringSize);
+				}
+
+				MemoryPoolIndex++;
+				if (MemoryPoolIndex >= MemoryPool.Length)
+					MemoryPoolIndex = 0;
+
+				take = MemoryPool[MemoryPoolIndex];
+
+				((byte*)take)[0] = 0;
 			}
-
-			MemoryPoolIndex++;
-			if ( MemoryPoolIndex >= MemoryPool.Length )
-				MemoryPoolIndex = 0;
-
-			var take = MemoryPool[MemoryPoolIndex];
-
-			((byte*)take)[0] = 0;
 
 			return take;
 		}

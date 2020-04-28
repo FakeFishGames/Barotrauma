@@ -435,8 +435,8 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.GameSession?.Submarine != null &&
-                        GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                    if (GameMain.GameSession?.SubmarineInfo != null &&
+                        GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                     {
                         new GUIMessageBox("", TextManager.Get("ReplaceShuttleDockingPortOccupied"));
                         return true;
@@ -917,7 +917,7 @@ namespace Barotrauma
                     GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = 100,
+                    MaxValueInt = CargoManager.MaxQuantity,
                     UserData = pi,
                     IntValue = pi.Quantity
                 };
@@ -927,7 +927,11 @@ namespace Barotrauma
                 {
                     if (suppressBuySell) { return; }
                     PurchasedItem purchasedItem = numberInput.UserData as PurchasedItem;
-
+                    if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
+                    {
+                        numberInput.IntValue = purchasedItem.Quantity;
+                        return;
+                    }
                     //Attempting to buy
                     if (numberInput.IntValue > purchasedItem.Quantity)
                     {
@@ -965,15 +969,18 @@ namespace Barotrauma
 
         private bool BuyItem(GUIComponent component, object obj)
         {
-            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) return false;
+            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) { return false; }
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
                 return false;
             }
-            
+
+            var purchasedItem = Campaign.CargoManager.PurchasedItems.Find(pi2 => pi2.ItemPrefab == pi.ItemPrefab);
+            if (purchasedItem != null && purchasedItem.Quantity >= CargoManager.MaxQuantity) { return false; }
+
             PriceInfo priceInfo = pi.ItemPrefab.GetPrice(Campaign.Map.CurrentLocation);
-            if (priceInfo == null || priceInfo.BuyPrice > Campaign.Money) return false;
+            if (priceInfo == null || priceInfo.BuyPrice > Campaign.Money) { return false; }
             
             Campaign.CargoManager.PurchaseItem(pi.ItemPrefab, 1);
             GameMain.Client?.SendCampaignState();
@@ -983,7 +990,7 @@ namespace Barotrauma
 
         private bool SellItem(GUIComponent component, object obj)
         {
-            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) return false;
+            if (!(obj is PurchasedItem pi) || pi.ItemPrefab == null) { return false; }
 
             if (GameMain.Client != null && !GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign))
             {
@@ -1068,7 +1075,7 @@ namespace Barotrauma
                         (GameMain.Client == null || GameMain.Client.HasPermission(Networking.ClientPermissions.ManageCampaign));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
 
-                    if (GameMain.GameSession?.Submarine == null || !GameMain.GameSession.Submarine.SubsLeftBehind)
+                    if (GameMain.GameSession?.SubmarineInfo == null || !GameMain.GameSession.SubmarineInfo.SubsLeftBehind)
                     {
                         replaceShuttlesButton.Enabled = false;
                         replaceShuttlesButton.GetChild<GUITickBox>().Selected = false;
@@ -1166,7 +1173,7 @@ namespace Barotrauma
                 };
                 var characterPreviewContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.8f), characterPreviewFrame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.02f) }, style: null);
 
-                characterInfo.CreateInfoFrame(characterPreviewContent);
+                characterInfo.CreateInfoFrame(characterPreviewContent, true);
             }
 
             var currentCrew = GameMain.GameSession.CrewManager.GetCharacterInfos();

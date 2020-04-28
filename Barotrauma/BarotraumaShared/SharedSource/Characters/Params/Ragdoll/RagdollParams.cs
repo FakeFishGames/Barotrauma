@@ -94,8 +94,7 @@ namespace Barotrauma
 
         public static string GetFolder(string speciesName, ContentPackage contentPackage = null)
         {
-            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.ToLowerInvariant()==speciesName.ToLowerInvariant() &&
-                                                          (contentPackage==null || p.ContentPackage == contentPackage));
+            CharacterPrefab prefab = CharacterPrefab.Find(p => p.Identifier.Equals(speciesName, StringComparison.OrdinalIgnoreCase) && (contentPackage == null || p.ContentPackage == contentPackage));
             if (prefab?.XDocument == null)
             {
                 DebugConsole.ThrowError($"Failed to find config file for '{speciesName}' (content package {contentPackage?.Name ?? "null"})");
@@ -107,7 +106,7 @@ namespace Barotrauma
         public static string GetFolder(XDocument doc, string filePath)
         {
             var folder = doc.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
-            if (string.IsNullOrEmpty(folder) || folder.ToLowerInvariant() == "default")
+            if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
@@ -150,7 +149,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).ToLowerInvariant() == fileName.ToLowerInvariant());
+                        selectedFile = files.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
                         if (selectedFile == null)
                         {
                             DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.");
@@ -813,6 +812,15 @@ namespace Barotrauma
 
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
+
+            [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+            public Color Color { get; set; }
+
+            [Serialize("1.0,1.0,1.0,1.0", true, description: "Target color when the character is dead."), Editable()]
+            public Color DeadColor { get; set; }
+
+            [Serialize(0f, true, "How long it takes to fade into the dead color? 0 = Not applied."), Editable(DecimalCount = 1, MinValueFloat = 0, MaxValueFloat = 10)]
+            public float DeadColorTime { get; set; }
 
             public override string Name => "Sprite";
 

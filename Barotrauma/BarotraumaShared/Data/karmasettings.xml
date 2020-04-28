@@ -22,7 +22,9 @@
     kickbanthreshold="1"
     kicksbeforeban="3"
     karmanotificationinterval="15" 
-    resetkarmabetweenrounds="true" />
+    resetkarmabetweenrounds="true"
+    dangerousitemstealkarmadecrease="15"
+    dangerousitemstealbots="false" />
   <Preset
     name="Strict"
     karmadecay="0.08"
@@ -45,7 +47,9 @@
     kickbanthreshold="1"
     kicksbeforeban="1"
     karmanotificationinterval="15"
-    resetkarmabetweenrounds="true" />
+    resetkarmabetweenrounds="true"
+    dangerousitemstealkarmadecrease="15"
+    dangerousitemstealbots="true" />
   <Preset
     name="Custom"
     karmadecay="0.08"
@@ -68,5 +72,7 @@
     kickbanthreshold="1"
     kicksbeforeban="3"
     karmanotificationinterval="15"
-    resetkarmabetweenrounds="true" />
+    resetkarmabetweenrounds="true"
+    dangerousitemstealkarmadecrease="15"
+    dangerousitemstealbots="false" />
 </KarmaManager>

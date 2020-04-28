@@ -490,6 +490,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
+                    if (t.Entity is Character c && c.Params.HideInSonar) { continue; }
                     if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
@@ -647,6 +648,8 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.GameSession == null) { return; }
 
+            if (Level.Loaded == null) { return; }
+
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
                 "outpost",
@@ -699,8 +702,8 @@ namespace Barotrauma.Items.Components
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                              
                 DrawMarker(spriteBatch, 
-                    sub.Name, 
-                    sub.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
+                    sub.Info.DisplayName, 
+                    sub.Info.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
                     sub.WorldPosition - transducerCenter, 
                     displayScale, center, DisplayRadius * 0.95f);
             }
@@ -799,8 +802,11 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
+                if (dockingPort.Item.Submarine == null) { continue; }
+                if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
+
                 //don't show the docking ports of the opposing team on the sonar
-                if (item.Submarine != null && dockingPort.Item.Submarine != null)
+                if (item.Submarine != null)
                 {
                     if ((dockingPort.Item.Submarine.TeamID == Character.TeamType.Team1 && item.Submarine.TeamID == Character.TeamType.Team2) ||
                         (dockingPort.Item.Submarine.TeamID == Character.TeamType.Team2 && item.Submarine.TeamID == Character.TeamType.Team1))
@@ -1125,6 +1131,7 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
+                if (c.Params.HideInSonar) { continue; }
                 if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
 
                 if (c.AnimController.SimplePhysicsEnabled)

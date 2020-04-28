@@ -246,7 +246,7 @@ namespace Barotrauma
 
             if (!ShowHulls && !GameMain.DebugDraw) return;
 
-            if (!editing && !GameMain.DebugDraw) return;
+            if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) return;
 
            Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
@@ -269,7 +269,8 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
                 if (WaterVolume > Volume)
                 {
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / MaxCompress)), GUI.Style.Red, true);
+                    float maxExcessWater = Volume * MaxCompress;
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUI.Style.Red, true);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
 
@@ -450,7 +451,7 @@ namespace Barotrauma
                     }
 
                     //we only create a new quad if this is the first or the last one, of if there's a wave large enough that we need more geometry
-                    if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[3].Y) > 1.0f)
+                    if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[2].Y) > 0.01f)
                     {
                         renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(prevCorners[0], prevUVs[0]);
                         renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);

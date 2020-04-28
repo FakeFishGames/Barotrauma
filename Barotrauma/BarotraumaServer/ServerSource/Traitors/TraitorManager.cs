@@ -90,6 +90,7 @@ namespace Barotrauma
                 Character.TeamType winningTeam = Character.TeamType.None;
                 foreach (var mission in Missions)
                 {
+                    DebugConsole.NewMessage("Mission: " + mission.ToString());
                     mission.Value.Update(deltaTime, () =>
                     {
                         switch (mission.Key)
@@ -134,11 +135,13 @@ namespace Barotrauma
                     int playerCharactersCount = server.ConnectedClients.Sum(client => client.Character != null && !client.Character.IsDead ? 1 : 0);
                     if (playerCharactersCount < server.ServerSettings.TraitorsMinPlayerCount)
                     {
+                        DebugConsole.NewMessage("Starting countdown to assign traitor");
                         startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                         return;
                     }
                     if (GameMain.GameSession.Mission is CombatMission)
                     {
+                        DebugConsole.NewMessage("This mission is PvP");
                         var teamIds = new[] { Character.TeamType.Team1, Character.TeamType.Team2 };
                         foreach (var teamId in teamIds)
                         {
@@ -164,6 +167,7 @@ namespace Barotrauma
                     }
                     else
                     {
+                        DebugConsole.NewMessage("Giving traitor mission?");
                         var mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
                         if (mission != null) {
                             if (mission.CanBeStarted(server, this, Character.TeamType.None))

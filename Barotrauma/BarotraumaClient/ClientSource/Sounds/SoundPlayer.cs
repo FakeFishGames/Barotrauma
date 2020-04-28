@@ -73,8 +73,8 @@ namespace Barotrauma
         private static float updateMusicTimer;
 
         //ambience
-        private static List<Sound> waterAmbiences = new List<Sound>();
-        private static SoundChannel[] waterAmbienceChannels = new SoundChannel[2];
+        private static Sound waterAmbienceIn, waterAmbienceOut, waterAmbienceMoving;
+        private static SoundChannel[] waterAmbienceChannels = new SoundChannel[3];
 
         private static float ambientSoundTimer;
         private static Vector2 ambientSoundInterval = new Vector2(20.0f, 40.0f); //x = min, y = max
@@ -123,7 +123,7 @@ namespace Barotrauma
             string filePathB = b.GetAttributeString("file", "").CleanUpPath();
             float baseGainB = b.GetAttributeFloat("volume", 1.0f);
             float rangeB = b.GetAttributeFloat("range", 1000.0f);
-            return a.Name.ToString().ToLowerInvariant() == b.Name.ToString().ToLowerInvariant() &&
+            return a.Name.ToString().Equals(b.Name.ToString(), StringComparison.OrdinalIgnoreCase) &&
                    filePathA == filePathB && MathUtils.NearlyEqual(baseGainA, baseGainB) &&
                    MathUtils.NearlyEqual(rangeA, rangeB);
         }
@@ -148,10 +148,10 @@ namespace Barotrauma
                 }
                 soundElements.AddRange(mainElement.Elements());
             }
-            
+
             SoundCount = 1 + soundElements.Count();
 
-            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().ToLowerInvariant() == "startupsound");
+            var startUpSoundElement = soundElements.Find(e => e.Name.ToString().Equals("startupsound", StringComparison.OrdinalIgnoreCase));
             if (startUpSoundElement != null)
             {
                 startUpSound = GameMain.SoundManager.LoadSound(startUpSoundElement, false);
@@ -159,11 +159,13 @@ namespace Barotrauma
             }
 
             yield return CoroutineStatus.Running;
-                                    
+
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
-            damageSounds = damageSounds ?? new List<DamageSound>();
-            musicClips = musicClips ?? new List<BackgroundMusic>();
-            
+            damageSounds ??= new List<DamageSound>();
+            musicClips ??= new List<BackgroundMusic>();
+
+            bool firstWaterAmbienceLoaded = false;
+
             foreach (XElement soundElement in soundElements)
             {
                 yield return CoroutineStatus.Running;
@@ -182,7 +184,7 @@ namespace Barotrauma
                             musicClips.AddIfNotNull(newMusicClip);
                             if (loadedSoundElements != null)
                             {
-                                if (newMusicClip.Type.ToLowerInvariant() == "menu")
+                                if (newMusicClip.Type.Equals("menu", StringComparison.OrdinalIgnoreCase))
                                 {
                                     targetMusic[0] = newMusicClip;
                                 }
@@ -195,17 +197,57 @@ namespace Barotrauma
                             FlowSounds.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
                             break;
                         case "waterambience":
-                            waterAmbiences.AddIfNotNull(GameMain.SoundManager.LoadSound(soundElement, false));
+                            //backwards compatibility (1st waterambience used to be played both inside and outside, 2nd when moving)
+                            if (!firstWaterAmbienceLoaded)
+                            {
+                                waterAmbienceIn?.Dispose();
+                                waterAmbienceOut?.Dispose();
+                                if (File.Exists(soundElement.GetAttributeString("file", "")))
+                                {
+                                    waterAmbienceIn = GameMain.SoundManager.LoadSound(soundElement, false);
+                                    waterAmbienceOut = GameMain.SoundManager.LoadSound(soundElement, false);
+                                }
+                                else
+                                {
+                                    waterAmbienceIn = GameMain.SoundManager.LoadSound(soundElement, false, "Content/Sounds/Water/WaterAmbienceIn.ogg");
+                                    waterAmbienceOut = GameMain.SoundManager.LoadSound(soundElement, false, "Content/Sounds/Water/WaterAmbienceOut.ogg");
+                                }
+                                firstWaterAmbienceLoaded = true;
+                            }
+                            else
+                            {
+                                waterAmbienceMoving?.Dispose();
+                                if (File.Exists(soundElement.GetAttributeString("file", "")))
+                                {
+                                    waterAmbienceMoving = GameMain.SoundManager.LoadSound(soundElement, false);
+                                }
+                                else
+                                {
+                                    waterAmbienceMoving = GameMain.SoundManager.LoadSound(soundElement, false, "Content/Sounds/Water/WaterAmbienceMoving.ogg");
+                                }
+                            }
+                            break;
+                        case "waterambiencein":
+                            waterAmbienceIn?.Dispose();
+                            waterAmbienceIn = GameMain.SoundManager.LoadSound(soundElement, false);
+                            break;
+                        case "waterambienceout":
+                            waterAmbienceOut?.Dispose();
+                            waterAmbienceOut = GameMain.SoundManager.LoadSound(soundElement, false);
+                            break;
+                        case "waterambiencemoving":
+                            waterAmbienceMoving?.Dispose();
+                            waterAmbienceMoving = GameMain.SoundManager.LoadSound(soundElement, false);
                             break;
                         case "damagesound":
                             Sound damageSound = GameMain.SoundManager.LoadSound(soundElement, false);
                             if (damageSound == null) { continue; }
-                    
+
                             string damageSoundType = soundElement.GetAttributeString("damagesoundtype", "None");
                             damageSounds.Add(new DamageSound(
-                                damageSound, 
-                                soundElement.GetAttributeVector2("damagerange", Vector2.Zero), 
-                                damageSoundType, 
+                                damageSound,
+                                soundElement.GetAttributeVector2("damagerange", Vector2.Zero),
+                                damageSoundType,
                                 soundElement.GetAttributeString("requiredtag", "")));
 
                             break;
@@ -221,12 +263,12 @@ namespace Barotrauma
                 catch (FileNotFoundException e)
                 {
                     DebugConsole.ThrowError("Error while initializing SoundPlayer.", e);
-                }                
+                }
             }
 
             musicClips.RemoveAll(mc => !soundElements.Any(e => SoundElementsEquivalent(mc.Element, e)));
 
-            for (int i=0;i<currentMusic.Length;i++)
+            for (int i = 0; i < currentMusic.Length; i++)
             {
                 if (currentMusic[i] != null && !musicClips.Any(mc => mc.File == currentMusic[i].Filename))
                 {
@@ -245,12 +287,6 @@ namespace Barotrauma
                 if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
             });
             FlowSounds.RemoveAll(s => s.Disposed);
-
-            waterAmbiences.ForEach(s =>
-            {
-                if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
-            });
-            waterAmbiences.RemoveAll(s => s.Disposed);
 
             damageSounds.ForEach(s =>
             {
@@ -273,7 +309,7 @@ namespace Barotrauma
             fireVolumeLeft = new float[2];
             fireVolumeRight = new float[2];
 
-            miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);            
+            miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
 
             Initialized = true;
 
@@ -282,7 +318,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
 
         }
-        
+
 
         public static void Update(float deltaTime)
         {
@@ -293,27 +329,27 @@ namespace Barotrauma
             if (startUpSound != null && !GameMain.SoundManager.IsPlaying(startUpSound))
             {
                 startUpSound.Dispose();
-                startUpSound = null;                
+                startUpSound = null;
             }
 
             //stop water sounds if no sub is loaded
-            if (Submarine.MainSub == null || Screen.Selected != GameMain.GameScreen)  
+            if (Submarine.MainSub == null || Screen.Selected != GameMain.GameScreen)
             {
                 for (int i = 0; i < waterAmbienceChannels.Length; i++)
                 {
-                    if (waterAmbienceChannels[i] == null) continue;
+                    if (waterAmbienceChannels[i] == null) { continue; }
                     waterAmbienceChannels[i].FadeOutAndDispose();
                     waterAmbienceChannels[i] = null;
                 }
                 for (int i = 0; i < FlowSounds.Count; i++)
                 {
-                    if (flowSoundChannels[i] == null) continue;
+                    if (flowSoundChannels[i] == null) { continue; }
                     flowSoundChannels[i].FadeOutAndDispose();
                     flowSoundChannels[i] = null;
                 }
                 for (int i = 0; i < fireSoundChannels.Length; i++)
                 {
-                    if (fireSoundChannels[i] == null) continue;
+                    if (fireSoundChannels[i] == null) { continue; }
                     fireSoundChannels[i].FadeOutAndDispose();
                     fireSoundChannels[i] = null;
                 }
@@ -333,17 +369,18 @@ namespace Barotrauma
                 }
             }
 
-            UpdateWaterAmbience(ambienceVolume);
+            UpdateWaterAmbience(ambienceVolume, deltaTime);
             UpdateWaterFlowSounds(deltaTime);
             UpdateRandomAmbience(deltaTime);
-            UpdateFireSounds(deltaTime);            
+            UpdateFireSounds(deltaTime);
         }
 
-        private static void UpdateWaterAmbience(float ambienceVolume)
+        private static void UpdateWaterAmbience(float ambienceVolume, float deltaTime)
         {
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementSoundVolume = 0.0f;
 
+            float insideSubFactor = 0.0f;
             foreach (Submarine sub in Submarine.Loaded)
             {
                 float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 10.0f;
@@ -352,7 +389,12 @@ namespace Barotrauma
                 if (Character.Controlled == null || Character.Controlled.Submarine != sub)
                 {
                     float dist = Vector2.Distance(GameMain.GameScreen.Cam.WorldViewCenter, sub.WorldPosition);
-                    movementFactor = movementFactor / Math.Max(dist / 1000.0f, 1.0f);
+                    movementFactor /= Math.Max(dist / 1000.0f, 1.0f);
+                    insideSubFactor = Math.Max(1.0f / Math.Max(dist / 1000.0f, 1.0f), insideSubFactor);
+                }
+                else
+                {
+                    insideSubFactor = 1.0f;
                 }
 
                 movementSoundVolume = Math.Max(movementSoundVolume, movementFactor);
@@ -365,28 +407,38 @@ namespace Barotrauma
                 }
             }
 
-            if (waterAmbiences.Count > 1)
+            for (int i = 0; i < 3; i++)
             {
-                if (waterAmbienceChannels[0] == null || !waterAmbienceChannels[0].IsPlaying)
+                float volume = 0.0f;
+                Sound sound = null;
+                switch (i)
                 {
-                    waterAmbienceChannels[0] = waterAmbiences[0].Play(ambienceVolume * (1.0f - movementSoundVolume),"waterambience");
-                    //waterAmbiences[0].Loop(waterAmbienceIndexes[0], ambienceVolume * (1.0f - movementSoundVolume));
-                    waterAmbienceChannels[0].Looping = true;
-                }
-                else
-                {
-                    waterAmbienceChannels[0].Gain = ambienceVolume * (1.0f - movementSoundVolume);
+                    case 0:
+                        volume = ambienceVolume * (1.0f - movementSoundVolume) * insideSubFactor;
+                        sound = waterAmbienceIn;
+                        break;
+                    case 1:
+                        volume = ambienceVolume * movementSoundVolume * insideSubFactor;
+                        sound = waterAmbienceMoving;
+                        break;
+                    case 2:
+                        volume = 1.0f - insideSubFactor;
+                        sound = waterAmbienceOut;
+                        break;
                 }
 
-                if (waterAmbienceChannels[1] == null || !waterAmbienceChannels[1].IsPlaying)
+                if ((waterAmbienceChannels[i] == null || !waterAmbienceChannels[i].IsPlaying) && volume > 0.01f)
                 {
-                    waterAmbienceChannels[1] = waterAmbiences[1].Play(ambienceVolume * movementSoundVolume, "waterambience");
-                    //waterAmbienceIndexes[1] = waterAmbiences[1].Loop(waterAmbienceIndexes[1], ambienceVolume * movementSoundVolume);
-                    waterAmbienceChannels[1].Looping = true;
+                    waterAmbienceChannels[i] = sound.Play(volume, "waterambience");
+                    waterAmbienceChannels[i].Looping = true;
                 }
-                else
+                else if (waterAmbienceChannels[i] != null)
                 {
-                    waterAmbienceChannels[1].Gain = ambienceVolume * movementSoundVolume;
+                    waterAmbienceChannels[i].Gain += deltaTime * Math.Sign(volume - waterAmbienceChannels[i].Gain);
+                    if (waterAmbienceChannels[i].Gain < 0.01f)
+                    {
+                        waterAmbienceChannels[i].FadeOutAndDispose();
+                    }
                 }
             }
         }
@@ -419,11 +471,11 @@ namespace Barotrauma
                     //flow at the left side
                     if (diff.X < 0)
                     {
-                        targetFlowLeft[flowSoundIndex] = 1.0f - distFallOff;
+                        targetFlowLeft[flowSoundIndex] += 1.0f - distFallOff;
                     }
                     else
                     {
-                        targetFlowRight[flowSoundIndex] = 1.0f - distFallOff;
+                        targetFlowRight[flowSoundIndex] += 1.0f - distFallOff;
                     }
                 }
             }
@@ -742,22 +794,30 @@ namespace Barotrauma
                 Screen.Selected == GameMain.LevelEditorScreen ||
                 Screen.Selected == GameMain.ParticleEditorScreen ||
                 Screen.Selected == GameMain.SpriteEditorScreen ||
-                Screen.Selected == GameMain.SubEditorScreen)
+                Screen.Selected == GameMain.SubEditorScreen ||
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is SubTestMode))
             {
                 return "editor";
             }
 
             if (Screen.Selected != GameMain.GameScreen) { return "menu"; }
 
-            if (Character.Controlled != null &&
-                Level.Loaded != null && Level.Loaded.Ruins != null &&
-                Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+
+            if (Character.Controlled != null)
             {
-                return "ruins";
+                if (Level.Loaded != null && Level.Loaded.Ruins != null &&
+                    Level.Loaded.Ruins.Any(r => r.Area.Contains(Character.Controlled.WorldPosition)))
+                {
+                    return "ruins";
+                }
+
+                if (Character.Controlled.Submarine?.Info?.IsWreck ?? false)
+                {
+                    return "wreck";
+                }
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
-
             if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
                 (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
             {

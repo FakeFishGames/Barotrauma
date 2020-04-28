@@ -277,7 +277,7 @@ namespace Barotrauma.RuinGeneration
             {
                 foreach (XElement subElement in element2.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "chooseone")
+                    if (subElement.Name.ToString().Equals("chooseone", StringComparison.OrdinalIgnoreCase))
                     {
                         groupIndex++;
                         LoadEntities(subElement, ref groupIndex);
@@ -390,7 +390,7 @@ namespace Barotrauma.RuinGeneration
                 SourceEntityIdentifier = element.GetAttributeString("sourceentity", "");
                 foreach (XElement subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().ToLowerInvariant() == "wire")
+                    if (subElement.Name.ToString().Equals("wire", StringComparison.OrdinalIgnoreCase))
                     {
                         WireConnection = new Pair<string, string>(
                             subElement.GetAttributeString("from", ""),

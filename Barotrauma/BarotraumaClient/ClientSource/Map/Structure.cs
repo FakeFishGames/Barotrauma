@@ -18,11 +18,13 @@ namespace Barotrauma
 
         private List<ConvexHull> convexHulls;
 
+        private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
+
         public override bool SelectableInEditor
         {
             get
             {
-                return HasBody ? ShowWalls : ShowStructures;;
+                return HasBody ? ShowWalls : ShowStructures;
             }
         }
         
@@ -38,6 +40,14 @@ namespace Barotrauma
         {
             Prefab.sprite?.EnsureLazyLoaded();
             Prefab.BackgroundSprite?.EnsureLazyLoaded();
+
+            foreach (var decorativeSprite in Prefab.DecorativeSprites)
+            {
+                decorativeSprite.Sprite.EnsureLazyLoaded();
+                spriteAnimState.Add(decorativeSprite, new DecorativeSprite.State());
+            }
+
+            UpdateSpriteStates(0.0f);
         }
 
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
@@ -156,19 +166,19 @@ namespace Barotrauma
         {
             Rectangle worldRect = WorldRect;
 
-            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) return false;
-            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) return false;
+            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) { return false; }
+            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) { return false; }
 
             return true;
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (prefab.sprite == null) return;
+            if (prefab.sprite == null) { return; }
             if (editing)
             {
-                if (!HasBody && !ShowStructures) return;
-                if (HasBody && !ShowWalls) return;
+                if (!HasBody && !ShowStructures) { return; }
+                if (HasBody && !ShowWalls) { return; }
             }
 
             Draw(spriteBatch, editing, back, null);
@@ -188,12 +198,13 @@ namespace Barotrauma
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
-            if (prefab.sprite == null) return;
+            if (prefab.sprite == null) { return; }
             if (editing)
             {
-                if (!HasBody && !ShowStructures) return;
-                if (HasBody && !ShowWalls) return;
+                if (!HasBody && !ShowStructures) { return; }
+                if (HasBody && !ShowWalls) { return; }
             }
+            else if (HiddenInGame) { return; }
 
             Color color = IsHighlighted ? GUI.Style.Orange : spriteColor;
             if (IsSelected && editing)
@@ -254,7 +265,7 @@ namespace Barotrauma
                         spriteBatch,
                         new Vector2(rect.X + drawOffset.X, -(rect.Y + drawOffset.Y)),
                         new Vector2(rect.Width, rect.Height),
-                        color: color,
+                        color: Prefab.BackgroundSpriteColor,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
                         depth: Math.Max(Prefab.BackgroundSprite.Depth + (ID % 255) * 0.000001f, depth + 0.000001f));
@@ -318,10 +329,20 @@ namespace Barotrauma
                         depth: depth,
                         textureScale: TextureScale * Scale);
                 }
+
+                foreach (var decorativeSprite in Prefab.DecorativeSprites)
+                {
+                    if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                    decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
+                        rotation, decorativeSprite.Scale * Scale, prefab.sprite.effects,
+                        depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                }
                 prefab.sprite.effects = oldEffects;
             }
 
-            if (GameMain.DebugDraw)
+            if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.5f)
             {
                 if (Bodies != null)
                 {
@@ -353,12 +374,70 @@ namespace Barotrauma
             }
         }
 
+        public void UpdateSpriteStates(float deltaTime)
+        {
+            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);
+            foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
+            {
+                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
+                {
+                    var decorativeSprite = Prefab.DecorativeSpriteGroups[spriteGroup][i];
+                    if (decorativeSprite == null) { continue; }
+                    if (spriteGroup > 0)
+                    {
+                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Count;
+                        if (i != activeSpriteIndex)
+                        {
+                            spriteAnimState[decorativeSprite].IsActive = false;
+                            continue;
+                        }
+                    }
+
+                    //check if the sprite is active (whether it should be drawn or not)
+                    var spriteState = spriteAnimState[decorativeSprite];
+                    spriteState.IsActive = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.IsActiveConditionals)
+                    {
+                        if (!ConditionalMatches(conditional))
+                        {
+                            spriteState.IsActive = false;
+                            break;
+                        }
+                    }
+                    if (!spriteState.IsActive) { continue; }
+
+                    //check if the sprite should be animated
+                    bool animate = true;
+                    foreach (PropertyConditional conditional in decorativeSprite.AnimationConditionals)
+                    {
+                        if (!ConditionalMatches(conditional)) { animate = false; break; }
+                    }
+                    if (!animate) { continue; }
+                    spriteState.OffsetState += deltaTime;
+                    spriteState.RotationState += deltaTime;
+                }
+            }
+        }
+
+        private bool ConditionalMatches(PropertyConditional conditional)
+        {
+            if (!string.IsNullOrEmpty(conditional.TargetItemComponentName))
+            {
+                return false;
+            }
+            else
+            {
+                if (!conditional.Matches(this)) { return false; }                
+            }
+            return true;
+        }
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             byte sectionCount = msg.ReadByte();
             if (sectionCount != Sections.Length)
             {
-                string errorMsg = $"Error while reading a network event for the structure \"{Name}\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
+                string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
                 GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }

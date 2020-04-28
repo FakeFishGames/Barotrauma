@@ -10,7 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
-        Structure = 1, Decorative = 2, Machine = 4, Equipment = 8, Electrical = 16, Material = 32, Misc = 64, Alien = 128, ItemAssembly = 256, Legacy = 512
+        Structure = 1, Decorative = 2, Machine = 4, Equipment = 8, Electrical = 16, Material = 32, Misc = 64, Alien = 128, Wrecked = 256, Thalamus = 512, ItemAssembly = 1024, Legacy = 2048
     }
 
     abstract partial class MapEntityPrefab : IPrefab, IDisposable
@@ -242,23 +242,35 @@ namespace Barotrauma
         /// <param name="identifier">The identifier of the item (if null, the identifier is ignored and the search is done only based on the name)</param>
         public static MapEntityPrefab Find(string name, string identifier = null, bool showErrorMessages = true)
         {
-            if (name != null) name = name.ToLowerInvariant();
+            if (name != null)
+            {
+                name = name.ToLowerInvariant();
+            }
             foreach (MapEntityPrefab prefab in List)
             {
                 if (identifier != null)
                 {
                     if (prefab.identifier != identifier)
                     {
+                        if (prefab.Aliases != null && prefab.Aliases.Any(a => a.Equals(identifier, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            return prefab;
+                        }                        
                         continue;
                     }
                     else
                     {
-                        if (string.IsNullOrEmpty(name)) return prefab;
+                        if (string.IsNullOrEmpty(name)) { return prefab; }
                     }
                 }
                 if (!string.IsNullOrEmpty(name))
                 {
-                    if (prefab.Name.ToLowerInvariant() == name || prefab.originalName.ToLowerInvariant() == name || (prefab.Aliases != null && prefab.Aliases.Any(a => a.ToLowerInvariant() == name))) return prefab;
+                    if (prefab.Name.Equals(name, StringComparison.OrdinalIgnoreCase) || 
+                        prefab.originalName.Equals(name, StringComparison.OrdinalIgnoreCase) || 
+                        (prefab.Aliases != null && prefab.Aliases.Any(a => a.Equals(name, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        return prefab;
+                    }
                 }
             }
 
@@ -281,27 +293,9 @@ namespace Barotrauma
         /// <summary>
         /// Check if the name or any of the aliases of this prefab match the given name.
         /// </summary>
-        public bool NameMatches(string name, bool caseSensitive = false)
-        {
-            if (caseSensitive)
-            {
-                return this.originalName == name || (Aliases != null && Aliases.Any(a => a == name));
-            }
-            else
-            {
-                name = name.ToLowerInvariant();
-                return this.originalName.ToLowerInvariant() == name || (Aliases != null && Aliases.Any(a => a.ToLowerInvariant() == name));
-            }
-        }
+        public bool NameMatches(string name, StringComparison comparisonType) => originalName.Equals(name, comparisonType) || (Aliases != null && Aliases.Any(a => a.Equals(name, comparisonType)));
 
-        public bool NameMatches(IEnumerable<string> allowedNames, bool caseSensitive = false)
-        {
-            foreach (string name in allowedNames)
-            {
-                if (NameMatches(name, caseSensitive)) return true;
-            }
-            return false;
-        }
+        public bool NameMatches(IEnumerable<string> allowedNames, StringComparison comparisonType) => allowedNames.Any(n => NameMatches(n, comparisonType));
 
         public bool IsLinkAllowed(MapEntityPrefab target)
         {
