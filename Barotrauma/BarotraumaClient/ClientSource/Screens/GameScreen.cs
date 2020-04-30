@@ -153,6 +153,8 @@ namespace Barotrauma
 
             GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
 
+            GameMain.LightManager.BlindVision = Character.Controlled != null && Character.Controlled.BlindVision;
+
             if (Character.Controlled != null)
             {
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);

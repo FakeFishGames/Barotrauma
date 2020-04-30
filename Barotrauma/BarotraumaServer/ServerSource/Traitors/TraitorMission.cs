@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -17,7 +18,7 @@ namespace Barotrauma
         public class TraitorMission
         {
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
-
+            private List<Character> giftedCandidates = new List<Character>();
             private readonly List<Objective> allObjectives = new List<Objective>();
             private readonly List<Objective> pendingObjectives = new List<Objective>();
             private readonly List<Objective> completedObjectives = new List<Objective>();
@@ -161,9 +162,10 @@ namespace Barotrauma
                     {
                         ++numCandidates;
                     }
-
                     var selected = ToolBox.SelectWeightedRandom(availableCandidates, availableCandidates.Select(c => Math.Max(c.Item1.RoundsSincePlayedAsTraitor, 0.1f)).ToList(), TraitorManager.Random);
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
+
+
                     foreach (var candidate in roleCandidates.Values)
                     {
                         candidate.Remove(selected);
@@ -173,6 +175,21 @@ namespace Barotrauma
                 {
                     return null;
                 }
+                //code to add new item to the traitor(s)
+                //
+                //foreach (var candidate in assignedCandidates)
+                //{
+                //    var selected = candidate.Item2;
+                //    if (!giftedCandidates.Contains(selected.Item2))
+                //    {
+                //        giftedCandidates.Add(selected.Item2);
+                //        DebugConsole.NewMessage(selected.ToString());
+                //        ItemPrefab itemPrefab = MapEntityPrefab.Find(null, "button") as ItemPrefab;
+                //        DebugConsole.NewMessage(itemPrefab.Name);
+                //        Item item = new Item(itemPrefab, selected.Item2.Position, null);
+                //        DebugConsole.NewMessage("Add item result: " + selected.Item2.Inventory.TryPutItem(item, null, item.AllowedSlots));
+                //    }
+                //}
                 return assignedCandidates;
             }
 

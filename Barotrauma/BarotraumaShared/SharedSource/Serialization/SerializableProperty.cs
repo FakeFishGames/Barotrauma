@@ -513,6 +513,9 @@ namespace Barotrauma
                 case "ObstructVision":
                     { if (parentObject is Character character && value is bool) { character.ObstructVision = (bool)value; return true; } }
                     break;
+                case "BlindVision":
+                    { if (parentObject is Character character && value is bool) { character.BlindVision = (bool)value; return true; } }
+                    break;
                 case "PressureProtection":
                     { if (parentObject is Character character && value is float) { character.PressureProtection = (float)value; return true; } }
                     break;

@@ -153,6 +153,15 @@ namespace Barotrauma
 
         protected override void PutItem(Item item, int i, Character user, bool removeItem = true, bool createNetworkEvent = true)
         {
+            if (user != null && user.Name != null)
+            {
+                DebugConsole.NewMessage("Placing Item in inventory of: " + user.Name);
+                if(item != null)
+                {
+                    DebugConsole.NewMessage("That item is: " + item.Name);
+                }
+            }
+            
             base.PutItem(item, i, user, removeItem, createNetworkEvent);
             CreateSlots();
         }

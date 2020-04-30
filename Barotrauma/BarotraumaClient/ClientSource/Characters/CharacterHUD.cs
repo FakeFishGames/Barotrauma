@@ -330,7 +330,7 @@ namespace Barotrauma
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
-                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUI.Style.Green * 0.5f);
+                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, !character.IsTraitor ? GUI.Style.Green * 0.5f : GUI.Style.Red);
                     }
                 }
                 if (ShouldDrawInventory(character))

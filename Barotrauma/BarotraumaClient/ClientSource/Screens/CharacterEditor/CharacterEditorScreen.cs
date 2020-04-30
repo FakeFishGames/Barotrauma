@@ -786,6 +786,7 @@ namespace Barotrauma.CharacterEditor
             if (GameMain.LightManager.LightingEnabled)
             {
                 GameMain.LightManager.ObstructVision = Character.Controlled.ObstructVision;
+                GameMain.LightManager.BlindVision = Character.Controlled.BlindVision;
                 GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }

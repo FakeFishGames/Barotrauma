@@ -392,6 +392,19 @@ namespace Barotrauma
             }
         }
 
+        private float blindVisionAmount;
+        public bool BlindVision
+        {
+            get
+            {
+                return blindVisionAmount > 0.5f;
+            }
+            set
+            {
+                blindVisionAmount = 1.0f;
+            }
+        }
+
         private float pressureProtection;
         public float PressureProtection
         {
@@ -2058,6 +2071,7 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
+            blindVisionAmount = Math.Max(blindVisionAmount - deltaTime, 0.0f);
 
             if (Inventory != null)
             {

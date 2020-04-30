@@ -98,21 +98,31 @@ namespace Barotrauma.Networking
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
                     WifiComponent radio = null;
+                    float muffler = 0f;
                     var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio;
                     if (client.VoipSound.UseRadioFilter)
                     {
-                        client.VoipSound.SetRange(radio.Range * 0.8f, radio.Range);
+                        client.VoipSound.SetRange(radio.Range * 0.6f, radio.Range);
                     }
                     else
                     {
-                        client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
+                        client.VoipSound.Muffled = 100 - client.Character.SpeechImpediment;
+                        muffler = client.VoipSound.Muffled / 100;
+                        client.VoipSound.SetRange(ChatMessage.SpeakRange * (0.4f * muffler), ChatMessage.SpeakRange * muffler);
                     }
                     if (!client.VoipSound.UseRadioFilter && Character.Controlled != null)
                     {
-                        client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
+                        if(muffler < 1)
+                        {
+                            client.VoipSound.UseMuffleFilter = true;
+                        }
+                        else
+                        {
+                            client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
+                        }
                     }
                 }
 

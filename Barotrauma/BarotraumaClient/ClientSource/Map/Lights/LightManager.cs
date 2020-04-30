@@ -65,6 +65,7 @@ namespace Barotrauma.Lights
         public bool LightingEnabled = true;
 
         public bool ObstructVision;
+        public bool BlindVision;
 
         private Texture2D visionCircle;
         
@@ -539,7 +540,22 @@ namespace Barotrauma.Lights
             graphics.SetRenderTarget(LosTexture);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
-            if (ObstructVision)
+
+            if (BlindVision)
+            {
+                graphics.Clear(Color.Black); //sets screen to black
+                Vector2 diff = lookAtPosition - ViewTarget.WorldPosition; //centerpoint for the circle
+                diff.Y = -diff.Y;
+                float rotation = MathUtils.VectorToAngle(diff);
+
+                Vector2 scale = new Vector2(0.4f, 0.4f); //this is how big the view circle will be
+                Color dimness = new Color(26, 26, 26); //color for how dim the circle will be. 0-255. lower = darker
+
+                //heres the circle draw. you shouldnt have to change anything here
+                spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, dimness, rotation,
+                    new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+            }
+            else if (ObstructVision)
             {
                 graphics.Clear(Color.Black);
                 Vector2 diff = lookAtPosition - ViewTarget.WorldPosition;
