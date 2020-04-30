@@ -1,5 +1,0 @@
-LightManager.cs
-CharacterEditorScreen.cs
-GameScreens.cs
-Character.cs
-SerializableProperty.cs
