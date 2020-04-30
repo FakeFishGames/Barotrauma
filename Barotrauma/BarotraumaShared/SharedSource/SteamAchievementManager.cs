@@ -371,7 +371,7 @@ namespace Barotrauma
                 if (charactersInSub.Count == 1)
                 {
                     //there must be some non-enemy casualties to get the last mant standing achievement
-                    if (roundData.Casualties.Any(c => !(c.AIController is EnemyAIController)))
+                    if (roundData.Casualties.Any(c => !(c.AIController is EnemyAIController) && c.TeamID == charactersInSub[0].TeamID))
                     {
                         UnlockAchievement(charactersInSub[0], "lastmanstanding");
                     }

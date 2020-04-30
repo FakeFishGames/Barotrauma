@@ -2124,6 +2124,7 @@ namespace Barotrauma.Networking
                         GameMain.GameSession.SubmarineInfo = new SubmarineInfo(subPath, "");
                     }
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    GameMain.GameSession?.SubmarineInfo?.Reload();
                     GameMain.GameSession?.SubmarineInfo?.CheckSubsLeftBehind();
                     if (GameMain.GameSession?.SubmarineInfo?.Name != null)
                     {
@@ -3007,6 +3008,11 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.GameMode != null)
             {
                 errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
+                {
+                    errorLines.Add("Campaign ID: " + campaign.CampaignID);
+                    errorLines.Add("Campaign save ID: " + campaign.LastSaveID + "(pending: " + campaign.PendingSaveID + ")");
+                }
             }
             if (GameMain.GameSession?.Submarine != null)
             {
@@ -3015,6 +3021,13 @@ namespace Barotrauma.Networking
             if (Level.Loaded != null)
             {
                 errorLines.Add("Level: " + Level.Loaded.Seed + ", " + Level.Loaded.EqualityCheckVal);
+                errorLines.Add("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
+                errorLines.Add("Entities:");
+                foreach (Entity e in Level.Loaded.EntitiesBeforeGenerate)
+                {
+                    errorLines.Add("    " + e.ID + ": " + e.ToString());
+                }
+                errorLines.Add("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
             }
 
             errorLines.Add("Entity IDs:");

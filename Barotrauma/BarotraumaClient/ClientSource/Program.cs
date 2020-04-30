@@ -148,7 +148,8 @@ namespace Barotrauma
             if (GameMain.Config != null)
             {
                 sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-                sb.AppendLine("VSync "+ (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
+                sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
+                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
             }
             if (GameMain.SelectedPackages != null)
             {

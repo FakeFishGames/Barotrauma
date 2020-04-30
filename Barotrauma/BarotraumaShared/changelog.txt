@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.9.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed bots being unable to fire turrets due to the visibility raycast hitting the turret's collider.
+- Fixed submarine's version number resetting to 0.0.0.0 when saving in the sub editor (didn't affect the actual saved sub file, only the in-game metadata that got fixed by restarting the game - so there's no need to do anything to fix the sub files you saved with the previous version).
+- Fixed server list occasionally crashing when trying to filter based on game mode.
+- Fixed an issue in multiplayer campaign that occasionally caused clients to get kicked with a "missing entity" error message.
+- Fixed clients occasionally crashing when joining a server mid-round. Happened when the client tried to execute the attack of a monster that has already despawned server-side.
+- Fixed local changes an user has made to a mod getting overwritten when the item gets autoupdated.
+- Changed the hotkey to toggle the entity list in the sub editor from Q to the "toggle inventory" keybind to make it a little more user-friendly on AZERTY keyboards.
+- Fixed corpses in wrecks being considered dead members of the crew in SteamAchievementManager, preventing "lone sailor" from unlocking and making it possible to unlock "last man standing" with just one character.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.9.0
 ---------------------------------------------------------------------------------------------------------
 

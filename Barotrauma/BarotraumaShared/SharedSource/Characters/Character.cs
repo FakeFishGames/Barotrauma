@@ -2908,7 +2908,10 @@ namespace Barotrauma
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
+            {
+                SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            }
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 

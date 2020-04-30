@@ -422,7 +422,7 @@ namespace Barotrauma
             }
 
             // Game mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode")) { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"), font: GUI.SubHeadingFont) { CanBeFocused = false };
 
             gameModeTickBoxes = new List<GUITickBox>();
             foreach (GameModePreset mode in GameModePreset.List)
@@ -1013,7 +1013,7 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in gameModeTickBoxes)
                 {
                     var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
+                    if (!tickBox.Selected && serverInfo.GameMode != null && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
                     {
                         child.Visible = false;
                         break;

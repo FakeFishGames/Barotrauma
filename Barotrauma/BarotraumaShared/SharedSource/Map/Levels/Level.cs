@@ -166,6 +166,11 @@ namespace Barotrauma
             private set;
         }
 
+        public List<Entity> EntitiesBeforeGenerate { get; private set; } = new List<Entity>();
+        public int EntityCountBeforeGenerate { get; private set; }
+        public int EntityCountAfterGenerate { get; private set; }
+
+
         public float Difficulty
         {
             get;
@@ -281,8 +286,11 @@ namespace Barotrauma
 
         public void Generate(bool mirror)
         {
-            if (loaded != null) loaded.Remove();            
+            if (loaded != null) { loaded.Remove(); }        
             loaded = this;
+
+            EntitiesBeforeGenerate = GetEntityList();
+            EntityCountBeforeGenerate = EntitiesBeforeGenerate.Count();
             
             levelObjectManager = new LevelObjectManager();
 
@@ -758,6 +766,8 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("Generated level with the seed " + seed + " (type: " + generationParams.Name + ")", Color.White);
             }
+
+            EntityCountAfterGenerate = Entity.GetEntityList().Count();
 
             //assign an ID to make entity events work
             ID = FindFreeID();

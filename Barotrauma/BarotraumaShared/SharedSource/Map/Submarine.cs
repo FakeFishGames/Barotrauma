@@ -215,7 +215,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "Barotrauma.Submarine (" + Info?.Name ?? "[NULL INFO]" + ")";
+            return "Barotrauma.Submarine (" + (Info?.Name ?? "[NULL INFO]") + ", " + IdOffset + ")";
         }
 
         public override bool Removed
@@ -1231,9 +1231,12 @@ namespace Barotrauma
 
         public bool SaveAs(string filePath, MemoryStream previewImage = null)
         {
-            var newInfo = new SubmarineInfo(this);
-            newInfo.FilePath = filePath;
-            newInfo.Name = Path.GetFileNameWithoutExtension(filePath);
+            var newInfo = new SubmarineInfo(this)
+            {
+                GameVersion = GameMain.Version,
+                FilePath = filePath,
+                Name = Path.GetFileNameWithoutExtension(filePath)
+            };
             Info.Dispose(); Info = newInfo;
 
             return newInfo.SaveAs(filePath, previewImage);

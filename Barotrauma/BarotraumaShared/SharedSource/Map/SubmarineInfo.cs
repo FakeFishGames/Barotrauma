@@ -101,7 +101,11 @@ namespace Barotrauma
             set;
         }
 
-        public readonly XElement SubmarineElement;
+        public XElement SubmarineElement
+        {
+            get;
+            private set;
+        }
 
         public override string ToString()
         {
@@ -180,28 +184,7 @@ namespace Barotrauma
 
             if (element == null && tryLoad)
             {
-                XDocument doc = null;
-                int maxLoadRetries = 4;
-                for (int i = 0; i <= maxLoadRetries; i++)
-                {
-                    doc = OpenFile(filePath, out Exception e);
-                    if (e != null && !(e is IOException)) { break; }
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
-                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
-                    Thread.Sleep(250);
-                }
-                if (doc == null || doc.Root == null)
-                {
-                    IsFileCorrupted = true;
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(hash))
-                {
-                    StartHashDocTask(doc);
-                }
-
-                SubmarineElement = doc.Root;
+                Reload();
             }
             else
             {
@@ -215,6 +198,7 @@ namespace Barotrauma
 
         public SubmarineInfo(Submarine sub) : this(sub.Info)
         {
+            GameVersion = GameMain.Version;
             SubmarineElement = new XElement("Submarine");
             sub.SaveToXElement(SubmarineElement);
             Init();
@@ -240,6 +224,30 @@ namespace Barotrauma
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
 #endif
+        }
+
+        public void Reload()
+        {
+            XDocument doc = null;
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
+            {
+                doc = OpenFile(FilePath, out Exception e);
+                if (e != null && !(e is IOException)) { break; }
+                if (doc != null || i == maxLoadRetries || !File.Exists(FilePath)) { break; }
+                DebugConsole.NewMessage("Opening submarine file \"" + FilePath + "\" failed, retrying in 250 ms...");
+                Thread.Sleep(250);
+            }
+            if (doc == null || doc.Root == null)
+            {
+                IsFileCorrupted = true;
+                return;
+            }
+            if (hash == null)
+            {
+                StartHashDocTask(doc);
+            }
+            SubmarineElement = doc.Root;
         }
 
         private void Init()

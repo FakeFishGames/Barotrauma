@@ -370,7 +370,7 @@ namespace Barotrauma.Steam
             if (Enum.TryParse(lobby.GetData("traitors"), out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
 
             serverInfo.GameStarted = lobby.GetData("gamestarted") == "True";
-            serverInfo.GameMode = lobby.GetData("gamemode");
+            serverInfo.GameMode = lobby.GetData("gamemode") ?? "";
             if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
 
             if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
@@ -1052,7 +1052,7 @@ namespace Barotrauma.Steam
                 Directory.CreateDirectory(targetPath);
                 File.WriteAllText(copyingPath, "TEMPORARY FILE");
 
-                SaveUtil.CopyFolder(item?.Directory, targetPath, copySubDirs: true, overwriteExisting: true);
+                SaveUtil.CopyFolder(item?.Directory, targetPath, copySubDirs: true, overwriteExisting: item?.Owner.Id != Steamworks.SteamClient.SteamId);
 
                 File.Delete(copyingPath);
                 return "";
@@ -1145,7 +1145,7 @@ namespace Barotrauma.Steam
 
                 //make sure the destination directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(contentFile.Path));
-                CorrectContentFileCopy(contentPackage, sourceFile, contentFile.Path, overwrite: true);
+                CorrectContentFileCopy(contentPackage, sourceFile, contentFile.Path, overwrite: item?.Owner.Id != Steamworks.SteamClient.SteamId);
             }
 
             foreach (string nonContentFile in nonContentFiles)
@@ -1154,7 +1154,7 @@ namespace Barotrauma.Steam
                 if (!File.Exists(sourceFile)) { continue; }
                 string destinationPath = CorrectContentFilePath(nonContentFile, contentPackage, false);
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                CorrectContentFileCopy(contentPackage, sourceFile, destinationPath, overwrite: true);
+                CorrectContentFileCopy(contentPackage, sourceFile, destinationPath, overwrite: item?.Owner.Id != Steamworks.SteamClient.SteamId);
             }
 
             File.Delete(copyingPath);
@@ -1507,6 +1507,8 @@ namespace Barotrauma.Steam
 
         private static void CorrectContentFileCopy(ContentPackage package, string src, string dest, bool overwrite)
         {
+            if (!overwrite && File.Exists(dest)) { return; }
+
             if (Path.GetExtension(src).Equals(".xml", StringComparison.OrdinalIgnoreCase))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(src);
@@ -1529,12 +1531,12 @@ namespace Barotrauma.Steam
                 }
                 else
                 {
-                    File.Copy(src, dest, overwrite: overwrite);
+                    File.Copy(src, dest, overwrite: true);
                 }
             }
             else
             {
-                File.Copy(src, dest, overwrite: overwrite);
+                File.Copy(src, dest, overwrite: true);
             }
         }
 
