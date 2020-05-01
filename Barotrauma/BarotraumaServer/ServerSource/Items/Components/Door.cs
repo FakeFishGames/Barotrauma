@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
             isOpen = open;
 
             //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+            if (isOpen) stuck = MathHelper.Clamp(stuck - 5.0f, 0.0f, 100.0f);
 
             if (sendNetworkMessage)
             {

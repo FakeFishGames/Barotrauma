@@ -144,8 +144,9 @@ namespace Barotrauma.Items.Components
             // unpowered (electrical) items can be repaired without a risk of electrical shock
             if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)) &&
                 item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) { return true; }
-
-            if (Rand.Range(0.0f, 0.5f) < DegreeOfSuccess(character)) { return true; }
+            float rand = Rand.Range(0.0f, 0.5f);
+            DebugConsole.NewMessage("Character DegreeOfSuccess: " + DegreeOfSuccess(character) + "RAND: " + rand);
+            if (rand < DegreeOfSuccess(character)) { return true; }
 
             ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             return false;

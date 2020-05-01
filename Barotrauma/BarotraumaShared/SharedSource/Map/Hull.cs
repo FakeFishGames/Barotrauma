@@ -43,6 +43,8 @@ namespace Barotrauma
         private float pressure;
 
         private float oxygen;
+        private float airAfflictionAmount;
+        private String airAffliction;
 
         private bool update;
 
@@ -92,6 +94,7 @@ namespace Barotrauma
             set
             {
                 float prevOxygenPercentage = OxygenPercentage;
+                float prevAirAfflictionPercentage = AirAfflictionPercentage;
                 base.Rect = value;
 
                 if (Submarine == null || !Submarine.Loading)
@@ -101,6 +104,7 @@ namespace Barotrauma
                 }
 
                 OxygenPercentage = prevOxygenPercentage;
+                AirAfflictionPercentage = prevAirAfflictionPercentage;
                 surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }
@@ -172,12 +176,37 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(0.0f, true)]
+        public float AirAfflictionAmount
+        {
+            get { return airAfflictionAmount; }
+            set
+            {
+                airAfflictionAmount = MathHelper.Max(value, 0.0f);
+            }
+        }
+
+        public String AirAffliction
+        {
+            get { return airAffliction; }
+            set
+            {
+                airAffliction = value;
+            }
+        }
+
         public float WaterPercentage => MathUtils.Percentage(WaterVolume, Volume);
 
         public float OxygenPercentage
         {
             get { return Volume <= 0.0f ? 100.0f : oxygen / Volume * 100.0f; }
             set { Oxygen = (value / 100.0f) * Volume; }
+        }
+
+        public float AirAfflictionPercentage
+        {
+            get { return Volume <= 0.0f ? 100.0f : airAfflictionAmount / Volume * 100.0f; }
+            set { airAfflictionAmount = (value / 100.0f) * Volume; }
         }
 
         public float Volume
@@ -215,6 +244,7 @@ namespace Barotrauma
             rect = rectangle;
             
             OxygenPercentage = 100.0f;
+            AirAfflictionPercentage = 0.0f;
 
             FireSources = new List<FireSource>();
 
@@ -432,6 +462,7 @@ namespace Barotrauma
             UpdateProjSpecific(deltaTime, cam);
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
+            //AirAfflictionAmount -= OxygenDeteriorationSpeed * 6.0f * deltaTime;
 
             FireSource.UpdateAll(FireSources, deltaTime);
 

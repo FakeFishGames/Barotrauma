@@ -105,7 +105,7 @@ namespace Barotrauma.Networking
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio;
                     if (client.VoipSound.UseRadioFilter)
                     {
-                        client.VoipSound.SetRange(radio.Range * 0.6f, radio.Range);
+                        client.VoipSound.SetRange(radio.Range * 0.7f, radio.Range);
                     }
                     else
                     {
@@ -115,7 +115,7 @@ namespace Barotrauma.Networking
                     }
                     if (!client.VoipSound.UseRadioFilter && Character.Controlled != null)
                     {
-                        if(muffler < 1)
+                        if(muffler < 0.5f)
                         {
                             client.VoipSound.UseMuffleFilter = true;
                         }

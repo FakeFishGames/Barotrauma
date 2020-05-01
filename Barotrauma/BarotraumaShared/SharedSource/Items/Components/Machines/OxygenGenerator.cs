@@ -110,7 +110,8 @@ namespace Barotrauma.Items.Components
             foreach (Vent v in ventList)
             {
                 if (v.Item.CurrentHull == null) continue;
-
+                //v.AirAffliction = "psychosis";
+                //v.AirAfflictionFlow = deltaOxygen * (v.Item.CurrentHull.Volume / totalHullVolume);
                 v.OxygenFlow = deltaOxygen * (v.Item.CurrentHull.Volume / totalHullVolume);
                 v.IsActive = true;
             }

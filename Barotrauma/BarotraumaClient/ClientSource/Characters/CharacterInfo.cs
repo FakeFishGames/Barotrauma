@@ -157,13 +157,6 @@ namespace Barotrauma
                     Vector2.UnitY * 10.0f);
             }
 
-            if ((int)newLevel > (int)prevLevel)
-            {
-                GUI.AddMessage(
-                    TextManager.GetWithVariables("SkillIncreased", new string[3] { "[name]", "[skillname]", "[newlevel]" },
-                    new string[3] { Name, TextManager.Get("SkillName." + skillIdentifier), ((int)newLevel).ToString() },
-                    new bool[3] { false, true, false }), GUI.Style.Green);
-            }
         }
 
         partial void LoadAttachmentSprites(bool omitJob)
