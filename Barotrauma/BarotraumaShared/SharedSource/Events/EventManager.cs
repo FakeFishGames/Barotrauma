@@ -88,7 +88,7 @@ namespace Barotrauma
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
-            eventCoolDown = 0.0f;
+            eventCoolDown = 30.0f;
         }
 
         private void SelectSettings()
@@ -239,7 +239,7 @@ namespace Barotrauma
                         {
                             var newEvent = eventPrefab.CreateInstance();
                             newEvent.Init(true);
-                            DebugConsole.Log("Initialized event " + newEvent.ToString());
+                            DebugConsole.NewMessage("Initialized event " + newEvent.ToString());
                             if (!selectedEvents.ContainsKey(eventSet))
                             {
                                 selectedEvents.Add(eventSet, new List<ScriptedEvent>());
@@ -311,7 +311,7 @@ namespace Barotrauma
             {
                 if (distanceTraveled <= 0.0f ||
                     distFromStart * Physics.DisplayToRealWorldRatio < 50.0f ||
-                    distFromEnd * Physics.DisplayToRealWorldRatio < 50.0f)
+                    distFromEnd * Physics.DisplayToRealWorldRatio < 20.0f) //reduce end of level radius
                 {
                     return false;
                 }
@@ -379,14 +379,17 @@ namespace Barotrauma
                 {
                     var eventSet = pendingEventSets[i];
                     if (!CanStartEventSet(eventSet)) { continue; }
-
                     pendingEventSets.RemoveAt(i);
+
 
                     if (selectedEvents.ContainsKey(eventSet))
                     {
                         //start events in this set
                         foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])
                         {
+                            DebugConsole.NewMessage("New event triggered");
+                            eventCoolDown = settings.EventCooldown;
+                            eventThreshold = settings.DefaultEventThreshold;
                             activeEvents.Add(scriptedEvent);
                         }
                     }
@@ -400,8 +403,6 @@ namespace Barotrauma
                         }
                     }
                 }
-                eventThreshold = settings.DefaultEventThreshold;
-                eventCoolDown = settings.EventCooldown;
             }
 
             foreach (ScriptedEvent ev in activeEvents)

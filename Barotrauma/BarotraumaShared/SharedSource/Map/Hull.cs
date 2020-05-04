@@ -94,7 +94,7 @@ namespace Barotrauma
             set
             {
                 float prevOxygenPercentage = OxygenPercentage;
-                float prevAirAfflictionPercentage = AirAfflictionPercentage;
+                //float prevAirAfflictionPercentage = AirAfflictionPercentage;
                 base.Rect = value;
 
                 if (Submarine == null || !Submarine.Loading)
@@ -104,7 +104,7 @@ namespace Barotrauma
                 }
 
                 OxygenPercentage = prevOxygenPercentage;
-                AirAfflictionPercentage = prevAirAfflictionPercentage;
+                //AirAfflictionPercentage = prevAirAfflictionPercentage;
                 surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
             }
@@ -206,7 +206,7 @@ namespace Barotrauma
         public float AirAfflictionPercentage
         {
             get { return Volume <= 0.0f ? 100.0f : airAfflictionAmount / Volume * 100.0f; }
-            set { airAfflictionAmount = (value / 100.0f) * Volume; }
+           set { airAfflictionAmount = (value / 100.0f) * Volume; }
         }
 
         public float Volume
@@ -244,7 +244,7 @@ namespace Barotrauma
             rect = rectangle;
             
             OxygenPercentage = 100.0f;
-            AirAfflictionPercentage = 0.0f;
+            //AirAfflictionPercentage = 0.0f;
 
             FireSources = new List<FireSource>();
 
