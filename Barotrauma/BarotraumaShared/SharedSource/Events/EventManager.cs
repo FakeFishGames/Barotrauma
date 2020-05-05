@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -36,6 +37,8 @@ namespace Barotrauma
         private float roundDuration;
 
         private Random randGen;
+
+        private float challengeScale;
 
         private List<String> randWanderMonster;
 
@@ -76,12 +79,16 @@ namespace Barotrauma
         {
             if (isClient) { return; }
 
+            challengeScale = 5000.0f;
             randWanderMonster = new List<String>();
             randWanderMonster.Add("crawler");
+            randWanderMonster.Add("crawlerhusk");
             randWanderMonster.Add("husk");
+            randWanderMonster.Add("mudraptor");
             randMonster = new List<String>();
             randMonster.Add("charybdis");
             randMonster.Add("hammerhead");
+
 
             pendingEventSets.Clear();
             selectedEvents.Clear();
@@ -387,9 +394,15 @@ namespace Barotrauma
             if (eventCoolDown <= 0.0f)
             {
                 SummonWanderingMonsters();
-                if (roundDuration >= 1800)
+                if (roundDuration >= 2700)
                 {
                     SummonGameEndMonsters();
+                }
+                if (roundDuration >= 5400)
+                {
+                    roundDuration -= 1600;
+                    String errMsg;
+                    SpawnCharacter(new[] { "endworm", "cursor" }, FindSpawnLocation(), out errMsg); //spawn an endworm because why not its been 90 minutes
                 }
             }
             if (eventCoolDown > 0.0f)
@@ -436,7 +449,7 @@ namespace Barotrauma
 
             foreach (ScriptedEvent ev in activeEvents)
             {
-                if (!ev.IsFinished) { ev.Update(deltaTime); }                             
+                if (ev != null && !ev.IsFinished) { ev.Update(deltaTime); }                             
             }
         }
                 
@@ -547,13 +560,30 @@ namespace Barotrauma
         private void SummonWanderingMonsters()
         {
             String errMsg = "";
-            int randNum = randGen.Next(0, randWanderMonster.Count);
-            int rand = randGen.Next(0, 2);
-            DebugConsole.NewMessage("Spawning wandering monsters");
+            int randNum = 0;
+            int rand = 0;
+            float majorRand = (float)randGen.NextDouble() * 100.0f;
+            //trigger a unique major attack sometimes (100% difficulty is a 10% chance of major event every 30 seconds, 80% difficulty is 6.4%, 50% difficulty is 2.5%, 10% is 0.1%
+            DebugConsole.NewMessage("Major Monster Threshold: " + (100.0f - (level.Difficulty*level.Difficulty) / challengeScale));
+            DebugConsole.NewMessage("Current Intensisty: " + currentIntensity);
+            if (majorRand >= (100.0f - (level.Difficulty * level.Difficulty) / challengeScale))
+            {
+                DebugConsole.NewMessage("Spawning Major Monsters!");
+                errMsg = SummonMajorMonsters(errMsg);
+                challengeScale = 5000.0f; //challengeScale reset each time a major event occurs
+            }
+            else
+            {
+                challengeScale -= 100.0f;
+            }
+            //always spawn wandering trash mobs
+            randNum = randGen.Next(0, randWanderMonster.Count); //which monsters spawns
+            rand = randGen.Next(0, 2); //how many spawn
             for (int i = 0; i < rand; i++)
             {
-                DebugConsole.SpawnCharacter(new[] { randWanderMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
+                SpawnCharacter(new[] { randWanderMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
             }
+            DebugConsole.NewMessage("Spawning wandering monsters (Count for trash, Index, MajorChance) " + rand + " " + randNum + " " + majorRand);
             if (errMsg != "")
             {
                 DebugConsole.NewMessage("Spawn Error: " + errMsg);
@@ -569,12 +599,54 @@ namespace Barotrauma
             DebugConsole.NewMessage("Spawning ENDGAME MOBS");
             for (int i = 0; i < rand; i++)
             {
-                DebugConsole.SpawnCharacter(new[] { randMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
+                SpawnCharacter(new[] { randMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
             }
             if (errMsg != "")
             {
                 DebugConsole.NewMessage("Spawn Error: " + errMsg);
             }
+        }
+
+        private String SummonMajorMonsters(String errMsg)
+        {
+            int rand = 0;
+            int randNum = randGen.Next(0, 3); //which monsterset spawns
+            if (randNum == 0)
+            {
+                rand = randGen.Next(1, 2); //how many spawn
+                for (int i = 0; i < rand; i++)
+                {
+                    SpawnCharacter(new[] { "hammerhead", "cursor" }, FindSpawnLocation(), out errMsg);
+                }
+                SpawnCharacter(new[] { "hammerheadmatriarch", "cursor" }, FindSpawnLocation(), out errMsg);
+            }
+            else if (randNum == 1)
+            {
+                SpawnCharacter(new[] { "moloch", "cursor" }, FindSpawnLocation(), out errMsg);
+                rand = randGen.Next(3, 6);
+                for (int i = 0; i < rand; i++)
+                {
+                    SpawnCharacter(new[] { "husk", "cursor" }, FindSpawnLocation(), out errMsg);
+                }
+            }
+            else if (randNum == 2)
+            {
+                rand = randGen.Next(1, 2);
+                for (int i = 0; i < rand; i++)
+                {
+                    SpawnCharacter(new[] { "bonethresher", "cursor" }, FindSpawnLocation(), out errMsg);
+                }
+                rand = randGen.Next(2, 5);
+                for (int i = 0; i < rand; i++)
+                {
+                    SpawnCharacter(new[] { "tigerthresher", "cursor" }, FindSpawnLocation(), out errMsg);
+                }
+            }
+            else if (randNum == 3)
+            {
+                SpawnCharacter(new[] { "charybdis", "cursor" }, FindSpawnLocation(), out errMsg);
+            }
+            return errMsg;
         }
 
         private Vector2 FindSpawnLocation()
@@ -614,6 +686,101 @@ namespace Barotrauma
                 }
             }
             return spawnPos;
+        }
+        private void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg) //was private
+        {
+            errorMsg = "";
+            if (args.Length == 0) return;
+
+            Character spawnedCharacter = null;
+
+            Vector2 spawnPosition = Vector2.Zero;
+            WayPoint spawnPoint = null;
+
+            string characterLowerCase = args[0].ToLowerInvariant();
+            JobPrefab job = null;
+            if (!JobPrefab.Prefabs.ContainsKey(characterLowerCase))
+            {
+                job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(characterLowerCase, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                job = JobPrefab.Prefabs[characterLowerCase];
+            }
+            bool human = job != null || characterLowerCase == CharacterPrefab.HumanSpeciesName;
+
+            if (args.Length > 1)
+            {
+                switch (args[1].ToLowerInvariant())
+                {
+                    case "inside":
+                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        break;
+                    case "outside":
+                        spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
+                        break;
+                    case "near":
+                    case "close":
+                        float closestDist = -1.0f;
+                        foreach (WayPoint wp in WayPoint.WayPointList)
+                        {
+                            if (wp.Submarine != null) continue;
+
+                            //don't spawn inside hulls
+                            if (Hull.FindHull(wp.WorldPosition, null) != null) continue;
+
+                            float dist = Vector2.Distance(wp.WorldPosition, GameMain.GameScreen.Cam.WorldViewCenter);
+
+                            if (closestDist < 0.0f || dist < closestDist)
+                            {
+                                spawnPoint = wp;
+                                closestDist = dist;
+                            }
+                        }
+                        break;
+                    case "cursor":
+                        spawnPosition = cursorWorldPos;
+                        break;
+                    default:
+                        spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+                        break;
+                }
+            }
+            else
+            {
+                spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
+            }
+
+            if (string.IsNullOrWhiteSpace(args[0])) return;
+
+            if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
+
+            if (human)
+            {
+                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.Server) : 0;
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
+                spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
+                if (GameMain.GameSession != null)
+                {
+                    if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
+                    {
+                        //TODO: a way to select which team to spawn to?
+                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;
+                    }
+#if CLIENT
+                    GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);
+#endif
+                }
+                spawnedCharacter.GiveJobItems(spawnPoint);
+                spawnedCharacter.Info.StartItemsGiven = true;
+            }
+            else
+            {
+                if (CharacterPrefab.FindBySpeciesName(args[0]) != null)
+                {
+                    Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
+                }
+            }
         }
     }
 }

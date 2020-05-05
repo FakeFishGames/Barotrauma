@@ -277,14 +277,6 @@ namespace Barotrauma
             bool spawnReady = false;
             if (spawnPending)
             {
-                //wait until there are no submarines at the spawnpos
-                foreach (Submarine submarine in Submarine.Loaded)
-                {
-                    if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
-                    float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
-                }
-
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
                 //unnecessary monsters in places the players might never visit during the round
                 if (spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Cave || spawnPosType == Level.PositionType.Wreck)
@@ -312,6 +304,17 @@ namespace Barotrauma
                         }
                     }
                     if (!someoneNearby) { return; }
+                    DebugConsole.NewMessage("Spawn in Alien Ruin");
+                }
+                else
+                {
+                    //wait until there are no submarines at the spawnpos
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        float minDist = GetMinDistanceToSub(submarine);
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                    }
                 }
 
                 spawnPending = false;
@@ -328,7 +331,6 @@ namespace Barotrauma
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
-
                         monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));
 
                         if (monsters.Count == amount)

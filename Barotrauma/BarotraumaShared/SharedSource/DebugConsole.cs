@@ -1334,7 +1334,7 @@ namespace Barotrauma
             return null;
         }
 
-        public static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg) //was private
+        private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg) //was private
         {
             errorMsg = "";
             if (args.Length == 0) return;
