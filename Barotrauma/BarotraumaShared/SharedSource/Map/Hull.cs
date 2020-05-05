@@ -43,8 +43,6 @@ namespace Barotrauma
         private float pressure;
 
         private float oxygen;
-        private float airAfflictionAmount;
-        private String airAffliction;
 
         private bool update;
 
@@ -174,26 +172,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value)) return;
                 oxygen = MathHelper.Clamp(value, 0.0f, Volume); 
             }
-        }
-
-        [Serialize(0.0f, true)]
-        public float AirAfflictionAmount
-        {
-            get { return airAfflictionAmount; }
-            set
-            {
-                airAfflictionAmount = MathHelper.Max(value, 0.0f);
-            }
-        }
-
-        public String AirAffliction
-        {
-            get { return airAffliction; }
-            set
-            {
-                airAffliction = value;
-            }
-        }
+        } 
 
         public float WaterPercentage => MathUtils.Percentage(WaterVolume, Volume);
 
@@ -201,12 +180,6 @@ namespace Barotrauma
         {
             get { return Volume <= 0.0f ? 100.0f : oxygen / Volume * 100.0f; }
             set { Oxygen = (value / 100.0f) * Volume; }
-        }
-
-        public float AirAfflictionPercentage
-        {
-            get { return Volume <= 0.0f ? 100.0f : airAfflictionAmount / Volume * 100.0f; }
-           set { airAfflictionAmount = (value / 100.0f) * Volume; }
         }
 
         public float Volume

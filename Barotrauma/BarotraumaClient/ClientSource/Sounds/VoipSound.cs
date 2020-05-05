@@ -31,7 +31,6 @@ namespace Barotrauma.Sounds
 
         public bool UseRadioFilter;
         public bool UseMuffleFilter;
-        public float Muffled;
 
         public float Near { get; private set; }
         public float Far { get; private set; }

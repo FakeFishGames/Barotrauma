@@ -98,7 +98,6 @@ namespace Barotrauma.Networking
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
                     WifiComponent radio = null;
-                    float muffler = 0f;
                     var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
@@ -109,20 +108,11 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        client.VoipSound.Muffled = 100 - client.Character.SpeechImpediment;
-                        muffler = client.VoipSound.Muffled / 100;
-                        client.VoipSound.SetRange(ChatMessage.SpeakRange * (0.4f * muffler), ChatMessage.SpeakRange * muffler);
+                        client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
                     }
                     if (!client.VoipSound.UseRadioFilter && Character.Controlled != null)
                     {
-                        if(muffler < 0.5f)
-                        {
-                            client.VoipSound.UseMuffleFilter = true;
-                        }
-                        else
-                        {
-                            client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
-                        }
+                        client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
                     }
                 }
 

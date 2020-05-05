@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,12 @@ namespace Barotrauma
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
         private float roundDuration;
+
+        private Random randGen;
+
+        private List<String> randWanderMonster;
+
+        private List<String> randMonster;
 
         private readonly List<ScriptedEventSet> pendingEventSets = new List<ScriptedEventSet>();
 
@@ -69,8 +76,17 @@ namespace Barotrauma
         {
             if (isClient) { return; }
 
+            randWanderMonster = new List<String>();
+            randWanderMonster.Add("crawler");
+            randWanderMonster.Add("husk");
+            randMonster = new List<String>();
+            randMonster.Add("charybdis");
+            randMonster.Add("hammerhead");
+
             pendingEventSets.Clear();
             selectedEvents.Clear();
+
+            randGen = new Random();
 
             this.level = level;
             SelectSettings();
@@ -368,6 +384,14 @@ namespace Barotrauma
             }
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
+            if (eventCoolDown <= 0.0f)
+            {
+                SummonWanderingMonsters();
+                if (roundDuration >= 1800)
+                {
+                    SummonGameEndMonsters();
+                }
+            }
             if (eventCoolDown > 0.0f)
             {
                 eventCoolDown -= deltaTime;
@@ -388,8 +412,6 @@ namespace Barotrauma
                         foreach (ScriptedEvent scriptedEvent in selectedEvents[eventSet])
                         {
                             DebugConsole.NewMessage("New event triggered");
-                            eventCoolDown = settings.EventCooldown;
-                            eventThreshold = settings.DefaultEventThreshold;
                             activeEvents.Add(scriptedEvent);
                         }
                     }
@@ -403,6 +425,13 @@ namespace Barotrauma
                         }
                     }
                 }
+                eventCoolDown = settings.EventCooldown;
+                eventThreshold = settings.DefaultEventThreshold;
+            }
+            else
+            {
+                eventCoolDown = settings.EventCooldown;
+                eventThreshold = settings.DefaultEventThreshold;
             }
 
             foreach (ScriptedEvent ev in activeEvents)
@@ -514,6 +543,77 @@ namespace Barotrauma
                 //400 seconds for intensity to go from 1.0 to 0.0
                 currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
             }
+        }
+        private void SummonWanderingMonsters()
+        {
+            String errMsg = "";
+            int randNum = randGen.Next(0, randWanderMonster.Count);
+            int rand = randGen.Next(0, 2);
+            DebugConsole.NewMessage("Spawning wandering monsters");
+            for (int i = 0; i < rand; i++)
+            {
+                DebugConsole.SpawnCharacter(new[] { randWanderMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
+            }
+            if (errMsg != "")
+            {
+                DebugConsole.NewMessage("Spawn Error: " + errMsg);
+            }
+        }
+
+        private void SummonGameEndMonsters()
+        {
+            //maybe spawn a bunch at the start
+            String errMsg = "";
+            int randNum = randGen.Next(0, randMonster.Count);
+            int rand = randGen.Next(0, 2);
+            DebugConsole.NewMessage("Spawning ENDGAME MOBS");
+            for (int i = 0; i < rand; i++)
+            {
+                DebugConsole.SpawnCharacter(new[] { randMonster[randNum], "cursor" }, FindSpawnLocation(), out errMsg);
+            }
+            if (errMsg != "")
+            {
+                DebugConsole.NewMessage("Spawn Error: " + errMsg);
+            }
+        }
+
+        private Vector2 FindSpawnLocation()
+        {
+            float closestDist = float.MaxValue;
+            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => Level.PositionType.MainPath.HasFlag(p.PositionType));
+            var chosenPosition = availablePositions[0];
+            foreach (var position in availablePositions)
+            {
+                Vector2 pos = position.Position.ToVector2();
+                float dist = Vector2.DistanceSquared(pos, Submarine.MainSub.WorldPosition);
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+
+                    if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                    float minDistToSub = Math.Max(Math.Max(sub.Borders.Width, sub.Borders.Height), Sonar.DefaultSonarRange * 0.9f);
+                    if (dist > minDistToSub * minDistToSub && dist < closestDist)
+                    {
+                        closestDist = dist;
+                        chosenPosition = position;
+                    }
+                }
+            }
+            Vector2 spawnPos = Vector2.Zero;
+            if (chosenPosition.IsValid)
+            {
+                spawnPos = chosenPosition.Position.ToVector2();
+                if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
+                {
+                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, ruin: chosenPosition.Ruin, useSyncedRand: false);
+                    if (spawnPoint != null)
+                    {
+                        System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
+                        System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
+                        spawnPos = spawnPoint.WorldPosition;
+                    }
+                }
+            }
+            return spawnPos;
         }
     }
 }
