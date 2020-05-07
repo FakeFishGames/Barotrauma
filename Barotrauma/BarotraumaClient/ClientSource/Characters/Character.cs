@@ -509,7 +509,7 @@ namespace Barotrauma
             float closestDist = 0.0f;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
-             
+
             foreach (Character c in CharacterList)
             {
                 if (!CanInteractWith(c, checkVisibility: false)) continue;

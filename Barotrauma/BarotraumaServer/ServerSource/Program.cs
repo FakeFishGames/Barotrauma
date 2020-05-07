@@ -93,6 +93,10 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+            if (GameMain.Config != null)
+            {
+                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
+            }
             if (GameMain.SelectedPackages != null)
             {
                 sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));

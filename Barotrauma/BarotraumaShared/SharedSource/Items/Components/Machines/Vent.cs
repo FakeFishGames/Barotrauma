@@ -7,7 +7,6 @@ namespace Barotrauma.Items.Components
     {
         private float oxygenFlow;
 
-
         public float OxygenFlow
         {
             get { return oxygenFlow; }

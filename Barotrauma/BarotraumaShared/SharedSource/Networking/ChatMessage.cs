@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         public const int MaxMessagesPerPacket = 10;
 
-        public const float SpeakRange = 1000.0f; //2000 original
+        public const float SpeakRange = 1000.0f;
 
         private static readonly string dateTimeFormatLongTimePattern = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortTimePattern;
 

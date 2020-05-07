@@ -575,7 +575,7 @@ namespace Barotrauma.Networking
         }
 
         private bool allowRespawn;
-        [Serialize(true, true)]
+        [Serialize(false, true)]
         public bool AllowRespawn
         {
             get { return allowRespawn; ; }
@@ -670,7 +670,7 @@ namespace Barotrauma.Networking
         }
 
         private YesNoMaybe traitorsEnabled;
-        [Serialize(YesNoMaybe.No, true)]
+        [Serialize(YesNoMaybe.Yes, true)]
         public YesNoMaybe TraitorsEnabled
         {
             get { return traitorsEnabled; }
@@ -689,14 +689,14 @@ namespace Barotrauma.Networking
             set;
         }
 
-        [Serialize(defaultValue: 90.0f, isSaveable: true)]
+        [Serialize(defaultValue: 5.0f, isSaveable: true)]
         public float TraitorsMinStartDelay
         {
             get;
             set;
         }
 
-        [Serialize(defaultValue: 180.0f, isSaveable: true)]
+        [Serialize(defaultValue: 10.0f, isSaveable: true)]
         public float TraitorsMaxStartDelay
         {
             get;
@@ -759,14 +759,14 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(120.0f, true)]
+        [Serialize(1200.0f, true)]
         public float KillDisconnectedTime
         {
             get;
             private set;
         }
 
-        [Serialize(600.0f, true)]
+        [Serialize(6000.0f, true)]
         public float KickAFKTime
         {
             get;

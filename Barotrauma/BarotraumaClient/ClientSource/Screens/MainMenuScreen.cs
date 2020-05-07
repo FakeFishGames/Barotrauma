@@ -957,7 +957,6 @@ namespace Barotrauma
         {
             joinServerButton.Enabled = true;
             hostServerButton.Enabled = true;
-            steamWorkshopButton.Enabled = false;
         }
 
         public void DrawBackground(GraphicsDevice graphics, SpriteBatch spriteBatch)

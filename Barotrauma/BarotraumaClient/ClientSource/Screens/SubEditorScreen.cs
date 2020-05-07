@@ -3103,8 +3103,7 @@ namespace Barotrauma
                     }
                 }
                 
-                // TODO adjust when the new inventory stuff rolls in
-                if (PlayerInput.KeyHit(Keys.Q) && mode == Mode.Default)
+                if (GameMain.Config.KeyBind(InputType.ToggleInventory).IsHit() && mode == Mode.Default)
                 {
                     toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
                 }

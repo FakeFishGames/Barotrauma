@@ -893,13 +893,12 @@ namespace Barotrauma
             }
             lowpassHFGain *= Character.Controlled.LowPassMultiplier;
             if (lowpassHFGain < 0.5f) return true;
-
+            
             Hull targetHull = Hull.FindHull(soundWorldPos, hullGuess, true);
             if (listener.CurrentHull == null || targetHull == null)
             {
                 return listener.CurrentHull != targetHull;
             }
-
             Vector2 soundPos = soundWorldPos;
             if (targetHull.Submarine != null)
             {

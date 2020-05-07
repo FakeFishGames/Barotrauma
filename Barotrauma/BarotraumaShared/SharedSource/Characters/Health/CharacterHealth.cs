@@ -612,10 +612,6 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
-            //if(!Character.ObstructVision || (Character.ObstructVision && Character.LockHands))
-            //{
-            //    UpdateAirAfflictions(deltaTime);
-            //}
 
             for (int i = 0; i < limbHealths.Count; i++)
             {
@@ -681,30 +677,6 @@ namespace Barotrauma
             }
 
             UpdateOxygenProjSpecific(prevOxygen);
-        }
-        private float prevAfflictionAmount = 0.0f;
-        private AfflictionPrefab prevAffliction;
-        private void UpdateAirAfflictions(float deltaTime)
-        {
-            AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(Character.AirAffliction, StringComparison.OrdinalIgnoreCase));
-            if(afflictionPrefab == null && prevAffliction != null)
-            {
-                DebugConsole.NewMessage("No Affliction Named: " + Character.AirAffliction);
-                prevAffliction = null;
-                return;
-            }
-            if(prevAffliction != null && !afflictionPrefab.Equals(prevAffliction))
-            {
-                DebugConsole.NewMessage("NEW AFFLICTION");
-                prevAffliction = afflictionPrefab;
-                prevAfflictionAmount = 0.0f;
-            }
-            if(afflictionPrefab != null && Character.AirAfflictionPercentage != 0)
-            {
-                DebugConsole.NewMessage("AFFLICTION: " + Character.AirAffliction);
-                AddAffliction(new Affliction(afflictionPrefab, prevAfflictionAmount += (Character.AirAfflictionPercentage * 0.00002f * deltaTime)));
-                //prevAfflictionAmount += Character.AirAfflictionAvailable * 0.0002f * deltaTime; done above
-            }
         }
         
         partial void UpdateOxygenProjSpecific(float prevOxygen);

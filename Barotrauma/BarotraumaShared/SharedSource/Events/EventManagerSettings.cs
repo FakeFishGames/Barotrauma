@@ -20,7 +20,11 @@ namespace Barotrauma
         public readonly float DefaultEventThreshold = 0.2f;
         
         public readonly float EventCooldown = 360.0f;
-        
+        public readonly float WanderCooldown = 60.0f;
+
+        public readonly float WanderChallengeScale = 5000.0f;
+        public readonly float WanderChallengeScaleRate = 100.0f;
+
         public readonly float MinLevelDifficulty = 0.0f;
         public readonly float MaxLevelDifficulty = 100.0f;
 
@@ -73,6 +77,9 @@ namespace Barotrauma
             EventThresholdIncrease = element.GetAttributeFloat("EventThresholdIncrease", 0.0005f);
             DefaultEventThreshold = element.GetAttributeFloat("DefaultEventThreshold", 0.2f);
             EventCooldown = element.GetAttributeFloat("EventCooldown", 360.0f);
+            WanderCooldown = element.GetAttributeFloat("WanderCooldown", 60.0f);
+            WanderChallengeScale = element.GetAttributeFloat("ChallengeScale", 5000.0f);
+            WanderChallengeScaleRate = element.GetAttributeFloat("ChallengeScaleRate", 100.0f);
 
             MinLevelDifficulty = element.GetAttributeFloat("MinLevelDifficulty", 0.0f);
             MaxLevelDifficulty = element.GetAttributeFloat("MaxLevelDifficulty", 100.0f);

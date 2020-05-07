@@ -422,7 +422,7 @@ namespace Barotrauma
             }
 
             // Game mode Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode")) { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("gamemode"), font: GUI.SubHeadingFont) { CanBeFocused = false };
 
             gameModeTickBoxes = new List<GUITickBox>();
             foreach (GameModePreset mode in GameModePreset.List)
@@ -920,11 +920,11 @@ namespace Barotrauma
 
             Steamworks.SteamMatchmaking.ResetActions();
 
-            //if (GameMain.Client != null)
-            //{
-            //    GameMain.Client.Disconnect();
-            //    GameMain.Client = null;
-            //}
+            if (GameMain.Client != null)
+            {
+                GameMain.Client.Disconnect();
+                GameMain.Client = null;
+            }
 
             RefreshServers();
         }
@@ -1013,7 +1013,7 @@ namespace Barotrauma
                 foreach (GUITickBox tickBox in gameModeTickBoxes)
                 {
                     var gameMode = (string)tickBox.UserData;
-                    if (!tickBox.Selected && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
+                    if (!tickBox.Selected && serverInfo.GameMode != null && serverInfo.GameMode.Equals(gameMode, StringComparison.OrdinalIgnoreCase))
                     {
                         child.Visible = false;
                         break;
@@ -1049,7 +1049,8 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get("ServerEndpoint"), textAlignment: Alignment.Center);
             var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
-            endpointBox.Text = "108.51.200.200:14242";
+            endpointBox.Text = "108.51.200.200:27015";
+            
             content.RectTransform.NonScaledSize = new Point(content.Rect.Width, (int)(content.RectTransform.Children.Sum(c => c.Rect.Height)));
             content.RectTransform.IsFixedSize = true;
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0, (int)((content.RectTransform.NonScaledSize.Y + msgBox.Content.RectTransform.Children.Sum(c => c.NonScaledSize.Y + msgBox.Content.AbsoluteSpacing)) * 1.1f));
@@ -1911,7 +1912,6 @@ namespace Barotrauma
 
         private bool JoinServer(string endpoint, string serverName)
         {
-            DebugConsole.NewMessage("HELP");
             if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
             {
                 ClientNameBox.Flash();
@@ -1919,10 +1919,10 @@ namespace Barotrauma
                 GUI.PlayUISound(GUISoundType.PickItemFail);
                 return false;
             }
-            DebugConsole.NewMessage("Getting player name");
+
             GameMain.Config.PlayerName = ClientNameBox.Text;
             GameMain.Config.SaveNewPlayerConfig();
-            DebugConsole.NewMessage("Starting Coroutine");
+
             CoroutineManager.StartCoroutine(ConnectToServer(endpoint, serverName), "ConnectToServer");
 
             return true;
@@ -1931,23 +1931,21 @@ namespace Barotrauma
         private IEnumerable<object> ConnectToServer(string endpoint, string serverName)
         {
             string serverIP = null;
-            DebugConsole.NewMessage("Getting Steam ID");
             UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
-            DebugConsole.NewMessage("server steam ID " + serverSteamID);
-            if (serverSteamID == 0) 
-            {
-                DebugConsole.NewMessage("ip address targe " + endpoint);
-                serverIP = endpoint;
-            }
+            if (serverSteamID == 0) { serverIP = endpoint; }
 
+#if !DEBUG
             try
             {
+#endif
                 GameMain.Client = new GameClient(GameMain.Config.PlayerName, serverIP, serverSteamID, serverName);
+#if !DEBUG
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to start the client", e);
             }
+#endif
 
             yield return CoroutineStatus.Success;
         }

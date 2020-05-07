@@ -99,9 +99,6 @@ namespace Barotrauma
         private Vector2 cursorPosition;
 
         protected float oxygenAvailable;
-        protected float airAfflictionAvailable;
-        protected float airAfflictionPercentage;
-        protected String airAffliction;
 
         //seed used to generate this character
         private readonly string seed;
@@ -301,20 +298,6 @@ namespace Barotrauma
             }
         }
 
-        private float lockHandsTimeLeft;
-        [Serialize(0.0f, false)]
-        public float LockHandsTimeLeft
-        {
-            get
-            {
-                return lockHandsTimeLeft;
-            }
-            set
-            {
-                lockHandsTimeLeft = 50.0f;
-            }
-        }
-
         public bool AllowInput
         {
             get { return Stun <= 0.0f && !IsDead && !IsIncapacitated; }
@@ -409,19 +392,6 @@ namespace Barotrauma
             }
         }
 
-        private float blindVisionAmount;
-        public bool BlindVision
-        {
-            get
-            {
-                return blindVisionAmount > 0.5f;
-            }
-            set
-            {
-                blindVisionAmount = 1.0f;
-            }
-        }
-
         private float pressureProtection;
         public float PressureProtection
         {
@@ -466,22 +436,7 @@ namespace Barotrauma
             get { return oxygenAvailable; }
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
-        public float AirAfflictionAvailable
-        {
-            get { return airAfflictionAvailable; }
-            set { airAfflictionAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
-        }
-        public String AirAffliction
-        {
-            get { return airAffliction; }
-            set { airAffliction = value; }
-        }
-        public float AirAfflictionPercentage
-        {
-            get { return airAfflictionPercentage; }
-            set { airAfflictionPercentage = MathHelper.Max(value, 0.0f); }
-        }
-
+                
         public float Stun
         {
             get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
@@ -2103,7 +2058,6 @@ namespace Barotrauma
             speechBubbleTimer = Math.Max(0.0f, speechBubbleTimer - deltaTime);
 
             obstructVisionAmount = Math.Max(obstructVisionAmount - deltaTime, 0.0f);
-            blindVisionAmount = Math.Max(blindVisionAmount - deltaTime, 0.0f);
 
             if (Inventory != null)
             {
@@ -2268,15 +2222,7 @@ namespace Barotrauma
                 SelectedConstruction = null;
             }
 
-            if (!IsDead) 
-            {
-                lockHandsTimeLeft -= deltaTime;
-                if(lockHandsTimeLeft <= 0.0f)
-                {
-                    //remove handcuffs or let them press a key too remove
-                }
-                LockHands = false; 
-            }
+            if (!IsDead) { LockHands = false; }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -2303,32 +2249,18 @@ namespace Barotrauma
             else
             {
                 float hullAvailableOxygen = 0.0f;
-                float hullAvailableAirAffliction = 0.0f;
                 if (!AnimController.HeadInWater && AnimController.CurrentHull != null)
                 {
                     //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
                     //(i.e. if the character has some external source of oxygen)
-                    //ie give the affliction if this is true because they are breathing its air
                     if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage)
                     {
-                        //AnimController.CurrentHull.AirAfflictionAmount -= Hull.OxygenConsumptionSpeed * deltaTime;
                         AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
-                        //AirAfflictionPercentage = AnimController.CurrentHull.AirAfflictionPercentage;
-                        //AirAffliction = AnimController.CurrentHull.AirAffliction;
                     }
-                    //else
-                    //{
-                        //AirAfflictionPercentage = 0.0f;
-                        //AirAffliction = null;
-                    //}
                     hullAvailableOxygen = AnimController.CurrentHull.OxygenPercentage;
-                    //hullAvailableAirAffliction = AnimController.CurrentHull.AirAfflictionPercentage;
-
 
                 }
                 OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
-                //AirAfflictionAvailable += MathHelper.Clamp(hullAvailableAirAffliction - airAfflictionAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
-                
             }
 
         }
@@ -2976,7 +2908,10 @@ namespace Barotrauma
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
+            {
+                SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            }
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 

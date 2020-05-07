@@ -343,15 +343,17 @@ namespace Barotrauma
                             UInt16 targetEntityID = msg.ReadUInt16();
                             int targetLimbIndex = msg.ReadByte();
 
+                            //255 = entity already removed, no need to do anything
+                            if (attackLimbIndex == 255) { break; }
+
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
                                 DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Limb index out of bounds ({attackLimbIndex})");
                                 break;
                             }
                             Limb attackLimb = AnimController.Limbs[attackLimbIndex];
-                            IDamageable targetEntity = FindEntityByID(targetEntityID) as IDamageable;
                             Limb targetLimb = null;
-                            if (targetEntity == null)
+                            if (!(FindEntityByID(targetEntityID) is IDamageable targetEntity))
                             {
                                 DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target entity not found (ID {targetEntityID})");
                                 break;
@@ -365,8 +367,10 @@ namespace Barotrauma
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
                             }
-
-                            attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
+                            if (attackLimb?.attack != null)
+                            {
+                                attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
+                            }
                             break;
                     }
                     msg.ReadPadBits();

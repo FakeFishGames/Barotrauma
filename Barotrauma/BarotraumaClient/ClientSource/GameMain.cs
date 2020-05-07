@@ -613,7 +613,7 @@ namespace Barotrauma
 
             foreach (string steamError in SteamManager.InitializationErrors)
             {
-                //new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
             }
 
             TitleScreen.LoadState = 100.0f;

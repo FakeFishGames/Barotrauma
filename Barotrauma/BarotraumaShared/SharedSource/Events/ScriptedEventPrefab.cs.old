@@ -14,13 +14,6 @@ namespace Barotrauma
         public readonly bool AllowOnlyOnce;
         public float Commonness;
 
-        public ScriptedEventPrefab(Type eventType, string musicType, float spawnProbability, bool allowOnlyOnce)
-        {
-            EventType = eventType;
-            MusicType = musicType;
-            SpawnProbability = spawnProbability;
-            AllowOnlyOnce = allowOnlyOnce;
-        }
         public ScriptedEventPrefab(XElement element)
         {
             ConfigElement = element;

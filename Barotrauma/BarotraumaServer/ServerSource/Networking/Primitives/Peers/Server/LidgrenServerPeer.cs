@@ -416,12 +416,10 @@ namespace Barotrauma.Networking
 #if DEBUG
                         requireSteamAuth = false;
 #endif
-                        //steam auth cannot be done (SteamManager not initialized or no ticket given),
-                        //but it's not required either -> let the client join without auth
                         pendingClient.Name = name;
                         pendingClient.OwnerKey = ownKey;
                         pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
-                      
+                       
                     }
                     else //TODO: could remove since this seems impossible
                     {

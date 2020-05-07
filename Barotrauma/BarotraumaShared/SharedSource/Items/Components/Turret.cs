@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics.Dynamics;
 
 namespace Barotrauma.Items.Components
 {
@@ -655,7 +656,8 @@ namespace Barotrauma.Items.Components
                 end -= target.Submarine.SimPosition;
             }
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel;
-            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true);
+            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true,
+               customPredicate: (Fixture f) => { return !item.StaticFixtures.Contains(f); });
             if (pickedBody == null) { return; }
             Character targetCharacter = null;
             if (pickedBody.UserData is Character c)
@@ -817,7 +819,8 @@ namespace Barotrauma.Items.Components
                 end -= closestEnemy.Submarine.SimPosition;
             }
             var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel;
-            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true);
+            var pickedBody = Submarine.PickBody(start, end, null, collisionCategories, allowInsideFixture: true, 
+               customPredicate: (Fixture f) => { return !item.StaticFixtures.Contains(f); });
             if (pickedBody == null) { return false; }
             Character targetCharacter = null;
             if (pickedBody.UserData is Character c)

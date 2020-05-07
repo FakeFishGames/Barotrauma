@@ -164,6 +164,7 @@ namespace Barotrauma.Networking
             //TODO: gui stuff should probably not be here?
             this.ownerKey = ownerKey;
             this.steamP2POwner = steamP2POwner;
+
             roundInitStatus = RoundInitStatus.NotStarted;
 
             allowReconnect = true;
@@ -247,8 +248,7 @@ namespace Barotrauma.Networking
             otherClients = new List<Client>();
 
             serverSettings = new ServerSettings(this, "Server", 0, 0, 0, false, false);
-            DebugConsole.NewMessage("SteamID is: " + steamId);
-            DebugConsole.NewMessage("Server ip is : " + ip);
+
             if (steamId == 0)
             {
                 serverEndpoint = ip;
@@ -267,7 +267,6 @@ namespace Barotrauma.Networking
 
         private void ConnectToServer(object endpoint, string hostName)
         {
-            DebugConsole.NewMessage("Connecting to server");
             LastClientListUpdateID = 0;
             foreach (var c in ConnectedClients)
             {
@@ -391,7 +390,7 @@ namespace Barotrauma.Networking
             }
 
             updateInterval = new TimeSpan(0, 0, 0, 0, 150);
-            DebugConsole.NewMessage("Finished Connection Waiting for start info");
+
             CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
         }        
 
@@ -436,7 +435,7 @@ namespace Barotrauma.Networking
             canStart = false;
 
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
-           // DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
+            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
 
             // Loop until we are approved
             string connectingText = TextManager.Get("Connecting");
@@ -454,7 +453,7 @@ namespace Barotrauma.Networking
                             string steamUserName = Steamworks.SteamFriends.GetFriendPersonaName(steamConnection.SteamID);
                             if (!string.IsNullOrEmpty(steamUserName) && steamUserName != "[unknown]")
                             {
-                               serverDisplayName = steamUserName;
+                                serverDisplayName = steamUserName;
                             }
                         }
                     }
@@ -538,7 +537,7 @@ namespace Barotrauma.Networking
 
             GUI.ClearCursorWait();
             if (connectCancelled) { yield return CoroutineStatus.Success; }
-            DebugConsole.NewMessage("Info recieved");
+            
             yield return CoroutineStatus.Success;
         }
 
@@ -888,10 +887,10 @@ namespace Barotrauma.Networking
 
         private void OnDisconnect()
         {
-            //if (SteamManager.IsInitialized)
-            //{
-            //    Steamworks.SteamFriends.ClearRichPresence();
-            //}
+            if (SteamManager.IsInitialized)
+            {
+                Steamworks.SteamFriends.ClearRichPresence();
+            }
         }
 
         private void HandleDisconnectMessage(string disconnectMsg)
@@ -974,7 +973,6 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                     GameMain.GameSession?.EndRound("");
                     gameStarted = false;
-                    myCharacter = null;
                     myCharacter = null;
                 }
 
@@ -1656,15 +1654,15 @@ namespace Barotrauma.Networking
                 }
                 if (updateClientListId) { LastClientListUpdateID = listId; }
 
-                //if (clientPeer is SteamP2POwnerPeer)
-                //{
-                //    TaskPool.Add(Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
-                //    {
-                //        Steam.SteamManager.UpdateLobby(serverSettings);
-                //    });
-                //
-                //    Steam.SteamManager.UpdateLobby(serverSettings);
-                //}
+                if (clientPeer is SteamP2POwnerPeer)
+                {
+                    TaskPool.Add(Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
+                    {
+                        Steam.SteamManager.UpdateLobby(serverSettings);
+                    });
+
+                    Steam.SteamManager.UpdateLobby(serverSettings);
+                }
             }
         }
 
@@ -1769,10 +1767,10 @@ namespace Barotrauma.Networking
                                 serverSettings.Voting.AllowSubVoting = allowSubVoting;
                                 serverSettings.Voting.AllowModeVoting = allowModeVoting;
 
-                                //if (clientPeer is SteamP2POwnerPeer)
-                                //{
-                                //    Steam.SteamManager.UpdateLobby(serverSettings);
-                                //}
+                                if (clientPeer is SteamP2POwnerPeer)
+                                {
+                                    Steam.SteamManager.UpdateLobby(serverSettings);
+                                }
 
                                 GUI.KeyboardDispatcher.Subscriber = prevDispatcher;
                             }
@@ -2126,6 +2124,7 @@ namespace Barotrauma.Networking
                         GameMain.GameSession.SubmarineInfo = new SubmarineInfo(subPath, "");
                     }
                     SaveUtil.LoadGame(GameMain.GameSession.SavePath, GameMain.GameSession);
+                    GameMain.GameSession?.SubmarineInfo?.Reload();
                     GameMain.GameSession?.SubmarineInfo?.CheckSubsLeftBehind();
                     if (GameMain.GameSession?.SubmarineInfo?.Name != null)
                     {
@@ -2183,10 +2182,10 @@ namespace Barotrauma.Networking
         {
             allowReconnect = false;
 
-            //if (clientPeer is SteamP2PClientPeer || clientPeer is SteamP2POwnerPeer)
-            //{
-            //    SteamManager.LeaveLobby();
-            //}
+            if (clientPeer is SteamP2PClientPeer || clientPeer is SteamP2POwnerPeer)
+            {
+                SteamManager.LeaveLobby();
+            }
 
             clientPeer?.Close();
             clientPeer = null;
@@ -3009,6 +3008,11 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.GameMode != null)
             {
                 errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
+                {
+                    errorLines.Add("Campaign ID: " + campaign.CampaignID);
+                    errorLines.Add("Campaign save ID: " + campaign.LastSaveID + "(pending: " + campaign.PendingSaveID + ")");
+                }
             }
             if (GameMain.GameSession?.Submarine != null)
             {
@@ -3017,6 +3021,13 @@ namespace Barotrauma.Networking
             if (Level.Loaded != null)
             {
                 errorLines.Add("Level: " + Level.Loaded.Seed + ", " + Level.Loaded.EqualityCheckVal);
+                errorLines.Add("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
+                errorLines.Add("Entities:");
+                foreach (Entity e in Level.Loaded.EntitiesBeforeGenerate)
+                {
+                    errorLines.Add("    " + e.ID + ": " + e.ToString());
+                }
+                errorLines.Add("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
             }
 
             errorLines.Add("Entity IDs:");

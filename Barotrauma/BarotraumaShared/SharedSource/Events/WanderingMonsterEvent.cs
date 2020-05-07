@@ -7,7 +7,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class MonsterEvent : ScriptedEvent
+    class WanderingMonsterEvent : ScriptedEvent
     {
         private readonly string speciesName;
         private readonly int minAmount, maxAmount;
@@ -32,22 +32,22 @@ namespace Barotrauma
         {
             if (maxAmount <= 1)
             {
-                return "MonsterEvent (" + speciesName + ")";
+                return "WanderingMonsterEvent (" + speciesName + ")";
             }
             else if (minAmount < maxAmount)
             {
-                return "MonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
+                return "WanderingMonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
             }
             else
             {
-                return "MonsterEvent (" + speciesName + " x" + maxAmount + ")";
+                return "WanderingMonsterEvent (" + speciesName + " x" + maxAmount + ")";
             }
         }
 
-        public MonsterEvent(ScriptedEventPrefab prefab)
+        public WanderingMonsterEvent(ScriptedEventPrefab prefab, String speciesNameIn, int amount, int minAmountIn, int maxAmountIn, String spawnTypeStr, bool spawnDeepIn)
             : base (prefab)
         {
-            speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
+            speciesName = speciesNameIn;
             CharacterPrefab characterPrefab = CharacterPrefab.FindByFilePath(speciesName);
             if (characterPrefab != null)
             {
@@ -59,11 +59,11 @@ namespace Barotrauma
                 throw new Exception("speciesname is null!");
             }
 
-            int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
-            minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
-            maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
+            int defaultAmount = amount;
+            minAmount = minAmountIn;
+            maxAmount = Math.Max(maxAmountIn, minAmount);
 
-            var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
+            String spawnPosTypeStr = spawnTypeStr;
 
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
                 !Enum.TryParse(spawnPosTypeStr, true, out spawnPosType))
@@ -71,7 +71,7 @@ namespace Barotrauma
                 spawnPosType = Level.PositionType.MainPath;
             }
 
-            spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
+            spawnDeep = spawnDeepIn;
 
             if (GameMain.NetworkMember != null)
             {
@@ -277,14 +277,6 @@ namespace Barotrauma
             bool spawnReady = false;
             if (spawnPending)
             {
-                //wait until there are no submarines at the spawnpos
-                foreach (Submarine submarine in Submarine.Loaded)
-                {
-                    if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
-                    float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
-                }
-
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
                 //unnecessary monsters in places the players might never visit during the round
                 if (spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Cave || spawnPosType == Level.PositionType.Wreck)
@@ -312,6 +304,17 @@ namespace Barotrauma
                         }
                     }
                     if (!someoneNearby) { return; }
+                    DebugConsole.NewMessage("Spawn in Alien Ruin");
+                }
+                else
+                {
+                    //wait until there are no submarines at the spawnpos
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        float minDist = GetMinDistanceToSub(submarine);
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                    }
                 }
 
                 spawnPending = false;
@@ -328,7 +331,6 @@ namespace Barotrauma
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
-
                         monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));
 
                         if (monsters.Count == amount)

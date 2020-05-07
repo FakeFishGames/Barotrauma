@@ -101,11 +101,12 @@ namespace Barotrauma.Sounds
             for (int i = 0; i < readSamples; i++)
             {
                 float fVal = ShortToFloat(buffer[i]);
+
                 if (gain * GameMain.Config.VoiceChatVolume > 1.0f) //TODO: take distance into account?
                 {
                     fVal = Math.Clamp(fVal * gain * GameMain.Config.VoiceChatVolume, -1.0f, 1.0f);
                 }
-                
+
                 if (UseMuffleFilter)
                 {                
                     foreach (var filter in muffleFilters)

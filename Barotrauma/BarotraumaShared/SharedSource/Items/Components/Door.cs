@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) { IsStuck = false; }
-                if (stuck >= 30.0f) { IsStuck = true; } //original is 100, this is the value at which point the door wont open
+                if (stuck >= 33.0f) { IsStuck = true; }
             }
         }
 

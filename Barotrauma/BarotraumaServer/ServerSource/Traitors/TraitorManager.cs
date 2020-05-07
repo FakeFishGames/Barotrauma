@@ -79,7 +79,7 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             if (ShouldEndRound) { return; }
-
+            
 #if DISABLE_MISSIONS
             return;
 #endif
@@ -103,11 +103,11 @@ namespace Barotrauma
                             default:
                                 break;
                         }
-                        //gameShouldEnd = true;
+                        gameShouldEnd = true;
                     });
                     if (!gameShouldEnd && mission.Value.IsCompleted)
                     {
-                        //missionCompleted = true;
+                        missionCompleted = true;
                         foreach (var traitor in mission.Value.Traitors.Values)
                         {
                             traitor.UpdateCurrentObjective("", mission.Value.Identifier);
@@ -123,7 +123,8 @@ namespace Barotrauma
                 if (missionCompleted)
                 {
                     Missions.Clear();
-                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
+                    gameShouldEnd = true;
+                    //startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                 }
             }
             else if (startCountdown > 0.0f && server.GameStarted)
@@ -134,13 +135,11 @@ namespace Barotrauma
                     int playerCharactersCount = server.ConnectedClients.Sum(client => client.Character != null && !client.Character.IsDead ? 1 : 0);
                     if (playerCharactersCount < server.ServerSettings.TraitorsMinPlayerCount)
                     {
-                        DebugConsole.NewMessage("Starting countdown to re-assign traitor");
                         startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                         return;
                     }
                     if (GameMain.GameSession.Mission is CombatMission)
                     {
-                        DebugConsole.NewMessage("This mission is PvP");
                         var teamIds = new[] { Character.TeamType.Team1, Character.TeamType.Team2 };
                         foreach (var teamId in teamIds)
                         {
@@ -166,7 +165,6 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.NewMessage("Giving traitor mission");
                         var mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
                         if (mission != null) {
                             if (mission.CanBeStarted(server, this, Character.TeamType.None))
@@ -174,7 +172,6 @@ namespace Barotrauma
                                 if (mission.Start(server, this, Character.TeamType.None))
                                 {
                                     Missions.Add(Character.TeamType.None, mission);
-                                    
                                     return;
                                 }
                             }

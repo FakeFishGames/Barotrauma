@@ -298,7 +298,7 @@ namespace Barotrauma
                         UInt16 targetEntityID = (UInt16)extraData[2];
                         int targetLimbIndex = extraData.Length > 3 ? (int)extraData[3] : 0;
                         msg.WriteRangedInteger(4, 0, 4);
-                        msg.Write((byte)(Removed ? 0 : Array.IndexOf(AnimController.Limbs, attackLimb)));
+                        msg.Write((byte)(Removed ? 255 : Array.IndexOf(AnimController.Limbs, attackLimb)));
                         msg.Write(targetEntityID);
                         msg.Write((byte)targetLimbIndex);
                         break;
