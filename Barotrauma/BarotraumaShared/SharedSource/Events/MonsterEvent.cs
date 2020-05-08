@@ -277,13 +277,7 @@ namespace Barotrauma
             bool spawnReady = false;
             if (spawnPending)
             {
-                //wait until there are no submarines at the spawnpos
-                foreach (Submarine submarine in Submarine.Loaded)
-                {
-                    if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
-                    float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
-                }
+
 
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
                 //unnecessary monsters in places the players might never visit during the round
@@ -312,6 +306,16 @@ namespace Barotrauma
                         }
                     }
                     if (!someoneNearby) { return; }
+                }
+                else
+                {
+                    //wait until there are no submarines at the spawnpos
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        float minDist = GetMinDistanceToSub(submarine);
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                    }
                 }
 
                 spawnPending = false;
