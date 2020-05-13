@@ -31,7 +31,7 @@
     Down="S"
     Left="A"
     Right="D"
-    Attack="MiddleMouse"
+    Attack="R"
     Run="LeftShift"
     Crouch="LeftControl"
     InfoTab="Tab"

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
-using System.IO;
+using Barotrauma.IO;
 using System.Xml;
 using Barotrauma.Extensions;
 #if CLIENT
@@ -470,6 +470,12 @@ namespace Barotrauma
             [Serialize(true, true), Editable]
             public bool CanBeSevered { get; set; }
 
+            [Serialize(1f, true, description:"Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects limbs of type None, Shield, or Tail on non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
+            public float SeveranceProbabilityModifier { get; set; }
+
+            [Serialize("gore", true), Editable]
+            public string BreakSound { get; set; }
+
             [Serialize(true, true), Editable]
             public bool LimitEnabled { get; set; }
 
@@ -605,7 +611,11 @@ namespace Barotrauma
             [Serialize(1f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
             public float AttackForceMultiplier { get; set; }
 
+            [Serialize(1f, true, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
+            public float MinSeveranceDamage { get; set; }
+
             // Non-editable ->
+            // TODO: make read-only
             [Serialize(0, true)]
             public int HealthIndex { get; set; }
 
@@ -813,6 +823,15 @@ namespace Barotrauma
             [Serialize("", true), Editable()]
             public string Texture { get; set; }
 
+            [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+            public Color Color { get; set; }
+
+            [Serialize("1.0,1.0,1.0,1.0", true, description: "Target color when the character is dead."), Editable()]
+            public Color DeadColor { get; set; }
+
+            [Serialize(0f, true, "How long it takes to fade into the dead color? 0 = Not applied."), Editable(DecimalCount = 1, MinValueFloat = 0, MaxValueFloat = 10)]
+            public float DeadColorTime { get; set; }
+
             public override string Name => "Sprite";
 
             public SpriteParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
@@ -927,7 +946,7 @@ namespace Barotrauma
             {
                 public override string Name => "Light Texture";
 
-                [Serialize("", true), Editable]
+                [Serialize("Content/Lights/pointlight_bright.png", true), Editable]
                 public string Texture { get; private set; }
 
                 [Serialize("0.5, 0.5", true), Editable(DecimalCount = 2)]

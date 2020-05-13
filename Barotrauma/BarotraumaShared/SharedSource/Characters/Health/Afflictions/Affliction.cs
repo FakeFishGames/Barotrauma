@@ -19,7 +19,7 @@ namespace Barotrauma
         public virtual float Strength
         {
             get { return _strength; }
-            set { _strength = value; }
+            set { _strength = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength); }
         }
 
         [Serialize("", true), Editable]
@@ -184,6 +184,8 @@ namespace Barotrauma
             {
                 _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
             }
+            // Don't use the property, because its virtual and some afflictions like husk overload it for external use.
+            _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {

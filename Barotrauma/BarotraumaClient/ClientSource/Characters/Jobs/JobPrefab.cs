@@ -12,8 +12,10 @@ namespace Barotrauma
         {
             int width = 500, height = 400;
 
-            GUIButton backFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), backFrame.RectTransform, Anchor.Center));
+            GUIButton frameHolder = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, frameHolder.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, height), frameHolder.RectTransform, Anchor.Center));
             GUIFrame paddedFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center), style: null);
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.1f), paddedFrame.RectTransform), Name, font: GUI.LargeFont);
@@ -49,7 +51,7 @@ namespace Barotrauma
                     font: GUI.SmallFont);
             }*/
 
-            return backFrame;
+            return frameHolder;
         }
 
 

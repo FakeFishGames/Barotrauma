@@ -54,6 +54,33 @@ namespace Barotrauma
 #endif
         }
 
+        public static Item FindItemRecursive(Item item, Predicate<Item> condition)
+        {
+            if (condition.Invoke(item))
+            {
+                return item;
+            }
+
+            var containers = item.GetComponents<ItemContainer>();
+
+            if (containers != null)
+            {
+                foreach (var container in containers)
+                {
+                    foreach (var inventoryItem in container.Inventory.Items)
+                    {
+                        var findItem = FindItemRecursive(inventoryItem, condition);
+                        if (findItem != null)
+                        {
+                            return findItem;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public int FindIndex(Item item)
         {
             for (int i = 0; i < capacity; i++)
@@ -173,6 +200,7 @@ namespace Barotrauma
             if (Owner == null) return;
 
             Inventory prevInventory = item.ParentInventory;
+            Inventory prevOwnerInventory = item.FindParentInventory(inv => inv is CharacterInventory);
 
             if (createNetworkEvent)
             {
@@ -199,6 +227,14 @@ namespace Barotrauma
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
             }
+            
+#if SERVER
+            if (prevOwnerInventory is CharacterInventory characterInventory && characterInventory != this && Owner == user)
+            {
+                var client = GameMain.Server?.ConnectedClients?.Find(cl => cl.Character == user);
+                GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(characterInventory, client, item);
+            }
+#endif
         }
 
         public bool IsEmpty()

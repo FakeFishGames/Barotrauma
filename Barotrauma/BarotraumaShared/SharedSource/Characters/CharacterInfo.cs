@@ -4,7 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -995,6 +995,15 @@ namespace Barotrauma
             beards = null;
             moustaches = null;
             faceAttachments = null;
+        }
+
+        /// <summary>
+        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
+        /// </summary>
+        public void ResetCurrentOrder()
+        {
+            CurrentOrder = null;
+            CurrentOrderOption = "";
         }
 
         public void Remove()

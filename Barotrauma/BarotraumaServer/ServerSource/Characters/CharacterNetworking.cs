@@ -264,21 +264,21 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 3);
+                        msg.WriteRangedInteger(0, 0, 4);
                         msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                         Inventory.ServerWrite(msg, c);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(1, 0, 3);
+                        msg.WriteRangedInteger(1, 0, 4);
                         Client owner = (Client)extraData[1];
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 3);
+                        msg.WriteRangedInteger(2, 0, 4);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(3, 0, 3);
+                        msg.WriteRangedInteger(3, 0, 4);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -292,6 +292,15 @@ namespace Barotrauma
                                 msg.Write(skill.Level);
                             }
                         }
+                        break;
+                    case NetEntityEvent.Type.ExecuteAttack:
+                        Limb attackLimb = extraData[1] as Limb;
+                        UInt16 targetEntityID = (UInt16)extraData[2];
+                        int targetLimbIndex = extraData.Length > 3 ? (int)extraData[3] : 0;
+                        msg.WriteRangedInteger(4, 0, 4);
+                        msg.Write((byte)(Removed ? 255 : Array.IndexOf(AnimController.Limbs, attackLimb)));
+                        msg.Write(targetEntityID);
+                        msg.Write((byte)targetLimbIndex);
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -407,6 +416,7 @@ namespace Barotrauma
             }
         }
 
+        private List<int> severedJointIndices = new List<int>();
         private void WriteStatus(IWriteMessage msg)
         {
             msg.Write(IsDead);
@@ -417,32 +427,31 @@ namespace Barotrauma
                 {
                     msg.Write(CauseOfDeath.Affliction.Identifier);
                 }
-
-                if (AnimController?.LimbJoints == null)
-                {
-                    //0 limbs severed
-                    msg.Write((byte)0);
-                }
-                else
-                {
-                    List<int> severedJointIndices = new List<int>();
-                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
-                    {
-                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
-                        {
-                            severedJointIndices.Add(i);
-                        }
-                    }
-                    msg.Write((byte)severedJointIndices.Count);
-                    foreach (int jointIndex in severedJointIndices)
-                    {
-                        msg.Write((byte)jointIndex);
-                    }
-                }
             }
             else
             {
                 CharacterHealth.ServerWrite(msg);
+            }
+            if (AnimController?.LimbJoints == null)
+            {
+                //0 limbs severed
+                msg.Write((byte)0);
+            }
+            else
+            {
+                severedJointIndices.Clear();
+                for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                {
+                    if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                    {
+                        severedJointIndices.Add(i);
+                    }
+                }
+                msg.Write((byte)severedJointIndices.Count);
+                foreach (int jointIndex in severedJointIndices)
+                {
+                    msg.Write((byte)jointIndex);
+                }
             }
         }
 

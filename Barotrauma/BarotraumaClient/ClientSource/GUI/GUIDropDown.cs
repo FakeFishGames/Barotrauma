@@ -394,7 +394,7 @@ namespace Barotrauma
 
             if (Dropped)
             {
-                listBox.AddToGUIUpdateList(false, UpdateOrder);
+                listBox.AddToGUIUpdateList(false, 1);
             }
         }
 

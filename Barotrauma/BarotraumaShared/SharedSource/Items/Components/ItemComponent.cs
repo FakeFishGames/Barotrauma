@@ -421,7 +421,10 @@ namespace Barotrauma.Items.Components
                 case "activate":
                 case "use":
                 case "trigger_in":
-                    item.Use(1.0f, sender);
+                    if (signal != "0")
+                    {
+                        item.Use(1.0f, sender);
+                    }
                     break;
                 case "toggle":
                     if (signal != "0")
@@ -734,12 +737,15 @@ namespace Barotrauma.Items.Components
 
         public virtual void Load(XElement componentElement, bool usePrefabValues)
         {
-            if (componentElement != null && !usePrefabValues) 
+            if (componentElement != null) 
             { 
                 foreach (XAttribute attribute in componentElement.Attributes())
                 {
                     if (!SerializableProperties.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
-                    property.TrySetValue(this, attribute.Value);
+                    if (property.OverridePrefabValues || !usePrefabValues)
+                    {
+                        property.TrySetValue(this, attribute.Value);
+                    }
                 }
                 ParseMsg();
                 OverrideRequiredItems(componentElement);
@@ -908,49 +914,56 @@ namespace Barotrauma.Items.Components
         #region AI related
         protected const float AIUpdateInterval = 0.2f;
         protected float aiUpdateTimer;
-
         private int itemIndex;
-        private List<Item> ignoredContainers = new List<Item>();
         private Character previousUser;
         protected bool FindSuitableContainer(Character character, Func<Item, float> priority, out Item suitableContainer)
         {
-            if (previousUser != character)
-            {
-                ignoredContainers.Clear();
-                previousUser = character;
-            }
             suitableContainer = null;
-            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: priority))
+            if (character.AIController is HumanAIController aiController)
             {
-                suitableContainer = targetContainer;
-                return true;
+                if (previousUser != character)
+                {
+                    previousUser = character;
+                    itemIndex = 0;
+                }
+                if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: aiController.IgnoredItems, customPriorityFunction: priority))
+                {
+                    suitableContainer = targetContainer;
+                    return true;
+                }
             }
             return false;
         }
 
         protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip, bool removeEmpty) where T : ItemComponent
         {
-            var containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
+            AIObjectiveContainItem containObjective = null;
+            if (character.AIController is HumanAIController aiController)
             {
-                targetItemCount = itemCount,
-                Equip = equip,
-                RemoveEmpty = removeEmpty,
-                GetItemPriority = i =>
+                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
                 {
-                    if (i.ParentInventory?.Owner is Item)
+                    targetItemCount = itemCount,
+                    Equip = equip,
+                    RemoveEmpty = removeEmpty,
+                    GetItemPriority = i =>
                     {
-                        //don't take items from other items of the same type
-                        if (((Item)i.ParentInventory.Owner).GetComponent<T>() != null)
+                        if (i.ParentInventory?.Owner is Item)
                         {
-                            return 0.0f;
+                            //don't take items from other items of the same type
+                            if (((Item)i.ParentInventory.Owner).GetComponent<T>() != null)
+                            {
+                                return 0.0f;
+                            }
                         }
+                        return 1.0f;
                     }
-                    return 1.0f;
-                }
-            };
-            // TODO: are we sure that we want to abandon the objective here?
-            containObjective.Abandoned += () => objective.Abandon = true;
-            objective.AddSubObjective(containObjective);
+                };
+                containObjective.Abandoned += () =>
+                {
+                    aiController.IgnoredItems.Add(container.Item);
+                };
+                objective.AddSubObjective(containObjective);
+            }
             return containObjective;
         }
 
@@ -959,68 +972,71 @@ namespace Barotrauma.Items.Components
         /// </summary>
         protected bool AIDecontainEmptyItems(Character character, AIObjective objective, bool equip, ItemContainer sourceContainer = null)
         {
-            ItemContainer sourceC = sourceContainer ?? (item.OwnInventory?.Owner is Item it ? it.GetComponent<ItemContainer>() : null);
-            var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
-            foreach (Item containedItem in containedItems)
+            if (character.AIController is HumanAIController aiController)
             {
-                if (containedItem != null && containedItem.Condition <= 0.0f)
+                ItemContainer sourceC = sourceContainer ?? (item.OwnInventory?.Owner is Item it ? it.GetComponent<ItemContainer>() : null);
+                var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
+                foreach (Item containedItem in containedItems)
                 {
-                    if (FindSuitableContainer(character,
-                        i =>
-                        {
-                            var container = i.GetComponent<ItemContainer>();
-                            if (container == null) { return 0; }
-                            if (container.Inventory.IsFull()) { return 0; }
+                    if (containedItem != null && containedItem.Condition <= 0.0f)
+                    {
+                        if (FindSuitableContainer(character,
+                            i =>
+                            {
+                                var container = i.GetComponent<ItemContainer>();
+                                if (container == null) { return 0; }
+                                if (container.Inventory.IsFull()) { return 0; }
                             // Ignore containers that are identical to the source container
                             if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
-                            if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
-                            {
-                                if (isRestrictionsDefined)
+                                if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
                                 {
-                                    return 4;
-                                }
-                                else
-                                {
-                                    if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
+                                    if (isRestrictionsDefined)
                                     {
-                                        return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
+                                        return 4;
                                     }
                                     else
                                     {
-                                        return isPreferencesDefined ? 0 : 1;
+                                        if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
+                                        {
+                                            return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
+                                        }
+                                        else
+                                        {
+                                            return isPreferencesDefined ? 0 : 1;
+                                        }
                                     }
                                 }
-                            }
-                            else
+                                else
+                                {
+                                    return 0;
+                                }
+                            }, out Item targetContainer))
+                        {
+                            var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>())
                             {
-                                return 0;
-                            }
-                        }, out Item targetContainer))
-                    {
-                        var decontainObjective = new AIObjectiveDecontainItem(character, containedItem, objective.objectiveManager, sourceC, targetContainer?.GetComponent<ItemContainer>())
-                        {
-                            Equip = equip
-                        };
-                        decontainObjective.Abandoned += () =>
-                        {
-                            itemIndex = 0;
-                            if (targetContainer != null)
-                            {
-                                ignoredContainers.Add(targetContainer);
-                            }
-                        };
-                        decontainObjective.Completed += () =>
-                        {
-                            if (targetContainer == null)
+                                Equip = equip
+                            };
+                            decontainObjective.Abandoned += () =>
                             {
                                 itemIndex = 0;
-                            }
-                        };
-                        objective.AddSubObjectiveInQueue(decontainObjective);
-                    }
-                    else
-                    {
-                        return false;
+                                if (targetContainer != null)
+                                {
+                                    aiController.IgnoredItems.Add(targetContainer);
+                                }
+                            };
+                            decontainObjective.Completed += () =>
+                            {
+                                if (targetContainer == null)
+                                {
+                                    itemIndex = 0;
+                                }
+                            };
+                            objective.AddSubObjectiveInQueue(decontainObjective);
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
             }

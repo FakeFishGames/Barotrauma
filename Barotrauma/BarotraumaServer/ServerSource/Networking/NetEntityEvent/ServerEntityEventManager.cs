@@ -138,7 +138,12 @@ namespace Barotrauma.Networking
             //remove old events that have been sent to all clients, they are redundant now
             //  keep at least one event in the list (lastSentToAll == e.ID) so we can use it to keep track of the latest ID
             //  and events less than 15 seconds old to give disconnected clients a bit of time to reconnect without getting desynced
-            events.RemoveAll(e => (NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) || !inGameClientsPresent) && e.CreateTime < Timing.TotalTime - 15.0f);
+            if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + NetConfig.RoundStartSyncDuration)
+            {
+                events.RemoveAll(e => 
+                    (NetIdUtils.IdMoreRecent(lastSentToAll, e.ID) || !inGameClientsPresent) && 
+                    e.CreateTime < Timing.TotalTime - NetConfig.EventRemovalTime);
+            }
             
             for (int i = events.Count - 1; i >= 0; i--)
             {
@@ -224,7 +229,9 @@ namespace Barotrauma.Networking
                 });
                 lastSentToAnyoneTime = events.Find(e => e.ID == lastSentToAnyone)?.CreateTime ?? Timing.TotalTime;
 
-                if ((Timing.TotalTime - lastSentToAnyoneTime) > 10.0 && (Timing.TotalTime - lastWarningTime) > 5.0)
+                if (Timing.TotalTime - lastWarningTime > 5.0 && 
+                    Timing.TotalTime - lastSentToAnyoneTime > 10.0 && 
+                    Timing.TotalTime > GameMain.GameSession.RoundStartTime + NetConfig.RoundStartSyncDuration)
                 {
                     lastWarningTime = Timing.TotalTime;
                     GameServer.Log("WARNING: ServerEntityEventManager is lagging behind! Last sent id: " + lastSentToAnyone.ToString() + ", latest create id: " + ID.ToString(), ServerLog.MessageType.ServerMessage);
@@ -235,19 +242,21 @@ namespace Barotrauma.Networking
                 clients.Where(c => c.NeedsMidRoundSync).ForEach(c => { if (NetIdUtils.IdMoreRecent(lastSentToAll, c.FirstNewEventID)) lastSentToAll = (ushort)(c.FirstNewEventID - 1); });
 
                 ServerEntityEvent firstEventToResend = events.Find(e => e.ID == (ushort)(lastSentToAll + 1));
-                if (firstEventToResend != null && ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > 10.0 || (Timing.TotalTime - firstEventToResend.CreateTime) > 30.0))
+                if (firstEventToResend != null &&
+                    Timing.TotalTime > GameMain.GameSession.RoundStartTime + NetConfig.RoundStartSyncDuration &&
+                    ((lastSentToAnyoneTime - firstEventToResend.CreateTime) > NetConfig.OldReceivedEventKickTime || (Timing.TotalTime - firstEventToResend.CreateTime) > NetConfig.OldEventKickTime))
                 {
                     //  This event is 10 seconds older than the last one we've successfully sent,
                     //  kick everyone that hasn't received it yet, this is way too old
                     //  UNLESS the event was created when the client was still midround syncing,
                     //  in which case we'll wait until the timeout runs out before kicking the client
                     List<Client> toKick = inGameClients.FindAll(c => 
-                        NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) && 
+                        NetIdUtils.IdMoreRecent((UInt16)(lastSentToAll + 1), c.LastRecvEntityEventID) &&
                         (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
                     toKick.ForEach(c =>
                         {
                             DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
-                            GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected old event "
+                            GameServer.Log("Disconnecting client " + GameServer.ClientLogName(c) + " due to excessive desync (expected old event "
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
                                 (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
@@ -265,7 +274,7 @@ namespace Barotrauma.Networking
                     toKick.ForEach(c =>
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
-                        GameServer.Log("Disconnecting client " + c.Name + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
+                        GameServer.Log("Disconnecting client " + GameServer.ClientLogName(c) + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
                         server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncRemovedEvent + "/ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }
@@ -274,7 +283,7 @@ namespace Barotrauma.Networking
             var timedOutClients = clients.FindAll(c => c.Connection != GameMain.Server.OwnerConnection && c.InGame && c.NeedsMidRoundSync && Timing.TotalTime > c.MidRoundSyncTimeOut);
             foreach (Client timedOutClient in timedOutClients)
             {
-                GameServer.Log("Disconnecting client " + timedOutClient.Name + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
+                GameServer.Log("Disconnecting client " + GameServer.ClientLogName(timedOutClient) + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
                 GameMain.Server.DisconnectClient(timedOutClient, "", DisconnectReason.SyncTimeout + "/ServerMessage.SyncTimeout");
             }
 

@@ -155,16 +155,16 @@ namespace Barotrauma
             Prefabs.RemoveByFile(filePath);
         }
 
-        public void GiveItems(Character character)
+        public void GiveItems(Character character, Submarine submarine)
         {
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), Rand.RandSync.Unsynced);
             foreach (XElement itemElement in spawnItems.GetChildElements("item"))
             {
-                InitializeItems(character, itemElement);
+                InitializeItems(character, itemElement, submarine);
             }
         }
 
-        private void InitializeItems(Character character, XElement itemElement, Item parentItem = null)
+        private void InitializeItems(Character character, XElement itemElement, Submarine submarine, Item parentItem = null)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
@@ -201,9 +201,10 @@ namespace Barotrauma
             {
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
-            if (item.Prefab.Identifier == "idcard")
+            if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
                 item.AddTag("name:" + character.Name);
+                item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
                 var job = character.Info?.Job;
                 if (job != null)
                 {
@@ -220,7 +221,7 @@ namespace Barotrauma
             }
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItems(character, childItemElement, item);
+                InitializeItems(character, childItemElement, submarine, item);
             }
         }
     }

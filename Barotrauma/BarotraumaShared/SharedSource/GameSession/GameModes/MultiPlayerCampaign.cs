@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -113,6 +113,7 @@ namespace Barotrauma
             {
                 if (c.Character?.Info != null && !c.Character.IsDead)
                 {
+                    c.Character.ResetCurrentOrder();
                     c.CharacterInfo = c.Character.Info;
                     characterData.Add(new CharacterCampaignData(c));
                 }

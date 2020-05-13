@@ -17,10 +17,12 @@ namespace Barotrauma.Networking
         {
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
 
             if (type != ChatMessageType.Order)
             {
+                changeType = (PlayerConnectionChangeType)msg.ReadByte();
                 txt = msg.ReadString();
             }
 
@@ -114,7 +116,7 @@ namespace Barotrauma.Networking
                         GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
-                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter);
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter, changeType);
                         break;
                 }
                 LastID = ID;

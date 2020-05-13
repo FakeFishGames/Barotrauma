@@ -25,7 +25,7 @@ namespace Barotrauma.Networking
         }
 
         public OrderChatMessage(Order order, string orderOption, string text, Entity targetEntity, Character targetCharacter, Character sender)
-            : base(sender?.Name, text, ChatMessageType.Order, sender)
+            : base(sender?.Name, text, ChatMessageType.Order, sender, GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == sender))
         {
             Order = order;
             OrderOption = orderOption;

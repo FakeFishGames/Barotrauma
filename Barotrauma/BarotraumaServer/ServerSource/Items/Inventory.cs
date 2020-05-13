@@ -66,6 +66,19 @@ namespace Barotrauma
                         Item droppedItem = Items[i];
                         Entity prevOwner = Owner;
                         droppedItem.Drop(null);
+
+                        var previousInventory = prevOwner switch
+                        {
+                            Item itemInventory => (itemInventory.FindParentInventory(inventory => inventory is CharacterInventory) as CharacterInventory),
+                            Character character => character.Inventory,
+                            _ => null
+                        };
+
+                        if (previousInventory != null && previousInventory != c.Character?.Inventory)
+                        {
+                            GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(previousInventory, c, droppedItem);
+                        }
+                        
                         if (droppedItem.body != null && prevOwner != null)
                         {
                             droppedItem.body.SetTransform(prevOwner.SimPosition, 0.0f);
@@ -120,11 +133,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character.LogName+ " picked up " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " picked up " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character.LogName + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " placed " + item.Name + " in " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }
@@ -135,11 +148,11 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
-                        GameServer.Log(c.Character.LogName + " dropped " + item.Name, ServerLog.MessageType.Inventory);
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " dropped " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else
                     {
-                        GameServer.Log(c.Character.LogName + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " removed " + item.Name + " from " + Owner, ServerLog.MessageType.Inventory);
                     }
                 }
             }

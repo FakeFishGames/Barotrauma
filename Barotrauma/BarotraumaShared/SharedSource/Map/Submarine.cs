@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,7 +128,7 @@ namespace Barotrauma
 
         public PhysicsBody PhysicsBody
         {
-            get { return subBody.Body; }
+            get { return subBody?.Body; }
         }
 
         public Rectangle Borders
@@ -178,23 +178,6 @@ namespace Barotrauma
             }
         }
 
-        private bool? subsLeftBehind;
-        public bool SubsLeftBehind
-        {
-            get
-            {
-                if (subsLeftBehind.HasValue) { return subsLeftBehind.Value; }
-
-                CheckSubsLeftBehind(Info.SubmarineElement);
-
-                return subsLeftBehind.Value;
-            }
-            //set { subsLeftBehind = value; }
-        }
-        public bool LeftBehindSubDockingPortOccupied
-        {
-            get; private set;
-        }
 
         public new Vector2 DrawPosition
         {
@@ -222,7 +205,7 @@ namespace Barotrauma
 
         public List<Vector2> HullVertices
         {
-            get { return subBody.HullVertices; }
+            get { return subBody?.HullVertices; }
         }
 
         public bool AtDamageDepth
@@ -232,7 +215,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "Barotrauma.Submarine (" + Info?.Name ?? "[NULL INFO]" + ")";
+            return "Barotrauma.Submarine (" + (Info?.Name ?? "[NULL INFO]") + ", " + IdOffset + ")";
         }
 
         public override bool Removed
@@ -249,87 +232,69 @@ namespace Barotrauma
             ShowSonarMarker = false;
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = Character.TeamType.None;
+
+            string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
+            ReplaceIDCardTagRequirements("wreck_id", defaultTag);
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != this) { continue; }
+                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard") 
+                {
+                    foreach (string tag in item.GetTags().ToList())
+                    {
+                        if (tag == "smallitem") { continue; }
+                        string newTag = Level.Loaded.GetWreckIDTag(tag, this);
+                        item.ReplaceTag(tag, newTag);
+                        ReplaceIDCardTagRequirements(tag, newTag);
+                    } 
+                }
+            }
+
+            void ReplaceIDCardTagRequirements(string oldTag, string newTag)
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != this) { continue; }
+                    foreach (ItemComponent ic in item.Components)
+                    {
+                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Picked, oldTag, newTag);
+                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Equipped, oldTag, newTag);
+                    }
+                }
+            }
+
+            static void ReplaceIDCardTagRequirement(ItemComponent ic, RelatedItem.RelationType relationType, string oldTag, string newTag)
+            {
+                if (!ic.requiredItems.ContainsKey(relationType)) { return; }
+                foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
+                {
+                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
+                    if (index == -1) { continue; }
+                    requiredItem.Identifiers[index] = newTag;
+                }
+            }
         }
 
-        public WreckAI ThalamusAI { get; private set; }
-        public bool CreateThalamus()
+        public WreckAI WreckAI { get; private set; }
+        public bool CreateWreckAI()
         {
             MakeWreck();
-            var thalamusPrefabs = ItemPrefab.Prefabs.Where(p => p.Category == MapEntityCategory.Thalamus || p.Tags.Contains("thalamus"));
-            var brainPrefab = thalamusPrefabs.GetRandom(i => i.Tags.Contains("thalamusbrain"), Rand.RandSync.Server);
-            if (brainPrefab == null) { return false; }
-            var allItems = GetItems(false);
-            var thalamusItems = allItems.FindAll(i => i.Prefab.Category == MapEntityCategory.Thalamus || i.HasTag("thalamus"));
-            var hulls = GetHulls(false);
-            Item brain = new Item(brainPrefab, Vector2.Zero, this);
-            Vector2 negativeMargin = new Vector2(40, 20);
-            Vector2 minSize = brain.Rect.Size.ToVector2() - negativeMargin;
-            Vector2 maxSize = new Vector2(brain.Rect.Width * 3, brain.Rect.Height * 3);
-            // First try to get a room that is not too big and not in the edges of the sub.
-            // Also try not to create the brain in a room that already have carrier items inside.
-            // Ignore hulls that have any linked hulls to keep the calculations simple.
-            // Shrink the horizontal axis so that the brain is not placed in the left or right side, where we often have curved walls.
-            // Also ignore hulls that have open gaps, because we'll want the room to be full of water. The room will be filled with water when the brain is inserted in the room.
-            Rectangle shrinkedBounds = ToolBox.GetWorldBounds(WorldPosition.ToPoint(), new Point(Borders.Width - 500, Borders.Height));
-            bool BaseCondition(Hull h) => h.RectWidth > minSize.X && h.RectHeight > minSize.Y && h.GetLinkedEntities<Hull>().None() && h.ConnectedGaps.None(g => g.Open > 0);
-            bool IsNotTooBig(Hull h) => h.RectWidth < maxSize.X && h.RectHeight < maxSize.Y;
-            bool IsNotInFringes(Hull h) => shrinkedBounds.ContainsWorld(h.WorldRect);
-            bool DoesNotContainOtherItems(Hull h) => thalamusItems.None(i => i.CurrentHull == h);
-            Hull brainHull = hulls.GetRandom(h => BaseCondition(h) && IsNotTooBig(h) && IsNotInFringes(h) && DoesNotContainOtherItems(h), Rand.RandSync.Server);
-            if (brainHull == null)
-            {
-                brainHull = hulls.GetRandom(h => BaseCondition(h) && IsNotInFringes(h) && DoesNotContainOtherItems(h), Rand.RandSync.Server);
-            }
-            if (brainHull == null)
-            {
-                brainHull = hulls.GetRandom(h => BaseCondition(h) && (IsNotInFringes(h) || DoesNotContainOtherItems(h)), Rand.RandSync.Server);
-            }
-            if (brainHull == null)
-            {
-                brainHull = hulls.GetRandom(BaseCondition, Rand.RandSync.Server);
-            }
-            var thalamusStructs = StructurePrefab.Prefabs.Where(p => p.Category == MapEntityCategory.Thalamus);
-            if (brainHull == null) { return false; }
-            brainHull.WaterVolume = brainHull.Volume;
-            brain.SetTransform(brainHull.SimPosition, rotation: 0, findNewHull: false);
-            brain.CurrentHull = brainHull;
-            var backgroundPrefab = thalamusStructs.GetRandom(i => i.Tags.Contains("brainroombackground"), Rand.RandSync.Server);
-            if (backgroundPrefab != null)
-            {
-                new Structure(brainHull.Rect, backgroundPrefab, this);
-            }
-            var horizontalWallPrefab = thalamusStructs.GetRandom(p => p.Tags.Contains("thalamuswall_horizontal_decorative"), Rand.RandSync.Server);
-            if (horizontalWallPrefab != null)
-            {
-                int height = (int)horizontalWallPrefab.Size.Y;
-                int halfHeight = height / 2;
-                int quarterHeight = halfHeight / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, this);
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top - brainHull.Rect.Height + halfHeight + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, this);
-            }
-            var verticalWallPrefab = thalamusStructs.GetRandom(p => p.Tags.Contains("thalamuswall_vertical_decorative"), Rand.RandSync.Server);
-            if (verticalWallPrefab != null)
-            {
-                int width = (int)verticalWallPrefab.Size.X;
-                int halfWidth = width / 2;
-                int quarterWidth = halfWidth / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, this);
-                new Structure(new Rectangle(brainHull.Rect.Right - halfWidth - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, this);
-            }
-            ThalamusAI = new WreckAI(this, brain, allItems);
-            return true;
+            WreckAI = new WreckAI(this);
+            return WreckAI != null;
         }
 
-        public void DisableThalamus()
+        public void DisableWreckAI()
         {
-            var thalamusEntities = GetEntities(false, MapEntity.mapEntityList).FindAll(e => e.prefab.Category == MapEntityCategory.Thalamus || e.prefab.Tags.Contains("thalamus")).ToList();
-
-            foreach (var entity in thalamusEntities)
+            if (WreckAI == null)
             {
-                entity.Remove();
+                WreckAI.RemoveThalamusItems(this);
             }
-            ThalamusAI?.Kill();
-            ThalamusAI = null;
+            else
+            {
+                WreckAI?.Remove();
+                WreckAI = null;
+            }
         }
 
         /// <summary>
@@ -775,7 +740,7 @@ namespace Barotrauma
 
         public void FlipX(List<Submarine> parents = null)
         {
-            if (parents == null) parents = new List<Submarine>();
+            if (parents == null) { parents = new List<Submarine>(); }
             parents.Add(this);
 
             flippedX = !flippedX;
@@ -783,20 +748,25 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-
             List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
 
             foreach (MapEntity e in subEntities)
             {
                 if (e is Item) continue;
-                if (e is LinkedSubmarine)
+                if (e is LinkedSubmarine linkedSub)
                 {
-                    Submarine sub = ((LinkedSubmarine)e).Sub;
-                    if (!parents.Contains(sub))
+                    Submarine sub = linkedSub.Sub;
+                    if (sub == null)
+                    {
+                        Vector2 relative1 = linkedSub.Position - SubBody.Position;
+                        relative1.X = -relative1.X;
+                        linkedSub.Rect = new Rectangle((relative1 + SubBody.Position).ToPoint(), linkedSub.Rect.Size);
+                    }
+                    else if (!parents.Contains(sub))
                     {
                         Vector2 relative1 = sub.SubBody.Position - SubBody.Position;
                         relative1.X = -relative1.X;
-                        sub.SetPosition(relative1 + SubBody.Position);
+                        sub.SetPosition(relative1 + SubBody.Position, new List<Submarine>(parents));
                         sub.FlipX(parents);
                     }
                 }
@@ -814,7 +784,7 @@ namespace Barotrauma
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
             subBody.Body.Remove();
             subBody = new SubmarineBody(this);
-            SetPosition(pos);
+            SetPosition(pos, new List<Submarine>(parents.Where(p => p != this)));
 
             if (entityGrid != null)
             {
@@ -853,14 +823,15 @@ namespace Barotrauma
         {
             //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
-            if (Level.Loaded == null || subBody == null) { return; }
-
-            if (Info.Type == SubmarineInfo.SubmarineType.Wreck)
+            if (Info.IsWreck)
             {
-                ThalamusAI?.Update(deltaTime);
+                WreckAI?.Update(deltaTime);
             }
 
-            if (WorldPosition.Y < Level.MaxEntityDepth &&
+            if (subBody?.Body == null) { return; }
+
+            if (Level.Loaded != null &&
+                WorldPosition.Y < Level.MaxEntityDepth &&
                 subBody.Body.Enabled &&
                 (GameMain.NetworkMember?.RespawnManager == null || this != GameMain.NetworkMember.RespawnManager.RespawnShuttle))
             {
@@ -887,17 +858,17 @@ namespace Barotrauma
                 return;
             }
 
+
             subBody.Body.LinearVelocity = new Vector2(
                 LockX ? 0.0f : subBody.Body.LinearVelocity.X,
                 LockY ? 0.0f : subBody.Body.LinearVelocity.Y);
-
 
             subBody.Update(deltaTime);
 
             for (int i = 0; i < 2; i++)
             {
-                if (MainSubs[i] == null) continue;
-                if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) return;
+                if (MainSubs[i] == null) { continue; }
+                if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) { return; }
             }
 
             //send updates more frequently if moving fast
@@ -919,9 +890,9 @@ namespace Barotrauma
             prevPosition = position;
         }
 
-        public void SetPosition(Vector2 position, List<Submarine> checkd=null)
+        public void SetPosition(Vector2 position, List<Submarine> checkd = null)
         {
-            if (!MathUtils.IsValid(position)) return;
+            if (!MathUtils.IsValid(position)) { return; }
 
             if (checkd == null) { checkd = new List<Submarine>(); }
             if (checkd.Contains(this)) { return; }
@@ -933,9 +904,16 @@ namespace Barotrauma
 
             foreach (Submarine dockedSub in DockedTo)
             {
+                if (dockedSub.PhysicsBody.BodyType == BodyType.Static)
+                {
+                    if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
+                    {
+                        port.Undock();
+                        continue;
+                    }
+                }
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
-
                 dockedSub.SetPosition(position + expectedLocation.Value, checkd);
                 dockedSub.UpdateTransform(interpolate: false);
             }
@@ -992,6 +970,11 @@ namespace Barotrauma
             return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
         }
 
+        public IEnumerable<T> GetEntities<T>(bool includingConnectedSubs, IEnumerable<T> list) where T : MapEntity
+        {
+            return list.Where(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
+        }
+
         public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
         {
             if (entity == null) { return false; }
@@ -999,7 +982,7 @@ namespace Barotrauma
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)
             {
-                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID);
+                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID && entity.Submarine.Info.Type == Info.Type);
             }
             return false;
         }
@@ -1182,6 +1165,13 @@ namespace Barotrauma
             Loading = false;
 
             MapEntity.MapLoaded(newEntities, true);
+            foreach (MapEntity me in MapEntity.mapEntityList)
+            {
+                if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
+                {
+                    linkedSub.LinkDummyToMainSubmarine();
+                }
+            }
 
             foreach (Hull hull in matchingHulls)
             {
@@ -1221,28 +1211,6 @@ namespace Barotrauma
             return sub;
         }
 
-        public void CheckSubsLeftBehind(XElement element = null)
-        {
-            if (element == null) { element = Info.SubmarineElement; }
-
-            subsLeftBehind = false;
-            LeftBehindSubDockingPortOccupied = false;
-            foreach (XElement subElement in element.Elements())
-            {
-                if (!subElement.Name.ToString().Equals("linkedsubmarine")) { continue; }
-                if (subElement.Attribute("location") == null) { continue; }
-
-                subsLeftBehind = true;
-                ushort targetDockingPortID = (ushort)subElement.GetAttributeInt("originallinkedto", 0);
-                XElement targetPortElement = targetDockingPortID == 0 ? null :
-                    element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
-                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
-                {
-                    LeftBehindSubDockingPortOccupied = true;
-                }
-            }
-        }
-
         public void SaveToXElement(XElement element)
         {
             element.Add(new XAttribute("name", Info.Name));
@@ -1264,14 +1232,17 @@ namespace Barotrauma
                 e.Save(element);
             }
 
-            CheckSubsLeftBehind(element);
+            Info.CheckSubsLeftBehind(element);
         }
 
-        public bool SaveAs(string filePath, MemoryStream previewImage = null)
+        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
-            var newInfo = new SubmarineInfo(this);
-            newInfo.FilePath = filePath;
-            newInfo.Name = Path.GetFileNameWithoutExtension(filePath);
+            var newInfo = new SubmarineInfo(this)
+            {
+                GameVersion = GameMain.Version,
+                FilePath = filePath,
+                Name = Path.GetFileNameWithoutExtension(filePath)
+            };
             Info.Dispose(); Info = newInfo;
 
             return newInfo.SaveAs(filePath, previewImage);

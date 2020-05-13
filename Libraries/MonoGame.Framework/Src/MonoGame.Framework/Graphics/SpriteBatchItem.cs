@@ -22,7 +22,7 @@ namespace Microsoft.Xna.Framework.Graphics
             vertexBL = new VertexPositionColorTexture();
             vertexBR = new VertexPositionColorTexture();            
 		}
-		
+
 		public void Set ( float x, float y, float dx, float dy, float w, float h, float sin, float cos, Color color, Vector2 texCoordTL, Vector2 texCoordBR, float depth )
 		{
             // TODO, Should we be just assigning the Depth Value to Z?

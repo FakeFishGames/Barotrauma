@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -233,7 +234,7 @@ namespace Barotrauma
                             pressureParticleTimer += pressure * deltaTime;
                             if (pressureParticleTimer > 10.0f)
                             {
-                                Particle p = GameMain.ParticleManager.CreateParticle("waterblood", WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
+                                GameMain.ParticleManager.CreateParticle(Params.BleedParticleWater, WorldPosition + Rand.Vector(5.0f), Rand.Vector(10.0f));
                                 pressureParticleTimer = 0.0f;
                             }
                         }
@@ -355,7 +356,7 @@ namespace Barotrauma
             }
         }
         
-        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
             if (attackResult.Damage <= 1.0f || IsDead) { return; }
             if (soundTimer < soundInterval * 0.5f)
@@ -444,6 +445,7 @@ namespace Barotrauma
                 if (item.body != null && !item.body.Enabled) continue;
                 if (item.ParentInventory != null) continue;
                 if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 
                 if (draggingItemToWorld)
                 {
@@ -812,19 +814,23 @@ namespace Barotrauma
             return progressBar;
         }
 
+        private readonly List<CharacterSound> matchingSounds = new List<CharacterSound>();
         private SoundChannel soundChannel;
         public void PlaySound(CharacterSound.SoundType soundType)
         {
             if (sounds == null || sounds.Count == 0) { return; }
             if (soundChannel != null && soundChannel.IsPlaying) { return; }
-
-            var matchingSounds = sounds.Where(s => 
-                s.Type == soundType && 
-                (s.Gender == Gender.None || (info != null && info.Gender == s.Gender)));
-            if (!matchingSounds.Any()) { return; }
-
-            var matchingSoundsList = matchingSounds.ToList();
-            var selectedSound = matchingSoundsList[Rand.Int(matchingSoundsList.Count)];
+            if (GameMain.SoundManager?.Disabled ?? true) { return; }
+            matchingSounds.Clear();
+            foreach (var s in sounds)
+            {
+                if (s.Type == soundType && (s.Gender == Gender.None || (info != null && info.Gender == s.Gender)))
+                {
+                    matchingSounds.Add(s);
+                }
+            }
+            var selectedSound = matchingSounds.GetRandom();
+            if (selectedSound?.Sound == null) { return; }
             soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, CurrentHull);
             soundTimer = soundInterval;
         }
@@ -842,6 +848,11 @@ namespace Barotrauma
             if (found == null) return;
             activeObjectiveEntities.Remove(found);
         }
+
+        /// <summary>
+        /// Note that when a predicate is provided, the random option uses Linq.Where() extension method, which creates a new collection.
+        /// </summary>
+        public CharacterSound GetSound(Func<CharacterSound, bool> predicate = null, bool random = false) => random ? sounds.GetRandom(predicate) : sounds.FirstOrDefault(predicate);
 
         partial void ImplodeFX()
         {

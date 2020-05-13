@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -375,9 +375,7 @@ namespace Barotrauma
                 }
             }
 
-            StreamWriter file = new StreamWriter(@"NPCConversations.csv");
-            file.WriteLine(sb.ToString());
-            file.Close();
+            File.WriteAllText("NPCConversations.csv", sb.ToString());
         }
 
         private static void WriteConversation(System.Text.StringBuilder sb, NPCConversation conv, int depthIndex)

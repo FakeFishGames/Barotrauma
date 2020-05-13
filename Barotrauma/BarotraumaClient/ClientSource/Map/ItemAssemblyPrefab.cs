@@ -18,6 +18,7 @@ namespace Barotrauma
 
             foreach (Pair<MapEntityPrefab, Rectangle> entity in DisplayEntities)
             {
+                if (entity.First is CoreEntityPrefab) { continue; }
                 Rectangle drawRect = entity.Second;
                 drawRect = new Rectangle(
                     (int)(drawRect.X * scale) + drawArea.Center.X, (int)((drawRect.Y) * scale) - drawArea.Center.Y, 
@@ -33,7 +34,9 @@ namespace Barotrauma
             foreach (Pair<MapEntityPrefab, Rectangle> entity in DisplayEntities)
             {
                 Rectangle drawRect = entity.Second;
-                drawRect.Location += Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
+
+                drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
+                
                 entity.First.DrawPlacing(spriteBatch, drawRect, entity.First.Scale);
             }
         }

@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Math.Abs(newTargetForce - targetForce) > 0.01f)
                 {
-                    GameServer.Log(c.Character.LogName + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(GameServer.CharacterLogName(c.Character) + " set the force of " + item.Name + " to " + (int)(newTargetForce) + " %", ServerLog.MessageType.ItemInteraction);
                 }
 
                 targetForce = newTargetForce;

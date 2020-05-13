@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
@@ -70,7 +70,6 @@ namespace Barotrauma
                     }
                 }
             }
-
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -110,6 +109,7 @@ namespace Barotrauma
 
         private float wetTimer;
         private float dripParticleTimer;
+        private float deadTimer;
 
         /// <summary>
         /// Note that different limbs can share the same deformations.
@@ -125,7 +125,7 @@ namespace Barotrauma
         {
             get
             {
-                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.IsActive && c.DeformableSprite != null);
+                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.Exclusive && c.IsActive && c.DeformableSprite != null);
                 if (conditionalSprite != null)
                 {
                     return conditionalSprite.DeformableSprite;
@@ -143,7 +143,7 @@ namespace Barotrauma
         {
             get
             {
-                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.IsActive && c.ActiveSprite != null);
+                var conditionalSprite = ConditionalSprites.FirstOrDefault(c => c.Exclusive && c.IsActive && c.ActiveSprite != null);
                 if (conditionalSprite != null)
                 {
                     return conditionalSprite.ActiveSprite;
@@ -164,6 +164,12 @@ namespace Barotrauma
         public float TextureScale => Params.Ragdoll.TextureScale;
 
         public Sprite DamagedSprite { get; private set; }
+
+        public bool Hide
+        {
+            get => Params.Hide;
+            set => Params.Hide = value;
+        }
 
         public List<ConditionalSprite> ConditionalSprites { get; private set; } = new List<ConditionalSprite>();
         private Dictionary<DecorativeSprite, SpriteState> spriteAnimState = new Dictionary<DecorativeSprite, SpriteState>();
@@ -273,7 +279,17 @@ namespace Barotrauma
                         DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams));
                         break;
                     case "conditionalsprite":
-                        var conditionalSprite = new ConditionalSprite(subElement, character, file: GetSpritePath(subElement, null));
+                        ISerializableEntity targetEntity;
+                        string target = subElement.GetAttributeString("target", null);
+                        if (string.Equals(target, "character", StringComparison.OrdinalIgnoreCase))
+                        {
+                            targetEntity = character;
+                        }
+                        else
+                        {
+                            targetEntity = this;
+                        }
+                        var conditionalSprite = new ConditionalSprite(subElement, targetEntity, file: GetSpritePath(subElement, null));
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
@@ -372,12 +388,16 @@ namespace Barotrauma
 
         private string GetSpritePath(XElement element, SpriteParams spriteParams)
         {
-            string texturePath = element.GetAttributeString("texture", null);
-            if (string.IsNullOrWhiteSpace(texturePath) && spriteParams != null)
+            if (spriteParams != null)
             {
-                texturePath = spriteParams.Ragdoll.Texture;
+                return GetSpritePath(spriteParams.GetTexturePath());
             }
-            return GetSpritePath(texturePath);
+            else
+            {
+                string texturePath = element.GetAttributeString("texture", null);
+                texturePath = string.IsNullOrWhiteSpace(texturePath) ? ragdoll.RagdollParams.Texture : texturePath;
+                return GetSpritePath(texturePath);
+            }
         }
 
         /// <summary>
@@ -418,19 +438,46 @@ namespace Barotrauma
             }
         }
 
-        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers)
+        partial void AddDamageProjSpecific(bool playSound, AttackResult result)
         {
-            float bleedingDamage = character.CharacterHealth.DoesBleed ? afflictions.FindAll(a => a is AfflictionBleeding).Sum(a => a.GetVitalityDecrease(character.CharacterHealth)) : 0;
-            float damage = afflictions.FindAll(a => a.Prefab.AfflictionType == "damage").Sum(a => a.GetVitalityDecrease(character.CharacterHealth));
-            float damageMultiplier = 1;
-            foreach (DamageModifier damageModifier in appliedDamageModifiers)
+            float bleedingDamage = 0;
+            if (character.CharacterHealth.DoesBleed)
             {
-                damageMultiplier *= damageModifier.DamageMultiplier;
+                foreach (var affliction in result.Afflictions)
+                {
+                    if (affliction is AfflictionBleeding)
+                    {
+                        bleedingDamage += affliction.GetVitalityDecrease(character.CharacterHealth);
+                    }
+                }
+            }
+            float damage = 0;
+            foreach (var affliction in result.Afflictions)
+            {
+                if (affliction.Prefab.AfflictionType == "damage")
+                {
+                    damage += affliction.GetVitalityDecrease(character.CharacterHealth);
+                }
+            }
+            float damageMultiplier = 1;
+            foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
+            {
+                foreach (var afflictionPrefab in AfflictionPrefab.List)
+                {
+                    if (damageModifier.MatchesAffliction(afflictionPrefab.Identifier, afflictionPrefab.AfflictionType))
+                    {
+                        if (afflictionPrefab.Effects.Any(e => e.MaxVitalityDecrease > 0))
+                        {
+                            damageMultiplier *= damageModifier.DamageMultiplier;
+                            break;
+                        }
+                    }
+                }
             }
             if (playSound)
             {
                 string damageSoundType = (bleedingDamage > damage) ? "LimbSlash" : "LimbBlunt";
-                foreach (DamageModifier damageModifier in appliedDamageModifiers)
+                foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
                 {
                     if (!string.IsNullOrWhiteSpace(damageModifier.DamageSound))
                     {
@@ -447,9 +494,8 @@ namespace Barotrauma
             {
                 foreach (ParticleEmitter emitter in character.DamageEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
-
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
                 }
             }
@@ -461,9 +507,8 @@ namespace Barotrauma
 
                 foreach (ParticleEmitter emitter in character.BloodEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
-
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
                 }
 
@@ -471,18 +516,25 @@ namespace Barotrauma
                 {
                     character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
                 }
-            }
-           
+            }   
         }
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (!body.Enabled) return;
+            if (!body.Enabled) { return; }
 
-            if (!character.IsDead)
+            if (!IsDead)
             {
                 DamageOverlayStrength -= deltaTime;
                 BurnOverlayStrength -= deltaTime;
+            }
+            else
+            {
+                var spriteParams = Params.GetSprite();
+                if (spriteParams.DeadColorTime > 0 && deadTimer < spriteParams.DeadColorTime)
+                {
+                    deadTimer += deltaTime;
+                }
             }
 
             if (inWater)
@@ -524,7 +576,14 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null)
         {
             float brightness = 1.0f - (burnOverLayStrength / 100.0f) * 0.5f;
-            Color color = new Color(brightness, brightness, brightness);
+            var spriteParams = Params.GetSprite();
+            if (spriteParams == null) { return; }
+
+            Color color = new Color(spriteParams.Color.R / 255f * brightness, spriteParams.Color.G / 255f * brightness, spriteParams.Color.B / 255f * brightness, spriteParams.Color.A / 255f);
+            if (deadTimer > 0)
+            {
+                color = Color.Lerp(color, spriteParams.DeadColor, MathUtils.InverseLerp(0, spriteParams.DeadColorTime, deadTimer));
+            }
 
             color = overrideColor ?? color;
 
@@ -545,7 +604,7 @@ namespace Barotrauma
 
             float herpesStrength = character.CharacterHealth.GetAfflictionStrength("spaceherpes");
 
-            bool hideLimb = Params.Hide || 
+            bool hideLimb = Hide || 
                 OtherWearables.Any(w => w.HideLimb) || 
                 wearingItems.Any(w => w != null && w.HideLimb);
 
@@ -566,6 +625,7 @@ namespace Barotrauma
                     {
                         var deformation = SpriteDeformation.GetDeformation(Deformations, deformSprite.Size);
                         deformSprite.Deform(deformation);
+                        LightSource?.DeformableLightSprite?.Deform(deformation);
                     }
                     else
                     {
@@ -576,6 +636,31 @@ namespace Barotrauma
                 else
                 {
                     body.Draw(spriteBatch, activeSprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                }
+                // Handle non-exlusive, i.e. additional conditional sprites
+                foreach (var conditionalSprite in ConditionalSprites)
+                {
+                    // Exclusive conditional sprites are handled in the Properties
+                    if (conditionalSprite.Exclusive) { continue; }
+                    if (!conditionalSprite.IsActive) { continue; }
+                    if (conditionalSprite.DeformableSprite != null)
+                    {
+                        var defSprite = conditionalSprite.DeformableSprite;
+                        if (Deformations != null && Deformations.Any())
+                        {
+                            var deformation = SpriteDeformation.GetDeformation(Deformations, defSprite.Size);
+                            defSprite.Deform(deformation);
+                        }
+                        else
+                        {
+                            defSprite.Reset();
+                        }
+                        body.Draw(defSprite, cam, Vector2.One * Scale * TextureScale, color, Params.MirrorHorizontally);
+                    }
+                    else
+                    {
+                        body.Draw(spriteBatch, conditionalSprite.Sprite, color, null, Scale * TextureScale, Params.MirrorHorizontally, Params.MirrorVertically);
+                    }
                 }
             }
             SpriteEffects spriteEffect = (dir == Direction.Right) ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
@@ -594,13 +679,19 @@ namespace Barotrauma
             foreach (var decorativeSprite in DecorativeSprites)
             {
                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                Color c = new Color(decorativeSprite.Color.R / 255f * brightness, decorativeSprite.Color.G / 255f * brightness, decorativeSprite.Color.B / 255f * brightness, decorativeSprite.Color.A / 255f);
+                if (deadTimer > 0)
+                {
+                    c = Color.Lerp(c, spriteParams.DeadColor, MathUtils.InverseLerp(0, Params.GetSprite().DeadColorTime, deadTimer));
+                }
+                c = overrideColor ?? c;
                 float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                 Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                 var ca = (float)Math.Cos(-body.Rotation);
                 var sa = (float)Math.Sin(-body.Rotation);
                 Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
-                decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), color,
-                    -body.Rotation + rotation, Scale, spriteEffect,
+                decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(body.DrawPosition.X + transformedOffset.X, -(body.DrawPosition.Y + transformedOffset.Y)), c,
+                    -body.Rotation + rotation, decorativeSprite.Scale * Scale, spriteEffect,
                     depth: decorativeSprite.Sprite.Depth);
             }
             float depthStep = 0.000001f;

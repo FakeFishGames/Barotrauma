@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
@@ -18,8 +18,8 @@ namespace Barotrauma.Networking
 
         public static void Start(ProcessStartInfo processInfo)
         {
-            writePipe = new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable);
-            readPipe = new AnonymousPipeServerStream(PipeDirection.In, HandleInheritability.Inheritable);
+            writePipe = new AnonymousPipeServerStream(PipeDirection.Out, System.IO.HandleInheritability.Inheritable);
+            readPipe = new AnonymousPipeServerStream(PipeDirection.In, System.IO.HandleInheritability.Inheritable);
 
             writeStream = writePipe; readStream = readPipe;
 
@@ -36,6 +36,13 @@ namespace Barotrauma.Networking
             if (localHandlesDisposed) { return; }
             writePipe.DisposeLocalCopyOfClientHandle(); readPipe.DisposeLocalCopyOfClientHandle();
             localHandlesDisposed = true;
+        }
+
+        public static void ClosePipes()
+        {
+            writePipe?.Close();
+            readPipe?.Close(); 
+            shutDown = true;
         }
 
         public static void ShutDown()

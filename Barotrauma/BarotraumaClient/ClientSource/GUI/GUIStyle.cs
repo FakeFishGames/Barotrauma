@@ -59,6 +59,11 @@ namespace Barotrauma
         /// </summary>
         public Color Blue { get; private set; } = Color.Blue;
 
+        /// <summary>
+        /// General yellow color used for elements whose colors are set from code
+        /// </summary>
+        public Color Yellow { get; private set; } = Color.Yellow;
+
         public Color ColorInventoryEmpty { get; private set; } = Color.Red;
         public Color ColorInventoryHalf { get; private set; } = Color.Orange;
         public Color ColorInventoryFull { get; private set; } = Color.LightGreen;
@@ -127,6 +132,9 @@ namespace Barotrauma
                         break;
                     case "blue":
                         Blue = subElement.GetAttributeColor("color", Blue);
+                        break;
+                    case "yellow":
+                        Yellow = subElement.GetAttributeColor("color", Yellow);
                         break;
                     case "colorinventoryempty":
                         ColorInventoryEmpty = subElement.GetAttributeColor("color", ColorInventoryEmpty);

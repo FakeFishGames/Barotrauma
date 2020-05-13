@@ -1,8 +1,10 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Extensions;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -17,10 +19,13 @@ namespace Barotrauma
         private readonly string containerTag;
 
         private readonly string existingItemTag;
-
-        private bool usedExistingItem;
-
+        
         private readonly bool showMessageWhenPickedUp;
+
+        /// <summary>
+        /// Status effects executed on the target item when the mission starts. A random effect is chosen from each child list.
+        /// </summary>
+        private readonly List<List<StatusEffect>> statusEffects = new List<List<StatusEffect>>();
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -71,6 +76,29 @@ namespace Barotrauma
             {
                 spawnPositionType = Level.PositionType.Cave | Level.PositionType.Ruin;
             }
+
+            foreach (XElement element in prefab.ConfigElement.Elements())
+            {
+                switch (element.Name.ToString().ToLowerInvariant())
+                {
+                    case "statuseffect":
+                        {
+                            var newEffect = StatusEffect.Load(element, parentDebugName: prefab.Name);
+                            if (newEffect == null) { continue; }
+                            statusEffects.Add(new List<StatusEffect> { newEffect });
+                            break;
+                        }
+                    case "chooserandom":
+                        statusEffects.Add(new List<StatusEffect>());
+                        foreach (XElement subElement in element.Elements())
+                        {
+                            var newEffect = StatusEffect.Load(subElement, parentDebugName: prefab.Name);
+                            if (newEffect == null) { continue; }
+                            statusEffects.Last().Add(newEffect);
+                        }
+                        break;
+                }
+            }
         }
 
         public override void Start(Level level)
@@ -103,7 +131,9 @@ namespace Barotrauma
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
                                 {
                                     item = it;
+#if SERVER
                                     usedExistingItem = true;
+#endif
                                     break;
                                 }
                             }
@@ -116,6 +146,18 @@ namespace Barotrauma
                     item = new Item(itemPrefab, position, null);
                     item.body.FarseerBody.BodyType = BodyType.Kinematic;
                     item.FindHull();
+                }
+
+                for (int i = 0; i < statusEffects.Count; i++)
+                {
+                    List<StatusEffect> effectList = statusEffects[i];
+                    if (effectList.Count == 0) { continue; }
+                    int effectIndex = Rand.Int(effectList.Count);
+                    var selectedEffect = effectList[effectIndex];
+                    item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: item.Position);
+#if SERVER
+                    executedEffectIndices.Add(new Pair<int, int>(i, effectIndex));
+#endif
                 }
 
                 //try to find a container and place the item inside it
@@ -147,15 +189,23 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (item == null)
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Error in salvage mission " + Prefab.Identifier + " (item was null)");
+#endif
+                return;
+            }
+
             if (IsClient)
             {
-                if (item.ParentInventory != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
+                if (item.ParentInventory != null && item.body != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
                 return;
             }
             switch (State)
             {
                 case 0:
-                    if (item.ParentInventory != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
+                    if (item.ParentInventory != null && item.body != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
                     if (showMessageWhenPickedUp)
                     {
                         if (!(item.ParentInventory?.Owner is Character)) { return; }
@@ -175,7 +225,10 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (item.CurrentHull?.Submarine == null || !item.CurrentHull.Submarine.AtEndPosition || item.Removed) { return; }
+            if (item.CurrentHull?.Submarine == null || (!item.CurrentHull.Submarine.AtEndPosition && !item.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
+            { 
+                return; 
+            }
 
             item?.Remove();
             item = null;

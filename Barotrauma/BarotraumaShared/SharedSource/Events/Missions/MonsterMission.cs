@@ -70,7 +70,7 @@ namespace Barotrauma
                 monsterFiles.Add(new Tuple<string, Point>(monster, new Point(min, max)));
             }
             description = description.Replace("[monster]",
-                TextManager.Get("character." + System.IO.Path.GetFileNameWithoutExtension(monsterFileName)));
+                TextManager.Get("character." + Barotrauma.IO.Path.GetFileNameWithoutExtension(monsterFileName)));
         }
         
         public override void Start(Level level)

@@ -14,8 +14,10 @@ namespace Barotrauma.Networking
         public UInt64 SteamID;
         public byte ID;
         public UInt16 CharacterID;
+        public float Karma;
         public bool Muted;
         public bool InGame;
+        public bool HasPermissions;
         public bool AllowKicking;
     }
 
@@ -43,6 +45,8 @@ namespace Barotrauma.Networking
         }
 
         public bool AllowKicking;
+
+        public float Karma;
 
         public void UpdateSoundPosition()
         {

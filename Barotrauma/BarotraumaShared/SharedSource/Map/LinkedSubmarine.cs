@@ -19,18 +19,17 @@ namespace Barotrauma
             //Prefabs.Remove(this);
         }
 
-        public readonly Submarine mainSub;
+        public readonly SubmarineInfo subInfo;
         
-        public LinkedSubmarinePrefab(Submarine submarine)
+        public LinkedSubmarinePrefab(SubmarineInfo subInfo)
         {
-            this.mainSub = submarine;
+            this.subInfo = subInfo;
         }
 
         protected override void CreateInstance(Rectangle rect)
         {
             System.Diagnostics.Debug.Assert(Submarine.MainSub != null);
-
-            LinkedSubmarine.CreateDummy(Submarine.MainSub, mainSub.Info.FilePath, rect.Location.ToVector2());
+            LinkedSubmarine.CreateDummy(Submarine.MainSub, subInfo.FilePath, rect.Location.ToVector2());
         }
     }
 
@@ -113,7 +112,9 @@ namespace Barotrauma
                     (int)sl.wallVertices.Max(v => v.X + position.X),
                     (int)sl.wallVertices.Min(v => v.Y + position.Y));
 
-                sl.Rect = new Rectangle(sl.rect.X, sl.rect.Y, sl.rect.Width - sl.rect.X, sl.rect.Y - sl.rect.Height);
+                int width = sl.rect.Width - sl.rect.X;
+                int height = sl.rect.Y - sl.rect.Height;
+                sl.Rect = new Rectangle((int)(position.X - width / 2), (int)(position.Y + height / 2), width, height);
             }
             else
             {
@@ -162,8 +163,7 @@ namespace Barotrauma
         public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
-            LinkedSubmarine linkedSub = null;
-
+            LinkedSubmarine linkedSub;
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 linkedSub = CreateDummy(submarine, element, pos);
@@ -198,20 +198,25 @@ namespace Barotrauma
             for (int i = 0; i < linkedToIds.Length; i++)
             {
                 linkedSub.linkedToID.Add((ushort)linkedToIds[i]);
-                if (Screen.Selected == GameMain.SubEditorScreen)
-                {
-                    if (FindEntityByID((ushort)linkedToIds[i]) is MapEntity linked)
-                    {
-                        linkedSub.linkedTo.Add(linked);
-                    }
-                }
             }
             linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
 
-
             return linkedSub.loadSub ? linkedSub : null;
         }
+
+        public void LinkDummyToMainSubmarine()
+        {
+            if (Screen.Selected != GameMain.SubEditorScreen) { return; }            
+            for (int i = 0; i < linkedToID.Count; i++)
+            {
+                if (FindEntityByID(linkedToID[i]) is MapEntity linked)
+                {
+                    linkedTo.Add(linked);
+                }
+            }            
+        }
+
 
         public override void OnMapLoaded()
         {

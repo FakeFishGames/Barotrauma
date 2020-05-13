@@ -50,6 +50,26 @@ namespace Barotrauma.Networking
         public const int MaxEventPacketsPerUpdate = 4;
 
         /// <summary>
+        /// How long the server waits for the clients to get in sync after the round has started before kicking them
+        /// </summary>
+        public const float RoundStartSyncDuration = 60.0f;
+
+        /// <summary>
+        /// How long the server keeps events that everyone currently synced has received
+        /// </summary>
+        public const float EventRemovalTime = 15.0f;
+
+        /// <summary>
+        /// If a client hasn't received an event that has been succesfully sent to someone within this time, they get kicked
+        /// </summary>
+        public const float OldReceivedEventKickTime = 10.0f;
+
+        /// <summary>
+        /// If a client hasn't received an event after this time, they get kicked
+        /// </summary>
+        public const float OldEventKickTime = 30.0f;
+
+        /// <summary>
         /// Interpolates the positional error of a physics body towards zero.
         /// </summary>
         public static Vector2 InterpolateSimPositionError(Vector2 simPositionError, float? smoothingFactor = null)

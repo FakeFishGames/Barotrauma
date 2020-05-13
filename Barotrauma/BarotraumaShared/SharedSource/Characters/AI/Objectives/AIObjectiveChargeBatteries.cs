@@ -20,11 +20,16 @@ namespace Barotrauma
         {
             if (battery == null) { return false; }
             var item = battery.Item;
+            if (item.NonInteractable) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine != null)
+            {
+                if (item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (!character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+            }
             if (item.ConditionPercentage <= 0) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (IsReady(battery)) { return false; }
             return true;

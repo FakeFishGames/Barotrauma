@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml;
@@ -100,7 +100,7 @@ namespace Barotrauma.Networking
                     WriteStream = null;
                 }
 
-                WriteStream = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                WriteStream = File.Open(FilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write);
                 TimeStarted = Environment.TickCount;
             }
 
@@ -259,7 +259,7 @@ namespace Barotrauma.Networking
                             {
                                 newTransfer.OpenStream();
                             }
-                            catch (IOException e)
+                            catch (System.IO.IOException e)
                             {
                                 if (i < maxRetries)
                                 {
@@ -422,7 +422,7 @@ namespace Barotrauma.Networking
             }
 
             if (string.IsNullOrEmpty(fileName) ||
-                fileName.IndexOfAny(Path.GetInvalidFileNameChars()) > -1)
+                fileName.IndexOfAny(Path.GetInvalidFileNameChars().ToArray()) > -1)
             {
                 errorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
@@ -455,7 +455,7 @@ namespace Barotrauma.Networking
             switch (fileTransfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    Stream stream;
+                    System.IO.Stream stream;
                     try
                     {
                         stream = SaveUtil.DecompressFiletoStream(fileTransfer.FilePath);

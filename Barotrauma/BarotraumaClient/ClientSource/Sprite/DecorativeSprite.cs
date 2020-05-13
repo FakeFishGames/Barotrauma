@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {
@@ -64,6 +63,14 @@ namespace Barotrauma
             }
         }
 
+        private float scale;
+        [Serialize(1.0f, true), Editable]
+        public float Scale
+        {
+            get { return scale; }
+            private set { scale = MathHelper.Clamp(value, 0.0f, 10.0f); }
+        }
+
         [Serialize(AnimationType.None, false), Editable]
         public AnimationType RotationAnim { get; private set; }
 
@@ -72,6 +79,9 @@ namespace Barotrauma
         /// </summary>
         [Serialize(0, false, description: "If > 0, only one sprite of the same group is used (chosen randomly)"), Editable(ReadOnly = true)]
         public int RandomGroupID { get; private set; }
+
+        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        public Color Color { get; set; }
 
         /// <summary>
         /// The sprite is only drawn if these conditions are fulfilled
@@ -158,7 +168,7 @@ namespace Barotrauma
         {
             foreach (int spriteGroup in spriteGroups.Keys)
             {
-                for (int i = 0; i < spriteGroups.Count; i++)
+                for (int i = 0; i < spriteGroups[spriteGroup].Count; i++)
                 {
                     var decorativeSprite = spriteGroups[spriteGroup][i];
                     if (decorativeSprite == null) { continue; }

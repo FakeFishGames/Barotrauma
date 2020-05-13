@@ -156,7 +156,7 @@ namespace Barotrauma.Tutorials
             //yield return new WaitForSeconds(2.5f);
 
             doctor.SetStun(1.5f);
-            var explosion = new Explosion(range: 100, force: 10, damage: 0, structureDamage: 0);
+            var explosion = new Explosion(range: 100, force: 10, damage: 0, structureDamage: 0, itemDamage: 0);
             explosion.DisableParticles();
             GameMain.GameScreen.Cam.Shake = shakeAmount;
             explosion.Explode(Character.Controlled.WorldPosition - Vector2.UnitX * 25, null);

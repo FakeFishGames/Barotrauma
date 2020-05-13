@@ -39,7 +39,10 @@ namespace Barotrauma.Networking
 
             contentPackageOrderReceived = false;
 
-            netPeerConfiguration = new NetPeerConfiguration("barotrauma");
+            netPeerConfiguration = new NetPeerConfiguration("barotrauma")
+            {
+                UseDualModeSockets = GameMain.Config.UseDualModeSockets
+            };
 
             netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
                 | NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error);
@@ -93,6 +96,9 @@ namespace Barotrauma.Networking
 
             incomingLidgrenMessages.Clear();
             netClient.ReadMessages(incomingLidgrenMessages);
+
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.ReceivedBytes, netClient.Statistics.ReceivedBytes);
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.SentBytes, netClient.Statistics.SentBytes);
 
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
             {

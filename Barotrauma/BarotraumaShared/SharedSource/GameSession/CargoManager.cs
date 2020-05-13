@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -20,8 +21,9 @@ namespace Barotrauma
 
     class CargoManager
     {
-        private readonly List<PurchasedItem> purchasedItems;
+        public const int MaxQuantity = 100;
 
+        private readonly List<PurchasedItem> purchasedItems;
         private readonly CampaignMode campaign;
 
         public Action OnItemsChanged;
@@ -115,9 +117,25 @@ namespace Barotrauma
             ItemPrefab containerPrefab = null;
             foreach (PurchasedItem pi in itemsToSpawn)
             {
+                float floorPos = cargoRoom.Rect.Y - cargoRoom.Rect.Height;
+
                 Vector2 position = new Vector2(
                     Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
-                    cargoRoom.Rect.Y - cargoRoom.Rect.Height + pi.ItemPrefab.Size.Y / 2);
+                    floorPos);
+
+                //check where the actual floor structure is in case the bottom of the hull extends below it
+                if (Submarine.PickBody(
+                    ConvertUnits.ToSimUnits(new Vector2(position.X, cargoRoom.Rect.Y - cargoRoom.Rect.Height / 2)),
+                    ConvertUnits.ToSimUnits(position),
+                    collisionCategory: Physics.CollisionWall) != null)
+                {
+                    float floorStructurePos = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition.Y);
+                    if (floorStructurePos > floorPos)
+                    {
+                        floorPos = floorStructurePos;
+                    }
+                }
+                position.Y = floorPos +  pi.ItemPrefab.Size.Y / 2;
 
                 ItemContainer itemContainer = null;
                 if (!string.IsNullOrEmpty(pi.ItemPrefab.CargoContainerIdentifier))

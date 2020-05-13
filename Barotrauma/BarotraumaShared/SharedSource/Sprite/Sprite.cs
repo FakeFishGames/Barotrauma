@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
-using System.IO;
+using Barotrauma.IO;
 using System;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 #if CLIENT
@@ -47,7 +47,11 @@ namespace Barotrauma
         //the offset used when drawing the sprite
         protected Vector2 offset;
 
-        private bool lazyLoad;
+        public bool LazyLoad
+        {
+            get;
+            private set;
+        }
 
         protected Vector2 origin;
 
@@ -108,6 +112,8 @@ namespace Barotrauma
 
         public string FullPath { get; private set; }
 
+        public bool Compress { get; private set; }
+
         public override string ToString()
         {
             return FilePath + ": " + sourceRect;
@@ -135,7 +141,7 @@ namespace Barotrauma
         public Sprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
         {
             if (element == null) { return; }
-            this.lazyLoad = lazyLoad;
+            this.LazyLoad = lazyLoad;
             SourceElement = element;
             if (!ParseTexturePath(path, file)) { return; }
             Name = SourceElement.GetAttributeString("name", null);
@@ -145,6 +151,7 @@ namespace Barotrauma
             {
                 sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             }
+            Compress = SourceElement.GetAttributeBool("compress", true);
             bool shouldReturn = false;
             if (!lazyLoad)
             {

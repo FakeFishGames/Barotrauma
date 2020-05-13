@@ -238,7 +238,8 @@ namespace Barotrauma
         }
 
 
-        [Editable, Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
+            Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
         public Point MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -256,7 +257,8 @@ namespace Barotrauma
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
 
-        [Editable, Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
+            Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
         public Point SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }
@@ -349,8 +351,7 @@ namespace Barotrauma
         [Serialize(5, true, description: "The maximum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MaxCorpseCount { get; set; }
 
-        // TODO: default to 0
-        [Serialize(1f, true, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        [Serialize(0.0f, true, description: "How likely is it that a Thalamus inhabits a wreck. Percentage from 0 to 1 per wreck."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float ThalamusProbability { get; set; }
 
         [Serialize(0.5f, true, description: "How likely the water level of a hull inside a wreck is randomly set."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]

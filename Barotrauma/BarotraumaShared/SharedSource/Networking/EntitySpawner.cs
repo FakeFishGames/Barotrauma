@@ -125,7 +125,7 @@ namespace Barotrauma
         {
             public readonly Entity Entity;
 
-            public readonly UInt16 OriginalID;
+            public readonly UInt16 OriginalID, OriginalInventoryID;
 
             public readonly bool Remove = false;
 
@@ -133,6 +133,10 @@ namespace Barotrauma
             {
                 Entity = entity;
                 OriginalID = entity.ID;
+                if (entity is Item item && item.ParentInventory?.Owner != null)
+                {
+                    OriginalInventoryID = item.ParentInventory.Owner.ID;
+                }
                 Remove = remove;
             }
         }

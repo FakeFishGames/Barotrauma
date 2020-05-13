@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using Barotrauma.Extensions;
 using System.Xml.Linq;

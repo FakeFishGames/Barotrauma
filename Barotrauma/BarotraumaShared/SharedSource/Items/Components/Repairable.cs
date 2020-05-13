@@ -273,7 +273,7 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (!item.IsFullCondition)
+            if (item.ConditionPercentage < AIRepairThreshold)
             {
                 wasBroken = true;
             }

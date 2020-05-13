@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -325,15 +325,12 @@ namespace Barotrauma
             {
                 try
                 {
-                    using (StreamReader file = new StreamReader(filePath))
+                    lines = File.ReadAllLines(filePath).ToList();
+                    cachedLines.Add(filePath, lines);
+                    if (lines.Count == 0)
                     {
-                        lines = File.ReadLines(filePath).ToList();
-                        cachedLines.Add(filePath, lines);
-                        if (lines.Count == 0)
-                        {
-                            DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
-                            return "";
-                        }
+                        DebugConsole.ThrowError("File \"" + filePath + "\" is empty!");
+                        return "";
                     }
                 }
                 catch (Exception e)

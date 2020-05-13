@@ -34,7 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Text;
 #if NET_4_0
 using System.Web.Configuration;
@@ -225,7 +225,7 @@ namespace RestSharp.Contrib
             if (String.IsNullOrEmpty(value))
                 return value;
 
-            MemoryStream result = new MemoryStream();
+            System.IO.MemoryStream result = new System.IO.MemoryStream();
             int length = value.Length;
             for (int i = 0; i < length; i++)
                 UrlPathEncodeChar(value[i], result);
@@ -248,7 +248,7 @@ namespace RestSharp.Contrib
             if (count < 0 || count > blen - offset)
                 throw new ArgumentOutOfRangeException("count");
 
-            MemoryStream result = new MemoryStream(count);
+            System.IO.MemoryStream result = new System.IO.MemoryStream(count);
             int end = offset + count;
             for (int i = offset; i < end; i++)
                 UrlEncodeChar((char)bytes[i], result, false);
@@ -575,7 +575,7 @@ namespace RestSharp.Contrib
 );
         }
 
-        internal static void UrlEncodeChar(char c, Stream result, bool isUnicode)
+        internal static void UrlEncodeChar(char c, System.IO.Stream result, bool isUnicode)
         {
             if (c > 255)
             {
@@ -632,7 +632,7 @@ namespace RestSharp.Contrib
                 result.WriteByte((byte)c);
         }
 
-        internal static void UrlPathEncodeChar(char c, Stream result)
+        internal static void UrlPathEncodeChar(char c, System.IO.Stream result)
         {
             if (c < 33 || c > 126)
             {

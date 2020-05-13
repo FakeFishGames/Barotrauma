@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     public enum TransitionMode
     {
@@ -12,5 +8,18 @@ namespace Barotrauma
         EaseIn,
         EaseOut,
         Exponential
+    }
+
+    public enum ActionType
+    {
+        Always, OnPicked, OnUse, OnSecondaryUse,
+        OnWearing, OnContaining, OnContained, OnNotContained,
+        OnActive, OnFailure, OnBroken,
+        OnFire, InWater, NotInWater,
+        OnImpact,
+        OnEating,
+        OnDeath = OnBroken,
+        OnDamaged,
+        OnSevered
     }
 }

@@ -150,7 +150,15 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            if (allowedSlots == null || !allowedSlots.Any()) return false;
+            if (allowedSlots == null || !allowedSlots.Any()) { return false; }
+            if (item == null)
+            {
+#if DEBUG
+                throw new Exception("item null");
+#else
+                return false;
+#endif
+            }
 
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
@@ -167,7 +175,7 @@ namespace Barotrauma
                 }
             }
             //all good
-            if (inSuitableSlot && !inWrongSlot) return true;
+            if (inSuitableSlot && !inWrongSlot) { return true; }
 
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))

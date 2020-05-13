@@ -238,6 +238,44 @@ namespace Microsoft.Xna.Framework.Graphics
             }
         }
 
+        public void Draw(Texture2D texture, VertexPositionColorTexture[] vertices, float layerDepth)
+        {
+            CheckValid(texture);
+
+            float sortKey = 0f;
+
+            // set SortKey based on SpriteSortMode.
+            switch (_sortMode)
+            {
+                // Comparison of Texture objects.
+                case SpriteSortMode.Texture:
+                    sortKey = texture.SortingKey;
+                    break;
+                // Comparison of Depth
+                case SpriteSortMode.FrontToBack:
+                    sortKey = layerDepth;
+                    break;
+                // Comparison of Depth in reverse
+                case SpriteSortMode.BackToFront:
+                    sortKey = -layerDepth;
+                    break;
+            }
+
+            int iters = vertices.Length / 4;
+            for (int i=0;i<iters;i++)
+            {
+                var item = _batcher.CreateBatchItem();
+                item.Texture = texture;
+
+                item.SortKey = sortKey;
+
+                item.vertexTL = vertices[(i * 4) + 0];
+                item.vertexTR = vertices[(i * 4) + 1];
+                item.vertexBL = vertices[(i * 4) + 2];
+                item.vertexBR = vertices[(i * 4) + 3];
+            }
+        }
+
         /// <summary>
         /// Submit a sprite for drawing in the current batch.
         /// </summary>
@@ -1220,6 +1258,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     }
                 }
             }
+            //_batcher.Dispose();
             base.Dispose(disposing);
         }
 	}

@@ -57,6 +57,12 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        public bool ForceLocal
+        {
+            get;
+            set;
+        }
+
         public DateTime LastReadTime
         {
             get;
@@ -76,7 +82,7 @@ namespace Barotrauma.Networking
             QueueID = id;
             CanSend = canSend;
             CanReceive = canReceive;
-            LatestBufferID = BUFFER_COUNT-1;
+            LatestBufferID = BUFFER_COUNT - 1;
             firstRead = true;
 
             LastReadTime = DateTime.Now;
@@ -84,7 +90,7 @@ namespace Barotrauma.Networking
 
         public void EnqueueBuffer(int length)
         {
-            if (length > byte.MaxValue) return;
+            if (length > byte.MaxValue) { return; }
 
             newestBufferInd = (newestBufferInd + 1) % BUFFER_COUNT;
 
@@ -92,17 +98,18 @@ namespace Barotrauma.Networking
 
             bufferLengths[newestBufferInd] = length;
             BufferToQueue.CopyTo(buffers[newestBufferInd], 0);
-            
-            if ((enqueuedTotalLength+length)>0) LatestBufferID++;
+
+            if ((enqueuedTotalLength + length) > 0) { LatestBufferID++; }
         }
 
-        public void RetrieveBuffer(int id,out int outSize,out byte[] outBuf)
+        public void RetrieveBuffer(int id, out int outSize, out byte[] outBuf)
         {
             lock (buffers)
             {
                 if (id >= LatestBufferID - (BUFFER_COUNT - 1) && id <= LatestBufferID)
                 {
-                    int index = (newestBufferInd - (LatestBufferID - id)); if (index < 0) index += BUFFER_COUNT;
+                    int index = newestBufferInd - (LatestBufferID - id); 
+                    if (index < 0) { index += BUFFER_COUNT; }
                     outSize = bufferLengths[index];
                     outBuf = buffers[index];
                     return;
@@ -114,30 +121,39 @@ namespace Barotrauma.Networking
 
         public virtual void Write(IWriteMessage msg)
         {
-            if (!CanSend) throw new Exception("Called Write on a VoipQueue not set up for sending");
+            if (!CanSend) { throw new Exception("Called Write on a VoipQueue not set up for sending"); }
 
             msg.Write((UInt16)LatestBufferID);
-            for (int i = 0; i < BUFFER_COUNT; i++)
+            msg.Write(ForceLocal); msg.WritePadBits();
+            lock (buffers)
             {
-                int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
+                for (int i = 0; i < BUFFER_COUNT; i++)
+                {
+                    int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
 
-                msg.Write((byte)bufferLengths[index]);
-                msg.Write(buffers[index], 0, bufferLengths[index]);
+                    msg.Write((byte)bufferLengths[index]);
+                    msg.Write(buffers[index], 0, bufferLengths[index]);
+                }
             }
         }
 
-        public virtual bool Read(IReadMessage msg)
+        public virtual bool Read(IReadMessage msg, bool discardData = false)
         {
-            if (!CanReceive) throw new Exception("Called Read on a VoipQueue not set up for receiving");
+            if (!CanReceive) { throw new Exception("Called Read on a VoipQueue not set up for receiving"); }
 
             UInt16 incLatestBufferID = msg.ReadUInt16();
-            if (firstRead || NetIdUtils.IdMoreRecent(incLatestBufferID,LatestBufferID))
+            if ((firstRead || NetIdUtils.IdMoreRecent(incLatestBufferID, LatestBufferID)) && !discardData)
             {
+                ForceLocal = msg.ReadBoolean(); msg.ReadPadBits();
+
                 firstRead = false;
-                for (int i = 0; i < BUFFER_COUNT; i++)
+                lock (buffers)
                 {
-                    bufferLengths[i] = msg.ReadByte();
-                    buffers[i] = msg.ReadBytes(bufferLengths[i]);
+                    for (int i = 0; i < BUFFER_COUNT; i++)
+                    {
+                        bufferLengths[i] = msg.ReadByte();
+                        buffers[i] = msg.ReadBytes(bufferLengths[i]);
+                    }
                 }
                 newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;
@@ -146,6 +162,7 @@ namespace Barotrauma.Networking
             }
             else
             {
+                msg.ReadBoolean(); msg.ReadPadBits();
                 for (int i = 0; i < BUFFER_COUNT; i++)
                 {
                     byte len = msg.ReadByte();

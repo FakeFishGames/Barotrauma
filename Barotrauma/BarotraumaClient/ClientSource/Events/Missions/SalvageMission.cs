@@ -26,7 +26,19 @@ namespace Barotrauma
                 }
             }
 
-            item.body.FarseerBody.BodyType = BodyType.Kinematic;
+            int executedEffectCount = msg.ReadByte();
+            for (int i = 0; i < executedEffectCount; i++)
+            {
+                int index1 = msg.ReadByte();
+                int index2 = msg.ReadByte();
+                var selectedEffect = statusEffects[index1][index2];
+                item.ApplyStatusEffect(selectedEffect, selectedEffect.type, deltaTime: 1.0f, worldPosition: item.Position);
+            }
+
+            if (item.body != null)
+            {
+                item.body.FarseerBody.BodyType = BodyType.Kinematic;
+            }
         }
     }
 }

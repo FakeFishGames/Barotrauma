@@ -118,13 +118,13 @@ namespace Barotrauma
 
         private List<Level.InterestingPosition> GetAvailableSpawnPositions()
         {
-            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType) && !Level.Loaded.UsedPositions.Contains(p));
+            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType));
             var removals = new List<Level.InterestingPosition>();
             foreach (var position in availablePositions)
             {
                 if (position.Submarine != null)
                 {
-                    if (position.Submarine.ThalamusAI != null && position.Submarine.ThalamusAI.IsAlive)
+                    if (position.Submarine.WreckAI != null && position.Submarine.WreckAI.IsAlive)
                     {
                         removals.Add(position);
                     }
@@ -169,10 +169,6 @@ namespace Barotrauma
                 if (Rand.Value(Rand.RandSync.Server) > prefab.SpawnProbability)
                 {
                     removedPositions.Add(position);
-                    if (prefab.AllowOnlyOnce)
-                    {
-                        Level.Loaded.UsedPositions.Add(position);
-                    }
                 }
             }
             removedPositions.ForEach(p => availablePositions.Remove(p));
@@ -237,17 +233,15 @@ namespace Barotrauma
                 spawnPos = chosenPosition.Position.ToVector2();
                 if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
                 {
-                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, useSyncedRand: false);
-                    if (spawnPoint != null)
+                    var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, ruin: chosenPosition.Ruin, useSyncedRand: false);
+                    if (spawnPoint != null) 
                     {
-                        spawnPos = spawnPoint.WorldPosition;
+                        System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
+                        System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
+                        spawnPos = spawnPoint.WorldPosition; 
                     }
                 }
                 spawnPending = true;
-                if (prefab.AllowOnlyOnce)
-                {
-                    Level.Loaded.UsedPositions.Add(chosenPosition);
-                }
             }
         }
 
@@ -276,11 +270,14 @@ namespace Barotrauma
             if (spawnPending)
             {
                 //wait until there are no submarines at the spawnpos
-                foreach (Submarine submarine in Submarine.Loaded)
+                if (spawnPosType == Level.PositionType.MainPath)
                 {
-                    if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
-                    float minDist = GetMinDistanceToSub(submarine);
-                    if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        float minDist = GetMinDistanceToSub(submarine);
+                        if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
+                    }
                 }
 
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 

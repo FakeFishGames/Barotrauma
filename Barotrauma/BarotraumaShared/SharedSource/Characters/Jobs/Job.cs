@@ -80,8 +80,8 @@ namespace Barotrauma
 
         public float GetSkillLevel(string skillIdentifier)
         {
+            if (string.IsNullOrWhiteSpace(skillIdentifier)) { return 0.0f; }
             skills.TryGetValue(skillIdentifier, out Skill skill);
-
             return (skill == null) ? 0.0f : skill.Level;
         }
 

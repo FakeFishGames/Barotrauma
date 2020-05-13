@@ -81,6 +81,11 @@ namespace Steamworks
 
 		public static long LocalTimestamp => Internal.GetLocalTimestamp();
 
+		public static void SetDebugOutputFunction(DebugOutputType eDetailLevel, IntPtr pfnFunc)
+		{
+			Internal.SetDebugOutputFunction(eDetailLevel, pfnFunc);
+		}
+
 
 		/// <summary>
 		/// [0 - 100] - Randomly discard N pct of packets

@@ -33,46 +33,32 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            int otherRescuers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRescueAll>(), onlyBots: true);
-            int targetCount = Targets.Count;
-            bool anyRescuers = otherRescuers > 0;
-            float ratio = anyRescuers ? targetCount / (float)otherRescuers : 1;
-            if (objectiveManager.CurrentOrder == this)
+            if (objectiveManager.CurrentOrder != this)
             {
-                return Targets.Min(t => GetVitalityFactor(t)) / ratio;
-            }
-            else
-            {
-                float multiplier = 1;
-                if (anyRescuers)
+                if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsMedic && !c.Character.IsUnconscious))
                 {
-                    float mySkill = character.GetSkillLevel("medical");
-                    int betterRescuers = HumanAIController.CountCrew(c => c != HumanAIController && c.Character.Info.Job.GetSkillLevel("medical") >= mySkill, onlyBots: true);
-                    if (targetCount / (float)betterRescuers <= 1)
-                    {
-                        // Enough rescuers
-                        return 100;
-                    }
-                    else
-                    {
-                        bool foundOtherMedics = HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.Info.Job.Prefab.Identifier == "medicaldoctor");
-                        if (foundOtherMedics)
-                        {
-                            if (character.Info.Job.Prefab.Identifier != "medicaldoctor")
-                            {
-                                // Double the vitality factor -> less likely to take action
-                                multiplier = 2;
-                            }
-                        }
-                    }
+                    // Don't do anything if there's a medic on board and we are not a medic
+                    return 100;
                 }
-                return Targets.Min(t => GetVitalityFactor(t)) / ratio * multiplier;
             }
+            float worstCondition = Targets.Min(t => GetVitalityFactor(t));
+            if (Targets.Contains(character))
+            {
+                if (character.Bleeding > 10)
+                {
+                    // Enforce the highest priority when bleeding out.
+                    worstCondition = 0;
+                }
+                // Boost the priority when wounded.
+                worstCondition /= 2;
+            }
+            return worstCondition;
         }
 
         public static float GetVitalityFactor(Character character)
         {
-            float vitality = character.HealthPercentage - character.Bleeding - character.Bloodloss + Math.Min(character.Oxygen, 0);
+            float vitality = character.HealthPercentage - (character.Bleeding * 2) - character.Bloodloss + Math.Min(character.Oxygen, 0);
+            vitality -= character.CharacterHealth.GetAfflictionStrength("paralysis");
             return Math.Clamp(vitality, 0, 100);
         }
 
@@ -91,6 +77,11 @@ namespace Barotrauma
                 if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target)) { return false; }
                 if (!humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveRescueAll>())
                 {
+                    if (!character.IsMedic && target != character)
+                    {
+                        // Don't allow to treat others autonomously
+                        return false;
+                }
                     // Ignore unsafe hulls, unless ordered
                     if (humanAI.UnsafeHulls.Contains(target.CurrentHull))
                     {
@@ -105,11 +96,15 @@ namespace Barotrauma
             if (target.Submarine == null || character.Submarine == null) { return false; }
             if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
-            if (!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
+            if (character.Submarine != null)
+            {
+                if (target.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+            }
+            if (target != character &&!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
                 // Ignore all concious targets that are currently fighting, fleeing or treating characters
-                if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() || 
+                if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() ||
                     targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFindSafety>() ||
                     targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                 {

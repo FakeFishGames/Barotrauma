@@ -251,8 +251,7 @@ namespace Barotrauma
         {
             get
             {
-                // 0.38775510204f = percentage of offset before reaching the healthbar portion of the graphic going from bottom upwards
-                return new Point(2, (int)(HUDLayoutSettings.HealthBarArea.Size.Y * 0.38775510204f));
+                return new Point(Math.Max(2, GUI.IntScaleCeiling(1.5f)), Math.Min(GUI.IntScaleFloor(18f), 19));
             }
         }
 
@@ -260,7 +259,7 @@ namespace Barotrauma
         {
             get
             {
-                return new Point((int)Math.Ceiling(HUDLayoutSettings.HealthBarArea.Size.X - 45 * GUI.Scale), (int)(healthBarHolder.Rect.Height - Math.Min(23 * GUI.Scale, 25)) / 2);
+                return new Point(healthBarHolder.Rect.Width - Math.Min(GUI.IntScale(45f), 47), GUI.IntScale(15f));
             }
         }
 
@@ -505,8 +504,6 @@ namespace Barotrauma
                     Character.Controlled.AnimController.Anim = (Character.Controlled.AnimController.Anim == AnimController.Animation.CPR) ?
                         AnimController.Animation.None : AnimController.Animation.CPR;
 
-                    button.Selected = Character.Controlled.AnimController.Anim == AnimController.Animation.CPR;
-
                     selectedCharacter.AnimController.ResetPullJoints();
 
                     if (GameMain.Client != null)
@@ -599,12 +596,14 @@ namespace Barotrauma
             switch (alignment)
             {
                 case Alignment.Left:
-                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.CenterLeft);
+                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.BottomLeft);
                     break;
                 case Alignment.Right:
-                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.CenterRight);
+                    healthInterfaceFrame.RectTransform.SetPosition(Anchor.BottomRight);
                     break;
             }
+
+            healthInterfaceFrame.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.Padding, screenResolution.Y - HUDLayoutSettings.ChatBoxArea.Y + HUDLayoutSettings.Padding);
             healthInterfaceFrame.RectTransform.RecalculateChildren(false);
         }
 
@@ -651,10 +650,14 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
+                bool inWater = Character.AnimController.InWater;
                 float bloodParticleSize = MathHelper.Lerp(0.5f, 1.0f, affliction.Strength / 100.0f);
-                if (!Character.AnimController.InWater) bloodParticleSize *= 2.0f;
+                if (!inWater)
+                {
+                    bloodParticleSize *= 2.0f;
+                }
                 var blood = GameMain.ParticleManager.CreateParticle(
-                    Character.AnimController.InWater ? "waterblood" : "blooddrop",
+                    inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
 
                 if (blood != null)
@@ -765,7 +768,8 @@ namespace Barotrauma
                 {
                     OpenHealthWindow = null;
                 }
-                else if (Character.Controlled == Character && Character.Controlled.FocusedCharacter == null)
+                else if (Character.Controlled == Character && 
+                    (Character.Controlled.FocusedCharacter?.CharacterHealth == null || !Character.Controlled.FocusedCharacter.CharacterHealth.UseHealthWindow))
                 {
                     OpenHealthWindow = this;
                     forceAfflictionContainerUpdate = true;
@@ -946,6 +950,10 @@ namespace Barotrauma
                 && !Character.IsDead
                 && openHealthWindow == this;
             cprButton.IgnoreLayoutGroups = !cprButton.Visible;
+            cprButton.Selected =  
+                Character.Controlled != null && 
+                Character == Character.Controlled.SelectedCharacter && 
+                Character.Controlled.AnimController.Anim == AnimController.Animation.CPR;
 
             cprFrame.RectTransform.Resize(new Vector2(0.7f, 1.0f));
             cprButton.RectTransform.Resize(new Vector2(1.0f, 1.0f));
@@ -1100,7 +1108,7 @@ namespace Barotrauma
                     float currHealth = healthBar.BarSize;
                     Color prevColor = healthBar.Color;
                     healthBarShadow.BarSize = healthShadowSize;
-                    healthBarShadow.Color = GUI.Style.Red;
+                    healthBarShadow.Color = Color.Lerp(GUI.Style.Red, Color.Black, 0.5f);
                     healthBarShadow.Visible = true;
                     healthBar.BarSize = currHealth;
                     healthBar.Color = prevColor;
@@ -1815,7 +1823,7 @@ namespace Barotrauma
                 Vector2 iconPos = highlightArea.Center.ToVector2();
 
                 //Affliction mostSevereAffliction = thisAfflictions.FirstOrDefault(a => !a.Prefab.IsBuff && !thisAfflictions.Any(a2 => !a2.Prefab.IsBuff && a2.Strength > a.Strength)) ?? thisAfflictions.FirstOrDefault();
-                Affliction mostSevereAffliction = SortAfflictionsBySeverity(thisAfflictions).FirstOrDefault();
+                Affliction mostSevereAffliction = SortAfflictionsBySeverity(thisAfflictions, excludeBuffs: false).FirstOrDefault();
                 if (mostSevereAffliction != null) { DrawLimbAfflictionIcon(spriteBatch, mostSevereAffliction, iconScale, ref iconPos); }
 
                 if (thisAfflictions.Count() > 1)

@@ -90,6 +90,7 @@ namespace Barotrauma.Items.Components
             return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
         }
 
+        private readonly List<Body> limbBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) { return false; }
@@ -104,9 +105,10 @@ namespace Barotrauma.Items.Components
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
             }
 
-            List<Body> limbBodies = new List<Body>();
+            limbBodies.Clear();
             foreach (Limb l in character.AnimController.Limbs)
             {
+                if (l.IsSevered) { continue; }
                 limbBodies.Add(l.body.FarseerBody);
             }
 

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 
@@ -38,7 +38,7 @@ namespace Barotrauma
         private static GUIDropDown fileTypeDropdown;
         private static GUIButton openButton;
 
-        private static FileSystemWatcher fileSystemWatcher;
+        private static System.IO.FileSystemWatcher fileSystemWatcher;
 
         private static string currentFileTypePattern;
 
@@ -78,10 +78,10 @@ namespace Barotrauma
                     currentDirectory += "/";
                 }
                 fileSystemWatcher?.Dispose();
-                fileSystemWatcher = new FileSystemWatcher(currentDirectory)
+                fileSystemWatcher = new System.IO.FileSystemWatcher(currentDirectory)
                 {
                     Filter = "*",
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
+                    NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName
                 };
                 fileSystemWatcher.Created += OnFileSystemChanges;
                 fileSystemWatcher.Deleted += OnFileSystemChanges;
@@ -97,11 +97,11 @@ namespace Barotrauma
             set;
         }
 
-        private static void OnFileSystemChanges(object sender, FileSystemEventArgs e)
+        private static void OnFileSystemChanges(object sender, System.IO.FileSystemEventArgs e)
         {
             switch (e.ChangeType)
             {
-                case WatcherChangeTypes.Created:
+                case System.IO.WatcherChangeTypes.Created:
                     {
                         var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), e.Name)
                         {
@@ -114,15 +114,15 @@ namespace Barotrauma
                         fileList.Content.RectTransform.SortChildren(SortFiles);
                     }
                     break;
-                case WatcherChangeTypes.Deleted:
+                case System.IO.WatcherChangeTypes.Deleted:
                     {
                         var itemFrame = fileList.Content.FindChild(c => (c is GUITextBlock tb) && (tb.Text == e.Name || tb.Text == e.Name + "/"));
                         if (itemFrame != null) { fileList.RemoveChild(itemFrame); }
                     }
                     break;
-                case WatcherChangeTypes.Renamed:
+                case System.IO.WatcherChangeTypes.Renamed:
                     {
-                        RenamedEventArgs renameArgs = e as RenamedEventArgs;
+                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
                         var itemFrame = fileList.Content.FindChild(c => (c is GUITextBlock tb) && (tb.Text == renameArgs.OldName || tb.Text == renameArgs.OldName + "/")) as GUITextBlock;
                         itemFrame.UserData = (bool?)Directory.Exists(e.FullPath);
                         itemFrame.Text = renameArgs.Name;
@@ -156,7 +156,7 @@ namespace Barotrauma
 
         public static void Init()
         {
-            backgroundFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            backgroundFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
             {
                 Color = Color.Black * 0.5f,
                 HoverColor = Color.Black * 0.5f,
@@ -169,10 +169,10 @@ namespace Barotrauma
             var horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, window.RectTransform, Anchor.Center), true);
             sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform));
 
-            var drives = DriveInfo.GetDrives();
+            var drives = System.IO.DriveInfo.GetDrives();
             foreach (var drive in drives)
             {
-                if (drive.DriveType == DriveType.Ram) { continue; }
+                if (drive.DriveType == System.IO.DriveType.Ram) { continue; }
                 if (ignoredDrivePrefixes.Any(p => drive.Name.StartsWith(p))) { continue; }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), sidebar.Content.RectTransform), drive.Name.Replace('\\','/'));
             }
@@ -348,17 +348,24 @@ namespace Barotrauma
                 }
 
                 IEnumerable<string> files = null;
-                foreach (string pattern in currentFileTypePattern.Split(','))
+                if (currentFileTypePattern == null)
                 {
-                    string patternTrimmed = pattern.Trim();
-                    patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
-                    if (files == null)
+                    files = Directory.GetFiles(currentDirectory);
+                }
+                else
+                {
+                    foreach (string pattern in currentFileTypePattern.Split(','))
                     {
-                        files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
-                    }
-                    else
-                    {
-                        files = files.Concat(Directory.EnumerateFiles(currentDirectory, patternTrimmed));
+                        string patternTrimmed = pattern.Trim();
+                        patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
+                        if (files == null)
+                        {
+                            files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
+                        }
+                        else
+                        {
+                            files = files.Concat(Directory.EnumerateFiles(currentDirectory, patternTrimmed));
+                        }
                     }
                 }
 

@@ -16,7 +16,7 @@ namespace Barotrauma.Lights
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; } = new Dictionary<string, SerializableProperty>();
 
-        [Serialize("1.0,1.0,1.0,1.0", true), Editable]
+        [Serialize("1.0,1.0,1.0,1.0", true, alwaysUseInstanceValues: true), Editable]
         public Color Color
         {
             get;
@@ -25,7 +25,7 @@ namespace Barotrauma.Lights
 
         private float range;
 
-        [Serialize(100.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
+        [Serialize(100.0f, true, alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
             get { return range; }
@@ -331,7 +331,7 @@ namespace Barotrauma.Lights
 
             if (lightSourceParams.DeformableLightSpriteElement != null)
             {
-                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement, invert: true);
             }
         }
 
@@ -342,7 +342,7 @@ namespace Barotrauma.Lights
             lightSourceParams.Persistent = true;
             if (lightSourceParams.DeformableLightSpriteElement != null)
             {
-                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement);
+                DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement, invert: true);
             }
         }
 
@@ -952,23 +952,44 @@ namespace Barotrauma.Lights
             {
                 Vector2 origin = DeformableLightSprite.Origin;
                 Vector2 drawPos = position;
-                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                if (ParentSub != null)
+                {
+                    drawPos += ParentSub.DrawPosition;
+                }
+
+                if (LightSpriteEffect == SpriteEffects.FlipHorizontally)
+                {
+                    origin.X = DeformableLightSprite.Sprite.SourceRect.Width - origin.X;
+                }
+                if (LightSpriteEffect == SpriteEffects.FlipVertically)
+                {
+                    origin.Y = DeformableLightSprite.Sprite.SourceRect.Height - origin.Y;
+                }
 
                 DeformableLightSprite.Draw(
                     cam, new Vector3(drawPos, 0.0f),
                     origin, -Rotation, SpriteScale,
                     new Color(Color, lightSourceParams.OverrideLightSpriteAlpha ?? Color.A / 255.0f),
-                    LightSpriteEffect == SpriteEffects.FlipHorizontally);
+                    LightSpriteEffect == SpriteEffects.FlipVertically);
             }
 
             if (LightSprite != null)
             {
                 Vector2 origin = LightSprite.Origin;
-                if (LightSpriteEffect == SpriteEffects.FlipHorizontally) origin.X = LightSprite.SourceRect.Width - origin.X;
-                if (LightSpriteEffect == SpriteEffects.FlipVertically) origin.Y = LightSprite.SourceRect.Height - origin.Y;
+                if (LightSpriteEffect == SpriteEffects.FlipHorizontally)
+                {
+                    origin.X = LightSprite.SourceRect.Width - origin.X;
+                }
+                if (LightSpriteEffect == SpriteEffects.FlipVertically)
+                {
+                    origin.Y = LightSprite.SourceRect.Height - origin.Y;
+                }
 
                 Vector2 drawPos = position;
-                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                if (ParentSub != null)
+                {
+                    drawPos += ParentSub.DrawPosition;
+                }
                 drawPos.Y = -drawPos.Y;
 
                 LightSprite.Draw(

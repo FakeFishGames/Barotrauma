@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public Sprite SlotSprite;
 
-        public Keys QuickUseKey;
+        public int InventoryKeyIndex = -1;
 
         public int SubInventoryDir = -1;
 
@@ -191,7 +191,7 @@ namespace Barotrauma
             public Item Item;
             public bool IsSubSlot;
             public string Tooltip;
-            public List<ColorData> TooltipColorData;
+            public List<RichTextData> TooltipRichTextData;
 
             public SlotReference(Inventory parentInventory, InventorySlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
@@ -201,7 +201,7 @@ namespace Barotrauma
                 Inventory = subInventory;
                 IsSubSlot = isSubSlot;
                 Item = ParentInventory.Items[slotIndex];
-                TooltipColorData = ColorData.GetColorData(GetTooltip(Item), out Tooltip);
+                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item), out Tooltip);
             }
 
             private string GetTooltip(Item item)
@@ -450,12 +450,33 @@ namespace Barotrauma
                 }
             }*/
 
-            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI;
+            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled;
+            
+            // Delete item from container in sub editor
+            if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown())
+            {
+                draggingItem = null;
+                var mouseDrag = SubEditorScreen.MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, SubEditorScreen.MouseDragStart) >= GUI.Scale * 20;
+                if (mouseOn && (PlayerInput.PrimaryMouseButtonClicked() || mouseDrag))
+                {
+                    if (item != null)
+                    {
+                        if (mouseDrag) { item.OwnInventory?.DeleteAllItems(); }
+                        slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
+                        if (!mouseDrag)
+                        {
+                            GUI.PlayUISound(GUISoundType.PickItem);
+                        }
+                        item.Remove();
+                    }
+                }
+            }
+            
             if (PlayerInput.LeftButtonHeld() && PlayerInput.RightButtonHeld())
             {
                 mouseOn = false;
             }
-
+            
             if (selectedSlot != null && selectedSlot.Slot != slot)
             {
                 //subinventory slot highlighted -> don't allow highlighting this one
@@ -476,11 +497,14 @@ namespace Barotrauma
             // &&
             //(highlightedSubInventories.Count == 0 || highlightedSubInventories.Contains(this) || highlightedSubInventorySlot?.Slot == slot || highlightedSubInventory.Owner == item))
             {
+                
                 slot.State = GUIComponent.ComponentState.Hover;
 
                 if (selectedSlot == null || (!selectedSlot.IsSubSlot && isSubSlot))
                 {
-                    selectedSlot = new SlotReference(this, slot, slotIndex, isSubSlot, Items[slotIndex]?.GetComponent<ItemContainer>()?.Inventory);
+                    var slotRef = new SlotReference(this, slot, slotIndex, isSubSlot, Items[slotIndex]?.GetComponent<ItemContainer>()?.Inventory);
+                    if (Screen.Selected is SubEditorScreen editor && !editor.WiringMode && slotRef.ParentInventory is CharacterInventory) { return; }
+                    selectedSlot = slotRef;
                 }
 
                 if (draggingItem == null)
@@ -668,18 +692,34 @@ namespace Barotrauma
                 DrawSlot(spriteBatch, this, slots[i], Items[i], i, drawItem);
             }
         }
+        
+        /// <summary>
+        /// Check if the mouse is hovering on top of the slot
+        /// </summary>
+        /// <param name="slot">The desired slot we want to check</param>
+        /// <returns>True if our mouse is hover on the slot, false otherwise</returns>
+        public static bool IsMouseOnSlot(InventorySlot slot)
+        {
+            var rect = new Rectangle(slot.InteractRect.X, slot.InteractRect.Y, slot.InteractRect.Width, slot.InteractRect.Height);
+            rect.Offset(slot.DrawOffset);
+            return rect.Contains(PlayerInput.MousePosition);
+        }
 
         /// <summary>
         /// Is the mouse on any inventory element (slot, equip button, subinventory...)
         /// </summary>
         /// <returns></returns>
-        public static bool IsMouseOnInventory()
+        public static bool IsMouseOnInventory(bool ignoreDraggedItem = false)
         {
-            if (Character.Controlled == null) return false;
+            var isSubEditor = Screen.Selected is SubEditorScreen editor && !editor.WiringMode;
+            if (Character.Controlled == null) { return false; }
 
-            if (draggingItem != null || DraggingInventory != null) return true;
+            if (!ignoreDraggedItem)
+            {
+                if (draggingItem != null || DraggingInventory != null) { return true; }
+            }
 
-            if (Character.Controlled.Inventory != null)
+            if (Character.Controlled.Inventory != null && !isSubEditor)
             {
                 var inv = Character.Controlled.Inventory;
                 for (var i = 0; i < inv.slots.Length; i++)
@@ -699,7 +739,8 @@ namespace Barotrauma
                     }
                 }
             }
-            if (Character.Controlled.SelectedCharacter?.Inventory != null)
+            
+            if (Character.Controlled.SelectedCharacter?.Inventory != null && !isSubEditor)
             {
                 var inv = Character.Controlled.SelectedCharacter.Inventory;
                 for (var i = 0; i < inv.slots.Length; i++)
@@ -830,9 +871,9 @@ namespace Barotrauma
             return CursorState.Default;
         }
 
-        protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot, List<ColorData> colorData = null)
+        protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot, List<RichTextData> richTextData = null)
         {           
-            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot, colorData);
+            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot, richTextData);
         }
 
         public void DrawSubInventory(SpriteBatch spriteBatch, int slotIndex)
@@ -928,7 +969,8 @@ namespace Barotrauma
             {
                 Character.Controlled.ClearInputs();
 
-                if (CharacterHealth.OpenHealthWindow != null &&
+                if (!IsMouseOnInventory(ignoreDraggedItem: true) &&
+                    CharacterHealth.OpenHealthWindow != null &&
                     CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem, false))
                 {
                     draggingItem = null;
@@ -946,8 +988,33 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GUI.PlayUISound(GUISoundType.DropItem);
-                        draggingItem.Drop(Character.Controlled);
+                        bool removed = false;
+                        if (Screen.Selected is SubEditorScreen editor)
+                        {
+                            if (editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition))
+                            {
+                                draggingItem.Remove();
+                                removed = true;
+                            }
+                            else
+                            {
+                                if (editor.WiringMode)
+                                {
+                                    draggingItem.Remove();
+                                    removed = true;
+                                }
+                                else
+                                {
+                                    draggingItem.Drop(Character.Controlled);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            draggingItem.Drop(Character.Controlled);
+                        }
+                        
+                        GUI.PlayUISound(removed ? GUISoundType.PickItem : GUISoundType.DropItem);
                     }
                 }
                 else if (selectedSlot.ParentInventory.Items[selectedSlot.SlotIndex] != draggingItem)
@@ -1015,7 +1082,7 @@ namespace Barotrauma
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
             Rectangle hoverArea;
-            if (!subSlot.Inventory.Movable())
+            if (!subSlot.Inventory.Movable() || Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item))
             {
                 hoverArea = subSlot.Slot.Rect;
                 hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
@@ -1038,7 +1105,9 @@ namespace Barotrauma
                 }
                 if (subSlot.Slot.SubInventoryDir < 0)
                 {
-                    hoverArea.Height -= hoverArea.Bottom - subSlot.Slot.Rect.Bottom;
+                    // 24/2/2020 - the below statement makes the sub inventory extend all the way to the bottom of the screen because of a double negative
+                    // Not sure if it's intentional or not but it was causing hover issues and disabling it seems to have no detrimental effects.
+                    // hoverArea.Height -= hoverArea.Bottom - subSlot.Slot.Rect.Bottom;
                 }
                 else
                 {
@@ -1088,7 +1157,7 @@ namespace Barotrauma
                         string toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :
                             Character.Controlled.FocusedItem != null ?
                                 TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, true) :
-                                TextManager.Get("DropItem");
+                                TextManager.Get(Screen.Selected is SubEditorScreen editor && editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition) ? "Delete" : "DropItem");
                         int textWidth = (int)Math.Max(GUI.Font.MeasureString(draggingItem.Name).X, GUI.SmallFont.MeasureString(toolTip).X);
                         int textSpacing = (int)(15 * GUI.Scale);
                         Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
@@ -1111,7 +1180,7 @@ namespace Barotrauma
             {
                 Rectangle slotRect = selectedSlot.Slot.Rect;
                 slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
-                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipColorData);
+                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipRichTextData);
             }
         }
 
@@ -1154,6 +1223,11 @@ namespace Barotrauma
 
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
                 spriteBatch.Draw(slotSprite.Texture, rect, slotSprite.SourceRect, slotColor);
+                
+                if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown() && selectedSlot?.Slot == slot)
+                {
+                    GUI.DrawRectangle(spriteBatch, rect, GUI.Style.Red * 0.3f, isFilled: true);
+                }
 
                 bool canBePut = false;
 
@@ -1181,7 +1255,7 @@ namespace Barotrauma
 
                 if (item != null && drawItem)
                 {
-                    if (!item.IsFullCondition && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
+                    if (!item.IsFullCondition && !item.Prefab.HideConditionBar && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
@@ -1308,10 +1382,10 @@ namespace Barotrauma
             if (inventory != null &&
                 !inventory.Locked &&
                 Character.Controlled?.Inventory == inventory &&
-                slot.QuickUseKey != Keys.None)
+                slot.InventoryKeyIndex != -1)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), slot.QuickUseKey.ToString().Substring(1, 1), Color.Black, font: GUI.HotkeyFont);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameMain.Config.InventoryKeyBind(slot.InventoryKeyIndex).Name, Color.Black, font: GUI.HotkeyFont);
             }
         }
 

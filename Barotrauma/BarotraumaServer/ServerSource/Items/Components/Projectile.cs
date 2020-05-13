@@ -7,17 +7,21 @@ namespace Barotrauma.Items.Components
     {
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.Write(StickTarget != null);
-            if (StickTarget != null)
+            bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();
+            msg.Write(stuck);
+            if (stuck)
             {
-                msg.Write(item.body.SimPosition.X);
-                msg.Write(item.body.SimPosition.Y);
+                msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
+                msg.Write(item.CurrentHull?.ID ?? Entity.NullEntityID);
+                msg.Write(item.SimPosition.X);
+                msg.Write(item.SimPosition.Y);
                 msg.Write(stickJoint.Axis.X);
                 msg.Write(stickJoint.Axis.Y);
                 if (StickTarget.UserData is Structure structure)
                 {
                     msg.Write(structure.ID);
-                    msg.Write((byte)structure.Bodies.IndexOf(StickTarget));
+                    int bodyIndex = structure.Bodies.IndexOf(StickTarget);
+                    msg.Write((byte)(bodyIndex == -1 ? 0 : bodyIndex));
                 }
                 else if (StickTarget.UserData is Entity entity)
                 {

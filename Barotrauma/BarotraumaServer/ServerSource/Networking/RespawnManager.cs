@@ -282,7 +282,7 @@ namespace Barotrauma.Networking
                     clients[i].Character = character;
                     character.OwnerClientEndPoint = clients[i].Connection.EndPointString;
                     character.OwnerClientName = clients[i].Name;
-                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", clients[i].Name, clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", GameServer.ClientLogName(clients[i]), clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
 
                 if (divingSuitPrefab != null && oxyPrefab != null && RespawnShuttle != null)

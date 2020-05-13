@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 #if USE_STEAM
 namespace Barotrauma.Steam
@@ -47,7 +49,7 @@ namespace Barotrauma.Steam
        
         private static bool isInitialized;
         public static bool IsInitialized => isInitialized;
-        
+
         public static void Initialize()
         {
             InitializeProjectSpecific();

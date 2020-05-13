@@ -12,35 +12,68 @@ namespace Barotrauma
 
         public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
 
+        [Serialize("", false)]
+        public string Entity { get; private set; }
+
+        [Serialize("", false)]
+        public string DefensiveAgent { get; private set; }
+
+        [Serialize("", false)]
+        public string OffensiveAgent { get; private set; }
+
+        [Serialize("", false)]
+        public string Brain { get; private set; }
+
+        [Serialize("", false)]
+        public string Spawner { get; private set; }
+
+        [Serialize("", false)]
+        public string BrainRoomBackground { get; private set; }
+
+        [Serialize("", false)]
+        public string BrainRoomVerticalWall { get; private set; }
+
+        [Serialize("", false)]
+        public string BrainRoomHorizontalWall { get; private set; }
+
         [Serialize(60f, false)]
-        public float CellSpawnTime { get; set; }
+        public float AgentSpawnDelay { get; private set; }
 
         [Serialize(0.5f, false)]
-        public float CellSpawnRandomFactor { get; set; }
+        public float AgentSpawnDelayRandomFactor { get; private set; }
 
         [Serialize(0, false)]
-        public int MinCellsPerBrainRoom { get; set; }
+        public int MinAgentsPerBrainRoom { get; private set; }
 
         [Serialize(3, false)]
-        public int MaxCellsPerRoom { get; set; }
+        public int MaxAgentsPerRoom { get; private set; }
 
         [Serialize(2, false)]
-        public int MinCellsOutside { get; set; }
+        public int MinAgentsOutside { get; private set; }
 
         [Serialize(5, false)]
-        public int MaxCellsOutside { get; set; }
+        public int MaxAgentsOutside { get; private set; }
 
         [Serialize(3, false)]
-        public int MinCellsInside { get; set; }
+        public int MinAgentsInside { get; private set; }
 
         [Serialize(10, false)]
-        public int MaxCellsInside { get; set; }
+        public int MaxAgentsInside { get; private set; }
 
         [Serialize(15, false)]
-        public int MaxCellCount { get; set; }
+        public int MaxAgentCount { get; private set; }
 
         [Serialize(100f, false)]
-        public float MinWaterLevel { get; set; }
+        public float MinWaterLevel { get; private set; }
+
+        [Serialize(true, false)]
+        public bool KillAgentsWhenEntityDies { get; private set; }
+
+        [Serialize(1f, false)]
+        public float DeadEntityColorMultiplier { get; private set; }
+
+        [Serialize(1f, false)]
+        public float DeadEntityColorFadeOutTime { get; private set; }
 
         public readonly string[] ForbiddenAmmunition;
 

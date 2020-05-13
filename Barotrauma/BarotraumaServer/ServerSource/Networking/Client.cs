@@ -75,7 +75,8 @@ namespace Barotrauma.Networking
         public bool SpectateOnly;
 
         public int KarmaKickCount;
-        
+
+        private float syncedKarma = 100.0f;
         private float karma = 100.0f;
         public float Karma
         {
@@ -89,6 +90,11 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.Server == null || !GameMain.Server.ServerSettings.KarmaEnabled) { return; }
                 karma = Math.Min(Math.Max(value, 0.0f), 100.0f);
+                if (!MathUtils.NearlyEqual(karma, syncedKarma, 10.0f))
+                {
+                    syncedKarma = karma;
+                    GameMain.NetworkMember.LastClientListUpdateID++;
+                }
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,8 @@ namespace Barotrauma
     partial class EventManager
     {
         const float IntensityUpdateInterval = 5.0f;
+
+        const float CalculateDistanceTraveledInterval = 5.0f;
 
         private Level level;
 
@@ -29,6 +32,11 @@ namespace Barotrauma
         private float eventCoolDown;
 
         private float intensityUpdateTimer;
+
+        private PathFinder pathFinder;
+        private float totalPathLength;
+        private float calculateDistanceTraveledTimer;
+        private float distanceTraveled;
 
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
@@ -71,6 +79,10 @@ namespace Barotrauma
 
             pendingEventSets.Clear();
             selectedEvents.Clear();
+
+            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+            var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+            totalPathLength = steeringPath.TotalLength;
 
             this.level = level;
             SelectSettings();
@@ -137,7 +149,44 @@ namespace Barotrauma
 
         public void PreloadContent(IEnumerable<ContentFile> contentFiles)
         {
-            foreach (ContentFile file in contentFiles)
+            var filesToPreload = new List<ContentFile>(contentFiles);
+            foreach (Submarine sub in Submarine.Loaded)
+            {
+                if (sub.WreckAI == null) { continue; }
+
+                if (!string.IsNullOrEmpty(sub.WreckAI.Config.DefensiveAgent))
+                {
+                    var prefab = CharacterPrefab.FindBySpeciesName(sub.WreckAI.Config.DefensiveAgent);
+                    if (prefab != null && !filesToPreload.Any(f => f.Path == prefab.FilePath))
+                    {
+                        filesToPreload.Add(new ContentFile(prefab.FilePath, ContentType.Character));
+                    }
+                }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != sub) { continue; }
+                    foreach (Items.Components.ItemComponent component in item.Components)
+                    {
+                        if (component.statusEffectLists == null) { continue; }
+                        foreach (var statusEffectList in component.statusEffectLists.Values)
+                        {
+                            foreach (StatusEffect statusEffect in statusEffectList)
+                            {
+                                foreach (var spawnInfo in statusEffect.SpawnCharacters)
+                                {
+                                    var prefab = CharacterPrefab.FindBySpeciesName(spawnInfo.SpeciesName);
+                                    if (prefab != null && !filesToPreload.Any(f => f.Path == prefab.FilePath))
+                                    {
+                                        filesToPreload.Add(new ContentFile(prefab.FilePath, ContentType.Character));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }                
+            }
+
+            foreach (ContentFile file in filesToPreload)
             {
                 switch (file.Type)
                 {
@@ -225,7 +274,7 @@ namespace Barotrauma
             }
             else if (eventSet.PerWreck)
             {
-                applyCount = Submarine.Loaded.Count(s => s.Info.IsWreck && (s.ThalamusAI == null || !s.ThalamusAI.IsAlive));
+                applyCount = Submarine.Loaded.Count(s => s.Info.IsWreck && (s.WreckAI == null || !s.WreckAI.IsAlive));
             }
             for (int i = 0; i < applyCount; i++)
             {
@@ -299,12 +348,9 @@ namespace Barotrauma
 
         private bool CanStartEventSet(ScriptedEventSet eventSet)
         {
-            float distFromStart = Vector2.Distance(Submarine.MainSub.WorldPosition, level.StartPosition);
-            float distFromEnd = Vector2.Distance(Submarine.MainSub.WorldPosition, level.EndPosition);
-
-            float distanceTraveled = MathHelper.Clamp(
-                (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
-                0.0f, 1.0f);
+            ISpatialEntity refEntity = GetRefEntity();
+            float distFromStart = Vector2.Distance(refEntity.WorldPosition, level.StartPosition);
+            float distFromEnd = Vector2.Distance(refEntity.WorldPosition, level.EndPosition);
 
             //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)
@@ -365,6 +411,13 @@ namespace Barotrauma
                     Enabled = false;
                     return;
                 }
+            }
+
+            calculateDistanceTraveledTimer -= deltaTime;
+            if (calculateDistanceTraveledTimer <= 0.0f)
+            {
+                distanceTraveled = CalculateDistanceTraveled();
+                calculateDistanceTraveledTimer = CalculateDistanceTraveledInterval;
             }
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
@@ -513,6 +566,63 @@ namespace Barotrauma
                 //400 seconds for intensity to go from 1.0 to 0.0
                 currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
             }
+        }
+
+        private float CalculateDistanceTraveled()
+        {
+            var refEntity = GetRefEntity();
+            Vector2 target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
+            var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(refEntity.WorldPosition), target);
+            if (steeringPath.Unreachable || float.IsPositiveInfinity(totalPathLength))
+            {
+                //use horizontal position in the level as a fallback if a path can't be found
+                return MathHelper.Clamp((refEntity.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X), 0.0f, 1.0f);
+            }
+            else
+            {
+                return MathHelper.Clamp(1.0f - steeringPath.TotalLength / totalPathLength, 0.0f, 1.0f);
+            }
+        }
+
+
+        /// <summary>
+        /// Get the entity that should be used in determining how far the player has progressed in the level.
+        /// = The submarine or player character that has progressed the furthest. 
+        /// </summary>
+        private ISpatialEntity GetRefEntity()
+        {
+            ISpatialEntity refEntity = Submarine.MainSub;
+#if CLIENT
+            if (Character.Controlled != null)
+            {
+                if (Character.Controlled.Submarine != null && 
+                    Character.Controlled.Submarine.Info.Type == SubmarineInfo.SubmarineType.Player)
+                {
+                    refEntity = Character.Controlled.Submarine;
+                }
+                else
+                {
+                    refEntity = Character.Controlled;
+                }
+            }
+#else
+            foreach (Barotrauma.Networking.Client client in GameMain.Server.ConnectedClients)
+            {
+                if (client.Character == null) { continue; }
+                //only take the players inside a player sub into account. 
+                //Otherwise the system could be abused by for example making a respawned player wait
+                //close to the destination outpost
+                if (client.Character.Submarine != null && 
+                    client.Character.Submarine.Info.Type == SubmarineInfo.SubmarineType.Player)
+                {
+                    if (client.Character.Submarine.WorldPosition.X > refEntity.WorldPosition.X)
+                    {
+                        refEntity = client.Character.Submarine;
+                    }
+                }
+            }
+#endif
+            return refEntity;
         }
     }
 }

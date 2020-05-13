@@ -3,7 +3,7 @@ using FarseerPhysics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
-using System.IO;
+using Barotrauma.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -43,6 +43,7 @@ namespace Barotrauma
 
                 foreach (Limb limb in AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     if (limb.body != null)
                     {
                         limb.body.Enabled = enabled;
@@ -59,6 +60,7 @@ namespace Barotrauma
         public bool IsRemotePlayer;
 
         public bool IsPlayer => Controlled == this || IsRemotePlayer;
+        public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
 
         public readonly Dictionary<string, SerializableProperty> Properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -234,6 +236,7 @@ namespace Barotrauma
         {
             get
             {
+                if (info != null && !string.IsNullOrWhiteSpace(info.Name)) { return info.Name; }
                 var displayName = Params.DisplayName;
                 if (string.IsNullOrWhiteSpace(displayName))
                 {
@@ -601,7 +604,9 @@ namespace Barotrauma
                     {
                         errorMsg += " AnimController.Collider == null";
                     }
-
+#if DEBUG || UNSTABLE
+                    errorMsg += '\n' + Environment.StackTrace;
+#endif
                     DebugConsole.NewMessage(errorMsg, Color.Red);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Character.SimPosition:AccessRemoved",
@@ -1137,22 +1142,76 @@ namespace Barotrauma
             greatestNegativeSpeedMultiplier = 1f;
         }
 
+        /// <summary>
+        /// Speed reduction from the current limb specific damage. Min 0, max 1.
+        /// </summary>
+        public float GetTemporarySpeedReduction()
+        {
+            float reduction = 0;
+            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightFoot, excludeSevered: false), reduction);
+            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftFoot, excludeSevered: false), reduction);
+            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightHand, excludeSevered: false), reduction);
+            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftHand, excludeSevered: false), reduction);
+            int totalTailLimbs = 0;
+            int destroyedTailLimbs = 0;
+            foreach (var limb in AnimController.Limbs)
+            {
+                if (limb.type == LimbType.Tail)
+                {
+                    totalTailLimbs++;
+                    if (limb.IsSevered)
+                    {
+                        destroyedTailLimbs++;
+                    }
+                }
+            }
+            if (destroyedTailLimbs > 0)
+            {
+                reduction += MathHelper.Lerp(0, AnimController.InWater ? 1f : 0.5f, (float)destroyedTailLimbs / totalTailLimbs);
+            }
+            return Math.Clamp(reduction, 0, 1f);
+        }
+
+        private float CalculateMovementPenalty(Limb limb, float sum, float max = 0.4f)
+        {
+            if (limb != null)
+            {
+                sum += MathHelper.Lerp(0, max, CharacterHealth.GetLimbDamage(limb));
+            }
+            return Math.Clamp(sum, 0, 1f);
+        }
+
+        public float GetRightHandPenalty() => CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightHand, excludeSevered: false), 0, max: 1);
+        public float GetLeftHandPenalty() => CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftHand, excludeSevered: false), 0, max: 1);
+
+        public float GetLegPenalty(float startSum = 0)
+        {
+            float sum = startSum;
+            foreach (var limb in AnimController.Limbs)
+            {
+                switch (limb.type)
+                {
+                    case LimbType.RightFoot:
+                    case LimbType.LeftFoot:
+                        sum += CalculateMovementPenalty(limb, sum, max: 0.5f);
+                        break;
+                }
+            }
+            return Math.Clamp(sum, 0, 1f);
+        }
+
         public float ApplyTemporarySpeedLimits(float speed)
         {
-            var leftFoot = AnimController.GetLimb(LimbType.LeftFoot);
-            if (leftFoot != null)
+            float max;
+            if (AnimController is HumanoidAnimController)
             {
-                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", leftFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                max = AnimController.InWater ? 0.5f : 0.7f;
             }
-
-            var rightFoot = AnimController.GetLimb(LimbType.RightFoot);
-            if (rightFoot != null)
+            else
             {
-                float footAfflictionStrength = CharacterHealth.GetAfflictionStrength("damage", rightFoot, true);
-                speed *= MathHelper.Lerp(1.0f, 0.4f, MathHelper.Clamp(footAfflictionStrength / 80.0f, 0.0f, 1.0f));
+                max = AnimController.InWater ? 0.9f : 0.5f;
             }
-
+            speed *= 1f - MathHelper.Lerp(0, max, GetTemporarySpeedReduction());
             return speed;
         }
 
@@ -1251,60 +1310,74 @@ namespace Barotrauma
             {
                 attackCoolDown -= deltaTime;
             }
-            else if (IsKeyDown(InputType.Attack))
+            else if (IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
+                Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
+                List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                ignoredBodies.Add(AnimController.Collider.FarseerBody);
+
+                var body = Submarine.PickBody(
+                    SimPosition,
+                    attackPos,
+                    ignoredBodies,
+                    Physics.CollisionCharacter | Physics.CollisionWall);
+
+                IDamageable attackTarget = null;
+                if (body != null)
+                {
+                    attackPos = Submarine.LastPickedPosition;
+
+                    if (body.UserData is Submarine sub)
+                    {
+                        body = Submarine.PickBody(
+                            SimPosition - ((Submarine)body.UserData).SimPosition,
+                            attackPos - ((Submarine)body.UserData).SimPosition,
+                            ignoredBodies,
+                            Physics.CollisionWall);
+
+                        if (body != null)
+                        {
+                            attackPos = Submarine.LastPickedPosition + sub.SimPosition;
+                            attackTarget = body.UserData as IDamageable;
+                        }
+                    }
+                    else
+                    {
+                        if (body.UserData is IDamageable)
+                        {
+                            attackTarget = (IDamageable)body.UserData;
+                        }
+                        else if (body.UserData is Limb)
+                        {
+                            attackTarget = ((Limb)body.UserData).character;
+                        }
+                    }
+                }
                 var currentContexts = GetAttackContexts();
-                var validLimbs = AnimController.Limbs.Where(l => !l.IsSevered && !l.IsStuck && l.attack != null && l.attack.IsValidContext(currentContexts));
+                var validLimbs = AnimController.Limbs.Where(l =>
+                {
+                    if (l.IsSevered || l.IsStuck) { return false; }
+                    var attack = l.attack;
+                    if (attack == null) { return false; }
+                    if (attack.CoolDownTimer > 0) { return false; }
+                    if (!attack.IsValidContext(currentContexts)) { return false; }
+                    if (attackTarget != null)
+                    {
+                        if (!attack.IsValidTarget(attackTarget)) { return false; }
+                        if (attackTarget is ISerializableEntity se && attackTarget is Character)
+                        {
+                            if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                        }
+                    }
+                    if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(this))) { return false; }
+                    return true;
+                });
                 var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
                 // Select closest
                 var attackLimb = sortedLimbs.FirstOrDefault();
                 if (attackLimb != null)
                 {
-                    Vector2 attackPos = attackLimb.SimPosition + Vector2.Normalize(cursorPosition - attackLimb.Position) * ConvertUnits.ToSimUnits(attackLimb.attack.Range);
-
-                    List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
-                    ignoredBodies.Add(AnimController.Collider.FarseerBody);
-
-                    var body = Submarine.PickBody(
-                        attackLimb.SimPosition,
-                        attackPos,
-                        ignoredBodies,
-                        Physics.CollisionCharacter | Physics.CollisionWall);
-
-                    IDamageable attackTarget = null;
-                    if (body != null)
-                    {
-                        attackPos = Submarine.LastPickedPosition;
-
-                        if (body.UserData is Submarine sub)
-                        {
-                            body = Submarine.PickBody(
-                                attackLimb.SimPosition - ((Submarine)body.UserData).SimPosition,
-                                attackPos - ((Submarine)body.UserData).SimPosition,
-                                ignoredBodies,
-                                Physics.CollisionWall);
-
-                            if (body != null)
-                            {
-                                attackPos = Submarine.LastPickedPosition + sub.SimPosition;
-                                attackTarget = body.UserData as IDamageable;
-                            }
-                        }
-                        else
-                        {
-                            if (body.UserData is IDamageable)
-                            {
-                                attackTarget = (IDamageable)body.UserData;
-                            }
-                            else if (body.UserData is Limb)
-                            {
-                                attackTarget = ((Limb)body.UserData).character;
-                            }
-                        }
-                    }
-
                     attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
-
                     if (!attackLimb.attack.IsRunning)
                     {
                         attackCoolDown = 1.0f;
@@ -1391,22 +1464,23 @@ namespace Barotrauma
         {
             Limb selfLimb = AnimController.GetLimb(LimbType.Head);
             if (selfLimb == null) { selfLimb = AnimController.GetLimb(LimbType.Torso); }
-            if (selfLimb == null) { selfLimb = AnimController.Limbs.FirstOrDefault(); }
+            if (selfLimb == null) { selfLimb = AnimController.MainLimb; }
             return selfLimb;
         }
 
         public bool CanSeeTarget(ISpatialEntity target, Limb seeingLimb = null)
         {
-            seeingLimb = seeingLimb ?? GetSeeingLimb();
+            seeingLimb ??= GetSeeingLimb();
             if (seeingLimb == null) { return false; }
+            ISpatialEntity seeingEntity = AnimController.SimplePhysicsEnabled ? this : seeingLimb as ISpatialEntity;
             // TODO: Could we just use the method below? If not, let's refactor it so that we can.
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingLimb.WorldPosition);
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingEntity.WorldPosition);
             Body closestBody;
             //both inside the same sub (or both outside)
             //OR the we're inside, the other character outside
             if (target.Submarine == Submarine || target.Submarine == null)
             {
-                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
             }
             //we're outside, the other character inside
             else if (Submarine == null)
@@ -1416,7 +1490,7 @@ namespace Barotrauma
             //both inside different subs
             else
             {
-                closestBody = Submarine.CheckVisibility(seeingLimb.SimPosition, seeingLimb.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
                 if (!IsBlocking(closestBody))
                 {
                     closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
@@ -1433,10 +1507,11 @@ namespace Barotrauma
                 }
                 else if (body.UserData is Item item && item != target)
                 {
+                    // TODO: The door collider should be disabled, so this check is probably unnecessary.
                     var door = item.GetComponent<Door>();
                     if (door != null)
                     {
-                        return !door.IsOpen;
+                        return !door.IsOpen && !door.IsBroken;
                     }
                 }
                 return false;
@@ -1463,7 +1538,7 @@ namespace Barotrauma
             Structure wall = closestBody.UserData as Structure;
             Item item = closestBody.UserData as Item;
             Door door = item?.GetComponent<Door>();
-            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen);
+            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen || door.IsBroken);
         }
 
         public bool HasItem(Item item, bool requireEquipped = false) => requireEquipped ? HasEquippedItem(item) : item.IsOwnedBy(this);
@@ -1561,7 +1636,7 @@ namespace Barotrauma
         /// <summary>
         /// Finds the closest item seeking by identifiers or tags from the world.
         /// Ignores items that are outside or in another team's submarine or in a submarine that is not connected to this submarine.
-        /// Also ignores items that are taken by someone else.
+        /// Also ignores non-interactable items and items that are taken by someone else.
         /// The method is run in steps for performance reasons. So you'll have to provide the reference to the itemIndex.
         /// Returns false while running and true when done.
         /// </summary>
@@ -1578,12 +1653,17 @@ namespace Barotrauma
             {
                 itemIndex++;
                 var item = Item.ItemList[itemIndex];
+                if (item.NonInteractable) { continue; }
                 if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
                 if (item.Submarine.TeamID != TeamID) { continue; }
-                if (Submarine != null && !Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 if (item.CurrentHull == null) { continue; }
                 if (ignoreBroken && item.Condition <= 0) { continue; }
+                if (Submarine != null)
+                {
+                    if (item.Submarine.Info.Type != Submarine.Info.Type) { continue; }
+                    if (!Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
+                }
                 if (customPredicate != null && !customPredicate(item)) { continue; }
                 if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
@@ -1593,8 +1673,8 @@ namespace Barotrauma
                 if (IsItemTakenBySomeoneElse(item)) { continue; }
                 float itemPriority = customPriorityFunction != null ? customPriorityFunction(item) : 1;
                 if (itemPriority <= 0) { continue; }
-                Item rootContainer = item.GetRootContainer();
-                Vector2 itemPos = (rootContainer ?? item).WorldPosition;
+                Entity rootInventoryOwner = item.GetRootInventoryOwner();
+                Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
                 float yDist = Math.Abs(WorldPosition.Y - itemPos.Y);
                 yDist = yDist > 100 ? yDist * 5 : 0;
                 float dist = Math.Abs(WorldPosition.X - itemPos.X) + yDist;
@@ -1612,13 +1692,16 @@ namespace Barotrauma
 
         public bool IsItemTakenBySomeoneElse(Item item) => item.FindParentInventory(i => i.Owner != this && i.Owner is Character owner && !owner.IsDead && !owner.Removed) != null;
 
-        public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true)
+        public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true, bool skipDistanceCheck = false)
         {
-            if (c == this || Removed || !c.Enabled || !c.CanBeSelected) return false;
-            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && c.onCustomInteract == null) return false;
+            if (c == this || Removed || !c.Enabled || !c.CanBeSelected) { return false; }
+            if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && c.onCustomInteract == null) { return false; }
 
-            maxDist = ConvertUnits.ToSimUnits(maxDist);
-            if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) return false;
+            if (!skipDistanceCheck)
+            {
+                maxDist = ConvertUnits.ToSimUnits(maxDist);
+                if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) { return false; }
+            }
 
             return checkVisibility ? CanSeeCharacter(c) : true;
         }
@@ -1824,13 +1907,17 @@ namespace Barotrauma
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
                         FocusedCharacter = CanInteract ? FindCharacterAtPosition(mouseSimPos) : null;
+                        if (FocusedCharacter != null && !CanSeeCharacter(FocusedCharacter)) { FocusedCharacter = null; }
                         float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
                         if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
                         {
                             //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
                             aimAssist = 0.0f;
                         }
-                        focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, aimAssist) : null;
+
+                        var item = FindItemAtPosition(mouseSimPos, aimAssist);
+                        
+                        focusedItem = CanInteract ? item : null;
                         findFocusedTimer = 0.05f;
                     }
                 }
@@ -1964,7 +2051,7 @@ namespace Barotrauma
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        if (c == Controlled || c.IsRemotePlayer)
+                        if (c.IsPlayer || (c.IsBot && !c.IsDead))
                         {
                             c.Enabled = true;
                         }
@@ -2182,11 +2269,12 @@ namespace Barotrauma
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
             //ragdoll button
-            if (IsRagdolled)
+            if (IsRagdolled || !CanMove)
             {
-                if (AnimController is HumanoidAnimController) ((HumanoidAnimController)AnimController).Crouching = false;
-                /*if(GameMain.Server != null)
-                    GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });*/
+                if (AnimController is HumanoidAnimController) 
+                { 
+                    ((HumanoidAnimController)AnimController).Crouching = false; 
+                }
                 AnimController.ResetPullJoints();
                 SelectedConstruction = null;
                 return;
@@ -2209,7 +2297,7 @@ namespace Barotrauma
                 SelectedConstruction = null;
             }
 
-            if (!IsDead) LockHands = false;
+            if (!IsDead) { LockHands = false; }
         }
 
         partial void UpdateControlled(float deltaTime, Camera cam);
@@ -2295,9 +2383,12 @@ namespace Barotrauma
 
             if (!IsDead) { return; }
 
-            if (Submarine != null && CharacterList.Count(c => c.IsDead && c.Submarine == Submarine) < GameMain.Config.CorpsesPerSubDespawnThreshold)
+            int subCorpseCount = 0;
+
+            if (Submarine != null)
             {
-                return;
+                subCorpseCount = CharacterList.Count(c => c.IsDead && c.Submarine == Submarine);
+                if (subCorpseCount < GameMain.Config.CorpsesPerSubDespawnThreshold) { return; }
             }
 
             float distToClosestPlayer = GetDistanceToClosestPlayer();
@@ -2306,8 +2397,20 @@ namespace Barotrauma
                 //despawn in 1 minute if very far from all human players
                 despawnTimer = Math.Max(despawnTimer, GameMain.Config.CorpseDespawnDelay - 60.0f);
             }
+
+            float despawnPriority = 1.0f;
+            if (subCorpseCount > GameMain.Config.CorpsesPerSubDespawnThreshold)
+            {
+                //despawn faster if there are lots of corpses in the sub (twice as many as the threshold -> despawn twice as fast)
+                despawnPriority += (subCorpseCount - GameMain.Config.CorpsesPerSubDespawnThreshold) / (float)GameMain.Config.CorpsesPerSubDespawnThreshold;
+            }
+            if (AIController is EnemyAIController)
+            {
+                //enemies despawn faster
+                despawnPriority *= 2.0f;
+            }
             
-            despawnTimer += deltaTime;
+            despawnTimer += deltaTime * despawnPriority;
             if (despawnTimer < GameMain.Config.CorpseDespawnDelay) { return; }
 
             if (IsHuman)
@@ -2416,6 +2519,14 @@ namespace Barotrauma
             //set the character order only if the character is close enough to hear the message
             if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
+            // If there's another character operating the same device, make them dismiss themself
+            if (order != null && order.Category == OrderCategory.Operate)
+            {
+                CharacterList.FindAll(c => c != this && c.TeamID == TeamID && c.CurrentOrder is Order characterOrder && characterOrder.Category == OrderCategory.Operate &&
+                                           characterOrder.Identifier.Equals(order.Identifier) && characterOrder.TargetEntity == order.TargetEntity)?
+                    .ForEach(c => c.SetOrder(Order.GetPrefab("dismissed"), null, c, speak: true));
+            }
+
             if (AIController is HumanAIController humanAI)
             {
                 humanAI.SetOrder(order, orderOption, orderGiver, speak);
@@ -2425,6 +2536,11 @@ namespace Barotrauma
             CurrentOrder = order;
             CurrentOrderOption = orderOption;
         }
+
+        /// <summary>
+        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
+        /// </summary>
+        public void ResetCurrentOrder() => Info?.ResetCurrentOrder();
 
         private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
 
@@ -2575,7 +2691,7 @@ namespace Barotrauma
             if (attacker is Character attackingCharacter && attackingCharacter.AIController == null)
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append(LogName + " attacked by " + attackingCharacter.LogName + ".");
+                sb.Append(GameServer.CharacterLogName(this) + " attacked by " + GameServer.CharacterLogName(attackingCharacter) + ".");
                 if (attackResult.Afflictions != null)
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
@@ -2588,39 +2704,61 @@ namespace Barotrauma
             }
 #endif
 
-            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
-
-            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability);
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage);
 
             return attackResult;
         }
 
-        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability)
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage)
         {
-            bool isNotClient = GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient;
-
-            if (isNotClient &&
-                IsDead && Rand.Range(0.0f, 1.0f) < severLimbsProbability)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+#if DEBUG
+            if (targetLimb.character != this)
             {
-                foreach (LimbJoint joint in AnimController.LimbJoints)
-                {
-                    if (joint.CanBeSevered && (joint.LimbA == targetLimb || joint.LimbB == targetLimb))
-                    {
-#if CLIENT
-                        CurrentHull?.AddDecal("blood", WorldPosition, Rand.Range(0.5f, 1.5f));                       
+                DebugConsole.ThrowError($"{Name} is attempting to sever joints of {targetLimb.character.Name}!");
+                return;
+            }
 #endif
-                        AnimController.SeverLimbJoint(joint);
-
-                        if (joint.LimbA == targetLimb)
-                        {
-                            joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
-                        }
-                        else
-                        {
-                            joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
-                        }
+            if (!IsDead && !targetLimb.CanBeSeveredAlive) { return; }
+            if (damage < targetLimb.Params.MinSeveranceDamage) { return; }
+            bool wasSevered = false;
+            float random = Rand.Value();
+            foreach (LimbJoint joint in AnimController.LimbJoints)
+            {
+                if (!joint.CanBeSevered) { continue; }
+                if (joint.LimbA != targetLimb && joint.LimbB != targetLimb) { continue; }
+                float probability = severLimbsProbability;
+                if (!IsDead)
+                {
+                    probability *= joint.Params.SeveranceProbabilityModifier;
+                }
+                if (probability <= 0) { continue; }
+                if (random > probability) { continue; }
+                bool severed = AnimController.SeverLimbJoint(joint);
+                if (!wasSevered)
+                {
+                    wasSevered = severed;
+                }
+                if (severed)
+                {
+                    if (joint.LimbA == targetLimb)
+                    {
+                        joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
+                    }
+                    else
+                    {
+                        joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
                     }
                 }
+            }
+            if (wasSevered)
+            {
+                if (targetLimb.character.AIController is EnemyAIController enemyAI)
+                {
+                    enemyAI.ReevaluateAttacks();
+                }
+                ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+                targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
             }
         }
 
@@ -2700,10 +2838,15 @@ namespace Barotrauma
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
+            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            if (attackResult.Damage > 0)
+            {
+                hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            }
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
-                OnAttackedProjSpecific(attacker, attackResult);
+                OnAttackedProjSpecific(attacker, attackResult, stun);
                 if (!wasDead)
                 {
                     TryAdjustAttackerSkill(attacker, -attackResult.Damage);
@@ -2718,7 +2861,7 @@ namespace Barotrauma
             return attackResult;
         }
 
-        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult);
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun);
 
         public void TryAdjustAttackerSkill(Character attacker, float healthChange)
         {
@@ -2760,6 +2903,7 @@ namespace Barotrauma
             }
         }
 
+        private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public void ApplyStatusEffects(ActionType actionType, float deltaTime)
         {
             foreach (StatusEffect statusEffect in statusEffects)
@@ -2768,30 +2912,60 @@ namespace Barotrauma
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
-                    var targets = new List<ISerializableEntity>();
+                    targets.Clear();
                     statusEffect.GetNearbyTargets(WorldPosition, targets);
                     statusEffect.Apply(ActionType.OnActive, deltaTime, this, targets);
                 }
                 else
                 {
                     statusEffect.Apply(actionType, deltaTime, this, this);
+                    if (statusEffect.targetLimbs != null)
+                    {
+                        foreach (var limbType in statusEffect.targetLimbs)
+                        {
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            {
+                                // Target all matching limbs
+                                foreach (var limb in AnimController.Limbs)
+                                {
+                                    if (limb.IsSevered) { continue; }
+                                    if (limb.type == limbType)
+                                    {
+                                        statusEffect.Apply(actionType, deltaTime, this, limb);
+                                    }
+                                }
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                            {
+                                // Target just the first matching limb
+                                Limb limb = AnimController.GetLimb(limbType);
+                                statusEffect.Apply(actionType, deltaTime, this, limb);
+                            }
+                        }
+                    }
                 }
+            }
+            if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
+            {
+                // OnDamaged is called only for the limb that is hit.
+                AnimController.Limbs.ForEach(l => l.ApplyStatusEffects(actionType, deltaTime));
             }
         }
 
         private void Implode(bool isNetworkMessage = false)
         {
-            if (CharacterHealth.Unkillable) { return; }
+            if (CharacterHealth.Unkillable || IsDead) { return; }
 
             if (!isNetworkMessage)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             }
 
-            Kill(CauseOfDeathType.Pressure, null, isNetworkMessage);
-            CharacterHealth.PressureAffliction.Strength = CharacterHealth.PressureAffliction.Prefab.MaxStrength;
-            CharacterHealth.SetAllDamage(200.0f, 0.0f, 0.0f);
-            BreakJoints();
+            CharacterHealth.ApplyAffliction(null, new Affliction(AfflictionPrefab.Pressure, AfflictionPrefab.Pressure.MaxStrength));
+            if (IsDead)
+            {
+                BreakJoints();
+            }
         }
 
         public void BreakJoints()
@@ -2799,6 +2973,7 @@ namespace Barotrauma
             Vector2 centerOfMass = AnimController.GetCenterOfMass();
             foreach (Limb limb in AnimController.Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 limb.AddDamage(limb.SimPosition, 500.0f, 0.0f, 0.0f, false);
 
                 Vector2 diff = centerOfMass - limb.SimPosition;
@@ -2866,7 +3041,10 @@ namespace Barotrauma
                 causeOfDeathAffliction?.Source ?? LastAttacker, LastDamageSource);
             OnDeath?.Invoke(this, CauseOfDeath);
 
-            SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
+            {
+                SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+            }
 
             KillProjSpecific(causeOfDeath, causeOfDeathAffliction, log);
 
@@ -3023,13 +3201,13 @@ namespace Barotrauma
         public IEnumerable<AttackContext> GetAttackContexts()
         {
             currentContexts.Clear();
-            if (AnimController.CurrentAnimationParams.IsGroundedAnimation)
+            if (AnimController.InWater)
             {
-                currentContexts.Add(AttackContext.Ground);
+                currentContexts.Add(AttackContext.Water);
             }
             else
             {
-                currentContexts.Add(AttackContext.Water);
+                currentContexts.Add(AttackContext.Ground);
             }
             if (CurrentHull == null)
             {
@@ -3131,5 +3309,15 @@ namespace Barotrauma
             }
             return targetPos;
         }
+
+        public bool IsCaptain => HasJob("captain");
+        public bool IsEngineer => HasJob("engineer");
+        public bool IsMechanic => HasJob("mechanic");
+        public bool IsMedic => HasJob("medicaldoctor");
+        public bool IsOfficer => HasJob("securityofficer");
+        public bool IsAsssitant => HasJob("assistant");
+        public bool IsWatchman => HasJob("watchman");
+
+        public bool HasJob(string identifier) => Info?.Job?.Prefab.Identifier == identifier;
     }
 }

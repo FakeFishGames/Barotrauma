@@ -97,13 +97,15 @@ namespace Barotrauma
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
+            int limbCount = character.AnimController.Limbs.Count(l => !l.ignoreCollisions && !l.IsSevered);
             foreach (Limb limb in character.AnimController.Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 float random = Rand.Value(Rand.RandSync.Server);
                 huskInfection.Clear();
-                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * deltaTime / character.AnimController.Limbs.Length));
+                huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / limbCount));
                 character.LastDamageSource = null;
-                float force = applyForce ? random * 0.1f * limb.Mass : 0;
+                float force = applyForce ? random * 0.5f * limb.Mass : 0;
                 character.DamageLimb(limb.WorldPosition, limb, huskInfection, 0, false, force);
             }
         }
@@ -186,18 +188,20 @@ namespace Barotrauma
                 }
             }
 
-            if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
+            if (character.Inventory != null && husk.Inventory != null)
             {
-                string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                yield return CoroutineStatus.Success;
-            }
-
-            for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
-            {
-                if (character.Inventory.Items[i] == null) continue;
-                husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
+                if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
+                {
+                    string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    yield return CoroutineStatus.Success;
+                }
+                for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
+                {
+                    if (character.Inventory.Items[i] == null) continue;
+                    husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
+                }
             }
 
             husk.SetStun(5);
@@ -255,20 +259,19 @@ namespace Barotrauma
                     Limb attachLimb = null;
                     if (matchingAffliction.AttachLimbId > -1)
                     {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == matchingAffliction.AttachLimbId);
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == matchingAffliction.AttachLimbId);
                     }
                     else if (matchingAffliction.AttachLimbName != null)
                     {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Name == matchingAffliction.AttachLimbName);
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Name == matchingAffliction.AttachLimbName);
                     }
                     else if (matchingAffliction.AttachLimbType != LimbType.None)
                     {
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.type == matchingAffliction.AttachLimbType);
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.type == matchingAffliction.AttachLimbType);
                     }
                     if (attachLimb == null)
                     {
-                        DebugConsole.Log("Attachment limb not defined in the affliction prefab or no matching limb could be found. Using the appendage definition as it is.");
-                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => l.Params.ID == jointParams.Limb1);
+                        attachLimb = ragdoll.Limbs.FirstOrDefault(l => !l.IsSevered && l.Params.ID == jointParams.Limb1);
                     }
                     if (attachLimb != null)
                     {
@@ -285,10 +288,6 @@ namespace Barotrauma
                         ragdoll.AddLimb(huskAppendage);
                         ragdoll.AddJoint(jointParams);
                         appendage.Add(huskAppendage);
-                    }
-                    else
-                    {
-                        DebugConsole.ThrowError("Attachment limb not found!");
                     }
                 }
             }

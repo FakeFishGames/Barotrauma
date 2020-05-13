@@ -115,7 +115,7 @@ namespace Barotrauma.Items.Components
                     if (!MathUtils.IsValid(throwVector)) { throwVector = Vector2.UnitY; }
 
 #if SERVER
-                    GameServer.Log(picker.LogName + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
+                    GameServer.Log(GameServer.CharacterLogName(picker) + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
                     Character thrower = picker;
                     item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);

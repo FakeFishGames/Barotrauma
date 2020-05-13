@@ -200,7 +200,7 @@ namespace Barotrauma
             worldView = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             viewMatrix = Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
             
-            globalZoomScale = (float)Math.Pow(new Vector2(resolution.X, resolution.Y).Length() / new Vector2(1920, 1080).Length(), 2);
+            globalZoomScale = (float)Math.Pow(new Vector2(GUI.UIWidth, resolution.Y).Length() / GUI.ReferenceResolution.Length(), 2);
         }
 
         public void UpdateTransform(bool interpolate = true)

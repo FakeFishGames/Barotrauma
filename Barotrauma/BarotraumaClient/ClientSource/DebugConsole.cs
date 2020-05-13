@@ -5,13 +5,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using System.Globalization;
 using FarseerPhysics;
 using Barotrauma.Extensions;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -217,6 +218,8 @@ namespace Barotrauma
                 case "toggleupperhud":
                 case "togglecharacternames":
                 case "fpscounter":
+                case "dumptofile":
+                case "findentityids":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -453,17 +456,10 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
-            commands.Add(new Command("money", "", args =>
+            commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks debug logging.", (string[] args) =>
             {
-                if (args.Length == 0) { return; }
-                if (GameMain.GameSession.GameMode is CampaignMode campaign)
-                {
-                    if (int.TryParse(args[0], out int money))
-                    {
-                        campaign.Money += money;
-                    }
-                }
-            }, isCheat: true));
+                SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
+            }));
 
             AssignRelayToServer("kick", false);
             AssignRelayToServer("kickid", false);
@@ -476,6 +472,7 @@ namespace Barotrauma
             AssignRelayToServer("help", false);
             AssignRelayToServer("verboselogging", false);
             AssignRelayToServer("freecam", false);
+            AssignRelayToServer("steamnetdebug", false);
 #if DEBUG
             AssignRelayToServer("crash", false);
             AssignRelayToServer("simulatedlatency", false);
@@ -495,6 +492,7 @@ namespace Barotrauma
             AssignRelayToServer("setpassword", true);
             commands.Add(new Command("traitorlist", "", (string[] args) => { }));
             AssignRelayToServer("traitorlist", true);
+            AssignRelayToServer("money", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -515,13 +513,14 @@ namespace Barotrauma
             AssignOnExecute("explosion", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10, empStrength = 0.0f;
+                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
-                if (args.Length > 4) float.TryParse(args[4], out empStrength);
-                new Explosion(range, force, damage, structureDamage, empStrength).Explode(explosionPos, null);
+                if (args.Length > 4) float.TryParse(args[4], out itemDamage);
+                if (args.Length > 5) float.TryParse(args[5], out empStrength);
+                new Explosion(range, force, damage, structureDamage, itemDamage, empStrength).Explode(explosionPos, null);
             });
 
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
@@ -836,7 +835,7 @@ namespace Barotrauma
                     return;
                 }
 
-                if (Submarine.MainSub.SaveAs(System.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
+                if (Submarine.MainSub.SaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
                 {
                     NewMessage("Sub saved", Color.Green);
                 }
@@ -1028,8 +1027,7 @@ namespace Barotrauma
 
                     foreach (var deconstructItem in itemPrefab.DeconstructItems)
                     {
-                        var targetItem = MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) as ItemPrefab;
-                        if (targetItem == null)
+                        if (!(MapEntityPrefab.Find(null, deconstructItem.ItemIdentifier, showErrorMessages: false) is ItemPrefab targetItem))
                         {
                             ThrowError("Error in item \"" + itemPrefab.Name + "\" - could not find deconstruct item \"" + deconstructItem.ItemIdentifier + "\"!");
                             continue;
@@ -1044,9 +1042,14 @@ namespace Barotrauma
 
                         if (fabricationRecipe != null)
                         {
-                            if (!fabricationRecipe.RequiredItems.Any(r => r.ItemPrefab == targetItem))
+                            var ingredient = fabricationRecipe.RequiredItems.Find(r => r.ItemPrefab == targetItem);
+                            if (ingredient == null)
                             {
-                                NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Orange);
+                                NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
+                            }
+                            else if (ingredient.UseCondition && ingredient.MinCondition < deconstructItem.OutCondition)
+                            {
+                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {ingredient.ItemPrefab.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
                             }
                         }
                     }
@@ -1430,7 +1433,7 @@ namespace Barotrauma
                     element.Value = lines[i];
                     i++;
                 }
-                doc.Save(destinationPath);
+                doc.SaveSafe(destinationPath);
             },
             () =>
             {
@@ -1465,7 +1468,7 @@ namespace Barotrauma
                     while ((!(nextNode is XElement) || nextNode == element) && nextNode != null) nextNode = nextNode.NextNode;
                     destinationElement = nextNode as XElement;
                 }
-                destinationDoc.Save(destinationPath);
+                destinationDoc.SaveSafe(destinationPath);
             },
             () =>
             {
@@ -1720,69 +1723,69 @@ namespace Barotrauma
 
                 GameMain.Config.SaveNewPlayerConfig();
 
-                var saveFiles = System.IO.Directory.GetFiles(SaveUtil.SaveFolder);
+                var saveFiles = Barotrauma.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 
                 foreach (string saveFile in saveFiles)
                 {
-                    System.IO.File.Delete(saveFile);
+                    Barotrauma.IO.File.Delete(saveFile);
                     NewMessage("Deleted " + saveFile, Color.Green);
                 }
 
-                if (System.IO.Directory.Exists(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
+                if (Barotrauma.IO.Directory.Exists(Barotrauma.IO.Path.Combine(SaveUtil.SaveFolder, "temp")))
                 {
-                    System.IO.Directory.Delete(System.IO.Path.Combine(SaveUtil.SaveFolder, "temp"), true);
+                    Barotrauma.IO.Directory.Delete(Barotrauma.IO.Path.Combine(SaveUtil.SaveFolder, "temp"), true);
                     NewMessage("Deleted temp save folder", Color.Green);
                 }
 
-                if (System.IO.Directory.Exists(ServerLog.SavePath))
+                if (Barotrauma.IO.Directory.Exists(ServerLog.SavePath))
                 {
-                    var logFiles = System.IO.Directory.GetFiles(ServerLog.SavePath);
+                    var logFiles = Barotrauma.IO.Directory.GetFiles(ServerLog.SavePath);
 
                     foreach (string logFile in logFiles)
                     {
-                        System.IO.File.Delete(logFile);
+                        Barotrauma.IO.File.Delete(logFile);
                         NewMessage("Deleted " + logFile, Color.Green);
                     }
                 }
 
-                if (System.IO.File.Exists("filelist.xml"))
+                if (Barotrauma.IO.File.Exists("filelist.xml"))
                 {
-                    System.IO.File.Delete("filelist.xml");
+                    Barotrauma.IO.File.Delete("filelist.xml");
                     NewMessage("Deleted filelist", Color.Green);
                 }
 
-                if (System.IO.File.Exists("Data/bannedplayers.txt"))
+                if (Barotrauma.IO.File.Exists("Data/bannedplayers.txt"))
                 {
-                    System.IO.File.Delete("Data/bannedplayers.txt");
+                    Barotrauma.IO.File.Delete("Data/bannedplayers.txt");
                     NewMessage("Deleted bannedplayers.txt", Color.Green);
                 }
 
-                if (System.IO.File.Exists("Submarines/TutorialSub.sub"))
+                if (Barotrauma.IO.File.Exists("Submarines/TutorialSub.sub"))
                 {
-                    System.IO.File.Delete("Submarines/TutorialSub.sub");
+                    Barotrauma.IO.File.Delete("Submarines/TutorialSub.sub");
 
                     NewMessage("Deleted TutorialSub from the submarine folder", Color.Green);
                 }
 
-                /*if (System.IO.File.Exists(GameServer.SettingsFile))
+                /*if (Barotrauma.IO.File.Exists(GameServer.SettingsFile))
                 {
-                    System.IO.File.Delete(GameServer.SettingsFile);
+                    Barotrauma.IO.File.Delete(GameServer.SettingsFile);
                     NewMessage("Deleted server settings", Color.Green);
                 }
 
-                if (System.IO.File.Exists(GameServer.ClientPermissionsFile))
+                if (Barotrauma.IO.File.Exists(GameServer.ClientPermissionsFile))
                 {
-                    System.IO.File.Delete(GameServer.ClientPermissionsFile);
+                    Barotrauma.IO.File.Delete(GameServer.ClientPermissionsFile);
                     NewMessage("Deleted client permission file", Color.Green);
                 }*/
 
-                if (System.IO.File.Exists("crashreport.log"))
+                if (Barotrauma.IO.File.Exists("crashreport.log"))
                 {
-                    System.IO.File.Delete("crashreport.log");
+                    Barotrauma.IO.File.Delete("crashreport.log");
                     NewMessage("Deleted crashreport.log", Color.Green);
                 }
 
-                if (!System.IO.File.Exists("Content/Map/TutorialSub.sub"))
+                if (!Barotrauma.IO.File.Exists("Content/Map/TutorialSub.sub"))
                 {
                     ThrowError("TutorialSub.sub not found!");
                 }
@@ -2196,7 +2199,7 @@ namespace Barotrauma
                     ThrowError("Cannot use the flipx command while playing online.");
                     return;
                 }
-                Submarine.MainSub?.FlipX();
+                if (Submarine.MainSub.SubBody != null) { Submarine.MainSub?.FlipX(); }
             }, isCheat: true));
 
             commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
@@ -2318,9 +2321,16 @@ namespace Barotrauma
                 }
                 try
                 {
-                    SubmarineInfo subInfo = new SubmarineInfo(args[0]);
-                    Submarine spawnedSub = Submarine.Load(subInfo, false);
-                    spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                    var subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (subInfo == null)
+                    {
+                        ThrowError($"Could not find a submarine with the name \"{args[0]}\".");
+                    }
+                    else
+                    {
+                        Submarine spawnedSub = Submarine.Load(subInfo, false);
+                        spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                    }
                 }
                 catch (Exception e)
                 {
@@ -2328,7 +2338,15 @@ namespace Barotrauma
                     ThrowError(errorMsg, e);
                     GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnSubmarine:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
                 }
-            }, isCheat: true));
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    SubmarineInfo.SavedSubmarines.Select(s => s.DisplayName).ToArray()
+                };
+            },
+            isCheat: true));
 
             commands.Add(new Command("pause", "Toggles the pause state when playing offline", (string[] args) =>
             {

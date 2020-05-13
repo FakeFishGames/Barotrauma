@@ -17,7 +17,7 @@ namespace Barotrauma
             get { return bodyShapeTexture; }
         }
 
-        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool mirror = false)
+        public void Draw(DeformableSprite deformSprite, Camera cam, Vector2 scale, Color color, bool invert = false)
         {
             if (!Enabled) return;
             UpdateDrawPosition();
@@ -25,7 +25,7 @@ namespace Barotrauma
                 new Vector3(DrawPosition, MathHelper.Clamp(deformSprite.Sprite.Depth, 0, 1)), 
                 deformSprite.Origin, 
                 -DrawRotation, 
-                scale, color, Dir < 0, mirror);
+                scale, color, Dir < 0, invert);
         }
 
         public void Draw(SpriteBatch spriteBatch, Sprite sprite, Color color, float? depth = null, float scale = 1.0f, bool mirrorX = false, bool mirrorY = false)

@@ -5,7 +5,7 @@ using System.Linq;
 using Barotrauma.Extensions;
 using System;
 using System.Xml.Linq;
-using System.IO;
+using Barotrauma.IO;
 using RestSharp;
 using System.Net;
 
@@ -17,6 +17,9 @@ namespace Barotrauma
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
 
         public CursorState HoverCursor = CursorState.Default;
+        
+        public delegate bool SecondaryButtonDownHandler(GUIComponent component, object userData);
+        public SecondaryButtonDownHandler OnSecondaryClicked;
         
         public IEnumerable<GUIComponent> Children => RectTransform.Children.Select(c => c.GUIComponent);
 
@@ -202,12 +205,12 @@ namespace Barotrauma
             set
             {
                 RawToolTip = value;
-                TooltipColorData = ColorData.GetColorData(value, out value);
+                TooltipRichTextData = RichTextData.GetRichTextData(value, out value);
                 toolTip = value;
             }
         }
 
-        public List<ColorData> TooltipColorData = null;
+        public List<RichTextData> TooltipRichTextData = null;
 
         public GUIComponentStyle Style
         {
@@ -451,6 +454,15 @@ namespace Barotrauma
         protected virtual void Update(float deltaTime)
         {
             if (!Visible) return;
+            
+            if (CanBeFocused && OnSecondaryClicked != null)
+            {
+                if (GUI.IsMouseOn(this) && PlayerInput.SecondaryMouseButtonClicked())
+                {
+                    OnSecondaryClicked?.Invoke(this, userData);
+                }
+            }
+            
             if (flashTimer > 0.0f)
             {
                 flashTimer -= deltaTime;
@@ -638,10 +650,10 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) return;
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipColorData);
+            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipRichTextData);
         }
 
-        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<ColorData> colorData = null)
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<RichTextData> richTextData = null)
         {
             if (Tutorials.Tutorial.ContentRunning) { return; }
 
@@ -651,7 +663,7 @@ namespace Barotrauma
 
             if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
             {
-                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), colorData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
                 toolTipBlock.RectTransform.NonScaledSize = new Point(
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
                     (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));

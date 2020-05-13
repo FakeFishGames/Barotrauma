@@ -515,7 +515,7 @@ namespace Barotrauma.Tutorials
                 height += (int)GUI.Font.MeasureString(title).Y + (int)(150 * GUI.Scale);
             }
 
-            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: null, Color.Black * 0.5f);
+            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), background.RectTransform, anchor));
             infoBlock.Flash(GUI.Style.Green);
@@ -533,15 +533,15 @@ namespace Barotrauma.Tutorials
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            List<ColorData> colorData = ColorData.GetColorData(text, out text);
+            List<RichTextData> richTextData = RichTextData.GetRichTextData(text, out text);
             GUITextBlock textBlock;
-            if (colorData == null)
+            if (richTextData == null)
             {
                 textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
             }
             else
             {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), colorData, " " + text, wrap: true);
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, " " + text, wrap: true);
             }
 
             textBlock.RectTransform.IsFixedSize = true;

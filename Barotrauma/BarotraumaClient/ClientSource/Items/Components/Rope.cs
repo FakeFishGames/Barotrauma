@@ -66,6 +66,15 @@ namespace Barotrauma.Items.Components
             if (target == null) { return; }
 
             Vector2 startPos = new Vector2(source.DrawPosition.X, -source.DrawPosition.Y);
+            var turret = source?.GetComponent<Turret>();
+            if (turret != null)
+            {
+                startPos = new Vector2(source.WorldRect.X + turret.TransformedBarrelPos.X, -(source.WorldRect.Y - turret.TransformedBarrelPos.Y));
+                if (turret.BarrelSprite != null)
+                {
+                    startPos += new Vector2((float)Math.Cos(turret.Rotation), (float)Math.Sin(turret.Rotation)) * turret.BarrelSprite.size.Y * turret.BarrelSprite.RelativeOrigin.Y * item.Scale * 0.9f;
+                }
+            }
             Vector2 endPos = new Vector2(target.DrawPosition.X, -target.DrawPosition.Y);
 
             if (Snapped)

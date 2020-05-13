@@ -25,7 +25,7 @@ namespace Barotrauma
             : base(preset, param)
         {
             int buttonHeight = (int)(HUDLayoutSettings.ButtonAreaTop.Height * 0.7f);
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - 200, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, 200, buttonHeight), GUICanvas.Instance),
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(HUDLayoutSettings.ButtonAreaTop.Right - GUI.IntScale(200), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonHeight / 2, GUI.IntScale(200), buttonHeight), GUICanvas.Instance),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center)
             {
                 Font = GUI.SmallFont,
@@ -276,6 +276,7 @@ namespace Barotrauma
                     c.SaveInventory(c.Inventory, inventoryElement);
                     c.Info.InventoryData = inventoryElement;
                     c.Inventory?.DeleteAllItems();
+                    c.ResetCurrentOrder();
                 }
 
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);

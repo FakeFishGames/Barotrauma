@@ -108,10 +108,17 @@ namespace Barotrauma.Items.Components
 
         public Vector2 TargetVelocity
         {
-            get { return targetVelocity;}
-            set 
+            get { return targetVelocity; }
+            set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value))
+                {
+                    if (!MathUtils.IsValid(targetVelocity))
+                    {
+                        targetVelocity = Vector2.Zero;
+                    }
+                    return;
+                }
                 targetVelocity.X = MathHelper.Clamp(value.X, -100.0f, 100.0f);
                 targetVelocity.Y = MathHelper.Clamp(value.Y, -100.0f, 100.0f);
             }
@@ -285,7 +292,7 @@ namespace Barotrauma.Items.Components
             if (AutoPilot)
             {
                 UpdateAutoPilot(deltaTime);
-                targetVelocity = targetVelocity.ClampLength(MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f);
+                TargetVelocity = TargetVelocity.ClampLength(MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f);
             }
             else
             {
@@ -443,41 +450,46 @@ namespace Barotrauma.Items.Components
             //steer away from other subs
             foreach (Submarine sub in Submarine.Loaded)
             {
-                if (sub == controlledSub) continue;
-                if (controlledSub.DockedTo.Contains(sub)) continue;
-
-                float thisSize = Math.Max(controlledSub.Borders.Width, controlledSub.Borders.Height);
-                float otherSize = Math.Max(sub.Borders.Width, sub.Borders.Height);
-
+                if (sub == controlledSub) { continue; }
+                if (controlledSub.DockedTo.Contains(sub)) { continue; }
+                Point sizeSum = controlledSub.Borders.Size + sub.Borders.Size;
+                Vector2 minDist = sizeSum.ToVector2() / 2;
                 Vector2 diff = controlledSub.WorldPosition - sub.WorldPosition;
-                float dist = diff == Vector2.Zero ? 0.0f : diff.Length();
-
-                //far enough -> ignore
-                if (dist > thisSize + otherSize) continue;
-
-                Vector2 dir = dist <= 0.0001f ? Vector2.UnitY : diff / dist;
-                float dot = controlledSub.Velocity == Vector2.Zero ?
-                    0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -dir);
-
-                //heading away -> ignore
-                if (dot < 0.0f) continue;
-
-                targetVelocity += diff * 200.0f;
+                float xDist = Math.Abs(diff.X);
+                float yDist = Math.Abs(diff.Y);
+                Vector2 maxAvoidDistance = minDist * 2;
+                if (xDist > maxAvoidDistance.X || yDist > maxAvoidDistance.Y)
+                {
+                    //far enough -> ignore
+                    continue;
+                }
+                float dot = controlledSub.Velocity == Vector2.Zero ? 0.0f : Vector2.Dot(Vector2.Normalize(controlledSub.Velocity), -diff);
+                if (dot < 0.0f)
+                {
+                    //heading away -> ignore
+                    continue;
+                }
+                float distanceFactor = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(maxAvoidDistance.X + maxAvoidDistance.Y, minDist.X + minDist.Y, xDist + yDist));
+                float velocityFactor = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 3, controlledSub.Velocity.Length()));
+                TargetVelocity += 100 * Vector2.Normalize(diff) * distanceFactor * velocityFactor;
             }
 
-            //clamp velocity magnitude to 100.0f
-            float velMagnitude = targetVelocity.Length();
+            //clamp velocity magnitude to 100.0f (Is this required? The X and Y components are clamped in the property setter)
+            float velMagnitude = TargetVelocity.Length();
             if (velMagnitude > 100.0f)
             {
-                targetVelocity *= 100.0f / velMagnitude;
+                TargetVelocity *= 100.0f / velMagnitude;
             }
         }
 
         private void UpdatePath()
         {
             if (Level.Loaded == null) { return; }
-            
-            if (pathFinder == null) pathFinder = new PathFinder(WayPoint.WayPointList, false);
+
+            if (pathFinder == null)
+            {
+                pathFinder = new PathFinder(WayPoint.WayPointList, false);
+            }
 
             Vector2 target;
             if (LevelEndSelected)

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -189,7 +190,7 @@ namespace Barotrauma
             foreach (PurchasedItem pi in CargoManager.PurchasedItems)
             {
                 msg.Write(pi.ItemPrefab.Identifier);
-                msg.Write((UInt16)pi.Quantity);
+                msg.WriteRangedInteger(pi.Quantity, 0, 100);
             }
 
             var characterData = GetClientCharacterData(c);
@@ -217,7 +218,7 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemCount; i++)
             {
                 string itemPrefabIdentifier = msg.ReadString();
-                UInt16 itemQuantity = msg.ReadUInt16();
+                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
                 purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
             }
 
@@ -255,8 +256,8 @@ namespace Barotrauma
             }
             if (purchasedLostShuttles != this.PurchasedLostShuttles)
             {
-                if (GameMain.GameSession?.Submarine != null &&
-                    GameMain.GameSession.Submarine.LeftBehindSubDockingPortOccupied)
+                if (GameMain.GameSession?.SubmarineInfo != null &&
+                    GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }
@@ -306,7 +307,7 @@ namespace Barotrauma
             }
             try
             {
-                characterDataDoc.Save(characterDataPath);
+                characterDataDoc.SaveSafe(characterDataPath);
             }
             catch (Exception e)
             {

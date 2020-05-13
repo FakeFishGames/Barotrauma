@@ -6,9 +6,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -86,7 +87,7 @@ namespace Barotrauma
                     existingSound = GameMain.SoundManager.LoadSound(filename, stream);
                     if (existingSound == null) { return null; }
                 }
-                catch (FileNotFoundException e)
+                catch (System.IO.FileNotFoundException e)
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);
@@ -223,7 +224,7 @@ namespace Barotrauma
 
                     GUI.DrawRectangle(spriteBatch, worldBorders, Color.White, false, 0, 5);
 
-                    if (sub.subBody == null || sub.subBody.PositionBuffer.Count < 2) continue;
+                    if (sub.SubBody == null || sub.subBody.PositionBuffer.Count < 2) continue;
 
                     Vector2 prevPos = ConvertUnits.ToDisplayUnits(sub.subBody.PositionBuffer[0].Position);
                     prevPos.Y = -prevPos.Y;
@@ -246,7 +247,7 @@ namespace Barotrauma
         public static Color DamageEffectColor;
 
         private static readonly List<Structure> depthSortedDamageable = new List<Structure>();
-        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false)
+        public static void DrawDamageable(SpriteBatch spriteBatch, Effect damageEffect, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
 
@@ -257,6 +258,10 @@ namespace Barotrauma
             {
                 if (e is Structure structure && structure.DrawDamageEffect)
                 {
+                    if (predicate != null)
+                    {
+                        if (!predicate(e)) continue;
+                    }
                     float drawDepth = structure.GetDrawDepth();
                     int i = 0;
                     while (i < depthSortedDamageable.Count)

@@ -17,17 +17,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    public enum ActionType
-    {
-        Always, OnPicked, OnUse, OnSecondaryUse,
-        OnWearing, OnContaining, OnContained, OnNotContained,
-        OnActive, OnFailure, OnBroken, 
-        OnFire, InWater, NotInWater,
-        OnImpact,
-        OnEating,
-        OnDeath = OnBroken,
-        OnDamaged
-    }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
@@ -37,6 +26,8 @@ namespace Barotrauma
         public static bool ShowLinks = true;
                 
         private HashSet<string> tags;
+
+        private bool isWire;
 
         private Hull currentHull;
         public Hull CurrentHull
@@ -63,10 +54,13 @@ namespace Barotrauma
         /// </summary>
         private readonly List<ItemComponent> updateableComponents = new List<ItemComponent>();
         private List<IDrawableComponent> drawableComponents;
+        private bool hasComponentsToDraw;
 
         public PhysicsBody body;
 
         public readonly XElement StaticBodyConfig;
+
+        public List<Fixture> StaticFixtures = new List<Fixture>();
 
         private bool transformDirty = true;
 
@@ -166,7 +160,7 @@ namespace Barotrauma
             set { description = value; }
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, alwaysUseInstanceValues: true)]
         public bool NonInteractable
         {
             get;
@@ -598,7 +592,7 @@ namespace Barotrauma
             spriteColor = prefab.SpriteColor;
 
             components          = new List<ItemComponent>();
-            drawableComponents  = new List<IDrawableComponent>();
+            drawableComponents  = new List<IDrawableComponent>(); hasComponentsToDraw = false;
             tags                = new HashSet<string>();
             repairables         = new List<Repairable>();
 
@@ -626,7 +620,7 @@ namespace Barotrauma
                     case "body":
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale);
                         string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
-                        if (Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons)
+                        if ((Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons) && Condition > 0)
                         {
                             //force collision category to Character to allow projectiles and weapons to hit
                             //(we could also do this by making the projectiles and weapons hit CollisionItem
@@ -683,7 +677,11 @@ namespace Barotrauma
 
                         AddComponent(ic);
 
-                        if (ic is IDrawableComponent && ic.Drawable) drawableComponents.Add(ic as IDrawableComponent);
+                        if (ic is IDrawableComponent && ic.Drawable)
+                        {
+                            drawableComponents.Add(ic as IDrawableComponent);
+                            hasComponentsToDraw = true;
+                        }
                         if (ic is Repairable) repairables.Add((Repairable)ic);
                         break;
                 }
@@ -762,6 +760,8 @@ namespace Barotrauma
             ItemList.Add(this);
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
+
+            if (Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
         }
 
         partial void InitProjSpecific();
@@ -888,12 +888,23 @@ namespace Barotrauma
             if (!drawableComponents.Contains(drawable))
             {
                 drawableComponents.Add(drawable);
+                hasComponentsToDraw = true;
+#if CLIENT
+                cachedVisibleSize = null;
+#endif
             }
         }
 
         public void DisableDrawableComponent(IDrawableComponent drawable)
         {
-            drawableComponents.Remove(drawable);            
+            if (drawableComponents.Contains(drawable))
+            {
+                drawableComponents.Remove(drawable);
+                hasComponentsToDraw = drawableComponents.Count > 0;
+#if CLIENT
+                cachedVisibleSize = null;
+#endif
+            }
         }
 
         public int GetComponentIndex(ItemComponent component)
@@ -1065,7 +1076,7 @@ namespace Barotrauma
 
         public Item GetRootContainer()
         {
-            if (Container == null) return null;
+            if (Container == null) { return null; }
 
             Item rootContainer = Container;
             while (rootContainer.Container != null)
@@ -1076,7 +1087,16 @@ namespace Barotrauma
             return rootContainer;
         }
 
-        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == character) != null;
+        public bool IsOwnedBy(Entity entity) => FindParentInventory(i => i.Owner == entity) != null;
+
+        public Entity GetRootInventoryOwner()
+        {
+            if (ParentInventory == null) { return this; }
+            if (ParentInventory.Owner is Character) { return ParentInventory.Owner; }
+            var rootContainer = GetRootContainer();
+            if (rootContainer?.ParentInventory?.Owner is Character) { return rootContainer.ParentInventory.Owner; }
+            return rootContainer ?? this;
+        }
 
         public Inventory FindParentInventory(Func<Inventory, bool> predicate)
         {
@@ -1104,14 +1124,26 @@ namespace Barotrauma
         
         public void AddTag(string tag)
         {
-            if (tags.Contains(tag)) return;
+            if (tags.Contains(tag)) { return; }
             tags.Add(tag);
         }
 
         public bool HasTag(string tag)
         {
-            if (tag == null) return true;
+            if (tag == null) { return true; }
             return tags.Contains(tag) || prefab.Tags.Contains(tag);
+        }
+
+        public void ReplaceTag(string tag, string newTag)
+        {
+            if (!tags.Contains(tag)) { return; }
+            tags.Remove(tag);
+            tags.Add(newTag);
+        }
+
+        public IEnumerable<string> GetTags()
+        {
+            return tags;
         }
 
         public bool HasTag(IEnumerable<string> allowedTags)
@@ -1391,7 +1423,7 @@ namespace Barotrauma
             }
             else
             {
-                if (updateableComponents.Count == 0 && aiTarget == null && !hasStatusEffectsOfType[(int)ActionType.Always] && body == null)
+                if (updateableComponents.Count == 0 && aiTarget == null && !hasStatusEffectsOfType[(int)ActionType.Always] && (body == null || !body.Enabled))
                 {
 #if CLIENT
                     positionBuffer.Clear();
@@ -1421,6 +1453,14 @@ namespace Barotrauma
             else if (Submarine != null && prevSub != null && Submarine != prevSub)
             {
                 body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
+            }
+
+            if (Submarine != prevSub && ContainedItems != null)
+            {
+                foreach (Item containedItem in ContainedItems)
+                {
+                    containedItem.Submarine = Submarine;
+                }
             }
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
@@ -1671,7 +1711,22 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public Controller FindController()
+        {
+            //try finding the controller with the simpler non-recursive method first
+            var controllers = GetConnectedComponents<Controller>();
+            if (controllers.None()) { controllers = GetConnectedComponents<Controller>(recursive: true); }
+            return controllers.Count < 2 ? controllers.FirstOrDefault() :
+                (controllers.FirstOrDefault(c => c.GetFocusTarget() == this) ?? controllers.FirstOrDefault());
+        }
+
+        public bool TryFindController(out Controller controller)
+        {
+            controller = FindController();
+            return controller != null;
+        }
+
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             if (connections == null) { return; }
@@ -1745,7 +1800,8 @@ namespace Barotrauma
 #if CLIENT
             bool hasRequiredSkills = true;
             Skill requiredSkill = null;
-#endif            
+#endif
+            if (NonInteractable) { return false; }
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
@@ -2003,6 +2059,8 @@ namespace Barotrauma
 
         public void Drop(Character dropper, bool createNetworkEvent = true)
         {
+            Inventory prevInventory = parentInventory;
+            
             if (createNetworkEvent)
             {
                 if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
@@ -2016,6 +2074,7 @@ namespace Barotrauma
 
             if (body != null)
             {
+                isActive = true;
                 body.Enabled = true;
                 body.PhysEnabled = true;
                 body.ResetDynamics();
@@ -2477,7 +2536,7 @@ namespace Barotrauma
                 return;
             }
             DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");
-
+            
             base.Remove();
 
             foreach (Character character in Character.CharacterList)
@@ -2505,6 +2564,18 @@ namespace Barotrauma
             {
                 body.Remove();
                 body = null;
+            }
+
+            if (StaticFixtures != null)
+            {
+                foreach (Fixture fixture in StaticFixtures)
+                {
+                    //if the world is null, the body has already been removed
+                    //happens if the sub the fixture is attached to is removed before the item
+                    if (fixture.Body?.World == null) { continue; }
+                    fixture.Body.Remove(fixture);
+                }
+                StaticFixtures.Clear();
             }
 
             foreach (Item it in ItemList)

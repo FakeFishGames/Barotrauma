@@ -15,21 +15,21 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signals are equal.")]
+        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the condition is met.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
             set { output = value; }
         }
 
-        [InGameEditable, Serialize("", true, description: "The signal this item outputs when the received signals are not equal.")]
+        [InGameEditable, Serialize("", true, description: "The signal this item outputs when the condition is not met.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
             set { falseOutput = value; }
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.")]
+        [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.", alwaysUseInstanceValues: true)]
         public float TimeFrame
         {
             get { return timeFrame; }

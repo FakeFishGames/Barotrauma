@@ -1,8 +1,12 @@
-﻿using System.IO;
-using System.Collections.Generic;
-using System.Xml;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+#if DEBUG
+using System.IO;
+using System.Xml;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma
 {
@@ -75,7 +79,7 @@ namespace Barotrauma
             Folder = Path.GetDirectoryName(FullPath);
         }
 
-        public virtual bool Save(string fileNameWithoutExtension = null, XmlWriterSettings settings = null)
+        public virtual bool Save(string fileNameWithoutExtension = null, System.Xml.XmlWriterSettings settings = null)
         {
             if (!Directory.Exists(Folder))
             {
@@ -85,7 +89,7 @@ namespace Barotrauma
             Serialize();
             if (settings == null)
             {
-                settings = new XmlWriterSettings
+                settings = new System.Xml.XmlWriterSettings
                 {
                     Indent = true,
                     OmitXmlDeclaration = true,

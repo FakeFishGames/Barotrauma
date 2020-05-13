@@ -9,9 +9,9 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement mainElement) { }
 
-        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult)
+        partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
-            GameMain.Server.KarmaManager.OnCharacterHealthChanged(this, attacker, attackResult.Damage, attackResult.Afflictions);
+            GameMain.Server.KarmaManager.OnCharacterHealthChanged(this, attacker, attackResult.Damage, stun, attackResult.Afflictions);
         }
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
@@ -20,11 +20,11 @@ namespace Barotrauma
             {
                 if (causeOfDeath == CauseOfDeathType.Affliction)
                 {
-                    GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
+                    GameServer.Log(GameServer.CharacterLogName(this) + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
                 }
                 else
                 {
-                    GameServer.Log(LogName + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
+                    GameServer.Log(GameServer.CharacterLogName(this) + " has died (Cause of death: " + causeOfDeath + ")", ServerLog.MessageType.Attack);
                 }
             }
 

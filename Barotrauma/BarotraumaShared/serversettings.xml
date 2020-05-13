@@ -46,7 +46,7 @@
   kickafktime="600"
   traitoruseratio="True"
   traitorratio="0.2"
-  karmaenabled="False"
+  karmaenabled="True"
   karmapreset="default"
   gamemodeidentifier="sandbox"
   missiontype="Random"

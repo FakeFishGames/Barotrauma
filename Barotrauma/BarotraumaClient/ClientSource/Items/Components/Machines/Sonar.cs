@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
             Disruption
         }
 
+        private PathFinder pathFinder;
+
         private bool dynamicDockingIndicator = true;
 
         private bool unsentChanges;
@@ -45,7 +47,7 @@ namespace Barotrauma.Items.Components
         private Sprite sonarBlip;
         private Sprite lineSprite;
 
-        private Dictionary<string, Sprite> targetIcons = new Dictionary<string, Sprite>();
+        private readonly Dictionary<string, Sprite> targetIcons = new Dictionary<string, Sprite>();
 
         private float displayBorderSize;
 
@@ -65,7 +67,23 @@ namespace Barotrauma.Items.Components
 
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
-        List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
+        private readonly List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
+
+        class CachedDistance
+        {
+            public readonly Vector2 TransducerWorldPos;
+            public readonly Vector2 WorldPos;
+            public readonly float Distance;
+
+            public CachedDistance(Vector2 transducerWorldPos, Vector2 worldPos, float dist)
+            {
+                TransducerWorldPos = transducerWorldPos;
+                WorldPos = worldPos;
+                Distance = dist;
+            }
+        }
+
+        private readonly Dictionary<object, CachedDistance> markerDistances = new Dictionary<object, CachedDistance>();
 
         private readonly Color positiveColor = Color.Green;
         private readonly Color warningColor = Color.Orange;
@@ -74,7 +92,7 @@ namespace Barotrauma.Items.Components
 
         public static readonly Vector2 controlBoxSize = new Vector2(0.33f, 0.32f);
         public static readonly Vector2 controlBoxOffset = new Vector2(0.025f, 0);
-        public static readonly float sonarAreaSize = 1.09f;
+        private static readonly float sonarAreaSize = 1.09f;
 
         private static readonly Dictionary<BlipType, Color[]> blipColorGradient = new Dictionary<BlipType, Color[]>()
         {
@@ -93,6 +111,8 @@ namespace Barotrauma.Items.Components
         public Vector2 DisplayOffset { get; private set; }
 
         public float DisplayRadius { get; private set; }
+
+        public static Vector2 GUISizeCalculation => Vector2.One * Math.Min(GUI.RelativeHorizontalAspectRatio, 1f) * sonarAreaSize;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -254,7 +274,7 @@ namespace Barotrauma.Items.Components
                 controlContainer.RectTransform.SetPosition(Anchor.TopLeft);
                 sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
                 sonarView.RectTransform.SetPosition(Anchor.CenterRight);
-                sonarView.RectTransform.Resize(Vector2.One * GUI.RelativeHorizontalAspectRatio * sonarAreaSize);
+                sonarView.RectTransform.Resize(GUISizeCalculation);
                 GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
             }
         }
@@ -490,6 +510,7 @@ namespace Barotrauma.Items.Components
                 disruptedDirections.Clear();
                 foreach (AITarget t in AITarget.List)
                 {
+                    if (t.Entity is Character c && c.Params.HideInSonar) { continue; }
                     if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
                     
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
@@ -652,12 +673,16 @@ namespace Barotrauma.Items.Components
             DrawMarker(spriteBatch,
                 GameMain.GameSession.StartLocation.Name,
                 "outpost",
-                (Level.Loaded.StartPosition - transducerCenter), displayScale, center, DisplayRadius);
+                GameMain.GameSession.StartLocation.Name,
+                Level.Loaded.StartPosition, transducerCenter,
+                displayScale, center, DisplayRadius);
 
             DrawMarker(spriteBatch,
                 GameMain.GameSession.EndLocation.Name,
                 "outpost",
-                (Level.Loaded.EndPosition - transducerCenter), displayScale, center, DisplayRadius);
+                GameMain.GameSession.EndLocation.Name,
+                Level.Loaded.EndPosition, transducerCenter, 
+                displayScale, center, DisplayRadius);
 
             foreach (AITarget aiTarget in AITarget.List)
             {
@@ -669,7 +694,9 @@ namespace Barotrauma.Items.Components
                     DrawMarker(spriteBatch,
                         aiTarget.SonarLabel,
                         aiTarget.SonarIconIdentifier,
-                        aiTarget.WorldPosition - transducerCenter, displayScale, center, DisplayRadius * 0.975f);
+                        aiTarget,
+                        aiTarget.WorldPosition, transducerCenter, 
+                        displayScale, center, DisplayRadius * 0.975f);
                 }
             }
             
@@ -684,7 +711,9 @@ namespace Barotrauma.Items.Components
                         DrawMarker(spriteBatch,
                             mission.SonarLabel,
                             mission.SonarIconIdentifier,
-                            sonarPosition - transducerCenter, displayScale, center, DisplayRadius * 0.95f);
+                            mission,
+                            sonarPosition, transducerCenter, 
+                            displayScale, center, DisplayRadius * 0.95f);
                     }
                 }
             }
@@ -701,9 +730,10 @@ namespace Barotrauma.Items.Components
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                              
                 DrawMarker(spriteBatch, 
-                    sub.Info.Name, 
+                    sub.Info.DisplayName, 
                     sub.Info.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
-                    sub.WorldPosition - transducerCenter, 
+                    sub,
+                    sub.WorldPosition, transducerCenter, 
                     displayScale, center, DisplayRadius * 0.95f);
             }
 
@@ -801,8 +831,11 @@ namespace Barotrauma.Items.Components
             {
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
+                if (dockingPort.Item.Submarine == null) { continue; }
+                if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
+
                 //don't show the docking ports of the opposing team on the sonar
-                if (item.Submarine != null && dockingPort.Item.Submarine != null)
+                if (item.Submarine != null)
                 {
                     if ((dockingPort.Item.Submarine.TeamID == Character.TeamType.Team1 && item.Submarine.TeamID == Character.TeamType.Team2) ||
                         (dockingPort.Item.Submarine.TeamID == Character.TeamType.Team2 && item.Submarine.TeamID == Character.TeamType.Team1))
@@ -947,14 +980,13 @@ namespace Barotrauma.Items.Components
                 }
                 foreach (AITarget aiTarget in AITarget.List)
                 {
-                    if (aiTarget.SonarDisruption <= 0.0f || !aiTarget.Enabled) { continue; }
+                    float disruption = aiTarget.Entity is Character c ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
+                    if (disruption <= 0.0f || !aiTarget.Enabled) { continue; }
                     float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
                     if (distSqr > worldPingRadiusSqr) { continue; }
-
                     float disruptionDist = (float)Math.Sqrt(distSqr);
                     disruptedDirections.Add(new Pair<Vector2, float>((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
-
-                    CreateBlipsForDisruption(aiTarget.WorldPosition, aiTarget.SonarDisruption);                    
+                    CreateBlipsForDisruption(aiTarget.WorldPosition, disruption);
                 }
             }
 
@@ -1127,6 +1159,7 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (c.AnimController.CurrentHull != null || !c.Enabled) { continue; }
+                if (c.Params.HideInSonar) { continue; }
                 if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
 
                 if (c.AnimController.SimplePhysicsEnabled)
@@ -1298,9 +1331,42 @@ namespace Barotrauma.Items.Components
             sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
         }
 
-        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, Vector2 position, float scale, Vector2 center, float radius)
+        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius)
         {
-            float dist = position.Length();
+            float dist = Vector2.Distance(worldPosition, transducerPosition);
+            if (Vector2.DistanceSquared(worldPosition, transducerPosition) > Range * Range)
+            {
+                if (markerDistances.TryGetValue(targetIdentifier, out CachedDistance cachedDistance))
+                {
+                    if (Vector2.DistanceSquared(cachedDistance.TransducerWorldPos, transducerPosition) > 500 * 500 ||
+                        Vector2.DistanceSquared(cachedDistance.WorldPos, worldPosition) > 500 * 500)
+                    {
+                        markerDistances.Remove(targetIdentifier);
+                        CalculateDistance();
+                    }
+                    else
+                    {
+                        dist = cachedDistance.Distance;
+                    }
+                }
+                else
+                {
+                    CalculateDistance();
+                }
+            }
+
+            void CalculateDistance()
+            {
+                pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
+                if (!path.Unreachable)
+                {
+                    markerDistances.Add(targetIdentifier, new CachedDistance(transducerPosition, worldPosition, path.TotalLength));
+                    dist = path.TotalLength;
+                }
+            }
+
+            Vector2 position = worldPosition - transducerPosition;
 
             position *= zoom;
             position *= scale;

@@ -14,6 +14,8 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt64 SteamID;
 
+        public UInt16 Ping;
+
         public string PreferredJob;
 
         public Character.TeamType TeamID;
@@ -86,6 +88,14 @@ namespace Barotrauma.Networking
             }
         }
 
+        public bool Spectating
+        {
+            get
+            {
+                return inGame && character == null;
+            }
+        }
+
         private bool muted;
         public bool Muted
         {
@@ -104,6 +114,8 @@ namespace Barotrauma.Networking
                 }
             }
         }
+
+        public bool HasPermissions = false;
 
         public VoipQueue VoipQueue
         {

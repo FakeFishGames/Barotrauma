@@ -241,7 +241,6 @@ namespace Barotrauma.Items.Components
         private void Launch(Vector2 impulse)
         {
             hits.Clear();
-            MaxTargetsToHit = 2;
 
             if (item.AiTarget != null)
             {
@@ -294,6 +293,12 @@ namespace Barotrauma.Items.Components
             {
                 //shooting indoors, do a hitscan outside as well
                 hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition));
+                //also in the coordinate space of docked subs
+                foreach (Submarine dockedSub in item.Submarine.DockedTo)
+                {
+                    if (dockedSub == item.Submarine) { continue; }
+                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition));
+                }
             }
             else
             {
@@ -354,7 +359,7 @@ namespace Barotrauma.Items.Components
             {
                 //ignore sensors and items
                 if (fixture?.Body == null || fixture.IsSensor) { return true; }
-                if (fixture.Body.UserData is Item item  && item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles) { return true; }
+                if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
                 if (fixture.Body?.UserData as string == "ruinroom") { return true; }
 
                 //ignore everything else than characters, sub walls and level walls
@@ -374,7 +379,7 @@ namespace Barotrauma.Items.Components
                 //ignore sensors and items
                 if (fixture?.Body == null || fixture.IsSensor) { return -1; }
 
-                if (fixture.Body.UserData is Item item && item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles) { return -1; }
+                if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
                 if (fixture.Body?.UserData as string == "ruinroom") { return -1; }
 
                 //ignore everything else than characters, sub walls and level walls
@@ -410,9 +415,9 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (stickJoint == null || StickPermanently) { return; }
+            if (stickJoint == null) { return; }
 
-            if (persistentStickJointTimer > 0.0f)
+            if (persistentStickJointTimer > 0.0f && !StickPermanently)
             {
                 persistentStickJointTimer -= deltaTime;
                 return;
@@ -420,18 +425,23 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f ||
-                    stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)
+                if (StickTargetRemoved() ||
+                    (!StickPermanently && (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)))
                 {
                     Unstick();
-                }
 #if SERVER
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                {
-                    item.CreateServerEvent(this);
-                }
+                    item.CreateServerEvent(this);                
 #endif
+                }
             }
+        }
+
+        private bool StickTargetRemoved()
+        {
+            if (StickTarget == null) { return true; }
+            if (StickTarget.UserData is Limb limb) { return limb.character.Removed; }
+            if (StickTarget.UserData is Entity entity) { return entity.Removed; }
+            return false;
         }
 
 
@@ -529,7 +539,7 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Item targetItem)
             {
-                if (attack != null && targetItem.Prefab.DamagedByProjectiles) 
+                if (attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
                 {
                     attackResult = attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f); 
                 }
@@ -604,7 +614,7 @@ namespace Barotrauma.Items.Components
             if (hits.Count() >= MaxTargetsToHit)
             {
                 item.body.FarseerBody.OnCollision -= OnProjectileCollision;
-                if (item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons)
+                if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
                 {
                     item.body.CollisionCategories = Physics.CollisionCharacter;
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
@@ -623,6 +633,7 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.1f;
             }
             else if (Vector2.Dot(velocity, collisionNormal) < 0.0f && hits.Count() >= MaxTargetsToHit &&
+                        target.Body.Mass > item.body.Mass * 0.5f &&
                         (DoesStick ||
                         (StickToCharacters && target.Body.UserData is Limb) ||
                         (StickToStructures && target.Body.UserData is Structure) ||
@@ -692,6 +703,7 @@ namespace Barotrauma.Items.Components
             if (StickPermanently)
             {
                 stickJoint.LowerLimit = stickJoint.UpperLimit = 0.0f;
+                item.body.ResetDynamics();
             }
             else if (item.Sprite != null)
             {

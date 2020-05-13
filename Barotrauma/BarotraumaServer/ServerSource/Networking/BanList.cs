@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 
@@ -347,7 +347,7 @@ namespace Barotrauma.Networking
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
-                        GameServer.Log(c.Name + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
                         RemoveBan(bannedPlayer);
                     }
                 }
@@ -358,7 +358,7 @@ namespace Barotrauma.Networking
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
-                        GameServer.Log(c.Name + " rangebanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        GameServer.Log(GameServer.ClientLogName(c) + " rangebanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
                         RangeBan(bannedPlayer);
                     }
                 }

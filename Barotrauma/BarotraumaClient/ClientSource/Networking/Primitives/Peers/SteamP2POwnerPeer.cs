@@ -13,7 +13,9 @@ namespace Barotrauma.Networking
         private bool isActive;
 
         private ConnectionInitialization initializationStep;
-        private UInt64 selfSteamID;
+        private readonly UInt64 selfSteamID;
+
+        private long sentBytes, receivedBytes;
 
         class RemotePeer
         {
@@ -204,22 +206,24 @@ namespace Barotrauma.Networking
                 }
             }
 
-            for (int i=0;i<100;i++)
+            for (int i = 0; i < 100; i++)
             {
                 if (!Steamworks.SteamNetworking.IsP2PPacketAvailable()) { break; }
                 var packet = Steamworks.SteamNetworking.ReadP2PPacket();
                 if (packet.HasValue)
                 {
                     OnP2PData(packet?.SteamId ?? 0, packet?.Data, packet?.Data.Length ?? 0, 0);
+                    receivedBytes += packet?.Data.Length ?? 0;
                 }
             }
+
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.ReceivedBytes, receivedBytes);
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.SentBytes, sentBytes);
 
             while (ChildServerRelay.Read(out byte[] incBuf))
             {
                 ChildServerRelay.DisposeLocalHandles();
-
                 IReadMessage inc = new ReadOnlyMessage(incBuf, false, 0, incBuf.Length, ServerConnection);
-
                 HandleDataMessage(inc);
             }
         }
@@ -295,6 +299,7 @@ namespace Barotrauma.Networking
                 }
 
                 bool successSend = Steamworks.SteamNetworking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, 0, sendType);
+                sentBytes += p2pData.Length;
 
                 if (!successSend)
                 {
@@ -303,6 +308,7 @@ namespace Barotrauma.Networking
                         DebugConsole.Log("WARNING: message couldn't be sent unreliably, forcing reliable send (" + p2pData.Length.ToString() + " bytes)");
                         sendType = Steamworks.P2PSend.Reliable;
                         successSend = Steamworks.SteamNetworking.SendP2PPacket(recipientSteamId, p2pData, p2pData.Length, 0, sendType);
+                        sentBytes += p2pData.Length;
                     }
                     if (!successSend)
                     {
@@ -336,7 +342,6 @@ namespace Barotrauma.Networking
                     byte[] msgToSend = (byte[])outMsg.Buffer.Clone();
                     Array.Resize(ref msgToSend, outMsg.LengthBytes);
                     ChildServerRelay.Write(msgToSend);
-
                     return;
                 }
                 else
@@ -369,6 +374,7 @@ namespace Barotrauma.Networking
                 outMsg.Write(msg);
 
                 Steamworks.SteamNetworking.SendP2PPacket(peer.SteamID, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
+                sentBytes += outMsg.LengthBytes;
             }
             else
             {
@@ -405,7 +411,7 @@ namespace Barotrauma.Networking
                 ClosePeerSession(remotePeers[i]);
             }
 
-            ChildServerRelay.ShutDown();
+            ChildServerRelay.ClosePipes();
 
             OnDisconnect?.Invoke();
 

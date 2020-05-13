@@ -654,13 +654,14 @@ namespace Barotrauma.RuinGeneration
                         {
                             connectionPanel.Locked = true;
                             connectionPanel.CanBeSelected = false;
+                            connectionPanel.Item.ShouldBeSaved = false;
                         }
-
-                        // Hide wires for now
+                        // Hide wires
                         if (ic is Wire wire)
                         {
                             wire.Hidden = true;
                             wire.CanBeSelected = false;
+                            wire.Item.ShouldBeSaved = false;
                         }
                     }
                 }

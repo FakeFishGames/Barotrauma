@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -27,13 +26,18 @@ namespace Barotrauma
         protected override bool Filter(Pump pump)
         {
             if (pump == null) { return false; }
+            if (pump.Item.NonInteractable) { return false; }
             if (pump.Item.HasTag("ballast")) { return false; }
             if (pump.Item.Submarine == null) { return false; }
             if (pump.Item.CurrentHull == null) { return false; }
             if (pump.Item.Submarine.TeamID != character.TeamID) { return false; }
             if (pump.Item.ConditionPercentage <= 0) { return false; }
             if (pump.Item.CurrentHull.FireSources.Count > 0) { return false; }
-            if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
+            if (character.Submarine != null)
+            {
+                if (pump.Item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
+                if (!character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
+            }
             if (Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (IsReady(pump)) { return false; }
             return true;

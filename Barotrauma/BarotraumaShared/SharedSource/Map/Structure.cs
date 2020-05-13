@@ -283,6 +283,13 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, true), Editable]
+        public bool NoAITarget
+        {
+            get;
+            private set;
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -354,6 +361,7 @@ namespace Barotrauma
             }
 
             StairDirection = Prefab.StairDirection;
+            NoAITarget = Prefab.NoAITarget;
             SerializableProperties = SerializableProperty.GetProperties(this);
 
             InitProjSpecific();
@@ -381,7 +389,7 @@ namespace Barotrauma
             }
 
             // Only add ai targets automatically to submarine/outpost walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !Prefab.NoAITarget)
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !NoAITarget)
             {
                 aiTarget = new AITarget(this)
                 {
@@ -818,7 +826,10 @@ namespace Barotrauma
                 Vector2 sectionPos = new Vector2(
                     Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
                     Sections[sectionIndex].rect.Y - Sections[sectionIndex].rect.Height / 2.0f);
-                if (world && Submarine != null) sectionPos += Submarine.Position;
+                if (world && Submarine != null)
+                {
+                    sectionPos += Submarine.Position;
+                }
                 return sectionPos;
             }
             else
@@ -839,7 +850,10 @@ namespace Barotrauma
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
 
-                if (world && Submarine != null) sectionPos += Submarine.Position;
+                if (world && Submarine != null)
+                {
+                    sectionPos += Submarine.Position;
+                }
                 return sectionPos;
             }
 
@@ -913,7 +927,7 @@ namespace Barotrauma
                     //the structure doesn't have any other gap, log the structure being fixed
                     if (noGaps && attacker != null)
                     {
-                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall repaired by " + GameServer.CharacterLogName(attacker), ServerLog.MessageType.ItemInteraction);
                     }
 #endif
                     DebugConsole.Log("Removing gap (ID " + Sections[sectionIndex].gap.ID + ", section: " + sectionIndex + ") from wall " + ID);
@@ -987,11 +1001,11 @@ namespace Barotrauma
                     //the structure didn't have any other gaps yet, log the breach
                     if (noGaps && attacker != null)
                     {
-                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + attacker.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log((Sections[sectionIndex].gap.IsRoomToRoom ? "Inner" : "Outer") + " wall breached by " + GameServer.CharacterLogName(attacker), ServerLog.MessageType.ItemInteraction);
                     }
 #endif
                 }
-                
+
                 float gapOpen = (damage / Prefab.Health - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
                 Sections[sectionIndex].gap.Open = gapOpen;
             }
@@ -1255,6 +1269,11 @@ namespace Barotrauma
                 s.UseDropShadow = prefab.Body;
             }
 
+            if (element.Attribute("noaitarget") == null)
+            {
+                s.NoAITarget = prefab.NoAITarget;
+            }
+
             return s;
         }
 
@@ -1327,6 +1346,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
+            NoAITarget = Prefab.NoAITarget;
         }
 
         public override void Update(float deltaTime, Camera cam)

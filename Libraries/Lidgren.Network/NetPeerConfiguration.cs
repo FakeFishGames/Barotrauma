@@ -142,6 +142,12 @@ namespace Lidgren.Network
 			get { return m_appIdentifier; }
 		}
 
+		public bool UseDualModeSockets
+		{
+			get;
+			set;
+		} = true;
+
 		/// <summary>
 		/// Enables receiving of the specified type of message
 		/// </summary>

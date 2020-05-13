@@ -166,10 +166,20 @@ namespace Barotrauma
                 if (isSevered)
                 {
                     ragdoll.SubtractMass(this);
+                    if (type == LimbType.Head)
+                    {
+                        character.Kill(CauseOfDeathType.Unknown, null);
+                    }
                 }
-                if (!isSevered) severedFadeOutTimer = 0.0f;
+                else
+                {
+                    severedFadeOutTimer = 0.0f;
+                }
 #if CLIENT
-                if (isSevered) damageOverlayStrength = 100.0f;
+                if (isSevered)
+                {
+                    damageOverlayStrength = 100.0f;
+                }
 #endif
             }
         }
@@ -366,11 +376,41 @@ namespace Barotrauma
 
         public string Name => Params.Name;
 
+        // Exposed for status effects
+        public bool IsDead => character.IsDead;
+
+        public bool CanBeSeveredAlive
+        {
+            get
+            {
+                if (character.IsHumanoid) { return false; }
+                if (this == character.AnimController.MainLimb) { return false; }
+                if (character.AnimController.CanWalk)
+                {
+                    switch (type)
+                    {
+                        case LimbType.LeftFoot:
+                        case LimbType.RightFoot:
+                        case LimbType.LeftLeg:
+                        case LimbType.RightLeg:
+                        case LimbType.LeftThigh:
+                        case LimbType.RightThigh:
+                        case LimbType.Legs:
+                        case LimbType.Waist:
+                            return false;
+                    }
+                }
+                return true;
+            }
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
             private set;
         }
+
+        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
@@ -434,6 +474,9 @@ namespace Barotrauma
                     case "damagemodifier":
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
+                    case "statuseffect":
+                        statusEffects.Add(StatusEffect.Load(subElement, Name));
+                        break;
                 }
             }
 
@@ -471,43 +514,60 @@ namespace Barotrauma
             return AddDamage(simPosition, afflictions, playSound);
         }
 
+        private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+        private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
         public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
         {
-            List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
-            //create a copy of the original affliction list to prevent modifying the afflictions of an Attack/StatusEffect etc
-            var afflictionsCopy = afflictions.Where(a => Rand.Range(0.0f, 1.0f) <= a.Probability).ToList();
-            for (int i = 0; i < afflictionsCopy.Count; i++)
+            appliedDamageModifiers.Clear();
+            afflictionsCopy.Clear();
+            foreach (var affliction in afflictions)
             {
+                var newAffliction = affliction;
+                float random = Rand.Value(Rand.RandSync.Unsynced);
+                if (random > affliction.Probability) { continue; }
+                bool applyAffliction = true;
                 foreach (DamageModifier damageModifier in DamageModifiers)
                 {
-                    if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                    if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                    if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
+                    {
+                        applyAffliction = false;
+                        continue;
+                    }
                     if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                     {
-                        afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                        newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
                         appliedDamageModifiers.Add(damageModifier);
                     }
                 }
-
                 foreach (WearableSprite wearable in wearingItems)
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
-                        if (!damageModifier.MatchesAffliction(afflictionsCopy[i])) continue;
+                        if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                        if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
+                        {
+                            applyAffliction = false;
+                            continue;
+                        }
                         if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                         {
-                            afflictionsCopy[i] = afflictionsCopy[i].CreateMultiplied(damageModifier.DamageMultiplier);
+                            newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
                             appliedDamageModifiers.Add(damageModifier);
                         }
                     }
                 }
+                if (applyAffliction)
+                {
+                    afflictionsCopy.Add(newAffliction);
+                }
             }
-
-            AddDamageProjSpecific(simPosition, afflictionsCopy, playSound, appliedDamageModifiers);
-
-            return new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            AddDamageProjSpecific(playSound, result);
+            return result;
         }
 
-        partial void AddDamageProjSpecific(Vector2 simPosition, List<Affliction> afflictions, bool playSound, List<DamageModifier> appliedDamageModifiers);
+        partial void AddDamageProjSpecific(bool playSound, AttackResult result);
 
         public bool SectorHit(Vector2 armorSector, Vector2 simPosition)
         {
@@ -564,7 +624,8 @@ namespace Barotrauma
         public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
             attackResult = default(AttackResult);
-            float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(SimPosition, attackSimPos));
+            Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
+            float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime);
 
@@ -577,7 +638,7 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(SimPosition, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);                            
+                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);                            
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
@@ -646,33 +707,19 @@ namespace Barotrauma
 
             if (wasHit)
             {
-                bool playSound = false;
-#if CLIENT
-                playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
-                if (playSound)
+                if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
-                    LastAttackSoundTime = SoundInterval;
+                    ExecuteAttack(damageTarget, targetLimb, out attackResult);
                 }
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(character, new object[] 
+                { 
+                    NetEntityEvent.Type.ExecuteAttack, 
+                    this, 
+                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
+                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0
+                });   
 #endif
-                if (damageTarget is Character targetCharacter && targetLimb != null)
-                {
-                    attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
-                }
-                else
-                {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
-                }
-                if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
-                {
-                    // TODO: use the hit pos?
-                    var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
-                    var from = body.FarseerBody.GetWorldPoint(localFront);
-                    var to = from;
-                    var drawPos = body.DrawPosition;
-                    StickTo(structureBody, from, to);
-                }
-                attack.ResetAttackTimer();
-                attack.SetCoolDown();
             }
 
             Vector2 diff = attackSimPos - SimPosition;
@@ -685,6 +732,7 @@ namespace Barotrauma
                     {
                         if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) { continue; }
                         Limb limb = character.AnimController.Limbs[limbIndex];
+                        if (limb.IsSevered) { continue; }
                         diff = attackSimPos - limb.SimPosition;
                         if (diff == Vector2.Zero) { continue; }
                         limb.body.ApplyTorque(limb.Mass * character.AnimController.Dir * attack.Torque * limb.Params.AttackForceMultiplier);
@@ -705,9 +753,47 @@ namespace Barotrauma
             if (!attack.IsRunning)
             {
                 // Set the main collider where the body lands after the attack
-                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: 0);
+                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
             }
             return wasHit;
+        }
+
+        public void ExecuteAttack(IDamageable damageTarget, Limb targetLimb, out AttackResult attackResult)
+        {
+            bool playSound = false;
+#if CLIENT
+            playSound = LastAttackSoundTime < Timing.TotalTime - SoundInterval;
+            if (playSound)
+            {
+                LastAttackSoundTime = SoundInterval;
+            }
+#endif
+            if (damageTarget is Character targetCharacter && targetLimb != null)
+            {
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
+            }
+            else
+            {
+                if (damageTarget is Item targetItem && !targetItem.Prefab.DamagedByMonsters)
+                {
+                    attackResult = new AttackResult();
+                }
+                else
+                {
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                }
+            }
+            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+            {
+                // TODO: use the hit pos?
+                var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
+                var from = body.FarseerBody.GetWorldPoint(localFront);
+                var to = from;
+                var drawPos = body.DrawPosition;
+                StickTo(structureBody, from, to);
+            }*/
+            attack.ResetAttackTimer();
+            attack.SetCoolDown();
         }
 
         private WeldJoint attachJoint;
@@ -766,6 +852,30 @@ namespace Barotrauma
             {
                 GameMain.World.Remove(colliderJoint);
                 colliderJoint = null;
+            }
+        }
+
+        private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+        public void ApplyStatusEffects(ActionType actionType, float deltaTime)
+        {
+            foreach (StatusEffect statusEffect in statusEffects)
+            {
+                if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    targets.Clear();
+                    statusEffect.GetNearbyTargets(WorldPosition, targets);
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, character, targets);
+                }
+                else
+                {
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                    {
+                        statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
+                    }
+                    statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                }
             }
         }
 

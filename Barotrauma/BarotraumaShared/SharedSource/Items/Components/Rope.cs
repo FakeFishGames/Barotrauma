@@ -120,6 +120,10 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+#if CLIENT
+            item.ResetCachedVisibleSize();
+#endif
+
             if (SnapOnCollision)
             {
                 raycastTimer += deltaTime;

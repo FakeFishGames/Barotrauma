@@ -88,6 +88,8 @@ namespace Barotrauma
             Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
+        public const float DefaultAngularDamping = 5.0f;
+
         private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
         public static List<PhysicsBody> List
         {
@@ -342,7 +344,7 @@ namespace Barotrauma
             FarseerBody.BodyType = BodyType.Dynamic;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
             FarseerBody.CollisionCategories = Physics.CollisionCharacter;
-            FarseerBody.AngularDamping = 5.0f;
+            FarseerBody.AngularDamping = DefaultAngularDamping;
             FarseerBody.FixedRotation = true;
             FarseerBody.Friction = 0.05f;
             FarseerBody.Restitution = 0.05f;
@@ -370,15 +372,15 @@ namespace Barotrauma
             list.Add(this);
         }
         
-        public PhysicsBody(XElement element, Vector2 position, float scale=1.0f)
+        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
             density = element.GetAttributeFloat("density", 10.0f);
             CreateBody(width, height, radius, density);
-            //Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            FarseerBody.BodyType = BodyType.Dynamic;
+            Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
+            FarseerBody.BodyType = bodyType;
             FarseerBody.CollisionCategories = Physics.CollisionItem;
             FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.3f);
@@ -428,7 +430,7 @@ namespace Barotrauma
         /// For rectangles, the front is either at the top or at the right, depending on which one of the two is greater: width or height.
         /// The rotation is in radians.
         /// </summary>
-        public Vector2 GetLocalFront(float spritesheetRotation = 0)
+        public Vector2 GetLocalFront(float? spritesheetRotation = null)
         {
             Vector2 pos;
             switch (bodyShape)
@@ -443,12 +445,12 @@ namespace Barotrauma
                     pos = new Vector2(0.0f, radius);
                     break;
                 case Shape.Rectangle:
-                    pos = new Vector2(0.0f, Math.Max(height, width) / 2.0f);
+                    pos = height > width ? new Vector2(0, height / 2) : new Vector2(width / 2, 0);
                     break;
                 default:
                     throw new NotImplementedException();
             }
-            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(-spritesheetRotation));
+            return spritesheetRotation.HasValue ? Vector2.Transform(pos, Matrix.CreateRotationZ(-spritesheetRotation.Value)) : pos;
         }
 
         public float GetMaxExtent()

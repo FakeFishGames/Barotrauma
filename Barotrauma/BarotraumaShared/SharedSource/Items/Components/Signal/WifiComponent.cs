@@ -9,7 +9,7 @@ namespace Barotrauma.Items.Components
 {
     partial class WifiComponent : ItemComponent
     {
-        private static List<WifiComponent> list = new List<WifiComponent>();
+        private static readonly List<WifiComponent> list = new List<WifiComponent>();
 
         private float range;
 
@@ -19,17 +19,23 @@ namespace Barotrauma.Items.Components
 
         private string prevSignal;
 
-        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.")]
+        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
         public Character.TeamType TeamID { get; set; }
 
-        [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.")]
+        [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
         public float Range
         {
             get { return range; }
-            set { range = Math.Max(value, 0.0f); }
+            set
+            {
+                range = Math.Max(value, 0.0f);
+#if CLIENT
+                item.ResetCachedVisibleSize();
+#endif
+            }
         }
 
-        [InGameEditable, Serialize(1, true, description: "WiFi components can only communicate with components that use the same channel.")]
+        [InGameEditable, Serialize(1, true, description: "WiFi components can only communicate with components that use the same channel.", alwaysUseInstanceValues: true)]
         public int Channel
         {
             get { return channel; }
@@ -40,7 +46,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [Serialize(false, false, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.")]
+        [Serialize(false, false, description: "Can the component communicate with wifi components in another team's submarine (e.g. enemy sub in Combat missions, respawn shuttle). Needs to be enabled on both the component transmitting the signal and the component receiving it.", alwaysUseInstanceValues: true)]
         public bool AllowCrossTeamCommunication
         {
             get;
@@ -48,7 +54,7 @@ namespace Barotrauma.Items.Components
         }
 
         [Editable, Serialize(false, false, description: "If enabled, any signals received from another chat-linked wifi component are displayed " +
-            "as chat messages in the chatbox of the player holding the item.")]
+            "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
             get;
@@ -105,12 +111,16 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             chatMsgCooldown -= deltaTime;
+            if (chatMsgCooldown <= 0.0f)
+            {
+                IsActive = false;
+            }
         }
 
         public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
         {
             var senderComponent = source?.GetComponent<WifiComponent>();
-            if (senderComponent != null && !CanReceive(senderComponent)) return;
+            if (senderComponent != null && !CanReceive(senderComponent)) { return; }
 
             bool chatMsgSent = false;
 
@@ -138,33 +148,32 @@ namespace Barotrauma.Items.Components
                 if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && sendToChat)
                 {
                     if (wifiComp.item.ParentInventory != null &&
-                        wifiComp.item.ParentInventory.Owner != null &&
-                        GameMain.NetworkMember != null)
+                        wifiComp.item.ParentInventory.Owner != null)
                     {
                         string chatMsg = signal;
                         if (senderComponent != null)
                         {
                             chatMsg = ChatMessage.ApplyDistanceEffect(chatMsg, 1.0f - sentSignalStrength);
                         }
-                        if (chatMsg.Length > ChatMessage.MaxLength) chatMsg = chatMsg.Substring(0, ChatMessage.MaxLength);
-                        if (string.IsNullOrEmpty(chatMsg)) continue;
+                        if (chatMsg.Length > ChatMessage.MaxLength) { chatMsg = chatMsg.Substring(0, ChatMessage.MaxLength); }
+                        if (string.IsNullOrEmpty(chatMsg)) { continue; }
 
 #if CLIENT
                         if (wifiComp.item.ParentInventory.Owner == Character.Controlled)
                         {
                             if (GameMain.Client == null)
-                                GameMain.NetworkMember.AddChatMessage(signal, ChatMessageType.Radio, source == null ? "" : source.Name);
+                            {
+                                GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(source?.Name ?? "", signal, ChatMessageType.Radio, sender: null);
+                            }
                         }
-#endif
-
-#if SERVER
+#elif SERVER
                         if (GameMain.Server != null)
                         {
                             Client recipientClient = GameMain.Server.ConnectedClients.Find(c => c.Character == wifiComp.item.ParentInventory.Owner);
                             if (recipientClient != null)
                             {
                                 GameMain.Server.SendDirectChatMessage(
-                                    ChatMessage.Create(source == null ? "" : source.Name, chatMsg, ChatMessageType.Radio, null), recipientClient);
+                                    ChatMessage.Create(source?.Name ?? "", chatMsg, ChatMessageType.Radio, null), recipientClient);
                             }
                         }
 #endif
@@ -172,15 +181,31 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (chatMsgSent) chatMsgCooldown = MinChatMessageInterval;
+            if (chatMsgSent) 
+            { 
+                chatMsgCooldown = MinChatMessageInterval;
+                IsActive = true;
+            }
 
             prevSignal = signal;
         }
                 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (connection == null || connection.Name != "signal_in") return;
-            TransmitSignal(stepsTaken, signal, source, sender, true, signalStrength);
+            if (connection == null) { return; }
+
+            switch (connection.Name)
+            {
+                case "signal_in":
+                    TransmitSignal(stepsTaken, signal, source, sender, true, signalStrength);
+                    break;
+                case "set_channel":
+                    if (int.TryParse(signal, out int newChannel))
+                    {
+                        Channel = newChannel;
+                    }
+                    break;
+            }
         }
 
         protected override void RemoveComponentSpecific()

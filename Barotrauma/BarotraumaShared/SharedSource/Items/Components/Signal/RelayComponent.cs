@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Can the relay currently pass power and signals through it.")]
+        [Editable, Serialize(false, true, description: "Can the relay currently pass power and signals through it.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
             get

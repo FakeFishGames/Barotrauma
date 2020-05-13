@@ -205,7 +205,7 @@ namespace Barotrauma.Sounds
             get { return gain; }
             set
             {
-                gain = Math.Max(Math.Min(value, 1.0f), 0.0f);
+                gain = Math.Clamp(value, 0.0f, 1.0f);
 
                 if (ALSourceIndex < 0) { return; }
 

@@ -46,9 +46,13 @@ namespace Barotrauma
         {
             base.Update(deltaTime, cam);
 
-            if (!Enabled) return;
+            if (!Enabled) { return; }
+            if (IsDead || Vitality <= 0.0f || Stun > 0.0f || IsIncapacitated) { return; }
 
-            if (!IsRemotePlayer)
+            //don't enable simple physics on dead/incapacitated characters
+            //the ragdoll controls the movement of incapacitated characters instead of the collider,
+            //but in simple physics mode the ragdoll would get disabled, causing the character to not move at all
+            if (!IsRemotePlayer && !(AIController is HumanAIController))
             {
                 float characterDist = float.MaxValue;
 #if CLIENT
@@ -70,10 +74,9 @@ namespace Barotrauma
                 }
             }
 
-            if (IsDead || Vitality <= 0.0f|| Stun > 0.0f || IsIncapacitated) return;
-            if (!aiController.Enabled) return;
-            if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) return;
-            if (Controlled == this) return;
+            if (!aiController.Enabled) { return; }
+            if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
+            if (Controlled == this) { return; }
             
             if (!IsRemotePlayer)
             {

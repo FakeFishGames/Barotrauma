@@ -27,6 +27,8 @@ namespace Barotrauma.Items.Components
 
         private FixActions requestStartFixAction;
 
+        public float FakeBrokenTimer;
+
         [Serialize("", false, description: "An optional description of the needed repairs displayed in the repair interface.")]
         public string Description
         {
@@ -117,9 +119,18 @@ namespace Barotrauma.Items.Components
                     case "emitter":
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
-                        particleEmitterConditionRanges.Add(new Vector2(
-                            subElement.GetAttributeFloat("mincondition", 0.0f), 
-                            subElement.GetAttributeFloat("maxcondition", 100.0f)));
+                        float minCondition = subElement.GetAttributeFloat("mincondition", 0.0f);
+                        float maxCondition = subElement.GetAttributeFloat("maxcondition", 100.0f);
+
+                        if (maxCondition < minCondition)
+                        {
+                            DebugConsole.ThrowError("Invalid damage particle configuration in the Repairable component of " + item.Name + ". MaxCondition needs to be larger than MinCondition.");
+                            float temp = maxCondition;
+                            maxCondition = minCondition;
+                            minCondition = temp;
+                        }
+                        particleEmitterConditionRanges.Add(new Vector2(minCondition, maxCondition));
+
                         break;
                 }
             }
@@ -127,6 +138,9 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
+            FakeBrokenTimer -= deltaTime;
+            item.FakeBroken = FakeBrokenTimer > 0.0f;
+
             if (!GameMain.IsMultiplayer)
             {
                 switch (requestStartFixAction)
@@ -141,10 +155,10 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
-            
+
             for (int i = 0; i < particleEmitters.Count; i++)
             {
-                if (item.ConditionPercentage >= particleEmitterConditionRanges[i].X && item.ConditionPercentage <= particleEmitterConditionRanges[i].Y)
+                if ((item.ConditionPercentage >= particleEmitterConditionRanges[i].X && item.ConditionPercentage <= particleEmitterConditionRanges[i].Y) || FakeBrokenTimer > 0.0f)
                 {
                     particleEmitters[i].Emit(deltaTime, item.WorldPosition, item.CurrentHull);
                 }

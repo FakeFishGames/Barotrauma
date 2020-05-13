@@ -1,7 +1,7 @@
 ﻿#region Using Statements
 
 using System;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using GameAnalyticsSDK.Net;
@@ -104,8 +104,6 @@ namespace Barotrauma
                 exeHash = new Md5Hash(stream);
             }
 
-            StreamWriter sw = new StreamWriter(filePath);
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Barotrauma Client crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
@@ -148,7 +146,8 @@ namespace Barotrauma
             if (GameMain.Config != null)
             {
                 sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-                sb.AppendLine("VSync "+ (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
+                sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
+                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
             }
             if (GameMain.SelectedPackages != null)
             {
@@ -234,8 +233,7 @@ namespace Barotrauma
 
             string crashReport = sb.ToString();
 
-            sw.WriteLine(crashReport);
-            sw.Close();
+            File.WriteAllText(filePath, crashReport);
 
             if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 

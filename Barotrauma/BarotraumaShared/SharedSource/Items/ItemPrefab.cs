@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Items.Components;
@@ -223,6 +223,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool AllowDeconstruct
+        {
+            get;
+            private set;
+        }
+
         //how close the Character has to be to the item to pick it up
         [Serialize(120.0f, false)]
         public float InteractDistance
@@ -245,6 +251,9 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        [Serialize(false, false, description: "Hides the condition bar displayed at the bottom of the inventory slot the item is in.")]
+        public bool HideConditionBar { get; set; }
 
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item
@@ -300,6 +309,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(1f, false)]
+        public float ExplosionDamageMultiplier
+        {
+            get;
+            private set;
+        }
+
         [Serialize(false, false)]
         public bool DamagedByProjectiles
         {
@@ -309,6 +325,20 @@ namespace Barotrauma
 
         [Serialize(false, false)]
         public bool DamagedByMeleeWeapons
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByRepairTools
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool DamagedByMonsters
         {
             get;
             private set;
@@ -727,7 +757,7 @@ namespace Barotrauma
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 1.0f);
-
+                        AllowDeconstruct = true;
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
                             if (deconstructItem.Attribute("name") != null)

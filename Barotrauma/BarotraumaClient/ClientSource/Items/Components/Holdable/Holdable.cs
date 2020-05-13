@@ -71,6 +71,8 @@ namespace Barotrauma.Items.Components
             base.ClientRead(type, msg, sendingTime);
             bool shouldBeAttached = msg.ReadBoolean();
             Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+            UInt16 submarineID = msg.ReadUInt16();
+            Submarine sub = Entity.FindEntityByID(submarineID) as Submarine;
 
             if (!attachable)
             {
@@ -84,6 +86,7 @@ namespace Barotrauma.Items.Components
                 {
                     Drop(false, null);
                     item.SetTransform(simPosition, 0.0f);
+                    item.Submarine = sub;
                     AttachToWall();
                 }
             }

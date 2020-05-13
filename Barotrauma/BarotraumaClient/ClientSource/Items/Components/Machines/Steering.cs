@@ -390,7 +390,7 @@ namespace Barotrauma.Items.Components
             };
 
             // Sonar area
-            steerArea = new GUICustomComponent(new RectTransform(Vector2.One * GUI.RelativeHorizontalAspectRatio * Sonar.sonarAreaSize, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
+            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 
@@ -667,7 +667,7 @@ namespace Barotrauma.Items.Components
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsInfoFrameOpen)
+                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen)
                 {
                     Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
                     displaySubPos.Y = -displaySubPos.Y;

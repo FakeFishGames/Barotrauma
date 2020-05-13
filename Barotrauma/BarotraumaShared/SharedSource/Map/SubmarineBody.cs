@@ -131,7 +131,7 @@ namespace Barotrauma
                 farseerBody.UserData = this;
                 foreach (Structure wall in Structure.WallList)
                 {
-                    if (wall.Submarine != submarine) continue;
+                    if (wall.Submarine != submarine || wall.IsPlatform) { continue; }
 
                     Rectangle rect = wall.Rect;
 
@@ -150,7 +150,7 @@ namespace Barotrauma
 
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != submarine) continue;
+                    if (hull.Submarine != submarine) { continue; }
 
                     Rectangle rect = hull.Rect;
                     farseerBody.CreateRectangle(
@@ -167,7 +167,7 @@ namespace Barotrauma
 
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.StaticBodyConfig == null || item.Submarine != submarine) continue;
+                    if (item.StaticBodyConfig == null || item.Submarine != submarine) { continue; }
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
@@ -180,7 +180,7 @@ namespace Barotrauma
 
                     if (width > 0.0f && height > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos));
 
                         minExtents.X = Math.Min(item.Position.X - width / 2, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2, minExtents.Y);
@@ -189,9 +189,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && width > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simRadius * 2, 5.0f, simPos));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitX * simWidth / 2));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simWidth / 2));
                         minExtents.X = Math.Min(item.Position.X - width / 2 - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + width / 2 + radius, maxExtents.X);
@@ -199,9 +199,9 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f && height > 0.0f)
                     {
-                        farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2).UserData = item;
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateRectangle(simRadius * 2, height, 5.0f, simPos));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos - Vector2.UnitY * simHeight / 2));
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos + Vector2.UnitX * simHeight / 2));
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - height / 2 - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
@@ -209,12 +209,13 @@ namespace Barotrauma
                     }
                     else if (radius > 0.0f)
                     {
-                        farseerBody.CreateCircle(simRadius, 5.0f, simPos).UserData = item;
+                        item.StaticFixtures.Add(farseerBody.CreateCircle(simRadius, 5.0f, simPos));
                         minExtents.X = Math.Min(item.Position.X - radius, minExtents.X);
                         minExtents.Y = Math.Min(item.Position.Y - radius, minExtents.Y);
                         maxExtents.X = Math.Max(item.Position.X + radius, maxExtents.X);
                         maxExtents.Y = Math.Max(item.Position.Y + radius, maxExtents.Y);
                     }
+                    item.StaticFixtures.ForEach(f => f.UserData = item);
                 }
 
                 Borders = new Rectangle((int)minExtents.X, (int)maxExtents.Y, (int)(maxExtents.X - minExtents.X), (int)(maxExtents.Y - minExtents.Y));
@@ -301,7 +302,7 @@ namespace Barotrauma
             //-------------------------
 
             //if outside left or right edge of the level
-            if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
+            if (Level.Loaded != null && (Position.X < 0 || Position.X > Level.Loaded.Size.X))
             {
                 Rectangle worldBorders = Borders;
                 worldBorders.Location += MathUtils.ToPoint(Position);
@@ -385,12 +386,13 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) continue;
+                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) { continue; }
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     //if the character isn't inside the bounding box, continue
-                    if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) continue;
+                    if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) { continue; }
 
                     //cast a line from the position of the character to the same direction as the translation of the sub
                     //and see where it intersects with the bounding box
@@ -454,11 +456,11 @@ namespace Barotrauma
 
             depthDamageTimer -= deltaTime;
 
-            if (depthDamageTimer > 0.0f) return;
+            if (depthDamageTimer > 0.0f) { return; }
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != submarine) continue;
+                if (wall.Submarine != submarine) { continue; }
 
                 if (wall.Health < depth * 0.01f)
                 {
@@ -498,9 +500,13 @@ namespace Barotrauma
                 }
                 return collision;
             }
-            if (f2.Body.UserData is Character character)
+            else if (f2.Body.UserData is Character character)
             {
                 return CheckCharacterCollision(contact, character);
+            }
+            else if (f2.UserData is Items.Components.DockingPort)
+            {
+                return false;
             }
            
             lock (impactQueue)
@@ -692,8 +698,8 @@ namespace Barotrauma
 
             //find all contacts between this sub and level walls
             List<Contact> levelContacts = new List<Contact>();
-            ContactEdge contactEdge = Body.FarseerBody.ContactList;
-            while (contactEdge.Next != null)
+            ContactEdge contactEdge = Body?.FarseerBody?.ContactList;
+            while (contactEdge?.Next != null)
             {
                 if (contactEdge.Contact.Enabled &&
                     contactEdge.Other.UserData is VoronoiCell &&
@@ -705,7 +711,7 @@ namespace Barotrauma
                 contactEdge = contactEdge.Next;
             }
 
-            if (levelContacts.Count == 0) return;
+            if (levelContacts.Count == 0) { return; }
             
             //if this sub is in contact with the level, apply artifical impacts
             //to both subs to prevent the other sub from bouncing on top of this one 
@@ -794,6 +800,7 @@ namespace Barotrauma
                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
                 c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);

@@ -32,13 +32,22 @@ namespace Barotrauma.Extensions
 
         public static T GetRandom<T>(this IEnumerable<T> source, Func<T, bool> predicate, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
+            if (predicate == null) { return GetRandom(source, randSync); }
             return source.Where(predicate).GetRandom(randSync);
         }
 
         public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            int count = source.Count();
-            return count == 0 ? default(T) : source.ElementAt(Rand.Range(0, count, randSync));
+            if (source is IList<T> list)
+            {
+                int count = list.Count;
+                return count == 0 ? default : list[Rand.Range(0, count, randSync)];
+            }
+            else
+            {
+                int count = source.Count();
+                return count == 0 ? default : source.ElementAt(Rand.Range(0, count, randSync));
+            }
         }
 
         /// <summary>

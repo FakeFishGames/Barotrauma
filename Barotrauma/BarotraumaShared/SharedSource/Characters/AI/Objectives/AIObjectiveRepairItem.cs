@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Barotrauma.Extensions;
-using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -20,14 +19,22 @@ namespace Barotrauma
         private RepairTool repairTool;
 
         private bool IsRepairing => character.SelectedConstruction == Item && Item.GetComponent<Repairable>()?.CurrentFixer == character;
+        private readonly bool isPriority;
 
-        public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool isPriority = false)
+            : base(character, objectiveManager, priorityModifier)
         {
             Item = item;
+            this.isPriority = isPriority;
         }
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             // TODO: priority list?
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character))
@@ -36,20 +43,19 @@ namespace Barotrauma
             }
             else
             {
-                float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
-                yDist = yDist > 100 ? yDist * 5 : 0;
-                float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
-                float distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
-                if (Item.CurrentHull == character.CurrentHull)
+                float distanceFactor = 1;
+                if (!isPriority && Item.CurrentHull != character.CurrentHull)
                 {
-                    distanceFactor = 1;
+                    float yDist = Math.Abs(character.WorldPosition.Y - Item.WorldPosition.Y);
+                    yDist = yDist > 100 ? yDist * 5 : 0;
+                    float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
+                    distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
                 }
-                float damagePriority = MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
-                float successFactor = MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+                float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character);
                 float isSelected = IsRepairing ? 50 : 0;
                 float devotion = (CumulatedDevotion + isSelected) / 100;
                 float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (damagePriority * distanceFactor * successFactor * PriorityModifier), 0, 1));
+                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             }
             return Priority;
         }

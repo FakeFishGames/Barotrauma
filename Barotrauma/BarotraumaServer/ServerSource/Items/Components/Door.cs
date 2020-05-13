@@ -15,7 +15,7 @@ namespace Barotrauma.Items.Components
             isOpen = open;
 
             //opening a partially stuck door makes it less stuck
-            if (isOpen) stuck = MathHelper.Clamp(stuck - 30.0f, 0.0f, 100.0f);
+            if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
 
             if (sendNetworkMessage)
             {
@@ -28,6 +28,7 @@ namespace Barotrauma.Items.Components
             base.ServerWrite(msg, c, extraData);
 
             msg.Write(isOpen);
+            msg.Write(isBroken);
             msg.Write(extraData.Length == 3 ? (bool)extraData[2] : false); //forced open
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
             msg.Write(lastUser == null ? (UInt16)0 : lastUser.ID);

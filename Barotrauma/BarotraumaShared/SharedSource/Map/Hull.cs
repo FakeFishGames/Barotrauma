@@ -22,9 +22,9 @@ namespace Barotrauma
         public const float OxygenConsumptionSpeed = 700.0f;
 
         public const int WaveWidth = 32;
-        public static float WaveStiffness = 0.02f;
-        public static float WaveSpread = 0.05f;
-        public static float WaveDampening = 0.05f;
+        public static float WaveStiffness = 0.01f;
+        public static float WaveSpread = 0.02f;
+        public static float WaveDampening = 0.02f;
         
         //how much excess water the room can contain, relative to the volume of the room.
         //needed to make it possible for pressure to "push" water up through U-shaped hull configurations
@@ -80,6 +80,21 @@ namespace Barotrauma
                 if (roomName == value) { return; }
                 roomName = value;
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+            }
+        }
+
+        private Color ambientLight;
+
+        [Editable, Serialize("0,0,0,0", true)]
+        public Color AmbientLight
+        {
+            get { return ambientLight; }
+            set 
+            { 
+                ambientLight = value;
+#if CLIENT
+                lastAmbientLightEditTime = Timing.TotalTime;
+#endif
             }
         }
 
@@ -501,54 +516,34 @@ namespace Barotrauma
                     rightDelta[i] = WaveSpread * (waveY[i] - waveY[i + 1]);
                     waveVel[i + 1] += rightDelta[i];
                 }
-
-                for (int i = 1; i < waveY.Length - 1; i++)
-                {
-                    waveY[i - 1] += leftDelta[i];
-                    waveY[i + 1] += rightDelta[i];
-                }
             }
 
             //make waves propagate through horizontal gaps
             foreach (Gap gap in ConnectedGaps)
             {
-                if (!gap.IsRoomToRoom || !gap.IsHorizontal || gap.Open <= 0.0f) continue;
-                if (surface > gap.Rect.Y || surface < gap.Rect.Y - gap.Rect.Height) continue;
-
-                Hull hull2 = this == gap.linkedTo[0] as Hull ? (Hull)gap.linkedTo[1] : (Hull)gap.linkedTo[0];
-                float otherSurfaceY = hull2.surface;
-                if (otherSurfaceY > gap.Rect.Y || otherSurfaceY < gap.Rect.Y - gap.Rect.Height) continue;
-
-                float surfaceDiff = (surface - otherSurfaceY) * gap.Open;
                 if (this != gap.linkedTo[0] as Hull)
                 {
-                    //the first hull linked to the gap handles the wave propagation, 
-                    //the second just updates the surfaces to the same level
-                    if (surfaceDiff < 32.0f)
-                    {
-                        hull2.waveY[hull2.waveY.Length - 1] = surfaceDiff * 0.5f;
-                        waveY[0] = -surfaceDiff * 0.5f;
-                    }
+                    //let the first linked hull handle the water propagation
                     continue;
                 }
 
+                if (!gap.IsRoomToRoom || !gap.IsHorizontal || gap.Open <= 0.0f) { continue; }
+                if (surface > gap.Rect.Y || surface < gap.Rect.Y - gap.Rect.Height) { continue; }
+
+                Hull hull2 = this == gap.linkedTo[0] as Hull ? (Hull)gap.linkedTo[1] : (Hull)gap.linkedTo[0];
+                float otherSurfaceY = hull2.surface;
+                if (otherSurfaceY > gap.Rect.Y || otherSurfaceY < gap.Rect.Y - gap.Rect.Height) { continue; }
+
+                float surfaceDiff = (surface - otherSurfaceY) * gap.Open;
                 for (int j = 0; j < 2; j++)
                 {
-                    int i = waveY.Length - 1;
+                    rightDelta[waveY.Length - 1] = WaveSpread * (hull2.waveY[0] - waveY[waveY.Length - 1] - surfaceDiff) * 0.5f;
+                    waveVel[waveY.Length - 1] += rightDelta[waveY.Length - 1];
+                    waveY[waveY.Length - 1] += rightDelta[waveY.Length - 1];
 
-                    leftDelta[i] = WaveSpread * (waveY[i] - waveY[i - 1]);
-                    waveVel[i - 1] += leftDelta[i];
-
-                    rightDelta[i] = WaveSpread * (waveY[i] - hull2.waveY[0] + surfaceDiff);
-                    hull2.waveVel[0] += rightDelta[i];
-
-                    i = 0;
-
-                    hull2.leftDelta[i] = WaveSpread * (hull2.waveY[i] - waveY[waveY.Length - 1] - surfaceDiff);
-                    waveVel[waveVel.Length - 1] += hull2.leftDelta[i];
-
-                    hull2.rightDelta[i] = WaveSpread * (hull2.waveY[i] - hull2.waveY[i + 1]);
-                    hull2.waveVel[i + 1] += hull2.rightDelta[i];
+                    hull2.leftDelta[0] = WaveSpread * (waveY[waveY.Length - 1] - hull2.waveY[0] + surfaceDiff) * 0.5f;
+                    hull2.waveVel[0] += hull2.leftDelta[0];
+                    hull2.waveY[0] += hull2.leftDelta[0];
                 }
 
                 if (surfaceDiff < 32.0f)
@@ -557,13 +552,19 @@ namespace Barotrauma
                     hull2.waveY[0] = surfaceDiff * 0.5f;
                     waveY[waveY.Length - 1] = -surfaceDiff * 0.5f;
                 }
-                else
+            }
+
+
+            //apply spread (two iterations)
+            for (int j = 0; j < 2; j++)
+            {
+                for (int i = 1; i < waveY.Length - 1; i++)
                 {
-                    hull2.waveY[0] += rightDelta[waveY.Length - 1];
-                    waveY[waveY.Length - 1] += hull2.leftDelta[0];
+                    waveY[i - 1] += leftDelta[i];
+                    waveY[i + 1] += rightDelta[i];
                 }
             }
-            
+
             if (waterVolume < Volume)
             {
                 LethalPressure -= 10.0f * deltaTime;
@@ -609,37 +610,33 @@ namespace Barotrauma
             FireSources.Remove(fire);
         }
 
-        private HashSet<Hull> adjacentHulls = new HashSet<Hull>();
-        public IEnumerable<Hull> GetConnectedHulls(bool includingThis, int? searchDepth = null)
+        private readonly HashSet<Hull> adjacentHulls = new HashSet<Hull>();
+        public IEnumerable<Hull> GetConnectedHulls(bool includingThis, int? searchDepth = null, bool ignoreClosedGaps = false)
         {
             adjacentHulls.Clear();
             int startStep = 0;
-            searchDepth = searchDepth ?? 100;
-            return GetAdjacentHulls(includingThis, adjacentHulls, ref startStep, searchDepth.Value);
+            searchDepth ??= 100;
+            GetAdjacentHulls(adjacentHulls, ref startStep, searchDepth.Value, ignoreClosedGaps);
+            if (!includingThis) { adjacentHulls.Remove(this); }
+            return adjacentHulls;
         }
 
-        private HashSet<Hull> GetAdjacentHulls(bool includingThis, HashSet<Hull> connectedHulls, ref int step, int searchDepth)
+        private void GetAdjacentHulls(HashSet<Hull> connectedHulls, ref int step, int searchDepth, bool ignoreClosedGaps = false)
         {
-            if (includingThis)
-            {
-                connectedHulls.Add(this);
-            }
-            if (step > searchDepth)
-            {
-                return connectedHulls;
-            }
+            connectedHulls.Add(this);
+            if (step > searchDepth) { return; }
             foreach (Gap g in ConnectedGaps)
             {
+                if (ignoreClosedGaps && g.Open <= 0.0f) { continue; }
                 for (int i = 0; i < 2 && i < g.linkedTo.Count; i++)
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
                         step++;
-                        hull.GetAdjacentHulls(true, connectedHulls, ref step, searchDepth);
+                        hull.GetAdjacentHulls(connectedHulls, ref step, searchDepth, ignoreClosedGaps);
                     }
                 }
             }
-            return connectedHulls;
         }
 
         /// <summary>
@@ -666,7 +663,7 @@ namespace Barotrauma
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
-                    if (!g.ConnectedDoor.IsOpen || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
+                    if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
                         if (g.ConnectedDoor.OpenState < 0.1f) continue;
                     }

@@ -52,7 +52,20 @@ namespace Barotrauma
 
         public GUITextBox InputBox { get; private set; }
 
-        public GUIButton ToggleButton;
+        private GUIButton toggleButton;
+        
+        public GUIButton ToggleButton
+        {
+            get => toggleButton;
+            set
+            {
+                if (toggleButton != null)
+                {
+                    toggleButton.RectTransform.Parent = null;
+                }
+                toggleButton = value;
+            }
+        }
 
         private GUIButton showNewMessagesButton;
 
@@ -109,7 +122,7 @@ namespace Barotrauma
             };
             chatSendButton.RectTransform.AbsoluteOffset = new Point((int)(InputBox.Rect.Height * 0.15f), 0);
             InputBox.TextBlock.RectTransform.MaxSize 
-                = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.Z), int.MaxValue);
+                = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.X - chatSendButton.RectTransform.AbsoluteOffset.X), int.MaxValue);
 
             showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.075f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.125f) }, TextManager.Get("chat.shownewmessages"));
             showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -190,22 +203,49 @@ namespace Barotrauma
             var msgHolder = new GUIFrame(new RectTransform(new Vector2(0.95f, 0.0f), chatBox.Content.RectTransform, Anchor.TopCenter), style: null,
                     color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
 
-            GUITextBlock senderNameBlock = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform) { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
+            GUITextBlock senderNameTimestamp = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform) { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
                 ChatMessage.GetTimeStamp(), textColor: Color.LightGray, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
             {
                 CanBeFocused = true
             };
             if (!string.IsNullOrEmpty(senderName))
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 1.0f), senderNameBlock.RectTransform) { AbsoluteOffset = new Point((int)(senderNameBlock.TextSize.X), 0) },
-                    senderName, textColor: senderColor, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
+                var senderNameBlock = new GUIButton(new RectTransform(new Vector2(0.8f, 1.0f), senderNameTimestamp.RectTransform) { AbsoluteOffset = new Point((int)(senderNameTimestamp.TextSize.X), 0) },
+                    senderName, textAlignment: Alignment.TopLeft, style: null, color: Color.Transparent)
                 {
-                    CanBeFocused = true
+                    TextBlock =
+                    {
+                        Padding = Vector4.Zero
+                    },
+                    Font = GUI.SmallFont,
+                    CanBeFocused = true,
+                    ForceUpperCase = false,
+                    UserData = message.SenderClient,
+                    OnClicked = (_, o) =>
+                    {
+                        if (!(o is Client client)) { return false; }
+                        GameMain.NetLobbyScreen?.SelectPlayer(client);
+                        return true;
+                    },
+                    OnSecondaryClicked = (_, o) =>
+                    {
+                        if (!(o is Client client)) { return false; }
+                        GameMain.GameSession?.CrewManager?.CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                        return true;
+                    },
+                    Text = senderName
                 };
+                
+                senderNameBlock.RectTransform.NonScaledSize = senderNameBlock.TextBlock.TextSize.ToPoint();
+                senderNameBlock.TextBlock.OverrideTextColor(senderColor);
+                if (senderNameBlock.UserData != null)
+                {
+                    senderNameBlock.TextBlock.HoverTextColor = Color.White;
+                }
             }
 
             var msgText =new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
-            { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameBlock == null ? 0 : senderNameBlock.Rect.Height) },
+            { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameTimestamp == null ? 0 : senderNameTimestamp.Rect.Height) },
                 displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
             {
@@ -230,7 +270,7 @@ namespace Barotrauma
                 msgHolder.RectTransform.SizeChanged -= Recalculate;
                 //resize the holder to match the size of the message and add some spacing
                 msgText.RectTransform.MaxSize = new Point(msgHolder.Rect.Width - msgText.RectTransform.AbsoluteOffset.X, int.MaxValue);
-                senderNameBlock.RectTransform.MaxSize = new Point(msgHolder.Rect.Width - senderNameBlock.RectTransform.AbsoluteOffset.X, int.MaxValue);
+                senderNameTimestamp.RectTransform.MaxSize = new Point(msgHolder.Rect.Width - senderNameTimestamp.RectTransform.AbsoluteOffset.X, int.MaxValue);
                 msgHolder.Children.ForEach(c => (c as GUITextBlock)?.CalculateHeightFromText());
                 msgHolder.RectTransform.Resize(new Point(msgHolder.Rect.Width, msgHolder.Children.Sum(c => c.Rect.Height) + (int)(10 * GUI.Scale)), resizeChildren: false);
                 msgHolder.RectTransform.SizeChanged += Recalculate;
@@ -245,6 +285,11 @@ namespace Barotrauma
             if (chatBox.ScrollBar.Visible && chatBox.ScrollBar.BarScroll < 1f)
             {
                 showNewMessagesButton.Visible = true;
+            }
+
+            if (message.Type == ChatMessageType.Server && message.ChangeType != PlayerConnectionChangeType.None)
+            {
+                TabMenu.StorePlayerConnectionChangeMessage(message);
             }
 
             if (!ToggleOpen)
@@ -337,17 +382,6 @@ namespace Barotrauma
                 SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
-            }
-
-            //hide chatbox when accessing the inventory of another character to prevent overlaps
-            if (Character.Controlled?.SelectedCharacter?.Inventory != null &&
-                Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
-            {
-                SetVisibility(false);
-            }
-            else
-            {
-                SetVisibility(true);
             }
 
             if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)

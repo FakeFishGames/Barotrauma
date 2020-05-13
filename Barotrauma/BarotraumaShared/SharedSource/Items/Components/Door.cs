@@ -4,7 +4,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 #if CLIENT
@@ -38,11 +38,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        //how much "less stuck" partially doors get when opened
+        const float StuckReductionOnOpen = 30.0f;
+
         private float resetPredictionTimer;
         private float toggleCooldownTimer;
         private Character lastUser;
 
         private float damageSoundCooldown;
+
+        private double lastBrokenTime;
 
         private Rectangle doorRect;
 
@@ -53,7 +58,7 @@ namespace Barotrauma.Items.Components
             get { return isBroken; }
             set
             {
-                if (isBroken == value) return;
+                if (isBroken == value) { return; }
                 isBroken = value;
                 if (isBroken)
                 {
@@ -63,6 +68,9 @@ namespace Barotrauma.Items.Components
                 {
                     EnableBody();
                 }
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
             }
         }
 
@@ -85,7 +93,7 @@ namespace Barotrauma.Items.Components
                 if (isOpen || isBroken || !CanBeWelded) return;
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
                 if (stuck <= 0.0f) { IsStuck = false; }
-                if (stuck >= 100.0f) { IsStuck = true; }
+                if (stuck >= 99.0f) { IsStuck = true; }
             }
         }
 
@@ -203,10 +211,16 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+                        
+            IsActive = true;
+        }
 
+        public override void OnItemLoaded()
+        {
+            //do this here because the scale of the item might not be set to the final value yet in the constructor
             doorRect = new Rectangle(
                 item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
-                item.Rect.Y - item.Rect.Height/2 + (int)(doorSprite.size.Y / 2.0f * item.Scale),
+                item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f * item.Scale),
                 (int)(doorSprite.size.X * item.Scale),
                 (int)(doorSprite.size.Y * item.Scale));
 
@@ -224,8 +238,6 @@ namespace Barotrauma.Items.Components
             Body.SetTransformIgnoreContacts(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
-            
-            IsActive = true;
         }
 
         public override void Move(Vector2 amount)
@@ -295,6 +307,7 @@ namespace Barotrauma.Items.Components
                 PickingTime = 0;
                 ToggleState(ActionType.OnUse, character);
                 PickingTime = originalPickingTime;
+                StopPicking(picker);
             }
 #if CLIENT
             else if (hasRequiredItems && character != null && character == Character.Controlled)
@@ -313,8 +326,9 @@ namespace Barotrauma.Items.Components
 
             if (isBroken)
             {
+                lastBrokenTime = Timing.TotalTime;
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage > 50.0f)
+                if (item.ConditionPercentage > 50.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
                 {
                     IsBroken = false;
                 }
@@ -363,7 +377,10 @@ namespace Barotrauma.Items.Components
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             base.UpdateBroken(deltaTime, cam);
-            IsBroken = true;
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                IsBroken = true;
+            }
         }
 
         private void EnableBody()
@@ -502,6 +519,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     if (PushBodyOutOfDoorway(c, limb.body, dir, simPos, simSize) && damageSoundCooldown <= 0.0f)
                     {
 #if CLIENT
@@ -564,7 +582,12 @@ namespace Barotrauma.Items.Components
                 body.ApplyLinearImpulse(new Vector2(dir * 2.0f, isOpen ? 0.0f : -1.0f), maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
 
-            c.SetStun(0.2f);
+            //don't stun if the door was broken a moment ago
+            //otherwise enabling the door's collider and pushing the character away will interrupt repairing
+            if (lastBrokenTime < Timing.TotalTime - 1.0f)
+            {
+                c.SetStun(0.2f);
+            }
             return true;
         }
 
@@ -594,7 +617,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (sender != null && wasOpen != isOpen)
             {
-                GameServer.Log(sender.LogName + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(sender) + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }

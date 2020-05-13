@@ -66,16 +66,17 @@ namespace Barotrauma
         [Serialize("", false)]
         public string ImpactSoundTag { get; private set; }
 
-
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
+            
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 selected = null;
                 return;
             }
+            
+            var potentialContainer = MapEntity.GetPotentialContainer(position);
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
@@ -87,6 +88,14 @@ namespace Barotrauma
                     };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
+
+                    if (PlayerInput.IsShiftDown())
+                    {
+                        if (potentialContainer?.OwnInventory?.TryPutItem(item, Character.Controlled) ?? false)
+                        {
+                            GUI.PlayUISound(GUISoundType.PickItem);
+                        }
+                    }
 
                     placePosition = Vector2.Zero;
                     return;
@@ -124,6 +133,12 @@ namespace Barotrauma
                 }
             }
 
+            if (potentialContainer != null)
+            {
+                potentialContainer.IsHighlighted = true;
+            }
+            
+
             //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
 
         }
@@ -141,26 +156,10 @@ namespace Barotrauma
             if (!ResizeHorizontal && !ResizeVertical)
             {
                 sprite.Draw(spriteBatch, new Vector2(position.X, -position.Y) + sprite.size / 2.0f * Scale, SpriteColor, scale: Scale);
-
             }
             else
             {
-                Vector2 placeSize = size;
-                if (placePosition == Vector2.Zero)
-                {
-                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
-                }
-                else
-                {
-                    if (ResizeHorizontal)
-                        placeSize.X = Math.Max(position.X - placePosition.X, size.X);
-                    if (ResizeVertical)
-                        placeSize.Y = Math.Max(placePosition.Y - position.Y, size.Y);
-
-                    position = placePosition;
-                }
-
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
+                sprite?.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), size, color: SpriteColor);
             }
         }
 

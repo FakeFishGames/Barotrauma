@@ -2,6 +2,7 @@
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace Barotrauma
             {
                 if (hudFrame == null)
                 {
-                    hudFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                    hudFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
                     {
                         CanBeFocused = false
                     };
@@ -36,6 +37,9 @@ namespace Barotrauma
                 return hudFrame;
             }
         }
+
+        private static bool shouldRecreateHudTexts = true;
+        private static bool heldDownShiftWhenGotHudTexts;
 
         private static bool ShouldDrawInventory(Character character)
         {
@@ -140,7 +144,11 @@ namespace Barotrauma
                 else
                 {
                     focusedItemOverlayTimer = Math.Max(focusedItemOverlayTimer - deltaTime, 0.0f);
-                    if (focusedItemOverlayTimer <= 0.0f) focusedItem = null;
+                    if (focusedItemOverlayTimer <= 0.0f)
+                    {
+                        focusedItem = null;
+                        shouldRecreateHudTexts = true;
+                    }
                 }
             }
 
@@ -194,6 +202,7 @@ namespace Barotrauma
 
             foreach (Item brokenItem in brokenItems)
             {
+                if (brokenItem.NonInteractable) { continue; }
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
                 Vector2 drawPos = brokenItem.DrawPosition;
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
@@ -209,20 +218,20 @@ namespace Barotrauma
                     DrawCharacterHoverTexts(spriteBatch, cam, character);
                 }
 
-                float circleSize;
                 if (character.FocusedItem != null)
                 {
                     if (focusedItem != character.FocusedItem)
                     {
                         focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
+                        shouldRecreateHudTexts = true;
                     }
-                    focusedItem = character.FocusedItem;                    
+                    focusedItem = character.FocusedItem;
                 }
 
                 if (focusedItem != null && focusedItemOverlayTimer > ItemOverlayDelay)
                 {
                     Vector2 circlePos = cam.WorldToScreen(focusedItem.DrawPosition);
-                    circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
+                    float circleSize = Math.Max(focusedItem.Rect.Width, focusedItem.Rect.Height) * 1.5f;
                     circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
                     if (circleSize > 0.0f)
                     {
@@ -238,7 +247,14 @@ namespace Barotrauma
 
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
-                        var hudTexts = focusedItem.GetHUDTexts(character);
+                        bool shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+                        if(shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        {
+                            shouldRecreateHudTexts = true;
+                            heldDownShiftWhenGotHudTexts = shiftDown;
+                        }
+                        var hudTexts = focusedItem.GetHUDTexts(character, shouldRecreateHudTexts);
+                        shouldRecreateHudTexts = false;
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
@@ -358,7 +374,7 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
-                    character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
+                    character.Info?.Job == null ? character.DisplayName : character.DisplayName + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
         }
@@ -378,10 +394,6 @@ namespace Barotrauma
             startPos = cam.WorldToScreen(startPos);
 
             string focusName = character.FocusedCharacter.DisplayName;
-            if (character.FocusedCharacter.Info != null)
-            {
-                focusName = character.FocusedCharacter.Info.DisplayName;
-            }
             Vector2 textPos = startPos;
             Vector2 textSize = GUI.Font.MeasureString(focusName);
             Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(focusName);

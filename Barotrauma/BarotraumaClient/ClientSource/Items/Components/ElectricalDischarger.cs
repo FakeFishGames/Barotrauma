@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
@@ -51,6 +52,14 @@ namespace Barotrauma.Items.Components
                     GUI.DrawRectangle(spriteBatch, new Vector2(nodes[i].WorldPosition.X, -nodes[i].WorldPosition.Y), Vector2.One * 5, Color.LightCyan, isFilled: true);
                 }
             }
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            CurrPowerConsumption = powerConsumption;
+            charging = true;
+            timer = Duration;
+            IsActive = true;
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                if (picker.PickingItem == null && PickingTime <= float.MaxValue)
+                if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
                     item.CreateServerEvent(this);

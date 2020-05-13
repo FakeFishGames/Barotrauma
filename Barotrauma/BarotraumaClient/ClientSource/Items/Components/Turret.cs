@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
         private GUIProgressBar powerIndicator;
 
         private float recoilTimer;
+
+        private float RetractionTime => Math.Max(Reload * RetractionDurationMultiplier, RecoilTime);
 
         private RoundSound startMoveSound, endMoveSound, moveSound;
 
@@ -83,6 +85,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Sprite BarrelSprite
+        {
+            get { return barrelSprite; }
+        }
+
         partial void InitProjSpecific(XElement element)
         {
             foreach (XElement subElement in element.Elements())
@@ -126,13 +133,19 @@ namespace Barotrauma.Items.Components
 
         partial void LaunchProjSpecific()
         {
-            recoilTimer = Math.Max(Reload, 0.1f);
+            recoilTimer = RetractionTime;
             PlaySound(ActionType.OnUse);
             Vector2 particlePos = new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
             }
+        }
+
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            base.UpdateBroken(deltaTime, cam);
+            recoilTimer -= deltaTime;
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -232,15 +245,21 @@ namespace Barotrauma.Items.Components
             float recoilOffset = 0.0f;
             if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
             {
-                //move the barrel backwards 0.1 seconds after launching
-                if (recoilTimer >= Math.Max(Reload, 0.1f) - 0.1f)
+                float diff = RetractionTime - RecoilTime;
+                if (recoilTimer >= diff)
                 {
-                    recoilOffset = RecoilDistance * (1.0f - (recoilTimer - (Math.Max(Reload, 0.1f) - 0.1f)) / 0.1f);
+                    //move the barrel backwards 0.1 seconds (defined by RecoilTime) after launching
+                    recoilOffset = RecoilDistance * (1.0f - (recoilTimer - diff) / RecoilTime);
                 }
-                //move back to normal position while reloading
+                else if (recoilTimer <= diff - RetractionDelay)
+                {
+                    //move back to normal position while reloading
+                    float t = diff - RetractionDelay;
+                    recoilOffset = RecoilDistance * recoilTimer / t;
+                }
                 else
                 {
-                    recoilOffset = RecoilDistance * recoilTimer / (Math.Max(Reload, 0.1f) - 0.1f);
+                    recoilOffset = RecoilDistance;
                 }
             }
 
@@ -504,7 +523,7 @@ namespace Barotrauma.Items.Components
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             UInt16 projectileID = msg.ReadUInt16();
-            float newTargetRotation = msg.ReadRangedSingle(minRotation, maxRotation, 8);
+            float newTargetRotation = msg.ReadRangedSingle(minRotation, maxRotation, 16);
 
             if (Character.Controlled == null || user != Character.Controlled)
             {
@@ -514,13 +533,21 @@ namespace Barotrauma.Items.Components
             //projectile removed, do nothing
             if (projectileID == 0) { return; }
 
-            if (!(Entity.FindEntityByID(projectileID) is Item projectile))
+            //ID ushort.MaxValue = launched without a projectile
+            if (projectileID == ushort.MaxValue)
             {
-                DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
-                return;
+                Launch(null);
+            }
+            else
+            {
+                if (!(Entity.FindEntityByID(projectileID) is Item projectile))
+                {
+                    DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
+                    return;
+                }
+                Launch(projectile, launchRotation: newTargetRotation);
             }
 
-            Launch(projectile);
         }
     }
 }

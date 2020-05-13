@@ -242,7 +242,7 @@ namespace Barotrauma
                 case ConditionType.SpeciesName:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
                     if (!(target is Character targetCharacter)) { return false; }
-                    return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
+                    return (Operator == OperatorType.Equals) == targetCharacter.SpeciesName.Equals(valStr, StringComparison.OrdinalIgnoreCase);
                 case ConditionType.EntityType:
                     switch (valStr)
                     {

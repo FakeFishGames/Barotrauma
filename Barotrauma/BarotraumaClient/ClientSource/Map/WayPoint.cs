@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
@@ -8,7 +9,7 @@ namespace Barotrauma
 {
     partial class WayPoint : MapEntity
     {
-        private static Dictionary<SpawnType, Sprite> iconSprites;
+        private static Dictionary<string, Sprite> iconSprites;
         private const int WaypointSize = 12, SpawnPointSize = 32;
 
         public override bool IsVisible(Rectangle worldView)
@@ -55,10 +56,18 @@ namespace Barotrauma
                     Color.White);
             }
 
-            Sprite sprite = iconSprites[SpawnType];
+            Sprite sprite = iconSprites[SpawnType.ToString()];
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
-                sprite = iconSprites[SpawnType.Path];
+                sprite = iconSprites["Path"];
+            }
+            else if (ConnectedDoor != null)
+            {
+                sprite = iconSprites["Door"];
+            }
+            else if (Ladders != null)
+            {
+                sprite = iconSprites["Ladder"];
             }
             sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
             sprite.RelativeOrigin = Vector2.One * 0.5f;
@@ -107,59 +116,72 @@ namespace Barotrauma
             {
                 editingHUD = CreateEditingHUD();
             }
-            
+
             if (IsSelected && PlayerInput.PrimaryMouseButtonClicked())
             {
                 Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
 
-                // Update gaps, ladders, and stairs
-                UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
+                if (PlayerInput.KeyDown(Keys.Space))
                 {
-                    if (ConnectedGap == gap)
+                    foreach (MapEntity e in mapEntityList)
                     {
-                        ConnectedGap = null;
-                    }
-                });
-                UpdateLinkedEntity(position, Item.ItemList, i =>
-                {
-                    var ladder = i?.GetComponent<Ladder>();
-                    if (ladder != null)
-                    {
-                        Ladders = ladder;
-                    }
-                }, i =>
-                {
-                    var ladder = i?.GetComponent<Ladder>();
-                    if (ladder != null)
-                    {
-                        if (Ladders == ladder)
+                        if (e.GetType() != typeof(WayPoint)) continue;
+                        if (e == this) continue;
+
+                        if (!Submarine.RectContains(e.Rect, position)) continue;
+
+                        if (linkedTo.Contains(e))
                         {
-                            Ladders = null;
+                            linkedTo.Remove(e);
+                            e.linkedTo.Remove(this);
+                        }
+                        else
+                        {
+                            linkedTo.Add(e);
+                            e.linkedTo.Add(this);
                         }
                     }
-                }, inflate: 5);
-                // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
-                //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
-                //UpdateLinkedEntity(position, stairList, s =>
-                //{
-                //    Stairs = s;
-                //}, s =>
-                //{
-                //    if (Stairs == s)
-                //    {
-                //        Stairs = null;
-                //    }
-                //});
-
-                foreach (MapEntity e in mapEntityList)
+                }
+                else
                 {
-                    if (e.GetType() != typeof(WayPoint)) continue;
-                    if (e == this) continue;
-
-                    if (!Submarine.RectContains(e.Rect, position)) continue;
-
-                    linkedTo.Add(e);
-                    e.linkedTo.Add(this);
+                    // Update gaps, ladders, and stairs
+                    UpdateLinkedEntity(position, Gap.GapList, gap => ConnectedGap = gap, gap =>
+                    {
+                        if (ConnectedGap == gap)
+                        {
+                            ConnectedGap = null;
+                        }
+                    });
+                    UpdateLinkedEntity(position, Item.ItemList, i =>
+                    {
+                        var ladder = i?.GetComponent<Ladder>();
+                        if (ladder != null)
+                        {
+                            Ladders = ladder;
+                        }
+                    }, i =>
+                    {
+                        var ladder = i?.GetComponent<Ladder>();
+                        if (ladder != null)
+                        {
+                            if (Ladders == ladder)
+                            {
+                                Ladders = null;
+                            }
+                        }
+                    }, inflate: 5);
+                    // TODO: Cannot check the rectangle, since the rectangle is not rotated -> Need to use the collider.
+                    //var stairList = mapEntityList.Where(me => me is Structure s && s.StairDirection != Direction.None).Select(me => me as Structure);
+                    //UpdateLinkedEntity(position, stairList, s =>
+                    //{
+                    //    Stairs = s;
+                    //}, s =>
+                    //{
+                    //    if (Stairs == s)
+                    //    {
+                    //        Stairs = null;
+                    //    }
+                    //});
                 }
             }
         }

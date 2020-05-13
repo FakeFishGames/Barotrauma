@@ -18,6 +18,12 @@ namespace Barotrauma
 
         public override void UpdatePlacing(Camera cam)
         {
+            if (PlayerInput.SecondaryMouseButtonClicked())
+            {
+                selected = null;
+                return;
+            }
+            
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
             Vector2 size = ScaledSize;
             Rectangle newRect = new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
@@ -59,8 +65,6 @@ namespace Barotrauma
                     return;
                 }
             }
-            
-            if (PlayerInput.SecondaryMouseButtonHeld()) selected = null;
         }
         
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
@@ -70,9 +74,6 @@ namespace Barotrauma
 
             if (placePosition == Vector2.Zero)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld())
-                    placePosition = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
                 newRect.X = (int)position.X;
                 newRect.Y = (int)position.Y;
             }

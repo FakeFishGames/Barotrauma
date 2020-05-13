@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;

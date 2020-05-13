@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -81,6 +81,7 @@ namespace Barotrauma
 
                 var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
                 var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
+                filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
                 searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
                 searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
                 searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };

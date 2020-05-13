@@ -19,75 +19,107 @@ namespace Barotrauma
         }
 
 
-        public GUIFrame CreateInfoFrame(GUIFrame frame)
+        public GUIComponent CreateInfoFrame(GUIFrame frame, bool returnParent, Sprite permissionIcon = null)
         {
-            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.874f, 0.58f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
             {
-                Stretch = true,
-                RelativeSpacing = 0.03f
+                RelativeSpacing = 0.05f
+               //Stretch = true
             };
 
-            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), paddedFrame.RectTransform), isHorizontal: true)
-            {
-                RelativeSpacing = 0.05f,
-                Stretch = true
-            };
+            var headerArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.322f), paddedFrame.RectTransform), isHorizontal: true);
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1.0f), headerArea.RectTransform), 
-                onDraw: (sb, component) => DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
+            new GUICustomComponent(new RectTransform(new Vector2(0.425f, 1.0f), headerArea.RectTransform), 
+                onDraw: (sb, component) => DrawInfoFrameCharacterIcon(sb, component.Rect));
 
             ScalableFont font = paddedFrame.Rect.Width < 280 ? GUI.SmallFont : GUI.Font;
 
-            var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 1.0f), headerArea.RectTransform))
+            var headerTextArea = new GUILayoutGroup(new RectTransform(new Vector2(0.575f, 1.0f), headerArea.RectTransform))
             {
-                RelativeSpacing = 0.05f,
+                RelativeSpacing = 0.02f,
                 Stretch = true
             };
 
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                Name, textColor: nameColor, font: GUI.LargeFont)
+
+            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUI.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUI.Font)
             {
-                Padding = Vector4.Zero,
-                AutoScaleHorizontal = true
+                ForceUpperCase = true,
+                Padding = Vector4.Zero
             };
 
-            if (Job != null)
+            if (permissionIcon != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                    Job.Name, textColor: Job.Prefab.UIColor, font: font);
+                Point iconSize = permissionIcon.SourceRect.Size;
+                int iconWidth = (int)((float)characterNameBlock.Rect.Height / iconSize.Y * iconSize.X);
+                new GUIImage(new RectTransform(new Point(iconWidth, characterNameBlock.Rect.Height), characterNameBlock.RectTransform) { AbsoluteOffset = new Point(-iconWidth - 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
+            }
+
+            if (Job != null)
+            {   
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
+                {
+                    Padding = Vector4.Zero
+                };
             }
 
             if (personalityTrait != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                   TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + personalityTrait.Name.Replace(" ", ""))), font: font);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + personalityTrait.Name.Replace(" ", ""))), font: font)
+                {
+                    Padding = Vector4.Zero
+                };
             }
 
-            //spacing
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform), style: null);
-
-            if (Job != null)
+            if (Job != null && (Character == null || !Character.IsDead))
             {
+                var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                {
+                    Stretch = true
+                };
+
                 var skills = Job.Skills;
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                    TextManager.Get("Skills") + ":", font: font);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
                 
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
-                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
-                        TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform),
-                        ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                    var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
                 }
             }
+            else if (Character != null && Character.IsDead)
+            {
+                var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
+                {
+                    Stretch = true
+                };
 
-            return frame;
+                string deadDescription = TextManager.AddPunctuation(':', TextManager.Get("deceased") + "\n" + Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? 
+                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString())));
+
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUI.Style.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
+            }
+
+            if (returnParent)
+            {
+                return frame;
+            }
+            else
+            {
+                return paddedFrame;
+            }
+        }
+
+        private void DrawInfoFrameCharacterIcon(SpriteBatch sb, Rectangle componentRect)
+        {
+            Vector2 targetAreaSize = componentRect.Size.ToVector2();
+            float scale = Math.Min(targetAreaSize.X / headSprite.size.X, targetAreaSize.Y / headSprite.size.Y);
+            DrawIcon(sb, componentRect.Location.ToVector2() + headSprite.size / 2 * scale, targetAreaSize);
         }
 
         public GUIFrame CreateCharacterFrame(GUIComponent parent, string text, object userData)

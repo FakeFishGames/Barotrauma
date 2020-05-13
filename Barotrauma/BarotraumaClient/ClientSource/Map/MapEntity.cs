@@ -16,6 +16,8 @@ namespace Barotrauma
 
         private static Vector2 startMovingPos = Vector2.Zero;
 
+        private static float keyDelay;
+        
         public static Vector2 StartMovingPos => startMovingPos;
 
         // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
@@ -132,7 +134,7 @@ namespace Barotrauma
                 if (highlightedListBox == null ||
                     (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn)))
                 {
-                    UpdateHighlightedListBox(null);
+                    UpdateHighlightedListBox(null, false);
                     return;
                 }
             }
@@ -147,11 +149,15 @@ namespace Barotrauma
             {
                 if (PlayerInput.KeyDown(Keys.Delete))
                 {
-                    selectedList.ForEach(e => e.Remove());
+                    selectedList.ForEach(e =>
+                    {
+                        //orphaned wires may already have been removed
+                        if (!e.Removed) { e.Remove(); }
+                    });
                     selectedList.Clear();
                 }
 
-                if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                if (PlayerInput.IsCtrlDown())
                 {
                     if (PlayerInput.KeyHit(Keys.C))
                     {
@@ -244,32 +250,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (PlayerInput.MouseSpeed.LengthSquared() > 10)
-                    {
-                        highlightTimer = 0.0f;
-                    }
-                    else
-                    {
-                        bool mouseNearHighlightBox = false;
-
-                        if (highlightedListBox != null)
-                        {
-                            Rectangle expandedRect = highlightedListBox.Rect;
-                            expandedRect.Inflate(20, 20);
-                            mouseNearHighlightBox = expandedRect.Contains(PlayerInput.MousePosition);
-                            if (!mouseNearHighlightBox) highlightedListBox = null;
-                        }
-
-                        highlightTimer += (float)Timing.Step;
-                        if (highlightTimer > 1.0f)
-                        {
-                            if (!mouseNearHighlightBox)
-                            {
-                                UpdateHighlightedListBox(highlightedEntities);
-                                highlightTimer = 0.0f;
-                            }
-                        }
-                    }
+                    UpdateHighlighting(highlightedEntities);
                 }
 
                 if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
@@ -277,35 +258,65 @@ namespace Barotrauma
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
+                int up = PlayerInput.KeyDown(Keys.Up) ? 1 : 0,
+                    down = PlayerInput.KeyDown(Keys.Down) ? -1 : 0,
+                    left = PlayerInput.KeyDown(Keys.Left) ? -1 : 0,
+                    right = PlayerInput.KeyDown(Keys.Right) ? 1 : 0;
+
+                int xKeysDown = (left + right);
+                int yKeysDown = (up + down);
+                
+                if (xKeysDown != 0 || yKeysDown != 0) { keyDelay += (float) Timing.Step; } else { keyDelay = 0; }
+                
                 Vector2 nudgeAmount = Vector2.Zero;
-                if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y = 1f;
+
+                if (keyDelay >= 0.5f)
+                {
+                    nudgeAmount.Y = yKeysDown;
+                    nudgeAmount.X = xKeysDown;
+                }
+                
+                if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y =  1f;
                 if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
                 if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
-                if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X = 1f;            
+                if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X =  1f;
                 if (nudgeAmount != Vector2.Zero)
                 {
-                    foreach (MapEntity entityToNudge in selectedList)
-                    {
-                        entityToNudge.Move(nudgeAmount);
-                    }
+                    foreach (MapEntity entityToNudge in selectedList) { entityToNudge.Move(nudgeAmount); }
                 }
             }
+            else
+            {
+                keyDelay = 0;
+            }
+
+            bool isShiftDown = PlayerInput.IsShiftDown();
 
             //started moving selected entities
             if (startMovingPos != Vector2.Zero)
             {
+                Item targetContainer = GetPotentialContainer(position, selectedList);
+
+                if (targetContainer != null) { targetContainer.IsHighlighted = true; }
+
                 if (PlayerInput.PrimaryMouseButtonReleased())
                 {
                     //mouse released -> move the entities to the new position of the mouse
 
                     Vector2 moveAmount = position - startMovingPos;
-                    moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
-                    moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
-                    if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
+                                        
+                    if (!isShiftDown)
                     {
-                        moveAmount = Submarine.VectorToWorldGrid(moveAmount);
+                        moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                        moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+                    }
+                    
+                    if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y || isShiftDown)
+                    {
+                        if (!isShiftDown) { moveAmount = Submarine.VectorToWorldGrid(moveAmount); }
+
                         //clone
-                        if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
+                        if (PlayerInput.IsCtrlDown())
                         {
                             var clones = Clone(selectedList);
                             selectedList = clones;
@@ -313,6 +324,7 @@ namespace Barotrauma
                         }
                         else // move
                         {
+                            List<MapEntity> deposited = new List<MapEntity>();
                             foreach (MapEntity e in selectedList)
                             {
                                 if (e.rectMemento == null)
@@ -321,8 +333,23 @@ namespace Barotrauma
                                     e.rectMemento.Store(e.Rect);
                                 }
                                 e.Move(moveAmount);
+
+                                if (isShiftDown && e is Item item && targetContainer != null)
+                                {
+                                    if (targetContainer.OwnInventory.TryPutItem(item, Character.Controlled))
+                                    {
+                                        GUI.PlayUISound(GUISoundType.DropItem);
+                                        deposited.Add(item);
+                                    }
+                                    else
+                                    {
+                                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                                    }                                 
+                                }
                                 e.rectMemento.Store(e.Rect);
                             }
+
+                            deposited.ForEach(entity => { selectedList.Remove(entity); });
                         }
                     }
                     startMovingPos = Vector2.Zero;
@@ -357,8 +384,7 @@ namespace Barotrauma
 
                 if (PlayerInput.PrimaryMouseButtonReleased())
                 {
-                    if (PlayerInput.KeyDown(Keys.LeftControl) ||
-                        PlayerInput.KeyDown(Keys.RightControl))
+                    if (PlayerInput.IsCtrlDown())
                     {
                         foreach (MapEntity e in newSelection)
                         {
@@ -441,7 +467,84 @@ namespace Barotrauma
             }
         }
 
-        private static void UpdateHighlightedListBox(List<MapEntity> highlightedEntities)
+        public static Item GetPotentialContainer(Vector2 position, List<MapEntity> entities = null)
+        {
+            Item targetContainer = null;
+            bool isShiftDown = PlayerInput.IsShiftDown();
+
+            if (!isShiftDown) return null;
+            
+            foreach (MapEntity e in mapEntityList)
+            {
+                if (!e.SelectableInEditor ||!(e is Item potentialContainer)) { continue; }
+
+                if (e.IsMouseOn(position))
+                {
+                    if (entities == null)
+                    {
+                        if (potentialContainer.OwnInventory != null && potentialContainer.ParentInventory == null && !potentialContainer.OwnInventory.IsFull())
+                        {
+                            targetContainer = potentialContainer;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        foreach (MapEntity selectedEntity in entities)
+                        {
+                            if (!(selectedEntity is Item selectedItem)) { continue; }
+                            if (potentialContainer.OwnInventory != null && potentialContainer.ParentInventory == null && potentialContainer != selectedItem &&
+                                potentialContainer.OwnInventory.CanBePut(selectedItem))
+                            {
+                                targetContainer = potentialContainer;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (targetContainer != null) { break; }
+            }
+
+            return targetContainer;
+        }
+
+        /// <summary>
+        /// Updates the logic that runs the highlight box when the mouse is sitting still.
+        /// </summary>
+        /// <see cref="UpdateHighlightedListBox"/>
+        /// <param name="highlightedEntities"></param>
+        /// <param name="wiringMode">true to give items tooltip showing their connection</param>
+        public static void UpdateHighlighting(List<MapEntity> highlightedEntities, bool wiringMode = false)
+        {
+            if (PlayerInput.MouseSpeed.LengthSquared() > 10)
+            {
+                highlightTimer = 0.0f;
+            }
+            else
+            {
+                bool mouseNearHighlightBox = false;
+
+                if (highlightedListBox != null)
+                {
+                    Rectangle expandedRect = highlightedListBox.Rect;
+                    expandedRect.Inflate(20, 20);
+                    mouseNearHighlightBox = expandedRect.Contains(PlayerInput.MousePosition);
+                    if (!mouseNearHighlightBox) highlightedListBox = null;
+                }
+
+                highlightTimer += (float)Timing.Step;
+                if (highlightTimer > 1.0f)
+                {
+                    if (!mouseNearHighlightBox)
+                    {
+                        UpdateHighlightedListBox(highlightedEntities, wiringMode);
+                        highlightTimer = 0.0f;
+                    }
+                }
+            }
+        }
+
+        private static void UpdateHighlightedListBox(List<MapEntity> highlightedEntities, bool wiringMode)
         {
             if (highlightedEntities == null || highlightedEntities.Count < 2)
             {
@@ -458,14 +561,37 @@ namespace Barotrauma
 
             highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
             {
+                MaxSize = new Point(int.MaxValue, 256),
                 ScreenSpaceOffset =  PlayerInput.MousePosition.ToPoint() + new Point(15)
             }, style: "GUIToolTip");
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
-                    ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                var tooltip = string.Empty;
+
+                if (wiringMode && entity is Item item)
                 {
+                    var wire = item.GetComponent<Wire>();
+                    if (wire?.Connections != null)
+                    {
+                        for (var i = 0; i < wire.Connections.Length; i++)
+                        {
+                            var conn = wire.Connections[i];
+                            if (conn != null)
+                            {
+                                string[] tags = { "[item]", "[pin]" };
+                                string[] values = { conn.Item?.Name, conn.Name };
+                                tooltip += TextManager.GetWithVariables("wirelistformat",tags , values);
+                            }
+                            if (i != wire.Connections.Length - 1) { tooltip += '\n'; }
+                        }
+                    }
+                }
+
+                var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
+                                                 ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                {
+                    ToolTip = tooltip,
                     UserData = entity
                 };
             }
@@ -474,8 +600,7 @@ namespace Barotrauma
             {
                 MapEntity entity = obj as MapEntity;
 
-                if (PlayerInput.KeyDown(Keys.LeftControl) ||
-                    PlayerInput.KeyDown(Keys.RightControl))
+                if (PlayerInput.IsCtrlDown() && !wiringMode)
                 {
                     if (selectedList.Contains(entity))
                     {
@@ -485,11 +610,10 @@ namespace Barotrauma
                     {
                         AddSelection(entity);
                     }
+
+                    return true;
                 }
-                else
-                {
-                    SelectEntity(entity);
-                }
+                SelectEntity(entity);
 
                 return true;
             };
@@ -558,6 +682,10 @@ namespace Barotrauma
                 {
                     item.UpdateSpriteStates(deltaTime);
                 }
+                else if (me is Structure structure)
+                {
+                    structure.UpdateSpriteStates(deltaTime);
+                }
             }
         }
 
@@ -575,32 +703,52 @@ namespace Barotrauma
             {
                 Vector2 moveAmount = position - startMovingPos;
                 moveAmount.Y = -moveAmount.Y;
-                moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
-                moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+
+                bool isShiftDown = PlayerInput.IsShiftDown();
+                
+                if (!isShiftDown)
+                {
+                    moveAmount.X = (float)(moveAmount.X > 0.0f ? Math.Floor(moveAmount.X / Submarine.GridSize.X) : Math.Ceiling(moveAmount.X / Submarine.GridSize.X)) * Submarine.GridSize.X;
+                    moveAmount.Y = (float)(moveAmount.Y > 0.0f ? Math.Floor(moveAmount.Y / Submarine.GridSize.Y) : Math.Ceiling(moveAmount.Y / Submarine.GridSize.Y)) * Submarine.GridSize.Y;
+                }
 
                 //started moving the selected entities
-                if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y)
+                if (Math.Abs(moveAmount.X) >= Submarine.GridSize.X || Math.Abs(moveAmount.Y) >= Submarine.GridSize.Y || isShiftDown)
                 {
                     foreach (MapEntity e in selectedList)
                     {
                         SpriteEffects spriteEffects = SpriteEffects.None;
-                        if (e is Item item)
+                        switch (e) 
                         {
-                            if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                            if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                        }
-                        else if (e is Structure structure)
-                        {
-                            if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                            if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                        }
-                        else if (e is WayPoint wayPoint)
-                        {
-                            Vector2 drawPos = e.WorldPosition;
-                            drawPos.Y = -drawPos.Y;
-                            drawPos += moveAmount;
-                            wayPoint.Draw(spriteBatch, drawPos);
-                            continue;
+                            case Item item: 
+                            {
+                                if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
+                                if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
+                                break;
+                            }
+                            case Structure structure: 
+                            {
+                                if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
+                                if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
+                                break;
+                            }
+                            case WayPoint wayPoint: 
+                            {
+                                Vector2 drawPos = e.WorldPosition;
+                                drawPos.Y = -drawPos.Y;
+                                drawPos += moveAmount;
+                                wayPoint.Draw(spriteBatch, drawPos);
+                                continue;
+                            }
+                            case LinkedSubmarine linkedSub:
+                            {
+                                var ma = moveAmount;
+                                ma.Y = -ma.Y;
+                                Vector2 lPos = linkedSub.Position;
+                                lPos += ma;
+                                linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
+                                break;
+                            }
                         }
                         e.prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
@@ -656,7 +804,7 @@ namespace Barotrauma
                 }
             }
 
-            if ((PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl)))
+            if (PlayerInput.IsCtrlDown())
             {
                 if (PlayerInput.KeyHit(Keys.N))
                 {
@@ -734,7 +882,10 @@ namespace Barotrauma
 
             CopyEntities(entities);
 
-            entities.ForEach(e => e.Remove());
+            entities.ForEach(e =>
+            {
+                e.Remove();
+            });
             entities.Clear();
         }
 
@@ -847,6 +998,7 @@ namespace Barotrauma
                         resizeDirX = x;
                         resizeDirY = y;
                         resizing = true;
+                        startMovingPos = Vector2.Zero;
                     }
                 }
             }
@@ -863,6 +1015,11 @@ namespace Barotrauma
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
                 Vector2 mousePos = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
+
+                if (PlayerInput.IsShiftDown())
+                {
+                    mousePos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                }
 
                 if (resizeDirX > 0)
                 {

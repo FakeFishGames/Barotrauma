@@ -37,5 +37,8 @@ Libraries/webm_mem_playback/opus_x64_linux/
 # Mac
 *.DS_Store
 
+# Win
+desktop.ini
+
 #Merge script
 temp.txt

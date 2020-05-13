@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Editable(0.0f, float.MaxValue), Serialize(10000.0f, true, description: "How much power (kW) the reactor generates when operating at full capacity.")]
+        [Editable(0.0f, float.MaxValue), Serialize(10000.0f, true, description: "How much power (kW) the reactor generates when operating at full capacity.", alwaysUseInstanceValues: true)]
         public float MaxPowerOutput
         {
             get { return maxPowerOutput; }
@@ -190,7 +190,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Timing.TotalTime >= (float)nextServerLogWriteTime)
                 {
-                    GameServer.Log(lastUser.LogName + " adjusted reactor settings: " +
+                    GameServer.Log(GameServer.CharacterLogName(lastUser) + " adjusted reactor settings: " +
                             "Temperature: " + (int)(temperature * 100.0f) +
                             ", Fission rate: " + (int)targetFissionRate +
                             ", Turbine output: " + (int)targetTurbineOutput +
@@ -330,6 +330,8 @@ namespace Barotrauma.Items.Components
             }
 
             item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
+            item.SendSignal(0, ((int)-CurrPowerConsumption).ToString(), "power_value_out", null);
+            item.SendSignal(0, ((int)load).ToString(), "load_value_out", null);
 
             UpdateFailures(deltaTime);
 #if CLIENT
@@ -622,7 +624,8 @@ namespace Barotrauma.Items.Components
                     AutoTemp = false;
                     targetFissionRate = 0.0f;
                     targetTurbineOutput = 0.0f;
-                    break;
+                    unsentChanges = true;
+                    return true;
             }
 
             if (autoTemp != prevAutoTemp ||
@@ -653,17 +656,23 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "set_fissionrate":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
+                    if (PowerOn && float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
-                        FissionRate = newFissionRate;
+                        targetFissionRate = newFissionRate;
                         unsentChanges = true;
+#if CLIENT
+                        FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
+#endif
                     }
                     break;
                 case "set_turbineoutput":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
+                    if (PowerOn && float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
-                        TurbineOutput = newTurbineOutput;
+                        targetTurbineOutput = newTurbineOutput;
                         unsentChanges = true;
+#if CLIENT
+                        TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
+#endif
                     }
                     break;
             }

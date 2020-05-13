@@ -1,7 +1,7 @@
 ﻿using System;
 using OpenAL;
 using Microsoft.Xna.Framework;
-using System.IO;
+using Barotrauma.IO;
 using System.Xml.Linq;
 
 namespace Barotrauma.Sounds

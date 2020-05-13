@@ -266,7 +266,9 @@ namespace Barotrauma.Networking
             }
 
             //background frame
-            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+            settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, settingsFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
                 if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) { ToggleSettingsFrame(btn, userData); }

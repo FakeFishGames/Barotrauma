@@ -72,6 +72,12 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
+        [Serialize(1f, true, description: "Reduces continuous flipping when the character abruptly changes direction."), Editable]
+        public float FlipCooldown { get; set; }
+
+        [Serialize(0.5f, true, description: "How much it takes before the character flips. The timer starts when the character starts to move in the different direction."), Editable]
+        public float FlipDelay { get; set; }
+
         [Serialize(10.0f, true, description: "How much force is used to move the head to the correct position."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float HeadMoveForce { get; set; }
 
@@ -146,8 +152,17 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "Should the character be flipped depending on which direction it faces. Should usually be enabled on all characters that have distinctive upper and lower sides.")]
         public bool Flip { get; set; }
 
+        [Serialize(1f, true, description: "Reduces continuous flipping when the character abruptly changes direction."), Editable]
+        public float FlipCooldown { get; set; }
+
+        [Serialize(0.5f, true, description: "How much it takes before the character flips. The timer starts when the character starts to move in the different direction."), Editable]
+        public float FlipDelay { get; set; }
+
         [Editable, Serialize(true, true, description: "If enabled, the character will simply be mirrored horizontally when it wants to turn around. If disabled, it will rotate itself to face the other direction.")]
         public bool Mirror { get; set; }
+
+        [Editable, Serialize(true, true, description: "Disabling this will make mirroring instantaneous.")]
+        public bool MirrorLerp { get; set; }
 
         [Serialize(5f, true), Editable]
         public float WaveAmplitude { get; set; }
@@ -205,7 +220,6 @@ namespace Barotrauma
 
     interface IFishAnimation
     {
-        bool Flip { get; set; }
         string FootAngles { get; set; }
         Dictionary<int, float> FootAnglesInRadians { get; set; }
         float TailAngle { get; set; }
@@ -214,5 +228,8 @@ namespace Barotrauma
         float TorsoTorque { get; set; }
         float TailTorque { get; set; }
         float FootTorque { get; set; }
+        bool Flip { get; set; }
+        float FlipCooldown { get; set; }
+        float FlipDelay { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.Networking;
+using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
@@ -94,6 +95,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb l in character.AnimController.Limbs)
                 {
+                    if (l.IsSevered) { continue; }
                     if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) { continue; }
                     if (l.type == LimbType.Head || l.type == LimbType.Torso)
                     {
@@ -310,70 +312,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            if (attack != null)
-            {
-                if (targetLimb == null && targetCharacter == null && targetStructure == null && (targetItem == null || ! targetItem.Prefab.DamagedByMeleeWeapons))
-                {
-                    return false;
-                }
-
-                if (targetLimb != null)
-                {
-                    targetLimb.character.LastDamageSource = item;
-                    attack.DoDamageToLimb(User, targetLimb, item.WorldPosition, 1.0f);
-                }
-                else if (targetCharacter != null)
-                {
-                    targetCharacter.LastDamageSource = item;
-                    attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
-                }
-                else if (targetStructure != null)
-                {
-                    attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
-                }
-                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
-                {
-                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return true; }
-
-#if SERVER
-            if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
-            {
-
-                GameMain.Server.CreateEntityEvent(item, new object[] 
-                {
-                    Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
-                    ActionType.OnUse,
-                    null, //itemcomponent
-                    targetCharacter.ID, targetLimb
-                });
-
-                string logStr = picker?.LogName + " used " + item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Any())
-                {
-                    logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
-                }
-                logStr += " on " + targetCharacter.LogName + ".";
-                Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
-            }
-#endif
-
-            if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
-            {
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: User);
-            }
-
-            if (DeleteOnUse)
-            {
-                Entity.Spawner.AddToRemoveQueue(item);
-            }
+            impactQueue.Enqueue(f2);
 
             return true;
         }
@@ -414,7 +353,7 @@ namespace Barotrauma.Items.Components
                     if (targetStructure.Removed) { return; }
                     attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
                 }
-                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons)
+                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
                     attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);

@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     {
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.Write(state);
+            msg.Write(State);
             msg.Write(user == null ? (ushort)0 : user.ID);
         }
     }

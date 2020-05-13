@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
@@ -221,11 +221,11 @@ namespace Barotrauma.Items.Components
             get { return variant; }
             set
             {
-#if SERVER
+                if (variant == value) { return; }
+#if SERVER                
                 variant = value;
                 item.CreateServerEvent(this);
 #elif CLIENT
-                if (variant == value) { return; }
 
                 Character character = picker;
                 if (character != null)
@@ -370,11 +370,12 @@ namespace Barotrauma.Items.Components
 
         public override void Unequip(Character character)
         {
-            if (picker == null) return;
+            if (character == null || character.Removed) { return; }
+            if (picker == null) { return; }
             for (int i = 0; i < wearableSprites.Length; i++)
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);
-                if (equipLimb == null) continue;
+                if (equipLimb == null) { continue; }
 
                 if (wearableSprites[i].LightComponent != null)
                 {
@@ -385,7 +386,6 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 equipLimb.UpdateWearableTypesToHide();
 #endif
-
                 limb[i] = null;
             }
 
@@ -419,9 +419,14 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
 
+            Unequip(picker);
+
             foreach (WearableSprite wearableSprite in wearableSprites)
             {
-                if (wearableSprite != null && wearableSprite.Sprite != null) wearableSprite.Sprite.Remove();
+                if (wearableSprite != null && wearableSprite.Sprite != null)
+                {
+                    wearableSprite.Sprite.Remove();
+                }
             }
         }
 

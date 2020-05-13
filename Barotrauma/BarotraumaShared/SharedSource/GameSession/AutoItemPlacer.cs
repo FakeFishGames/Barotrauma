@@ -160,7 +160,7 @@ namespace Barotrauma
             bool success = false;
             if (Rand.Value() > validContainer.Value.SpawnProbability) { return false; }
             // Don't add dangerously reactive materials in thalamus wrecks 
-            if (validContainer.Key.Item.Submarine.ThalamusAI != null && itemPrefab.Tags.Contains("explodesinwater"))
+            if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
             {
                 return false;
             }
@@ -174,6 +174,10 @@ namespace Barotrauma
                 }
 
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine);
+                foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                {
+                    wifiComponent.TeamID = validContainer.Key.Item.Submarine.TeamID;
+                }
                 spawnedItems.Add(item);
 #if SERVER
                 Entity.Spawner.CreateNetworkEvent(item, remove: false);

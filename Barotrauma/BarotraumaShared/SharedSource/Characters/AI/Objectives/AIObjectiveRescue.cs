@@ -38,7 +38,19 @@ namespace Barotrauma
             }
             this.targetCharacter = targetCharacter;
         }
-        
+
+        protected override void OnAbandon()
+        {
+            character.SelectedCharacter = null;
+            base.OnAbandon();
+        }
+
+        protected override void OnCompleted()
+        {
+            character.SelectedCharacter = null;
+            base.OnCompleted();
+        }
+
         protected override void Act(float deltaTime)
         {
             if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
@@ -46,16 +58,13 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (targetCharacter.SelectedBy != null && targetCharacter.SelectedBy != character)
+            var otherRescuer = targetCharacter.SelectedBy;
+            if (otherRescuer != null && otherRescuer != character)
             {
-                var otherCharacter = character.SelectedBy;
-                if (otherCharacter != null)
-                {
-                    // Someone else is rescuing/holding the target.
-                    Abandon = otherCharacter.IsPlayer || character.GetSkillLevel("medical") < otherCharacter.GetSkillLevel("medical");
-                }
+                // Someone else is rescuing/holding the target.
+                Abandon = otherRescuer.IsPlayer || character.GetSkillLevel("medical") < otherRescuer.GetSkillLevel("medical");
+                return;
             }
-
             if (targetCharacter != character)
             {
                 // Incapacitated target is not in a safe place -> Move to a safe place first
@@ -63,9 +72,12 @@ namespace Barotrauma
                 {
                     if (character.SelectedCharacter != targetCharacter)
                     {
-                        character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
-                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                            null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                        if (targetCharacter.CurrentHull.DisplayName != null)
+                        {
+                            character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
+                                new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                                null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                        }
 
                         // Go to the target and select it
                         if (!character.CanInteractWith(targetCharacter))
@@ -142,10 +154,13 @@ namespace Barotrauma
             {
                 // We can start applying treatment
                 if (character != targetCharacter && character.SelectedCharacter != targetCharacter)
-                {                
-                    character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
-                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                        null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                {
+                    if (targetCharacter.CurrentHull.DisplayName != null)
+                    {
+                        character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
+                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                            null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                    }
 
                     character.SelectCharacter(targetCharacter);
                 }
@@ -155,13 +170,23 @@ namespace Barotrauma
 
         private readonly List<string> suitableItemIdentifiers = new List<string>();
         private readonly List<string> itemNameList = new List<string>();
-        private Dictionary<string, float> currentTreatmentSuitabilities = new Dictionary<string, float>();
+        private readonly Dictionary<string, float> currentTreatmentSuitabilities = new Dictionary<string, float>();
         private void GiveTreatment(float deltaTime)
         {
+            if (targetCharacter == null)
+            {
+                string errorMsg = $"{character.Name}: Attempted to update a Rescue objective with no target!";
+                DebugConsole.ThrowError(errorMsg);
+                Abandon = true;
+                return;
+            }
+
+            SteeringManager?.Reset();
+
             if (!targetCharacter.IsPlayer)
             {
                 // If the target is a bot, don't let it move
-                targetCharacter.AIController?.SteeringManager.Reset();
+                targetCharacter.AIController?.SteeringManager?.Reset();
             }
             if (treatmentTimer > 0.0f)
             {
@@ -176,6 +201,8 @@ namespace Barotrauma
             //check if we already have a suitable treatment for any of the afflictions
             foreach (Affliction affliction in GetSortedAfflictions(targetCharacter))
             {
+                if (affliction == null) { throw new Exception("Affliction was null"); }
+                if (affliction.Prefab == null) { throw new Exception("Affliction prefab was null"); }
                 foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
                 {
                     if (currentTreatmentSuitabilities.ContainsKey(treatmentSuitability.Key) && currentTreatmentSuitabilities[treatmentSuitability.Key] > 0.0f)
@@ -288,6 +315,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
                 Priority = 0;

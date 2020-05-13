@@ -358,19 +358,23 @@ namespace Barotrauma
                 return;
             }
 
-            //check if there are any other contacts with the entity
+            //check if there are contacts with any other fixture of the trigger
             //(the OnSeparation callback happens when two fixtures separate, 
             //e.g. if a body stops touching the circular fixture at the end of a capsule-shaped body)
             ContactEdge contactEdge = fixtureA.Body.ContactList;
             while (contactEdge != null)
             {
                 if (contactEdge.Contact != null &&
+                    contactEdge.Contact.Enabled &&
                     contactEdge.Contact.IsTouching)
                 {
-                    var otherEntity = GetEntity(contactEdge.Contact.FixtureB == fixtureB ? 
-                        contactEdge.Contact.FixtureB : 
-                        contactEdge.Contact.FixtureA);
-                    if (otherEntity == entity) return;
+                    if (contactEdge.Contact.FixtureA != fixtureA && contactEdge.Contact.FixtureB != fixtureA)
+                    {
+                        var otherEntity = GetEntity(contactEdge.Contact.FixtureB == fixtureB ?
+                            contactEdge.Contact.FixtureB :
+                            contactEdge.Contact.FixtureA);
+                        if (otherEntity == entity) { return; }
+                    }
                 }
                 contactEdge = contactEdge.Next;
             }
@@ -418,9 +422,19 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            if (ParentTrigger != null && !ParentTrigger.IsTriggered) return;
+            if (ParentTrigger != null && !ParentTrigger.IsTriggered) { return; }
 
             triggerers.RemoveWhere(t => t.Removed);
+
+            if (physicsBody != null)
+            {
+                //failsafe to ensure triggerers get removed when they're far from the trigger
+                float maxExtent = Math.Max(ConvertUnits.ToDisplayUnits(physicsBody.GetMaxExtent() * 5), 5000.0f);
+                triggerers.RemoveWhere(t =>
+                {
+                    return Vector2.Distance(t.WorldPosition, WorldPosition) > maxExtent;
+                });
+            }            
 
             bool isNotClient = true;
 #if CLIENT
@@ -511,6 +525,7 @@ namespace Barotrauma
                         ApplyForce(character.AnimController.Collider, deltaTime);
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
+                            if (limb.IsSevered) { continue; }
                             ApplyForce(limb.body, deltaTime);
                         }
                     }

@@ -238,9 +238,40 @@ namespace Barotrauma
             get { return censoredText; }
         }
 
-        private List<ColorData> colorData = null;
-        private bool hasColorHighlight = false;
-                
+        public class StrikethroughSettings
+        {
+            private Color color = GUI.Style.Red;
+            private int thickness;
+            private int expand;
+
+            public StrikethroughSettings(Color? color = null, int thickness = 1, int expand = 0)
+            {
+                if (color != null) this.color = color.Value;
+                this.thickness = thickness;
+                this.expand = expand;
+            }
+
+            public void Draw(SpriteBatch spriteBatch, float textSizeHalf, float xPos, float yPos)
+            {
+                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), color, thickness);
+            }
+        }
+
+        public StrikethroughSettings Strikethrough = null;
+
+        private readonly List<RichTextData> richTextData = null;
+
+        private readonly bool hasColorHighlight = false;
+
+        public struct ClickableArea
+        {
+            public RichTextData Data;
+
+            public delegate void OnClickDelegate(GUITextBlock textBlock, ClickableArea area);
+            public OnClickDelegate OnClick;
+        }
+        public List<ClickableArea> ClickableAreas { get; private set; } = new List<ClickableArea>();
+        
         /// <summary>
         /// This is the new constructor.
         /// If the rectT height is set 0, the height is calculated from the text.
@@ -282,11 +313,11 @@ namespace Barotrauma
             Enabled = true;
             Censor = false;
         }
-        public GUITextBlock(RectTransform rectT, List<ColorData> colorData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
+        public GUITextBlock(RectTransform rectT, List<RichTextData> richTextData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
         : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
         {
-            this.colorData = colorData;
-            hasColorHighlight = colorData != null;
+            this.richTextData = richTextData;
+            hasColorHighlight = richTextData != null;
         }
 
         public void CalculateHeightFromText(int padding = 0)
@@ -427,6 +458,131 @@ namespace Barotrauma
             disabledTextColor = color;
         }
 
+        protected List<Tuple<Vector2, int>> GetAllPositions()
+        {
+            float halfHeight = Font.MeasureString("T").Y * 0.5f;
+            string textDrawn = Censor ? CensoredText : WrappedText;
+            var positions = new List<Tuple<Vector2, int>>();
+            if (textDrawn.Contains("\n"))
+            {
+                string[] lines = textDrawn.Split('\n');
+                int index = 0;
+                int totalIndex = 0;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    totalIndex += line.Length;
+                    float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y;
+                    for (int j = 0; j <= line.Length; j++)
+                    {
+                        Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
+                        Vector2 indexPos = new Vector2(lineTextSize.X + Padding.X, totalTextHeight + Padding.Y - halfHeight);
+                        //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
+                        positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
+                    }
+                    index = totalIndex;
+                }
+            }
+            else
+            {
+                textDrawn = Censor ? CensoredText : Text;
+                for (int i = 0; i <= Text.Length; i++)
+                {
+                    Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i));
+                    Vector2 indexPos = new Vector2(textSize.X + Padding.X, textSize.Y + Padding.Y - halfHeight) + TextPos - Origin;
+                    //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
+                    positions.Add(new Tuple<Vector2, int>(indexPos, i));
+                }
+            }
+            return positions;
+        }
+
+        public int GetCaretIndexFromScreenPos(Vector2 pos)
+        {
+            return GetCaretIndexFromLocalPos(pos - Rect.Location.ToVector2());
+        }
+
+        public int GetCaretIndexFromLocalPos(Vector2 pos)
+        {
+            var positions = GetAllPositions();
+            if (positions.Count == 0) { return 0; }
+            float halfHeight = Font.MeasureString("T").Y * 0.5f;
+
+            var currPosition = positions[0];
+
+            float topY = positions.Min(p => p.Item1.Y);
+
+            for (int i = 1; i < positions.Count; i++)
+            {
+                var p1 = positions[i];
+                var p2 = currPosition;
+
+                float diffY = Math.Abs(p1.Item1.Y - pos.Y) - Math.Abs(p2.Item1.Y - pos.Y);
+                if (diffY < -3.0f)
+                {
+                    currPosition = p1; continue;
+                }
+                else if (diffY > 3.0f)
+                {
+                    continue;
+                }
+                else
+                {
+                    diffY = Math.Abs(p1.Item1.Y - pos.Y);
+                    if (diffY < halfHeight || (p1.Item1.Y == topY && pos.Y < topY))
+                    {
+                        //we are on this line, select the nearest character
+                        float diffX = Math.Abs(p1.Item1.X - pos.X) - Math.Abs(p2.Item1.X - pos.X);
+                        if (diffX < -1.0f)
+                        {
+                            currPosition = p1; continue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        //we are on a different line, preserve order
+                        if (p1.Item2 < p2.Item2)
+                        {
+                            if (p1.Item1.Y > pos.Y) { currPosition = p1; }
+                        }
+                        else if (p1.Item2 > p2.Item2)
+                        {
+                            if (p1.Item1.Y < pos.Y) { currPosition = p1; }
+                        }
+                        continue;
+                    }
+                }
+            }
+            //GUI.AddMessage($"index: {posIndex.Item2}, pos: {posIndex.Item1}", Color.WhiteSmoke);
+            return currPosition != null ? currPosition.Item2 : Text.Length;
+        }
+
+        protected override void Update(float deltaTime)
+        {
+            base.Update(deltaTime);
+
+            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true) && Rect.Contains(PlayerInput.MousePosition))
+            {
+                int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
+                foreach (ClickableArea clickableArea in ClickableAreas)
+                {
+                    if (clickableArea.Data.StartIndex <= index && index <= clickableArea.Data.EndIndex)
+                    {
+                        GUI.MouseCursor = CursorState.Hand;
+                        if (PlayerInput.PrimaryMouseButtonClicked())
+                        {
+                            clickableArea.OnClick?.Invoke(this, clickableArea);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }
@@ -480,7 +636,12 @@ namespace Barotrauma
                 else
                 {
                     Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, colorData);
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, richTextData);
+                }
+
+                if (Strikethrough != null)
+                {
+                    Strikethrough.Draw(spriteBatch, (int)Math.Ceiling(TextSize.X / 2f), pos.X, ForceUpperCase ? pos.Y : pos.Y + GUI.Scale * 2f);
                 }
             }
 

@@ -186,12 +186,12 @@ namespace Barotrauma
 
                     if (ContainedItems == null || ContainedItems.All(i => i == null))
                     {
-                        GameServer.Log(c.Character.LogName + " used item " + Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " used item " + Name, ServerLog.MessageType.ItemInteraction);
                     }
                     else
                     {
                         GameServer.Log(
-                            c.Character.LogName + " used item " + Name + " (contained items: " + string.Join(", ", ContainedItems.Select(i => i.Name)) + ")",
+                            GameServer.CharacterLogName(c.Character) + " used item " + Name + " (contained items: " + string.Join(", ", ContainedItems.Select(i => i.Name)) + ")",
                             ServerLog.MessageType.ItemInteraction);
                     }
 
@@ -213,7 +213,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID)
         {
             if (GameMain.Server == null) return;
 
@@ -227,7 +227,7 @@ namespace Barotrauma
 
             msg.Write(entityID);
 
-            if (ParentInventory == null || ParentInventory.Owner == null)
+            if (ParentInventory == null || ParentInventory.Owner == null || originalInventoryID == 0)
             {
                 msg.Write((ushort)0);
 
@@ -237,7 +237,7 @@ namespace Barotrauma
             }
             else
             {
-                msg.Write(ParentInventory.Owner.ID);
+                msg.Write(originalInventoryID);
 
                 //find the index of the ItemContainer this item is inside to get the item to
                 //spawn in the correct inventory in multi-inventory items like fabricators

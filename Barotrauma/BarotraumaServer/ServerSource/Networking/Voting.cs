@@ -74,7 +74,7 @@ namespace Barotrauma
                     if (ready != sender.GetVote<bool>(VoteType.StartRound))
                     {
                         sender.SetVote(VoteType.StartRound, ready);
-                        GameServer.Log(sender.Name + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
+                        GameServer.Log(GameServer.ClientLogName(sender) + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
                     }
 
                     break;

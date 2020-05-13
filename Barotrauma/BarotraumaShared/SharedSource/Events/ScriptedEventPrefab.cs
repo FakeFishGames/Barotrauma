@@ -11,7 +11,6 @@ namespace Barotrauma
         public readonly Type EventType;      
         public readonly string MusicType;
         public readonly float SpawnProbability;
-        public readonly bool AllowOnlyOnce;
         public float Commonness;
 
         public ScriptedEventPrefab(XElement element)
@@ -34,7 +33,6 @@ namespace Barotrauma
             }
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             SpawnProbability = Math.Clamp(element.GetAttributeFloat("spawnprobability", 1.0f), 0, 1);
-            AllowOnlyOnce = element.GetAttributeBool("allowonlyonce", false);
         }
 
         public ScriptedEvent CreateInstance()

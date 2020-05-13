@@ -5,7 +5,7 @@ using System;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Barotrauma.Extensions;
@@ -235,7 +235,7 @@ namespace Barotrauma
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
-                    GameServer.Log($"{traitor.Character.Name} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
+                    GameServer.Log($"{GameServer.CharacterLogName(traitor.Character)} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
                 }
 #endif
                 return true;
@@ -287,10 +287,7 @@ namespace Barotrauma
                         {
                             pendingObjectives.Remove(objective);
                             completedObjectives.Add(objective);
-                            if (pendingObjectives.Count > 0)
-                            {
-                                objective.EndMessage();
-                            }
+                            objective.EndMessage();
                             continue;
                         }
                         if (objective.IsStarted && !objective.CanBeCompleted)

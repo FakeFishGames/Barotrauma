@@ -91,11 +91,11 @@ namespace Barotrauma
         public void RenderWater(SpriteBatch spriteBatch, RenderTarget2D texture, Camera cam)
         {
             spriteBatch.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-            
+
             WaterEffect.Parameters["xTexture"].SetValue(texture);
             Vector2 distortionStrength = cam == null ? DistortionStrength : DistortionStrength * cam.Zoom;
-            WaterEffect.Parameters["xWaveWidth"].SetValue(DistortionStrength.X);
-            WaterEffect.Parameters["xWaveHeight"].SetValue(DistortionStrength.Y);
+            WaterEffect.Parameters["xWaveWidth"].SetValue(distortionStrength.X);
+            WaterEffect.Parameters["xWaveHeight"].SetValue(distortionStrength.Y);
             if (BlurAmount > 0.0f)
             {
                 WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShaderBlurred"];
@@ -111,6 +111,9 @@ namespace Barotrauma
                 offset += (cam.Position - new Vector2(cam.WorldView.Width / 2.0f, -cam.WorldView.Height / 2.0f));
                 offset.Y += cam.WorldView.Height;
                 offset.X += cam.WorldView.Width;
+#if LINUX || OSX
+                offset.X += cam.WorldView.Width;
+#endif
                 offset *= DistortionScale;
             }
             offset.Y = -offset.Y;
@@ -176,6 +179,9 @@ namespace Barotrauma
 
                 spriteBatch.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, subVerts.Value, 0, PositionInIndoorsBuffer[subVerts.Key] / 3);
             }
+
+            WaterEffect.Parameters["xTexture"].SetValue((Texture2D)null);
+            WaterEffect.CurrentTechnique.Passes[0].Apply();
         }
 
         public void ScrollWater(Vector2 vel, float deltaTime)
@@ -195,7 +201,10 @@ namespace Barotrauma
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
             graphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, PositionInBuffer / 3);         
+            graphicsDevice.DrawUserPrimitives<VertexPositionTexture>(PrimitiveType.TriangleList, vertices, 0, PositionInBuffer / 3);
+
+            basicEffect.Texture = null;
+            basicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
         public void ResetBuffers()

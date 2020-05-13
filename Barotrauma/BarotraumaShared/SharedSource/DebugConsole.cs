@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 
@@ -678,7 +678,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [emp strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
+            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [item damage] [emp strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
 
             commands.Add(new Command("showseed|showlevelseed", "showseed: Show the seed of the current level.", (string[] args) =>
             {
@@ -692,7 +692,7 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
 
@@ -974,6 +974,22 @@ namespace Barotrauma
                     NewMessage(location.Name + " selected.", Color.White);
                 }
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                    else
+                    {
+                        ThrowError($"\"{args[0]}\" is not a valid numeric value.");
+                    }
+                }
+            }, isCheat: true));
 
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
             

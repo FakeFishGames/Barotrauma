@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -13,11 +13,28 @@ namespace Barotrauma
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
             if (!editing || wallVertices == null) { return; }
+            
+            Draw(spriteBatch, Position);
 
-            Color color = IsHighlighted ? GUI.Style.Orange : GUI.Style.Green;
+            if (!Item.ShowLinks) { return; }
+
+            foreach (MapEntity e in linkedTo)
+            {
+                bool isLinkAllowed = e is Item item && item.HasTag("dock");
+
+                GUI.DrawLine(spriteBatch,
+                             new Vector2(WorldPosition.X, -WorldPosition.Y),
+                             new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
+                             isLinkAllowed ? GUI.Style.Green * 0.5f : GUI.Style.Red * 0.5f, width: 3);
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 drawPos, float alpha = 1.0f)
+        {
+            Color color = (IsHighlighted) ? GUI.Style.Orange : GUI.Style.Green;
             if (IsSelected) { color = GUI.Style.Red; }
 
-            Vector2 pos = Position;
+            Vector2 pos = drawPos;
 
             for (int i = 0; i < wallVertices.Count; i++)
             {
@@ -28,26 +45,14 @@ namespace Barotrauma
                 endPos.Y = -endPos.Y;
 
                 GUI.DrawLine(spriteBatch,
-                    startPos,
-                    endPos,
-                    color, 0.0f, 5);
+                             startPos,
+                             endPos,
+                             color * alpha, 0.0f, 5);
             }
 
             pos.Y = -pos.Y;
-            GUI.DrawLine(spriteBatch, pos + Vector2.UnitY * 50.0f, pos - Vector2.UnitY * 50.0f, color, 0.0f, 5);
-            GUI.DrawLine(spriteBatch, pos + Vector2.UnitX * 50.0f, pos - Vector2.UnitX * 50.0f, color, 0.0f, 5);
-
-            if (!Item.ShowLinks) { return; }
-
-            foreach (MapEntity e in linkedTo)
-            {
-                bool isLinkAllowed = e is Item item && item.HasTag("dock");
-
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(WorldPosition.X, -WorldPosition.Y),
-                     new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                    isLinkAllowed ? GUI.Style.Green * 0.5f : GUI.Style.Red * 0.5f, width: 3);
-            }
+            GUI.DrawLine(spriteBatch, pos + Vector2.UnitY * 50.0f, pos - Vector2.UnitY * 50.0f, color * alpha, 0.0f, 5);
+            GUI.DrawLine(spriteBatch, pos + Vector2.UnitX * 50.0f, pos - Vector2.UnitX * 50.0f, color * alpha, 0.0f, 5);
         }
 
         public override void UpdateEditing(Camera cam)
@@ -100,10 +105,9 @@ namespace Barotrauma
             }
 
             var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
-
             var pathBox = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), pathContainer.RectTransform), filePath, font: GUI.SmallFont);
             var reloadButton = new GUIButton(new RectTransform(new Vector2(0.25f / pathBox.RectTransform.RelativeSize.X, 1.0f), pathBox.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), 
-                TextManager.Get("ReloadLinkedSub"), style: "GUIButtonSmall")
+                                             TextManager.Get("ReloadLinkedSub"), style: "GUIButtonSmall")
             {
                 OnClicked = Reload,
                 UserData = pathBox,
@@ -133,6 +137,7 @@ namespace Barotrauma
 
             XDocument doc = SubmarineInfo.OpenFile(pathBox.Text);
             if (doc == null || doc.Root == null) return false;
+            doc.Root.SetAttributeValue("filepath", pathBox.Text);
 
             pathBox.Flash(GUI.Style.Green);
 

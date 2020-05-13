@@ -1,10 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma.Networking
@@ -108,7 +107,7 @@ namespace Barotrauma.Networking
                         netProperties[key].Read(incMsg);
                         if (!netProperties[key].PropEquals(prevValue, netProperties[key]))
                         {
-                            GameServer.Log(c.Name + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
+                            GameServer.Log(GameServer.ClientLogName(c) + " changed " + netProperties[key].Name + " to " + netProperties[key].Value.ToString(), ServerLog.MessageType.ServerMessage);
                         }
                         changed = true;
                     }
@@ -204,7 +203,7 @@ namespace Barotrauma.Networking
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
 
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true
@@ -212,7 +211,7 @@ namespace Barotrauma.Networking
 
             using (var writer = XmlWriter.Create(SettingsFile, settings))
             {
-                doc.Save(writer);
+                doc.SaveSafe(writer);
             }
 
             if (KarmaPreset == "custom")
@@ -521,13 +520,13 @@ namespace Barotrauma.Networking
 
             try
             {
-                XmlWriterSettings settings = new XmlWriterSettings();
+                System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings();
                 settings.Indent = true;
                 settings.NewLineOnAttributes = true;
 
                 using (var writer = XmlWriter.Create(ClientPermissionsFile, settings))
                 {
-                    doc.Save(writer);
+                    doc.SaveSafe(writer);
                 }
             }
             catch (Exception e)

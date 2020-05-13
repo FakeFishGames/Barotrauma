@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -53,8 +52,20 @@ namespace Barotrauma
         [Serialize(0.25f, true)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 
+        [Serialize(0.25f, true)]
+        public float StunFriendlyKarmaDecrease { get; set; }
+
+        [Serialize(0.3f, true)]
+        public float StunFriendlyKarmaDecreaseThreshold { get; set; }
+
         [Serialize(1.0f, true)]
         public float ExtinguishFireKarmaIncrease { get; set; }
+        
+        [Serialize(defaultValue: 15.0f, true)]
+        public float DangerousItemStealKarmaDecrease { get; set; }
+        
+        [Serialize(defaultValue: false, true)]
+        public bool DangerousItemStealBots { get; set; }
 
 
         private int allowedWireDisconnectionsPerMinute;
@@ -104,7 +115,7 @@ namespace Barotrauma
                     doc = XMLExtensions.TryLoadXml(ConfigFile);
                     break;
                 }
-                catch (IOException)
+                catch (System.IO.IOException)
                 {
                     if (i == maxLoadRetries) { break; }
                     DebugConsole.NewMessage("Opening karma settings file \"" + ConfigFile + "\" failed, retrying in 250 ms...");
@@ -159,7 +170,7 @@ namespace Barotrauma
                 doc.Root.Add(preset.Value);
             }
 
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true
@@ -172,11 +183,11 @@ namespace Barotrauma
                 {
                     using (var writer = XmlWriter.Create(ConfigFile, settings))
                     {
-                        doc.Save(writer);
+                        doc.SaveSafe(writer);
                     }
                     break;
                 }
-                catch (IOException)
+                catch (System.IO.IOException)
                 {
                     if (i == maxLoadRetries) { throw; }
 

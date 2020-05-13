@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,6 +68,8 @@ namespace Barotrauma
         public bool IsOutpost => Type == SubmarineType.Outpost;
         public bool IsWreck => Type == SubmarineType.Wreck;
 
+        public bool IsPlayer => Type == SubmarineType.Player;
+
         public enum SubmarineType { Player, Outpost, Wreck }
         public SubmarineType Type { get; set; }
 
@@ -99,7 +101,11 @@ namespace Barotrauma
             set;
         }
 
-        public readonly XElement SubmarineElement;
+        public XElement SubmarineElement
+        {
+            get;
+            private set;
+        }
 
         public override string ToString()
         {
@@ -126,6 +132,22 @@ namespace Barotrauma
             }
         }
 
+        private bool? subsLeftBehind;
+        public bool SubsLeftBehind
+        {
+            get
+            {
+                if (subsLeftBehind.HasValue) { return subsLeftBehind.Value; }
+                CheckSubsLeftBehind(SubmarineElement);
+                return subsLeftBehind.Value;
+            }
+        }
+
+        public bool LeftBehindSubDockingPortOccupied
+        {
+            get; private set;
+        }
+
         //constructors & generation ----------------------------------------------------
         public SubmarineInfo()
         {
@@ -135,7 +157,7 @@ namespace Barotrauma
             RequiredContentPackages = new HashSet<string>();
         }
 
-        public SubmarineInfo(string filePath, string hash = "", XElement element = null)
+        public SubmarineInfo(string filePath, string hash = "", XElement element = null, bool tryLoad = true)
         {
             FilePath = filePath;
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
@@ -160,41 +182,23 @@ namespace Barotrauma
 
             RequiredContentPackages = new HashSet<string>();
 
-            if (element == null)
+            if (element == null && tryLoad)
             {
-                XDocument doc = null;
-                int maxLoadRetries = 4;
-                for (int i = 0; i <= maxLoadRetries; i++)
-                {
-                    doc = OpenFile(filePath, out Exception e);
-                    if (e != null && !(e is IOException)) { break; }
-                    if (doc != null || i == maxLoadRetries || !File.Exists(filePath)) { break; }
-                    DebugConsole.NewMessage("Opening submarine file \"" + filePath + "\" failed, retrying in 250 ms...");
-                    Thread.Sleep(250);
-                }
-                if (doc == null || doc.Root == null)
-                {
-                    IsFileCorrupted = true;
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(hash))
-                {
-                    StartHashDocTask(doc);
-                }
-
-                SubmarineElement = doc.Root;
+                Reload();
             }
             else
             {
                 SubmarineElement = element;
             }
 
+            Name = SubmarineElement.GetAttributeString("name", null) ?? Name;
+
             Init();
         }
 
         public SubmarineInfo(Submarine sub) : this(sub.Info)
         {
+            GameVersion = GameMain.Version;
             SubmarineElement = new XElement("Submarine");
             sub.SaveToXElement(SubmarineElement);
             Init();
@@ -220,6 +224,30 @@ namespace Barotrauma
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
 #endif
+        }
+
+        public void Reload()
+        {
+            XDocument doc = null;
+            int maxLoadRetries = 4;
+            for (int i = 0; i <= maxLoadRetries; i++)
+            {
+                doc = OpenFile(FilePath, out Exception e);
+                if (e != null && !(e is System.IO.IOException)) { break; }
+                if (doc != null || i == maxLoadRetries || !File.Exists(FilePath)) { break; }
+                DebugConsole.NewMessage("Opening submarine file \"" + FilePath + "\" failed, retrying in 250 ms...");
+                Thread.Sleep(250);
+            }
+            if (doc == null || doc.Root == null)
+            {
+                IsFileCorrupted = true;
+                return;
+            }
+            if (hash == null)
+            {
+                StartHashDocTask(doc);
+            }
+            SubmarineElement = doc.Root;
         }
 
         private void Init()
@@ -317,8 +345,31 @@ namespace Barotrauma
             Tags &= ~tag;
         }
 
+        public void CheckSubsLeftBehind(XElement element = null)
+        {
+            if (element == null) { element = SubmarineElement; }
+
+            subsLeftBehind = false;
+            LeftBehindSubDockingPortOccupied = false;
+            foreach (XElement subElement in element.Elements())
+            {
+                if (!subElement.Name.ToString().Equals("linkedsubmarine", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (subElement.Attribute("location") == null) { continue; }
+
+                subsLeftBehind = true;
+                ushort targetDockingPortID = (ushort)subElement.GetAttributeInt("originallinkedto", 0);
+                XElement targetPortElement = targetDockingPortID == 0 ? null :
+                    element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
+                if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
+                {
+                    LeftBehindSubDockingPortOccupied = true;
+                }
+            }
+        }
+
+
         //saving/loading ----------------------------------------------------
-        public bool SaveAs(string filePath, MemoryStream previewImage=null)
+        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage=null)
         {
             var newElement = new XElement(SubmarineElement.Name,
                 SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase)),
@@ -405,7 +456,11 @@ namespace Barotrauma
             try
             {
                 filePaths = Directory.GetFiles(SavePath).ToList();
-                subDirectories = Directory.GetDirectories(SavePath);
+                subDirectories = Directory.GetDirectories(SavePath).Where(s =>
+                {
+                    DirectoryInfo dir = new DirectoryInfo(s);
+                    return (dir.Attributes & System.IO.FileAttributes.Hidden) == 0;
+                }).ToArray();
             }
             catch (Exception e)
             {
@@ -504,12 +559,12 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                Stream stream = null;
+                System.IO.Stream stream = null;
                 try
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
                 }
-                catch (FileNotFoundException e)
+                catch (System.IO.FileNotFoundException e)
                 {
                     exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found) " + Environment.StackTrace, e);

@@ -2,8 +2,7 @@
 using System.Xml.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using System.Xml;
-using System.IO;
+using Barotrauma.IO;
 using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Input;
@@ -37,6 +36,8 @@ namespace Barotrauma
 
         public bool VSyncEnabled { get; set; }
 
+        public bool TextureCompressionEnabled { get; set; }
+
         public bool EnableSplashScreen { get; set; }
 
         public int ParticleLimit { get; set; }
@@ -66,6 +67,7 @@ namespace Barotrauma
 
 #if CLIENT
         private KeyOrMouse[] keyMapping;
+        private KeyOrMouse[] inventoryKeyMapping;
 #endif
 
         private WindowMode windowMode;
@@ -91,6 +93,7 @@ namespace Barotrauma
             set { /*do nothing*/ }
         }
 #endif
+        public bool UseDualModeSockets { get; set; } = true;
 
         public bool AutoUpdateWorkshopItems;
 
@@ -115,6 +118,19 @@ namespace Barotrauma
         {
             get { return jobPreferences; }
             set { jobPreferences = value; }
+        }
+
+        public bool AreJobPreferencesEqual(List<Pair<string, int>> compareTo)
+        {
+            if (jobPreferences == null || compareTo == null) return false;
+            if (jobPreferences.Count != compareTo.Count) return false;
+
+            for (int i = 0; i < jobPreferences.Count; i++)
+            {
+                if (jobPreferences[i].First != compareTo[i].First || jobPreferences[i].Second != compareTo[i].Second) return false;
+            }
+
+            return true;
         }
 
         public int CharacterHeadIndex { get; set; }
@@ -193,7 +209,7 @@ namespace Barotrauma
             {
                 musicVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("music", musicVolume * 0.7f, 0);
 #endif
             }
         }
@@ -203,11 +219,18 @@ namespace Barotrauma
             get { return voiceChatVolume; }
             set
             {
-                voiceChatVolume = MathHelper.Clamp(value, 0.0f, 1.0f);
+                voiceChatVolume = MathHelper.Clamp(value, 0.0f, 2.0f);
 #if CLIENT
-                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", voiceChatVolume, 0);
+                GameMain.SoundManager?.SetCategoryGainMultiplier("voip", Math.Min(voiceChatVolume, 1.0f), 0);
 #endif
             }
+        }
+
+
+        public int VoiceChatCutoffPrevention
+        {
+            get;
+            set;
         }
 
         public const float MaxMicrophoneVolume = 10.0f;
@@ -246,7 +269,7 @@ namespace Barotrauma
         public bool TextManagerDebugModeEnabled { get; set; }
 #endif
 
-        private FileSystemWatcher modsFolderWatcher;
+        private System.IO.FileSystemWatcher modsFolderWatcher;
 
         private int ContentFileLoadOrder(ContentFile a)
         {
@@ -280,58 +303,11 @@ namespace Barotrauma
                 !otherCorePackage.Files.Any(f2 =>
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
-            bool shouldRefreshSubs = false;
-            bool shouldRefreshFabricationRecipes = false;
-            bool shouldRefreshSoundPlayer = false;
-            bool shouldRefreshRuinGenerationParams = false;
-            bool shouldRefreshScriptedEventSets = false;
-            bool shouldRefreshMissionPrefabs = false;
-            bool shouldRefreshLevelObjectPrefabs = false;
-            bool shouldRefreshLocationTypes = false;
-            bool shouldRefreshMapGenerationParams = false;
-            bool shouldRefreshLevelGenerationParams = false;
-            bool shouldRefreshAfflictions = false;
+            DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder));
 
-            DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder),
-                                            ref shouldRefreshSubs,
-                                            ref shouldRefreshFabricationRecipes,
-                                            ref shouldRefreshSoundPlayer,
-                                            ref shouldRefreshRuinGenerationParams,
-                                            ref shouldRefreshScriptedEventSets,
-                                            ref shouldRefreshMissionPrefabs,
-                                            ref shouldRefreshLevelObjectPrefabs,
-                                            ref shouldRefreshLocationTypes,
-                                            ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams,
-                                            ref shouldRefreshAfflictions);
+            EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder));
 
-            EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder),
-                                            ref shouldRefreshSubs,
-                                            ref shouldRefreshFabricationRecipes,
-                                            ref shouldRefreshSoundPlayer,
-                                            ref shouldRefreshRuinGenerationParams,
-                                            ref shouldRefreshScriptedEventSets,
-                                            ref shouldRefreshMissionPrefabs,
-                                            ref shouldRefreshLevelObjectPrefabs,
-                                            ref shouldRefreshLocationTypes,
-                                            ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams,
-                                            ref shouldRefreshAfflictions);
-
-            if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-            if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
-            if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
-            if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-            if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
-            if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
-            if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
-            if (shouldRefreshLocationTypes) { LocationType.Init(); }
-            if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
-            if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
-
-#if CLIENT
-            if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
-#endif
+            RefreshContentPackageItems(filesToAdd.Concat(filesToRemove));
 
         }
         public void SelectContentPackage(ContentPackage contentPackage)
@@ -341,45 +317,9 @@ namespace Barotrauma
                 SelectedContentPackages.Add(contentPackage);
                 ContentPackage.SortContentPackages();
 
-                bool shouldRefreshSubs = false;
-                bool shouldRefreshFabricationRecipes = false;
-                bool shouldRefreshSoundPlayer = false;
-                bool shouldRefreshRuinGenerationParams = false;
-                bool shouldRefreshScriptedEventSets = false;
-                bool shouldRefreshMissionPrefabs = false;
-                bool shouldRefreshLevelObjectPrefabs = false;
-                bool shouldRefreshLocationTypes = false;
-                bool shouldRefreshMapGenerationParams = false;
-                bool shouldRefreshLevelGenerationParams = false;
-                bool shouldRefreshAfflictions = false;
+                EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
 
-                EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
-                                            ref shouldRefreshSubs,
-                                            ref shouldRefreshFabricationRecipes,
-                                            ref shouldRefreshSoundPlayer,
-                                            ref shouldRefreshRuinGenerationParams,
-                                            ref shouldRefreshScriptedEventSets,
-                                            ref shouldRefreshMissionPrefabs,
-                                            ref shouldRefreshLevelObjectPrefabs,
-                                            ref shouldRefreshLocationTypes,
-                                            ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams,
-                                            ref shouldRefreshAfflictions);
-
-                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-                if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
-                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
-                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
-                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
-                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
-                if (shouldRefreshLocationTypes) { LocationType.Init(); }
-                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
-                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
-
-#if CLIENT
-                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
-#endif
+                RefreshContentPackageItems(contentPackage.Files);
             }
         }
 
@@ -390,61 +330,14 @@ namespace Barotrauma
                 SelectedContentPackages.Remove(contentPackage);
                 ContentPackage.SortContentPackages();
 
-                bool shouldRefreshSubs = false;
-                bool shouldRefreshFabricationRecipes = false;
-                bool shouldRefreshSoundPlayer = false;
-                bool shouldRefreshRuinGenerationParams = false;
-                bool shouldRefreshScriptedEventSets = false;
-                bool shouldRefreshMissionPrefabs = false;
-                bool shouldRefreshLevelObjectPrefabs = false;
-                bool shouldRefreshLocationTypes = false;
-                bool shouldRefreshMapGenerationParams = false;
-                bool shouldRefreshLevelGenerationParams = false;
-                bool shouldRefreshAfflictions = false;
+                DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
 
-                DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder),
-                                            ref shouldRefreshSubs,
-                                            ref shouldRefreshFabricationRecipes,
-                                            ref shouldRefreshSoundPlayer,
-                                            ref shouldRefreshRuinGenerationParams,
-                                            ref shouldRefreshScriptedEventSets,
-                                            ref shouldRefreshMissionPrefabs,
-                                            ref shouldRefreshLevelObjectPrefabs,
-                                            ref shouldRefreshLocationTypes,
-                                            ref shouldRefreshMapGenerationParams,
-                                            ref shouldRefreshLevelGenerationParams,
-                                            ref shouldRefreshAfflictions);
-
-                if (shouldRefreshAfflictions) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-                if (shouldRefreshSubs) { SubmarineInfo.RefreshSavedSubs(); }
-                if (shouldRefreshFabricationRecipes) { ItemPrefab.InitFabricationRecipes(); }
-                if (shouldRefreshRuinGenerationParams) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-                if (shouldRefreshScriptedEventSets) { ScriptedEventSet.LoadPrefabs(); }
-                if (shouldRefreshMissionPrefabs) { MissionPrefab.Init(); }
-                if (shouldRefreshLevelObjectPrefabs) { LevelObjectPrefab.LoadAll(); }
-                if (shouldRefreshLocationTypes) { LocationType.Init(); }
-                if (shouldRefreshMapGenerationParams) { MapGenerationParams.Init(); }
-                if (shouldRefreshLevelGenerationParams) { LevelGenerationParams.LoadPresets(); }
-
-#if CLIENT
-                if (shouldRefreshSoundPlayer) { SoundPlayer.Init().ForEach(_ => { return; }); }
-#endif
+                RefreshContentPackageItems(contentPackage.Files);
             }
         }
 
 
-        private void EnableContentPackageItems(IOrderedEnumerable<ContentFile> files,
-                                                ref bool shouldRefreshSubs,
-                                                ref bool shouldRefreshFabricationRecipes,
-                                                ref bool shouldRefreshSoundPlayer,
-                                                ref bool shouldRefreshRuinGenerationParams,
-                                                ref bool shouldRefreshScriptedEventSets,
-                                                ref bool shouldRefreshMissionPrefabs,
-                                                ref bool shouldRefreshLevelObjectPrefabs,
-                                                ref bool shouldRefreshLocationTypes,
-                                                ref bool shouldRefreshMapGenerationParams,
-                                                ref bool shouldRefreshLevelGenerationParams,
-                                                ref bool shouldRefreshAfflictions)
+        private void EnableContentPackageItems(IOrderedEnumerable<ContentFile> files)
         {
             foreach (ContentFile file in files)
             {
@@ -452,6 +345,9 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
                         CharacterPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.Corpses:
+                        CorpsePrefab.LoadFromFile(file);
                         break;
                     case ContentType.NPCConversations:
                         NPCConversation.LoadFromFile(file);
@@ -461,7 +357,6 @@ namespace Barotrauma
                         break;
                     case ContentType.Item:
                         ItemPrefab.LoadFromFile(file);
-                        shouldRefreshFabricationRecipes = true;
                         break;
                     case ContentType.ItemAssembly:
                         new ItemAssemblyPrefab(file.Path);
@@ -469,40 +364,10 @@ namespace Barotrauma
                     case ContentType.Structure:
                         StructurePrefab.LoadFromFile(file);
                         break;
-                    case ContentType.Submarine:
-                        shouldRefreshSubs = true;
-                        break;
                     case ContentType.Text:
                         TextManager.LoadTextPack(file.Path);
                         break;
-                    case ContentType.Afflictions:
-                        shouldRefreshAfflictions = true;
-                        break;
-                    case ContentType.RuinConfig:
-                        shouldRefreshRuinGenerationParams = true;
-                        break;
-                    case ContentType.RandomEvents:
-                        shouldRefreshScriptedEventSets = true;
-                        break;
-                    case ContentType.Missions:
-                        shouldRefreshMissionPrefabs = true;
-                        break;
-                    case ContentType.LevelObjectPrefabs:
-                        shouldRefreshLevelObjectPrefabs = true;
-                        break;
-                    case ContentType.LocationTypes:
-                        shouldRefreshLocationTypes = true;
-                        break;
-                    case ContentType.MapGenerationParameters:
-                        shouldRefreshMapGenerationParams = true;
-                        break;
-                    case ContentType.LevelGenerationParameters:
-                        shouldRefreshLevelGenerationParams = true;
-                        break;
 #if CLIENT
-                    case ContentType.Sounds:
-                        shouldRefreshSoundPlayer = true;
-                        break;
                     case ContentType.Particles:
                         GameMain.ParticleManager?.LoadPrefabsFromFile(file);
                         break;
@@ -516,18 +381,7 @@ namespace Barotrauma
             }
         }
 
-        private void DisableContentPackageItems(IOrderedEnumerable<ContentFile> files,
-                                                ref bool shouldRefreshSubs,
-                                                ref bool shouldRefreshFabricationRecipes,
-                                                ref bool shouldRefreshSoundPlayer,
-                                                ref bool shouldRefreshRuinGenerationParams,
-                                                ref bool shouldRefreshScriptedEventSets,
-                                                ref bool shouldRefreshMissionPrefabs,
-                                                ref bool shouldRefreshLevelObjectPrefabs,
-                                                ref bool shouldRefreshLocationTypes,
-                                                ref bool shouldRefreshMapGenerationParams,
-                                                ref bool shouldRefreshLevelGenerationParams,
-                                                ref bool shouldRefreshAfflictions)
+        private void DisableContentPackageItems(IOrderedEnumerable<ContentFile> files)
         {
             foreach (ContentFile file in files)
             {
@@ -535,6 +389,9 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
                         CharacterPrefab.RemoveByFile(file.Path);
+                        break;
+                    case ContentType.Corpses:
+                        CorpsePrefab.RemoveByFile(file.Path);
                         break;
                     case ContentType.NPCConversations:
                         NPCConversation.RemoveByFile(file.Path);
@@ -544,7 +401,6 @@ namespace Barotrauma
                         break;
                     case ContentType.Item:
                         ItemPrefab.RemoveByFile(file.Path);
-                        shouldRefreshFabricationRecipes = true;
                         break;
                     case ContentType.ItemAssembly:
                         ItemAssemblyPrefab.Remove(file.Path);
@@ -552,40 +408,10 @@ namespace Barotrauma
                     case ContentType.Structure:
                         StructurePrefab.RemoveByFile(file.Path);
                         break;
-                    case ContentType.Submarine:
-                        shouldRefreshSubs = true;
-                        break;
                     case ContentType.Text:
                         TextManager.RemoveTextPack(file.Path);
                         break;
-                    case ContentType.Afflictions:
-                        shouldRefreshAfflictions = true;
-                        break;
-                    case ContentType.RuinConfig:
-                        shouldRefreshRuinGenerationParams = true;
-                        break;
-                    case ContentType.RandomEvents:
-                        shouldRefreshScriptedEventSets = true;
-                        break;
-                    case ContentType.Missions:
-                        shouldRefreshMissionPrefabs = true;
-                        break;
-                    case ContentType.LevelObjectPrefabs:
-                        shouldRefreshLevelObjectPrefabs = true;
-                        break;
-                    case ContentType.LocationTypes:
-                        shouldRefreshLocationTypes = true;
-                        break;
-                    case ContentType.MapGenerationParameters:
-                        shouldRefreshMapGenerationParams = true;
-                        break;
-                    case ContentType.LevelGenerationParameters:
-                        shouldRefreshLevelGenerationParams = true;
-                        break;
 #if CLIENT
-                    case ContentType.Sounds:
-                        shouldRefreshSoundPlayer = true;
-                        break;
                     case ContentType.Particles:
                         GameMain.ParticleManager?.RemovePrefabsByFile(file.Path);
                         break;
@@ -599,39 +425,74 @@ namespace Barotrauma
             }
         }
 
+        private void RefreshContentPackageItems(IEnumerable<ContentFile> files)
+        {
+            if (files.Any(f => f.Type == ContentType.Afflictions)) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
+            if (files.Any(f => f.Type == ContentType.Submarine)) { SubmarineInfo.RefreshSavedSubs(); }
+            if (files.Any(f => f.Type == ContentType.Item)) { ItemPrefab.InitFabricationRecipes(); }
+            if (files.Any(f => f.Type == ContentType.RuinConfig)) { RuinGeneration.RuinGenerationParams.ClearAll(); }
+            if (files.Any(f => f.Type == ContentType.RandomEvents)) { ScriptedEventSet.LoadPrefabs(); }
+            if (files.Any(f => f.Type == ContentType.Missions)) { MissionPrefab.Init(); }
+            if (files.Any(f => f.Type == ContentType.LevelObjectPrefabs)) { LevelObjectPrefab.LoadAll(); }
+            if (files.Any(f => f.Type == ContentType.LocationTypes)) { LocationType.Init(); }
+            if (files.Any(f => f.Type == ContentType.MapGenerationParameters)) { MapGenerationParams.Init(); }
+            if (files.Any(f => f.Type == ContentType.LevelGenerationParameters)) { LevelGenerationParams.LoadPresets(); }
+            if (files.Any(f => f.Type == ContentType.TraitorMissions)) { TraitorMissionPrefab.Init(); }
+            if (files.Any(f => f.Type == ContentType.Orders)) { Order.Init(); }
+            if (files.Any(f => f.Type == ContentType.EventManagerSettings)) { EventManagerSettings.Init(); }
+            if (files.Any(f => f.Type == ContentType.WreckAIConfig)) { WreckAIConfig.LoadAll(); }
+            if (files.Any(f => f.Type == ContentType.SkillSettings)) { SkillSettings.Load(GameMain.Instance.GetFilesOfType(ContentType.SkillSettings)); }
+
+#if CLIENT
+            if (files.Any(f => f.Type == ContentType.Tutorials)) { Tutorial.Init(); }
+            if (files.Any(f => f.Type == ContentType.Sounds)) { SoundPlayer.Init().ForEach(_ => { return; }); }
+#endif
+        }
+
+        private readonly static ContentType[] hotswappableContentTypes = new ContentType[]
+        {
+            ContentType.Character,
+            ContentType.Corpses,
+            ContentType.NPCConversations,
+            ContentType.Jobs,
+            ContentType.Orders,
+            ContentType.EventManagerSettings,
+            ContentType.Item,
+            ContentType.ItemAssembly,
+            ContentType.Structure,
+            ContentType.Submarine,
+            ContentType.Text,
+            ContentType.Afflictions,
+            ContentType.RuinConfig,
+            ContentType.RandomEvents,
+            ContentType.Missions,
+            ContentType.LevelObjectPrefabs,
+            ContentType.LocationTypes,
+            ContentType.MapGenerationParameters,
+            ContentType.LevelGenerationParameters,
+            ContentType.Sounds,
+            ContentType.Particles,
+            ContentType.Decals,
+            ContentType.Outpost,
+            ContentType.Wreck,
+            ContentType.WreckAIConfig,
+            ContentType.BackgroundCreaturePrefabs,
+            ContentType.ServerExecutable,
+            ContentType.TraitorMissions,
+            ContentType.Tutorials,
+            ContentType.SkillSettings,
+            ContentType.None
+        };
+
         private void UpdateContentPackageDirtyFlag(ContentFile file)
         {
-            switch (file.Type)
+            if (!hotswappableContentTypes.Contains(file.Type))
             {
-                case ContentType.Character:
-                case ContentType.NPCConversations:
-                case ContentType.Jobs:
-                case ContentType.Item:
-                case ContentType.ItemAssembly:
-                case ContentType.Structure:
-                case ContentType.Submarine:
-                case ContentType.Text:
-                case ContentType.Afflictions:
-                case ContentType.RuinConfig:
-                case ContentType.RandomEvents:
-                case ContentType.Missions:
-                case ContentType.LevelObjectPrefabs:
-                case ContentType.LocationTypes:
-                case ContentType.MapGenerationParameters:
-                case ContentType.LevelGenerationParameters:
-                case ContentType.Sounds:
-                case ContentType.Particles:
-                case ContentType.Decals:
-                case ContentType.Outpost:
-                case ContentType.Wreck:
-                case ContentType.BackgroundCreaturePrefabs:
-                case ContentType.ServerExecutable:
-                case ContentType.None:
-                    break; //do nothing here if the content type is supported
-                default:
+                if (ContentPackage.MultiplayerIncompatibleContent.Contains(file.Type))
+                {
                     ContentPackageSelectionDirty = true;
-                    ContentPackageSelectionDirtyNotification = true;
-                    break;
+                }
+                ContentPackageSelectionDirtyNotification = true;
             }
         }
 
@@ -661,6 +522,11 @@ namespace Barotrauma
             LocationType.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            TraitorMissionPrefab.Init();
+            Order.Init();
+            EventManagerSettings.Init();
+            WreckAIConfig.LoadAll();
+            SkillSettings.Load(GameMain.Instance.GetFilesOfType(ContentType.SkillSettings));
 
 #if CLIENT
             GameMain.DecalManager.Prefabs.SortAll();
@@ -733,6 +599,10 @@ namespace Barotrauma
         public bool ShowLanguageSelectionPrompt { get; set; }
 
         private bool showTutorialSkipWarning = true;
+
+        public static bool EnableSubmarineAutoSave { get; set; }
+        public static Color SubEditorBackgroundColor { get; set; }
+
         public bool ShowTutorialSkipWarning
         {
             get { return showTutorialSkipWarning && CompletedTutorialNames.Count == 0; }
@@ -755,21 +625,21 @@ namespace Barotrauma
 
             LoadPlayerConfig();
 
-            modsFolderWatcher = new FileSystemWatcher("Mods");
+            modsFolderWatcher = new System.IO.FileSystemWatcher("Mods");
             modsFolderWatcher.Filter = "*";
-            modsFolderWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            modsFolderWatcher.NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName;
             modsFolderWatcher.Created += OnModFolderUpdate;
             modsFolderWatcher.Deleted += OnModFolderUpdate;
             modsFolderWatcher.Renamed += OnModFolderUpdate;
             modsFolderWatcher.EnableRaisingEvents = true;
         }
 
-        private void OnModFolderUpdate(object sender, FileSystemEventArgs e)
+        private void OnModFolderUpdate(object sender, System.IO.FileSystemEventArgs e)
         {
             if (SuppressModFolderWatcher || (GameMain.NetworkMember?.IsClient ?? false)) { return; }
             switch (e.ChangeType)
             {
-                case WatcherChangeTypes.Created:
+                case System.IO.WatcherChangeTypes.Created:
                     {
                         string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
                         if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
@@ -779,7 +649,7 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case WatcherChangeTypes.Deleted:
+                case System.IO.WatcherChangeTypes.Deleted:
                     {
                         string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
                         var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
@@ -802,9 +672,9 @@ namespace Barotrauma
                         }
                     }
                     break;
-                case WatcherChangeTypes.Renamed:
+                case System.IO.WatcherChangeTypes.Renamed:
                     {
-                        RenamedEventArgs renameArgs = e as RenamedEventArgs;
+                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
 
                         string cpPath = Path.GetFullPath(Path.Combine(renameArgs.OldFullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
                         var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
@@ -884,8 +754,11 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("voicechatcutoffprevention", VoiceChatCutoffPrevention),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("submarineautosave", EnableSubmarineAutoSave),
+                new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
@@ -952,13 +825,29 @@ namespace Barotrauma
             doc.Root.Add(keyMappingElement);
             for (int i = 0; i < keyMapping.Length; i++)
             {
-                if (keyMapping[i].MouseButton == MouseButton.None)
+                KeyOrMouse bind = keyMapping[i];
+                if (bind.MouseButton == MouseButton.None)
                 {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].Key));
+                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.Key));
                 }
                 else
                 {
-                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
+                    keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), bind.MouseButton));
+                }
+            }
+
+            var inventoryKeyMappingElement = new XElement("inventorykeymapping");
+            doc.Root.Add(inventoryKeyMappingElement);
+            for (int i = 0; i < inventoryKeyMapping.Length; i++)
+            {
+                KeyOrMouse bind = inventoryKeyMapping[i];
+                if (bind.MouseButton == MouseButton.None)
+                {
+                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.Key));
+                }
+                else
+                {
+                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.MouseButton));
                 }
             }
 #endif
@@ -986,7 +875,7 @@ namespace Barotrauma
                 new XAttribute("faceattachmentindex", CharacterFaceAttachmentIndex));
             doc.Root.Add(playerElement);
 
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 OmitXmlDeclaration = true,
@@ -1082,7 +971,7 @@ namespace Barotrauma
             SelectedContentPackages.Clear();
             foreach (string path in contentPackagePaths)
             {
-                var matchingContentPackage = ContentPackage.List.Find(cp => System.IO.Path.GetFullPath(cp.Path).CleanUpPath() == path.CleanUpPath());
+                var matchingContentPackage = ContentPackage.List.Find(cp => Barotrauma.IO.Path.GetFullPath(cp.Path).CleanUpPath() == path.CleanUpPath());
 
                 if (matchingContentPackage == null)
                 {
@@ -1196,6 +1085,8 @@ namespace Barotrauma
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
+                new XAttribute("submarineautosave", EnableSubmarineAutoSave),
+                new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
                 new XAttribute("quickstartsub", QuickStartSubmarineName),
@@ -1210,7 +1101,8 @@ namespace Barotrauma
                 new XAttribute("editordisclaimershown", EditorDisclaimerShown),
                 new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning),
                 new XAttribute("corpsedespawndelay", CorpseDespawnDelay),
-                new XAttribute("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold)
+                new XAttribute("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold),
+                new XAttribute("usedualmodesockets", UseDualModeSockets)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
                 , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
@@ -1248,6 +1140,7 @@ namespace Barotrauma
                     new XAttribute("width", GraphicsWidth),
                     new XAttribute("height", GraphicsHeight),
                     new XAttribute("vsync", VSyncEnabled),
+                    new XAttribute("compresstextures", TextureCompressionEnabled),
                     new XAttribute("framelimit", Timing.FrameLimit),
                     new XAttribute("displaymode", windowMode));
             }
@@ -1262,13 +1155,14 @@ namespace Barotrauma
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("voicechatvolume", voiceChatVolume),
+                new XAttribute("voicechatcutoffprevention", VoiceChatCutoffPrevention),
                 new XAttribute("microphonevolume", microphoneVolume),
                 new XAttribute("muteonfocuslost", MuteOnFocusLost),
                 new XAttribute("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled),
                 new XAttribute("voipattenuationenabled", VoipAttenuationEnabled),
                 new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
-                new XAttribute("voicecapturedevice", VoiceCaptureDevice ?? ""),
+                new XAttribute("voicecapturedevice", System.Xml.XmlConvert.EncodeName(VoiceCaptureDevice ?? "")),
                 new XAttribute("noisegatethreshold", NoiseGateThreshold));
 
             XElement gSettings = doc.Root.Element("graphicssettings");
@@ -1306,6 +1200,21 @@ namespace Barotrauma
                 else
                 {
                     keyMappingElement.Add(new XAttribute(((InputType)i).ToString(), keyMapping[i].MouseButton));
+                }
+            }
+
+            var inventoryKeyMappingElement = new XElement("inventorykeymapping");
+            doc.Root.Add(inventoryKeyMappingElement);
+            for (int i = 0; i < inventoryKeyMapping.Length; i++)
+            {
+                KeyOrMouse bind = inventoryKeyMapping[i];
+                if (bind.MouseButton == MouseButton.None)
+                {
+                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.Key));
+                }
+                else
+                {
+                    inventoryKeyMappingElement.Add(new XAttribute($"slot{i}", bind.MouseButton));
                 }
             }
 #endif
@@ -1352,7 +1261,7 @@ namespace Barotrauma
             }
             doc.Root.Add(tutorialElement);
 
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 OmitXmlDeclaration = true,
@@ -1386,6 +1295,8 @@ namespace Barotrauma
             AutoCheckUpdates = doc.Root.GetAttributeBool("autocheckupdates", AutoCheckUpdates);
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
+            EnableSubmarineAutoSave = doc.Root.GetAttributeBool("submarineautosave", true);
+            SubEditorBackgroundColor = doc.Root.GetAttributeColor("subeditorbackground", new Color(0.051f, 0.149f, 0.271f, 1.0f));
             UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", UseSteamMatchmaking);
             RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", RequireSteamAuthentication);
             EnableSplashScreen = doc.Root.GetAttributeBool("enablesplashscreen", EnableSplashScreen);
@@ -1399,6 +1310,7 @@ namespace Barotrauma
             CampaignDisclaimerShown = doc.Root.GetAttributeBool("campaigndisclaimershown", CampaignDisclaimerShown);
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
+            UseDualModeSockets = doc.Root.GetAttributeBool("usedualmodesockets", true);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
             TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
@@ -1450,6 +1362,7 @@ namespace Barotrauma
             GraphicsWidth = graphicsMode.GetAttributeInt("width", GraphicsWidth);
             GraphicsHeight = graphicsMode.GetAttributeInt("height", GraphicsHeight);
             VSyncEnabled = graphicsMode.GetAttributeBool("vsync", VSyncEnabled);
+            TextureCompressionEnabled = graphicsMode.GetAttributeBool("compresstextures", TextureCompressionEnabled);
             Timing.FrameLimit = graphicsMode.GetAttributeInt("framelimit", 200);
 
             XElement graphicsSettings = doc.Root.Element("graphicssettings");
@@ -1487,10 +1400,11 @@ namespace Barotrauma
                 DynamicRangeCompressionEnabled = audioSettings.GetAttributeBool("dynamicrangecompressionenabled", DynamicRangeCompressionEnabled);
                 VoipAttenuationEnabled = audioSettings.GetAttributeBool("voipattenuationenabled", VoipAttenuationEnabled);
                 VoiceChatVolume = audioSettings.GetAttributeFloat("voicechatvolume", VoiceChatVolume);
+                VoiceChatCutoffPrevention = audioSettings.GetAttributeInt("voicechatcutoffprevention", VoiceChatCutoffPrevention);
                 MuteOnFocusLost = audioSettings.GetAttributeBool("muteonfocuslost", MuteOnFocusLost);
 
                 UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", UseDirectionalVoiceChat);
-                VoiceCaptureDevice = audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice);
+                VoiceCaptureDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice));
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
@@ -1532,6 +1446,7 @@ namespace Barotrauma
             GraphicsWidth = 0;
             GraphicsHeight = 0;
             VSyncEnabled = true;
+            TextureCompressionEnabled = true;
             Timing.FrameLimit = 200;
 #if DEBUG
             EnableSplashScreen = false;

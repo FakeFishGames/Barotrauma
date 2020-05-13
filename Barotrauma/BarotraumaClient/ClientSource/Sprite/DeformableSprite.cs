@@ -33,10 +33,12 @@ namespace Barotrauma
             get { return effect; }
         }
 
+        public bool Invert { get; set; }
+
         private Point spritePos;
         private Point spriteSize;
 
-        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad)
+        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad, bool invert)
         {
             if (effect == null)
             {
@@ -47,6 +49,8 @@ namespace Barotrauma
                 effect = GameMain.Instance.Content.Load<Effect>("Effects/deformshader_opengl");
 #endif
             }
+
+            Invert = invert;
             
             //use subdivisions configured in the xml if the arguments passed to the method are null
             Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", Vector2.One);
@@ -121,6 +125,12 @@ namespace Barotrauma
             uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
             uvTopLeftFlipped = Vector2.Divide(new Vector2(pos.X + size.X, pos.Y), textureSize);
             uvBottomRightFlipped = Vector2.Divide(new Vector2(pos.X, pos.Y + size.Y), textureSize);
+            if (Invert)
+            {
+                var temp = uvBottomRightFlipped;
+                uvBottomRightFlipped = uvTopLeftFlipped;
+                uvTopLeftFlipped = temp;
+            }
 
             for (int i = 0; i < 2; i++)
             {
@@ -267,7 +277,7 @@ namespace Barotrauma
                 Matrix.CreateTranslation(pos);
         }
 
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false, bool mirror = false)
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool mirror = false, bool invert = false)
         {
             if (Sprite.Texture == null) { return; }
             if (!initialized) { Init(); }
@@ -291,13 +301,13 @@ namespace Barotrauma
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
-            if (mirror)
+            if (invert)
             {
-                flip = !flip;
+                mirror = !mirror;
             }
-            effect.Parameters["uvTopLeft"].SetValue(flip ? uvTopLeftFlipped : uvTopLeft);
-            effect.Parameters["uvBottomRight"].SetValue(flip ? uvBottomRightFlipped : uvBottomRight);
-            effect.GraphicsDevice.SetVertexBuffer(flip ? flippedVertexBuffer : vertexBuffer);
+            effect.Parameters["uvTopLeft"].SetValue(mirror ? uvTopLeftFlipped : uvTopLeft);
+            effect.Parameters["uvBottomRight"].SetValue(mirror ? uvBottomRightFlipped : uvBottomRight);
+            effect.GraphicsDevice.SetVertexBuffer(mirror ? flippedVertexBuffer : vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();
             effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, triangleCount);

@@ -19,6 +19,8 @@ namespace Barotrauma.Networking
 
         VOICE,
         
+        PING_RESPONSE,
+
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
 
@@ -59,6 +61,9 @@ namespace Barotrauma.Networking
         FILE_TRANSFER,
 
         VOICE,
+
+        PING_REQUEST,       //ping the client
+        CLIENT_PINGS,       //tell the client the pings of all other clients
 
         QUERY_STARTGAME,    //ask the clients whether they're ready to start
         STARTGAME,          //start a new round
@@ -212,9 +217,9 @@ namespace Barotrauma.Networking
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, changeType: changeType));
         }
 
         public virtual void AddChatMessage(ChatMessage message)

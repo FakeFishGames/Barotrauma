@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -19,9 +19,9 @@ namespace Barotrauma
             {
                 try
                 {
-                    using (MemoryStream mem = new MemoryStream(Convert.FromBase64String(previewImageData)))
+                    using (System.IO.MemoryStream mem = new System.IO.MemoryStream(Convert.FromBase64String(previewImageData)))
                     {
-                        var texture = TextureLoader.FromStream(mem, path: FilePath);
+                        var texture = TextureLoader.FromStream(mem, path: FilePath, compress: false);
                         if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
                         PreviewImage = new Sprite(texture, null, null);
                     }

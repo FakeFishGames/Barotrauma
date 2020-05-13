@@ -24,6 +24,10 @@ namespace Barotrauma
         {
             get
             {
+                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                {
+                    return false;
+                }
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
@@ -46,6 +50,8 @@ namespace Barotrauma
                 decorativeSprite.Sprite.EnsureLazyLoaded();
                 spriteAnimState.Add(decorativeSprite, new DecorativeSprite.State());
             }
+
+            UpdateSpriteStates(0.0f);
         }
 
         partial void CreateConvexHull(Vector2 position, Vector2 size, float rotation)
@@ -334,7 +340,7 @@ namespace Barotrauma
                     float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, Scale, prefab.sprite.effects,
+                        rotation, decorativeSprite.Scale * Scale, prefab.sprite.effects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
                 }
                 prefab.sprite.effects = oldEffects;
@@ -435,7 +441,7 @@ namespace Barotrauma
             byte sectionCount = msg.ReadByte();
             if (sectionCount != Sections.Length)
             {
-                string errorMsg = $"Error while reading a network event for the structure \"{Name}\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
+                string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
                 GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }

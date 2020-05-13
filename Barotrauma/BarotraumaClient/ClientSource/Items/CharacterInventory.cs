@@ -345,9 +345,7 @@ namespace Barotrauma
                         {
                             hideButton.RectTransform.SetPosition(Anchor.TopLeft, Pivot.TopLeft);
                             hideButton.RectTransform.NonScaledSize = new Point(HideButtonWidth, HUDLayoutSettings.BottomRightInfoArea.Height);
-                            hideButton.RectTransform.AbsoluteOffset = new Point(
-                                personalSlotArea.Right + Spacing * 2,
-                                HUDLayoutSettings.BottomRightInfoArea.Y);
+                            hideButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.BottomRightInfoArea.Left - HideButtonWidth + GUI.IntScaleCeiling(2f), HUDLayoutSettings.BottomRightInfoArea.Y + GUI.IntScaleCeiling(1f));
                             hideButton.Visible = true;
 
                             SetIndicatorSizes();
@@ -356,7 +354,6 @@ namespace Barotrauma
                     break;
                 case Layout.Right:
                     {
-                        int extraOffset = 0;
                         int x = HUDLayoutSettings.InventoryAreaLower.Right;
                         int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - Spacing;
                         for (int i = 0; i < slots.Length; i++)
@@ -373,17 +370,18 @@ namespace Barotrauma
                         }
 
                         int lowerX = x;
+                        int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2 - (int)(!GUI.IsFourByThree() ? UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment : UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment * 2f);
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - Spacing * 2);
+                                SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
                                 personalSlotX -= slots[i].Rect.Width + Spacing;
                             }
                             else
                             {
-                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                                 x += slots[i].Rect.Width + Spacing;
                             }
                         }
@@ -393,7 +391,7 @@ namespace Barotrauma
                         {
                             if (!HideSlot(i)) continue;
                             x -= slots[i].Rect.Width + Spacing;
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                         }
                     }
                     break;
@@ -401,12 +399,14 @@ namespace Barotrauma
                     {
                         int x = HUDLayoutSettings.InventoryAreaLower.X;
                         int personalSlotX = x;
+                        int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2 - (int)(!GUI.IsFourByThree() ? UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment : UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment * 2f);
+
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2);
+                                SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
                                 personalSlotX += slots[i].Rect.Width + Spacing;
                             }
                             else
@@ -493,7 +493,7 @@ namespace Barotrauma
                 ((selectedSlot != null && selectedSlot.IsSubSlot) || (draggingItem != null && (draggingSlot == null || !draggingSlot.MouseOn())));
             if (CharacterHealth.OpenHealthWindow != null) hoverOnInventory = true;
             
-            if (layout == Layout.Default)
+            if (layout == Layout.Default && (Screen.Selected != GameMain.SubEditorScreen || Screen.Selected is SubEditorScreen editor && editor.WiringMode))
             {
                 if (hideButton.Visible)
                 {
@@ -525,8 +525,7 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
-                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen &&
-                    slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
+                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(slots[i].InventoryKeyIndex))
                 {
                     QuickUseItem(Items[i], true, false, true);
                 }
@@ -583,6 +582,19 @@ namespace Barotrauma
                     if (!highlightedSubInventorySlots.Any(s => s.Inventory == subInventory))
                     {
                         ShowSubInventory(selectedSlot, deltaTime, cam, hideSubInventories, false);
+                    }
+                }
+            }
+
+            // In sub editor we cannot hover over the slot because they are not rendered so we override it here
+            if (Screen.Selected is SubEditorScreen subEditor && !subEditor.WiringMode)
+            {
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    var subInventory = GetSubInventory(i);
+                    if (subInventory != null)
+                    {
+                        ShowSubInventory(new SlotReference(this, slots[i], i, false, Items[i].GetComponent<ItemContainer>().Inventory), deltaTime, cam, hideSubInventories, true);
                     }
                 }
             }
@@ -771,21 +783,16 @@ namespace Barotrauma
             }
         }
         
-        private void AssignQuickUseNumKeys()
+        public void AssignQuickUseNumKeys()
         {
-            int num = 1;
+            int keyBindIndex = 0;
             for (int i = 0; i < slots.Length; i++)
             {
-                if (HideSlot(i))
-                {
-                    slots[i].QuickUseKey = Keys.None;
-                    continue;
-                }
-
+                if (HideSlot(i)) continue;
                 if (SlotTypes[i] == InvSlotType.Any)
                 {
-                    slots[i].QuickUseKey = Keys.D0 + num % 10;
-                    num++;
+                    slots[i].InventoryKeyIndex = keyBindIndex;
+                    keyBindIndex++;
                 }
             }
         }
@@ -808,16 +815,21 @@ namespace Barotrauma
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
                     {
-                        return item.ParentInventory is CharacterInventory ?
-                            QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                        if (character.SelectedItems.Any(i => i?.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                        {
+                            return QuickUseAction.PutToEquippedItem;
+                        }
+                        else
+                        {
+                            return item.ParentInventory is CharacterInventory ? QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                        }
                     }
                     else
                     {
                         var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
                         if (selectedContainer != null &&
                             selectedContainer.Inventory != null &&
-                            !selectedContainer.Inventory.Locked &&
-                            allowInventorySwap)
+                            !selectedContainer.Inventory.Locked)
                         {
                             // Move the item from the subinventory to the selected container
                             return QuickUseAction.PutToContainer;
@@ -854,7 +866,7 @@ namespace Barotrauma
                 {
                     return QuickUseAction.TakeFromCharacter;
                 }
-                else if (character.SelectedItems.Any(i => i?.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                else if (character.SelectedItems.Any(i => i?.OwnInventory != null && i.OwnInventory.CanBePut(item)) && allowInventorySwap)
                 {
                     return QuickUseAction.PutToEquippedItem;
                 }
@@ -882,13 +894,40 @@ namespace Barotrauma
 
         private void QuickUseItem(Item item, bool allowEquip, bool allowInventorySwap, bool allowApplyTreatment)
         {
+            if (Screen.Selected is SubEditorScreen editor && !editor.WiringMode && !Submarine.Unloading)
+            {
+                // Find the slot the item was contained in and flash it
+                if (item.ParentInventory?.slots != null)
+                {
+                    var invSlots = item.ParentInventory.slots;
+                    var invItems = item.ParentInventory.Items;
+                    for (int i = 0; i < invSlots.Length; i++)
+                    {
+                        if (i < 0 || invSlots.Length <= i || i < 0 || invItems.Length <= i) { break; }
+                        
+                        var slot = invSlots[i];
+                        var slotItem = invItems[i];
+                        
+                        if (slotItem == item)
+                        {
+                            slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
+                            GUI.PlayUISound(GUISoundType.PickItem);
+                            break;
+                        }
+                    }
+                }
+                
+                item.Remove();
+                return;
+            }
+            
             var quickUseAction = GetQuickUseAction(item, allowEquip, allowInventorySwap, allowApplyTreatment);
             bool success = false;
             switch (quickUseAction)
             {
                 case QuickUseAction.Equip:
                     //attempt to put in a free slot first
-                    for (int i = 0; i < capacity; i++)
+                    for (int i = capacity - 1; i >= 0; i--)
                     {
                         if (Items[i] != null) continue;
                         if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
@@ -898,11 +937,11 @@ namespace Barotrauma
 
                     if (!success)
                     {
-                        for (int i = 0; i < capacity; i++)
+                        for (int i = capacity - 1; i >= 0; i--)
                         {
                             if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                            //something else already equipped in the slot, attempt to unequip it
-                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                            // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
+                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand)
                             {
                                 TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
                             }
@@ -1003,6 +1042,7 @@ namespace Barotrauma
                 prevUIScale != UIScale ||
                 prevHUDScale != GUI.Scale)
             {
+                CreateSlots();
                 SetSlotPositions(layout);
                 prevUIScale = UIScale;
                 prevHUDScale = GUI.Scale;

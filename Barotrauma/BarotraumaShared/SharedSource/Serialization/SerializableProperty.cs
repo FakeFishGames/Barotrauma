@@ -21,6 +21,11 @@ namespace Barotrauma
         public float ValueStep;
 
         /// <summary>
+        /// Labels of the components of a vector property (defaults to x,y,z,w)
+        /// </summary>
+        public string[] VectorComponentLabels;
+
+        /// <summary>
         /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
         /// </summary>
         public bool ReadOnly;
@@ -57,6 +62,11 @@ namespace Barotrauma
         public bool isSaveable;
         public string translationTextTag;
 
+        /// <summary>
+        /// If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
+        /// </summary>
+        public bool AlwaysUseInstanceValues;
+
         public string Description;
 
         /// <summary>
@@ -65,13 +75,15 @@ namespace Barotrauma
         /// <param name="defaultValue">The property is set to this value during deserialization if the value is not defined in XML.</param>
         /// <param name="isSaveable">Is the value saved to XML when serializing.</param>
         /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
+        /// <param name="alwaysUseInstanceValues">If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
-        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null)
+        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null, bool alwaysUseInstanceValues = false)
         {
             this.defaultValue = defaultValue;
             this.isSaveable = isSaveable;
             this.translationTextTag = translationTextTag;
-            this.Description = description;
+            Description = description;
+            AlwaysUseInstanceValues = alwaysUseInstanceValues;
         }
     }
 
@@ -98,6 +110,8 @@ namespace Barotrauma
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
+        public readonly bool OverridePrefabValues;
+
         public PropertyInfo PropertyInfo { get; private set; }
 
         public SerializableProperty(PropertyDescriptor property)
@@ -107,6 +121,7 @@ namespace Barotrauma
             PropertyInfo = property.ComponentType.GetProperty(property.Name);
             PropertyType = property.PropertyType;
             Attributes = property.Attributes;
+            OverridePrefabValues = GetAttribute<Serialize>()?.AlwaysUseInstanceValues ?? false;
         }
 
         public T GetAttribute<T>() where T : Attribute
@@ -116,7 +131,7 @@ namespace Barotrauma
                 if (a is T) return (T)a;
             }
 
-            return default(T);
+            return default;
         }
 
         public void SetValue(object parentObject, object val)

@@ -27,6 +27,11 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
             if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
                 && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
             {
@@ -101,7 +106,7 @@ namespace Barotrauma
                             if (SteeringManager == PathSteering)
                             {
                                 var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
-                                if (door != null && !door.IsOpen)
+                                if (door != null && !door.IsOpen && !door.IsBroken)
                                 {
                                     isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                                 }

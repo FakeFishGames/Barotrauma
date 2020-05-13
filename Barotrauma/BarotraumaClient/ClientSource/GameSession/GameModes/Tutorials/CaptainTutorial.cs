@@ -246,7 +246,7 @@ namespace Barotrauma.Tutorials
             {
                 //captain_navConsoleCustomInterface.HighlightElement(0, uiHighlightColor, duration: 1.0f, pulsateAmount: 0.0f);
                 yield return new WaitForSeconds(1.0f, false);
-            } while (!Submarine.MainSub.AtEndPosition || Submarine.MainSub.DockedTo.Any());
+            } while (!Submarine.MainSub.AtEndPosition || !Submarine.MainSub.DockedTo.Any());
             RemoveCompletedObjective(segments[6]);
             yield return new WaitForSeconds(3f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.GetWithVariable("Captain.Radio.Complete", "[OUTPOSTNAME]", GameMain.GameSession.EndLocation.Name), ChatMessageType.Radio, null);
@@ -284,7 +284,9 @@ namespace Barotrauma.Tutorials
 
         private bool IsSelectedItem(Item item)
         {
-            return captain?.SelectedConstruction == item;
+            return 
+                captain?.SelectedConstruction == item || 
+                (captain?.SelectedConstruction?.linkedTo?.Contains(item) ?? false);
         }
     }
 }

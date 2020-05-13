@@ -13,6 +13,7 @@ namespace Barotrauma.Items.Components
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
             msg.Write(body.SimPosition.Y);
+            msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
         }
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
@@ -30,7 +31,7 @@ namespace Barotrauma.Items.Components
             AttachToWall();
 
             item.CreateServerEvent(this);
-            GameServer.Log(c.Character.LogName + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
+            GameServer.Log(GameServer.CharacterLogName(c.Character) + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
         }
     }
 }

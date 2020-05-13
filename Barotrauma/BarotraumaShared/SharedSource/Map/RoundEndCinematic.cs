@@ -56,6 +56,15 @@ namespace Barotrauma
 
             Level.Loaded.TopBarrier.Enabled = false;
 
+            foreach (Character character in Character.CharacterList)
+            {
+                character.AnimController.Frozen = true;
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    limb.body.PhysEnabled = false;
+                }
+            }
+
             cam.TargetPos = Vector2.Zero;
             float timer = 0.0f;
             float initialZoom = cam.Zoom;

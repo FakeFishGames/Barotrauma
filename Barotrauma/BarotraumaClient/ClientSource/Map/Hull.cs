@@ -14,7 +14,7 @@ namespace Barotrauma
     {
         public const int MaxDecalsPerHull = 10;
         
-        private List<Decal> decals = new List<Decal>();
+        private readonly List<Decal> decals = new List<Decal>();
 
         private float serverUpdateDelay;
         private float remoteWaterVolume, remoteOxygenPercentage;
@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private bool networkUpdatePending;
         private float networkUpdateTimer;
+
+        private double lastAmbientLightEditTime;
 
         public override bool SelectableInEditor
         {
@@ -232,33 +234,36 @@ namespace Barotrauma
                 return;
             }
 
-            /*if (!Visible)
+            if (!ShowHulls && !GameMain.DebugDraw) { return; }
+
+            if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) { return; }
+
+            float alpha = 1.0f;
+            float hideTimeAfterEdit = 3.0f;
+            if (lastAmbientLightEditTime > Timing.TotalTime - hideTimeAfterEdit * 2.0f)
             {
-                drawRect =
-                    Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
-
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(drawRect.X, -drawRect.Y),
-                    new Vector2(rect.Width, rect.Height),
-                    Color.Black, true,
-                    0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
-            }*/
-
-            if (!ShowHulls && !GameMain.DebugDraw) return;
-
-            if (!editing && (!GameMain.DebugDraw || Screen.Selected.Cam.Zoom < 0.1f)) return;
+                alpha = Math.Min((float)(Timing.TotalTime - lastAmbientLightEditTime) / hideTimeAfterEdit - 1.0f, 1.0f);
+            }
 
            Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
+            if ((IsSelected || IsHighlighted) && editing)
+            {
+                GUI.DrawRectangle(spriteBatch,
+                    new Vector2(drawRect.X, -drawRect.Y),
+                    new Vector2(rect.Width, rect.Height),
+                    (IsHighlighted ? Color.LightBlue * 0.8f : GUI.Style.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+            }
+
             GUI.DrawRectangle(spriteBatch,
                 new Vector2(drawRect.X, -drawRect.Y),
                 new Vector2(rect.Width, rect.Height),
-                Color.Blue, false, (ID % 255) * 0.000001f, (int)Math.Max((1.5f / Screen.Selected.Cam.Zoom), 1.0f));
+                Color.Blue * alpha, false, (ID % 255) * 0.000001f, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                GUI.Style.Red * ((100.0f - OxygenPercentage) / 400.0f), true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
+                GUI.Style.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
 
             if (GameMain.DebugDraw)
             {
@@ -277,9 +282,11 @@ namespace Barotrauma
                 foreach (FireSource fs in FireSources)
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
-                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Orange, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Red, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUI.Style.Orange, false, 0, 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
+
 
                 /*GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
                 for (int i = 0; i < waveY.Length - 1; i++)
@@ -290,24 +297,15 @@ namespace Barotrauma
                 }*/
             }
 
-            if ((IsSelected || IsHighlighted) && editing)
-            {
-                GUI.DrawRectangle(spriteBatch,
-                    new Vector2(drawRect.X + 5, -drawRect.Y + 5),
-                    new Vector2(rect.Width - 10, rect.Height - 10),
-                    IsHighlighted ? Color.LightBlue * 0.5f : GUI.Style.Red * 0.5f, true, 0, (int)Math.Max((1.5f / GameScreen.Selected.Cam.Zoom), 1.0f));
-            }
-
             foreach (MapEntity e in linkedTo)
             {
-                if (e is Hull)
+                if (e is Hull linkedHull)
                 {
-                    Hull linkedHull = (Hull)e;
-                    Rectangle connectedHullRect = e.Submarine == null ? 
-                        linkedHull.rect : 
+                    Rectangle connectedHullRect = e.Submarine == null ?
+                        linkedHull.rect :
                         new Rectangle(
                             (int)(Submarine.DrawPosition.X + linkedHull.WorldPosition.X),
-                            (int)(Submarine.DrawPosition.Y + linkedHull.WorldPosition.Y), 
+                            (int)(Submarine.DrawPosition.Y + linkedHull.WorldPosition.Y),
                             linkedHull.WorldRect.Width, linkedHull.WorldRect.Height);
 
                     //center of the hull
@@ -315,7 +313,7 @@ namespace Barotrauma
                         WorldRect :
                         new Rectangle(
                             (int)(Submarine.DrawPosition.X + WorldPosition.X),
-                            (int)(Submarine.DrawPosition.Y + WorldPosition.Y), 
+                            (int)(Submarine.DrawPosition.Y + WorldPosition.Y),
                             WorldRect.Width, WorldRect.Height);
 
                     GUI.DrawLine(spriteBatch,
@@ -326,22 +324,22 @@ namespace Barotrauma
             }
         }
 
-        public static void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, WaterRenderer renderer)
+        public static void UpdateVertices(Camera cam, WaterRenderer renderer)
         {
             foreach (EntityGrid entityGrid in EntityGrids)
             {
-                if (entityGrid.WorldRect.X > cam.WorldView.Right || entityGrid.WorldRect.Right < cam.WorldView.X) continue;
-                if (entityGrid.WorldRect.Y - entityGrid.WorldRect.Height > cam.WorldView.Y || entityGrid.WorldRect.Y < cam.WorldView.Y - cam.WorldView.Height) continue;
+                if (entityGrid.WorldRect.X > cam.WorldView.Right || entityGrid.WorldRect.Right < cam.WorldView.X) { continue; }
+                if (entityGrid.WorldRect.Y - entityGrid.WorldRect.Height > cam.WorldView.Y || entityGrid.WorldRect.Y < cam.WorldView.Y - cam.WorldView.Height) { continue; }
 
                 var allEntities = entityGrid.GetAllEntities();
                 foreach (Hull hull in allEntities)
                 {
-                    hull.UpdateVertices(graphicsDevice, cam, entityGrid, renderer);
+                    hull.UpdateVertices(cam, entityGrid, renderer);
                 }
             }
         }
 
-        private void UpdateVertices(GraphicsDevice graphicsDevice, Camera cam, EntityGrid entityGrid, WaterRenderer renderer)
+        private void UpdateVertices(Camera cam, EntityGrid entityGrid, WaterRenderer renderer)
         {
             Vector2 submarinePos = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
@@ -451,7 +449,7 @@ namespace Barotrauma
                     }
 
                     //we only create a new quad if this is the first or the last one, of if there's a wave large enough that we need more geometry
-                    if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[3].Y) > 1.0f)
+                    if (i == end - 1 || i == start || Math.Abs(prevCorners[1].Y - corners[2].Y) > 0.01f)
                     {
                         renderer.vertices[renderer.PositionInBuffer] = new VertexPositionTexture(prevCorners[0], prevUVs[0]);
                         renderer.vertices[renderer.PositionInBuffer + 1] = new VertexPositionTexture(corners[1], uvCoords[1]);
@@ -554,11 +552,10 @@ namespace Barotrauma
             remoteOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
 
             bool hasFireSources = message.ReadBoolean();
-            int fireSourceCount = 0;
             remoteFireSources = new List<Vector3>();
             if (hasFireSources)
             {
-                fireSourceCount = message.ReadRangedInteger(0, 16);
+                int fireSourceCount = message.ReadRangedInteger(0, 16);
                 for (int i = 0; i < fireSourceCount; i++)
                 {
                     remoteFireSources.Add(new Vector3(

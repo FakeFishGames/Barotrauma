@@ -278,7 +278,7 @@ namespace Barotrauma
                     break;
                 case ServerNetObject.ENTITY_EVENT:
 
-                    int eventType = msg.ReadRangedInteger(0, 3);
+                    int eventType = msg.ReadRangedInteger(0, 4);
                     switch (eventType)
                     {
                         case 0:
@@ -336,6 +336,40 @@ namespace Barotrauma
                                 string skillIdentifier = msg.ReadString();
                                 float skillLevel = msg.ReadSingle();
                                 info?.SetSkillLevel(skillIdentifier, skillLevel, WorldPosition + Vector2.UnitY * 150.0f);
+                            }
+                            break;
+                        case 4:
+                            int attackLimbIndex = msg.ReadByte();
+                            UInt16 targetEntityID = msg.ReadUInt16();
+                            int targetLimbIndex = msg.ReadByte();
+
+                            //255 = entity already removed, no need to do anything
+                            if (attackLimbIndex == 255) { break; }
+
+                            if (attackLimbIndex >= AnimController.Limbs.Length)
+                            {
+                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Limb index out of bounds ({attackLimbIndex})");
+                                break;
+                            }
+                            Limb attackLimb = AnimController.Limbs[attackLimbIndex];
+                            Limb targetLimb = null;
+                            if (!(FindEntityByID(targetEntityID) is IDamageable targetEntity))
+                            {
+                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target entity not found (ID {targetEntityID})");
+                                break;
+                            }
+                            if (targetEntity is Character targetCharacter)
+                            {
+                                if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
+                                {
+                                    DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target limb index out of bounds ({targetLimbIndex})");
+                                    break;
+                                }
+                                targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
+                            }
+                            if (attackLimb?.attack != null)
+                            {
+                                attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
                             }
                             break;
                     }
@@ -397,8 +431,7 @@ namespace Barotrauma
                     if (orderPrefabIndex >= 0 && orderPrefabIndex < Order.PrefabList.Count)
                     {
                         var orderPrefab = Order.PrefabList[orderPrefabIndex];
-                        if ((orderPrefab.ItemComponentType == null && orderPrefab.ItemIdentifiers.None()) ||
-                            (targetEntity != null && (targetEntity as Item).Components.Any(c => c?.GetType() == orderPrefab.ItemComponentType)))
+                        if (!orderPrefab.MustSetTarget || (targetEntity != null && (targetEntity as Item).Components.Any(c => c?.GetType() == orderPrefab.ItemComponentType)))
                         {
                             character.SetOrder(
                                 new Order(orderPrefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(c => c?.GetType() == orderPrefab.ItemComponentType), orderGiver: orderGiver),
@@ -469,11 +502,9 @@ namespace Barotrauma
                         causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
                     }
                 }
-
-                byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
-                    if (causeOfDeathType == CauseOfDeathType.Pressure)
+                    if (causeOfDeathType == CauseOfDeathType.Pressure || causeOfDeathAffliction == AfflictionPrefab.Pressure)
                     {
                         Implode(true);
                     }
@@ -482,25 +513,25 @@ namespace Barotrauma
                         Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
                 }
-
-                for (int i = 0; i < severedLimbCount; i++)
-                {
-                    int severedJointIndex = msg.ReadByte();
-                    if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
-                    {
-                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                    }
-                    else
-                    {
-                        AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
-                    }
-                }
             }
             else
             {
                 if (IsDead) { Revive(); }
                 CharacterHealth.ClientRead(msg);
+            }
+            byte severedLimbCount = msg.ReadByte();
+            for (int i = 0; i < severedLimbCount; i++)
+            {
+                int severedJointIndex = msg.ReadByte();
+                if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                {
+                    string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                }
+                else
+                {
+                    AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                }
             }
         }
     }

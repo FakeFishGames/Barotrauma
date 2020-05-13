@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
             }
 
             CustomInterfaceElement clickedButton = null;
-            if (item.CanClientAccess(c))
+            if ((c.Character != null && DrawHudWhenEquipped && item.ParentInventory?.Owner == c.Character) || item.CanClientAccess(c))
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {

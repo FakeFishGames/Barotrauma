@@ -2,13 +2,17 @@
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+#if DEBUG
+using System.IO;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma.CharacterEditor
 {
@@ -121,7 +125,10 @@ namespace Barotrauma.CharacterEditor
                 ResetVariables();
                 var subInfo = new SubmarineInfo("Content/AnimEditor.sub");
                 Submarine.MainSub = new Submarine(subInfo);
-                Submarine.MainSub.PhysicsBody.Enabled = false;
+                if (Submarine.MainSub.PhysicsBody != null)
+                {
+                    Submarine.MainSub.PhysicsBody.Enabled = false;
+                }
                 originalWall = new WallGroup(new List<Structure>(Structure.WallList));
                 CloneWalls();
                 CalculateMovementLimits();
@@ -275,7 +282,7 @@ namespace Barotrauma.CharacterEditor
             return TextManager.Get(screenTextTag + tag);
         }
 
-        #region Main methods
+#region Main methods
         public override void AddToGUIUpdateList()
         {
             rightArea.AddToGUIUpdateList();
@@ -476,9 +483,16 @@ namespace Barotrauma.CharacterEditor
                 if (character.IsHumanoid)
                 {
                     animTestPoseToggle.Enabled = CurrentAnimation.IsGroundedAnimation;
-                    if (animTestPoseToggle.Enabled && PlayerInput.KeyHit(Keys.X))
+                    if (animTestPoseToggle.Enabled)
                     {
-                        SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
+                        if (PlayerInput.KeyHit(Keys.X))
+                        {
+                            SetToggle(animTestPoseToggle, !animTestPoseToggle.Selected);
+                        }
+                    }
+                    else
+                    {
+                        animTestPoseToggle.Selected = false;
                     }
                 }
                 if (PlayerInput.KeyHit(InputType.Run))
@@ -652,9 +666,6 @@ namespace Barotrauma.CharacterEditor
             }
             if (!isFrozen)
             {
-                Submarine.MainSub.SetPrevTransform(Submarine.MainSub.Position);
-                Submarine.MainSub.Update((float)deltaTime);
-
                 foreach (PhysicsBody body in PhysicsBody.List)
                 {
                     body.SetPrevTransform(body.SimPosition, body.Rotation);
@@ -981,9 +992,9 @@ namespace Barotrauma.CharacterEditor
             }
             spriteBatch.End();
         }
-        #endregion
+#endregion
 
-        #region Ragdoll Manipulation
+#region Ragdoll Manipulation
         private void UpdateJointCreation()
         {
             if (jointCreationMode == JointCreationMode.None)
@@ -1310,9 +1321,9 @@ namespace Barotrauma.CharacterEditor
             }
             RecreateRagdoll();
         }
-        #endregion
+#endregion
 
-        #region Endless runner
+#region Endless runner
         private int min;
         private int max;
         private void CalculateMovementLimits()
@@ -1415,9 +1426,9 @@ namespace Barotrauma.CharacterEditor
             AllWalls.ForEach(w => w.SetCollisionCategory(collisionCategory));
             GameMain.World.ProcessChanges();
         }
-        #endregion
+#endregion
 
-        #region Character spawning
+#region Character spawning
         private int characterIndex = -1;
         private string currentCharacterConfig;
         private string selectedJob = null;
@@ -1739,7 +1750,11 @@ namespace Barotrauma.CharacterEditor
             {
                 Directory.CreateDirectory(mainFolder);
             }
+#if DEBUG
             doc.Save(configFilePath);
+#else
+            doc.SaveSafe(configFilePath);
+#endif
             // Add to the selected content package
             contentPackage.AddFile(configFilePath, ContentType.Character);
             contentPackage.Save(contentPackage.Path);
@@ -1820,9 +1835,9 @@ namespace Barotrauma.CharacterEditor
         {
             character.Inventory?.Items.ForEachMod(i => i?.Unequip(character));
         }
-        #endregion
+#endregion
 
-        #region GUI
+#region GUI
         private static Vector2 innerScale = new Vector2(0.95f, 0.95f);
 
         private GUILayoutGroup rightArea, leftArea;
@@ -2117,7 +2132,7 @@ namespace Barotrauma.CharacterEditor
                 CreateTextures();
                 return true;
             };
-            new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.BottomCenter), GetCharacterEditorTranslation("RecreateRagdoll"))
+            var recreateButton = new GUIButton(new RectTransform(buttonSize, parent.RectTransform, Anchor.BottomCenter), GetCharacterEditorTranslation("RecreateRagdoll"))
             {
                 ToolTip = GetCharacterEditorTranslation("RecreateRagdollTooltip"),
                 OnClicked = (button, data) =>
@@ -2127,6 +2142,7 @@ namespace Barotrauma.CharacterEditor
                     return true;
                 }
             };
+            GUITextBlock.AutoScaleAndNormalize(reloadTexturesButton.TextBlock, recreateButton.TextBlock);
             buttonsPanelToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), buttonsPanel.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), Direction.Left);
             buttonsPanel.RectTransform.MinSize = new Point(0, (int)(parent.RectTransform.Children.Sum(c => c.MinSize.Y) * 1.5f));
         }
@@ -3117,6 +3133,8 @@ namespace Barotrauma.CharacterEditor
                 }
             };
 
+            GUITextBlock.AutoScaleAndNormalize(layoutGroup.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
+
             fileEditToggle = new ToggleButton(new RectTransform(new Vector2(0.08f, 1), fileEditPanel.RectTransform, Anchor.CenterLeft, Pivot.CenterRight), Direction.Right);
 
             void ResetView()
@@ -3134,9 +3152,9 @@ namespace Barotrauma.CharacterEditor
 
             fileEditPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
-        #endregion
+#endregion
 
-        #region ToggleButtons 
+#region ToggleButtons 
         private enum Direction
         {
             Left,
@@ -3198,9 +3216,9 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        #endregion
+#endregion
 
-        #region Params
+#region Params
         private CharacterParams CharacterParams => character.Params;
         private List<AnimationParams> AnimParams => character.AnimController.AllAnimParams;
         private AnimationParams CurrentAnimation => character.AnimController.CurrentAnimationParams;
@@ -3451,9 +3469,9 @@ namespace Barotrauma.CharacterEditor
                 }
             }
         }
-        #endregion
+#endregion
 
-        #region Helpers
+#region Helpers
         private Vector2 ScreenToSim(float x, float y) => ScreenToSim(new Vector2(x, y));
         private Vector2 ScreenToSim(Vector2 p) => ConvertUnits.ToSimUnits(Cam.ScreenToWorld(p)) + Submarine.MainSub.SimPosition;
         private Vector2 SimToScreen(float x, float y) => SimToScreen(new Vector2(x, y));
@@ -3694,9 +3712,9 @@ namespace Barotrauma.CharacterEditor
                 SetToggle(spritesheetToggle, true);
             }
         }
-        #endregion
+#endregion
 
-        #region Animation Controls
+#region Animation Controls
         private void DrawAnimationControls(SpriteBatch spriteBatch, float deltaTime)
         {
             var collider = character.AnimController.Collider;
@@ -4289,9 +4307,9 @@ namespace Barotrauma.CharacterEditor
                 }
             }
         }
-        #endregion
+#endregion
 
-        #region Ragdoll
+#region Ragdoll
         private Vector2[] corners = new Vector2[4];
         private Vector2[] GetLimbPhysicRect(Limb limb)
         {
@@ -4613,9 +4631,9 @@ namespace Barotrauma.CharacterEditor
             }
             return otherLimbs;
         }
-        #endregion
+#endregion
 
-        #region Spritesheet
+#region Spritesheet
         private List<Texture2D> textures;
         private List<Texture2D> Textures
         {
@@ -5210,9 +5228,9 @@ namespace Barotrauma.CharacterEditor
             CalculateSpritesheetZoom();
             spriteSheetZoomBar.BarScroll = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(spriteSheetMinZoom, spriteSheetMaxZoom, spriteSheetZoom));
         }
-        #endregion
+#endregion
 
-        #region Widgets as methods
+#region Widgets as methods
         private void DrawRadialWidget(SpriteBatch spriteBatch, Vector2 drawPos, float value, string toolTip, Color color, Action<float> onClick,
             float circleRadius = 30, int widgetSize = 10, float rotationOffset = 0, bool clockWise = true, bool displayAngle = true, bool? autoFreeze = null, bool wrapAnglePi = false, bool holdPosition = false, int rounding = 1)
         {
@@ -5321,9 +5339,9 @@ namespace Barotrauma.CharacterEditor
                 }
             }
         }
-        #endregion
+#endregion
 
-        #region Widgets as classes
+#region Widgets as classes
         private Dictionary<string, Widget> animationWidgets = new Dictionary<string, Widget>();
         private Dictionary<string, Widget> jointSelectionWidgets = new Dictionary<string, Widget>();
         private Dictionary<string, Widget> limbEditWidgets = new Dictionary<string, Widget>();
@@ -5477,6 +5495,6 @@ namespace Barotrauma.CharacterEditor
                 return w;
             }
         }
-        #endregion
+#endregion
     }
 }

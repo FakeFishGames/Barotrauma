@@ -13,7 +13,7 @@ float aMultiplier;
 float cCutoff;
 float cMultiplier;
 
-float4 main(float4 position : SV_Position, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
+float4 main(float4 position : POSITION0, float4 color : COLOR0, float2 texCoord : TEXCOORD0) : COLOR0
 {
 	float4 c = xTexture.Sample(TextureSampler, texCoord) * inColor;
 

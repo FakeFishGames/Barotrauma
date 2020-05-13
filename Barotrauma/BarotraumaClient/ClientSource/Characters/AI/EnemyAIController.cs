@@ -35,7 +35,7 @@ namespace Barotrauma
                 }
                 targetPos.Y = -targetPos.Y;
                 GUI.DrawLine(spriteBatch, pos, targetPos, GUI.Style.Red * 0.5f, 0, 4);
-                if (wallTarget != null)
+                if (wallTarget != null && (State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive))
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
                     if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.Position; }

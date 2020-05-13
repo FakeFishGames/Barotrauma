@@ -318,10 +318,10 @@ namespace Barotrauma.Items.Components
                             {
                                 if (item.ParentInventory.slots[availableSlotIndex].HighlightTimer <= 0.0f)
                                 {
-                                    item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f);
+                                    item.ParentInventory.slots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     if (slotIndex < inputContainer.Capacity)
                                     {
-                                        inputContainer.Inventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f);
+                                        inputContainer.Inventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     }
                                 }
                             }
@@ -337,10 +337,22 @@ namespace Barotrauma.Items.Components
                         slotRect.Center.ToVector2(),
                         color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
-                    
+
+                    if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
+                    {
+                        GUI.DrawRectangle(spriteBatch, new Rectangle(slotRect.X, slotRect.Bottom - 8, slotRect.Width, 8), Color.Black * 0.8f, true);
+                        GUI.DrawRectangle(spriteBatch,
+                            new Rectangle(slotRect.X, slotRect.Bottom - 8, (int)(slotRect.Width * requiredItem.MinCondition), 8),
+                            GUI.Style.Green * 0.8f, true);
+                    }
+
                     if (slotRect.Contains(PlayerInput.MousePosition))
                     {
                         string toolTipText = requiredItem.ItemPrefab.Name;
+                        if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
+                        {
+                            toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
+                        }
                         if (!string.IsNullOrEmpty(requiredItem.ItemPrefab.Description))
                         {
                             toolTipText += '\n' + requiredItem.ItemPrefab.Description;

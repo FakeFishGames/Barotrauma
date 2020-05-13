@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -436,8 +436,7 @@ namespace Barotrauma.Items.Components
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
                     string style = subElement.Attribute("style") == null ?
                         null : subElement.GetAttributeString("style", "");
-
-                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas, Anchor.Center), style, color);
+                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas.ItemComponentHolder, Anchor.Center), style, color);
                     DefaultLayout = GUILayoutSettings.Load(subElement);
                     break;
                 case "alternativelayout":

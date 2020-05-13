@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -11,6 +10,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "idle";
         public override bool UnequipItems => true;
+        public override bool AllowOutsideSubmarine => true;
 
         private readonly float newTargetIntervalMin = 10;
         private readonly float newTargetIntervalMax = 20;
@@ -34,41 +34,43 @@ namespace Barotrauma
         {
             standStillTimer = Rand.Range(-10.0f, 10.0f);
             walkDuration = Rand.Range(0.0f, 10.0f);
+            CalculatePriority();
         }
 
         protected override bool Check() => false;
         public override bool CanBeCompleted => true;
 
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace); }
 
         private float randomTimer;
         private float randomUpdateInterval = 5;
         public float Random { get; private set; }
 
-        public void CalculatePriority()
+        public void CalculatePriority(float max = 0)
         {
-            Random = Rand.Range(0.5f, 1.5f);
-            randomTimer = randomUpdateInterval;
-            float max = Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
-            float initiative = character.GetSkillLevel("initiative");
-            Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
+            //Random = Rand.Range(0.5f, 1.5f);
+            //randomTimer = randomUpdateInterval;
+            //max = max > 0 ? max : Math.Min(Math.Min(AIObjectiveManager.RunPriority, AIObjectiveManager.OrderPriority) - 1, 100);
+            //float initiative = character.GetSkillLevel("initiative");
+            //Priority = MathHelper.Lerp(1, max, MathUtils.InverseLerp(100, 0, initiative * Random));
+            Priority = 1;
         }
 
         public override float GetPriority() => Priority;
 
         public override void Update(float deltaTime)
         {
-            if (objectiveManager.CurrentObjective == this)
-            {
-                if (randomTimer > 0)
-                {
-                    randomTimer -= deltaTime;
-                }
-                else
-                {
-                    CalculatePriority();
-                }
-            }
+            //if (objectiveManager.CurrentObjective == this)
+            //{
+            //    if (randomTimer > 0)
+            //    {
+            //        randomTimer -= deltaTime;
+            //    }
+            //    else
+            //    {
+            //        CalculatePriority();
+            //    }
+            //}
         }
 
         protected override void Act(float deltaTime)
@@ -128,7 +130,7 @@ namespace Barotrauma
                     //choose a random available hull
                     currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                     bool isCurrentHullAllowed = !IsForbidden(character.CurrentHull);
-                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, nodeFilter: node =>
+                    var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: $"AIObjectiveIdle {character.DisplayName}", nodeFilter: node =>
                     {
                         if (node.Waypoint.CurrentHull == null) { return false; }
                         // Check that there is no unsafe or forbidden hulls on the way to the target
@@ -231,9 +233,11 @@ namespace Barotrauma
             {
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
-                if (hull.Submarine.TeamID != character.TeamID) { continue; }
-                // If the character is inside, only take connected hulls into account.
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
+                if (character.Submarine == null) { break; }
+                if (hull.Submarine.TeamID != character.Submarine.TeamID) { continue; }
+                if (hull.Submarine.Info.Type != character.Submarine.Info.Type) { continue; }
+                // If the character is inside, only take connected subs into account.
+                if (!character.Submarine.IsEntityFoundOnThisSub(hull, true)) { continue; }
                 if (IsForbidden(hull)) { continue; }
                 // Ignore hulls that are too low to stand inside
                 if (character.AnimController is HumanoidAnimController animController)

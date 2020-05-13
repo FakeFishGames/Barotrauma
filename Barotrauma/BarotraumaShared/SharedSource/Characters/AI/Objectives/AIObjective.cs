@@ -30,6 +30,7 @@ namespace Barotrauma
 
         public virtual bool KeepDivingGearOn => false;
         public virtual bool UnequipItems => false;
+        public virtual bool AllowOutsideSubmarine => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -117,7 +118,6 @@ namespace Barotrauma
         public void TryComplete(float deltaTime)
         {
             if (isCompleted) { return; }
-            //if (Abandon && !IsLoop && subObjectives.None()) { return; }
             if (CheckState()) { return; }
             // Not ready -> act (can't do foreach because it's possible that the collection is modified in event callbacks.
             for (int i = 0; i < subObjectives.Count; i++)
@@ -182,12 +182,26 @@ namespace Barotrauma
             }
         }
 
+        protected bool IsAllowed => AllowOutsideSubmarine || character.Submarine != null && character.Submarine.TeamID == character.TeamID && character.Submarine.Info.IsPlayer;
+
         /// <summary>
         /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
         /// </summary>
         public virtual float GetPriority()
         {
-            Priority = CumulatedDevotion * PriorityModifier;
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                return Priority;
+            }
+            if (objectiveManager.CurrentOrder == this)
+            {
+                Priority = AIObjectiveManager.OrderPriority;
+            }
+            else
+            {
+                Priority = CumulatedDevotion;
+            }
             return Priority;
         }
 
@@ -196,7 +210,7 @@ namespace Barotrauma
             var currentObjective = objectiveManager.CurrentObjective;
             if (currentObjective != null && (currentObjective == this || currentObjective.subObjectives.Any(so => so == this)))
             {
-                CumulatedDevotion += Devotion * PriorityModifier * deltaTime;
+                CumulatedDevotion += Devotion * deltaTime;
             }
         }
 
@@ -204,11 +218,7 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
-            if (objectiveManager.CurrentOrder == this)
-            {
-                Priority = AIObjectiveManager.OrderPriority;
-            }
-            else if (objectiveManager.WaitTimer <= 0)
+            if (objectiveManager.CurrentOrder != this && objectiveManager.WaitTimer <= 0)
             {
                 UpdateDevotion(deltaTime);
             }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,7 @@ namespace Barotrauma
         Movement,
         Power,
         Maintenance,
-        Operate,
-        Undefined
+        Operate
     }
 
     class Order
@@ -31,11 +31,7 @@ namespace Barotrauma
             return order;
         }
         
-        public Order Prefab
-        {
-            get;
-            private set;
-        }
+        public Order Prefab { get; private set; }
 
         public readonly string Name;
 
@@ -55,7 +51,7 @@ namespace Barotrauma
                 {
                     return color.Value;
                 }
-                else if (OrderCategoryIcons.TryGetValue(Category, out Tuple<Sprite, Color> sprite))
+                else if (Category.HasValue && OrderCategoryIcons.TryGetValue((OrderCategory)Category, out Tuple<Sprite, Color> sprite))
                 {
                     return sprite.Item2;
                 }
@@ -83,18 +79,28 @@ namespace Barotrauma
 
         public Character OrderGiver;
 
-        public readonly OrderCategory Category;
+        private readonly OrderCategory? category;
+        public OrderCategory? Category => category;
 
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
-        public readonly string[] OptionNames;
+        private readonly Dictionary<string, string> OptionNames;
 
         public readonly Dictionary<string, Sprite> OptionSprites;
 
-        public readonly float Weight;
+        private readonly Dictionary<string, Sprite> minimapIcons;
+        public Dictionary<string, Sprite> MinimapIcons => IsPrefab ? minimapIcons : Prefab.minimapIcons;
 
-        static Order()
+        public readonly float Weight;
+        public readonly bool MustSetTarget;
+        public readonly string AppropriateSkill;
+
+        public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
+        public bool IsPrefab { get; private set; }
+        public readonly bool MustManuallyAssign;
+
+        public static void Init()
         {
             Prefabs = new Dictionary<string, Order>();
             OrderCategoryIcons = new Dictionary<OrderCategory, Tuple<Sprite, Color>>();
@@ -197,28 +203,24 @@ namespace Barotrauma
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
-            Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), orderElement.GetAttributeString("category", "undefined"), true);
+            var category = orderElement.GetAttributeString("category", null);
+            if (!string.IsNullOrWhiteSpace(category)) { this.category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             Weight = orderElement.GetAttributeFloat(0.0f, "weight");
+            MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
+            AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
 
-            string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
-            if (translatedOptionNames == null)
+            var optionNames = TextManager.Get("OrderOptions." + Identifier, true)?.Split(',', '，') ??
+                orderElement.GetAttributeStringArray("optionnames", new string[0]);
+            OptionNames = new Dictionary<string, string>();
+            for (int i = 0; i < Options.Length && i < optionNames.Length; i++)
             {
-                OptionNames = orderElement.GetAttributeStringArray("optionnames", new string[0]);
+                OptionNames.Add(Options[i], optionNames[i].Trim());
             }
-            else
-            {
-                string[] splitOptionNames = translatedOptionNames.Split(',', '，');
-                OptionNames = new string[Options.Length];
-                for (int i = 0; i < Options.Length && i < splitOptionNames.Length; i++)
-                {
-                    OptionNames[i] = splitOptionNames[i].Trim();
-                }
-            }
-
-            if (OptionNames.Length != Options.Length)
+            if (OptionNames.Count != Options.Length)
             {
                 DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
-                OptionNames = Options;
+                OptionNames.Clear();
+                Options.ForEach(o => OptionNames.Add(o, o));
             }
 
             var spriteElement = orderElement.GetChildElement("sprite");
@@ -241,18 +243,31 @@ namespace Barotrauma
                     }
                 }
             }
+
+            minimapIcons = new Dictionary<string, Sprite>();
+            var minimapIconElements = orderElement.GetChildElements("minimapicon");
+            foreach (XElement minimapIconElement in minimapIconElements)
+            {
+                var id = minimapIconElement.GetAttributeString("id", null);
+                if (string.IsNullOrWhiteSpace(id)) { continue; }
+                minimapIcons.Add(id, new Sprite(minimapIconElement.GetChildElement("sprite"), lazyLoad: true));
+            }
+
+            IsPrefab = true;
+            MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
         }
         
         /// <summary>
         /// Constructor for order instances
         /// </summary>
-        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
         {
             Prefab = prefab;
 
             Name                = prefab.Name;
             Identifier          = prefab.Identifier;
             ItemComponentType   = prefab.ItemComponentType;
+            ItemIdentifiers     = prefab.ItemIdentifiers;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
             Color               = prefab.Color;
@@ -261,22 +276,31 @@ namespace Barotrauma
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
             Weight              = prefab.Weight;
-            Category            = prefab.Category;
-            OrderGiver          = orderGiver;
+            MustSetTarget       = prefab.MustSetTarget;
+            AppropriateSkill    = prefab.AppropriateSkill;
+            category            = prefab.Category;
+            MustManuallyAssign  = prefab.MustManuallyAssign;
 
+            OrderGiver = orderGiver;
             TargetEntity = targetEntity;
             if (targetItem != null)
             {
                 if (UseController)
                 {
-                    //try finding the controller with the simpler non-recursive method first
-                    ConnectedController = 
-                        targetItem.Item.GetConnectedComponents<Controller>().FirstOrDefault() ?? 
-                        targetItem.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
+                    ConnectedController = targetItem.Item?.FindController();
+                    if (ConnectedController == null)
+                    {
+#if DEBUG
+                        throw new Exception("Tried to use controller, but couldn't find one");
+#endif
+                        UseController = false;
+                    }
                 }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
             }
+
+            IsPrefab = false;
         }
         
         public bool HasAppropriateJob(Character character)
@@ -309,6 +333,52 @@ namespace Barotrauma
             if (msg == null) { return ""; }
 
             return msg;
+        }
+
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub)
+        {
+            List<Item> matchingItems = new List<Item>();
+            if (submarine == null) { return matchingItems; }
+            if (ItemComponentType != null || ItemIdentifiers.Length > 0)
+            {
+                matchingItems = ItemIdentifiers.Length > 0 ?
+                    Item.ItemList.FindAll(it => ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == ItemComponentType));
+                if (mustBelongToPlayerSub)
+                {
+                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player);
+                    matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                }
+                else
+                {
+                    matchingItems.RemoveAll(it => it.Submarine != submarine);
+                }
+                matchingItems.RemoveAll(it => it.NonInteractable);
+                if (UseController)
+                {
+                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
+                }
+            }
+            return matchingItems;
+        }
+
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub)
+        {
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+                Submarine.MainSubs[1] :
+                Submarine.MainSub;
+            return GetMatchingItems(submarine, mustBelongToPlayerSub);
+        }
+
+        public string GetOptionName(string id)
+        {
+            return Prefab == null ? OptionNames[id] : Prefab.OptionNames[id];
+        }
+
+        public string GetOptionName(int index)
+        {
+            if (index < 0 || index >= Options.Length) { return null; }
+            return GetOptionName(Options[index]);
         }
     }
 }

@@ -180,7 +180,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (user != null)
             {
-                GameServer.Log(user.LogName + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(user) + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }
@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (user != null)
             {
-                GameServer.Log(user.LogName + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(user) + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }

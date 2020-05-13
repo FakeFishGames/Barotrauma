@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
-        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.")]
+        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
             get;
@@ -192,6 +192,8 @@ namespace Barotrauma.Items.Components
         public bool CheckCharacterSuccess(Character character)
         {
             if (character == null) { return false; }
+            //no electrocution in sub editor
+            if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
             var powered = item.GetComponent<Powered>();
             if (powered != null)
@@ -262,7 +264,18 @@ namespace Barotrauma.Items.Components
             {
                 if (wire.OtherConnection(null) == null) //wire not connected to anything else
                 {
+#if CLIENT
+                    if (SubEditorScreen.IsSubEditor())
+                    {
+                        wire.Item.Remove();
+                    }
+                    else
+                    {
+                        wire.Item.Drop(null);
+                    }
+#else
                     wire.Item.Drop(null);
+#endif
                 }
             }
 
@@ -275,7 +288,18 @@ namespace Barotrauma.Items.Components
 
                     if (wire.OtherConnection(c) == null) //wire not connected to anything else
                     {
+#if CLIENT
+                        if (SubEditorScreen.IsSubEditor())
+                        {
+                            wire.Item.Remove();
+                        }
+                        else
+                        {
+                            wire.Item.Drop(null);
+                        }
+#else
                         wire.Item.Drop(null);
+#endif
                     }
                     else
                     {

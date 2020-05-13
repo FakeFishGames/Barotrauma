@@ -3,10 +3,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+#if DEBUG
+using System.IO;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma
 {
@@ -196,8 +200,9 @@ namespace Barotrauma
                 Stretch = true,
                 UserData = "filterarea"
             };
-            filterTexturesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true }; ;
+            filterTexturesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true }; ;
             filterTexturesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font, createClearButton: true);
+            filterArea.RectTransform.MinSize = filterTexturesBox.RectTransform.MinSize;
             filterTexturesBox.OnTextChanged += (textBox, text) => { FilterTextures(text); return true; };
 
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
@@ -240,8 +245,9 @@ namespace Barotrauma
                 Stretch = true,
                 UserData = "filterarea"
             };
-            filterSpritesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font) { IgnoreLayoutGroups = true };
+            filterSpritesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true };
             filterSpritesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font, createClearButton: true);
+            filterArea.RectTransform.MinSize = filterSpritesBox.RectTransform.MinSize;
             filterSpritesBox.OnTextChanged += (textBox, text) => { FilterSprites(text); return true; };
 
             spriteList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform))
@@ -413,7 +419,11 @@ namespace Barotrauma
             {
                 string xmlPath = doc.ParseContentPathFromUri();
                 xmlPathText.Text += "\n" + xmlPath;
+#if DEBUG
                 doc.Save(xmlPath);
+#else
+                doc.SaveSafe(xmlPath);
+#endif
             }
             xmlPathText.TextColor = GUI.Style.Green;
             return true;

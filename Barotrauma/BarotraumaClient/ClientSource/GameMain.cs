@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
-using System.IO;
+using Barotrauma.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
@@ -112,6 +112,8 @@ namespace Barotrauma
 
         public event Action OnResolutionChanged;
 
+        private bool exiting;
+
         public static GameMain Instance
         {
             get;
@@ -144,7 +146,17 @@ namespace Barotrauma
 
         public static bool WindowActive
         {
-            get { return Instance == null || Instance.IsActive; }
+            get
+            {
+                try
+                {
+                    return Instance != null && !Instance.exiting && Instance.IsActive;
+                }
+                catch (NullReferenceException)
+                {
+                    return false;
+                }
+            }
         }
 
         public static GameClient Client;
@@ -179,10 +191,14 @@ namespace Barotrauma
         {
             Content.RootDirectory = "Content";
 
-            GraphicsDeviceManager = new GraphicsDeviceManager(this);
-
-            GraphicsDeviceManager.IsFullScreen = false;
-            GraphicsDeviceManager.GraphicsProfile = GfxProfile;
+#if DEBUG && WINDOWS
+            GraphicsAdapter.UseDebugLayers = true;
+#endif
+            GraphicsDeviceManager = new GraphicsDeviceManager(this)
+            {
+                IsFullScreen = false,
+                GraphicsProfile = GfxProfile
+            };
             GraphicsDeviceManager.ApplyChanges();
 
             Window.Title = "Barotrauma";
@@ -329,6 +345,8 @@ namespace Barotrauma
             //do this here because we need it for the loading screen
             WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
 
+            Quad.Init(GraphicsDevice);
+
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice)
             {
@@ -409,7 +427,7 @@ namespace Barotrauma
             SoundManager.SetCategoryGainMultiplier("ui", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("waterambience", Config.SoundVolume, 0);
             SoundManager.SetCategoryGainMultiplier("music", Config.MusicVolume, 0);
-            SoundManager.SetCategoryGainMultiplier("voip", Config.VoiceChatVolume, 0);
+            SoundManager.SetCategoryGainMultiplier("voip", Math.Min(Config.VoiceChatVolume, 1.0f), 0);
 
             if (Config.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
             {
@@ -514,6 +532,8 @@ namespace Barotrauma
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
+            Order.Init();
+            EventManagerSettings.Init();
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
@@ -829,6 +849,10 @@ namespace Barotrauma
                         {
                             (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
                         }
+                        else if (GameSession.IsTabMenuOpen)
+                        {
+                            gameSession.ToggleTabMenu();
+                        }
                         else if (GUI.PauseMenuOpen)
                         {
                             GUI.TogglePauseMenu();
@@ -837,7 +861,8 @@ namespace Barotrauma
                         else if ((Character.Controlled == null || !itemHudActive())
                             //TODO: do we need to check Inventory.SelectedSlot?
                             && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
-                            && !CrewManager.IsCommandInterfaceOpen)
+                            && !CrewManager.IsCommandInterfaceOpen
+                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -928,7 +953,7 @@ namespace Barotrauma
 
                 sw.Stop();
                 PerformanceCounter.AddElapsedTicks("Update total", sw.ElapsedTicks);
-                PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+                PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
                 PerformanceCounter.UpdateIterationsGraph.Update(updateIterations);
             }
 
@@ -950,10 +975,13 @@ namespace Barotrauma
 
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
-            double step = 1.0 / Timing.FrameLimit;
-            while (!Config.VSyncEnabled && sw.Elapsed.TotalSeconds + deltaTime < step)
+            if (Timing.FrameLimit > 0)
             {
-                Thread.Sleep(1);
+                double step = 1.0 / Timing.FrameLimit;
+                while (!Config.VSyncEnabled && sw.Elapsed.TotalSeconds + deltaTime < step)
+                {
+                    Thread.Sleep(1);
+                }
             }
 
             PerformanceCounter.Update(sw.Elapsed.TotalSeconds + deltaTime);
@@ -978,7 +1006,7 @@ namespace Barotrauma
 
             sw.Stop();
             PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
-            PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks / (float)TimeSpan.TicksPerMillisecond);
+            PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
         }
 
 
@@ -1147,7 +1175,9 @@ namespace Barotrauma
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            if (NetworkMember != null) NetworkMember.Disconnect();
+            exiting = true;
+            DebugConsole.NewMessage("Exiting...");
+            NetworkMember?.Disconnect();
             SteamManager.ShutDown();
 
             try

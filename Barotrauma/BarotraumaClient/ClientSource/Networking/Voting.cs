@@ -61,10 +61,10 @@ namespace Barotrauma
 
                     foreach (GUIComponent comp in listBox.Content.Children)
                     {
-                        if (comp.FindChild("votes") is GUITextBlock voteText) comp.RemoveChild(voteText);
+                        if (comp.FindChild("votes") is GUITextBlock voteText) { comp.RemoveChild(voteText); }
                     }
 
-                    if (clients == null) return;
+                    if (clients == null) { return; }
                     
                     List<Pair<object, int>> voteList = GetVoteList(voteType, clients);
                     foreach (Pair<object, int> votable in voteList)
@@ -73,7 +73,7 @@ namespace Barotrauma
                     }                    
                     break;
                 case VoteType.StartRound:
-                    if (clients == null) return;
+                    if (clients == null) { return; }
                     foreach (Client client in clients)
                     {
                         var clientReady = GameMain.NetLobbyScreen.PlayerList.Content.FindChild(client)?.FindChild("clientready");
@@ -113,18 +113,18 @@ namespace Barotrauma
             switch (voteType)
             {
                 case VoteType.Sub:
-                    Submarine sub = data as Submarine;
-                    if (sub == null) return;
+                    SubmarineInfo sub = data as SubmarineInfo;
+                    if (sub == null) { return; }
 
-                    msg.Write(sub.Info.Name);
+                    msg.Write(sub.Name);
                     break;
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
-                    if (gameMode == null) return;
+                    if (gameMode == null) { return; }
                     msg.Write(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
-                    if (!(data is bool)) return;
+                    if (!(data is bool)) { return; }
                     msg.Write((bool)data);
                     break;
                 case VoteType.Kick:
@@ -153,12 +153,12 @@ namespace Barotrauma
                 {
                     int votes = inc.ReadByte();
                     string subName = inc.ReadString();
-                    List<Submarine> serversubs = new List<Submarine>();
+                    List<SubmarineInfo> serversubs = new List<SubmarineInfo>();
                     foreach (GUIComponent item in GameMain.NetLobbyScreen?.SubList?.Content?.Children)
                     {
-                        if (item.UserData != null && item.UserData is Submarine) serversubs.Add(item.UserData as Submarine);
+                        if (item.UserData != null && item.UserData is SubmarineInfo) { serversubs.Add(item.UserData as SubmarineInfo); }
                     }
-                    Submarine sub = serversubs.FirstOrDefault(sm => sm.Info.Name == subName);
+                    SubmarineInfo sub = serversubs.FirstOrDefault(s => s.Name == subName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);
                 }
             }

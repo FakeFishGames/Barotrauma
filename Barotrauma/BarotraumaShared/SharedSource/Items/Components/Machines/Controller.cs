@@ -39,8 +39,6 @@ namespace Barotrauma.Items.Components
         private Item focusTarget;
         private float targetRotation;
 
-        private bool state;
-
         public Vector2 UserPos
         {
             get { return userPos; }
@@ -59,6 +57,18 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }
+
+        [Editable, Serialize(false, false, description: "Whether the item is toggled on/off. Only valid if IsToggle is set to true.")]
+        public bool State
+        {
+            get;
+            set;
+        }
+
+        public bool ControlCharacterPose
+        {
+            get { return limbPositions.Count > 0; }
         }
 
         public Controller(Item item, XElement element)
@@ -99,7 +109,7 @@ namespace Barotrauma.Items.Components
 
             if (IsToggle)
             {
-                item.SendSignal(0, state ? "1" : "0", "signal_out", sender: null);
+                item.SendSignal(0, State ? "1" : "0", "signal_out", sender: null);
             }
 
             if (user == null 
@@ -272,7 +282,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private Item GetFocusTarget()
+        public Item GetFocusTarget()
         {
             item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", user);
 
@@ -294,7 +304,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
-                    state = !state;
+                    State = !State;
 #if SERVER
                     item.CreateServerEvent(this);
 #endif

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
+using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -34,7 +35,7 @@ namespace Barotrauma
                 {
                     //try fixing legacy EnglishVanilla path
                     string newPath = "Content/Texts/English/EnglishVanilla.xml";
-                    if (System.IO.File.Exists(newPath))
+                    if (Barotrauma.IO.File.Exists(newPath))
                     {
                         DebugConsole.NewMessage("Content package is using the obsolete text file path \"" + filePath + "\". Attempting to load from \"" + newPath + "\"...");
                         this.FilePath = filePath = newPath;
@@ -172,9 +173,7 @@ namespace Barotrauma
                 }
             }
 
-            System.IO.StreamWriter file = new System.IO.StreamWriter(@"duplicate_" + Language.ToLower() + "_" + index + ".txt");
-            file.WriteLine(sb.ToString());
-            file.Close();
+            File.WriteAllText(@"duplicate_" + Language.ToLower() + "_" + index + ".txt", sb.ToString());
         }
 
         public void WriteToCSV(int index)
@@ -199,9 +198,7 @@ namespace Barotrauma
                 }
             }
 
-            System.IO.StreamWriter file = new System.IO.StreamWriter(@"csv_" + Language.ToLower() + "_" + index + ".csv");
-            file.WriteLine(sb.ToString());
-            file.Close();
+            File.WriteAllText(@"csv_" + Language.ToLower() + "_" + index + ".csv", sb.ToString());
         }
 #endif
     }

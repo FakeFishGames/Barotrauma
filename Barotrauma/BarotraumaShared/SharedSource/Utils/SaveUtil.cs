@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -245,7 +245,7 @@ namespace Barotrauma
             // B.
             // Read file into byte array buffer.
             byte[] b;
-            using (FileStream f = new FileStream(temp, FileMode.Open))
+            using (FileStream f = File.Open(temp, System.IO.FileMode.Open))
             {
                 b = new byte[f.Length];
                 f.Read(b, 0, (int)f.Length);
@@ -253,7 +253,7 @@ namespace Barotrauma
 
             // C.
             // Use GZipStream to write compressed bytes to target file.
-            using (FileStream f2 = new FileStream(fileName, FileMode.Create))
+            using (FileStream f2 = File.Open(fileName, System.IO.FileMode.Create))
             using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))
             {
                 gz.Write(b, 0, b.Length);
@@ -276,10 +276,10 @@ namespace Barotrauma
 
         public static void CompressDirectory(string sInDir, string sOutFile, ProgressDelegate progress)
         {
-            string[] sFiles = Directory.GetFiles(sInDir, "*.*", SearchOption.AllDirectories);
+            IEnumerable<string> sFiles = Directory.GetFiles(sInDir, "*.*", System.IO.SearchOption.AllDirectories);
             int iDirLen = sInDir[sInDir.Length - 1] == Path.DirectorySeparatorChar ? sInDir.Length : sInDir.Length + 1;
 
-            using (FileStream outFile = new FileStream(sOutFile, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (FileStream outFile = File.Open(sOutFile, System.IO.FileMode.Create, System.IO.FileAccess.Write))
             using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
                 foreach (string sFilePath in sFiles)
                 {
@@ -290,11 +290,11 @@ namespace Barotrauma
         }
 
 
-        public static Stream DecompressFiletoStream(string fileName)
+        public static System.IO.Stream DecompressFiletoStream(string fileName)
         {
-            using (FileStream originalFileStream = new FileStream(fileName, FileMode.Open))
+            using (FileStream originalFileStream = File.Open(fileName, System.IO.FileMode.Open))
             {
-                MemoryStream decompressedFileStream = new MemoryStream();
+                System.IO.MemoryStream decompressedFileStream = new System.IO.MemoryStream();
 
                 using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
                 {
@@ -347,13 +347,13 @@ namespace Barotrauma
             {
                 try
                 {
-                    using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (FileStream outFile = File.Open(sFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                     {
                         outFile.Write(bytes, 0, iFileLen);
                     }
                     break;
                 }
-                catch (IOException e)
+                catch (System.IO.IOException e)
                 {
                     if (i >= maxRetries || !File.Exists(sFilePath)) { throw; }
                     DebugConsole.NewMessage("Failed decompress file \"" + sFilePath + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
@@ -371,13 +371,13 @@ namespace Barotrauma
             {
                 try
                 {
-                    using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                    using (FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
                         while (DecompressFile(sDir, zipStream, progress)) { };
 
                     break;
                 }
-                catch (IOException e)
+                catch (System.IO.IOException e)
                 {
                     if (i >= maxRetries || !File.Exists(sCompressedFile)) { throw; }
                     DebugConsole.NewMessage("Failed decompress file \"" + sCompressedFile + "\" {" + e.Message + "}, retrying in 250 ms...", Color.Red);
@@ -393,12 +393,12 @@ namespace Barotrauma
 
             if (!dir.Exists)
             {
-                throw new DirectoryNotFoundException(
+                throw new System.IO.DirectoryNotFoundException(
                     "Source directory does not exist or could not be found: "
                     + sourceDirName);
             }
 
-            DirectoryInfo[] dirs = dir.GetDirectories();
+            IEnumerable<DirectoryInfo> dirs = dir.GetDirectories();
             // If the destination directory doesn't exist, create it.
             if (!Directory.Exists(destDirName))
             {
@@ -406,11 +406,12 @@ namespace Barotrauma
             }
 
             // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = dir.GetFiles();
+            IEnumerable<FileInfo> files = dir.GetFiles();
             foreach (FileInfo file in files)
             {
                 string tempPath = Path.Combine(destDirName, file.Name);
-                file.CopyTo(tempPath, overwriteExisting);
+                if (!overwriteExisting && File.Exists(tempPath)) { continue; }
+                file.CopyTo(tempPath, true);
             }
 
             // If copying subdirectories, copy them and their contents to new location.
@@ -472,7 +473,7 @@ namespace Barotrauma
                         di.Delete();
                         break;
                     }
-                    catch (IOException)
+                    catch (System.IO.IOException)
                     {
                         if (i >= maxRetries) { throw; }
                         Thread.Sleep(250);

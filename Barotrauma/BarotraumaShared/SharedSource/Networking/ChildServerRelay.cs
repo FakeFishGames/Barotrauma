@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Text;
@@ -12,8 +12,8 @@ namespace Barotrauma.Networking
 {
     static partial class ChildServerRelay
     {
-        private static Stream writeStream;
-        private static Stream readStream;
+        private static System.IO.Stream writeStream;
+        private static System.IO.Stream readStream;
         private static volatile bool shutDown;
         public static bool HasShutDown
         {
@@ -233,7 +233,12 @@ namespace Barotrauma.Networking
                     {
                         writeStream?.Write(msg, 0, msg.Length);
                     }
-                    catch (IOException)
+                    catch (ObjectDisposedException)
+                    {
+                        shutDown = true;
+                        break;
+                    }
+                    catch (System.IO.IOException)
                     {
                         shutDown = true;
                         break;
@@ -263,7 +268,12 @@ namespace Barotrauma.Networking
                             lengthBytes[1] = (byte)0;
                             writeStream?.Write(lengthBytes, 0, 2);
                         }
-                        catch (IOException)
+                        catch (ObjectDisposedException)
+                        {
+                            shutDown = true;
+                            break;
+                        }
+                        catch (System.IO.IOException)
                         {
                             shutDown = true;
                             break;

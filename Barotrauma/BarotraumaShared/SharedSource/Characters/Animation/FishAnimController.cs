@@ -213,7 +213,12 @@ namespace Barotrauma
                 UpdateWalkAnim(deltaTime);
             }
 
-            //don't flip or drag when simply physics is enabled
+            if (character.SelectedCharacter != null)
+            {
+                DragCharacter(character.SelectedCharacter, deltaTime);
+            }
+
+            //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
             if (!character.IsRemotePlayer && (character.AIController == null || character.AIController.CanFlip))
@@ -248,29 +253,33 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedCharacter != null)
-            {
-                DragCharacter(character.SelectedCharacter, deltaTime);
-            }
-
             if (!CurrentFishAnimation.Flip) { return; }
             if (IsStuck) { return; }
             if (character.AIController != null && !character.AIController.CanFlip) { return; }
 
             flipCooldown -= deltaTime;
-
-            if (TargetDir != Direction.None && TargetDir != dir) 
+            if (TargetDir != Direction.None && TargetDir != dir)
             {
                 flipTimer += deltaTime;
-                if ((flipTimer > 0.5f && flipCooldown <= 0.0f) || character.IsRemotePlayer)
+                // Speed reductions are not taken into account here. It's intentional: an ai character cannot flip if it's heavily paralyzed (for example).
+                float requiredSpeed = CurrentAnimationParams.MovementSpeed / 2;
+                if (CurrentHull != null)
+                {
+                    // Enemy movement speeds are halved inside submarines
+                    requiredSpeed /= 2;
+                }
+                bool isMovingFastEnough = Math.Abs(MainLimb.LinearVelocity.X) > requiredSpeed;
+                bool isTryingToMoveHorizontally = Math.Abs(TargetMovement.X) > Math.Abs(TargetMovement.Y);
+                if ((flipTimer > CurrentFishAnimation.FlipDelay && flipCooldown <= 0.0f && ((isMovingFastEnough && isTryingToMoveHorizontally) || IsMovingBackwards))
+                    || character.IsRemotePlayer)
                 {
                     Flip();
                     if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                     {
-                        Mirror();
+                        Mirror(CurrentSwimParams != null ? CurrentSwimParams.MirrorLerp : true);
                     }
                     flipTimer = 0.0f;
-                    flipCooldown = 1.0f;
+                    flipCooldown = CurrentFishAnimation.FlipCooldown;
                 }
             }
             else
@@ -295,7 +304,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
                 //stop dragging if there's something between the pull limb and the target
-                Vector2 sourceSimPos = mouthLimb.SimPosition;
+                Vector2 sourceSimPos = SimplePhysicsEnabled ? character.SimPosition : mouthLimb.SimPosition;
                 Vector2 targetSimPos = target.SimPosition;
                 if (character.Submarine != null && character.SelectedCharacter.Submarine == null)
                 {
@@ -317,7 +326,7 @@ namespace Barotrauma
             float eatSpeed = dmg / ((float)Math.Sqrt(Math.Max(target.Mass, 1)) * 10);
             eatTimer += deltaTime * eatSpeed;
 
-            Vector2 mouthPos = GetMouthPosition().Value;
+            Vector2 mouthPos = SimplePhysicsEnabled ? character.SimPosition : GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
@@ -525,6 +534,7 @@ namespace Barotrauma
 
             foreach (var limb in Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
                     limb.body.SmoothRotate(movementAngle + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Params.ConstantTorque, wrapAngle: true);
@@ -550,10 +560,12 @@ namespace Barotrauma
 
             for (int i = 0; i < Limbs.Length; i++)
             {
-                if (Limbs[i].SteerForce <= 0.0f) { continue; }
+                var limb = Limbs[i];
+                if (limb.IsSevered) { continue; }
+                if (limb.SteerForce <= 0.0f) { continue; }
                 if (!Collider.PhysEnabled) { continue; }
-                Vector2 pullPos = Limbs[i].PullJointWorldAnchorA;
-                Limbs[i].body.ApplyForce(movement * Limbs[i].SteerForce * Limbs[i].Mass * Math.Max(character.SpeedMultiplier, 1), pullPos);
+                Vector2 pullPos = limb.PullJointWorldAnchorA;
+                limb.body.ApplyForce(movement * limb.SteerForce * limb.Mass * Math.Max(character.SpeedMultiplier, 1), pullPos);
             }
 
             Vector2 mainLimbDiff = mainLimb.PullJointWorldAnchorB - mainLimb.SimPosition;
@@ -604,6 +616,14 @@ namespace Barotrauma
             float stepLift = TargetMovement.X == 0.0f ? 0 :
                 (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
+            float limpAmount = character.GetLegPenalty();
+            if (limpAmount > 0)
+            {
+                float walkPosX = (float)Math.Cos(WalkPos);
+                //make the footpos oscillate when limping
+                limpAmount = Math.Max(Math.Abs(walkPosX) * limpAmount, 0.0f) * Math.Min(Math.Abs(TargetMovement.X), 0.3f) * Dir;
+            }
+
             Limb torso = GetLimb(LimbType.Torso);
             if (torso != null)
             {
@@ -613,7 +633,7 @@ namespace Barotrauma
                 }
                 if (TorsoPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + new Vector2(0, TorsoPosition.Value + stepLift);
+                    Vector2 pos = colliderBottom + new Vector2(limpAmount, TorsoPosition.Value + stepLift);
 
                     if (torso != mainLimb)
                     {
@@ -635,7 +655,7 @@ namespace Barotrauma
                 }
                 if (HeadPosition.HasValue)
                 {
-                    Vector2 pos = colliderBottom + new Vector2(0, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
+                    Vector2 pos = colliderBottom + new Vector2(limpAmount, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
 
                     if (head != mainLimb)
                     {
@@ -670,6 +690,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
                     limb.body.SmoothRotate(movementAngle + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Params.ConstantTorque, wrapAngle: true);
@@ -766,6 +787,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) { continue; }
 #if CLIENT
                 if (limb.LightSource != null)
                 {
@@ -821,6 +843,7 @@ namespace Barotrauma
             base.Flip();
             foreach (Limb l in Limbs)
             {
+                if (l.IsSevered) { continue; }
                 if (!l.DoesFlip) { continue; }         
                 if (RagdollParams.IsSpritesheetOrientationHorizontal)
                 {
@@ -838,10 +861,13 @@ namespace Barotrauma
 
             foreach (Limb l in Limbs)
             {
+                if (l.IsSevered) { continue; }
+
                 TrySetLimbPosition(l,
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
                     lerp);
+
                 l.body.PositionSmoothingFactor = 0.8f;
 
                 if (!l.DoesFlip) { continue; }
@@ -862,7 +888,7 @@ namespace Barotrauma
                 if (diff < 100.0f)
                 {
                     character.SelectedCharacter.AnimController.SetPosition(
-                        new Vector2(centerOfMass.X - diff, character.SelectedCharacter.SimPosition.Y), lerp: true);
+                        new Vector2(centerOfMass.X - diff, character.SelectedCharacter.SimPosition.Y), lerp);
                 }
             }
         }  
