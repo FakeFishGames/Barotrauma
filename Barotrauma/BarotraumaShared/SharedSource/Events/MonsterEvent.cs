@@ -277,8 +277,6 @@ namespace Barotrauma
             bool spawnReady = false;
             if (spawnPending)
             {
-
-
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
                 //unnecessary monsters in places the players might never visit during the round
                 if (spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Cave || spawnPosType == Level.PositionType.Wreck)

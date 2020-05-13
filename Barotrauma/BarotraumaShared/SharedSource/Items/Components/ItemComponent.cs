@@ -390,6 +390,7 @@ namespace Barotrauma.Items.Components
         //called when isActive is true and condition == 0.0f
         public virtual void UpdateBroken(float deltaTime, Camera cam)
         {
+
 #if CLIENT
             StopSounds(ActionType.OnActive);
 #endif

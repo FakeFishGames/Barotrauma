@@ -13,7 +13,7 @@ namespace Barotrauma
             private set;
         }
 
-        [Serialize(4.0f, true)]
+        [Serialize(3.0f, true)]
         public float SingleRoundSkillGainMultiplier { get; set; }
         
 
@@ -89,7 +89,7 @@ namespace Barotrauma
             set { skillIncreasePerFriendlyHealed = value; }
         }
 
-        [Serialize(1.1f, true)]
+        [Serialize(1.3f, true)]
         public float AssistantSkillIncreaseMultiplier
         {
             get;

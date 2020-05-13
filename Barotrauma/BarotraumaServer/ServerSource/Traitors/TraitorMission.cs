@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Barotrauma.Extensions;
+using Barotrauma.ServerSource.Traitors;
 
 namespace Barotrauma
 {
@@ -117,6 +118,7 @@ namespace Barotrauma
 
             protected List<Tuple<string, Tuple<Client, Character>>> AssignTraitors(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
+                
                 List<Character> characters = FindCharacters();
 #if !ALLOW_SOLO_TRAITOR
                 if (characters.Count < 2)
@@ -127,6 +129,7 @@ namespace Barotrauma
                 var roleCandidates = new Dictionary<string, HashSet<Tuple<Client, Character>>>();
                 foreach (var role in Roles)
                 {
+                    GameServer.Log("wtf is a role: " + role.Value + " i raelly dunno: " + role.Key , ServerLog.MessageType.ServerMessage);
                     roleCandidates.Add(role.Key, new HashSet<Tuple<Client, Character>>(FindTraitorCandidates(server, team, role.Value)));
                     if (roleCandidates[role.Key].Count <= 0)
                     {
@@ -173,6 +176,7 @@ namespace Barotrauma
                 {
                     return null;
                 }
+   
                 return assignedCandidates;
             }
 
@@ -212,11 +216,11 @@ namespace Barotrauma
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 
-                if (pendingObjectives.Count <= 0 || !pendingObjectives[0].CanBeStarted(Traitors.Values))
+                /**if (pendingObjectives.Count <= 0 || !pendingObjectives[0].CanBeStarted(Traitors.Values))
                 {
                     Traitors.Clear();
                     return false;
-                }
+                }**/
 
                 var pendingMessages = new Dictionary<Traitor, List<string>>();
                 pendingMessages.Clear();
@@ -249,13 +253,13 @@ namespace Barotrauma
                 {
                     return;
                 }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
+                /**if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
                     pendingObjectives.Clear();
                     Traitors.Clear();
                     return;
-                }
+                }**/
                 var startedObjectives = new List<Objective>();
                 foreach (var traitor in Traitors.Values)
                 {

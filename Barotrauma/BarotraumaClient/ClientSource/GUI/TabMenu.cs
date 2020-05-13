@@ -323,7 +323,7 @@ namespace Barotrauma
                             if (crewListArray[i] == crewList) continue;
                             crewListArray[i].Deselect();
                         }
-                        SelectElement(component.UserData, crewList);
+                        //SelectElement(component.UserData, crewList);
                         return true;
                     };
                 }
@@ -331,7 +331,7 @@ namespace Barotrauma
                 {
                     crewList.OnSelected = (component, obj) =>
                     {
-                        SelectElement(component.UserData, crewList);
+                        //SelectElement(component.UserData, crewList);
                         return true;
                     };
                 }
@@ -614,7 +614,7 @@ namespace Barotrauma
 
             if (client.Character != null && client.Character.IsDead)
             {
-                characterNameBlock.Strikethrough = new GUITextBlock.StrikethroughSettings(null, GUI.IntScale(1f), GUI.IntScale(5f));
+                //characterNameBlock.Strikethrough = new GUITextBlock.StrikethroughSettings(null, GUI.IntScale(1f), GUI.IntScale(5f));
             }
         }
 

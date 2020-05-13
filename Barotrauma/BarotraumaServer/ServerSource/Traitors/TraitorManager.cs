@@ -105,14 +105,14 @@ namespace Barotrauma
                         }
                         gameShouldEnd = true;
                     });
-                    if (!gameShouldEnd && mission.Value.IsCompleted)
+                    /**if (!gameShouldEnd && mission.Value.IsCompleted)
                     {
                         missionCompleted = true;
                         foreach (var traitor in mission.Value.Traitors.Values)
                         {
                             traitor.UpdateCurrentObjective("", mission.Value.Identifier);
                         }
-                    }
+                    }**/
                 }
                 if (gameShouldEnd)
                 {
@@ -122,9 +122,9 @@ namespace Barotrauma
                 }
                 if (missionCompleted)
                 {
-                    Missions.Clear();
+                   /** Missions.Clear();
                     gameShouldEnd = true;
-                    //startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
+                    startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());**/
                 }
             }
             else if (startCountdown > 0.0f && server.GameStarted)
@@ -177,7 +177,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    Missions.Clear();
+                    //Missions.Clear();
                     startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                 }
             }

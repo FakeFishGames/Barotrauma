@@ -1,0 +1,6 @@
+﻿useRatio=false
+traitorRatio=1.0
+traitorMinNumber=1
+traitorMaxNumber=2
+traitorStaticNumber=2
+traitorCount=2

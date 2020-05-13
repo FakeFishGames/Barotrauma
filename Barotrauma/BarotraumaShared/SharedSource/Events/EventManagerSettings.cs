@@ -22,8 +22,8 @@ namespace Barotrauma
         public readonly float EventCooldown = 360.0f;
         public readonly float WanderCooldown = 60.0f;
 
-        public readonly float WanderChallengeScale = 5000.0f;
-        public readonly float WanderChallengeScaleRate = 100.0f;
+        public readonly float WanderChallengeScale = 0.0f;
+        public readonly float WanderChallengeScaleRate = 0.001f;
 
         public readonly float MinLevelDifficulty = 0.0f;
         public readonly float MaxLevelDifficulty = 100.0f;
