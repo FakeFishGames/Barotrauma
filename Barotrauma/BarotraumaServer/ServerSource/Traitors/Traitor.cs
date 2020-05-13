@@ -5,7 +5,8 @@ namespace Barotrauma
     partial class Traitor
     {
         public readonly Character Character;
-
+        private string codewords;
+        private string coderesponses;
         public string Role { get; }
         public TraitorMission Mission { get; }
         public Objective CurrentObjective => Mission.GetCurrentObjective(this);
@@ -34,6 +35,8 @@ namespace Barotrauma
             {
                 GameMain.Server.SendTraitorMessage(ownerClient, CurrentObjective.StartMessageServerText, Mission?.Identifier, TraitorMessageType.ServerMessageBox);
             }
+            codewords = codeWords;
+            coderesponses = codeResponse;
         }
 
         public void SendChatMessage(string serverText, string iconIdentifier)
@@ -51,7 +54,7 @@ namespace Barotrauma
         public void UpdateCurrentObjective(string objectiveText, string iconIdentifier)
         {
             Client traitorClient = GameMain.Server.ConnectedClients.Find(c => c.Character == Character);
-            Character.TraitorCurrentObjective = objectiveText;
+            Character.TraitorCurrentObjective = objectiveText + "\nThere may be other traitors on board, this codephrase and coderesponse can help you find them: \n Code Phrase: " + codewords + "\n Code Response: " + coderesponses ;
             GameMain.Server.SendTraitorMessage(traitorClient, Character.TraitorCurrentObjective, iconIdentifier, TraitorMessageType.Objective);
         }
     }

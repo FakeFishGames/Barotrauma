@@ -52,7 +52,7 @@ namespace Barotrauma.Steam
             catch (Exception)
             {
                 isInitialized = false;
-                initializationErrors.Add("SteamClientInitFailed");
+                //initializationErrors.Add("SteamClientInitFailed");
             }
 
             if (!isInitialized)

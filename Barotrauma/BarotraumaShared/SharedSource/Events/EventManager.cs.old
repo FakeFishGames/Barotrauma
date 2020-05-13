@@ -1,19 +1,13 @@
-using FarseerPhysics;
-using Barotrauma.Items.Components;
-using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Barotrauma
 {
     partial class EventManager
     {
         const float IntensityUpdateInterval = 5.0f;
-
-        const float CalculateDistanceTraveledInterval = 5.0f;
 
         private Level level;
 
@@ -36,26 +30,9 @@ namespace Barotrauma
 
         private float intensityUpdateTimer;
 
-        private PathFinder pathFinder;
-        private float totalPathLength;
-        private float calculateDistanceTraveledTimer;
-        private float distanceTraveled;
-
-        private float wanderCooldown;
-
-        private float intensityUpdateTimer;
-
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
         private float roundDuration;
-
-        private Random randGen;
-
-        private float challengeScale;
-
-        private List<String> randWanderMonster;
-
-        private List<String> randMonster;
 
         private readonly List<ScriptedEventSet> pendingEventSets = new List<ScriptedEventSet>();
 
@@ -92,20 +69,8 @@ namespace Barotrauma
         {
             if (isClient) { return; }
 
-            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
-            var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
-            totalPathLength = steeringPath.TotalLength;
-
-            randWanderMonster = new List<String>();
-            randWanderMonster.Add("crawlerhusk");
-            randMonster = new List<String>();
-            randMonster.Add("charybdis");
-            randMonster.Add("hammerhead");
-
             pendingEventSets.Clear();
             selectedEvents.Clear();
-
-            randGen = new Random();
 
             this.level = level;
             SelectSettings();
@@ -118,14 +83,12 @@ namespace Barotrauma
             }
 
             PreloadContent(GetFilesToPreload());
-            challengeScale = settings.WanderChallengeScale;
+
             roundDuration = 0.0f;
             intensityUpdateTimer = 0.0f;
             CalculateCurrentIntensity(0.0f);
             currentIntensity = targetIntensity;
             eventCoolDown = 0.0f;
-            wanderCooldown = 120.0f;
-            DebugConsole.NewMessage("Wander Cooldown: " + settings.WanderCooldown);
         }
 
         private void SelectSettings()
@@ -174,44 +137,7 @@ namespace Barotrauma
 
         public void PreloadContent(IEnumerable<ContentFile> contentFiles)
         {
-            var filesToPreload = new List<ContentFile>(contentFiles);
-            foreach (Submarine sub in Submarine.Loaded)
-            {
-                if (sub.WreckAI == null) { continue; }
-
-                if (!string.IsNullOrEmpty(sub.WreckAI.Config.DefensiveAgent))
-                {
-                    var prefab = CharacterPrefab.FindBySpeciesName(sub.WreckAI.Config.DefensiveAgent);
-                    if (prefab != null && !filesToPreload.Any(f => f.Path == prefab.FilePath))
-                    {
-                        filesToPreload.Add(new ContentFile(prefab.FilePath, ContentType.Character));
-                    }
-                }
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != sub) { continue; }
-                    foreach (Items.Components.ItemComponent component in item.Components)
-                    {
-                        if (component.statusEffectLists == null) { continue; }
-                        foreach (var statusEffectList in component.statusEffectLists.Values)
-                        {
-                            foreach (StatusEffect statusEffect in statusEffectList)
-                            {
-                                foreach (var spawnInfo in statusEffect.SpawnCharacters)
-                                {
-                                    var prefab = CharacterPrefab.FindBySpeciesName(spawnInfo.SpeciesName);
-                                    if (prefab != null && !filesToPreload.Any(f => f.Path == prefab.FilePath))
-                                    {
-                                        filesToPreload.Add(new ContentFile(prefab.FilePath, ContentType.Character));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }                
-            }
-
-            foreach (ContentFile file in filesToPreload)
+            foreach (ContentFile file in contentFiles)
             {
                 switch (file.Type)
                 {
@@ -353,7 +279,7 @@ namespace Barotrauma
         {
             MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
 
-            var allowedEventSets =
+            var allowedEventSets = 
                 eventSets.Where(es => level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty);
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
@@ -373,9 +299,12 @@ namespace Barotrauma
 
         private bool CanStartEventSet(ScriptedEventSet eventSet)
         {
-            ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = Vector2.Distance(refEntity.WorldPosition, level.StartPosition);
-            float distFromEnd = Vector2.Distance(refEntity.WorldPosition, level.EndPosition);
+            float distFromStart = Vector2.Distance(Submarine.MainSub.WorldPosition, level.StartPosition);
+            float distFromEnd = Vector2.Distance(Submarine.MainSub.WorldPosition, level.EndPosition);
+
+            float distanceTraveled = MathHelper.Clamp(
+                (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
+                0.0f, 1.0f);
 
             //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)
@@ -402,6 +331,7 @@ namespace Barotrauma
             return true;
         }
 
+        
         public void Update(float deltaTime)
         {
             if (!Enabled) { return; }
@@ -436,27 +366,6 @@ namespace Barotrauma
                     return;
                 }
             }
-
-            calculateDistanceTraveledTimer -= deltaTime;
-            if (calculateDistanceTraveledTimer <= 0.0f)
-            {
-                distanceTraveled = CalculateDistanceTraveled();
-                calculateDistanceTraveledTimer = CalculateDistanceTraveledInterval;
-            }
-           
-            challengeScale += settings.WanderChallengeScaleRate * deltaTime;
-            if (wanderCooldown <= 0.0f)
-            {
-                SummonWanderingMonsters(deltaTime);
-                wanderCooldown = settings.WanderCooldown + (float)randGen.NextDouble() * (enemyDanger * 120.0f);
-                DebugConsole.NewMessage("New wander event triggered");
-                DebugConsole.NewMessage("Wander Cooldown: " + wanderCooldown);
-            }
-            else
-            {
-                wanderCooldown -= deltaTime;
-            }
-
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
             if (eventCoolDown > 0.0f)
@@ -497,10 +406,10 @@ namespace Barotrauma
 
             foreach (ScriptedEvent ev in activeEvents)
             {
-                if (ev != null && !ev.IsFinished) { ev.Update(deltaTime); }
+                if (!ev.IsFinished) { ev.Update(deltaTime); }                             
             }
         }
-
+                
         private void CalculateCurrentIntensity(float deltaTime)
         {
             intensityUpdateTimer -= deltaTime;
@@ -538,8 +447,8 @@ namespace Barotrauma
 
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
-
-                if (character.CurrentHull?.Submarine != null &&
+                
+                if (character.CurrentHull?.Submarine != null && 
                     (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
                     //crawler inside the sub adds 0.1f to enemy danger, mantis 0.25f
@@ -588,7 +497,7 @@ namespace Barotrauma
 
             // calculate final intensity --------------------------------------------------------
 
-            targetIntensity =
+            targetIntensity = 
                 ((1.0f - avgCrewHealth) + (1.0f - avgHullIntegrity) + floodingAmount) / 3.0f;
             targetIntensity += fireAmount * 0.5f;
             targetIntensity += enemyDanger;
@@ -604,140 +513,6 @@ namespace Barotrauma
                 //400 seconds for intensity to go from 1.0 to 0.0
                 currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
             }
-        }
-
-        private float CalculateDistanceTraveled()
-        {
-            var refEntity = GetRefEntity();
-            Vector2 target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
-            var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(refEntity.WorldPosition), target);
-            if (steeringPath.Unreachable || float.IsPositiveInfinity(totalPathLength))
-            {
-                //use horizontal position in the level as a fallback if a path can't be found
-                return MathHelper.Clamp((refEntity.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X), 0.0f, 1.0f);
-            }
-            else
-            {
-                return MathHelper.Clamp(1.0f - steeringPath.TotalLength / totalPathLength, 0.0f, 1.0f);
-            }
-        }
-
-
-        /// <summary>
-        /// Get the entity that should be used in determining how far the player has progressed in the level.
-        /// = The submarine or player character that has progressed the furthest. 
-        /// </summary>
-        private ISpatialEntity GetRefEntity()
-        {
-            ISpatialEntity refEntity = Submarine.MainSub;
-#if CLIENT
-            if (Character.Controlled != null)
-            {
-                if (Character.Controlled.Submarine != null && 
-                    Character.Controlled.Submarine.Info.Type == SubmarineInfo.SubmarineType.Player)
-                {
-                    refEntity = Character.Controlled.Submarine;
-                }
-                else
-                {
-                    refEntity = Character.Controlled;
-                }
-            }
-#else
-            foreach (Barotrauma.Networking.Client client in GameMain.Server.ConnectedClients)
-            {
-                if (client.Character == null) { continue; }
-                //only take the players inside a player sub into account. 
-                //Otherwise the system could be abused by for example making a respawned player wait
-                //close to the destination outpost
-                if (client.Character.Submarine != null && 
-                    client.Character.Submarine.Info.Type == SubmarineInfo.SubmarineType.Player)
-                {
-                    if (client.Character.Submarine.WorldPosition.X > refEntity.WorldPosition.X)
-                    {
-                        refEntity = client.Character.Submarine;
-                    }
-                }
-            }
-#endif
-            return refEntity;
-        private void SummonWanderingMonsters(float deltaTime)
-        {
-            String errMsg = "";
-            int randNum = 0;
-            float majorRand = (float)randGen.NextDouble();
-            if (majorRand > (challengeScale))
-            {
-                DebugConsole.NewMessage("Spawning Major Monsters!");
-                errMsg = SummonMajorMonsters(errMsg);
-                challengeScale = settings.WanderChallengeScale; //challengeScale reset each time a major event occurs
-            }
- 
-
-            //always spawn wandering trash mobsa
-            randNum = randGen.Next(0, randWanderMonster.Count); //which monsters spawns
-            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(Type.GetType("Barotrauma.WanderingMonsterEvent"), "monster", 1, false); //CxTODO, check this
-            WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, randWanderMonster[randNum], 1, 0, 2, "mainpath", false);
-            activeEvents.Add(wanderingMonsterEvent);
-            DebugConsole.NewMessage("Spawning wandering monsters (Index, MajorChance) " + randNum + " " + majorRand);
-            if (errMsg != "")
-            {
-                DebugConsole.NewMessage("Spawn Error: " + errMsg);
-            }
-        }
-
-        private void SummonGameEndMonsters()
-        {
-            //maybe spawn a bunch at the start
-            String errMsg = "";
-            int randNum = randGen.Next(0, randMonster.Count);
-            DebugConsole.NewMessage("Spawning ENDGAME MOBS");
-            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-            WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, randWanderMonster[randNum], 1, 0, 2, "mainpath", false);
-            activeEvents.Add(wanderingMonsterEvent);
-            if (errMsg != "")
-            {
-                DebugConsole.NewMessage("Spawn Error: " + errMsg);
-            }
-        }
-
-        private String SummonMajorMonsters(String errMsg)
-        {
-            int randNum = randGen.Next(0, 3); //which monsterset spawns
-            if (randNum == 0)
-            {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "hammerhead", 1, 1, 2, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "hammerheadmatriarch", 1, 1, 1, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-
-                //SpawnCharacter(new[] { "hammerheadmatriarch", "cursor" }, FindSpawnLocation(), out errMsg);
-            }
-            else if (randNum == 1)
-            {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "moloch", 1, 1, 1, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-
-            }
-            else if (randNum == 2)
-            {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "bonethresher", 1, 1, 2, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "tigerthresher", 1, 2, 5, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-            }
-            else if (randNum == 3)
-            {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "charybdis", 1, 1, 1, "mainpath", false);
-                activeEvents.Add(wanderingMonsterEvent);
-            }
-            return errMsg;
         }
     }
 }

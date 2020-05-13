@@ -93,9 +93,9 @@ namespace Barotrauma.Lights
         public static BasicEffect shadowEffect;
         public static BasicEffect penumbraEffect;
 
-        private readonly Segment[] segments = new Segment[4];
-        private readonly SegmentPoint[] vertices = new SegmentPoint[4];
-        private readonly SegmentPoint[] losVertices = new SegmentPoint[4];
+        private Segment[] segments = new Segment[4];
+        private SegmentPoint[] vertices = new SegmentPoint[4];
+        private SegmentPoint[] losVertices = new SegmentPoint[4];
         
         private readonly bool[] backFacing;
         private readonly bool[] ignoreEdge;
@@ -105,8 +105,6 @@ namespace Barotrauma.Lights
         public VertexPositionColor[] ShadowVertices { get; private set; }
         public VertexPositionTexture[] PenumbraVertices { get; private set; }
         public int ShadowVertexCount { get; private set; }
-
-        private readonly HashSet<ConvexHull> overlappingHulls = new HashSet<ConvexHull>();
 
         public MapEntity ParentEntity { get; private set; }
 
@@ -178,7 +176,7 @@ namespace Barotrauma.Lights
                 if (door != null) { isHorizontal = door.IsHorizontal; }
             }
 
-            var chList = HullLists.Find(h => h.Submarine == parent.Submarine);
+            var chList = HullLists.Find(x => x.Submarine == parent.Submarine);
             if (chList == null)
             {
                 chList = new ConvexHullList(parent.Submarine);
@@ -196,12 +194,10 @@ namespace Barotrauma.Lights
 
         private void MergeOverlappingSegments(ConvexHull ch)
         {
-            if (ch == this) { return; }
-
+            if (ch == this) return;
+            
             if (isHorizontal == ch.isHorizontal)
             {
-                if (BoundingBox == ch.BoundingBox) { return; }
-
                 //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
                 float mergeDist = 32;
                 float mergeDistSqr = mergeDist * mergeDist;
@@ -210,7 +206,6 @@ namespace Barotrauma.Lights
                     for (int j = 0; j < ch.segments.Length; j++)
                     {
                         if (segments[i].IsHorizontal != ch.segments[j].IsHorizontal) { continue; }
-                        if (ignoreEdge[i] || ch.ignoreEdge[j]) { continue; }
 
                         //the segments must be at different sides of the convex hulls to be merged
                         //(e.g. the right edge of a wall piece and the left edge of another one)
@@ -252,7 +247,6 @@ namespace Barotrauma.Lights
                         p.Y >= ch.BoundingBox.Y && p.Y <= ch.BoundingBox.Bottom)
                     {
                         ignoreEdge[i] = true;
-                        overlappingHulls.Add(ch);
                     }
                 }
             }
@@ -289,25 +283,11 @@ namespace Barotrauma.Lights
             }
             else
             {
-                if (Vector2.DistanceSquared(losVertices[startPointIndex].Pos, segment1.Start.Pos) < 
-                    Vector2.DistanceSquared(losVertices[startPointIndex].Pos, segment1.End.Pos))
-                {
-                    losVertices[startPointIndex].Pos = segment2.ConvexHull.losVertices[startPoint2Index].Pos =
-                        (segment1.Start.Pos + segment2.End.Pos) / 2.0f;
-                    losVertices[endPointIndex].Pos = segment2.ConvexHull.losVertices[endPoint2Index].Pos =
-                        (segment1.End.Pos + segment2.Start.Pos) / 2.0f;
-                }
-                else
-                {
-                    losVertices[startPointIndex].Pos = segment2.ConvexHull.losVertices[startPoint2Index].Pos =
-                        (segment1.End.Pos + segment2.Start.Pos) / 2.0f;
-                    losVertices[endPointIndex].Pos = segment2.ConvexHull.losVertices[endPoint2Index].Pos =
-                        (segment1.Start.Pos + segment2.End.Pos) / 2.0f;
-                }
+                losVertices[startPointIndex].Pos = segment2.ConvexHull.losVertices[startPoint2Index].Pos =
+                    (segment1.Start.Pos + segment2.End.Pos) / 2.0f;
+                losVertices[endPointIndex].Pos = segment2.ConvexHull.losVertices[endPoint2Index].Pos =
+                    (segment1.End.Pos + segment2.Start.Pos) / 2.0f;
             }
-
-            overlappingHulls.Add(segment2.ConvexHull);
-            segment2.ConvexHull.overlappingHulls.Add(this);
         }
 
         public void Rotate(Vector2 origin, float amount)
@@ -348,26 +328,7 @@ namespace Barotrauma.Lights
 
             LastVertexChangeTime = (float)Timing.TotalTime;
 
-            overlappingHulls.Clear();
-            for (int i = 0; i < 4; i++)
-            {
-                ignoreEdge[i] = false;
-            }
-
             CalculateDimensions();
-
-            if (ParentEntity == null) { return; }
-
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
-            if (chList != null)
-            {
-                overlappingHulls.Clear();
-                foreach (ConvexHull ch in chList.List)
-                {
-                    MergeOverlappingSegments(ch);
-                    ch.MergeOverlappingSegments(this);
-                }
-            }
         }
 
         public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
@@ -386,8 +347,6 @@ namespace Barotrauma.Lights
             {
                 ignoreEdge[i] = false;
             }
-
-            overlappingHulls.Clear();
 
             int margin = 0;
             if (Math.Abs(points[0].X - points[2].X) < Math.Abs(points[0].Y - points[2].Y))
@@ -422,10 +381,9 @@ namespace Barotrauma.Lights
 
             if (ParentEntity == null) return;
 
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
+            var chList = HullLists.Find(x => x.Submarine == ParentEntity.Submarine);
             if (chList != null)
             {
-                overlappingHulls.Clear();
                 foreach (ConvexHull ch in chList.List)
                 {
                     MergeOverlappingSegments(ch);
@@ -526,8 +484,8 @@ namespace Barotrauma.Lights
 
             //find beginning and ending vertices which
             //belong to the shadow
-            int startingIndex = -1;
-            int endingIndex = -1;
+            int startingIndex = 0;
+            int endingIndex = 0;
             for (int i = 0; i < 4; i++)
             {
                 int currentEdge = i;
@@ -539,8 +497,6 @@ namespace Barotrauma.Lights
                 if (!backFacing[currentEdge] && backFacing[nextEdge])
                     startingIndex = nextEdge;
             }
-
-            if (startingIndex == -1 || endingIndex == -1) { return; }
 
             //nr of vertices that are in the shadow
             if (endingIndex > startingIndex)
@@ -707,7 +663,7 @@ namespace Barotrauma.Lights
         
         public void Remove()
         {
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
+            var chList = HullLists.Find(x => x.Submarine == ParentEntity.Submarine);
 
             if (chList != null)
             {
@@ -716,19 +672,8 @@ namespace Barotrauma.Lights
                 {
                     HullLists.Remove(chList);
                 }
-                foreach (ConvexHull ch2 in overlappingHulls)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        ch2.ignoreEdge[i] = false;
-                    }
-                    ch2.overlappingHulls.Remove(this);
-                    foreach (ConvexHull ch in chList.List)
-                    {
-                        ch.MergeOverlappingSegments(ch2);
-                    }
-                }
             }
         }
     }
+
 }

@@ -538,6 +538,7 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
                     yPos += (int)anchorPivotStringSize.Y + padding / 2;
                 }
+<<<<<<< HEAD
                 else
                 {
                     string guiScaleString = $"GUI.Scale: {Scale}";
@@ -569,6 +570,8 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
                     yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
                 }
+=======
+>>>>>>> master
             }
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
@@ -1965,9 +1968,14 @@ namespace Barotrauma
                 Inventory.draggingItem = null;
                 Inventory.DraggingInventory = null;
 
+<<<<<<< HEAD
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas, Anchor.Center), style: null);
                 new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, PauseMenu.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
+=======
+                PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
+                    
+>>>>>>> master
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(250, 300) });
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.6f), pauseMenuInner.RectTransform, Anchor.Center))

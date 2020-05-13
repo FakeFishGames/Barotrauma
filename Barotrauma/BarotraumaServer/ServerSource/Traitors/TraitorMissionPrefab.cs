@@ -592,7 +592,33 @@ namespace Barotrauma
                         case "role":
                             checker.Required("id");
                             checker.Optional("jobs");
-                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                            traitorSettings settings = new traitorSettings();
+                            if (settings.useRatio == true)
+                            {
+                                DebugConsole.Log("using traitor ratio");
+                                DebugConsole.Log("using set traitor number: " + settings.traitorCount);
+                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                int count = settings.traitorCount - 1;
+                                while (count > 0)
+                                {
+                                    DebugConsole.Log("Added additional traitor");
+                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                    count--;
+                                }
+                            }
+                            else
+                            {
+                                DebugConsole.Log("using set traitor number: " + settings.traitorCount);
+                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                int count = settings.traitorCount - 1;
+                                while (count>0)
+                                {
+                                    DebugConsole.Log("Added additional traitor");
+                                    Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
+                                    count--;
+                                }
+                            }
+                            
                             break;
                     }
                 }

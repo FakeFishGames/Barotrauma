@@ -658,7 +658,6 @@ namespace Barotrauma
                     (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
                 float y = colliderPos.Y + stepLift;
-
                 if (TorsoPosition.HasValue)
                 {
                     y += TorsoPosition.Value;

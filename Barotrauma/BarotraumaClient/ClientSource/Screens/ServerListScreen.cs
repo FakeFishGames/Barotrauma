@@ -202,7 +202,7 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(ClientNameBox.Text))
             {
-                ClientNameBox.Text = SteamManager.GetUsername();
+                ClientNameBox.Text = "NutBurger";
             }
             ClientNameBox.OnTextChanged += (textbox, text) =>
             {
@@ -1063,13 +1063,14 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get("ServerEndpoint"), textAlignment: Alignment.Center);
             var endpointBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform));
-
+            endpointBox.Text = "108.51.200.200:27015";
+            
             content.RectTransform.NonScaledSize = new Point(content.Rect.Width, (int)(content.RectTransform.Children.Sum(c => c.Rect.Height)));
             content.RectTransform.IsFixedSize = true;
             msgBox.InnerFrame.RectTransform.MinSize = new Point(0, (int)((content.RectTransform.NonScaledSize.Y + msgBox.Content.RectTransform.Children.Sum(c => c.NonScaledSize.Y + msgBox.Content.AbsoluteSpacing)) * 1.1f));
 
             var okButton = msgBox.Buttons[0];
-            okButton.Enabled = false;
+            okButton.Enabled = true;
             okButton.OnClicked = (btn, userdata) =>
             {
                 JoinServer(endpointBox.Text, "");

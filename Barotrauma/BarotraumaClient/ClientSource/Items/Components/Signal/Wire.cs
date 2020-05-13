@@ -413,7 +413,7 @@ namespace Barotrauma.Items.Components
                                 selectedWire.nodes.RemoveAt(closestIndex);
                                 selectedWire.UpdateSections();
                             } 
-                            // if only one end of the wire is disconnect pick it back up with double click
+                            // if only one end of the wire is disconnected pick it back up with double click
                             else if (doubleClicked && equippedWire == null && Character.Controlled != null && selectedWire.connections.Any(conn => conn != null))
                             {
                                 if (selectedWire.connections[0] == null && closestIndex == 0 || selectedWire.connections[1] == null && closestIndex == selectedWire.nodes.Count - 1)

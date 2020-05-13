@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -21,9 +20,9 @@ namespace Barotrauma
         }
 
         const int MaxFakeFireSources = 10;
-        const float MinFakeFireSourceInterval = 30.0f, MaxFakeFireSourceInterval = 240.0f;
+        private float minFakeFireSourceInterval = 10.0f, maxFakeFireSourceInterval = 200.0f;
         private float createFireSourceTimer;
-        private readonly List<FakeFireSource> fakeFireSources = new List<FakeFireSource>();
+        private List<FakeFireSource> fakeFireSources = new List<FakeFireSource>();
 
         enum FloodType
         {
@@ -32,30 +31,26 @@ namespace Barotrauma
             HideFlooding
         }
 
-        const float MinSoundInterval = 10.0f, MaxSoundInterval = 180.0f;
+        private float minSoundInterval = 10.0f, maxSoundInterval = 60.0f;
         private FloodType currentFloodType;
         private float soundTimer;
 
-        const float MinFloodInterval = 60.0f, MaxFloodInterval = 240.0f;
+        private float minFloodInterval = 30.0f, maxFloodInterval = 180.0f;
         private float createFloodTimer;
         private float currentFloodState;
         private float currentFloodDuration;
-
-        private float fakeBrokenInterval = 30.0f;
-        private float fakeBrokenTimer = 0.0f;
 
         partial void UpdateProjSpecific(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             if (Character.Controlled != characterHealth.Character) return;
             UpdateFloods(deltaTime);
             UpdateSounds(characterHealth.Character, deltaTime);
-            UpdateFires(characterHealth.Character, deltaTime);
-            UpdateFakeBroken(deltaTime);
+            UpdateFires(characterHealth.Character, deltaTime);            
         }
 
         private void UpdateSounds(Character character, float deltaTime)
         {
-            if (soundTimer < MathHelper.Lerp(MaxSoundInterval, MinSoundInterval, Strength / 100.0f))
+            if (soundTimer < MathHelper.Lerp(maxSoundInterval, minSoundInterval, Strength / 100.0f))
             {
                 soundTimer += deltaTime;
                 return;
@@ -102,7 +97,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (createFloodTimer < MathHelper.Lerp(MaxFloodInterval, MinFloodInterval, Strength / 100.0f))
+            if (createFloodTimer < MathHelper.Lerp(maxFloodInterval, minFloodInterval, Strength / 100.0f))
             {
                 createFloodTimer += deltaTime;
                 return;
@@ -129,7 +124,7 @@ namespace Barotrauma
             createFireSourceTimer += deltaTime;
             if (fakeFireSources.Count < MaxFakeFireSources &&
                 character.Submarine != null &&
-                createFireSourceTimer > MathHelper.Lerp(MaxFakeFireSourceInterval, MinFakeFireSourceInterval, Strength / 100.0f))
+                createFireSourceTimer > MathHelper.Lerp(maxFakeFireSourceInterval, minFakeFireSourceInterval, Strength / 100.0f))
             {
                 Hull fireHull = Hull.hullList.GetRandom(h => h.Submarine == character.Submarine);
 
@@ -145,9 +140,9 @@ namespace Barotrauma
 
             foreach (FakeFireSource fakeFireSource in fakeFireSources)
             {
-                if (fakeFireSource.Hull.DrawSurface > fakeFireSource.Hull.Rect.Y - fakeFireSource.Hull.Rect.Height + fakeFireSource.Position.Y)
+                if (fakeFireSource.Hull.Surface > fakeFireSource.Hull.Rect.Y - fakeFireSource.Hull.Rect.Height + fakeFireSource.Position.Y)
                 {
-                    fakeFireSource.LifeTime -= deltaTime * 100.0f;
+                    fakeFireSource.LifeTime -= deltaTime * 10.0f;
                 }
 
                 fakeFireSource.LifeTime -= deltaTime;
@@ -166,29 +161,6 @@ namespace Barotrauma
             }
 
             fakeFireSources.RemoveAll(fs => fs.LifeTime <= 0.0f);
-        }
-
-        private void UpdateFakeBroken(float deltaTime)
-        {
-            fakeBrokenTimer -= deltaTime;
-            if (fakeBrokenTimer > 0.0f) { return; }
-
-            foreach (Item item in Item.ItemList)
-            {
-                var repairable = item.GetComponent<Repairable>();
-                if (repairable == null) { continue; }
-                if (ShouldFakeBrokenItem(item))
-                {
-                    repairable.FakeBrokenTimer = 60.0f;
-                }
-            }
-
-            fakeBrokenTimer = fakeBrokenInterval;
-        }
-
-        private bool ShouldFakeBrokenItem(Item item)
-        {
-            return Rand.Range(0.0f, 1000.0f) < Strength;
         }
     }
 }

@@ -624,7 +624,6 @@ namespace Barotrauma.Items.Components
                     hullRects[1].Height += midHullDiff / 2 + 1;
                 }
 
-
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));

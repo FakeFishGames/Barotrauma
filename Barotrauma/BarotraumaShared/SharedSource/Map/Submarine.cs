@@ -858,7 +858,6 @@ namespace Barotrauma
                 return;
             }
 
-
             subBody.Body.LinearVelocity = new Vector2(
                 LockX ? 0.0f : subBody.Body.LinearVelocity.X,
                 LockY ? 0.0f : subBody.Body.LinearVelocity.Y);

@@ -1604,7 +1604,6 @@ namespace Barotrauma
         private readonly List<Order> contextualOrders = new List<Order>();
         private Point shorcutCenterNodeOffset;
         private const int maxShorcutNodeCount = 4;
-
         private bool WasCommandInterfaceDisabledThisUpdate { get; set; }
         private bool CanIssueOrders
         {
@@ -1786,7 +1785,6 @@ namespace Barotrauma
             shortcutCenterNodeMargin = shortcutCenterNodeSize.X * 0.45f;
             shortcutNodeMargin = shortcutNodeSize.X * 0.5f;
             returnNodeMargin = returnNodeSize.X * 0.5f;
-
             nodeDistance = (int)(150 * GUI.Scale);
             shorcutCenterNodeOffset = new Point(0, (int)(1.25f * nodeDistance));
         }
@@ -1885,7 +1883,6 @@ namespace Barotrauma
                 shortcutNodes.Remove(node);
             };
             RemoveOptionNodes();
-
             if (returnNode != null)
             {
                 returnNode.RemoveChild(returnNode.GetChildByUserData("hotkey"));
@@ -1906,7 +1903,6 @@ namespace Barotrauma
                 commandFrame.RemoveChild(shortcutCenterNode);
                 shortcutCenterNode = null;
             }
-
             CreateNodes(userData);
             CreateReturnNodeHotkey();
             return true;
@@ -2570,7 +2566,6 @@ namespace Barotrauma
                 shortcutNodes.Remove(node);
             };
             RemoveOptionNodes();
-
             if (returnNode != null)
             {
                 returnNode.Children.ForEach(child => child.Visible = false);

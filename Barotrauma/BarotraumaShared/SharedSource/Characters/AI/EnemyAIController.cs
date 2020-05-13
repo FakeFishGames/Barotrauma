@@ -1281,7 +1281,6 @@ namespace Barotrauma
             }
             return isDisabled;
         }
-
         public override void OnAttacked(Character attacker, AttackResult attackResult)
         {
             float reactionTime = Rand.Range(0.1f, 0.3f);

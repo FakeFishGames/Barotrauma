@@ -157,6 +157,7 @@ namespace Barotrauma
                     Vector2.UnitY * 10.0f);
             }
 
+<<<<<<< HEAD
             if ((int)newLevel > (int)prevLevel)
             {
                 GUI.AddMessage(
@@ -164,6 +165,8 @@ namespace Barotrauma
                     new string[3] { Name, TextManager.Get("SkillName." + skillIdentifier), ((int)newLevel).ToString() },
                     new bool[3] { false, true, false }), GUI.Style.Green);
             }
+=======
+>>>>>>> master
         }
 
         partial void LoadAttachmentSprites(bool omitJob)

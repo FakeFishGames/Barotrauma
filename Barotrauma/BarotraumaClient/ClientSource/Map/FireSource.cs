@@ -60,10 +60,10 @@ namespace Barotrauma
                 var particle = GameMain.ParticleManager.CreateParticle("flame",
                     particlePos, particleVel, 0.0f, hull);
 
-                if (particle == null) { continue; }
+                if (particle == null) continue;
 
                 //make some of the particles create another firesource when they enter another hull
-                if (Rand.Int(20) == 1) { particle.OnChangeHull = onChangeHull; }
+                if (Rand.Int(20) == 1) particle.OnChangeHull = onChangeHull;
 
                 particle.Size *= MathHelper.Clamp(size.X / 60.0f * Math.Max(hull.Oxygen / hull.Volume, 0.4f), 0.5f, 1.0f);
 

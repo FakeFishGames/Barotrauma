@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.IO;
 using System.Linq;
 
 namespace Barotrauma.Networking

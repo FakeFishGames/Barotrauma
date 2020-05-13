@@ -9,29 +9,10 @@ namespace Barotrauma
 
         int currentIndex;
 
-        private float? totalLength;
-
         public bool Unreachable
         {
             get;
             set;
-        }
-
-        public float TotalLength
-        {
-            get
-            {
-                if (Unreachable) { return float.PositiveInfinity; }
-                if (!totalLength.HasValue)
-                {
-                    totalLength = 0.0f;
-                    for (int i = 0; i < nodes.Count - 1; i++)
-                    {
-                        totalLength += Vector2.Distance(nodes[i].WorldPosition, nodes[i + 1].WorldPosition);
-                    }
-                }
-                return totalLength.Value;
-            }
         }
 
         public SteeringPath(bool unreachable = false)
@@ -42,10 +23,10 @@ namespace Barotrauma
 
         public void AddNode(WayPoint node)
         {
-            if (node == null) { return; }
+            if (node == null) return;
             nodes.Add(node);
 
-            if (node.CurrentHull == null) { HasOutdoorsNodes = true; }
+            if (node.CurrentHull == null) HasOutdoorsNodes = true;
         }
         
         public bool HasOutdoorsNodes
@@ -67,10 +48,10 @@ namespace Barotrauma
 
         public WayPoint PrevNode
         {
-            get
+            get 
             {
-                if (currentIndex - 1 < 0 || currentIndex - 1 > nodes.Count - 1) { return null; }
-                return nodes[currentIndex - 1];
+                if (currentIndex-1 < 0 || currentIndex-1 > nodes.Count - 1) return null;
+                return nodes[currentIndex-1]; 
             }
         }
 
@@ -78,7 +59,7 @@ namespace Barotrauma
         {
             get 
             {
-                if (currentIndex < 0 || currentIndex > nodes.Count - 1) { return null; }
+                if (currentIndex < 0 || currentIndex > nodes.Count - 1) return null;
                 return nodes[currentIndex]; 
             }
         }
@@ -92,7 +73,7 @@ namespace Barotrauma
         {
             get
             {
-                if (currentIndex + 1 < 0 || currentIndex + 1 > nodes.Count - 1) { return null; }
+                if (currentIndex+1 < 0 || currentIndex+1 > nodes.Count - 1) return null;
                 return nodes[currentIndex+1];
             }
         }
@@ -109,8 +90,8 @@ namespace Barotrauma
 
         public WayPoint CheckProgress(Vector2 simPosition, float minSimDistance = 0.1f)
         {
-            if (nodes.Count == 0 || currentIndex > nodes.Count - 1) { return null; }
-            if (Vector2.Distance(simPosition, nodes[currentIndex].SimPosition) < minSimDistance) { currentIndex++; }
+            if (nodes.Count == 0 || currentIndex>nodes.Count-1) return null;
+            if (Vector2.Distance(simPosition, nodes[currentIndex].SimPosition) < minSimDistance) currentIndex++;
 
             return CurrentNode;
         }

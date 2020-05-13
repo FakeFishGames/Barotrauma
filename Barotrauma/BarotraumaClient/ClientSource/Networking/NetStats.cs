@@ -49,6 +49,10 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i < 3; i++)
             {
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
                 graphs[i].Update(totalValue[i] / UpdateInterval);
                 totalValue[i] = 0.0f;
             }

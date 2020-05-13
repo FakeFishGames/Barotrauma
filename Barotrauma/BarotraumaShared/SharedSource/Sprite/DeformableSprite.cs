@@ -18,12 +18,12 @@ namespace Barotrauma
 
         public Sprite Sprite { get; private set; }
 
-        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "", bool lazyLoad = false, bool invert = false)
+        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "", bool lazyLoad = false)
         {
             Sprite = new Sprite(element, file: filePath, lazyLoad: lazyLoad);
-            InitProjSpecific(element, subdivisionsX, subdivisionsY, lazyLoad, invert);
+            InitProjSpecific(element, subdivisionsX, subdivisionsY, lazyLoad);
         }
 
-        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad, bool invert);
+        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad = false);
     }
 }

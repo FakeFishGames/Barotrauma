@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 
 namespace Barotrauma
 {
@@ -20,7 +19,7 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in afflictions)
                 {
-                    if (!affliction.Prefab.IsBuff || affliction == this || affliction.MultiplierSource != this) { continue; }
+                    if (!affliction.Prefab.IsBuff || affliction == this || affliction.MultiplierSource != this) continue;
                     affliction.MultiplierSource = null;
                     affliction.StrengthDiminishMultiplier = 1f;
                 }
@@ -29,9 +28,9 @@ namespace Barotrauma
             {
                 foreach (Affliction affliction in afflictions)
                 {
-                    if (!affliction.Prefab.IsBuff || affliction == this) { continue; }
+                    if (!affliction.Prefab.IsBuff || affliction == this || affliction.MultiplierSource == this) continue;
                     float multiplier = GetDiminishMultiplier();
-                    if (affliction.StrengthDiminishMultiplier < multiplier && affliction.MultiplierSource != this) { continue; }
+                    if (affliction.StrengthDiminishMultiplier < multiplier) continue;
 
                     affliction.MultiplierSource = this;
                     affliction.StrengthDiminishMultiplier = multiplier;
@@ -41,15 +40,14 @@ namespace Barotrauma
 
         private float GetDiminishMultiplier()
         {
-            if (Strength < Prefab.ActivationThreshold) { return 1.0f; }
+            if (Strength < Prefab.ActivationThreshold) return 1.0f;
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) { return 1.0f; }
+            if (currentEffect == null) return 1.0f;
 
-            float multiplier = MathHelper.Lerp(
+            return MathHelper.Lerp(
                 currentEffect.MinBuffMultiplier,
                 currentEffect.MaxBuffMultiplier,
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
-            return 1.0f / Math.Max(multiplier, 0.001f);
         }
     }
 }

@@ -212,11 +212,11 @@ namespace Barotrauma
                 CodeWords = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 CodeResponse = ToolBox.GetRandomLine(wordsTxt) + ", " + ToolBox.GetRandomLine(wordsTxt);
                 
-                if (pendingObjectives.Count <= 0 || !pendingObjectives[0].CanBeStarted(Traitors.Values))
+                /**if (pendingObjectives.Count <= 0 || !pendingObjectives[0].CanBeStarted(Traitors.Values))
                 {
                     Traitors.Clear();
                     return false;
-                }
+                }**/
 
                 var pendingMessages = new Dictionary<Traitor, List<string>>();
                 pendingMessages.Clear();
@@ -235,7 +235,7 @@ namespace Barotrauma
 #if SERVER
                 foreach (var traitor in Traitors.Values)
                 {
-                    GameServer.Log($"{GameServer.CharacterLogName(traitor.Character)} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}", ServerLog.MessageType.ServerMessage);
+                    GameServer.Log($"{GameServer.CharacterLogName(traitor.Character)} is a traitor and the current goals are:\n{(traitor.CurrentObjective?.GoalInfos != null ? TextManager.GetServerMessage(traitor.CurrentObjective?.GoalInfos) : "(empty)")}, and codewords are:{CodeWords} and {CodeResponse}", ServerLog.MessageType.ServerMessage);
                 }
 #endif
                 return true;
@@ -249,13 +249,13 @@ namespace Barotrauma
                 {
                     return;
                 }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
+                /**if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
                     pendingObjectives.Clear();
                     Traitors.Clear();
                     return;
-                }
+                }**/
                 var startedObjectives = new List<Objective>();
                 foreach (var traitor in Traitors.Values)
                 {
@@ -308,7 +308,7 @@ namespace Barotrauma
                     {
                         SteamAchievementManager.OnTraitorWin(traitor.Value.Character);
                     }
-                    winHandler();
+                    //winHandler();
                 }
             }
 

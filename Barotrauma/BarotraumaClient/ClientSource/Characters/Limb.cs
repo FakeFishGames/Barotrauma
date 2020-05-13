@@ -70,6 +70,10 @@ namespace Barotrauma
                     }
                 }
             }
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -469,7 +473,6 @@ namespace Barotrauma
                         if (afflictionPrefab.Effects.Any(e => e.MaxVitalityDecrease > 0))
                         {
                             damageMultiplier *= damageModifier.DamageMultiplier;
-                            break;
                         }
                     }
                 }

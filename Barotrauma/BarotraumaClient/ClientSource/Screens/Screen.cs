@@ -14,11 +14,10 @@ namespace Barotrauma
             {
                 if (frame == null)
                 {
-                    frame = new GUIFrame(new RectTransform(GUICanvas.Instance.RelativeSize, GUICanvas.Instance), style: null)
+                    frame = new GUIFrame(new RectTransform(Vector2.One, GUICanvas.Instance), style: null)
                     {
                         CanBeFocused = false
                     };
-
                 }
                 return frame;
             }

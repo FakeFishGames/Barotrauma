@@ -23,7 +23,6 @@ namespace Barotrauma.Items.Components
         private float prevVoltage;
 
         private float controlLockTimer;
-
         [Editable(0.0f, 10000000.0f), 
         Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
