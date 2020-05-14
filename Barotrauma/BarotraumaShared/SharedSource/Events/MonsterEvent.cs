@@ -118,7 +118,7 @@ namespace Barotrauma
 
         private List<Level.InterestingPosition> GetAvailableSpawnPositions()
         {
-            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType) && !Level.Loaded.UsedPositions.Contains(p));
+            var availablePositions = Level.Loaded.PositionsOfInterest.FindAll(p => spawnPosType.HasFlag(p.PositionType));
             var removals = new List<Level.InterestingPosition>();
             foreach (var position in availablePositions)
             {

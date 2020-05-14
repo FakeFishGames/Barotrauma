@@ -26,19 +26,17 @@ namespace Barotrauma
         private int deformArrayWidth, deformArrayHeight;
 
         private int subDivX, subDivY;
-        
+
         private static Effect effect;
         public static Effect Effect
         {
             get { return effect; }
         }
 
-        public bool Invert { get; set; }
-
         private Point spritePos;
         private Point spriteSize;
 
-        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad, bool invert)
+        partial void InitProjSpecific(XElement element, int? subdivisionsX, int? subdivisionsY, bool lazyLoad)
         {
             if (effect == null)
             {
@@ -50,8 +48,6 @@ namespace Barotrauma
 #endif
             }
 
-            Invert = invert;
-            
             //use subdivisions configured in the xml if the arguments passed to the method are null
             Vector2 subdivisionsInXml = element.GetAttributeVector2("subdivisions", Vector2.One);
             subDivX = subdivisionsX ?? (int)subdivisionsInXml.X;
@@ -66,7 +62,7 @@ namespace Barotrauma
             {
                 Init();
             }
-            
+
             list.Add(this);
         }
 
@@ -85,9 +81,9 @@ namespace Barotrauma
                 if (!existing.initialized || existing == this) { continue; }
                 //share vertex and index buffers if there's already 
                 //an existing sprite with the same texture and subdivisions
-                if (existing.Sprite.Texture == Sprite.Texture && 
-                    existing.subDivX == subDivX && 
-                    existing.subDivY == subDivY && 
+                if (existing.Sprite.Texture == Sprite.Texture &&
+                    existing.subDivX == subDivX &&
+                    existing.subDivY == subDivY &&
                     existing.Sprite.SourceRect == Sprite.SourceRect)
                 {
                     vertexBuffer = existing.vertexBuffer;
@@ -98,7 +94,7 @@ namespace Barotrauma
                     uvBottomRight = existing.uvBottomRight;
                     uvTopLeftFlipped = existing.uvTopLeftFlipped;
                     uvBottomRightFlipped = existing.uvBottomRightFlipped;
-                    
+
                     Deform(new Vector2[,]
                     {
                         { Vector2.Zero, Vector2.Zero },
@@ -125,17 +121,11 @@ namespace Barotrauma
             uvBottomRight = Vector2.Divide((pos + size).ToVector2(), textureSize);
             uvTopLeftFlipped = Vector2.Divide(new Vector2(pos.X + size.X, pos.Y), textureSize);
             uvBottomRightFlipped = Vector2.Divide(new Vector2(pos.X, pos.Y + size.Y), textureSize);
-            if (Invert)
-            {
-                var temp = uvBottomRightFlipped;
-                uvBottomRightFlipped = uvTopLeftFlipped;
-                uvTopLeftFlipped = temp;
-            }
 
             for (int i = 0; i < 2; i++)
             {
                 bool flip = i == 1;
-            
+
                 var vertices = new VertexPositionColorTexture[(subDivX + 1) * (subDivY + 1)];
                 for (int x = 0; x <= subDivX; x++)
                 {
@@ -182,7 +172,7 @@ namespace Barotrauma
                     vertexBuffer.SetData(vertices);
                 }
             }
-            
+
             spritePos = Sprite.SourceRect.Location;
             spriteSize = Sprite.SourceRect.Size;
         }
@@ -270,14 +260,14 @@ namespace Barotrauma
         {
             if (!initialized) { Init(); }
 
-            return  
+            return
                 Matrix.CreateTranslation(-origin.X, -origin.Y, 0) *
                 Matrix.CreateScale(scale.X, -scale.Y, 1.0f) *
                 Matrix.CreateRotationZ(-rotate) *
                 Matrix.CreateTranslation(pos);
         }
 
-        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool mirror = false, bool invert = false)
+        public void Draw(Camera cam, Vector3 pos, Vector2 origin, float rotate, Vector2 scale, Color color, bool flip = false, bool mirror = false)
         {
             if (Sprite.Texture == null) { return; }
             if (!initialized) { Init(); }
@@ -301,13 +291,13 @@ namespace Barotrauma
             effect.Parameters["deformArray"].SetValue(deformAmount);
             effect.Parameters["deformArrayWidth"].SetValue(deformArrayWidth);
             effect.Parameters["deformArrayHeight"].SetValue(deformArrayHeight);
-            if (invert)
+            if (mirror)
             {
-                mirror = !mirror;
+                flip = !flip;
             }
-            effect.Parameters["uvTopLeft"].SetValue(mirror ? uvTopLeftFlipped : uvTopLeft);
-            effect.Parameters["uvBottomRight"].SetValue(mirror ? uvBottomRightFlipped : uvBottomRight);
-            effect.GraphicsDevice.SetVertexBuffer(mirror ? flippedVertexBuffer : vertexBuffer);
+            effect.Parameters["uvTopLeft"].SetValue(flip ? uvTopLeftFlipped : uvTopLeft);
+            effect.Parameters["uvBottomRight"].SetValue(flip ? uvBottomRightFlipped : uvBottomRight);
+            effect.GraphicsDevice.SetVertexBuffer(flip ? flippedVertexBuffer : vertexBuffer);
             effect.GraphicsDevice.Indices = indexBuffer;
             effect.CurrentTechnique.Passes[0].Apply();
             effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, triangleCount);
@@ -333,7 +323,7 @@ namespace Barotrauma
             indexBuffer?.Dispose();
             indexBuffer = null;
         }
-        
+
         #region Editing
 
         public GUIComponent CreateEditor(GUIComponent parent, List<SpriteDeformation> deformations, string parentDebugName)
@@ -347,7 +337,7 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Point(container.Rect.Width, (int)(60 * GUI.Scale)), container.RectTransform) { IsFixedSize = true },
                 "Sprite Deformations", textAlignment: Alignment.BottomCenter, font: GUI.LargeFont);
 
-            var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), (int)(30 * GUI.Scale), "Resolution", container.RectTransform, 
+            var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), (int)(30 * GUI.Scale), "Resolution", container.RectTransform,
                 "How many vertices the deformable sprite has on the x and y axes. Larger values make the deformations look smoother, but are more performance intensive.");
             resolutionField.RectTransform.IsFixedSize = true;
             GUINumberInput xField = null, yField = null;

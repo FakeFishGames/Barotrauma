@@ -12,7 +12,12 @@ namespace Barotrauma
         public readonly string MusicType;
         public readonly float SpawnProbability;
         public float Commonness;
-
+        public ScriptedEventPrefab(Type eventType, string musicType, float spawnProbability)
+        {
+            EventType = eventType;
+            MusicType = musicType;
+            SpawnProbability = spawnProbability;
+        }
         public ScriptedEventPrefab(XElement element)
         {
             ConfigElement = element;

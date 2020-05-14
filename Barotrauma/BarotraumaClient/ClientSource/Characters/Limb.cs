@@ -70,10 +70,6 @@ namespace Barotrauma
                     }
                 }
             }
-<<<<<<< HEAD
-=======
-
->>>>>>> master
         }
 
         public void Draw(SpriteBatch spriteBatch)

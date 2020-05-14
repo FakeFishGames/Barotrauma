@@ -422,11 +422,7 @@ namespace Barotrauma.Networking
             }
 
             if (string.IsNullOrEmpty(fileName) ||
-<<<<<<< HEAD
                 fileName.IndexOfAny(Path.GetInvalidFileNameChars().ToArray()) > -1)
-=======
-                fileName.IndexOfAny(Path.GetInvalidFileNameChars()) > -1)
->>>>>>> master
             {
                 errorMessage = "Illegal characters in file name ''" + fileName + "''";
                 return false;
@@ -459,11 +455,7 @@ namespace Barotrauma.Networking
             switch (fileTransfer.FileType)
             {
                 case FileTransferType.Submarine:
-<<<<<<< HEAD
                     System.IO.Stream stream;
-=======
-                    Stream stream;
->>>>>>> master
                     try
                     {
                         stream = SaveUtil.DecompressFiletoStream(fileTransfer.FilePath);

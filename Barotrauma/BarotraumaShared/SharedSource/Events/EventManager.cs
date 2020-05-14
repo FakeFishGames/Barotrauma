@@ -43,7 +43,6 @@ namespace Barotrauma
 
         private float wanderCooldown;
 
-        private float intensityUpdateTimer;
 
         private float avgCrewHealth, avgHullIntegrity, floodingAmount, fireAmount, enemyDanger;
 
@@ -633,7 +632,7 @@ namespace Barotrauma
 #if CLIENT
             if (Character.Controlled != null)
             {
-                if (Character.Controlled.Submarine != null && 
+                if (Character.Controlled.Submarine != null &&
                     Character.Controlled.Submarine.Info.Type == SubmarineInfo.SubmarineType.Player)
                 {
                     refEntity = Character.Controlled.Submarine;
@@ -661,6 +660,9 @@ namespace Barotrauma
             }
 #endif
             return refEntity;
+
+        }
+
         private void SummonWanderingMonsters(float deltaTime)
         {
             String errMsg = "";
@@ -676,10 +678,10 @@ namespace Barotrauma
 
             //always spawn wandering trash mobsa
             randNum = randGen.Next(0, randWanderMonster.Count); //which monsters spawns
-            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(Type.GetType("Barotrauma.WanderingMonsterEvent"), "monster", 1, false); //CxTODO, check this
+            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(Type.GetType("Barotrauma.WanderingMonsterEvent"), "monster", 1); //CxTODO, check this
             WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, randWanderMonster[randNum], 1, 0, 2, "mainpath", false);
             activeEvents.Add(wanderingMonsterEvent);
-            DebugConsole.NewMessage("Spawning wandering monsters (Index, MajorChance) " + randNum + " " + majorRand);
+            DebugConsole.NewMessage("Spawning wandering monsters (Challenge Scale, MajorChance) " + challengeScale + " " + majorRand);
             if (errMsg != "")
             {
                 DebugConsole.NewMessage("Spawn Error: " + errMsg);
@@ -692,7 +694,7 @@ namespace Barotrauma
             String errMsg = "";
             int randNum = randGen.Next(0, randMonster.Count);
             DebugConsole.NewMessage("Spawning ENDGAME MOBS");
-            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
+            ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
             WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, randWanderMonster[randNum], 1, 0, 2, "mainpath", false);
             activeEvents.Add(wanderingMonsterEvent);
             if (errMsg != "")
@@ -703,13 +705,13 @@ namespace Barotrauma
 
         private String SummonMajorMonsters(String errMsg)
         {
-            int randNum = randGen.Next(0, 3); //which monsterset spawns
+            int randNum = randGen.Next(0, 4); //which monsterset spawns
             if (randNum == 0)
             {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
+                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
                 WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "hammerhead", 1, 1, 2, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
-                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
+                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
                 wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "hammerheadmatriarch", 1, 1, 1, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
 
@@ -717,24 +719,32 @@ namespace Barotrauma
             }
             else if (randNum == 1)
             {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
+                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
                 WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "moloch", 1, 1, 1, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
-
+                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
+                wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "molochbaby", 1, 2, 4, "mainpath", false);
+                activeEvents.Add(wanderingMonsterEvent);
             }
             else if (randNum == 2)
             {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "bonethresher", 1, 1, 2, "mainpath", false);
+                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
+                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "bonethresher", 1, 1, 3, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
-                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
-                wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "tigerthresher", 1, 2, 5, "mainpath", false);
+                wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
+                wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "tigerthresher", 1, 3, 6, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
             }
             else if (randNum == 3)
             {
-                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1, false); //fill in parameters
+                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
                 WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "charybdis", 1, 1, 1, "mainpath", false);
+                activeEvents.Add(wanderingMonsterEvent);
+            }
+            else if (randNum == 4)
+            {
+                ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
+                WanderingMonsterEvent wanderingMonsterEvent = new WanderingMonsterEvent(wanderingEventSet, "molochblack", 1, 1, 1, "mainpath", false);
                 activeEvents.Add(wanderingMonsterEvent);
             }
             return errMsg;

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
         {
             get { return RoundSound.Volume; }
         }
-        
+
         public float Range
         {
             get { return RoundSound.Range; }
@@ -239,7 +239,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (loopingSoundChannel != null)
                     {
-                        loopingSoundChannel.FadeOutAndDispose(); 
+                        loopingSoundChannel.FadeOutAndDispose();
                         loopingSoundChannel = null;
                         loopingSound = null;
                     }
@@ -255,7 +255,7 @@ namespace Barotrauma.Items.Components
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
-                        new Vector3(item.WorldPosition, 0.0f), 
+                        new Vector3(item.WorldPosition, 0.0f),
                         0.01f,
                         SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
@@ -316,7 +316,7 @@ namespace Barotrauma.Items.Components
                     if (volume <= 0.0001f) { return; }
                     loopingSound = itemSound;
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
-                        new Vector3(position.X, position.Y, 0.0f), 
+                        new Vector3(position.X, position.Y, 0.0f),
                         0.01f,
                         muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
@@ -381,7 +381,7 @@ namespace Barotrauma.Items.Components
 
             return 0.0f;
         }
-        
+
         public virtual bool ShouldDrawHUD(Character character)
         {
             return true;
@@ -436,7 +436,8 @@ namespace Barotrauma.Items.Components
                     if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
                     string style = subElement.Attribute("style") == null ?
                         null : subElement.GetAttributeString("style", "");
-                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas.ItemComponentHolder, Anchor.Center), style, color);
+
+                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas, Anchor.Center), style, color);
                     DefaultLayout = GUILayoutSettings.Load(subElement);
                     break;
                 case "alternativelayout":
@@ -469,7 +470,7 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Invalid sound type in " + subElement + "!", e);
                         break;
                     }
-                    
+
                     RoundSound sound = Submarine.LoadRoundSound(subElement);
                     if (sound == null) { break; }
                     ItemSound itemSound = new ItemSound(sound, type, subElement.GetAttributeBool("loop", false))
@@ -511,7 +512,7 @@ namespace Barotrauma.Items.Components
 
         private IEnumerable<object> DoDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync)
         {
-            while (GameMain.Client != null && 
+            while (GameMain.Client != null &&
                 (correctionTimer > 0.0f || (waitForMidRoundSync && GameMain.Client.MidRoundSyncing)))
             {
                 correctionTimer -= CoroutineManager.DeltaTime;

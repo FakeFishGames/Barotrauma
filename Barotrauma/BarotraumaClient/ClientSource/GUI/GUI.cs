@@ -306,41 +306,41 @@ namespace Barotrauma
             }
 
 #if UNSTABLE
-            string line1 = "Barotrauma Unstable v" + GameMain.Version;
-            string line2 = "(" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
+            // string line1 = "Barotrauma Unstable v" + GameMain.Version;
+            // string line2 = "(" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
 
-            Rectangle watermarkRect = new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100);
-            float alpha = 1.0f;
+            // Rectangle watermarkRect = new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100);
+            // float alpha = 1.0f;
 
-            int yOffset = 0;
+            // int yOffset = 0;
 
-            if (Screen.Selected == GameMain.GameScreen)
-            {
-                yOffset = -HUDLayoutSettings.ChatBoxArea.Height;
-                watermarkRect.Y += yOffset;
-            }
+            // if (Screen.Selected == GameMain.GameScreen)
+            // {
+            //     yOffset = -HUDLayoutSettings.ChatBoxArea.Height;
+            //     watermarkRect.Y += yOffset;
+            // }
 
-            if (Screen.Selected == GameMain.GameScreen || Screen.Selected == GameMain.SubEditorScreen)
-            {
-                alpha = 0.2f;
-            }
+            // if (Screen.Selected == GameMain.GameScreen || Screen.Selected == GameMain.SubEditorScreen)
+            // {
+            //     alpha = 0.2f;
+            // }
 
-            Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                spriteBatch, watermarkRect, Color.Black * 0.8f * alpha);
-            LargeFont.DrawString(spriteBatch, line1,
-                new Vector2(10, GameMain.GraphicsHeight - 30 - LargeFont.MeasureString(line1).Y + yOffset), Color.White * 0.6f * alpha);
-            Font.DrawString(spriteBatch, line2,
-                new Vector2(10, GameMain.GraphicsHeight - 30 + yOffset), Color.White * 0.6f * alpha);
+            // Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
+            //     spriteBatch, watermarkRect, Color.Black * 0.8f * alpha);
+            // LargeFont.DrawString(spriteBatch, line1,
+            //     new Vector2(10, GameMain.GraphicsHeight - 30 - LargeFont.MeasureString(line1).Y + yOffset), Color.White * 0.6f * alpha);
+            // Font.DrawString(spriteBatch, line2,
+            //     new Vector2(10, GameMain.GraphicsHeight - 30 + yOffset), Color.White * 0.6f * alpha);
 
-            if (Screen.Selected != GameMain.GameScreen)
-            {
-                var buttonRect =
-                    new Rectangle(20 + (int)Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X), GameMain.GraphicsHeight - (int)(45 * Scale) + yOffset, (int)(150 * Scale), (int)(40 * Scale));
-                if (DrawButton(spriteBatch, buttonRect, "Report Bug", Style.GetComponentStyle("GUIBugButton").Color * 0.8f))
-                {
-                    GameMain.Instance.ShowBugReporter();
-                }
-            }
+            // if (Screen.Selected != GameMain.GameScreen)
+            // {
+            //     var buttonRect =
+            //         new Rectangle(20 + (int)Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X), GameMain.GraphicsHeight - (int)(45 * Scale) + yOffset, (int)(150 * Scale), (int)(40 * Scale));
+            //     if (DrawButton(spriteBatch, buttonRect, "Report Bug", Style.GetComponentStyle("GUIBugButton").Color * 0.8f))
+            //     {
+            //         GameMain.Instance.ShowBugReporter();
+            //     }
+            // }
 #endif
 
             if (DisableHUD) { return; }
@@ -538,7 +538,6 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
                     yPos += (int)anchorPivotStringSize.Y + padding / 2;
                 }
-<<<<<<< HEAD
                 else
                 {
                     string guiScaleString = $"GUI.Scale: {Scale}";
@@ -570,8 +569,6 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
                     yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
                 }
-=======
->>>>>>> master
             }
 
             if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
@@ -1968,14 +1965,9 @@ namespace Barotrauma
                 Inventory.draggingItem = null;
                 Inventory.DraggingInventory = null;
 
-<<<<<<< HEAD
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas, Anchor.Center), style: null);
                 new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, PauseMenu.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
-=======
-                PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
-                    
->>>>>>> master
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(250, 300) });
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.6f), pauseMenuInner.RectTransform, Anchor.Center))
