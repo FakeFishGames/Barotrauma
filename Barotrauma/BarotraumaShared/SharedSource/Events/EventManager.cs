@@ -668,7 +668,7 @@ namespace Barotrauma
             String errMsg = "";
             int randNum = 0;
             float majorRand = (float)randGen.NextDouble();
-            if (majorRand > (challengeScale))
+            if (majorRand < (challengeScale))
             {
                 DebugConsole.NewMessage("Spawning Major Monsters!");
                 errMsg = SummonMajorMonsters(errMsg);
@@ -705,7 +705,7 @@ namespace Barotrauma
 
         private String SummonMajorMonsters(String errMsg)
         {
-            int randNum = randGen.Next(0, 4); //which monsterset spawns
+            int randNum = randGen.Next(0, 5); //which monsterset spawns
             if (randNum == 0)
             {
                 ScriptedEventPrefab wanderingEventSet = new ScriptedEventPrefab(null, "monster", 1); //fill in parameters
