@@ -28,7 +28,6 @@ namespace Barotrauma
             public bool IsCompleted => pendingObjectives.Count <= 0;
 
             public readonly Dictionary<string, Traitor> Traitors = new Dictionary<string, Traitor>();
-
             public delegate bool RoleFilter(Character character);
             public readonly Dictionary<string, RoleFilter> Roles = new Dictionary<string, RoleFilter>();
 

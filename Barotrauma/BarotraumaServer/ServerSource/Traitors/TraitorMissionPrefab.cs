@@ -10,6 +10,7 @@ namespace Barotrauma
 {
     class TraitorMissionPrefab
     {
+        private Random randGen;
         public class TraitorMissionEntry
         {
             public readonly TraitorMissionPrefab Prefab;
@@ -594,32 +595,49 @@ namespace Barotrauma
                             checker.Required("id");
                             checker.Optional("jobs");
                             traitorSettings settings = new traitorSettings();
-                            if (settings.useRatio == true)
+                            DebugConsole.NewMessage("Help!");
+                            DebugConsole.NewMessage(settings.traitorSelectMode);
+                            DebugConsole.NewMessage("Help!");
+                            if (settings.traitorSelectMode.Equals("ratio"))
                             {
-                                DebugConsole.Log("using traitor ratio");
-                                DebugConsole.Log("using set traitor number: " + settings.traitorCount);
+                                DebugConsole.NewMessage("NOT IMPLEMENTED: using set traitor number: " + settings.traitorStaticNumber);
                                 Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorCount - 1;
+                                int count = settings.traitorStaticNumber - 1;
                                 while (count > 0)
                                 {
-                                    DebugConsole.Log("Added additional traitor");
+                                    DebugConsole.NewMessage("Added additional traitor");
                                     Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
                                     count--;
                                 }
                             }
-                            else
+                            else if (settings.traitorSelectMode.Equals("static"))
                             {
-                                DebugConsole.Log("using set traitor number: " + settings.traitorCount);
+                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
                                 Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorCount - 1;
+                                int count = settings.traitorStaticNumber - 1;
                                 while (count>0)
                                 {
-                                    DebugConsole.Log("Added additional traitor");
+                                    DebugConsole.NewMessage("Added additional traitor");
                                     Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
                                     count--;
                                 }
                             }
-                            
+                            else if (settings.traitorSelectMode.Equals("random"))
+                            {
+                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorRandomMin);
+                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                int count = settings.traitorRandomMin - 1;
+                                while (count > 0)
+                                {
+                                    DebugConsole.NewMessage("Added additional traitor");
+                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                    count--;
+                                }
+                                if(randGen.NextDouble() < settings.traitorRandomFactor)
+                                {
+                                    Roles.Add(element.GetAttributeString("id", null) + settings.traitorRandomMin, LoadRole(element));
+                                }
+                            }
                             break;
                     }
                 }
