@@ -13,6 +13,9 @@ namespace Barotrauma
         private readonly int minAmount, maxAmount;
         private List<Character> monsters;
 
+        private readonly float scatter;
+        private readonly float offset;
+
         private readonly bool spawnDeep;
 
         private Vector2? spawnPos;
@@ -32,15 +35,15 @@ namespace Barotrauma
         {
             if (maxAmount <= 1)
             {
-                return "WanderingMonsterEvent (" + speciesName + ")";
+                return "MonsterEvent (" + speciesName + ")";
             }
             else if (minAmount < maxAmount)
             {
-                return "WanderingMonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
+                return "MonsterEvent (" + speciesName + " x" + minAmount + "-" + maxAmount + ")";
             }
             else
             {
-                return "WanderingMonsterEvent (" + speciesName + " x" + maxAmount + ")";
+                return "MonsterEvent (" + speciesName + " x" + maxAmount + ")";
             }
         }
 
@@ -62,6 +65,9 @@ namespace Barotrauma
             int defaultAmount = amount;
             minAmount = minAmountIn;
             maxAmount = Math.Max(maxAmountIn, minAmount);
+
+            offset = 0;//Cx change needs looked at
+            scatter = 1000;//CX change needs looked at
 
             String spawnPosTypeStr = spawnTypeStr;
 
@@ -152,7 +158,7 @@ namespace Barotrauma
                     removals.Add(position);
                 }
             }
-            removals.ForEach(r => availablePositions.Remove(r));         
+            removals.ForEach(r => availablePositions.Remove(r));
             return availablePositions;
         }
 
@@ -234,11 +240,33 @@ namespace Barotrauma
                 if (chosenPosition.Submarine != null || chosenPosition.Ruin != null)
                 {
                     var spawnPoint = WayPoint.GetRandom(SpawnType.Enemy, sub: chosenPosition.Submarine, ruin: chosenPosition.Ruin, useSyncedRand: false);
-                    if (spawnPoint != null) 
+                    if (spawnPoint != null)
                     {
                         System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
                         System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
-                        spawnPos = spawnPoint.WorldPosition; 
+                        spawnPos = spawnPoint.WorldPosition;
+                    }
+                }
+                else if (chosenPosition.PositionType == Level.PositionType.MainPath && offset > 0)
+                {
+                    Vector2 dir;
+                    var waypoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == null);
+                    var nearestWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, spawnPos.Value)).FirstOrDefault();
+                    if (nearestWaypoint != null)
+                    {
+                        int currentIndex = waypoints.IndexOf(nearestWaypoint);
+                        var nextWaypoint = waypoints[Math.Min(currentIndex + 20, waypoints.Count - 1)];
+                        dir = Vector2.Normalize(nextWaypoint.WorldPosition - nearestWaypoint.WorldPosition);
+                    }
+                    else
+                    {
+                        dir = new Vector2(1, Rand.Range(-1, 1));
+                    }
+                    Vector2 targetPos = spawnPos.Value + dir * offset;
+                    var targetWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, targetPos)).FirstOrDefault();
+                    if (targetWaypoint != null)
+                    {
+                        spawnPos = targetWaypoint.WorldPosition;
                     }
                 }
                 spawnPending = true;
@@ -296,7 +324,6 @@ namespace Barotrauma
                         }
                     }
                     if (!someoneNearby) { return; }
-                    DebugConsole.NewMessage("Spawn in Alien Ruin");
                 }
                 else
                 {
@@ -314,16 +341,32 @@ namespace Barotrauma
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1);
                 monsters = new List<Character>();
-                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
+                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? scatter : 100;
                 for (int i = 0; i < amount; i++)
                 {
                     CoroutineManager.InvokeAfter(() =>
                     {
                         //round ended before the coroutine finished
                         if (GameMain.GameSession == null || Level.Loaded == null) { return; }
-						
+
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
-                        monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));
+
+                        Vector2 pos = spawnPos.Value + Rand.Vector(offsetAmount);
+                        if (spawnPosType == Level.PositionType.MainPath)
+                        {
+                            if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
+                            {
+                                // Can't use the offset position, let's use the exact spawn position.
+                                pos = spawnPos.Value;
+                            }
+                            else if (Level.Loaded.Ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).ContainsWorld(pos)))
+                            {
+                                // Can't use the offset position, let's use the exact spawn position.
+                                pos = spawnPos.Value;
+                            }
+                        }
+
+                        monsters.Add(Character.Create(speciesName, pos, Level.Loaded.Seed + i.ToString(), null, false, true, true));
 
                         if (monsters.Count == amount)
                         {
@@ -342,7 +385,7 @@ namespace Barotrauma
 #if CLIENT
             if (Character.Controlled != null) { targetEntity = Character.Controlled; }
 #endif
-            
+
             bool monstersDead = true;
             foreach (Character monster in monsters)
             {
