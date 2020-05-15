@@ -61,7 +61,7 @@ namespace Barotrauma
                 {
                     case "shutdown":
                         var powered = component?.Item.GetComponent<Powered>();
-                        if (powered != null && powered.IsActive)
+                        if (powered != null && !powered.IsActive)
                         {
                             Priority = 0;
                             return Priority;

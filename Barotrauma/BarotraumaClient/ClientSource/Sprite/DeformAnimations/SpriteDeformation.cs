@@ -195,11 +195,12 @@ namespace Barotrauma.SpriteDeformations
             Deformation = new Vector2[Params.Resolution.X, Params.Resolution.Y];
         }
 
-        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier);
+        protected abstract void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse);
 
         public abstract void Update(float deltaTime);
 
-        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale)
+        private static readonly List<int> yValues = new List<int>();
+        public static Vector2[,] GetDeformation(IEnumerable<SpriteDeformation> animations, Vector2 scale, bool inverseY = false)
         {
             foreach (SpriteDeformation animation in animations)
             {
@@ -221,8 +222,16 @@ namespace Barotrauma.SpriteDeformations
             Vector2[,] deformation = new Vector2[resolution.X, resolution.Y];
             foreach (SpriteDeformation animation in animations)
             {
-                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier);
-
+                yValues.Clear();
+                for (int y = 0; y < resolution.Y; y++)
+                {
+                    yValues.Add(y);
+                }
+                if (inverseY && animation is CustomDeformation)
+                {
+                    yValues.Reverse();
+                }
+                animation.GetDeformation(out Vector2[,] animDeformation, out float multiplier, inverseY);
                 for (int x = 0; x < resolution.X; x++)
                 {
                     for (int y = 0; y < resolution.Y; y++)
@@ -230,13 +239,13 @@ namespace Barotrauma.SpriteDeformations
                         switch (animation.Params.BlendMode)
                         {
                             case DeformationBlendMode.Override:
-                                deformation[x,y] = animDeformation[x,y] * scale * multiplier;
+                                deformation[x, yValues[y]] = animDeformation[x, y] * scale * multiplier;
                                 break;
                             case DeformationBlendMode.Add:
-                                deformation[x, y] += animDeformation[x, y] * scale * multiplier;
+                                deformation[x, yValues[y]] += animDeformation[x, y] * scale * multiplier;
                                 break;
                             case DeformationBlendMode.Multiply:
-                                deformation[x, y] *= animDeformation[x, y] * multiplier;
+                                deformation[x, yValues[y]] *= animDeformation[x, y] * multiplier;
                                 break;
                         }
                     }

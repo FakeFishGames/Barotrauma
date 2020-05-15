@@ -31,6 +31,7 @@ namespace Barotrauma
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);
             Volume = element.GetAttributeFloat("volume", 1.0f);
+            sound.DisableMuffle = element.GetAttributeBool("disablemuffle", false);
         }
     }
 

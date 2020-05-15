@@ -1,4 +1,25 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.1001.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Overhauled level layouts and events (longer and more difficult levels).
+- Added two new afflictions: medical items and poisons cause organ damage instead of internal damage and explosions cause deep tissue injuries. Both are functionally identical to internal damage, and treated with the same items. 
+- Always draw steering indicators at the center of the display instead of the center of the sub. Fixes indicators getting offset (sometimes even outside the display) during docking.
+- Added option to give all command perms with the "givecommandperm" command by using "all" as the parameter.
+- Non-raycast projectiles ignore destroyed items (= destroyed thalamus organs don't block harpoons).
+- Fixed monsters staying invisible if they die far away from the camera view.
+- Fixed very small limbs (mudraptor's mouth tentacles, husk appendages) launching off at a very high velocity, leading to glitchy physics behavior, when hit by a non-raycast projectile or an explosion.
+- Allow subs to be saved to subdirectories of the "Submarines" folder (e.g. "Submarines/Downloaded").
+- Fixed item deterioration delay not resetting when the item is repaired if the condition of the item wasn't below the repair threshold when starting to repair it.
+- Fixed bots failing to use welding tools inside their toolbox when fixing leaks.
+- Items that appear broken to psychotic characters revert back to normal immediately when the psychosis is healed or when switching to another character.
+- Fixed wires connected to a wifi component getting moved from signal_out to set_channel in old subs.
+- Fixed plasma cutter beam not going through broken doors.
+- Fixed extinguishers getting blocked by broken doors.
+- The explosive cargo mission that places a block of Volatile Compound N in one of the crates no longer requires delivering the volatile block to the destination.
+- Disabled crush depth in the submarine test mode.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.1000.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 

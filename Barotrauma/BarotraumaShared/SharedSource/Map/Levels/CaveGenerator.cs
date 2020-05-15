@@ -182,7 +182,7 @@ namespace Barotrauma
             currentCell.CellType = CellType.Path;
             pathCells.Add(currentCell);
 
-            int currentTargetIndex = 1;
+            int currentTargetIndex = 0;
 
             int iterationsLeft = cells.Count;
 

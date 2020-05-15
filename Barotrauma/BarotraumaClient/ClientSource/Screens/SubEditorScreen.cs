@@ -1245,7 +1245,8 @@ namespace Barotrauma
                 string prevDir = Path.GetDirectoryName(Submarine.MainSub.Info.FilePath).CleanUpPath();
                 string[] subDirs = prevDir.Split('/');
                 bool forceToSubFolder = Steam.SteamManager.IsInitialized;
-                if (forceToSubFolder && subDirs.Length>1 && subDirs[0].Equals("Mods", StringComparison.InvariantCultureIgnoreCase))
+                bool isInSubFolder = subDirs.Length > 0 && subDirs[0].Equals("Submarines", StringComparison.InvariantCultureIgnoreCase);
+                if (forceToSubFolder && subDirs.Length > 1 && subDirs[0].Equals("Mods", StringComparison.InvariantCultureIgnoreCase))
                 {
                     string modName = subDirs[1];
                     ContentPackage contentPackage = ContentPackage.List.Find(p => p.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
@@ -1261,7 +1262,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                savePath = Path.Combine(forceToSubFolder ? SubmarineInfo.SavePath : prevDir, savePath).CleanUpPath();
+                savePath = Path.Combine(forceToSubFolder && !isInSubFolder ? SubmarineInfo.SavePath : prevDir, savePath).CleanUpPath();
             }
             else
             {

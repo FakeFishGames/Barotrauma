@@ -567,6 +567,10 @@ namespace Barotrauma
                 {
                     LightSource.LightSprite.Depth = ActiveSprite.Depth;
                 }
+                if (LightSource.DeformableLightSprite != null)
+                {
+                    LightSource.DeformableLightSprite.Sprite.Depth = ActiveSprite.Depth;
+                }
             }
 
             UpdateSpriteStates(deltaTime);
@@ -624,7 +628,11 @@ namespace Barotrauma
                     {
                         var deformation = SpriteDeformation.GetDeformation(Deformations, deformSprite.Size);
                         deformSprite.Deform(deformation);
-                        LightSource?.DeformableLightSprite?.Deform(deformation);
+                        if (LightSource != null && LightSource.DeformableLightSprite != null)
+                        {
+                            deformation = SpriteDeformation.GetDeformation(Deformations, deformSprite.Size, dir == Direction.Left);
+                            LightSource.DeformableLightSprite.Deform(deformation);
+                        }
                     }
                     else
                     {

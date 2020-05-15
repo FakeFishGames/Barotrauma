@@ -469,7 +469,11 @@ namespace Barotrauma
         
         public static bool IsCtrlDown()
         {
+#if !OSX
             return KeyDown(Keys.LeftControl) || KeyDown(Keys.RightControl);
+#else
+            return KeyDown(Keys.LeftWindows) || KeyDown(Keys.RightWindows);
+#endif
         }
 
         public static void Update(double deltaTime)

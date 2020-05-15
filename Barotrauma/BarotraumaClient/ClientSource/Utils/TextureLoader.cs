@@ -208,7 +208,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.NewMessage($"Could not compress a texture because the dimensions are a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})", Color.Orange);
+                        DebugConsole.NewMessage($"Could not compress a texture because the dimensions aren't a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})", Color.Orange);
                     }
                 }
 

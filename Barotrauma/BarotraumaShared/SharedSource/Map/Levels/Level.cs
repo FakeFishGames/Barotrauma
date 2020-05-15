@@ -1600,6 +1600,7 @@ namespace Barotrauma
                 int attemptsLeft = maxAttempts;
                 bool success = false;
                 Vector2 spawnPoint = Vector2.Zero;
+                var allCells = Loaded.GetAllCells();
                 while (attemptsLeft > 0)
                 {
                     if (attemptsLeft < maxAttempts)
@@ -1847,8 +1848,7 @@ namespace Barotrauma
                     {
                         return true;
                     }
-                    var cells = Loaded.GetAllCells().Where(c => c.Body != null && Vector2.DistanceSquared(pos, c.Center) <= maxDistance);
-                    return cells.Any(c => c.BodyVertices.Any(v => bounds.ContainsWorld(v)));
+                    return cells.Any(c => c.Body != null && Vector2.DistanceSquared(pos, c.Center) <= maxDistance && c.BodyVertices.Any(v => bounds.ContainsWorld(v)));
                 }
             }
             totalSW.Stop();

@@ -309,11 +309,10 @@ namespace Barotrauma.Items.Components
                                 SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
                                 CurrentFixer.WorldPosition + Vector2.UnitY * 100.0f);
                         }
-
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
-                        deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-                        wasBroken = false;
                     }
+                    deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
+                    wasBroken = false;                    
                     StopRepairing(CurrentFixer);
                 }
             }
