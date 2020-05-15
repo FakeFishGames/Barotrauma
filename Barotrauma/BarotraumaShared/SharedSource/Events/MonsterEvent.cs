@@ -13,6 +13,9 @@ namespace Barotrauma
         private readonly int minAmount, maxAmount;
         private List<Character> monsters;
 
+        private readonly float scatter;
+        private readonly float offset;
+
         private readonly bool spawnDeep;
 
         private Vector2? spawnPos;
@@ -72,6 +75,8 @@ namespace Barotrauma
             }
 
             spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
+            offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
+            scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 1000), 0, 3000);
 
             if (GameMain.NetworkMember != null)
             {
@@ -241,6 +246,28 @@ namespace Barotrauma
                         spawnPos = spawnPoint.WorldPosition; 
                     }
                 }
+                else if (chosenPosition.PositionType == Level.PositionType.MainPath && offset > 0)
+                {
+                    Vector2 dir;
+                    var waypoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == null);
+                    var nearestWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, spawnPos.Value)).FirstOrDefault();
+                    if (nearestWaypoint != null)
+                    {
+                        int currentIndex = waypoints.IndexOf(nearestWaypoint);
+                        var nextWaypoint = waypoints[Math.Min(currentIndex + 20, waypoints.Count - 1)];
+                        dir = Vector2.Normalize(nextWaypoint.WorldPosition - nearestWaypoint.WorldPosition);
+                    }
+                    else
+                    {
+                        dir = new Vector2(1, Rand.Range(-1, 1));
+                    }
+                    Vector2 targetPos = spawnPos.Value + dir * offset;
+                    var targetWaypoint = waypoints.OrderBy(wp => Vector2.DistanceSquared(wp.WorldPosition, targetPos)).FirstOrDefault();
+                    if (targetWaypoint != null)
+                    {
+                        spawnPos = targetWaypoint.WorldPosition;
+                    }
+                }
                 spawnPending = true;
             }
         }
@@ -314,7 +341,7 @@ namespace Barotrauma
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1);
                 monsters = new List<Character>();
-                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? 1000 : 100;
+                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? scatter : 100;
                 for (int i = 0; i < amount; i++)
                 {
                     CoroutineManager.InvokeAfter(() =>
@@ -324,7 +351,22 @@ namespace Barotrauma
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
-                        monsters.Add(Character.Create(speciesName, spawnPos.Value + Rand.Vector(offsetAmount), Level.Loaded.Seed + i.ToString(), null, false, true, true));
+                        Vector2 pos = spawnPos.Value + Rand.Vector(offsetAmount);
+                        if (spawnPosType == Level.PositionType.MainPath)
+                        {
+                            if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
+                            {
+                                // Can't use the offset position, let's use the exact spawn position.
+                                pos = spawnPos.Value;
+                            }
+                            else if (Level.Loaded.Ruins.Any(r => ToolBox.GetWorldBounds(r.Area.Center, r.Area.Size).ContainsWorld(pos)))
+                            {
+                                // Can't use the offset position, let's use the exact spawn position.
+                                pos = spawnPos.Value;
+                            }
+                        }
+
+                        monsters.Add(Character.Create(speciesName, pos, Level.Loaded.Seed + i.ToString(), null, false, true, true));
 
                         if (monsters.Count == amount)
                         {

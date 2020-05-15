@@ -644,8 +644,12 @@ namespace Barotrauma
 
             float far = range ?? sound.BaseFar;
 
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;
-            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: ShouldMuffleSound(Character.Controlled, position, far, hullGuess));            
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far)
+            {
+                return null;
+            }
+            bool muffle = !sound.DisableMuffle && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
+            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: muffle);            
         }
 
         private static void UpdateMusic(float deltaTime)

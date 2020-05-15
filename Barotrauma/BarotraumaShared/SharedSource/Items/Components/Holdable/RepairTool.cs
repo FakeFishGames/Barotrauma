@@ -70,6 +70,12 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
+        [Serialize(true, false, description: "Can the item hit broken doors.")]
+        public bool HitItems { get; set; }
+
+        [Serialize(false, false, description: "Can the item hit broken doors.")]
+        public bool HitBrokenDoors { get; set; }
+
         [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
@@ -445,7 +451,9 @@ namespace Barotrauma.Items.Components
                 return true;
             }
             else if (targetBody.UserData is Item targetItem)
-            {                
+            {
+                if (!HitItems) { return false; }
+
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
                     levelResource.requiredItems.Any() &&
@@ -463,7 +471,15 @@ namespace Barotrauma.Items.Components
                 }
                 
                 if (!targetItem.Prefab.DamagedByRepairTools) { return false; }
-                if (item.GetComponent<Door>() == null && item.Condition <= 0) { return false; }
+
+                if (HitBrokenDoors)
+                {
+                    if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
+                }
+                else
+                {
+                    if (targetItem.Condition <= 0) { return false; }
+                }
 
                 targetItem.IsHighlighted = true;
                 

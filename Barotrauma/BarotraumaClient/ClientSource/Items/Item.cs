@@ -147,9 +147,9 @@ namespace Barotrauma
 
             for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
+                if (Prefab.BrokenSprites[i].FadeIn) { continue; }
                 float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                if (condition <= minCondition ||
-                    condition <= Prefab.BrokenSprites[i].MaxCondition && !Prefab.BrokenSprites[i].FadeIn)
+                if (condition <= minCondition || condition <= Prefab.BrokenSprites[i].MaxCondition)
                 {
                     activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
@@ -232,6 +232,7 @@ namespace Barotrauma
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
             float displayCondition = FakeBroken ? 0.0f : condition;
+            Vector2 drawOffset = Vector2.Zero;
             if (displayCondition < Prefab.Health)
             {
                 for (int i = 0; i < Prefab.BrokenSprites.Count; i++)
@@ -241,7 +242,7 @@ namespace Barotrauma
                         float min = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
                         float max = Prefab.BrokenSprites[i].MaxCondition;
                         fadeInBrokenSpriteAlpha = 1.0f - ((displayCondition - min) / (max - min));
-                        if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha < 1.0f)
+                        if (fadeInBrokenSpriteAlpha > 0.0f && fadeInBrokenSpriteAlpha <= 1.0f)
                         {
                             fadeInBrokenSprite = Prefab.BrokenSprites[i];
                         }
@@ -250,6 +251,7 @@ namespace Barotrauma
                     if (displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
                     {
                         activeSprite = Prefab.BrokenSprites[i].Sprite;
+                        drawOffset = Prefab.BrokenSprites[i].Offset.ToVector2() * Scale;
                         break;
                     }
                 }
@@ -271,9 +273,13 @@ namespace Barotrauma
                 {
                     if (prefab.ResizeHorizontal || prefab.ResizeVertical)
                     {
-                        activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color,
+                        Vector2 size = new Vector2(rect.Width, rect.Height);
+                        activeSprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)) + drawOffset, 
+                            size, color: color,
+                            textureScale: Vector2.One * Scale,
                             depth: depth);
-                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), color: color * fadeInBrokenSpriteAlpha,
+                        fadeInBrokenSprite?.Sprite.DrawTiled(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)) + fadeInBrokenSprite.Offset.ToVector2() * Scale, size, color: color * fadeInBrokenSpriteAlpha,
+                            textureScale: Vector2.One * Scale,
                             depth: depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
@@ -287,8 +293,8 @@ namespace Barotrauma
                     }
                     else
                     {
-                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color, SpriteRotation, Scale, activeSprite.effects, depth);
-                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y), color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, SpriteRotation, Scale, activeSprite.effects, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
@@ -1269,6 +1275,14 @@ namespace Barotrauma
                     {
                         inventory = container.Inventory;
                     }
+                }
+                else if (inventoryOwner == null)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of an entity with the ID {inventoryId} (entity not found)");
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Failed to spawn item \"{(itemIdentifier ?? "null")}\" in the inventory of \"{inventoryOwner} ({inventoryOwner.ID})\" (invalid entity, should be an item or a character)");
                 }
             }
 

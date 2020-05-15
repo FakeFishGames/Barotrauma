@@ -2469,7 +2469,7 @@ namespace Barotrauma
             }
         }
 
-        private readonly float maxAIRange = 10000;
+        private readonly float maxAIRange = 20000;
         private readonly float aiTargetChangeSpeed = 5;
 
         private void UpdateSightRange(float deltaTime)
@@ -2741,14 +2741,8 @@ namespace Barotrauma
                 }
                 if (severed)
                 {
-                    if (joint.LimbA == targetLimb)
-                    {
-                        joint.LimbB.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
-                    }
-                    else
-                    {
-                        joint.LimbA.body.LinearVelocity += targetLimb.LinearVelocity * 0.5f;
-                    }
+                    Limb otherLimb = joint.LimbA == targetLimb ? joint.LimbB : joint.LimbA;
+                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass);
                 }
             }
             if (wasSevered)

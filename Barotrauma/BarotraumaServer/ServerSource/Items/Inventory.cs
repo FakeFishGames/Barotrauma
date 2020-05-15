@@ -101,6 +101,9 @@ namespace Barotrauma
 
                         if (!prevItems.Contains(item) && !item.CanClientAccess(c))
                         {
+#if DEBUG || UNSTABLE
+                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
+#endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {
                                 c.PendingPositionUpdates.Enqueue(item);

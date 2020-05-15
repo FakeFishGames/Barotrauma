@@ -1574,7 +1574,10 @@ namespace Barotrauma.Steam
                 {
                     exists |= File.Exists(contentFilePath + ".dll");
                 }
-                return contentFilePath;
+                if (exists)
+                {
+                    return contentFilePath;
+                }
             }
 
             string[] splitPath = contentFilePath.Split('/');

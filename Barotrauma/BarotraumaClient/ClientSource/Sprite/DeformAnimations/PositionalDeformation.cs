@@ -100,7 +100,7 @@ namespace Barotrauma.SpriteDeformations
             }            
         }
 
-        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
+        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse)
         {
             deformation = Deformation;
             multiplier = 1.0f;

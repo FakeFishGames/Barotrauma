@@ -707,7 +707,8 @@ namespace Barotrauma
                         var brokenSprite = new BrokenItemSprite(
                             new Sprite(subElement, brokenSpriteFolder, lazyLoad: true), 
                             subElement.GetAttributeFloat("maxcondition", 0.0f),
-                            subElement.GetAttributeBool("fadein", false));
+                            subElement.GetAttributeBool("fadein", false),
+                            subElement.GetAttributePoint("offset", Point.Zero));
 
                         int spriteIndex = 0;
                         for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)

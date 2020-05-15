@@ -120,13 +120,13 @@ namespace Barotrauma.Particles
             return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation=0.0f, Hull hullGuess = null)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
 
             if (prefab == null)
             {
-                DebugConsole.ThrowError("Particle prefab \"" + prefabName+"\" not found!");
+                DebugConsole.ThrowError("Particle prefab \"" + prefabName + "\" not found!");
                 return null;
             }
 
@@ -135,7 +135,7 @@ namespace Barotrauma.Particles
 
         public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false)
         {
-            if (particleCount >= MaxParticles || prefab == null) return null;
+            if (particleCount >= MaxParticles || prefab == null || prefab.Sprites.Count == 0) { return null; }
 
             Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
 
@@ -144,8 +144,8 @@ namespace Barotrauma.Particles
 
             Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
 
-            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) return null;
-            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) return null;
+            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
+            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 

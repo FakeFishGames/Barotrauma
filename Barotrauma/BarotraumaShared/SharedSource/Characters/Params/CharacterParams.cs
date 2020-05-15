@@ -46,10 +46,10 @@ namespace Barotrauma
         [Serialize(false, false), Editable]
         public bool CanSpeak { get; set; }
 
-        [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 10000f)]
+        [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 100000f)]
         public float Noise { get; set; }
 
-        [Serialize(100f, true, description: "How visible the character is?"), Editable(minValue: 0f, maxValue: 10000f)]
+        [Serialize(100f, true, description: "How visible the character is?"), Editable(minValue: 0f, maxValue: 100000f)]
         public float Visibility { get; set; }
 
         [Serialize("blood", true), Editable]

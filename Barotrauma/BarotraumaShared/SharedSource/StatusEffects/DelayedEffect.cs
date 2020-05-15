@@ -81,7 +81,7 @@ namespace Barotrauma
 
                 if (element.StartTimer > 0.0f) { continue; }
 
-                element.Parent.Apply(1.0f, element.Entity, element.Targets, element.WorldPosition);
+                element.Parent.Apply(deltaTime, element.Entity, element.Targets, element.WorldPosition);
                 DelayList.Remove(element);
             }
         }

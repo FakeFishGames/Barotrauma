@@ -138,7 +138,15 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            FakeBrokenTimer -= deltaTime;
+            if (Character.Controlled == null || (Character.Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+            {
+                FakeBrokenTimer = 0.0f;
+            }
+            else
+            {
+                FakeBrokenTimer -= deltaTime;
+            }
+
             item.FakeBroken = FakeBrokenTimer > 0.0f;
 
             if (!GameMain.IsMultiplayer)

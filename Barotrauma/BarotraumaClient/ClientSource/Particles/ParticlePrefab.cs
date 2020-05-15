@@ -255,6 +255,11 @@ namespace Barotrauma.Particles
                 }
             }
 
+            if (Sprites.Count == 0)
+            {
+                DebugConsole.ThrowError($"Particle prefab \"{Name}\" in the file \"{file}\" has no sprites defined!");
+            }
+
             //if velocity change in water is not given, it defaults to the normal velocity change
             if (element.Attribute("velocitychangewater") == null)
             {

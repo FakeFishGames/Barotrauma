@@ -109,12 +109,12 @@ namespace Barotrauma.SpriteDeformations
             }
         }
 
-        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
+        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse)
         {
             deformation = Deformation;
             multiplier = CustomDeformationParams.Frequency <= 0.0f ? 
                 CustomDeformationParams.Amplitude : 
-                (float)Math.Sin(phase) * CustomDeformationParams.Amplitude;
+                (float)Math.Sin(inverse ? -phase : phase) * CustomDeformationParams.Amplitude;
             multiplier *= Params.Strength;
         }
 

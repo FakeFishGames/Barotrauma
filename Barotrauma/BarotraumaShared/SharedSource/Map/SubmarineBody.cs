@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
@@ -451,7 +452,9 @@ namespace Barotrauma
         private void UpdateDepthDamage(float deltaTime)
         {
             if (Position.Y > DamageDepth) { return; }
-
+#if CLIENT
+            if (GameMain.GameSession.GameMode is SubTestMode) { return; }
+#endif
             float depth = DamageDepth - Position.Y;
 
             depthDamageTimer -= deltaTime;
@@ -639,7 +642,7 @@ namespace Barotrauma
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
                 limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
+                    AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
 
                 if (limb.character.IsDead)
                 {

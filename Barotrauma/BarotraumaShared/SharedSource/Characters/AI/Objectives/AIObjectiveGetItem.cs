@@ -42,6 +42,7 @@ namespace Barotrauma
             currSearchIndex = -1;
             this.equip = equip;
             this.targetItem = targetItem;
+            moveToTarget = targetItem?.GetRootInventoryOwner();
         }
 
         public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 

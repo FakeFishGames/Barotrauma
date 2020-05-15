@@ -486,6 +486,10 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             }
+            else if (target.Body.UserData is Item item)
+            {
+                if (item.Condition <= 0.0f) { return false; }
+            }
 
             //ignore character colliders (the projectile only hits limbs)
             if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)

@@ -15,7 +15,7 @@ namespace Barotrauma
 
         private static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
         private static double LastMuffleCheckTime;
-        private List<RoundSound> sounds = new List<RoundSound>();
+        private readonly List<RoundSound> sounds = new List<RoundSound>();
         private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private Entity soundEmitter;
@@ -76,7 +76,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        int selectedSoundIndex = 0;
+                        int selectedSoundIndex;
                         if (soundSelectionMode == SoundSelectionMode.ItemSpecific && entity is Item item)
                         {
                             selectedSoundIndex = item.ID % sounds.Count;

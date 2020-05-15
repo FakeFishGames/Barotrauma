@@ -615,28 +615,45 @@ namespace Barotrauma
                     return;
                 }
 
-                ShowQuestionPrompt("Console command permissions to grant to \"" + client.Name + "\"? You may enter multiple commands separated with a space.", (commandsStr) =>
+                ShowQuestionPrompt("Console command permissions to grant to \"" + client.Name + "\"? You may enter multiple commands separated with a space, or \"all\" to allow using any console command.", (commandsStr) =>
                 {
                     string[] splitCommands = commandsStr.Split(' ');
+                    bool giveAll = splitCommands.Length > 0 && splitCommands[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+
                     List<Command> grantedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
+                    if (giveAll)
                     {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
+                        grantedCommands.AddRange(commands);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < splitCommands.Length; i++)
                         {
-                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
-                        }
-                        else
-                        {
-                            grantedCommands.Add(matchingCommand);
+                            splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                            if (matchingCommand == null)
+                            {
+                                ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                            }
+                            else
+                            {
+                                grantedCommands.Add(matchingCommand);
+                            }
                         }
                     }
 
                     client.GivePermission(ClientPermissions.ConsoleCommands);
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
                     GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    if (giveAll)
+                    {
+                        NewMessage("Gave the client \"" + client.Name + "\" the permission to use all console commands.", Color.White);
+                    }
+                    else
+                    {
+                        NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    }
+
                 }, args, 1);
             });
 
