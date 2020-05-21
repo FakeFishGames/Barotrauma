@@ -5,6 +5,8 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Networking;
 using Barotrauma.ServerSource.Traitors;
+using System.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace Barotrauma
 {
@@ -40,14 +42,53 @@ namespace Barotrauma
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
-            //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
+            DebugConsole.NewMessage("Random Prefab Called");
+            traitorSettings settings = new traitorSettings();
+            TraitorMissionPrefab selected = null;
+            int target = 1;
+            if (String.Equals(settings.traitorSelectMode, "static"))
+            {
+                DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
+                target = settings.traitorStaticNumber;
+            }
+            else if (String.Equals(settings.traitorSelectMode, "random"))
+            {
+                DebugConsole.NewMessage("using min traitor number: " + settings.traitorRandomMin);
+                target = settings.traitorRandomMin;
+                Random randGen = new Random();
+                int count = settings.traitorRandomMax - settings.traitorRandomMin; //subtract min because min is guarenteed already
+                while(count > 0)
+                {
+                    DebugConsole.NewMessage("Count: " + count + "random check test" + randGen.NextDouble() + " " + settings.traitorRandomFactor);
+                    if (randGen.NextDouble() < settings.traitorRandomFactor)
+                    {
+                        target++;
+                    }
+                    count--;
+                }
+                
+            }
             foreach (var mission in List)
             {
-                mission.SelectedWeight += 10;
+                DebugConsole.NewMessage("Count of roles for this mission and target is: " + mission.Prefab.Roles.Count + " " + target);
+                if(mission.Prefab.Roles.Count == target)
+                {
+                    selected = mission.Prefab;
+                }
             }
-            selected.SelectedWeight = 0.0f;
-            return selected.Prefab;
+            //var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
+            //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
+            //foreach (var mission in List)
+            //{
+            //    mission.SelectedWeight += 10;
+            //}
+            //selected.SelectedWeight = 0.0f;
+            //selected.prefab
+            if(selected == null)
+            {
+                DebugConsole.NewMessage("Critical Error Selected Null In TraitorMissionPrefab");
+            }
+            return selected;
         }
 
         private class AttributeChecker : IDisposable
@@ -594,51 +635,52 @@ namespace Barotrauma
                         case "role":
                             checker.Required("id");
                             checker.Optional("jobs");
-                            traitorSettings settings = new traitorSettings();
-                            DebugConsole.NewMessage("Help!");
-                            DebugConsole.NewMessage(settings.traitorSelectMode);
-                            DebugConsole.NewMessage("Help!");
-                            if (settings.traitorSelectMode.Equals("ratio"))
-                            {
-                                DebugConsole.NewMessage("NOT IMPLEMENTED: using set traitor number: " + settings.traitorStaticNumber);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorStaticNumber - 1;
-                                while (count > 0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
-                                    count--;
-                                }
-                            }
-                            else if (settings.traitorSelectMode.Equals("static"))
-                            {
-                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorStaticNumber - 1;
-                                while (count>0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
-                                    count--;
-                                }
-                            }
-                            else if (settings.traitorSelectMode.Equals("random"))
-                            {
-                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorRandomMin);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorRandomMin - 1;
-                                while (count > 0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
-                                    count--;
-                                }
-                                if(randGen.NextDouble() < settings.traitorRandomFactor)
-                                {
-                                    Roles.Add(element.GetAttributeString("id", null) + settings.traitorRandomMin, LoadRole(element));
-                                }
-                            }
+                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
                             break;
+                            /*                            traitorSettings settings = new traitorSettings();
+                                                        DebugConsole.NewMessage(settings.traitorSelectMode);
+                                                        if (settings.traitorSelectMode.Equals("ratio"))
+                                                        {
+                                                            DebugConsole.NewMessage("NOT IMPLEMENTED: using set traitor number: " + settings.traitorStaticNumber);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorStaticNumber - 1;
+                                                            while (count > 0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                        }
+                                                        else if (settings.traitorSelectMode.Equals("static"))
+                                                        {
+                                                            DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorStaticNumber - 1;
+                                                            while (count>0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                        }
+                                                        else if (settings.traitorSelectMode.Equals("random"))
+                                                        {
+                                                            DebugConsole.NewMessage("using set traitor number: " + settings.traitorRandomMin);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorRandomMin - 1;
+                                                            while (count > 0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                            if(randGen.NextDouble() < settings.traitorRandomFactor)
+                                                            {
+                                                                Roles.Add(element.GetAttributeString("id", null) + settings.traitorRandomMin, LoadRole(element));
+                                                            }
+                                                        } 
+                            break;
+                            */
                     }
                 }
             }

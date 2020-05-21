@@ -1212,6 +1212,7 @@ namespace Barotrauma
                 max = AnimController.InWater ? 0.9f : 0.5f;
             }
             speed *= 1f - MathHelper.Lerp(0, max, GetTemporarySpeedReduction());
+
             return speed;
         }
 
@@ -1546,6 +1547,7 @@ namespace Barotrauma
         public bool HasEquippedItem(Item item)
         {
             if (Inventory == null) { return false; }
+
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.Items[i] == item && Inventory.SlotTypes[i] != InvSlotType.Any) return true;

@@ -162,6 +162,10 @@ namespace Barotrauma
                     }
 
                     var selected = ToolBox.SelectWeightedRandom(availableCandidates, availableCandidates.Select(c => Math.Max(c.Item1.RoundsSincePlayedAsTraitor, 0.1f)).ToList(), TraitorManager.Random);
+                    DebugConsole.NewMessage("Setting User ID CARD");
+                    var idCard = selected.Item2.Inventory.FindItemByIdentifier("idcard");
+                    idCard.AddTag("traitor");
+                    idCard.Description = "Test here are your tags " + idCard.Tags;
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
                     foreach (var candidate in roleCandidates.Values)
                     {
