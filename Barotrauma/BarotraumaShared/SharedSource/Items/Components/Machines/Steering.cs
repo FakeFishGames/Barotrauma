@@ -298,10 +298,7 @@ namespace Barotrauma.Items.Components
             {
                 if (user != null && user.Info != null && user.SelectedConstruction == item)
                 {
-                    user.Info.IncreaseSkillLevel(
-                        "helm", 
-                        SkillSettings.Current.SkillIncreasePerSecondWhenSteering / Math.Max(userSkill, 1.0f) * deltaTime, 
-                        user.WorldPosition + Vector2.UnitY * 150.0f);
+                    IncreaseSkillLevel(user, deltaTime);
                 }
 
                 Vector2 velocityDiff = steeringInput - targetVelocity;
@@ -328,6 +325,18 @@ namespace Barotrauma.Items.Components
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
             item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", null);
+        }
+
+        private void IncreaseSkillLevel(Character user, float deltaTime)
+        {
+            if (user?.Info == null) { return; }
+
+            float userSkill = user.GetSkillLevel("helm") / 100.0f;
+            user.Info.IncreaseSkillLevel(
+                "helm",
+                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / Math.Max(userSkill, 1.0f) * deltaTime,
+                user.WorldPosition + Vector2.UnitY * 150.0f);
+
         }
 
         private void UpdateAutoPilot(float deltaTime)
@@ -565,6 +574,7 @@ namespace Barotrauma.Items.Components
                 unsentChanges = true;
                 AutoPilot = true;
             }
+            IncreaseSkillLevel(user, deltaTime);
             switch (objective.Option.ToLowerInvariant())
             {
                 case "maintainposition":

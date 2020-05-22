@@ -650,21 +650,29 @@ namespace Barotrauma
 
         public static void SortContentPackages()
         {
-            List = List
-                .OrderByDescending(p => p.CorePackage)
-                .ThenBy(p => List.IndexOf(p))
-                .ToList();
-
             if (GameMain.Config != null)
             {
+                List = List
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
+
                 var sortedSelected = GameMain.Config.SelectedContentPackages
                     .OrderByDescending(p => p.CorePackage)
-                    .ThenBy(p => List.IndexOf(p))
+                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
                     .ToList();
                 GameMain.Config.SelectedContentPackages.Clear(); GameMain.Config.SelectedContentPackages.AddRange(sortedSelected);
 
-                var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
+                var reportList = GameMain.Config.SelectedContentPackages;
                 DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
+            }
+            else
+            {
+                List = List
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
             }
         }
 

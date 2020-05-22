@@ -44,19 +44,20 @@ namespace Barotrauma
                 var currentObjective = ObjectiveManager.CurrentObjective;
                 if (currentObjective != null)
                 {
-                    if (currentOrder == null)
+                    int offset = currentOrder != null ? 20 : 0;
+                    if (currentOrder == null || currentOrder.Priority <= 0)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20 + offset), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                     var subObjective = currentObjective.CurrentSubObjective;
                     if (subObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40 + offset), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                     var activeObjective = ObjectiveManager.GetActiveObjective();
                     if (activeObjective != null)
                     {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60 + offset), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                     }
                 }
             }
@@ -86,7 +87,7 @@ namespace Barotrauma
                             new Vector2(path.CurrentNode.DrawPosition.X, -path.CurrentNode.DrawPosition.Y),
                             Color.BlueViolet, 0, 3);
 
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 80), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
+                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 100), "Path cost: " + path.Cost.FormatZeroDecimal(), Color.White, Color.Black * 0.5f);
                     }
                 }
             }

@@ -252,8 +252,8 @@ namespace Barotrauma
                 : afflictions.Where(limbHealthFilter).Union(limbHealths.SelectMany(lh => lh.Afflictions.Where(limbHealthFilter)));
         }
 
-        private LimbHealth GetMatchingLimbHealth(Limb limb) => limbHealths[limb.HealthIndex];
-        private LimbHealth GetMatchingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb));
+        private LimbHealth GetMatchingLimbHealth(Limb limb) => limb == null ? null : limbHealths[limb.HealthIndex];
+        private LimbHealth GetMatchingLimbHealth(Affliction affliction) => GetMatchingLimbHealth(Character.AnimController.GetLimb(affliction.Prefab.IndicatorLimb, excludeSevered: false));
 
         /// <summary>
         /// Returns the limb afflictions and non-limbspecific afflictions that are set to be displayed on this limb.
@@ -515,7 +515,7 @@ namespace Barotrauma
             if (Vitality <= MinVitality) { Kill(); }
         }
 
-        public float GetLimbDamage(Limb limb)
+        public float GetLimbDamage(Limb limb, string afflictionType = null)
         {
             float damageStrength;
             if (limb.IsSevered)
@@ -528,10 +528,17 @@ namespace Barotrauma
                 // Therefore with e.g. 80 health, the max damage per limb would be 20.
                 // Having at least 20 damage on both legs would cause maximum limping.
                 float max = MaxVitality / 4;
-                float damage = GetAfflictionStrength("damage", limb, true);
-                float bleeding = GetAfflictionStrength("bleeding", limb, true);
-                float burn = GetAfflictionStrength("burn", limb, true);
-                damageStrength = Math.Min(damage + bleeding + burn, max);
+                if (string.IsNullOrEmpty(afflictionType))
+                {
+                    float damage = GetAfflictionStrength("damage", limb, true);
+                    float bleeding = GetAfflictionStrength("bleeding", limb, true);
+                    float burn = GetAfflictionStrength("burn", limb, true);
+                    damageStrength = Math.Min(damage + bleeding + burn, max);
+                }
+                else
+                {
+                    damageStrength = Math.Min(GetAfflictionStrength("damage", limb, true), max);
+                }
                 return damageStrength / max;
             }
         }

@@ -358,7 +358,16 @@ namespace Barotrauma
         
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
-            if (attackResult.Damage <= 1.0f || IsDead) { return; }
+            if (IsDead) { return; }
+            if (attacker != null)
+            {
+                if (attackResult.Damage <= 0.01f) { return; }
+            }
+            else
+            {
+                if (attackResult.Damage <= 1.0f) { return; }
+            }
+
             if (soundTimer < soundInterval * 0.5f)
             {
                 PlaySound(CharacterSound.SoundType.Damage);

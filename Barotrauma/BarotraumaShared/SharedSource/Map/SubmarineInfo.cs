@@ -372,9 +372,12 @@ namespace Barotrauma
         public bool SaveAs(string filePath, System.IO.MemoryStream previewImage=null)
         {
             var newElement = new XElement(SubmarineElement.Name,
-                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase)),
+                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
+                                                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
                 SubmarineElement.Elements());
             XDocument doc = new XDocument(newElement);
+
+            doc.Root.Add(new XAttribute("name", Name));
 
             if (previewImage != null)
             {

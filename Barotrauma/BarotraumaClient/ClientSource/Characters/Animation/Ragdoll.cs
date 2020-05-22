@@ -510,7 +510,7 @@ namespace Barotrauma
             Collider.DebugDraw(spriteBatch, frozen ? GUI.Style.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.FormatSingleDecimal(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 
-            foreach (RevoluteJoint joint in LimbJoints)
+            foreach (var joint in LimbJoints)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorA);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);

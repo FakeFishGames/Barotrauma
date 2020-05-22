@@ -19,8 +19,8 @@ namespace Barotrauma
         None, LeftHand, RightHand, LeftArm, RightArm, LeftForearm, RightForearm,
         LeftLeg, RightLeg, LeftFoot, RightFoot, Head, Torso, Tail, Legs, RightThigh, LeftThigh, Waist, Jaw
     };
-    
-    partial class LimbJoint : RevoluteJoint
+
+    partial class LimbJoint
     {
         public bool IsSevered;
         public bool CanBeSevered => Params.CanBeSevered;
@@ -30,27 +30,135 @@ namespace Barotrauma
 
         public float Scale => Params.Scale * ragdoll.RagdollParams.JointScale;
 
-        public LimbJoint(Limb limbA, Limb limbB, JointParams jointParams, Ragdoll ragdoll) : this(limbA, limbB, Vector2.One, Vector2.One)
+        public readonly RevoluteJoint revoluteJoint;
+        public readonly WeldJoint weldJoint;
+        public Joint Joint => revoluteJoint ?? weldJoint as Joint;
+
+        public bool Enabled
+        {
+            get => Joint.Enabled;
+            set => Joint.Enabled = value;
+        }
+
+        public Body BodyA => Joint.BodyA;
+
+        public Body BodyB => Joint.BodyB;
+
+        public Vector2 WorldAnchorA
+        {
+            get => Joint.WorldAnchorA;
+            set => Joint.WorldAnchorA = value;
+        }
+
+        public Vector2 WorldAnchorB
+        {
+            get => Joint.WorldAnchorB;
+            set => Joint.WorldAnchorB = value;
+        }
+
+        public Vector2 LocalAnchorA
+        {
+            get => revoluteJoint != null ? revoluteJoint.LocalAnchorA : weldJoint.LocalAnchorA;
+            set
+            {
+                if (weldJoint != null)
+                {
+                    weldJoint.LocalAnchorA = value;
+                }
+                else
+                {
+                    revoluteJoint.LocalAnchorA = value;
+                }
+            }
+        }
+
+        public Vector2 LocalAnchorB
+        {
+            get => revoluteJoint != null ? revoluteJoint.LocalAnchorB : weldJoint.LocalAnchorB;
+            set
+            {
+                if (weldJoint != null)
+                {
+                    weldJoint.LocalAnchorB = value;
+                }
+                else
+                {
+                    revoluteJoint.LocalAnchorB = value;
+                }
+            }
+        }
+
+        public bool LimitEnabled
+        {
+            get => revoluteJoint != null ? revoluteJoint.LimitEnabled : false;
+            set
+            {
+                if (revoluteJoint != null)
+                {
+                    revoluteJoint.LimitEnabled = value;
+                }
+            }
+        }
+
+        public float LowerLimit
+        {
+            get => revoluteJoint != null ? revoluteJoint.LowerLimit : 0;
+            set
+            {
+                if (revoluteJoint != null)
+                {
+                    revoluteJoint.LowerLimit = value;
+                }
+            }
+        }
+
+        public float UpperLimit
+        {
+            get => revoluteJoint != null ? revoluteJoint.UpperLimit : 0;
+            set
+            {
+                if (revoluteJoint != null)
+                {
+                    revoluteJoint.UpperLimit = value;
+                }
+            }
+        }
+
+        public float JointAngle => revoluteJoint != null ? revoluteJoint.JointAngle : weldJoint.ReferenceAngle;
+
+        public LimbJoint(Limb limbA, Limb limbB, JointParams jointParams, Ragdoll ragdoll) : this(limbA, limbB, Vector2.One, Vector2.One, jointParams.WeldJoint)
         {
             Params = jointParams;
             this.ragdoll = ragdoll;
             LoadParams();
         }
 
-        public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2)
-            : base(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2)
+        public LimbJoint(Limb limbA, Limb limbB, Vector2 anchor1, Vector2 anchor2, bool weld = false)
         {
-            CollideConnected = false;
-            MotorEnabled = true;
-            MaxMotorTorque = 0.25f;
+            if (weld)
+            {
+                weldJoint = new WeldJoint(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2);
+            }
+            else
+            {
+                revoluteJoint = new RevoluteJoint(limbA.body.FarseerBody, limbB.body.FarseerBody, anchor1, anchor2)
+                {
+                    MotorEnabled = true,
+                    MaxMotorTorque = 0.25f
+                };
+            }
+            Joint.CollideConnected = false;
             LimbA = limbA;
             LimbB = limbB;
         }
 
         public void LoadParams()
         {
-            MaxMotorTorque = Params.Stiffness;
-            LimitEnabled = Params.LimitEnabled;
+            if (revoluteJoint != null)
+            {
+                revoluteJoint.MaxMotorTorque = Params.Stiffness;
+                revoluteJoint.LimitEnabled = Params.LimitEnabled;
+            }
             if (float.IsNaN(Params.LowerLimit))
             {
                 Params.LowerLimit = 0;
@@ -61,17 +169,33 @@ namespace Barotrauma
             }
             if (ragdoll.IsFlipped)
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Scale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Scale);
-                UpperLimit = MathHelper.ToRadians(-Params.LowerLimit);
-                LowerLimit = MathHelper.ToRadians(-Params.UpperLimit);
+                if (weldJoint != null)
+                {
+                    weldJoint.LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Scale);
+                    weldJoint.LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Scale);
+                }
+                else
+                {
+                    revoluteJoint.LocalAnchorA = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb1Anchor.X, Params.Limb1Anchor.Y) * Scale);
+                    revoluteJoint.LocalAnchorB = ConvertUnits.ToSimUnits(new Vector2(-Params.Limb2Anchor.X, Params.Limb2Anchor.Y) * Scale);
+                    revoluteJoint.UpperLimit = MathHelper.ToRadians(-Params.LowerLimit);
+                    revoluteJoint.LowerLimit = MathHelper.ToRadians(-Params.UpperLimit);
+                }
             }
             else
             {
-                LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Scale);
-                LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Scale);
-                UpperLimit = MathHelper.ToRadians(Params.UpperLimit);
-                LowerLimit = MathHelper.ToRadians(Params.LowerLimit);
+                if (weldJoint != null)
+                {
+                    weldJoint.LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Scale);
+                    weldJoint.LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Scale);
+                }
+                else
+                {
+                    revoluteJoint.LocalAnchorA = ConvertUnits.ToSimUnits(Params.Limb1Anchor * Scale);
+                    revoluteJoint.LocalAnchorB = ConvertUnits.ToSimUnits(Params.Limb2Anchor * Scale);
+                    revoluteJoint.UpperLimit = MathHelper.ToRadians(Params.UpperLimit);
+                    revoluteJoint.LowerLimit = MathHelper.ToRadians(Params.LowerLimit);
+                }
             }
         }
     }

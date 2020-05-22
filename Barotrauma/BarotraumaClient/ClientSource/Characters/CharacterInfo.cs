@@ -146,7 +146,8 @@ namespace Barotrauma
                     "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
                     GUI.Style.Green,
                     textPopupPos,
-                    Vector2.UnitY * 10.0f);
+                    Vector2.UnitY * 10.0f,
+                    playSound: Character.Controlled?.Info == this);
             }
             else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
             {
@@ -154,7 +155,8 @@ namespace Barotrauma
                     "+10 XP",
                     GUI.Style.Green,
                     textPopupPos,
-                    Vector2.UnitY * 10.0f);
+                    Vector2.UnitY * 10.0f,
+                    playSound: Character.Controlled?.Info == this);
             }
 
             if ((int)newLevel > (int)prevLevel)

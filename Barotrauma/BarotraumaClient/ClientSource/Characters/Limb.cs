@@ -3,7 +3,6 @@ using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
 using Barotrauma.Extensions;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -15,13 +14,13 @@ using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 
 namespace Barotrauma
 {
-    partial class LimbJoint : RevoluteJoint
+    partial class LimbJoint
     {
         public void UpdateDeformations(float deltaTime)
         {
             float diff = Math.Abs(UpperLimit - LowerLimit);
             float strength = MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, MathHelper.Pi, diff));
-            float jointAngle = this.JointAngle * strength;
+            float jointAngle = JointAngle * strength;
 
             JointBendDeformation limbADeformation = LimbA.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;
             JointBendDeformation limbBDeformation = LimbB.Deformations.Find(d => d is JointBendDeformation) as JointBendDeformation;

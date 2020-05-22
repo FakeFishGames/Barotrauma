@@ -55,8 +55,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(80.0f, true, description: "The condition of the item has to be below this for AI characters to repair it. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
-        public float AIRepairThreshold
+        [Serialize(80.0f, true, description: "The condition of the item has to be below this for it to become repairable. Percentages of max condition."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float RepairThreshold
         {
             get;
             set;
@@ -112,13 +112,14 @@ namespace Barotrauma.Items.Components
                 element.GetAttributeString("name", "");
 
             //backwards compatibility
-            var showRepairUIAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase));
-            if (showRepairUIAttribute != null)
+            var repairThresholdAttribute = 
+                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase)) ??
+                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairth44reshold", StringComparison.OrdinalIgnoreCase));
+            if (repairThresholdAttribute != null)
             {
-                float repairThreshold;
-                if (Single.TryParse(showRepairUIAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out repairThreshold))
+                if (float.TryParse(repairThresholdAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float repairThreshold))
                 {
-                    AIRepairThreshold = repairThreshold;
+                    RepairThreshold = repairThreshold;
                 }
             }
 
@@ -273,7 +274,7 @@ namespace Barotrauma.Items.Components
             float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
-            if (item.ConditionPercentage < AIRepairThreshold)
+            if (item.ConditionPercentage < RepairThreshold)
             {
                 wasBroken = true;
             }
@@ -356,6 +357,14 @@ namespace Barotrauma.Items.Components
         }
 
         partial void UpdateProjSpecific(float deltaTime);
+
+        public void AdjustPowerConsumption(ref float powerConsumption)
+        {
+            if (item.ConditionPercentage < RepairThreshold)
+            {
+                powerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            }
+        }
 
         private bool ShouldDeteriorate()
         {

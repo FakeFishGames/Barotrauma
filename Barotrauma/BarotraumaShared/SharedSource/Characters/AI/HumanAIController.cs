@@ -559,7 +559,7 @@ namespace Barotrauma
                                 if (item.CurrentHull != hull) { continue; }
                                 if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                                 {
-                                    if (item.Repairables.All(r => item.ConditionPercentage > r.AIRepairThreshold)) { continue; }
+                                    if (item.Repairables.All(r => item.ConditionPercentage > r.RepairThreshold)) { continue; }
                                     if (AddTargets<AIObjectiveRepairItems, Item>(Character, item) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRepairItem>())
                                     {
                                         var orderPrefab = Order.GetPrefab("reportbrokendevices");
@@ -609,9 +609,13 @@ namespace Barotrauma
             if (ObjectiveManager.CurrentObjective is AIObjectiveFightIntruders) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
+                // Don't react on the damage if there's no attacker.
+                // We might consider launching the retreat combat objective in some cases, so that the bot does not just stand somewhere getting damaged and dying.
+                // But fires and enemies should already be handled by the FindSafetyObjective.
+                return;
                 // Ignore damage from falling etc that we shouldn't react to.
-                if (Character.LastDamageSource == null) { return; }
-                AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                //if (Character.LastDamageSource == null) { return; }
+                //AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
             else if (IsFriendly(attacker))
             {
@@ -827,7 +831,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.RepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }

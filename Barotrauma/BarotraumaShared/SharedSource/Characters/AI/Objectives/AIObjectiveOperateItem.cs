@@ -28,6 +28,7 @@ namespace Barotrauma
         public ItemComponent GetTarget() => useController ? controller : component;
 
         public Func<bool> completionCondition;
+        private bool isDoneOperating;
 
         public override float GetPriority()
         {
@@ -51,30 +52,34 @@ namespace Barotrauma
                 if (targetItem == null)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Item or component of AI Objective Operate item wass null. This shouldn't happen.");
+                    DebugConsole.ThrowError("Item or component of AI Objective Operate item was null. This shouldn't happen.");
 #endif
                     Abandon = true;
                     Priority = 0;
                     return Priority;
                 }
-                switch (Option)
+                var reactor = component?.Item.GetComponent<Reactor>();
+                if (reactor != null)
                 {
-                    case "shutdown":
-                        var powered = component?.Item.GetComponent<Powered>();
-                        if (powered != null && !powered.IsActive)
-                        {
-                            Priority = 0;
-                            return Priority;
-                        }
-                        break;
-                    case "powerup":
-                        // Check that we don't already have another order that is targeting the same item.
-                        if (objectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder != this && operateOrder.GetTarget() == target)
-                        {
-                            Priority = 0;
-                            return Priority;
-                        }
-                        break;
+                    switch (Option)
+                    {
+                        case "shutdown":
+                            if (!reactor.PowerOn)
+                            {
+                                Priority = 0;
+                                return Priority;
+                            }
+                            break;
+                        case "powerup":
+                            // Check that we don't already have another order that is targeting the same item.
+                            // Without this the autonomous objective will tell the bot to turn the reactor on again.
+                            if (objectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder != this && operateOrder.GetTarget() == target)
+                            {
+                                Priority = 0;
+                                return Priority;
+                            }
+                            break;
+                    }
                 }
                 if (targetItem.CurrentHull == null || targetItem.CurrentHull.FireSources.Any() || HumanAIController.IsItemOperatedByAnother(target, out _))
                 {
@@ -87,7 +92,7 @@ namespace Barotrauma
                 else
                 {
                     float value = CumulatedDevotion + (AIObjectiveManager.OrderPriority * PriorityModifier);
-                    float max = objectiveManager.CurrentOrder == this ? MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90) : AIObjectiveManager.RunPriority - 1;
+                    float max = objectiveManager.CurrentOrder == this ? MathHelper.Min(AIObjectiveManager.OrderPriority, 90) : AIObjectiveManager.RunPriority - 1;
                     Priority = MathHelper.Clamp(value, 0, max);
                 }
             }
@@ -148,7 +153,7 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        IsCompleted = completionCondition == null || completionCondition();
+                        isDoneOperating = completionCondition == null || completionCondition();
                     }
                 }
                 else
@@ -215,12 +220,12 @@ namespace Barotrauma
                     }
                     if (component.AIOperate(deltaTime, character, this))
                     {
-                        IsCompleted = completionCondition == null || completionCondition();
+                        isDoneOperating = completionCondition == null || completionCondition();
                     }
                 }
             }
         }
 
-        protected override bool Check() => IsCompleted && !IsLoop;
+        protected override bool Check() => isDoneOperating && !IsLoop;
     }
 }

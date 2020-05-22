@@ -9,7 +9,9 @@ namespace Barotrauma
             msg.Write((ushort)items.Count);
             foreach (Item item in items)
             {
-                item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? 0);
+                item.WriteSpawnData(msg, 
+                    itemIDs[item], 
+                    parentInventoryIDs.ContainsKey(item) ? parentInventoryIDs[item] : Entity.NullEntityID);
             }
         }
     }

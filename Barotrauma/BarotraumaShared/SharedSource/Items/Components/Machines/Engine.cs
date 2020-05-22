@@ -92,8 +92,8 @@ namespace Barotrauma.Items.Components
             controlLockTimer -= deltaTime;
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
-            //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            //engines consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
 
             if (powerConsumption == 0.0f) { Voltage = 1.0f; }
 

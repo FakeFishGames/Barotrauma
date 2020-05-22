@@ -1765,7 +1765,7 @@ namespace Barotrauma
                 var workshopPublishStatus = SteamManager.StartPublishItem(itemContentPackage, itemEditor);
                 if (workshopPublishStatus != null)
                 {
-                    if (!itemEditor.Value.Tags.Contains("unstable")) { itemEditor.Value.Tags.Add("unstable"); }
+                    if (!(itemEditor?.HasTag("unstable") ?? false)) { itemEditor = itemEditor?.WithTag("unstable"); }
                     CoroutineManager.StartCoroutine(WaitForPublish(workshopPublishStatus), "WaitForPublish");
                 }
                 msgBox.Close();

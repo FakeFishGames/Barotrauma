@@ -1,13 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
-{
+{ 
+
     class ScriptedEventSet
     {
+        internal class EventDebugStats
+        {
+            public readonly ScriptedEventSet RootSet;
+            public readonly Dictionary<string, int> MonsterCounts = new Dictionary<string, int>();
+
+            public EventDebugStats(ScriptedEventSet rootSet)
+            {
+                RootSet = rootSet;
+            }
+        }
+
         public static List<ScriptedEventSet> List
         {
             get;
@@ -129,6 +144,116 @@ namespace Barotrauma
                     List.Add(new ScriptedEventSet(element, i.ToString()));
                     i++;
                 }
+            }
+        }
+
+        public static List<string> GetDebugStatistics(int simulatedRoundCount = 100)
+        {
+            List<string> debugLines = new List<string>();
+
+            foreach (var eventSet in List)
+            {
+                List<EventDebugStats> stats = new List<EventDebugStats>();
+                for (int i = 0; i < simulatedRoundCount; i++)
+                {
+                    var newStats = new EventDebugStats(eventSet);
+                    CheckEventSet(newStats, eventSet);
+                    stats.Add(newStats);
+                }
+                debugLines.Add($"Event stats ({eventSet.DebugIdentifier}): ");
+                LogEventStats(stats, debugLines);
+            }
+
+            for (int difficulty = 0; difficulty <= 100; difficulty += 10)
+            {
+                debugLines.Add($"Event stats on difficulty level {difficulty}: ");
+                List<EventDebugStats> stats = new List<EventDebugStats>();
+                for (int i = 0; i < simulatedRoundCount; i++)
+                {
+                    ScriptedEventSet selectedSet = List.Where(s => difficulty >= s.MinLevelDifficulty && difficulty <= s.MaxLevelDifficulty).GetRandom();
+                    if (selectedSet == null) { continue; }
+                    var newStats = new EventDebugStats(selectedSet);
+                    CheckEventSet(newStats, selectedSet);
+                    stats.Add(newStats);
+                }
+                LogEventStats(stats, debugLines);
+            }
+
+            return debugLines;
+
+            static void CheckEventSet(EventDebugStats stats, ScriptedEventSet thisSet)
+            {
+                if (thisSet.ChooseRandom)
+                {
+                    var eventPrefab = ToolBox.SelectWeightedRandom(thisSet.EventPrefabs, thisSet.EventPrefabs.Select(e => e.Commonness).ToList(), Rand.RandSync.Unsynced);
+                    if (eventPrefab != null)
+                    {
+                        AddEvent(stats, eventPrefab);
+                    }
+                }
+                else
+                {
+                    foreach (var eventPrefab in thisSet.EventPrefabs)
+                    {
+                        AddEvent(stats, eventPrefab);
+                    }
+                }
+                foreach (var childSet in thisSet.ChildSets)
+                {
+                    CheckEventSet(stats, childSet);
+                }
+            }
+
+            static void AddEvent(EventDebugStats stats, ScriptedEventPrefab eventPrefab)
+            {
+                if (eventPrefab.EventType == typeof(MonsterEvent))
+                {
+                    float spawnProbability = eventPrefab.ConfigElement.GetAttributeFloat("spawnprobability", 1.0f);
+                    if (Rand.Value(Rand.RandSync.Server) > spawnProbability)
+                    {
+                        return;
+                    }
+
+                    string character = eventPrefab.ConfigElement.GetAttributeString("characterfile", "");
+                    System.Diagnostics.Debug.Assert(!string.IsNullOrEmpty(character));
+                    int amount = eventPrefab.ConfigElement.GetAttributeInt("amount", 0);
+                    int minAmount = eventPrefab.ConfigElement.GetAttributeInt("minamount", amount);
+                    int maxAmount = eventPrefab.ConfigElement.GetAttributeInt("maxamount", amount);
+
+                    int count = Rand.Range(minAmount, maxAmount + 1);
+                    if (count <= 0) { return; }
+
+                    if (!stats.MonsterCounts.ContainsKey(character)) { stats.MonsterCounts[character] = 0; }
+                    stats.MonsterCounts[character] += count;
+                }
+            }
+
+            static void LogEventStats(List<EventDebugStats> stats, List<string> debugLines)
+            {
+                if (stats.Count == 0 || stats.All(s => s.MonsterCounts.Values.Sum() == 0))
+                {
+                    debugLines.Add("  No monster spawns");
+                    debugLines.Add($" ");
+                }
+                else
+                {
+                    stats.Sort((s1, s2) => { return s1.MonsterCounts.Values.Sum().CompareTo(s2.MonsterCounts.Values.Sum()); });
+
+                    EventDebugStats minStats = stats.First();
+                    EventDebugStats maxStats = stats.First();
+                    debugLines.Add($"  Minimum monster spawns: {stats.First().MonsterCounts.Values.Sum()}");
+                    debugLines.Add($"     {LogMonsterCounts(stats.First())}");
+                    debugLines.Add($"  Median monster spawns: {stats[stats.Count / 2].MonsterCounts.Values.Sum()}");
+                    debugLines.Add($"     {LogMonsterCounts(stats[stats.Count / 2])}");
+                    debugLines.Add($"  Maximum monster spawns: {stats.Last().MonsterCounts.Values.Sum()}");
+                    debugLines.Add($"     {LogMonsterCounts(stats.Last())}");
+                    debugLines.Add($" ");
+                }
+            }
+
+            static string LogMonsterCounts(EventDebugStats stats)
+            {
+                return string.Join(", ", stats.MonsterCounts.Select(mc => mc.Key + " x " + mc.Value));
             }
         }
     }

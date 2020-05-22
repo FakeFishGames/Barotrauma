@@ -163,6 +163,7 @@ namespace Barotrauma
         }
 
         public Sprite Icon;
+        public Sprite IconSmall;
         public string FilePath { get; private set; }
 
         public XElement Element { get; private set; }
@@ -206,6 +207,9 @@ namespace Barotrauma
                         break;
                     case "jobicon":
                         Icon = new Sprite(subElement.FirstElement());
+                        break;
+                    case "jobiconsmall":
+                        IconSmall = new Sprite(subElement.FirstElement());
                         break;
                 }
             }

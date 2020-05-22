@@ -163,7 +163,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
-                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.AIRepairThreshold)) { continue; }
+                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.RepairThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;

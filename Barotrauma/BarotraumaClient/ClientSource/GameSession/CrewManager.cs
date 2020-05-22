@@ -1376,32 +1376,6 @@ namespace Barotrauma
                     }
                 }
 
-                if (assignmentNodeIcons.Any())
-                {
-                    if (PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift))
-                    {
-                        if (assignmentNodeIcons.First().OrderIcon.Visible)
-                        {
-                            foreach (AssignmentNodeIconSet set in assignmentNodeIcons)
-                            {
-                                set.OrderIcon.Visible = false;
-                                set.JobIcon.Visible = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (assignmentNodeIcons.First().JobIcon.Visible)
-                        {
-                            foreach (AssignmentNodeIconSet set in assignmentNodeIcons)
-                            {
-                                set.JobIcon.Visible = false;
-                                set.OrderIcon.Visible = true;
-                            }
-                        }
-                    }
-                }
-
                 var hotkeyHit = false;
                 foreach (Tuple<GUIComponent, Keys> node in optionNodes)
                 {
@@ -1578,17 +1552,6 @@ namespace Barotrauma
         private List<OrderCategory> availableCategories;
         private Stack<GUIButton> historyNodes = new Stack<GUIButton>();
         private readonly List<Character> extraOptionCharacters = new List<Character>();
-        private readonly List<AssignmentNodeIconSet> assignmentNodeIcons = new List<AssignmentNodeIconSet>();
-        private struct AssignmentNodeIconSet
-        {
-            public GUIImage OrderIcon { get; private set; }
-            public GUIImage JobIcon { get; private set; }
-            public AssignmentNodeIconSet(GUIImage orderIcon, GUIImage jobIcon)
-            {
-                OrderIcon = orderIcon;
-                JobIcon = jobIcon;
-            }
-        }
 
         /// <summary>
         /// node.Color = node.HighlightColor * nodeColorMultiplier
@@ -1863,7 +1826,6 @@ namespace Barotrauma
             background = null;
             commandFrame = null;
             extraOptionCharacters.Clear();
-            assignmentNodeIcons.Clear();
             isOpeningClick = isSelectionHighlighted = false;
             characterContext = null;
             itemContext = null;
@@ -2024,7 +1986,6 @@ namespace Barotrauma
             expandNode = null;
             expandNodeHotkey = Keys.None;
             RemoveExtraOptionNodes();
-            assignmentNodeIcons.Clear();
         }
 
         private void RemoveExtraOptionNodes()
@@ -2729,24 +2690,14 @@ namespace Barotrauma
             GUIImage orderIcon;
             if (character.CurrentOrder != null && !character.CurrentOrder.Identifier.Equals("dismissed"))
             {
-                orderIcon = new GUIImage(new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center),
-                    character.CurrentOrder.SymbolSprite, scaleToFit: true);
+                orderIcon = new GUIImage(new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center), character.CurrentOrder.SymbolSprite, scaleToFit: true);
                 var tooltip = character.CurrentOrder.Name;
                 if (!string.IsNullOrWhiteSpace(character.CurrentOrderOption)) { tooltip += " (" + character.CurrentOrder.GetOptionName(character.CurrentOrderOption) + ")"; };
                 orderIcon.ToolTip = tooltip;
             }
             else
             {
-                // TODO: Replace with an icon that symbols the characters dismissed state and their availability to new orders OR localize the text
-                orderIcon = new GUIImage(new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center),
-                    "CommandNodeContainer", scaleToFit: true);
-                var label = new GUITextBlock(new RectTransform(new Vector2(0.9f / 1.2f), orderIcon.RectTransform, anchor: Anchor.Center),
-                    "FREE", textColor: jobColor * nodeColorMultiplier, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, style: null)
-                {
-                    CanBeFocused = false,
-                    ForceUpperCase = true,
-                    HoverTextColor = jobColor
-                };
+                orderIcon = new GUIImage(new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center), "CommandIdleNode", scaleToFit: true);
             }
             orderIcon.Color = jobColor * nodeColorMultiplier;
             orderIcon.HoverColor = jobColor;
@@ -2760,7 +2711,7 @@ namespace Barotrauma
             var nameLabel = new GUITextBlock(
                 new RectTransform(new Point(width, 0), parent: node.RectTransform, anchor: Anchor.TopCenter, pivot: Pivot.BottomCenter)
                 {
-                    RelativeOffset = new Vector2(0f, -0.1f)
+                    RelativeOffset = new Vector2(0f, -0.25f)
                 },
                 ToolBox.LimitString(character.Info?.DisplayName, font, width), textColor: jobColor * nodeColorMultiplier, font: font, textAlignment: Alignment.Center, style: null)
             {
@@ -2769,32 +2720,21 @@ namespace Barotrauma
                 HoverTextColor = jobColor
             };
 
-            // Job icon
-            GUIImage jobIcon = null;
-            if (character?.Info?.Job?.Prefab?.Icon is Sprite sprite)
+            if (character.Info?.Job?.Prefab?.IconSmall is Sprite smallJobIcon)
             {
-                jobIcon = new GUIImage(new RectTransform(new Vector2(1.2f), node.RectTransform, anchor: Anchor.Center),
-                    "CommandNodeContainer", scaleToFit: true)
+                // Job icon
+                new GUIImage(
+                    new RectTransform(new Vector2(0.4f), node.RectTransform, anchor: Anchor.TopCenter, pivot: Pivot.Center)
+                    {
+                        RelativeOffset = new Vector2(0.0f, -((orderIcon.RectTransform.RelativeSize.Y - 1) / 2))
+                    },
+                    smallJobIcon, scaleToFit: true)
                 {
                     CanBeFocused = false,
-                    Color = jobColor * nodeColorMultiplier,
-                    HoverColor = jobColor,
-                    PressedColor = jobColor,
-                    SelectedColor = jobColor,
-                    Visible = false
-                }; ;
-                new GUIImage(new RectTransform(new Vector2(0.9f / 1.2f), jobIcon.RectTransform, anchor: Anchor.Center),
-                    sprite, scaleToFit: true)
-                {
-                    CanBeFocused = false,
-                    Color = jobColor * nodeColorMultiplier,
-                    HoverColor = jobColor,
-                    PressedColor = jobColor,
-                    SelectedColor = jobColor
+                    Color = jobColor,
+                    HoverColor = jobColor
                 };
             }
-
-            assignmentNodeIcons.Add(new AssignmentNodeIconSet(orderIcon, jobIcon));
 
 #if DEBUG
             bool canHear = true;

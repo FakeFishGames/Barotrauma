@@ -279,7 +279,7 @@ namespace Barotrauma
                 ic.PlaySound(ActionType.OnUse, character);
 #endif
                 ic.WasUsed = true;
-                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb);
+                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: character);
                 if (ic.DeleteOnUse)
                 {
                     remove = true;

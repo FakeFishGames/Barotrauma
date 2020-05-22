@@ -331,8 +331,8 @@ namespace Barotrauma.Items.Components
 
             if (!item.body.Enabled)
             {
-                Limb rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
-                item.SetTransform(rightHand.SimPosition, 0.0f);
+                Limb hand = picker.AnimController.GetLimb(LimbType.RightHand) ?? picker.AnimController.GetLimb(LimbType.LeftHand);
+                item.SetTransform(hand != null ? hand.SimPosition : character.SimPosition, 0.0f);
             }
 
             bool alreadyEquipped = character.HasEquippedItem(item);
@@ -369,17 +369,19 @@ namespace Barotrauma.Items.Components
             IsActive = false;
         }
 
-        public bool CanBeAttached()
+        public bool CanBeAttached(Character user)
         {
             if (!attachable || !Reattachable) { return false; }
 
             //can be attached anywhere in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
-            //can be attached anywhere inside hulls
-            if (item.CurrentHull != null) { return true; }
+            Vector2 attachPos = user == null ? item.WorldPosition : GetAttachPosition(user, useWorldCoordinates: true);
 
-            return Structure.GetAttachTarget(item.WorldPosition) != null;
+            //can be attached anywhere inside hulls
+            if (item.CurrentHull != null && Submarine.RectContains(item.CurrentHull.WorldRect, attachPos)) { return true; }
+
+            return Structure.GetAttachTarget(attachPos) != null;
         }
         
         public bool CanBeDeattached()
@@ -396,8 +398,14 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            //don't allow deattaching if part of a sub and outside hulls
-            return item.Submarine == null || item.CurrentHull != null;
+            if (item.CurrentHull == null)
+            {
+                return Structure.GetAttachTarget(item.WorldPosition) != null;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public override bool Pick(Character picker)
@@ -505,7 +513,7 @@ namespace Barotrauma.Items.Components
             if (character != null)
             {
                 if (!character.IsKeyDown(InputType.Aim)) { return false; }
-                if (!CanBeAttached()) { return false; }
+                if (!CanBeAttached(character)) { return false; }
 
                 if (GameMain.NetworkMember != null)
                 {
@@ -534,7 +542,7 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     item.Drop(character);
-                    item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f);
+                    item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
                 }
             }
 
@@ -543,16 +551,18 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private Vector2 GetAttachPosition(Character user)
+        private Vector2 GetAttachPosition(Character user, bool useWorldCoordinates = false)
         {
-            if (user == null) { return item.Position; }
+            if (user == null) { return useWorldCoordinates ? item.WorldPosition : item.Position; }
 
             Vector2 mouseDiff = user.CursorWorldPosition - user.WorldPosition;
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
+            Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
+
             return new Vector2(
-                MathUtils.RoundTowardsClosest(user.Position.X + mouseDiff.X, Submarine.GridSize.X),
-                MathUtils.RoundTowardsClosest(user.Position.Y + mouseDiff.Y, Submarine.GridSize.Y));
+                MathUtils.RoundTowardsClosest(userPos.X + mouseDiff.X, Submarine.GridSize.X),
+                MathUtils.RoundTowardsClosest(userPos.Y + mouseDiff.Y, Submarine.GridSize.Y));
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)

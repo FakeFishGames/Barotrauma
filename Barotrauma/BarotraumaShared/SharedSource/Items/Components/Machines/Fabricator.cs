@@ -171,7 +171,7 @@ namespace Barotrauma.Items.Components
             outputContainer.Inventory.Locked = true;
 
             currPowerConsumption = powerConsumption;
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
 
             if (GameMain.NetworkMember?.IsServer ?? true)
             {

@@ -2111,13 +2111,19 @@ namespace Barotrauma
 
         public void Equip(Character character)
         {
-            foreach (ItemComponent ic in components) ic.Equip(character);
+            if (Removed)
+            {
+                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace}");
+                return;
+            }
+
+            foreach (ItemComponent ic in components) { ic.Equip(character); }
         }
 
         public void Unequip(Character character)
         {
             character.DeselectItem(this);
-            foreach (ItemComponent ic in components) ic.Unequip(character);
+            foreach (ItemComponent ic in components) { ic.Unequip(character); }
         }
 
         public List<Pair<object, SerializableProperty>> GetProperties<T>()

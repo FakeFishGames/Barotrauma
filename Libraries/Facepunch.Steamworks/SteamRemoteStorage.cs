@@ -160,21 +160,34 @@ namespace Steamworks
 		/// </summary>
 		public static int FileCount => Internal.GetFileCount();
 
-		/// <summary>
-		/// Get a list of filenames synchronized by Steam Cloud
-		/// </summary>
-		public static IEnumerable<string> Files
+		public struct RemoteFile
 		{
-			get
+			public string Filename;
+			public int Size;
+
+			public bool Delete()
 			{
-				int _ = 0;
-				for( int i=0; i<FileCount; i++ )
-				{
-					var filename = Internal.GetFileNameAndSize( i, ref _ );
-					yield return filename;
-				}
+				return Internal.FileDelete(Filename);
 			}
 		}
 
+		/// <summary>
+		/// Get a list of filenames synchronized by Steam Cloud
+		/// </summary>
+		public static List<RemoteFile> Files
+		{
+			get
+			{
+				var ret = new List<RemoteFile>();
+				int count = FileCount;
+				for( int i=0; i<count; i++ )
+				{
+					int size = -1;
+					var filename = Internal.GetFileNameAndSize( i, ref size );
+					ret.Add(new RemoteFile { Filename = filename, Size = size });
+				}
+				return ret;
+			}
+		}
 	}
 }
