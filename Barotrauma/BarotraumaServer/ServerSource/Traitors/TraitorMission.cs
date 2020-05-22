@@ -1,4 +1,4 @@
-﻿//#define ALLOW_SOLO_TRAITOR
+﻿#define ALLOW_SOLO_TRAITOR
 //#define ALLOW_NONHUMANOID_TRAITOR
 
 using System;
@@ -9,6 +9,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Barotrauma.Extensions;
+using Barotrauma.ServerSource.Traitors;
 
 namespace Barotrauma
 {
@@ -16,6 +17,8 @@ namespace Barotrauma
     {
         public class TraitorMission
         {
+
+            private bool latch = false;
             private static string wordsTxt = Path.Combine("Content", "CodeWords.txt");
 
             private readonly List<Objective> allObjectives = new List<Objective>();
@@ -114,15 +117,11 @@ namespace Barotrauma
                 return characters;
             }
 
-            protected List<Tuple<string, Tuple<Client, Character>>> AssignTraitors(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            protected List<Tuple<string, Tuple<Client, Character>>> AssignTraitors(GameServer server, TraitorManager traitorManager, Character.TeamType team, bool mainRun)
             {
+                
                 List<Character> characters = FindCharacters();
-#if !ALLOW_SOLO_TRAITOR
-                if (characters.Count < 2)
-                {
-                    return null;
-                }
-#endif
+
                 var roleCandidates = new Dictionary<string, HashSet<Tuple<Client, Character>>>();
                 foreach (var role in Roles)
                 {
@@ -160,8 +159,12 @@ namespace Barotrauma
                     {
                         ++numCandidates;
                     }
-
-                    var selected = ToolBox.SelectWeightedRandom(availableCandidates, availableCandidates.Select(c => Math.Max(c.Item1.RoundsSincePlayedAsTraitor, 0.1f)).ToList(), TraitorManager.Random);
+                    var selected = availableCandidates[TraitorManager.RandomInt(availableCandidates.Count)];
+                    if (mainRun)
+                    {
+                        var idCard = selected.Item2.Inventory.FindItemByIdentifier("idcard");
+                        idCard.AddTag("traitor");
+                    }
                     assignedCandidates.Add(Tuple.Create(currentRole, selected));
                     foreach (var candidate in roleCandidates.Values)
                     {
@@ -185,12 +188,12 @@ namespace Barotrauma
                         return false;
                     }
                 }
-                return AssignTraitors(server, traitorManager, team) != null;
+                return AssignTraitors(server, traitorManager, team, false) != null;
             }
 
             public bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
             {
-                var assignedCandidates = AssignTraitors(server, traitorManager, team);
+                var assignedCandidates = AssignTraitors(server, traitorManager, team, true);
                 if (assignedCandidates == null)
                 {
                     return false;
@@ -244,10 +247,11 @@ namespace Barotrauma
 
             public void Update(float deltaTime, TraitorWinHandler winHandler)
             {
-                if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
+   
+              /**  if (pendingObjectives.Count <= 0 || Traitors.Count <= 0)
                 {
                     return;
-                }
+                }**/
                 /**if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));

@@ -29,6 +29,9 @@ namespace Barotrauma.ServerSource.Traitors
             data.TryGetValue("traitorRatio", out string output2);
             traitorRatio = float.Parse(output2,System.Globalization.CultureInfo.InvariantCulture);
 
+            data.TryGetValue("traitorRandomFactor", out string output6);
+            traitorRandomFactor = float.Parse(output6, System.Globalization.CultureInfo.InvariantCulture);
+
             data.TryGetValue("traitorStaticNumber", out string output3);
             traitorStaticNumber = Int32.Parse(output3);
 
@@ -38,8 +41,6 @@ namespace Barotrauma.ServerSource.Traitors
             data.TryGetValue("traitorRandomMax", out string output5);
             traitorRandomMax = Int32.Parse(output5);
 
-            data.TryGetValue("traitorRandomFactor", out string output6);
-            traitorRandomFactor = float.Parse(output6, System.Globalization.CultureInfo.InvariantCulture);
         }
     
         private void readSettings(String path)

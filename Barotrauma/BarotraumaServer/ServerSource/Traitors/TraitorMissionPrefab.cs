@@ -5,6 +5,8 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Networking;
 using Barotrauma.ServerSource.Traitors;
+using System.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 
 namespace Barotrauma
 {
@@ -40,14 +42,53 @@ namespace Barotrauma
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
-            //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
+            DebugConsole.NewMessage("Random Prefab Called");
+            traitorSettings settings = new traitorSettings();
+            TraitorMissionPrefab selected = null;
+            int target = 1;
+            if (String.Equals(settings.traitorSelectMode, "static"))
+            {
+                DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
+                target = settings.traitorStaticNumber;
+            }
+            else if (String.Equals(settings.traitorSelectMode, "random"))
+            {
+                DebugConsole.NewMessage("using min traitor number: " + settings.traitorRandomMin);
+                target = settings.traitorRandomMin;
+                Random randGen = new Random();
+                int count = settings.traitorRandomMax - settings.traitorRandomMin; //subtract min because min is guarenteed already
+                while (count > 0)
+                {
+                    DebugConsole.NewMessage("Count: " + count + "random check test" + randGen.NextDouble() + " " + settings.traitorRandomFactor);
+                    if (randGen.NextDouble() < settings.traitorRandomFactor)
+                    {
+                        target++;
+                    }
+                    count--;
+                }
+
+            }
             foreach (var mission in List)
             {
-                mission.SelectedWeight += 10;
+                DebugConsole.NewMessage("Count of roles for this mission and target is: " + mission.Prefab.Roles.Count + " " + target);
+                if (mission.Prefab.Roles.Count == target)
+                {
+                    selected = mission.Prefab;
+                }
             }
-            selected.SelectedWeight = 0.0f;
-            return selected.Prefab;
+            //var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
+            //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
+            //foreach (var mission in List)
+            //{
+            //    mission.SelectedWeight += 10;
+            //}
+            //selected.SelectedWeight = 0.0f;
+            //selected.prefab
+            if (selected == null)
+            {
+                DebugConsole.NewMessage("Critical Error Selected Null In TraitorMissionPrefab");
+            }
+            return selected;
         }
 
         private class AttributeChecker : IDisposable
@@ -119,54 +160,54 @@ namespace Barotrauma
                     switch (goalType.ToLowerInvariant())
                     {
                         case "killtarget":
-                        {
-                            checker.Optional(targetFilters.Keys.ToArray());
-                            checker.Optional("causeofdeath");
-                            checker.Optional("affliction");
-                            checker.Optional("roomname");
-                            checker.Optional("targetcount");
-                            checker.Optional("targetpercentage");
-                            List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
-                            foreach (var attribute in Config.Attributes())
                             {
-                                if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                checker.Optional(targetFilters.Keys.ToArray());
+                                checker.Optional("causeofdeath");
+                                checker.Optional("affliction");
+                                checker.Optional("roomname");
+                                checker.Optional("targetcount");
+                                checker.Optional("targetpercentage");
+                                List<Traitor.TraitorMission.CharacterFilter> killFilters = new List<Traitor.TraitorMission.CharacterFilter>();
+                                foreach (var attribute in Config.Attributes())
                                 {
-                                    killFilters.Add((character) => filter(attribute.Value, character));
+                                    if (targetFilters.TryGetValue(attribute.Name.ToString().ToLower(System.Globalization.CultureInfo.InvariantCulture), out var filter))
+                                    {
+                                        killFilters.Add((character) => filter(attribute.Value, character));
+                                    }
                                 }
+                                goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)),
+                                    (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
+                                    Config.GetAttributeString("affliction", null), Config.GetAttributeString("targethull", null), Config.GetAttributeInt("targetcount", -1),
+                                    Config.GetAttributeFloat("targetpercentage", -1f));
+                                break;
                             }
-                            goal = new Traitor.GoalKillTarget((character) => killFilters.All(f => f(character)), 
-                                (CauseOfDeathType)Enum.Parse(typeof(CauseOfDeathType), Config.GetAttributeString("causeofdeath", "Unknown"), true),
-                                Config.GetAttributeString("affliction", null), Config.GetAttributeString("targethull", null), Config.GetAttributeInt("targetcount", -1), 
-                                Config.GetAttributeFloat("targetpercentage", -1f));
-                            break;
-                        }
                         case "destroyitems":
-                        {
-                            checker.Required("tag");
-                            checker.Optional("percentage", "matchIdentifier", "matchTag", "matchInventory");
-                            var tag = Config.GetAttributeString("tag", null);
-                            if (tag != null)
                             {
-                                goal = new Traitor.GoalDestroyItemsWithTag(
-                                    tag,
-                                    Config.GetAttributeFloat("percentage", 100.0f) / 100.0f,
-                                    Config.GetAttributeBool("matchIdentifier", true),
-                                    Config.GetAttributeBool("matchTag", true),
-                                    Config.GetAttributeBool("matchInventory", false));
+                                checker.Required("tag");
+                                checker.Optional("percentage", "matchIdentifier", "matchTag", "matchInventory");
+                                var tag = Config.GetAttributeString("tag", null);
+                                if (tag != null)
+                                {
+                                    goal = new Traitor.GoalDestroyItemsWithTag(
+                                        tag,
+                                        Config.GetAttributeFloat("percentage", 100.0f) / 100.0f,
+                                        Config.GetAttributeBool("matchIdentifier", true),
+                                        Config.GetAttributeBool("matchTag", true),
+                                        Config.GetAttributeBool("matchInventory", false));
+                                }
+                                break;
                             }
-                            break;
-                        }
                         case "sabotage":
-                        {
-                            checker.Required("tag");
-                            checker.Optional("threshold");
-                            var tag = Config.GetAttributeString("tag", null);
-                            if (tag != null)
                             {
-                                goal = new Traitor.GoalSabotageItems(tag, Config.GetAttributeFloat("threshold", 20.0f));
+                                checker.Required("tag");
+                                checker.Optional("threshold");
+                                var tag = Config.GetAttributeString("tag", null);
+                                if (tag != null)
+                                {
+                                    goal = new Traitor.GoalSabotageItems(tag, Config.GetAttributeFloat("threshold", 20.0f));
+                                }
+                                break;
                             }
-                            break;
-                        }
                         case "floodsub":
                             checker.Optional("percentage");
                             goal = new Traitor.GoalFloodPercentOfSub(Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
@@ -182,7 +223,7 @@ namespace Barotrauma
                                     itemCountFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)), Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)), Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] { "steelcabinet", "mediumsteelcabinet", "suppliescabinet" }));
                             break;
                         case "replaceinventory":
                             checker.Required("containers", "replacements");
@@ -207,7 +248,7 @@ namespace Barotrauma
                                     poisonFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null), 
+                            goal = new Traitor.GoalInjectTarget((character) => poisonFilters.All(f => f(character)), Config.GetAttributeString("poison", null),
                                 Config.GetAttributeString("affliction", null), Config.GetAttributeInt("targetcount", -1), Config.GetAttributeFloat("targetpercentage", -1f));
                             break;
                         case "unwire":
@@ -239,35 +280,35 @@ namespace Barotrauma
                     switch (element.Name.ToString().ToLowerInvariant())
                     {
                         case "modifier":
-                        {
-                            using (var checker = new AttributeChecker(element))
                             {
-                                checker.Required("type");
-                                var modifierType = element.GetAttributeString("type", "");
-                                switch (modifierType)
+                                using (var checker = new AttributeChecker(element))
                                 {
-                                    case "duration":
+                                    checker.Required("type");
+                                    var modifierType = element.GetAttributeString("type", "");
+                                    switch (modifierType)
                                     {
-                                        checker.Optional("cumulative", "duration", "infotext");
-                                        var isCumulative = element.GetAttributeBool("cumulative", false);
-                                        goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), isCumulative, element.GetAttributeString("infotext", isCumulative ? "TraitorGoalWithCumulativeDurationInfoText" : "TraitorGoalWithDurationInfoText"));
-                                        break;
+                                        case "duration":
+                                            {
+                                                checker.Optional("cumulative", "duration", "infotext");
+                                                var isCumulative = element.GetAttributeBool("cumulative", false);
+                                                goal = new Traitor.GoalHasDuration(goal, element.GetAttributeFloat("duration", 5.0f), isCumulative, element.GetAttributeString("infotext", isCumulative ? "TraitorGoalWithCumulativeDurationInfoText" : "TraitorGoalWithDurationInfoText"));
+                                                break;
+                                            }
+                                        case "timelimit":
+                                            checker.Optional("timelimit", "infotext");
+                                            goal = new Traitor.GoalHasTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f), element.GetAttributeString("infotext", "TraitorGoalWithTimeLimitInfoText"));
+                                            break;
+                                        case "optional":
+                                            checker.Optional("infotext");
+                                            goal = new Traitor.GoalIsOptional(goal, element.GetAttributeString("infotext", "TraitorGoalIsOptionalInfoText"));
+                                            break;
+                                        default:
+                                            GameServer.Log($"Unrecognized modifier type \"{modifierType}\".", ServerLog.MessageType.Error);
+                                            break;
                                     }
-                                    case "timelimit":
-                                        checker.Optional("timelimit", "infotext");
-                                        goal = new Traitor.GoalHasTimeLimit(goal, element.GetAttributeFloat("timelimit", 180.0f), element.GetAttributeString("infotext", "TraitorGoalWithTimeLimitInfoText"));
-                                        break;
-                                    case "optional":
-                                        checker.Optional("infotext");
-                                        goal = new Traitor.GoalIsOptional(goal, element.GetAttributeString("infotext", "TraitorGoalIsOptionalInfoText"));
-                                        break;
-                                    default:
-                                        GameServer.Log($"Unrecognized modifier type \"{modifierType}\".", ServerLog.MessageType.Error);
-                                        break;
                                 }
+                                break;
                             }
-                            break;
-                        }
                     }
                 }
                 foreach (var element in Config.Elements())
@@ -279,31 +320,31 @@ namespace Barotrauma
                             // loaded above
                             break;
                         case "infotext":
-                        {
-                            using (var checker = new AttributeChecker(element))
                             {
-                                checker.Required("id");
-                                var id = element.GetAttributeString("id", null);
-                                if (id != null)
+                                using (var checker = new AttributeChecker(element))
                                 {
-                                    goal.InfoTextId = id;
+                                    checker.Required("id");
+                                    var id = element.GetAttributeString("id", null);
+                                    if (id != null)
+                                    {
+                                        goal.InfoTextId = id;
+                                    }
                                 }
+                                break;
                             }
-                            break;
-                        }
                         case "completedtext":
-                        {
-                            using (var checker = new AttributeChecker(element))
                             {
-                                checker.Required("id");
-                                var id = element.GetAttributeString("id", null);
-                                if (id != null)
+                                using (var checker = new AttributeChecker(element))
                                 {
-                                    goal.CompletedTextId = id;
+                                    checker.Required("id");
+                                    var id = element.GetAttributeString("id", null);
+                                    if (id != null)
+                                    {
+                                        goal.CompletedTextId = id;
+                                    }
                                 }
+                                break;
                             }
-                            break;
-                        }
                         default:
                             GameServer.Log($"Unrecognized element \"{element.Name}\" in goal.", ServerLog.MessageType.Error);
                             break;
@@ -494,8 +535,8 @@ namespace Barotrauma
             return new Goal(goalType, goalRoot);
         }
 
-         protected Objective LoadObjective(XElement objectiveRoot, string[] allRoles)
-         {
+        protected Objective LoadObjective(XElement objectiveRoot, string[] allRoles)
+        {
             var allRolesSet = new HashSet<string>(allRoles);
             var result = new Objective
             {
@@ -553,14 +594,14 @@ namespace Barotrauma
                             result.EndMessageFailureDetainedTextId = element.GetAttributeString("id", null);
                             break;
                         case "goal":
-                        {
-                            var goal = LoadGoal(element);
-                            if (goal != null)
                             {
-                                result.Goals.Add(goal);
+                                var goal = LoadGoal(element);
+                                if (goal != null)
+                                {
+                                    result.Goals.Add(goal);
+                                }
+                                break;
                             }
-                            break;
-                        }
                         default:
                             GameServer.Log($"Unrecognized element \"{element.Name}\" under Objective.", ServerLog.MessageType.Error);
                             break;
@@ -594,51 +635,52 @@ namespace Barotrauma
                         case "role":
                             checker.Required("id");
                             checker.Optional("jobs");
-                            traitorSettings settings = new traitorSettings();
-                            DebugConsole.NewMessage("Help!");
-                            DebugConsole.NewMessage(settings.traitorSelectMode);
-                            DebugConsole.NewMessage("Help!");
-                            if (settings.traitorSelectMode.Equals("ratio"))
-                            {
-                                DebugConsole.NewMessage("NOT IMPLEMENTED: using set traitor number: " + settings.traitorStaticNumber);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorStaticNumber - 1;
-                                while (count > 0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
-                                    count--;
-                                }
-                            }
-                            else if (settings.traitorSelectMode.Equals("static"))
-                            {
-                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorStaticNumber - 1;
-                                while (count>0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
-                                    count--;
-                                }
-                            }
-                            else if (settings.traitorSelectMode.Equals("random"))
-                            {
-                                DebugConsole.NewMessage("using set traitor number: " + settings.traitorRandomMin);
-                                Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
-                                int count = settings.traitorRandomMin - 1;
-                                while (count > 0)
-                                {
-                                    DebugConsole.NewMessage("Added additional traitor");
-                                    Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
-                                    count--;
-                                }
-                                if(randGen.NextDouble() < settings.traitorRandomFactor)
-                                {
-                                    Roles.Add(element.GetAttributeString("id", null) + settings.traitorRandomMin, LoadRole(element));
-                                }
-                            }
+                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
                             break;
+                            /*                            traitorSettings settings = new traitorSettings();
+                                                        DebugConsole.NewMessage(settings.traitorSelectMode);
+                                                        if (settings.traitorSelectMode.Equals("ratio"))
+                                                        {
+                                                            DebugConsole.NewMessage("NOT IMPLEMENTED: using set traitor number: " + settings.traitorStaticNumber);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorStaticNumber - 1;
+                                                            while (count > 0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                        }
+                                                        else if (settings.traitorSelectMode.Equals("static"))
+                                                        {
+                                                            DebugConsole.NewMessage("using set traitor number: " + settings.traitorStaticNumber);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorStaticNumber - 1;
+                                                            while (count>0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null)+count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                        }
+                                                        else if (settings.traitorSelectMode.Equals("random"))
+                                                        {
+                                                            DebugConsole.NewMessage("using set traitor number: " + settings.traitorRandomMin);
+                                                            Roles.Add(element.GetAttributeString("id", null), LoadRole(element));
+                                                            int count = settings.traitorRandomMin - 1;
+                                                            while (count > 0)
+                                                            {
+                                                                DebugConsole.NewMessage("Added additional traitor");
+                                                                Roles.Add(element.GetAttributeString("id", null) + count, LoadRole(element));
+                                                                count--;
+                                                            }
+                                                            if(randGen.NextDouble() < settings.traitorRandomFactor)
+                                                            {
+                                                                Roles.Add(element.GetAttributeString("id", null) + settings.traitorRandomMin, LoadRole(element));
+                                                            }
+                                                        } 
+                            break;
+                            */
                     }
                 }
             }
@@ -684,14 +726,14 @@ namespace Barotrauma
                             EndMessageFailureDetainedText = element.GetAttributeString("id", null);
                             break;
                         case "objective":
-                        {
-                            var objective = LoadObjective(element, Roles.Keys.ToArray());
-                            if (objective != null)
                             {
-                                Objectives.Add(objective);
+                                var objective = LoadObjective(element, Roles.Keys.ToArray());
+                                if (objective != null)
+                                {
+                                    Objectives.Add(objective);
+                                }
+                                break;
                             }
-                            break;
-                        }
                         default:
                             GameServer.Log($"Unrecognized element \"{element.Name}\"under TraitorMission.", ServerLog.MessageType.Error);
                             break;
