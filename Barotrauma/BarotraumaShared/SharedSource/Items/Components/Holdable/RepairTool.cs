@@ -326,6 +326,18 @@ namespace Barotrauma.Items.Components
                     {
                         if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
+                        if (f.Body?.UserData is Item targetItem)
+                        {
+                            if (!HitItems) { return false; }
+                            if (HitBrokenDoors)
+                            {
+                                if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
+                            }
+                            else
+                            {
+                                if (targetItem.Condition <= 0) { return false; }
+                            }
+                        }
                         return f.Body?.UserData != null; 
                     },
                     allowInsideFixture: true));

@@ -594,6 +594,11 @@ namespace Barotrauma
             return assignedWayPoints;
         }
 
+        public void FindHull()
+        {
+            currentHull = Hull.FindHull(WorldPosition, CurrentHull);
+        }
+
         public override void OnMapLoaded()
         {
             currentHull = Hull.FindHull(WorldPosition, currentHull);

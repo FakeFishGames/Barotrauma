@@ -370,6 +370,30 @@ namespace Barotrauma.Lights
             }
         }
 
+        public static void RecalculateAll(Submarine sub)
+        {
+            var chList = HullLists.Find(h => h.Submarine == sub);
+            if (chList != null)
+            {
+                foreach (ConvexHull ch in chList.List)
+                {
+                    ch.overlappingHulls.Clear();
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ch.ignoreEdge[i] = false;
+                    }
+                }
+                for (int i = 0; i < chList.List.Count; i++)
+                {
+                    for (int j = i + 1; j < chList.List.Count; j++)
+                    {
+                        chList.List[i].MergeOverlappingSegments(chList.List[j]);
+                        chList.List[j].MergeOverlappingSegments(chList.List[i]);
+                    }
+                }
+            }
+        }
+
         public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");

@@ -487,7 +487,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("giveperm [id]: Grants administrative permissions to the player with the specified client ID.", Color.Cyan);
+                    NewMessage("giveperm [id/steamid/endpoint/name]: Grants administrative permissions to the player with the specified client.", Color.Cyan);
                     return;
                 }
 
@@ -522,7 +522,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", Color.Cyan);
+                    NewMessage("revokeperm [id/steamid/endpoint/name]: Revokes administrative permissions to the player with the specified client.", Color.Cyan);
                     return;
                 }
 
@@ -604,7 +604,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", Color.Cyan);
+                    NewMessage("givecommandperm [id/steamid/endpoint/name]: Gives the specified client the permission to use the specified console commands.", Color.Cyan);
                     return;
                 }
 
@@ -649,7 +649,7 @@ namespace Barotrauma
                     {
                         NewMessage("Gave the client \"" + client.Name + "\" the permission to use all console commands.", Color.White);
                     }
-                    else
+                    else if (grantedCommands.Count > 0)
                     {
                         NewMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
                     }
@@ -662,7 +662,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", Color.Cyan);
+                    NewMessage("revokecommandperm [id/steamid/endpoint/name]: Revokes permission to use the specified console commands from the specified client.", Color.Cyan);
                     return;
                 }
 
@@ -682,23 +682,39 @@ namespace Barotrauma
                 {
                     string[] splitCommands = commandsStr.Split(' ');
                     List<Command> revokedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
+                    bool revokeAll = splitCommands.Length > 0 && splitCommands[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    if (revokeAll)
                     {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
-                        {
-                            ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
-                        }
-                        else
-                        {
-                            revokedCommands.Add(matchingCommand);
-                        }
+                        revokedCommands.AddRange(commands);
                     }
+                    else
+                    {
+                        for (int i = 0; i < splitCommands.Length; i++)
+                        {
+                            splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                            if (matchingCommand == null)
+                            {
+                                ThrowError("Could not find the command \"" + splitCommands[i] + "\"!");
+                            }
+                            else
+                            {
+                                revokedCommands.Add(matchingCommand);
+                            }
+                        }
+                    }                    
 
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
                     GameMain.Server.UpdateClientPermissions(client);
-                    NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    if (revokeAll)
+                    {
+                        NewMessage("Revoked \"" + client.Name + "\"'s permission to use console commands.", Color.White);
+                    }
+                    else if (revokedCommands.Any())
+                    {
+                        NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    }
+
                 }, args, 1);
             });
 
@@ -707,7 +723,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return;
                 if (args.Length < 1)
                 {
-                    NewMessage("showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", Color.Cyan);
+                    NewMessage("showperm [id/steamid/endpoint/name]: Shows the current administrative permissions of the specified client.", Color.Cyan);
                     return;
                 }
 
@@ -1808,7 +1824,7 @@ namespace Barotrauma
                     var client = FindClient(args[0]);
                     if (client == null)
                     {
-                        ThrowError("Client \"" + args[0] + "\" not found.");
+                        GameMain.Server.SendConsoleMessage("Client \"" + args[0] + "\" not found.", senderClient);
                         return;
                     }
                     if (client.Connection == GameMain.Server.OwnerConnection)
@@ -1817,27 +1833,42 @@ namespace Barotrauma
                         return;
                     }
 
-                    string[] splitCommands = args.Skip(1).ToArray();
                     List<Command> grantedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
+                    string[] splitCommands = args.Skip(1).ToArray();
+                    bool giveAll = splitCommands.Length > 0 && splitCommands[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    if (giveAll)
                     {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
+                        grantedCommands.AddRange(commands);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < splitCommands.Length; i++)
                         {
-                            GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
-                        }
-                        else
-                        {
-                            grantedCommands.Add(matchingCommand);
+                            splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                            if (matchingCommand == null)
+                            {
+                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                            }
+                            else
+                            {
+                                grantedCommands.Add(matchingCommand);
+                            }
                         }
                     }
 
                     client.GivePermission(ClientPermissions.ConsoleCommands);
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Union(grantedCommands).Distinct().ToList());
+
                     GameMain.Server.UpdateClientPermissions(client);
-                    GameMain.Server.SendConsoleMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", senderClient);
-                    NewMessage("Gave the client \"" + client.Name + "\" the permission to use the console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    if (giveAll)
+                    {
+                        GameMain.Server.SendConsoleMessage("Gave the client \"" + client.Name + "\" the permission to use all console commands.", senderClient);
+                    }
+                    else if (grantedCommands.Count > 0)
+                    {
+                        GameMain.Server.SendConsoleMessage("Gave the client \"" + client.Name + "\" the permission to use console commands " + string.Join(", ", grantedCommands.Select(c => c.names[0])) + ".", senderClient);
+                    }                
                 }
             );
 
@@ -1845,7 +1876,7 @@ namespace Barotrauma
                 "revokecommandperm",
                 (Client senderClient, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (args.Length < 2) return;
+                    if (args.Length < 2) { return; }
 
                     var client = FindClient(args[0]);
                     if (client == null)
@@ -1858,28 +1889,43 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage("Cannot revoke command permissions from the server owner!", senderClient);
                         return;
                     }
-
-                    string[] splitCommands = args.Skip(1).ToArray();
                     List<Command> revokedCommands = new List<Command>();
-                    for (int i = 0; i < splitCommands.Length; i++)
+                    string[] splitCommands = args.Skip(1).ToArray();
+                    bool revokeAll = splitCommands.Length > 0 && splitCommands[0].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    if (revokeAll)
                     {
-                        splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
-                        Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
-                        if (matchingCommand == null)
+                        revokedCommands.AddRange(commands);
+                        client.RemovePermission(ClientPermissions.ConsoleCommands);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < splitCommands.Length; i++)
                         {
-                            GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                            splitCommands[i] = splitCommands[i].Trim().ToLowerInvariant();
+                            Command matchingCommand = commands.Find(c => c.names.Contains(splitCommands[i]));
+                            if (matchingCommand == null)
+                            {
+                                GameMain.Server.SendConsoleMessage("Could not find the command \"" + splitCommands[i] + "\"!", senderClient);
+                            }
+                            else
+                            {
+                                revokedCommands.Add(matchingCommand);
+                            }
                         }
-                        else
-                        {
-                            revokedCommands.Add(matchingCommand);
-                        }
+                        client.GivePermission(ClientPermissions.ConsoleCommands);
                     }
 
-                    client.GivePermission(ClientPermissions.ConsoleCommands);
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
                     GameMain.Server.UpdateClientPermissions(client);
                     GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
-                    NewMessage(senderClient.Name + " revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
+                    if (revokeAll)
+                    {
+                        GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use console commands.", senderClient);
+                    }
+                    else if (revokedCommands.Count > 0)
+                    {
+                        GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
+                    }
                 }
             );
 

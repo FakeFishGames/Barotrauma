@@ -182,8 +182,6 @@ namespace Barotrauma.Items.Components
                     newConnection.Item.Position : 
                     newConnection.Item.Position - refSub.HiddenSubPosition;
 
-                nodePos = RoundNode(nodePos);
-
                 if (nodes.Count > 0 && nodes[0] == nodePos) { break; }
                 if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { break; }
 

@@ -929,24 +929,24 @@ namespace Barotrauma
                     //attempt to put in a free slot first
                     for (int i = capacity - 1; i >= 0; i--)
                     {
-                        if (Items[i] != null) continue;
-                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                        if (Items[i] != null) { continue; }
+                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
                         success = TryPutItem(item, i, true, false, Character.Controlled, true);
-                        if (success) break;
+                        if (success) { break; }
                     }
 
                     if (!success)
                     {
                         for (int i = capacity - 1; i >= 0; i--)
                         {
-                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
                             // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
-                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand)
+                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && (SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand))
                             {
                                 TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
                             }
                             success = TryPutItem(item, i, true, false, Character.Controlled, true);
-                            if (success) break;
+                            if (success) { break; }
                         }
                     }
                     break;

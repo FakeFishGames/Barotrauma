@@ -76,7 +76,7 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
-        public bool DisableMuffle { get; set; }
+        public bool IgnoreMuffling { get; set; }
 
         /// <summary>
         /// How many instances of the same sound clip can be playing at the same time

@@ -32,7 +32,19 @@ namespace Barotrauma
 
         private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
 
-        public bool FakeBroken;
+        private bool fakeBroken;
+        public bool FakeBroken
+        {
+            get { return fakeBroken; }
+            set
+            {
+                if (value != fakeBroken)
+                {
+                    fakeBroken = value;
+                    SetActiveSprite();
+                }
+            }
+        }
 
         private Sprite activeSprite;
         public override Sprite Sprite
@@ -145,11 +157,12 @@ namespace Barotrauma
                 }
             }
 
+            float displayCondition = FakeBroken ? 0.0f : condition;
             for (int i = 0; i < Prefab.BrokenSprites.Count;i++)
             {
                 if (Prefab.BrokenSprites[i].FadeIn) { continue; }
                 float minCondition = i > 0 ? Prefab.BrokenSprites[i - i].MaxCondition : 0.0f;
-                if (condition <= minCondition || condition <= Prefab.BrokenSprites[i].MaxCondition)
+                if (displayCondition <= minCondition || displayCondition <= Prefab.BrokenSprites[i].MaxCondition)
                 {
                     activeSprite = Prefab.BrokenSprites[i].Sprite;
                     break;
@@ -315,19 +328,25 @@ namespace Barotrauma
                         if (holdable.Picker.SelectedItems[0] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.RightHand);
-                            depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() + depthStep * 2;
-                            foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                            if (holdLimb != null)
                             {
-                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Max(wearableSprite.Sprite.Depth + depthStep, depth); }
+                                depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() + depthStep * 2;
+                                foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                                {
+                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Max(wearableSprite.Sprite.Depth + depthStep, depth); }
+                                }
                             }
                         }
                         else if (holdable.Picker.SelectedItems[1] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftHand);
-                            depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() - depthStep * 2;
-                            foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                            if (holdLimb != null)
                             {
-                                if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Min(wearableSprite.Sprite.Depth - depthStep, depth); }
+                                depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() - depthStep * 2;
+                                foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
+                                {
+                                    if (!wearableSprite.InheritLimbDepth && wearableSprite.Sprite != null) { depth = Math.Min(wearableSprite.Sprite.Depth - depthStep, depth); }
+                                }
                             }
                         }
                     }

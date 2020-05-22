@@ -74,6 +74,7 @@ namespace Barotrauma.Items.Components
             public readonly Vector2 TransducerWorldPos;
             public readonly Vector2 WorldPos;
             public readonly float Distance;
+            public double RecalculationTime;
 
             public CachedDistance(Vector2 transducerWorldPos, Vector2 worldPos, float dist)
             {
@@ -1333,20 +1334,22 @@ namespace Barotrauma.Items.Components
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius)
         {
-            float dist = Vector2.Distance(worldPosition, transducerPosition);
-            if (Vector2.DistanceSquared(worldPosition, transducerPosition) > Range * Range)
+            float linearDist = Vector2.Distance(worldPosition, transducerPosition);
+            float dist = linearDist;
+            if (linearDist > Range)
             {
                 if (markerDistances.TryGetValue(targetIdentifier, out CachedDistance cachedDistance))
                 {
-                    if (Vector2.DistanceSquared(cachedDistance.TransducerWorldPos, transducerPosition) > 500 * 500 ||
-                        Vector2.DistanceSquared(cachedDistance.WorldPos, worldPosition) > 500 * 500)
+                    if (Timing.TotalTime > cachedDistance.RecalculationTime &&
+                        (Vector2.DistanceSquared(cachedDistance.TransducerWorldPos, transducerPosition) > 500 * 500 ||
+                        Vector2.DistanceSquared(cachedDistance.WorldPos, worldPosition) > 500 * 500))
                     {
                         markerDistances.Remove(targetIdentifier);
                         CalculateDistance();
                     }
                     else
                     {
-                        dist = cachedDistance.Distance;
+                        dist = Math.Max(cachedDistance.Distance, linearDist);
                     }
                 }
                 else
@@ -1361,7 +1364,11 @@ namespace Barotrauma.Items.Components
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {
-                    markerDistances.Add(targetIdentifier, new CachedDistance(transducerPosition, worldPosition, path.TotalLength));
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength)
+                    {
+                        RecalculationTime = Timing.TotalTime + Rand.Range(1.0f, 5.0f)
+                    };
+                    markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }
             }
@@ -1375,16 +1382,16 @@ namespace Barotrauma.Items.Components
             float textAlpha = MathHelper.Clamp(1.5f - dist / 50000.0f, 0.5f, 1.0f);
 
             Vector2 dir = Vector2.Normalize(position);
-            Vector2 markerPos = (dist * zoom * scale > radius) ? dir * radius : position;
+            Vector2 markerPos = (linearDist * zoom * scale > radius) ? dir * radius : position;
             markerPos += center;
 
             markerPos.X = (int)markerPos.X;
             markerPos.Y = (int)markerPos.Y;
 
             float alpha = 1.0f;
-            if (dist * scale < radius)
+            if (linearDist * scale < radius)
             {
-                float normalizedDist = dist * scale / radius;
+                float normalizedDist = linearDist * scale / radius;
                 alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
 
                 float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
@@ -1392,14 +1399,6 @@ namespace Barotrauma.Items.Components
                 if (mouseDist < hoverThreshold)
                 {
                     alpha += (hoverThreshold - mouseDist) / hoverThreshold;
-                }
-            }
-
-            if (!GuiFrame.Children.First().Rect.Contains(markerPos))
-            {
-                if (MathUtils.GetLineRectangleIntersection(center, markerPos, GuiFrame.Children.First().Rect, out Vector2 intersection))
-                {
-                    markerPos = intersection;
                 }
             }
 

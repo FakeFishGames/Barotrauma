@@ -16,13 +16,15 @@ namespace Microsoft.Xna.Framework.Graphics
                 return;
 
             if (_applyToVertexStage)
-                ClearTargets(targets, device._d3dContext.VertexShader);
+                ClearTargets(targets, device, device._d3dContext.VertexShader);
             else
-                ClearTargets(targets, device._d3dContext.PixelShader);
+                ClearTargets(targets, device, device._d3dContext.PixelShader);
         }
 
-        private void ClearTargets(RenderTargetBinding[] targets, SharpDX.Direct3D11.CommonShaderStage shaderStage)
+        private void ClearTargets(RenderTargetBinding[] targets, GraphicsDevice device, SharpDX.Direct3D11.CommonShaderStage shaderStage)
         {
+            PlatformSetTextures(device);
+
             // NOTE: We make the assumption here that the caller has
             // locked the d3dContext for us to use.
 
@@ -92,7 +94,8 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-            _dirty = 0;
+            if (_dirty != 0) { throw new System.Exception($"TextureCollection still dirty ({_dirty})"); }
+            //_dirty = 0;
         }
     }
 }

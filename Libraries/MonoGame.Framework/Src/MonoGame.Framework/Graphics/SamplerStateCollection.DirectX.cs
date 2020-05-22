@@ -8,7 +8,17 @@ namespace Microsoft.Xna.Framework.Graphics
 {
     public sealed partial class SamplerStateCollection
     {
+        private int _d3dMaxDirty;
         private int _d3dDirty;
+
+        partial void CalculateMaxDirty()
+        {
+            _d3dMaxDirty = 0;
+            for (var i = 0; i < _actualSamplers.Length; i++)
+            {
+                _d3dMaxDirty |= 1 << i;
+            }
+        }
 
         private void PlatformSetSamplerState(int index)
         {
@@ -17,12 +27,12 @@ namespace Microsoft.Xna.Framework.Graphics
 
         private void PlatformClear()
         {
-            _d3dDirty = int.MaxValue;
+            _d3dDirty = _d3dMaxDirty;
         }
 
         private void PlatformDirty()
         {
-            _d3dDirty = int.MaxValue;
+            _d3dDirty = _d3dMaxDirty;
         }
 
         internal void PlatformSetSamplers(GraphicsDevice device)
@@ -60,7 +70,8 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-            _d3dDirty = 0;
+            if (_d3dDirty != 0) { throw new System.Exception($"SamplerStateCollection still dirty ({_d3dDirty})"); }
+            //_d3dDirty = 0;
         }
     }
 }

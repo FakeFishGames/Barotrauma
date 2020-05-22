@@ -159,6 +159,15 @@ namespace Barotrauma
                 return false;
 #endif
             }
+            if (item.Removed)
+            {
+#if DEBUG
+                throw new Exception("Tried to put a removed item (" + item.Name + ") in an inventory");
+#else
+                DebugConsole.ThrowError("Tried to put a removed item (" + item.Name + ") in an inventory.\n" + Environment.StackTrace);
+                return false;
+#endif
+            }
 
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
@@ -192,6 +201,9 @@ namespace Barotrauma
             int placedInSlot = -1;
             foreach (InvSlotType allowedSlot in allowedSlots)
             {
+                if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null) { continue; }
+                if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null) { continue; }
+
                 //check if all the required slots are free
                 bool free = true;
                 for (int i = 0; i < capacity; i++)

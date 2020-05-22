@@ -1234,8 +1234,6 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine.MainSub.Info.Name = name;
-
             string savePath = name + ".sub";
             string prevSavePath = null;
             if (!string.IsNullOrEmpty(Submarine.MainSub?.Info.FilePath) &&
@@ -1740,10 +1738,24 @@ namespace Barotrauma
                 }
             }
 
-            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
-            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
-            
-            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
+            bool hideInMenus = !(nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox) ? false : hideInMenusTickBox.Selected;
+#if DEBUG
+            string saveFolder = ItemAssemblyPrefab.VanillaSaveFolder;
+#else
+            string saveFolder = ItemAssemblyPrefab.SaveFolder;
+            if (!Directory.Exists(saveFolder))
+            {
+                try
+                {
+                    Directory.CreateDirectory(saveFolder);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to create a directory for the item assmebly.", e);
+                    return false;
+                }
+            }
+#endif
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
 
             if (File.Exists(filePath))
@@ -1771,7 +1783,6 @@ namespace Barotrauma
 #else
                 doc.SaveSafe(filePath);
 #endif
-
                 new ItemAssemblyPrefab(filePath);
                 UpdateEntityList();
             }

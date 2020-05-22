@@ -136,7 +136,7 @@ namespace Barotrauma
                     if (powered == null || !powered.VulnerableToEMP) continue;
                     if (item.Repairables.Any())
                     {
-                        item.Condition -= 100 * EmpStrength * distFactor;
+                        item.Condition -= item.MaxCondition * EmpStrength * distFactor;
                     }
 
                     //discharge batteries

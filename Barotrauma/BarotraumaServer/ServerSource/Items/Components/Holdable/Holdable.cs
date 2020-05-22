@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             simPosition = c.Character.SimPosition + offset;
 
             Drop(false, null);
-            item.SetTransform(simPosition, 0.0f);
+            item.SetTransform(simPosition, 0.0f, findNewHull: false);
             AttachToWall();
 
             item.CreateServerEvent(this);

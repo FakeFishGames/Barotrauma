@@ -1150,8 +1150,11 @@ namespace Barotrauma
             float reduction = 0;
             reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightFoot, excludeSevered: false), reduction);
             reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftFoot, excludeSevered: false), reduction);
-            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightHand, excludeSevered: false), reduction);
-            reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftHand, excludeSevered: false), reduction);
+            if (!(AnimController is HumanoidAnimController))
+            {
+                reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.RightHand, excludeSevered: false), reduction);
+                reduction = CalculateMovementPenalty(AnimController.GetLimb(LimbType.LeftHand, excludeSevered: false), reduction);
+            }
             int totalTailLimbs = 0;
             int destroyedTailLimbs = 0;
             foreach (var limb in AnimController.Limbs)
@@ -1176,7 +1179,7 @@ namespace Barotrauma
         {
             if (limb != null)
             {
-                sum += MathHelper.Lerp(0, max, CharacterHealth.GetLimbDamage(limb));
+                sum += MathHelper.Lerp(0, max, CharacterHealth.GetLimbDamage(limb, afflictionType: "damage"));
             }
             return Math.Clamp(sum, 0, 1f);
         }
@@ -2895,6 +2898,7 @@ namespace Barotrauma
             {
                 SelectedConstruction = null;
             }
+            HealthUpdateInterval = 0.0f;
         }
 
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
@@ -2956,6 +2960,7 @@ namespace Barotrauma
             }
 
             CharacterHealth.ApplyAffliction(null, new Affliction(AfflictionPrefab.Pressure, AfflictionPrefab.Pressure.MaxStrength));
+            if (isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Vitality <= CharacterHealth.MinVitality) { Kill(CauseOfDeathType.Pressure, null, isNetworkMessage: true); }
             if (IsDead)
             {
                 BreakJoints();
@@ -2988,7 +2993,10 @@ namespace Barotrauma
 
             foreach (var joint in AnimController.LimbJoints)
             {
-                joint.LimitEnabled = false;
+                if (joint.revoluteJoint != null)
+                {
+                    joint.revoluteJoint.LimitEnabled = false;
+                }
             }
         }
 
@@ -3055,9 +3063,12 @@ namespace Barotrauma
             
             AnimController.ResetPullJoints();
 
-            foreach (RevoluteJoint joint in AnimController.LimbJoints)
+            foreach (var joint in AnimController.LimbJoints)
             {
-                joint.MotorEnabled = false;
+                if (joint.revoluteJoint != null)
+                {
+                    joint.revoluteJoint.MotorEnabled = false;
+                }
             }
 
             if (GameMain.GameSession != null)
@@ -3088,7 +3099,11 @@ namespace Barotrauma
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
-                joint.MotorEnabled = true;
+                var revoluteJoint = joint.revoluteJoint;
+                if (revoluteJoint != null)
+                {
+                    revoluteJoint.MotorEnabled = true;
+                }
                 joint.Enabled = true;
                 joint.IsSevered = false;
             }

@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (!IsActive || picker == null || !CanBeAttached() || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) { return; }
+            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) { return; }
 
             Vector2 gridPos = picker.Position;
             Vector2 roundedGridPos = new Vector2(

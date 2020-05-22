@@ -10,10 +10,13 @@ namespace Barotrauma
 {
     partial class ItemAssemblyPrefab : MapEntityPrefab
     {
-        private string name;
+        private readonly string name;
         public override string Name { get { return name; } }
 
         public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
+
+        public static readonly string VanillaSaveFolder = Path.Combine("Content", "Items", "Assemblies");
+        public static readonly string SaveFolder = "ItemAssemblies";
 
         private bool disposed = false;
         public override void Dispose()
@@ -144,11 +147,14 @@ namespace Barotrauma
 
             List<string> itemAssemblyFiles = new List<string>();
 
-            //find assembly files in the item assembly folder
-            string directoryPath = Path.Combine("Content", "Items", "Assemblies");
-            if (Directory.Exists(directoryPath))
+            //find assembly files in the item assembly folders
+            if (Directory.Exists(VanillaSaveFolder))
             {
-                itemAssemblyFiles.AddRange(Directory.GetFiles(directoryPath));
+                itemAssemblyFiles.AddRange(Directory.GetFiles(VanillaSaveFolder));
+            }
+            if (Directory.Exists(SaveFolder))
+            {
+                itemAssemblyFiles.AddRange(Directory.GetFiles(SaveFolder));
             }
 
             //find assembly files in selected content packages

@@ -23,6 +23,8 @@ namespace Microsoft.Xna.Framework.Graphics
         private readonly SamplerState[] _actualSamplers;
         private readonly bool _applyToVertexStage;
 
+        partial void CalculateMaxDirty();
+
 		internal SamplerStateCollection(GraphicsDevice device, int maxSamplers, bool applyToVertexStage)
 		{
 		    _graphicsDevice = device;
@@ -38,7 +40,8 @@ namespace Microsoft.Xna.Framework.Graphics
             _actualSamplers = new SamplerState[maxSamplers];
             _applyToVertexStage = applyToVertexStage;
 
-		    Clear();
+            CalculateMaxDirty();
+            Clear();
         }
 		
 		public SamplerState this [int index] 

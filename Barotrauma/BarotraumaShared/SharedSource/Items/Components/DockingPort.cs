@@ -205,18 +205,6 @@ namespace Barotrauma.Items.Components
             DockingDir = GetDir(DockingTarget);
             DockingTarget.DockingDir = -DockingDir;
            
-            if (door != null && DockingTarget.door != null)
-            {
-                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
-                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
-
-                if (myWayPoint != null && targetWayPoint != null)
-                {
-                    myWayPoint.linkedTo.Add(targetWayPoint);
-                    targetWayPoint.linkedTo.Add(myWayPoint);
-                }
-            }
-
             CreateJoint(false);
 
 #if SERVER
@@ -282,6 +270,20 @@ namespace Barotrauma.Items.Components
             if (!item.linkedTo.Any(e => e is Hull) && !DockingTarget.item.linkedTo.Any(e => e is Hull))
             {
                 CreateHulls();
+            }
+
+            if (door != null && DockingTarget.door != null)
+            {
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
+
+                if (myWayPoint != null && targetWayPoint != null)
+                {
+                    myWayPoint.FindHull();
+                    myWayPoint.linkedTo.Add(targetWayPoint);
+                    targetWayPoint.FindHull();
+                    targetWayPoint.linkedTo.Add(myWayPoint);
+                }
             }
         }
 
@@ -778,7 +780,9 @@ namespace Barotrauma.Items.Components
 
                 if (myWayPoint != null && targetWayPoint != null)
                 {
+                    myWayPoint.FindHull();
                     myWayPoint.linkedTo.Remove(targetWayPoint);
+                    targetWayPoint.FindHull();
                     targetWayPoint.linkedTo.Remove(myWayPoint);
                 }
             }

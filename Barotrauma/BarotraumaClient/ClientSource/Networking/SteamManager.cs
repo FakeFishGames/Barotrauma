@@ -578,7 +578,7 @@ namespace Barotrauma.Steam
             if (!isInitialized) return;
 
             var query = new Steamworks.Ugc.Query(Steamworks.UgcType.All)
-                .RankedByTotalUniqueSubscriptions()
+                .RankedByTrend()
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 

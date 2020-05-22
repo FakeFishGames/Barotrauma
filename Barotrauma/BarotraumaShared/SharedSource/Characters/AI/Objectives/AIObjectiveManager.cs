@@ -194,24 +194,18 @@ namespace Barotrauma
         {
             if (CurrentOrder != null)
             {
+#if DEBUG
+                // Note: don't automatically remove orders here. Removing orders needs to be done via dismissing.
                 if (CurrentOrder.IsCompleted)
                 {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing order {CurrentOrder.DebugTag}, because it is completed.", Color.LightGreen);
-#endif
-                    CurrentOrder = null;
+                    DebugConsole.NewMessage($"{character.Name}: ORDER {CurrentOrder.DebugTag} IS COMPLETED. CURRENTLY ALL ORDERS SHOULD BE LOOPING.", Color.Red);
                 }
                 else if (!CurrentOrder.CanBeCompleted)
                 {
-#if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing order {CurrentOrder.DebugTag}, because it cannot be completed.", Color.Red);
+                    DebugConsole.NewMessage($"{character.Name}: ORDER {CurrentOrder.DebugTag}, CANNOT BE COMPLETED.", Color.Red);
+                }
 #endif
-                    CurrentOrder = null;
-                }
-                else
-                {
-                    CurrentOrder.Update(deltaTime);
-                }
+                CurrentOrder.Update(deltaTime);
             }
             if (WaitTimer > 0)
             {
@@ -379,7 +373,7 @@ namespace Barotrauma
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option,
                         requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
                     {
-                        IsLoop = option != "shutdown",
+                        IsLoop = true,
                         // Don't override unless it's an order by a player
                         Override = orderGiver != null && orderGiver.IsPlayer
                     };

@@ -441,7 +441,7 @@ namespace Barotrauma
             {
                 foreach (LimbJoint joint in LimbJoints)
                 {
-                    if (GameMain.World.JointList.Contains(joint)) { GameMain.World.Remove(joint); }
+                    if (GameMain.World.JointList.Contains(joint.Joint)) { GameMain.World.Remove(joint.Joint); }
                 }
             }
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
@@ -526,7 +526,7 @@ namespace Barotrauma
         public void AddJoint(JointParams jointParams)
         {
             LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
-            GameMain.World.Add(joint);
+            GameMain.World.Add(joint.Joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 if (LimbJoints[i] != null) continue;
@@ -609,7 +609,7 @@ namespace Barotrauma
             limb.Remove();
             foreach (LimbJoint limbJoint in attachedJoints)
             {
-                GameMain.World.Remove(limbJoint);
+                GameMain.World.Remove(limbJoint.Joint);
             }
         }
 
@@ -726,7 +726,7 @@ namespace Barotrauma
 
         private readonly List<Limb> connectedLimbs = new List<Limb>();
         private readonly List<LimbJoint> checkedJoints = new List<LimbJoint>();
-        public bool SeverLimbJoint(LimbJoint limbJoint, bool playSound = true)
+        public bool SeverLimbJoint(LimbJoint limbJoint)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
@@ -750,6 +750,14 @@ namespace Barotrauma
             {
                 if (connectedLimbs.Contains(limb)) { continue; }
                 limb.IsSevered = true;
+                if (limb.type == LimbType.RightHand)
+                {
+                    character.SelectedItems[0]?.Drop(character);
+                }
+                else if (limb.type == LimbType.LeftHand)
+                {
+                    character.SelectedItems[1]?.Drop(character);
+                }
             }
 
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
@@ -1776,11 +1784,12 @@ namespace Barotrauma
 
             if (LimbJoints != null)
             {
-                foreach (RevoluteJoint joint in LimbJoints)
+                foreach (var joint in LimbJoints)
                 {
-                    if (GameMain.World.JointList.Contains(joint))
+                    var j = joint.Joint;
+                    if (GameMain.World.JointList.Contains(j))
                     {
-                        GameMain.World.Remove(joint);
+                        GameMain.World.Remove(j);
                     }
                 }
                 LimbJoints = null;

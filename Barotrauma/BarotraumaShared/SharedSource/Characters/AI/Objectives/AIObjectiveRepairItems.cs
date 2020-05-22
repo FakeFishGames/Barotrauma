@@ -76,7 +76,7 @@ namespace Barotrauma
                 if (item != character.SelectedConstruction)
                 {
                     float condition = item.ConditionPercentage;
-                    if (item.Repairables.All(r => condition >= r.AIRepairThreshold)) { return false; }
+                    if (item.Repairables.All(r => condition >= r.RepairThreshold)) { return false; }
                 }
             }
             if (!string.IsNullOrWhiteSpace(RelevantSkill))

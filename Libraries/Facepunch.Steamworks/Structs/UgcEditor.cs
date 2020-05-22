@@ -98,6 +98,13 @@ namespace Steamworks.Ugc
 			return this;
 		}
 
+		public bool HasTag( string tag )
+		{
+			if (Tags != null && Tags.Contains(tag)) { return true; }
+
+			return false;
+		}
+
 		public async Task<PublishResult> SubmitAsync( IProgress<float> progress = null )
 		{
 			var result = default( PublishResult );

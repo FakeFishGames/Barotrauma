@@ -648,7 +648,7 @@ namespace Barotrauma
             {
                 return null;
             }
-            bool muffle = !sound.DisableMuffle && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
+            bool muffle = !sound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
             return sound.Play(volume ?? sound.BaseGain, far, position, muffle: muffle);            
         }
 

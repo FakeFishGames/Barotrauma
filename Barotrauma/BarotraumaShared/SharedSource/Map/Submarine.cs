@@ -817,6 +817,9 @@ namespace Barotrauma
 
             Item.UpdateHulls();
             Gap.UpdateHulls();
+#if CLIENT
+            Lights.ConvexHull.RecalculateAll(this);
+#endif
         }
 
         public void Update(float deltaTime)

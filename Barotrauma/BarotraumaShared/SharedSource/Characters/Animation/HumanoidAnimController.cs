@@ -1713,7 +1713,7 @@ namespace Barotrauma
                 
                 if (holdable.ControlPose)
                 {
-                    head.body.SmoothRotate(itemAngle);
+                    head?.body.SmoothRotate(itemAngle);
 
                     if (TargetMovement == Vector2.Zero && inWater)
                     {
@@ -1735,13 +1735,13 @@ namespace Barotrauma
             {
                 if (character.SelectedItems[0] == item)
                 {
-                    if (rightHand.IsSevered) return;
+                    if (rightHand == null || rightHand.IsSevered) { return; }
                     transformedHoldPos = rightHand.PullJointWorldAnchorA - transformedHandlePos[0];
                     itemAngle = (rightHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
                 else if (character.SelectedItems[1] == item)
                 {
-                    if (leftHand.IsSevered) return;
+                    if (leftHand == null || leftHand.IsSevered) { return; }
                     transformedHoldPos = leftHand.PullJointWorldAnchorA - transformedHandlePos[1];
                     itemAngle = (leftHand.Rotation + (holdAngle - MathHelper.PiOver2) * Dir);
                 }
@@ -1750,12 +1750,12 @@ namespace Barotrauma
             {
                 if (character.SelectedItems[0] == item)
                 {
-                    if (rightHand.IsSevered) return;
+                    if (rightHand == null || rightHand.IsSevered) { return; }
                     rightHand.Disabled = true;
                 }
                 if (character.SelectedItems[1] == item)
                 {
-                    if (leftHand.IsSevered) return;
+                    if (leftHand == null || leftHand.IsSevered) { return; }
                     leftHand.Disabled = true;
                 }
 

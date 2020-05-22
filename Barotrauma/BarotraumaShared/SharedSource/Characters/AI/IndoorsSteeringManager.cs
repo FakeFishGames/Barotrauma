@@ -412,7 +412,11 @@ namespace Barotrauma
                     {
                         //the node we're heading towards is the last one in the path, and at a door
                         //the door needs to be open for the character to reach the node
-                        shouldBeOpen = true;
+                        if (currentWaypoint.ConnectedDoor.LinkedGap != null && currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom)
+                        {
+                            shouldBeOpen = true;
+                            door = currentWaypoint.ConnectedDoor;
+                        }
                     }
                     else
                     {

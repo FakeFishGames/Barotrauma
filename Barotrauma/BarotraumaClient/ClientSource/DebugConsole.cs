@@ -658,6 +658,44 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
+            commands.Add(new Command("listcloudfiles", "Lists all of your files on the Steam Cloud.", args =>
+            {
+                int i = 0;
+                foreach (var file in Steamworks.SteamRemoteStorage.Files)
+                {
+                    NewMessage($"* {i}: {file.Filename}, {file.Size} bytes", Color.Orange);
+                    i++;
+                }
+                NewMessage($"Bytes remaining: {Steamworks.SteamRemoteStorage.QuotaRemainingBytes}/{Steamworks.SteamRemoteStorage.QuotaBytes}", Color.Yellow);
+            }));
+
+            commands.Add(new Command("removefromcloud", "Removes a file from Steam Cloud.", args =>
+            {
+                if (args.Length < 1) { return; }
+                var files = Steamworks.SteamRemoteStorage.Files;
+                Steamworks.SteamRemoteStorage.RemoteFile file;
+                if (int.TryParse(args[0], out int index) && index>=0 && index<files.Count)
+                {
+                    file = files[index];
+                }
+                else
+                {
+                    file = files.Find(f => f.Filename.Equals(args[0], StringComparison.InvariantCultureIgnoreCase));
+                }
+
+                if (!string.IsNullOrEmpty(file.Filename))
+                {
+                    if (file.Delete())
+                    {
+                        NewMessage($"Deleting {file.Filename}", Color.Orange);
+                    }
+                    else
+                    {
+                        ThrowError($"Failed to delete {file.Filename}");
+                    }
+                }
+            }));
+
             commands.Add(new Command("resetall", "Reset all items and structures to prefabs. Only applicable in the subeditor.", args =>
             {
                 if (Screen.Selected == GameMain.SubEditorScreen)
@@ -1260,6 +1298,13 @@ namespace Barotrauma
                 TextManager.Language = "English";
             }));
 
+            commands.Add(new Command("eventstats", "", (string[] args) =>
+            {
+                var debugLines = ScriptedEventSet.GetDebugStatistics();
+                string filePath = "eventstats.txt";
+                File.WriteAllLines(filePath, debugLines);
+                ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+            }));
 #if DEBUG
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
             {
@@ -1834,7 +1879,7 @@ namespace Barotrauma
                 "giveperm",
                 (string[] args) =>
                 {
-                    if (args.Length < 1) return;
+                    if (args.Length < 1) { return; }
 
                     NewMessage("Valid permissions are:", Color.White);
                     foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
@@ -1891,7 +1936,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    ShowQuestionPrompt("Console command permissions to grant to client " + args[0] + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    ShowQuestionPrompt("Console command permissions to grant to client " + args[0] + "? You may enter multiple commands separated with a space or use \"all\" to give the permission to use all console commands.", (commandNames) =>
                     {
                         GameMain.Client?.SendConsoleCommand("givecommandperm " + args[0] + " " + commandNames);
                     }, args, 1);
@@ -1904,7 +1949,7 @@ namespace Barotrauma
                 {
                     if (args.Length < 1) return;
 
-                    ShowQuestionPrompt("Console command permissions to revoke from client " + args[0] + "? You may enter multiple commands separated with a space.", (commandNames) =>
+                    ShowQuestionPrompt("Console command permissions to revoke from client " + args[0] + "? You may enter multiple commands separated with a space or use \"all\" to revoke the permission to use any console commands.", (commandNames) =>
                     {
                         GameMain.Client?.SendConsoleCommand("revokecommandperm " + args[0] + " " + commandNames);
                     }, args, 1);

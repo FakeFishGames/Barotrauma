@@ -470,7 +470,7 @@ namespace Barotrauma
             [Serialize(true, true), Editable]
             public bool CanBeSevered { get; set; }
 
-            [Serialize(1f, true, description:"Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects limbs of type None, Shield, or Tail on non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
+            [Serialize(0f, true, description:"Default 0 (Can't be severed when the creature is alive). Modifies the severance probability (defined per item/attack) when the character is alive. Currently only affects non-humanoid ragdolls. Also note that if CanBeSevered is false, this property doesn't have any effect."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
             public float SeveranceProbabilityModifier { get; set; }
 
             [Serialize("gore", true), Editable]
@@ -496,6 +496,9 @@ namespace Barotrauma
 
             [Serialize(1f, true, description: "CAUTION: Not fully implemented. Only use for limb joints that connect non-animated limbs!"), Editable]
             public float Scale { get; set; }
+
+            [Serialize(false, false), Editable(ReadOnly = true)]
+            public bool WeldJoint { get; set; }
 
             public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
